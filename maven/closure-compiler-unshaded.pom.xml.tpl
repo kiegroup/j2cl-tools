@@ -19,7 +19,7 @@
   >
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.google.javascript</groupId>
+  <groupId>com.vertispan.javascript</groupId>
   <artifactId>closure-compiler-unshaded</artifactId>
   <packaging>jar</packaging>
 
@@ -38,7 +38,7 @@
   <inceptionYear>2009</inceptionYear>
 
   <parent>
-    <groupId>com.google.javascript</groupId>
+    <groupId>com.vertispan.javascript</groupId>
     <artifactId>closure-compiler-main</artifactId>
     <version>1.0-SNAPSHOT</version>
     <relativePath>closure-compiler-main.pom.xml</relativePath>
