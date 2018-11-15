@@ -41,6 +41,8 @@ public abstract class J2clTranspilerOptions implements FrontendOptions, BackendO
 
   public abstract Backend getBackend();
 
+  public abstract Builder toBuilder();
+
   public static Builder newBuilder() {
     return new AutoValue_J2clTranspilerOptions.Builder()
         .setOptimizeAutoValue(false)
