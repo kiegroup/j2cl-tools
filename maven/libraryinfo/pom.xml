@@ -9,7 +9,7 @@
     <artifactId>j2cl-parent</artifactId>
     <version>0.2-SNAPSHOT</version>
   </parent>
-  <artifactId>transpiler</artifactId>
+  <artifactId>libraryinfo</artifactId>
   <packaging>pom</packaging>
 
   <build>
@@ -28,11 +28,11 @@
             <configuration>
               <artifacts>
                 <artifact>
-                  <file>../../bazel-bin/transpiler/java/com/google/j2cl/transpiler/libtranspiler_lib.jar</file>
+                  <file>../../bazel-bin/transpiler/java/com/google/j2cl/libraryinfo/liblibraryinfo.jar</file>
                   <type>jar</type>
                 </artifact>
                 <artifact>
-                  <file>../../bazel-bin/transpiler/java/com/google/j2cl/transpiler/libtranspiler_lib-src.jar</file>
+                  <file>../../bazel-bin/transpiler/java/com/google/j2cl/libraryinfo/liblibraryinfo-src.jar</file>
                   <type>jar</type>
                   <classifier>sources</classifier>
                 </artifact>
@@ -48,10 +48,19 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java-util</artifactId>
+      <!--<type>bundle</type>-->
+    </dependency>
 
     <dependency>
       <groupId>com.vertispan.j2cl</groupId>
-      <artifactId>common</artifactId>
+      <artifactId>libraryinfo-proto</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -61,17 +70,7 @@
     </dependency>
     <dependency>
       <groupId>com.vertispan.j2cl</groupId>
-      <artifactId>ast-visitors</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.vertispan.j2cl</groupId>
-      <artifactId>frontend</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.vertispan.j2cl</groupId>
-      <artifactId>generator</artifactId>
+      <artifactId>common</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>
