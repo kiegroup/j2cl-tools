@@ -53,6 +53,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import com.google.javascript.jscomp.ijs.IjsErrors;
 import com.google.javascript.jscomp.parsing.Config;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.TokenStream;
@@ -81,6 +82,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.zip.GZIPInputStream;
@@ -2416,6 +2418,18 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
           break;
         }
       }
+    }
+
+    // First, print all defines passed in
+    Set<Entry<String, Node>> defines = compiler.getOptions().getDefineReplacements().entrySet();
+    if (!defines.isEmpty()) {
+      Node[] defineNodes = defines.stream()
+              .map((entry) -> IR.propdef(IR.stringKey(entry.getKey()), entry.getValue()))
+              .toArray(Node[]::new);
+
+      Node wrapper = IR.objectlit(defineNodes);
+      Node assign = IR.assign(IR.getprop(IR.thisNode(), "CLOSURE_UNCOMPILED_DEFINES"), wrapper);
+      out.append(new CodePrinter.Builder(assign).setPrettyPrint(true).build());
     }
 
     for (CompilerInput input : inputs) {
