@@ -24,12 +24,12 @@
   <packaging>jar</packaging>
 
   <name>Closure Compiler Externs</name>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1-SNAPSHOT</version>
 
   <parent>
     <groupId>com.vertispan.javascript</groupId>
     <artifactId>closure-compiler-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1-SNAPSHOT</version>
     <relativePath>closure-compiler-parent.pom.xml</relativePath>
   </parent>
 </project>
