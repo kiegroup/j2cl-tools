@@ -24,7 +24,7 @@
   <packaging>jar</packaging>
 
   <name>Closure Compiler Unshaded</name>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1-SNAPSHOT</version>
 
   <url>https://developers.google.com/closure/compiler/</url>
   <description>
