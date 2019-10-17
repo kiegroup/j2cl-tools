@@ -9,7 +9,7 @@
         <artifactId>j2cl-parent</artifactId>
         <version>0.4-SNAPSHOT</version>
     </parent>
-    <artifactId>frontend-jdt</artifactId>
+    <artifactId>frontend-javac</artifactId>
     <packaging>pom</packaging>
 
     <build>
@@ -28,11 +28,11 @@
                         <configuration>
                             <artifacts>
                                 <artifact>
-                                    <file>../../bazel-bin/transpiler/java/com/google/j2cl/frontend/jdt/libjdt.jar</file>
+                                    <file>../../bazel-bin/transpiler/java/com/google/j2cl/frontend/javac/libjavac.jar</file>
                                     <type>jar</type>
                                 </artifact>
                                 <artifact>
-                                    <file>../../bazel-bin/transpiler/java/com/google/j2cl/frontend/jdt/libjdt-src.jar</file>
+                                    <file>../../bazel-bin/transpiler/java/com/google/j2cl/frontend/javac/libjavac-src.jar</file>
                                     <type>jar</type>
                                     <classifier>sources</classifier>
                                 </artifact>
@@ -45,10 +45,6 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>com.google.auto.value</groupId>
-            <artifactId>auto-value</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
@@ -57,18 +53,14 @@
             <artifactId>jsinterop-annotations</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.vertispan.j2cl.external</groupId>
-            <artifactId>org.eclipse.jdt.core</artifactId>
+            <groupId>com.google.errorprone</groupId>
+            <artifactId>javac</artifactId>
+            <version>1.9.0-dev-r2644-1</version>
         </dependency>
 
         <dependency>
             <groupId>com.vertispan.j2cl</groupId>
             <artifactId>ast</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
-            <artifactId>common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
