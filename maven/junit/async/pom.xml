@@ -10,9 +10,8 @@
         <version>0.7-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
-    <artifactId>junit-processor-unshaded</artifactId>
+    <artifactId>junit-async</artifactId>
     <packaging>pom</packaging>
-    <description>Helper artifact, containing only the processor project.</description>
 
     <build>
         <plugins>
@@ -30,11 +29,11 @@
                         <configuration>
                             <artifacts>
                                 <artifact>
-                                    <file>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/apt/libjunit_processor.jar</file>
+                                    <file>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/async/libasync.jar</file>
                                     <type>jar</type>
                                 </artifact>
                                 <artifact>
-                                    <file>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/apt/libjunit_processor-src.jar</file>
+                                    <file>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/async/libasync-src.jar</file>
                                     <type>jar</type>
                                     <classifier>sources</classifier>
                                 </artifact>
@@ -45,39 +44,4 @@
             </plugin>
         </plugins>
     </build>
-    <dependencies>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>junit-async</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.auto</groupId>
-            <artifactId>auto-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.auto.service</groupId>
-            <artifactId>auto-service</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.auto.value</groupId>
-            <artifactId>auto-value</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.jsinterop</groupId>
-            <artifactId>jsinterop-annotations</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.velocity</groupId>
-            <artifactId>velocity-engine-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-        </dependency>
-    </dependencies>
 </project>
