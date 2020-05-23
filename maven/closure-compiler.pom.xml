@@ -24,7 +24,7 @@
   <packaging>jar</packaging>
 
   <name>Closure Compiler</name>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
 
   <url>https://developers.google.com/closure/compiler/</url>
   <description>
@@ -40,7 +40,7 @@
   <parent>
     <groupId>com.vertispan.javascript</groupId>
     <artifactId>closure-compiler-main</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
     <relativePath>closure-compiler-main.pom.xml</relativePath>
   </parent>
 </project>
