@@ -23,7 +23,7 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
-      - run: mvn integration-test
+      - run: mvn deploy -s .circleci/settings.xml -Dartifactory.username=$ARTIFACTORY_USER -Dartifactory.password=$ARTIFACTORY_APIKEY
 
       - save_cache:
           paths:
@@ -32,3 +32,9 @@ jobs:
 
 
 
+workflows:
+  version: 2
+  ci_build:
+    jobs:
+      - build:
+          context: deploy-keys
