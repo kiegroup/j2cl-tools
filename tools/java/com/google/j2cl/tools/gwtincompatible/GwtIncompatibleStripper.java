@@ -57,7 +57,7 @@ public final class GwtIncompatibleStripper {
   }
 
   /** Preprocess all provided files and put them to provided output path. */
-  private static void preprocessFiles(
+  public static void preprocessFiles(
       List<FileInfo> fileInfos, Output output, Problems problems, String annotationName) {
     for (FileInfo fileInfo : fileInfos) {
       String processedFileContent;
