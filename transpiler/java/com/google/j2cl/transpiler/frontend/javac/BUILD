@@ -8,6 +8,7 @@ package(
         "//transpiler/java/com/google/j2cl/transpiler/frontend:__subpackages__",
     ],
 )
+load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 licenses(["notice"])
 
@@ -23,5 +24,13 @@ java_library(
         "//transpiler/java/com/google/j2cl/common",
         "//transpiler/java/com/google/j2cl/transpiler/ast",
         "//transpiler/java/com/google/j2cl/transpiler/frontend/common",
+    ],
+)
+
+javadoc_library(
+    name = "javac-javadoc",
+    srcs = glob(["*.java"]),
+    deps = [
+        ":javac",
     ],
 )

@@ -1,3 +1,5 @@
+load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
+
 package(
     default_applicable_licenses = ["//:j2cl_license"],
     default_visibility = ["//transpiler:__subpackages__"],
@@ -13,5 +15,12 @@ java_library(
         "//third_party:jsr305_annotations",
         "//transpiler/java/com/google/j2cl/common",
         "//transpiler/java/com/google/j2cl/common/visitor",
+    ],
+)
+javadoc_library(
+    name = "ast-javadoc",
+    srcs = glob(["*.java"]),
+    deps = [
+        ":ast",
     ],
 )

@@ -7,6 +7,7 @@ package(
     default_applicable_licenses = ["//:j2cl_license"],
     licenses = ["notice"],
 )
+load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 java_library(
     name = "gwtincompatible_lib",
@@ -21,6 +22,17 @@ java_library(
         "//third_party:jdt-core",
         "//transpiler/java/com/google/j2cl/common",
         "//transpiler/java/com/google/j2cl/transpiler/frontend/jdt",
+    ],
+)
+
+javadoc_library(
+    name = "gwtincompatible_lib-javadoc",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["BazelGwtIncompatibleStripper.java"],
+    ),
+    deps = [
+        ":gwtincompatible_lib",
     ],
 )
 

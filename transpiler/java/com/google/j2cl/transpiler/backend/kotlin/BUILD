@@ -1,4 +1,5 @@
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
+load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 package(
     default_applicable_licenses = ["//:j2cl_license"],
@@ -20,5 +21,13 @@ kt_jvm_library(
         "//transpiler/java/com/google/j2cl/transpiler/backend/kotlin/common",
         "//transpiler/java/com/google/j2cl/transpiler/backend/kotlin/objc",
         "//transpiler/java/com/google/j2cl/transpiler/backend/kotlin/source",
+    ],
+)
+
+javadoc_library(
+    name = "kotlin-javadoc",
+    srcs = glob(["*.java"]),
+    deps = [
+        ":kotlin",
     ],
 )
