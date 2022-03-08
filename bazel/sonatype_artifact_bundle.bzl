@@ -42,11 +42,11 @@ def _sonatype_artifact_bundle(ctx):
     password = None
     generate_signatures = True
 
-    if version == _SNAPSHOT:
+    if version.endswith("-SNAPSHOT"):
         # A SNAPSHOT version can't be uploaded as a release
         # and thus doesn't need to be signed
         generate_signatures = False
-    elif not version.startswith("v") or not version[1:].isdigit():
+    elif not version.startswith("v"):
         fail("--define=COMPILER_VERSION was malformed; got '{0}'".format(version))
     else:
         password = _fail_missing_define(ctx, "CLEARTEXT_GPG_PASSPHRASE")

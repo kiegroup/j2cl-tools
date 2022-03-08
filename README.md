@@ -13,6 +13,33 @@ analyzes it, removes dead code and rewrites and minimizes what's left. It also
 checks syntax, variable references, and types, and warns about common JavaScript
 pitfalls.
 
+---
+
+This is Vertispan LLC's fork of the Closure Compiler targeted to support J2CL,
+which includes a few changes from Google's original repository, including:
+
+ * Externs that specifically match various stable versions of Elemental2.
+ * Sourcemap support for BUNDLE optimization levels.
+ * Include defines in BUNDLE output.
+ * Restore the `PersistentInputStore` API - note that with the introduction of
+   the (experimental) `TypedAst` feature, we may drop this soon.
+
+As the upstream project undergoes regular tagged releases, the Vertispan
+releases in turn will be versioned and tagged to match them, following a pattern
+of `<upstream-tag>-<release-count>`, where the `<upstream-tag>` is the tag that
+Google released, followed by `<release-count>`, an integer to increment for each
+tagged release - when a new Closure Compiler release is released, the release
+count will reset to `1`. Note that not all upstream tags will necessarily get an
+associated Vertispan release. Later releases off of the same upstream tag will
+then increment that count, should they be needed.
+
+The release process is to rebase this set of commits, then update the version in
+the poms appropriately. When a release is pushed to Maven Central, a tag will
+be pushed to our git repository with a matching version. Snapshot releases will
+use a `-SNAPSHOT` suffix after the release count.
+
+---
+
 ## Getting Started
 
 The easiest way to install the compiler is with [NPM](https://npmjs.com) or
