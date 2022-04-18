@@ -75,6 +75,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -2094,14 +2095,18 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
   @Override
   protected void prepForBundleAndAppendTo(Appendable out, CompilerInput input, String content, String outputPath)
       throws IOException {
-    String pathToInput = new File(input.getName()).getCanonicalPath();
-    String pathToOutput = new File(outputPath).getParentFile().getCanonicalPath();
-    String relativePath = Paths.get(pathToOutput).relativize(Paths.get(pathToInput)).toString();
-
-    ClosureBundler bundler;
-    if (!relativePath.startsWith("..")) {
-      bundler = getBundler().useEval(true).withSourceUrl(relativePath);
+    Path pathToInput = Paths.get(new File(input.getName()).getCanonicalPath());
+    Path pathToOutput = Paths.get(new File(outputPath).getParentFile().getCanonicalPath());
+    final ClosureBundler bundler;
+    if (Objects.equals(pathToInput.getRoot(), pathToOutput.getRoot())) {
+      String relativePath = pathToOutput.relativize(pathToInput).toString();
+      if (!relativePath.startsWith("..")) {
+        bundler = getBundler().useEval(true).withSourceUrl(relativePath);
+      } else {
+        bundler = getBundler();
+      }
     } else {
+      // Didn't share a root (such as two different windows drives), must not relativize
       bundler = getBundler();
     }
 
