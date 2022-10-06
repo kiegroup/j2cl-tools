@@ -1909,6 +1909,43 @@ RTCIceServerInterface_.prototype.credential;
  */
 var RTCIceServer;
 
+//WORKAROUND for elemental2 - we need to keep these externs around as long as elemental2-dom 1.1.0 is a going concern
+/**
+ * @typedef {{
+ *   iceServers: !Array<!RTCIceServer>,
+ *   iceTransportPolicy: (string|undefined),
+ *   sdpSemantics: (string|undefined)
+ * }}
+ * @private
+ */
+var RTCConfigurationRecord_;
+
+/**
+ * @interface
+ * @private
+ */
+function RTCConfigurationInterface_() {}
+/**
+ * @type {!Array<!RTCIceServer>}
+ */
+RTCConfigurationInterface_.prototype.iceServers;
+
+/**
+ * Allows specifying the ICE transport policy. Valid values are "all" and
+ * "relay", with "all" being the default.
+ * @type {string|undefined}
+ */
+RTCConfigurationInterface_.prototype.iceTransportPolicy;
+/**
+ * Allows specifying the SDP semantics. Valid values are "plan-b" and
+ * "unified-plan".
+ *
+ * @see {@link https://webrtc.org/web-apis/chrome/unified-plan/}
+ * @type {string|undefined}
+ */
+RTCConfigurationInterface_.prototype.sdpSemantics;
+//END WORKAROUND
+
 /**
  * @record
  * @see https://www.w3.org/TR/webrtc/#dom-rtcconfiguration
