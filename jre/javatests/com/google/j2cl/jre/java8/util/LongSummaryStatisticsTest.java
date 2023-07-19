@@ -30,7 +30,7 @@ public class LongSummaryStatisticsTest extends EmulTestBase {
   private LongSummaryStatistics stats;
 
   @Override
-  protected void setUp() throws Exception {
+  protected void gwtSetUp() throws Exception {
     stats = new LongSummaryStatistics();
   }
 

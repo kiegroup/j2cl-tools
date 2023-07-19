@@ -117,6 +117,11 @@ public class HashMapTest extends TestMap {
     assertEmptyIterator(hashMap.entrySet().iterator());
   }
 
+  @Override
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
+  }
+
   public void testAddEqualKeys() {
     final HashMap<Number, Object> expected = new HashMap<Number, Object>();
     assertEquals(0, expected.size());

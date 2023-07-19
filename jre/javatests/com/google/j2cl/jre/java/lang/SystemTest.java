@@ -17,11 +17,13 @@ package com.google.j2cl.jre.java.lang;
 
 import static com.google.j2cl.jre.testing.TestUtils.isWasm;
 
+import com.google.gwt.junit.client.GWTTestCase;
 import java.util.Arrays;
-import junit.framework.TestCase;
 
-/** Tests java.lang.System. */
-public class SystemTest extends TestCase {
+/**
+ * Tests java.lang.System.
+ */
+public class SystemTest extends GWTTestCase {
 
   private static class Bar extends Foo {
     public Bar() {
@@ -68,6 +70,11 @@ public class SystemTest extends TestCase {
     public String toString() {
       return "InterfazImpl[data=" + data + "]";
     }
+  }
+
+  @Override
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
   }
 
   public void testArraycopyEnumToInterface() {

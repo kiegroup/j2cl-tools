@@ -30,8 +30,8 @@ public class MapEntryTest extends EmulTestBase {
   private Entry<String, String> entry2;
 
   @Override
-  protected void setUp() throws Exception {
-    super.setUp();
+  protected void gwtSetUp() throws Exception {
+    super.gwtSetUp();
     entry1 = createTestEntry1();
     entry2 = createTestEntry2();
   }

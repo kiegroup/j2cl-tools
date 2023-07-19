@@ -110,6 +110,11 @@ abstract class TreeSetTest<E extends Comparable<E>> extends TestSet {
     super("TreeSetTest");
   }
 
+  @Override
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
+  }
+
   /**
    * Test method for 'java.util.Set.add(Object)'.
    *
@@ -1344,7 +1349,7 @@ abstract class TreeSetTest<E extends Comparable<E>> extends TestSet {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  protected void gwtSetUp() throws Exception {
     setComparator(null);
   }
 

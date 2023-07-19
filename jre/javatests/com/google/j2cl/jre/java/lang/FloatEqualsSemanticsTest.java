@@ -15,10 +15,15 @@
  */
 package com.google.j2cl.jre.java.lang;
 
-import junit.framework.TestCase;
+import com.google.gwt.junit.client.GWTTestCase;
 
 /** Tests equals semantics for Float. */
-public final class FloatEqualsSemanticsTest extends TestCase {
+public final class FloatEqualsSemanticsTest extends GWTTestCase {
+
+  @Override
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
+  }
 
   public void testEquals() {
     assertTrue(Float.valueOf(Float.NaN).equals(Float.NaN));

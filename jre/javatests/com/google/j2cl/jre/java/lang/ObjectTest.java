@@ -15,10 +15,16 @@
  */
 package com.google.j2cl.jre.java.lang;
 
-import junit.framework.TestCase;
+import com.google.gwt.junit.client.GWTTestCase;
 
-/** TODO: document me. */
-public class ObjectTest extends TestCase {
+/**
+ * TODO: document me.
+ */
+public class ObjectTest extends GWTTestCase {
+  @Override
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
+  }
 
   /*
    * Test method for 'java.lang.Object.hashCode()'

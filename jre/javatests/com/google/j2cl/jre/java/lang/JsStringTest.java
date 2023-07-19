@@ -15,10 +15,14 @@
  */
 package com.google.j2cl.jre.java.lang;
 
-import junit.framework.TestCase;
+import com.google.gwt.junit.client.GWTTestCase;
 
 /** Tests java.lang.String. */
-public final class JsStringTest extends TestCase {
+public final class JsStringTest extends GWTTestCase {
+  @Override
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
+  }
 
   // String.intern is not available in j2wasm.
   public void testIntern() {

@@ -16,10 +16,18 @@
 
 package com.google.j2cl.jre.java8.lang;
 
-import junit.framework.TestCase;
+import com.google.gwt.junit.client.GWTTestCase;
 
-/** Unit tests for the Javascript emulation of the Float/float autoboxed fundamental type. */
-public class FloatTest extends TestCase {
+/**
+ * Unit tests for the Javascript emulation of the Float/float autoboxed
+ * fundamental type.
+ */
+public class FloatTest extends GWTTestCase {
+
+  @Override
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
+  }
 
   public void testIsFinite() {
     final float[] nonfiniteNumbers = {

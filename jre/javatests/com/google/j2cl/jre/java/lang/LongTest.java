@@ -15,10 +15,18 @@
  */
 package com.google.j2cl.jre.java.lang;
 
-import junit.framework.TestCase;
+import com.google.gwt.junit.client.GWTTestCase;
 
-/** Unit tests for the Javascript emulation of the Long/long autoboxed fundamental type. */
-public class LongTest extends TestCase {
+/**
+ * Unit tests for the Javascript emulation of the Long/long autoboxed
+ * fundamental type.
+ */
+public class LongTest extends GWTTestCase {
+
+  @Override
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
+  }
 
   public void testBitCount() {
     assertEquals(0, Long.bitCount(0));

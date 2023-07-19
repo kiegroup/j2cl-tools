@@ -15,11 +15,16 @@
  */
 package com.google.j2cl.jre.java.lang.reflect;
 
+import com.google.gwt.junit.client.GWTTestCase;
 import java.lang.reflect.Array;
-import junit.framework.TestCase;
 
 /** Tests for java.lang.reflect.Array. */
-public final class ArrayTest extends TestCase {
+public final class ArrayTest extends GWTTestCase {
+
+  @Override
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
+  }
 
   public void testGet() {
     try {

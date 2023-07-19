@@ -15,16 +15,23 @@
  */
 package com.google.j2cl.jre.java.util;
 
+import com.google.gwt.junit.client.GWTTestCase;
 import java.util.EmptyStackException;
 import java.util.Stack;
-import junit.framework.TestCase;
 
-/** TODO: document me. */
-public class StackTest extends TestCase {
+/**
+ * TODO: document me.
+ */
+public class StackTest extends GWTTestCase {
 
   private static final int TEST_SEARCH_SIZE = 10;
   private static final int TEST_SIZE = 10;
 
+  /** Sets module name so that javascript compiler can operate. */
+  @Override
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
+  }
 
   /** Tests clone on Stacks. */
   public void testClone() {

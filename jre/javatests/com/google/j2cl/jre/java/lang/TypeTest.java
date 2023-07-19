@@ -15,11 +15,18 @@
  */
 package com.google.j2cl.jre.java.lang;
 
+import com.google.gwt.junit.client.GWTTestCase;
 import java.lang.reflect.Type;
-import junit.framework.TestCase;
 
-/** This is the test-case for {@link java.lang.reflect.Type} and {@link Class}. */
-public class TypeTest extends TestCase {
+/**
+ * This is the test-case for {@link java.lang.reflect.Type} and {@link Class}.
+ */
+public class TypeTest extends GWTTestCase {
+
+  @Override
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
+  }
 
   /**
    * Tests that {@link Class} actually implements {@link java.lang.reflect.Type}.

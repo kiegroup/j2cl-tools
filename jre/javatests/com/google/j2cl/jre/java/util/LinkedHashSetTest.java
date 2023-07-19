@@ -40,6 +40,14 @@ public class LinkedHashSetTest extends TestSet {
     super("LinkedHashSet");
   }
 
+  @Override
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
+  }
+
+  /*
+   * Test method for 'java.util.LinkedHashSet.clone()'
+   */
   @SuppressWarnings("unchecked")
   public void testClone() {
     LinkedHashSet<String> srcSet = new LinkedHashSet<String>();

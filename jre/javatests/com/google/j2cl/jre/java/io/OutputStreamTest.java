@@ -27,8 +27,8 @@ public class OutputStreamTest extends OutputStreamBaseTest {
   private static LinkedList<Byte> outputBytes;
 
   @Override
-  protected void setUp() throws Exception {
-    super.setUp();
+  protected void gwtSetUp() throws Exception {
+    super.gwtSetUp();
     outputBytes = new LinkedList<>();
   }
 

@@ -185,6 +185,11 @@ abstract class TreeMapTest<K extends Comparable<K>, V> extends TestMap {
   private final boolean isPutSupported = true;
   private final boolean isRemoveSupported = true;
 
+  @Override
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
+  }
+
   public void testCeilingEntry() {
     K[] keys = getSortedKeys();
     V[] values = getSortedValues();
@@ -3450,7 +3455,7 @@ abstract class TreeMapTest<K extends Comparable<K>, V> extends TestMap {
   protected abstract Object getConflictingValue();
 
   @Override
-  protected void setUp() throws Exception {
+  protected void gwtSetUp() throws Exception {
     setComparator(null);
   }
 

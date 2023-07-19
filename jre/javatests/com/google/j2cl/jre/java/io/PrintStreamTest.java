@@ -17,6 +17,7 @@ package com.google.j2cl.jre.java.io;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.gwt.junit.client.GWTTestCase;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -24,10 +25,9 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import junit.framework.TestCase;
 
 /** Unit test for the {@link java.io.PrintStream} emulated class. */
-public class PrintStreamTest extends TestCase {
+public class PrintStreamTest extends GWTTestCase {
 
   /** {@link java.io.PrintStream} object being tested. */
   private PrintStream ps;
@@ -52,9 +52,15 @@ public class PrintStreamTest extends TestCase {
     }
   }
 
+  /** Sets module name so that javascript compiler can operate. */
   @Override
-  protected void setUp() throws Exception {
-    super.setUp();
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
+  }
+
+  @Override
+  protected void gwtSetUp() throws Exception {
+    super.gwtSetUp();
     baos = new ByteArrayOutputStream();
     ps = new PrintStream(baos);
   }

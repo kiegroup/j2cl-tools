@@ -15,10 +15,18 @@
  */
 package com.google.j2cl.jre.java.lang;
 
-import junit.framework.TestCase;
+import com.google.gwt.junit.client.GWTTestCase;
 
-/** Unit tests for the Javascript emulation of the Integer/int autoboxed fundamental type. */
-public class IntegerTest extends TestCase {
+/**
+ * Unit tests for the Javascript emulation of the Integer/int autoboxed
+ * fundamental type.
+ */
+public class IntegerTest extends GWTTestCase {
+
+  @Override
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
+  }
 
   public void testBadStrings() {
     try {

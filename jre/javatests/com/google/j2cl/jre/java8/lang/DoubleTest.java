@@ -16,10 +16,17 @@
 
 package com.google.j2cl.jre.java8.lang;
 
-import junit.framework.TestCase;
+import com.google.gwt.junit.client.GWTTestCase;
 
-/** Unit tests for the emulated-in-Javascript Double/double autoboxed types. */
-public class DoubleTest extends TestCase {
+/**
+ * Unit tests for the emulated-in-Javascript Double/double autoboxed types.
+ */
+public class DoubleTest extends GWTTestCase {
+
+  @Override
+  public String getModuleName() {
+    return "com.google.gwt.emultest.EmulSuite";
+  }
 
   public void testIsFinite() {
     final double[] nonfiniteNumbers = {
