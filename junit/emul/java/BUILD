@@ -8,7 +8,12 @@ package(
 
 java_library(
     name = "junit_emul-java",
-    srcs = glob(["**/*.java"]),
+    srcs = glob(
+        ["**/*.java"],
+        exclude = [
+            "org/junit/super-j2kt/*.java",
+        ],
+    ),
     javacopts = [
         "-Xep:DoNotCall:OFF",
     ],
