@@ -34,7 +34,10 @@ j2cl_library(
     javacopts = [
         "-Xep:DoNotCall:OFF",
     ],
-    visibility = ["//:__pkg__"],
+    visibility = [
+        "//:__pkg__",
+        "//jre:__subpackages__",
+    ],
 )
 
 # For J2kt JVM test, we delegate back to the official JUnit because we cannot have both
