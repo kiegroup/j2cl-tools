@@ -133,8 +133,8 @@
       <artifactId>jsinterop-annotations</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.velocity</groupId>
-      <artifactId>velocity</artifactId>
+      <groupId>com.google.escapevelocity</groupId>
+      <artifactId>escapevelocity</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
