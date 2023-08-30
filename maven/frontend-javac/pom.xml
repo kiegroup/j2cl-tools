@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.vertispan.j2cl</groupId>
         <artifactId>j2cl-parent</artifactId>
-        <version>0.11.0-9336533b6</version>
+        <version>v20230718-1</version>
     </parent>
     <artifactId>frontend-javac</artifactId>
     <packaging>pom</packaging>
@@ -61,12 +61,15 @@
             <groupId>com.google.jsinterop</groupId>
             <artifactId>jsinterop-annotations</artifactId>
         </dependency>
-
         <dependency>
             <groupId>com.google.errorprone</groupId>
             <artifactId>javac</artifactId>
-            <version>9+181-r4173-1</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.vertispan.j2cl</groupId>
             <artifactId>common</artifactId>

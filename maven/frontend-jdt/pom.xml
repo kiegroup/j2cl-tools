@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.vertispan.j2cl</groupId>
         <artifactId>j2cl-parent</artifactId>
-        <version>0.11.0-9336533b6</version>
+        <version>v20230718-1</version>
     </parent>
     <artifactId>frontend-jdt</artifactId>
     <packaging>pom</packaging>
@@ -64,6 +64,10 @@
         <dependency>
             <groupId>com.vertispan.j2cl.external</groupId>
             <artifactId>org.eclipse.jdt.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
         </dependency>
 
         <dependency>

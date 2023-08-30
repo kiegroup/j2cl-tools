@@ -8,9 +8,8 @@
         <groupId>com.vertispan.j2cl</groupId>
         <artifactId>j2cl-parent</artifactId>
         <version>v20230718-1</version>
-        <relativePath>../../pom.xml</relativePath>
     </parent>
-    <artifactId>junit-async</artifactId>
+    <artifactId>backend-kotlin-common</artifactId>
     <packaging>pom</packaging>
 
     <build>
@@ -29,19 +28,19 @@
                         <configuration>
                             <artifacts>
                                 <artifact>
-                                    <file>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/async/libasync.jar</file>
+                                    <file>../../bazel-bin/transpiler/java/com/google/j2cl/transpiler/backend/kotlin/common/common.jar</file>
                                     <type>jar</type>
                                 </artifact>
                                 <artifact>
-                                    <file>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/async/libasync-src.jar</file>
+                                    <file>../../bazel-bin/transpiler/java/com/google/j2cl/transpiler/backend/kotlin/common/common-sources.jar</file>
                                     <type>jar</type>
                                     <classifier>sources</classifier>
                                 </artifact>
-                                <artifact>
-                                    <file>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/async/async-javadoc.jar</file>
-                                    <type>jar</type>
-                                    <classifier>javadoc</classifier>
-                                </artifact>
+                                <!--                                <artifact>-->
+                                <!--                                    <file>../../bazel-bin/transpiler/java/com/google/j2cl/transpiler/backend/kotlin/common/common-javadoc.jar</file>-->
+                                <!--                                    <type>jar</type>-->
+                                <!--                                    <classifier>javadoc</classifier>-->
+                                <!--                                </artifact>-->
                             </artifacts>
                         </configuration>
                     </execution>
@@ -49,4 +48,6 @@
             </plugin>
         </plugins>
     </build>
+    <dependencies>
+    </dependencies>
 </project>
