@@ -56,7 +56,7 @@ public class J2clTestingProcessingStep implements ProcessingStep {
             errorReporter, processingEnv.getTypeUtils(), processingEnv.getElementUtils());
     Map<String, String> options = processingEnv.getOptions();
     this.testPlatform =
-        options.getOrDefault(J2clTestingProcessor.JAVAC_OPTS_FLAG_TEST_PLATFORM, "UNKNOWN");
+        options.getOrDefault(J2clTestingProcessor.JAVAC_OPTS_FLAG_TEST_PLATFORM, "CLOSURE");
     this.writer = new TemplateWriter(errorReporter, processingEnv.getFiler(), testPlatform);
   }
 
