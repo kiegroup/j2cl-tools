@@ -16,6 +16,13 @@ original repository including
 * Modify Bazel wiring to allow GWT 2's GWTTestCase to be usable outside J2CL
   itself.
 * Modify Bazel wiring to build Javadocs
+* Temporary: default the test processor to assume platform=CLOSURE
+
+There is now a relatively-recent tagged version of J2CL in Google's own repository,
+the current latest release from Vertispan is based on that instead of an arbitrary
+commit. We don't know if tagged releases will continue - so far, they have not, so
+we may return to our own release pattern, see below. But for the moment, we are
+appending a build number to the end of the upstream tag, currently `v20230718-1`.
 
 As these changes alter J2CL's own public API, we are currently versioning releases
 and snapshots as 0.x.y-<hash> releases, to indicate first that this has not yet
