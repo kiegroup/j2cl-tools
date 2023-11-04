@@ -10,5 +10,5 @@ setup_j2cl_workspace()
 git_repository(
     name = "bazel_common",
     remote = "https://github.com/google/bazel-common.git",
-    commit = "bf8e5ef",
+    commit = "a482a3ab",
 )
