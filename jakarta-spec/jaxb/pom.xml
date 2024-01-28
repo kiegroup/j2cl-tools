@@ -8,7 +8,7 @@
     <parent>
         <groupId>org.kie.j2cl.tools.jakarta</groupId>
         <artifactId>parent</artifactId>
-        <version>${revision}</version>
+        <version>0.1</version>
     </parent>
     <packaging>pom</packaging>
 
