@@ -1,0 +1,4 @@
+[InnerExtern] => [$Overlay]
+[InnerExtern] => [$clinit]
+[InnerExtern] => [$Overlay.$clinit = () =>{};] "externs.Main$TopLevelExtern$InnerExtern$$Overlay.<clinit>"
+[InnerExtern] => [$Overlay.$loadModules();] "externs.Main$TopLevelExtern$InnerExtern$$Overlay.<clinit>"

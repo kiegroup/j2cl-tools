@@ -1,0 +1,77 @@
+goog.module('labelstatement.LabeledStatement$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+class LabeledStatement extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!LabeledStatement} */
+ static $create__() {
+  LabeledStatement.$clinit();
+  let $instance = new LabeledStatement();
+  $instance.$ctor__labelstatement_LabeledStatement__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__labelstatement_LabeledStatement__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @nodts */
+ m_loopStatements__void() {
+  LABEL: for (; true; ) {
+   break LABEL;
+  }
+ }
+ /** @nodts */
+ m_simpleStatement__void() {
+  LABEL: this.m_foo__void_$p_labelstatement_LabeledStatement();
+  do {
+   LABEL: continue;
+  } while (false);
+  LABEL: return;
+ }
+ /** @nodts */
+ m_block__void() {
+  LABEL: {
+   break LABEL;
+  }
+ }
+ /** @nodts */
+ m_ifStatement__void() {
+  LABEL: if (true) {
+   break LABEL;
+  }
+ }
+ /** @nodts */
+ m_switchStatement__void() {
+  LABEL: switch (0) {
+   case 0: 
+    if (true) {
+     break;
+    }
+  }
+ }
+ /** @nodts */
+ m_foo__void_$p_labelstatement_LabeledStatement() {}
+ /** @nodts */
+ static $clinit() {
+  LabeledStatement.$clinit = () =>{};
+  LabeledStatement.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof LabeledStatement;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+$Util.$setClassMetadata(LabeledStatement, 'labelstatement.LabeledStatement');
+
+exports = LabeledStatement;
+
+//# sourceMappingURL=LabeledStatement.js.map

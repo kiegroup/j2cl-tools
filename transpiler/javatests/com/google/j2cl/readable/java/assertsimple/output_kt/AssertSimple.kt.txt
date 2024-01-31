@@ -1,0 +1,65 @@
+// Generated from "assertsimple/AssertSimple.java"
+@file:OptIn(ExperimentalObjCName::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package assertsimple
+
+import javaemul.lang.*
+import kotlin.Any
+import kotlin.Array
+import kotlin.OptIn
+import kotlin.String
+import kotlin.Suppress
+import kotlin.assert
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.jvm.JvmStatic
+import kotlin.native.ObjCName
+import kotlin.run
+
+@ObjCName("J2ktAssertsimpleAssertSimple", exact = true)
+open class AssertSimple {
+ @ObjCName("J2ktAssertsimpleAssertSimpleCompanion", exact = true)
+ companion object {
+  @JvmStatic
+  @ObjCName("main")
+  fun main(
+   @ObjCName("withNSStringArray") args: Array<String?>?
+  ) {
+   assert(1 + 2 == 3)
+   assert(1 + 2 == 3) {
+    "Error!"
+   }
+   assert(1 + 2 == 3) {
+    "null"
+   }
+   assert(1 + 2 == 3) {
+    run {
+     val tmp: Array<String?>? = args
+     if (tmp == null) "null" else tmp!!
+    }
+   }
+   assert(1 + 2 == 3) {
+    run {
+     val tmp_1: String? = args!![0]
+     if (tmp_1 == null) "null" else tmp_1!!
+    }
+   }
+   assert(1 + 2 == 3) {
+    Any()
+   }
+  }
+ }
+}

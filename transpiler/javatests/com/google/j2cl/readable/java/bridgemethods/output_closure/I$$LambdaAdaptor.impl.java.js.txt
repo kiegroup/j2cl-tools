@@ -1,0 +1,49 @@
+goog.module('bridgemethods.I.$LambdaAdaptor$impl');
+
+const I = goog.require('bridgemethods.I$impl');
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+/**
+ * @template T, S
+ * @implements {I<T, S>}
+ */
+class $LambdaAdaptor extends j_l_Object {
+ /** @nodts */
+ constructor(/** ?function(S):T */ fn) {
+  $LambdaAdaptor.$clinit();
+  super();
+  /**@type {?function(S):T} @nodts*/
+  this.f_fn__bridgemethods_I_$LambdaAdaptor;
+  this.$ctor__bridgemethods_I_$LambdaAdaptor__bridgemethods_I_$JsFunction__void(fn);
+ }
+ /** @nodts */
+ $ctor__bridgemethods_I_$LambdaAdaptor__bridgemethods_I_$JsFunction__void(/** ?function(S):T */ fn) {
+  this.$ctor__java_lang_Object__void();
+  this.f_fn__bridgemethods_I_$LambdaAdaptor = fn;
+ }
+ /** @override @nodts @return {T} */
+ m_fun__java_lang_Object__java_lang_Object(/** S */ arg0) {
+  let /** ?function(S):T */ $function;
+  return ($function = this.f_fn__bridgemethods_I_$LambdaAdaptor, $function(arg0));
+ }
+ /** @nodts */
+ static $clinit() {
+  $LambdaAdaptor.$clinit = () =>{};
+  $LambdaAdaptor.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof $LambdaAdaptor;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+I.$markImplementor($LambdaAdaptor);
+$Util.$setClassMetadata($LambdaAdaptor, 'bridgemethods.I$$LambdaAdaptor');
+
+exports = $LambdaAdaptor;
+
+//# sourceMappingURL=I$$LambdaAdaptor.js.map

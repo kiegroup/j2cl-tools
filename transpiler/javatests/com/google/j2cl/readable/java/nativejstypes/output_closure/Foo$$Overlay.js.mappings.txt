@@ -1,0 +1,4 @@
+[Foo] => [$Overlay]
+[Foo] => [$clinit]
+[Foo] => [$Overlay.$clinit = () =>{};] "nativejstypes.Foo$$Overlay.<clinit>"
+[Foo] => [$Overlay.$loadModules();] "nativejstypes.Foo$$Overlay.<clinit>"

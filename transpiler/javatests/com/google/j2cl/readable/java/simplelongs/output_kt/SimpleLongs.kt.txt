@@ -1,0 +1,100 @@
+// Generated from "simplelongs/SimpleLongs.java"
+@file:OptIn(ExperimentalObjCName::class, ExperimentalObjCRefinement::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package simplelongs
+
+import javaemul.lang.*
+import kotlin.Int
+import kotlin.Long
+import kotlin.OptIn
+import kotlin.Suppress
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.experimental.ExperimentalObjCRefinement
+import kotlin.jvm.JvmField
+import kotlin.native.HiddenFromObjC
+import kotlin.native.ObjCName
+import kotlin.run
+
+@ObjCName("J2ktSimplelongsSimpleLongs", exact = true)
+open class SimpleLongs {
+ @JvmField
+ @ObjCName("foo_")
+ var foo: Long = 0L
+
+ @ObjCName("getBar")
+ open fun getBar(): Long {
+  return 0L
+ }
+
+ @JvmField
+ @HiddenFromObjC
+ var sideEffect_private_2: Int = 0
+
+ @ObjCName("getWithSideEffect")
+ open fun getWithSideEffect(): SimpleLongs? {
+  this.sideEffect_private_2 = this.sideEffect_private_2 + 1
+  return this
+ }
+
+ @ObjCName("main")
+ open fun main() {
+  var a: Long = 0L
+  a = - 100000L
+  a = 100000L
+  var b: Long = - 2147483648L
+  b = 2147483648L
+  b = (9223372036854775807L + 1L)
+  b = 9223372036854775807L
+  var c: Long = a + b
+  c = a / b
+  var e: Long = run {
+   a = a + 1L
+   a
+  }
+  e = run {
+   val ___qualifier: SimpleLongs = this
+   val ___value: Long = this.foo + 1L
+   ___qualifier!!.foo = ___value
+   ___value
+  }
+  e = run {
+   val ___qualifier_1: SimpleLongs? = this.getWithSideEffect()
+   val ___qualifier_2: SimpleLongs? = ___qualifier_1
+   val ___value_1: Long = ___qualifier_1!!.foo + 1L
+   ___qualifier_2!!.foo = ___value_1
+   ___value_1
+  }
+  var f: Long = run {
+   val ___value_2: Long = a
+   a = a + 1L
+   ___value_2
+  }
+  f = run {
+   val ___value_3: Long = this.foo
+   this.foo = this.foo + 1L
+   ___value_3
+  }
+  f = run {
+   val ___qualifier_3: SimpleLongs? = this.getWithSideEffect()
+   val ___value_4: Long = ___qualifier_3!!.foo
+   ___qualifier_3!!.foo = ___qualifier_3!!.foo + 1L
+   ___value_4
+  }
+  var g: Long = this.foo
+  g = this.getBar()
+ }
+}

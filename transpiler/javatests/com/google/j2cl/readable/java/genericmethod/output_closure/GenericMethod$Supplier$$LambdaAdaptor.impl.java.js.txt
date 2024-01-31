@@ -1,0 +1,49 @@
+goog.module('genericmethod.GenericMethod.Supplier.$LambdaAdaptor$impl');
+
+const Supplier = goog.require('genericmethod.GenericMethod.Supplier$impl');
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+/**
+ * @template V
+ * @implements {Supplier<V>}
+ */
+class $LambdaAdaptor extends j_l_Object {
+ /** @nodts */
+ constructor(/** ?function():V */ fn) {
+  $LambdaAdaptor.$clinit();
+  super();
+  /**@type {?function():V} @nodts*/
+  this.f_fn__genericmethod_GenericMethod_Supplier_$LambdaAdaptor;
+  this.$ctor__genericmethod_GenericMethod_Supplier_$LambdaAdaptor__genericmethod_GenericMethod_Supplier_$JsFunction__void(fn);
+ }
+ /** @nodts */
+ $ctor__genericmethod_GenericMethod_Supplier_$LambdaAdaptor__genericmethod_GenericMethod_Supplier_$JsFunction__void(/** ?function():V */ fn) {
+  this.$ctor__java_lang_Object__void();
+  this.f_fn__genericmethod_GenericMethod_Supplier_$LambdaAdaptor = fn;
+ }
+ /** @override @nodts @return {V} */
+ m_get__java_lang_Object() {
+  let /** ?function():V */ $function;
+  return ($function = this.f_fn__genericmethod_GenericMethod_Supplier_$LambdaAdaptor, $function());
+ }
+ /** @nodts */
+ static $clinit() {
+  $LambdaAdaptor.$clinit = () =>{};
+  $LambdaAdaptor.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof $LambdaAdaptor;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+Supplier.$markImplementor($LambdaAdaptor);
+$Util.$setClassMetadata($LambdaAdaptor, 'genericmethod.GenericMethod$Supplier$$LambdaAdaptor');
+
+exports = $LambdaAdaptor;
+
+//# sourceMappingURL=GenericMethod$Supplier$$LambdaAdaptor.js.map

@@ -1,0 +1,42 @@
+goog.module('libraryinfo.Main.JsAccessibleFunctionnalInterface$impl');
+
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let $LambdaAdaptor = goog.forwardDeclare('libraryinfo.Main.JsAccessibleFunctionnalInterface.$LambdaAdaptor$impl');
+
+/**
+ * @interface
+ */
+class JsAccessibleFunctionnalInterface {
+ /** @abstract */
+ accessibleFunctionalInterfaceMethod() {}
+ /** @nodts @return {JsAccessibleFunctionnalInterface} */
+ static $adapt(/** ?function():void */ fn) {
+  JsAccessibleFunctionnalInterface.$clinit();
+  return new $LambdaAdaptor(fn);
+ }
+ /** @nodts */
+ static $clinit() {
+  JsAccessibleFunctionnalInterface.$clinit = () =>{};
+  JsAccessibleFunctionnalInterface.$loadModules();
+ }
+ 
+ static $markImplementor(/** Function */ ctor) {
+  ctor.prototype.$implements__libraryinfo_Main_JsAccessibleFunctionnalInterface = true;
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance != null && !!instance.$implements__libraryinfo_Main_JsAccessibleFunctionnalInterface;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {
+  $LambdaAdaptor = goog.module.get('libraryinfo.Main.JsAccessibleFunctionnalInterface.$LambdaAdaptor$impl');
+ }
+}
+JsAccessibleFunctionnalInterface.$markImplementor(/**@type {Function}*/ (JsAccessibleFunctionnalInterface));
+$Util.$setClassMetadataForInterface(JsAccessibleFunctionnalInterface, 'libraryinfo.Main$JsAccessibleFunctionnalInterface');
+
+exports = JsAccessibleFunctionnalInterface;
+
+//# sourceMappingURL=Main$JsAccessibleFunctionnalInterface.js.map

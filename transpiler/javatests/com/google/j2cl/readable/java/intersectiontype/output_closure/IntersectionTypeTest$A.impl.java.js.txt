@@ -1,0 +1,39 @@
+goog.module('intersectiontype.IntersectionTypeTest.A$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+class A extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!A} */
+ static $create__() {
+  let $instance = new A();
+  $instance.$ctor__intersectiontype_IntersectionTypeTest_A__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__intersectiontype_IntersectionTypeTest_A__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @nodts */
+ static $clinit() {
+  A.$clinit = () =>{};
+  A.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof A;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+$Util.$setClassMetadata(A, 'intersectiontype.IntersectionTypeTest$A');
+
+exports = A;
+
+//# sourceMappingURL=IntersectionTypeTest$A.js.map

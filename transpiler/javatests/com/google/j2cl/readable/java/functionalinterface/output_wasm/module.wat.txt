@@ -1,0 +1,519 @@
+ ;;; Code for functionalinterface.FunctionalInterfaces.NonParametrized [type definition]
+ (type $functionalinterface.FunctionalInterfaces.NonParametrized.vtable (struct_subtype
+  (field $m_apply__java_lang_String__java_lang_String (ref $function.m_apply__java_lang_String__java_lang_String))
+  data)
+ )
+
+ ;;; Code for functionalinterface.FunctionalInterfaces.Parametrized [type definition]
+ (type $functionalinterface.FunctionalInterfaces.Parametrized.vtable (struct_subtype
+  (field $m_apply__java_lang_Object__java_lang_Object (ref $function.m_apply__java_lang_Object__java_lang_Object))
+  data)
+ )
+
+ ;;; Code for functionalinterface.FunctionalInterfaces.Specialized [type definition]
+ (type $functionalinterface.FunctionalInterfaces.Specialized.vtable (struct_subtype
+  (field $m_apply__java_lang_String__java_lang_String (ref $function.m_apply__java_lang_String__java_lang_String))
+  data)
+ )
+
+ ;;; Code for functionalinterface.FunctionalInterfaces.WithDefaultMethod [type definition]
+ (type $functionalinterface.FunctionalInterfaces.WithDefaultMethod.vtable (struct_subtype
+  (field $m_apply__java_lang_String__java_lang_String (ref $function.m_apply__java_lang_String__java_lang_String))
+  (field $m_defaultApply__java_lang_String__java_lang_String (ref $function.m_defaultApply__java_lang_String__java_lang_String))
+  data)
+ )
+
+ ;;; Code for functionalinterface.FunctionalInterfaces.WithObjectMethods [type definition]
+ (type $functionalinterface.FunctionalInterfaces.WithObjectMethods.vtable (struct_subtype
+  (field $m_apply__java_lang_String__java_lang_String (ref $function.m_apply__java_lang_String__java_lang_String))
+  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+  (field $m_hashCode__int (ref $function.m_hashCode__int))
+  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+  data)
+ )
+
+ ;;; Code for functionalinterface.FunctionalInterfaces.WithParametrizedMethod [type definition]
+ (type $functionalinterface.FunctionalInterfaces.WithParametrizedMethod.vtable (struct_subtype
+  (field $m_apply__java_lang_Object__java_lang_Object (ref $function.m_apply__java_lang_Object__java_lang_Object))
+  data)
+ )
+
+ ;;; Code for functionalinterface.FunctionalInterfaces.WithKtProperty [type definition]
+ (type $functionalinterface.FunctionalInterfaces.WithKtProperty.vtable (struct_subtype
+  (field $m_size__int (ref $function.m_size__int))
+  data)
+ )
+
+ ;;; Code for functionalinterface.FunctionalInterfaces [type definition]
+ (type $functionalinterface.FunctionalInterfaces (struct_subtype
+  (field $vtable (ref $functionalinterface.FunctionalInterfaces.vtable))
+  (field $itable (ref $itable))
+  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
+  $java.lang.Object)
+ )
+ (type $functionalinterface.FunctionalInterfaces.vtable (struct_subtype
+  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+  (field $m_hashCode__int (ref $function.m_hashCode__int))
+  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
+  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+  $java.lang.Object.vtable)
+ )
+
+;;; Code for functionalinterface.FunctionalInterfaces [vtable.init]
+(global $functionalinterface.FunctionalInterfaces.vtable (ref $functionalinterface.FunctionalInterfaces.vtable)
+ (struct.new $functionalinterface.FunctionalInterfaces.vtable
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
+  (ref.func $$getClassImpl__java_lang_Class@functionalinterface.FunctionalInterfaces)
+ )
+)
+
+;;; Code for functionalinterface.FunctionalInterfaces [static fields]
+(global $f_$initialized__functionalinterface_FunctionalInterfaces (mut i32) (i32.const 0))
+(global $f_$class__functionalinterface_FunctionalInterfaces (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for functionalinterface.FunctionalInterfaces.NonParametrized [static fields]
+(global $f_$initialized__functionalinterface_FunctionalInterfaces_NonParametrized (mut i32) (i32.const 0))
+(global $f_$class__functionalinterface_FunctionalInterfaces_NonParametrized (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_NonParametrized (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for functionalinterface.FunctionalInterfaces.Parametrized [static fields]
+(global $f_$initialized__functionalinterface_FunctionalInterfaces_Parametrized (mut i32) (i32.const 0))
+(global $f_$class__functionalinterface_FunctionalInterfaces_Parametrized (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_Parametrized (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for functionalinterface.FunctionalInterfaces.Specialized [static fields]
+(global $f_$initialized__functionalinterface_FunctionalInterfaces_Specialized (mut i32) (i32.const 0))
+(global $f_$class__functionalinterface_FunctionalInterfaces_Specialized (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_Specialized (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for functionalinterface.FunctionalInterfaces.WithDefaultMethod [static fields]
+(global $f_$initialized__functionalinterface_FunctionalInterfaces_WithDefaultMethod (mut i32) (i32.const 0))
+(global $f_$class__functionalinterface_FunctionalInterfaces_WithDefaultMethod (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithDefaultMethod (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for functionalinterface.FunctionalInterfaces.WithObjectMethods [static fields]
+(global $f_$initialized__functionalinterface_FunctionalInterfaces_WithObjectMethods (mut i32) (i32.const 0))
+(global $f_$class__functionalinterface_FunctionalInterfaces_WithObjectMethods (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithObjectMethods (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for functionalinterface.FunctionalInterfaces.WithParametrizedMethod [static fields]
+(global $f_$initialized__functionalinterface_FunctionalInterfaces_WithParametrizedMethod (mut i32) (i32.const 0))
+(global $f_$class__functionalinterface_FunctionalInterfaces_WithParametrizedMethod (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithParametrizedMethod (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for functionalinterface.FunctionalInterfaces.WithKtProperty [static fields]
+(global $f_$initialized__functionalinterface_FunctionalInterfaces_WithKtProperty (mut i32) (i32.const 0))
+(global $f_$class__functionalinterface_FunctionalInterfaces_WithKtProperty (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithKtProperty (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for functionalinterface.FunctionalInterfaces.NonParametrized [methods]
+
+;;; void NonParametrized.$clinit()
+(func $$clinit__void@functionalinterface.FunctionalInterfaces.NonParametrized
+ ;;@ functionalinterface/FunctionalInterfaces.java:21:19
+ (block
+  ;;@ functionalinterface/FunctionalInterfaces.java:21:19
+  (if (global.get $f_$initialized__functionalinterface_FunctionalInterfaces_NonParametrized)
+   (then
+    ;;@ functionalinterface/FunctionalInterfaces.java:21:19
+    (return )
+   )
+  )
+  ;;@ functionalinterface/FunctionalInterfaces.java:21:19
+  (global.set $f_$initialized__functionalinterface_FunctionalInterfaces_NonParametrized (i32.const 1))
+ )
+)
+
+;;; Class<T> NonParametrized.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@functionalinterface.FunctionalInterfaces.NonParametrized
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__functionalinterface_FunctionalInterfaces_NonParametrized) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__functionalinterface_FunctionalInterfaces_NonParametrized (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|functionalin...|__java_lang_String (ref.func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces.NonParametrized) )))
+   )
+  )
+  (return (global.get $f_$class__functionalinterface_FunctionalInterfaces_NonParametrized))
+ )
+)
+
+;;; String NonParametrized.$getString_|functionalin...|()
+(func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces.NonParametrized
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_NonParametrized) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_NonParametrized (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "functionalinterface.FunctionalInterfaces$NonParametrized")))
+   )
+  )
+  (return (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_NonParametrized))
+ )
+)
+
+;;; Code for functionalinterface.FunctionalInterfaces.Parametrized [methods]
+
+;;; void Parametrized.$clinit()
+(func $$clinit__void@functionalinterface.FunctionalInterfaces.Parametrized
+ ;;@ functionalinterface/FunctionalInterfaces.java:25:19
+ (block
+  ;;@ functionalinterface/FunctionalInterfaces.java:25:19
+  (if (global.get $f_$initialized__functionalinterface_FunctionalInterfaces_Parametrized)
+   (then
+    ;;@ functionalinterface/FunctionalInterfaces.java:25:19
+    (return )
+   )
+  )
+  ;;@ functionalinterface/FunctionalInterfaces.java:25:19
+  (global.set $f_$initialized__functionalinterface_FunctionalInterfaces_Parametrized (i32.const 1))
+ )
+)
+
+;;; Class<T> Parametrized.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@functionalinterface.FunctionalInterfaces.Parametrized
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__functionalinterface_FunctionalInterfaces_Parametrized) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__functionalinterface_FunctionalInterfaces_Parametrized (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|functionalin...|__java_lang_String (ref.func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces.Parametrized) )))
+   )
+  )
+  (return (global.get $f_$class__functionalinterface_FunctionalInterfaces_Parametrized))
+ )
+)
+
+;;; String Parametrized.$getString_|functionalin...|()
+(func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces.Parametrized
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_Parametrized) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_Parametrized (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "functionalinterface.FunctionalInterfaces$Parametrized")))
+   )
+  )
+  (return (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_Parametrized))
+ )
+)
+
+;;; Code for functionalinterface.FunctionalInterfaces.Specialized [methods]
+
+;;; void Specialized.$clinit()
+(func $$clinit__void@functionalinterface.FunctionalInterfaces.Specialized
+ ;;@ functionalinterface/FunctionalInterfaces.java:29:19
+ (block
+  ;;@ functionalinterface/FunctionalInterfaces.java:29:19
+  (if (global.get $f_$initialized__functionalinterface_FunctionalInterfaces_Specialized)
+   (then
+    ;;@ functionalinterface/FunctionalInterfaces.java:29:19
+    (return )
+   )
+  )
+  ;;@ functionalinterface/FunctionalInterfaces.java:29:19
+  (global.set $f_$initialized__functionalinterface_FunctionalInterfaces_Specialized (i32.const 1))
+ )
+)
+
+;;; Class<T> Specialized.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@functionalinterface.FunctionalInterfaces.Specialized
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__functionalinterface_FunctionalInterfaces_Specialized) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__functionalinterface_FunctionalInterfaces_Specialized (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|functionalin...|__java_lang_String (ref.func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces.Specialized) )))
+   )
+  )
+  (return (global.get $f_$class__functionalinterface_FunctionalInterfaces_Specialized))
+ )
+)
+
+;;; String Specialized.$getString_|functionalin...|()
+(func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces.Specialized
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_Specialized) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_Specialized (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "functionalinterface.FunctionalInterfaces$Specialized")))
+   )
+  )
+  (return (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_Specialized))
+ )
+)
+
+;;; Code for functionalinterface.FunctionalInterfaces.WithDefaultMethod [methods]
+
+;;; String WithDefaultMethod.defaultApply(String string)
+(func $m_defaultApply__java_lang_String__java_lang_String@functionalinterface.FunctionalInterfaces.WithDefaultMethod
+ (param $this (ref null $java.lang.Object))
+ (param $string (ref null $java.lang.String))
+ (result (ref null $java.lang.String))
+ ;;@ functionalinterface/FunctionalInterfaces.java:37:19
+ (block
+  ;;@ functionalinterface/FunctionalInterfaces.java:38:6
+  (return (call_ref $function.m_apply__java_lang_String__java_lang_String (ref.as_non_null (local.get $this))(local.get $string)(struct.get $functionalinterface.FunctionalInterfaces.WithDefaultMethod.vtable $m_apply__java_lang_String__java_lang_String (ref.null $functionalinterface.FunctionalInterfaces.WithDefaultMethod.vtable))))
+ )
+)
+(elem declare func $m_defaultApply__java_lang_String__java_lang_String@functionalinterface.FunctionalInterfaces.WithDefaultMethod)
+
+;;; void WithDefaultMethod.$clinit()
+(func $$clinit__void@functionalinterface.FunctionalInterfaces.WithDefaultMethod
+ ;;@ functionalinterface/FunctionalInterfaces.java:34:19
+ (block
+  ;;@ functionalinterface/FunctionalInterfaces.java:34:19
+  (if (global.get $f_$initialized__functionalinterface_FunctionalInterfaces_WithDefaultMethod)
+   (then
+    ;;@ functionalinterface/FunctionalInterfaces.java:34:19
+    (return )
+   )
+  )
+  ;;@ functionalinterface/FunctionalInterfaces.java:34:19
+  (global.set $f_$initialized__functionalinterface_FunctionalInterfaces_WithDefaultMethod (i32.const 1))
+ )
+)
+
+;;; Class<T> WithDefaultMethod.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@functionalinterface.FunctionalInterfaces.WithDefaultMethod
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__functionalinterface_FunctionalInterfaces_WithDefaultMethod) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__functionalinterface_FunctionalInterfaces_WithDefaultMethod (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|functionalin...|__java_lang_String (ref.func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces.WithDefaultMethod) )))
+   )
+  )
+  (return (global.get $f_$class__functionalinterface_FunctionalInterfaces_WithDefaultMethod))
+ )
+)
+
+;;; String WithDefaultMethod.$getString_|functionalin...|()
+(func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces.WithDefaultMethod
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithDefaultMethod) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithDefaultMethod (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "functionalinterface.FunctionalInterfaces$WithDefaultMethod")))
+   )
+  )
+  (return (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithDefaultMethod))
+ )
+)
+
+;;; Code for functionalinterface.FunctionalInterfaces.WithObjectMethods [methods]
+
+;;; void WithObjectMethods.$clinit()
+(func $$clinit__void@functionalinterface.FunctionalInterfaces.WithObjectMethods
+ ;;@ functionalinterface/FunctionalInterfaces.java:42:19
+ (block
+  ;;@ functionalinterface/FunctionalInterfaces.java:42:19
+  (if (global.get $f_$initialized__functionalinterface_FunctionalInterfaces_WithObjectMethods)
+   (then
+    ;;@ functionalinterface/FunctionalInterfaces.java:42:19
+    (return )
+   )
+  )
+  ;;@ functionalinterface/FunctionalInterfaces.java:42:19
+  (global.set $f_$initialized__functionalinterface_FunctionalInterfaces_WithObjectMethods (i32.const 1))
+ )
+)
+
+;;; Class<T> WithObjectMethods.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@functionalinterface.FunctionalInterfaces.WithObjectMethods
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__functionalinterface_FunctionalInterfaces_WithObjectMethods) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__functionalinterface_FunctionalInterfaces_WithObjectMethods (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|functionalin...|__java_lang_String (ref.func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces.WithObjectMethods) )))
+   )
+  )
+  (return (global.get $f_$class__functionalinterface_FunctionalInterfaces_WithObjectMethods))
+ )
+)
+
+;;; String WithObjectMethods.$getString_|functionalin...|()
+(func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces.WithObjectMethods
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithObjectMethods) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithObjectMethods (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "functionalinterface.FunctionalInterfaces$WithObjectMethods")))
+   )
+  )
+  (return (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithObjectMethods))
+ )
+)
+
+;;; Code for functionalinterface.FunctionalInterfaces.WithParametrizedMethod [methods]
+
+;;; void WithParametrizedMethod.$clinit()
+(func $$clinit__void@functionalinterface.FunctionalInterfaces.WithParametrizedMethod
+ ;;@ functionalinterface/FunctionalInterfaces.java:55:19
+ (block
+  ;;@ functionalinterface/FunctionalInterfaces.java:55:19
+  (if (global.get $f_$initialized__functionalinterface_FunctionalInterfaces_WithParametrizedMethod)
+   (then
+    ;;@ functionalinterface/FunctionalInterfaces.java:55:19
+    (return )
+   )
+  )
+  ;;@ functionalinterface/FunctionalInterfaces.java:55:19
+  (global.set $f_$initialized__functionalinterface_FunctionalInterfaces_WithParametrizedMethod (i32.const 1))
+ )
+)
+
+;;; Class<T> WithParametrizedMethod.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@functionalinterface.FunctionalInterfaces.WithParametrizedMethod
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__functionalinterface_FunctionalInterfaces_WithParametrizedMethod) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__functionalinterface_FunctionalInterfaces_WithParametrizedMethod (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|functionalin...|__java_lang_String (ref.func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces.WithParametrizedMethod) )))
+   )
+  )
+  (return (global.get $f_$class__functionalinterface_FunctionalInterfaces_WithParametrizedMethod))
+ )
+)
+
+;;; String WithParametrizedMethod.$getString_|functionalin...|()
+(func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces.WithParametrizedMethod
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithParametrizedMethod) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithParametrizedMethod (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "functionalinterface.FunctionalInterfaces$WithParametrizedMethod")))
+   )
+  )
+  (return (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithParametrizedMethod))
+ )
+)
+
+;;; Code for functionalinterface.FunctionalInterfaces.WithKtProperty [methods]
+
+;;; void WithKtProperty.$clinit()
+(func $$clinit__void@functionalinterface.FunctionalInterfaces.WithKtProperty
+ ;;@ functionalinterface/FunctionalInterfaces.java:59:19
+ (block
+  ;;@ functionalinterface/FunctionalInterfaces.java:59:19
+  (if (global.get $f_$initialized__functionalinterface_FunctionalInterfaces_WithKtProperty)
+   (then
+    ;;@ functionalinterface/FunctionalInterfaces.java:59:19
+    (return )
+   )
+  )
+  ;;@ functionalinterface/FunctionalInterfaces.java:59:19
+  (global.set $f_$initialized__functionalinterface_FunctionalInterfaces_WithKtProperty (i32.const 1))
+ )
+)
+
+;;; Class<T> WithKtProperty.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@functionalinterface.FunctionalInterfaces.WithKtProperty
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__functionalinterface_FunctionalInterfaces_WithKtProperty) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__functionalinterface_FunctionalInterfaces_WithKtProperty (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|functionalin...|__java_lang_String (ref.func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces.WithKtProperty) )))
+   )
+  )
+  (return (global.get $f_$class__functionalinterface_FunctionalInterfaces_WithKtProperty))
+ )
+)
+
+;;; String WithKtProperty.$getString_|functionalin...|()
+(func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces.WithKtProperty
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithKtProperty) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithKtProperty (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "functionalinterface.FunctionalInterfaces$WithKtProperty")))
+   )
+  )
+  (return (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces_WithKtProperty))
+ )
+)
+
+;;; Code for functionalinterface.FunctionalInterfaces [methods]
+
+;;; FunctionalInterfaces FunctionalInterfaces.$create()
+(func $$create__@functionalinterface.FunctionalInterfaces
+ (result (ref null $functionalinterface.FunctionalInterfaces))
+ ;;@ functionalinterface/FunctionalInterfaces.java:20:13
+ (local $$instance (ref null $functionalinterface.FunctionalInterfaces))
+ (block
+  ;;@ functionalinterface/FunctionalInterfaces.java:20:13
+  (local.set $$instance (struct.new $functionalinterface.FunctionalInterfaces (ref.as_non_null (global.get $functionalinterface.FunctionalInterfaces.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  ;;@ functionalinterface/FunctionalInterfaces.java:20:13
+  (call $$ctor__void_$p_functionalinterface_FunctionalInterfaces@functionalinterface.FunctionalInterfaces (ref.as_non_null (local.get $$instance)))
+  ;;@ functionalinterface/FunctionalInterfaces.java:20:13
+  (return (local.get $$instance))
+ )
+)
+
+;;; void FunctionalInterfaces.$ctor()
+(func $$ctor__void_$p_functionalinterface_FunctionalInterfaces@functionalinterface.FunctionalInterfaces
+ (param $this (ref null $functionalinterface.FunctionalInterfaces))
+ ;;@ functionalinterface/FunctionalInterfaces.java:20:13
+ (block
+  ;;@ functionalinterface/FunctionalInterfaces.java:20:13
+  (call $$clinit__void@functionalinterface.FunctionalInterfaces )
+  ;;@ functionalinterface/FunctionalInterfaces.java:20:13
+  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; void FunctionalInterfaces.$clinit()
+(func $$clinit__void@functionalinterface.FunctionalInterfaces
+ ;;@ functionalinterface/FunctionalInterfaces.java:20:13
+ (block
+  ;;@ functionalinterface/FunctionalInterfaces.java:20:13
+  (if (global.get $f_$initialized__functionalinterface_FunctionalInterfaces)
+   (then
+    ;;@ functionalinterface/FunctionalInterfaces.java:20:13
+    (return )
+   )
+  )
+  ;;@ functionalinterface/FunctionalInterfaces.java:20:13
+  (global.set $f_$initialized__functionalinterface_FunctionalInterfaces (i32.const 1))
+  ;;@ functionalinterface/FunctionalInterfaces.java:20:13
+  (call $$clinit__void@java.lang.Object )
+ )
+)
+
+;;; Class<T> FunctionalInterfaces.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@functionalinterface.FunctionalInterfaces
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__functionalinterface_FunctionalInterfaces) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__functionalinterface_FunctionalInterfaces (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|functionalin...|__java_lang_String (ref.func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+   )
+  )
+  (return (global.get $f_$class__functionalinterface_FunctionalInterfaces))
+ )
+)
+
+;;; Class<?> FunctionalInterfaces.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@functionalinterface.FunctionalInterfaces
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $functionalinterface.FunctionalInterfaces))
+ (local.set $this (ref.cast_static $functionalinterface.FunctionalInterfaces (local.get $this.untyped)))
+ (block
+  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@functionalinterface.FunctionalInterfaces) ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@functionalinterface.FunctionalInterfaces)
+
+;;; String FunctionalInterfaces.$getString_|functionalin...|()
+(func $$getString_|functionalin...|__java_lang_String@functionalinterface.FunctionalInterfaces
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "functionalinterface.FunctionalInterfaces")))
+   )
+  )
+  (return (global.get $f_$string_|functionalin...|__functionalinterface_FunctionalInterfaces))
+ )
+)

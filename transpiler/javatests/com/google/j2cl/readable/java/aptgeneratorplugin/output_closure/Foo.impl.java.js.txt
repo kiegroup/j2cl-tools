@@ -1,0 +1,52 @@
+goog.module('aptgeneratorplugin.Foo$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let Dummy = goog.forwardDeclare('aptgeneratorplugin.Dummy$impl');
+let Class = goog.forwardDeclare('java.lang.Class$impl');
+let $Objects = goog.forwardDeclare('vmbootstrap.Objects$impl');
+
+class Foo extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!Foo} */
+ static $create__() {
+  Foo.$clinit();
+  let $instance = new Foo();
+  $instance.$ctor__aptgeneratorplugin_Foo__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__aptgeneratorplugin_Foo__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @override @return {number} */
+ hashCode() {
+  return $Objects.m_hashCode__java_lang_Object__int(Class.$get(Dummy));
+ }
+ /** @nodts */
+ static $clinit() {
+  Foo.$clinit = () =>{};
+  Foo.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof Foo;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {
+  Dummy = goog.module.get('aptgeneratorplugin.Dummy$impl');
+  Class = goog.module.get('java.lang.Class$impl');
+  $Objects = goog.module.get('vmbootstrap.Objects$impl');
+ }
+}
+$Util.$setClassMetadata(Foo, 'aptgeneratorplugin.Foo');
+
+exports = Foo;
+
+//# sourceMappingURL=Foo.js.map

@@ -1,0 +1,138 @@
+ ;;; Code for staticfieldaccesslevels.StaticFieldAccessLevels [type definition]
+ (type $staticfieldaccesslevels.StaticFieldAccessLevels (struct_subtype
+  (field $vtable (ref $staticfieldaccesslevels.StaticFieldAccessLevels.vtable))
+  (field $itable (ref $itable))
+  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
+  $java.lang.Object)
+ )
+ (type $staticfieldaccesslevels.StaticFieldAccessLevels.vtable (struct_subtype
+  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+  (field $m_hashCode__int (ref $function.m_hashCode__int))
+  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
+  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+  (field $m_test__int (ref $function.m_test__int))
+  $java.lang.Object.vtable)
+ )
+
+;;; Code for staticfieldaccesslevels.StaticFieldAccessLevels [vtable.init]
+(global $staticfieldaccesslevels.StaticFieldAccessLevels.vtable (ref $staticfieldaccesslevels.StaticFieldAccessLevels.vtable)
+ (struct.new $staticfieldaccesslevels.StaticFieldAccessLevels.vtable
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
+  (ref.func $$getClassImpl__java_lang_Class@staticfieldaccesslevels.StaticFieldAccessLevels)
+  (ref.func $m_test__int@staticfieldaccesslevels.StaticFieldAccessLevels)
+ )
+)
+
+;;; Code for staticfieldaccesslevels.StaticFieldAccessLevels [static fields]
+(global $f_a__staticfieldaccesslevels_StaticFieldAccessLevels (mut i32) (i32.const 0))
+(global $f_b__staticfieldaccesslevels_StaticFieldAccessLevels_ (mut i32) (i32.const 0))
+(global $f_c__staticfieldaccesslevels_StaticFieldAccessLevels (mut (ref null $java.lang.Object)) (ref.null $java.lang.Object))
+(global $f_d__staticfieldaccesslevels_StaticFieldAccessLevels (mut i32) (i32.const 0))
+(global $f_$initialized__staticfieldaccesslevels_StaticFieldAccessLevels (mut i32) (i32.const 0))
+(global $f_$class__staticfieldaccesslevels_StaticFieldAccessLevels (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|staticfielda...|__staticfieldaccesslevels_StaticFieldAccessLevels (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for staticfieldaccesslevels.StaticFieldAccessLevels [methods]
+
+;;; StaticFieldAccessLevels StaticFieldAccessLevels.$create()
+(func $$create__@staticfieldaccesslevels.StaticFieldAccessLevels
+ (result (ref null $staticfieldaccesslevels.StaticFieldAccessLevels))
+ ;;@ staticfieldaccesslevels/StaticFieldAccessLevels.java:18:13
+ (local $$instance (ref null $staticfieldaccesslevels.StaticFieldAccessLevels))
+ (block
+  ;;@ staticfieldaccesslevels/StaticFieldAccessLevels.java:18:13
+  (local.set $$instance (struct.new $staticfieldaccesslevels.StaticFieldAccessLevels (ref.as_non_null (global.get $staticfieldaccesslevels.StaticFieldAccessLevels.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  ;;@ staticfieldaccesslevels/StaticFieldAccessLevels.java:18:13
+  (call $$ctor__void_$p_staticfieldaccesslevels_StaticFieldAccessLevels@staticfieldaccesslevels.StaticFieldAccessLevels (ref.as_non_null (local.get $$instance)))
+  ;;@ staticfieldaccesslevels/StaticFieldAccessLevels.java:18:13
+  (return (local.get $$instance))
+ )
+)
+
+;;; void StaticFieldAccessLevels.$ctor()
+(func $$ctor__void_$p_staticfieldaccesslevels_StaticFieldAccessLevels@staticfieldaccesslevels.StaticFieldAccessLevels
+ (param $this (ref null $staticfieldaccesslevels.StaticFieldAccessLevels))
+ ;;@ staticfieldaccesslevels/StaticFieldAccessLevels.java:18:13
+ (block
+  ;;@ staticfieldaccesslevels/StaticFieldAccessLevels.java:18:13
+  (call $$clinit__void@staticfieldaccesslevels.StaticFieldAccessLevels )
+  ;;@ staticfieldaccesslevels/StaticFieldAccessLevels.java:18:13
+  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; int StaticFieldAccessLevels.test()
+(func $m_test__int@staticfieldaccesslevels.StaticFieldAccessLevels
+ (type $function.m_test__int)
+ (param $this.untyped (ref $java.lang.Object))
+ (result i32)
+ ;;@ staticfieldaccesslevels/StaticFieldAccessLevels.java:24:13
+ (local $this (ref null $staticfieldaccesslevels.StaticFieldAccessLevels))
+ (local.set $this (ref.cast_static $staticfieldaccesslevels.StaticFieldAccessLevels (local.get $this.untyped)))
+ (block
+  ;;@ staticfieldaccesslevels/StaticFieldAccessLevels.java:25:4
+  (return (if (result i32) (global.get $f_b__staticfieldaccesslevels_StaticFieldAccessLevels_) (then (global.get $f_a__staticfieldaccesslevels_StaticFieldAccessLevels)) (else (global.get $f_d__staticfieldaccesslevels_StaticFieldAccessLevels))))
+ )
+)
+(elem declare func $m_test__int@staticfieldaccesslevels.StaticFieldAccessLevels)
+
+;;; void StaticFieldAccessLevels.$clinit()
+(func $$clinit__void@staticfieldaccesslevels.StaticFieldAccessLevels
+ ;;@ staticfieldaccesslevels/StaticFieldAccessLevels.java:18:13
+ (block
+  ;;@ staticfieldaccesslevels/StaticFieldAccessLevels.java:18:13
+  (if (global.get $f_$initialized__staticfieldaccesslevels_StaticFieldAccessLevels)
+   (then
+    ;;@ staticfieldaccesslevels/StaticFieldAccessLevels.java:18:13
+    (return )
+   )
+  )
+  ;;@ staticfieldaccesslevels/StaticFieldAccessLevels.java:18:13
+  (global.set $f_$initialized__staticfieldaccesslevels_StaticFieldAccessLevels (i32.const 1))
+  ;;@ staticfieldaccesslevels/StaticFieldAccessLevels.java:18:13
+  (call $$clinit__void@java.lang.Object )
+ )
+)
+
+;;; Class<T> StaticFieldAccessLevels.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@staticfieldaccesslevels.StaticFieldAccessLevels
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__staticfieldaccesslevels_StaticFieldAccessLevels) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__staticfieldaccesslevels_StaticFieldAccessLevels (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|staticfielda...|__java_lang_String (ref.func $$getString_|staticfielda...|__java_lang_String@staticfieldaccesslevels.StaticFieldAccessLevels) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+   )
+  )
+  (return (global.get $f_$class__staticfieldaccesslevels_StaticFieldAccessLevels))
+ )
+)
+
+;;; Class<?> StaticFieldAccessLevels.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@staticfieldaccesslevels.StaticFieldAccessLevels
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $staticfieldaccesslevels.StaticFieldAccessLevels))
+ (local.set $this (ref.cast_static $staticfieldaccesslevels.StaticFieldAccessLevels (local.get $this.untyped)))
+ (block
+  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@staticfieldaccesslevels.StaticFieldAccessLevels) ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@staticfieldaccesslevels.StaticFieldAccessLevels)
+
+;;; String StaticFieldAccessLevels.$getString_|staticfielda...|()
+(func $$getString_|staticfielda...|__java_lang_String@staticfieldaccesslevels.StaticFieldAccessLevels
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|staticfielda...|__staticfieldaccesslevels_StaticFieldAccessLevels) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|staticfielda...|__staticfieldaccesslevels_StaticFieldAccessLevels (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "staticfieldaccesslevels.StaticFieldAccessLevels")))
+   )
+  )
+  (return (global.get $f_$string_|staticfielda...|__staticfieldaccesslevels_StaticFieldAccessLevels))
+ )
+)

@@ -1,0 +1,50 @@
+goog.module('jsasync.Main.BaseInterface.$LambdaAdaptor$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const BaseInterface = goog.require('jsasync.Main.BaseInterface$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let Integer = goog.forwardDeclare('java.lang.Integer$impl');
+
+/**
+ * @implements {BaseInterface}
+ */
+class $LambdaAdaptor extends j_l_Object {
+ /** @nodts */
+ constructor(/** ?function():IThenable<Integer> */ fn) {
+  $LambdaAdaptor.$clinit();
+  super();
+  /**@type {?function():IThenable<Integer>} @nodts*/
+  this.f_fn__jsasync_Main_BaseInterface_$LambdaAdaptor;
+  this.$ctor__jsasync_Main_BaseInterface_$LambdaAdaptor__jsasync_Main_BaseInterface_$JsFunction__void(fn);
+ }
+ /** @nodts */
+ $ctor__jsasync_Main_BaseInterface_$LambdaAdaptor__jsasync_Main_BaseInterface_$JsFunction__void(/** ?function():IThenable<Integer> */ fn) {
+  this.$ctor__java_lang_Object__void();
+  this.f_fn__jsasync_Main_BaseInterface_$LambdaAdaptor = fn;
+ }
+ /** @override @nodts @return {IThenable<Integer>} */
+ m_asyncCall__jsasync_Main_IThenable() {
+  let /** ?function():IThenable<Integer> */ $function;
+  return ($function = this.f_fn__jsasync_Main_BaseInterface_$LambdaAdaptor, $function());
+ }
+ /** @nodts */
+ static $clinit() {
+  $LambdaAdaptor.$clinit = () =>{};
+  $LambdaAdaptor.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof $LambdaAdaptor;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+BaseInterface.$markImplementor($LambdaAdaptor);
+$Util.$setClassMetadata($LambdaAdaptor, 'jsasync.Main$BaseInterface$$LambdaAdaptor');
+
+exports = $LambdaAdaptor;
+
+//# sourceMappingURL=Main$BaseInterface$$LambdaAdaptor.js.map

@@ -1,0 +1,50 @@
+goog.module('typewildcards.TypeWildCards.IntegerSupplier.$LambdaAdaptor$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+const IntegerSupplier = goog.require('typewildcards.TypeWildCards.IntegerSupplier$impl');
+
+let Integer = goog.forwardDeclare('java.lang.Integer$impl');
+
+/**
+ * @implements {IntegerSupplier}
+ */
+class $LambdaAdaptor extends j_l_Object {
+ /** @nodts */
+ constructor(/** ?function():Integer */ fn) {
+  $LambdaAdaptor.$clinit();
+  super();
+  /**@type {?function():Integer} @nodts*/
+  this.f_fn__typewildcards_TypeWildCards_IntegerSupplier_$LambdaAdaptor;
+  this.$ctor__typewildcards_TypeWildCards_IntegerSupplier_$LambdaAdaptor__typewildcards_TypeWildCards_IntegerSupplier_$JsFunction__void(fn);
+ }
+ /** @nodts */
+ $ctor__typewildcards_TypeWildCards_IntegerSupplier_$LambdaAdaptor__typewildcards_TypeWildCards_IntegerSupplier_$JsFunction__void(/** ?function():Integer */ fn) {
+  this.$ctor__java_lang_Object__void();
+  this.f_fn__typewildcards_TypeWildCards_IntegerSupplier_$LambdaAdaptor = fn;
+ }
+ /** @override @nodts @return {Integer} */
+ m_get__java_lang_Integer() {
+  let /** ?function():Integer */ $function;
+  return ($function = this.f_fn__typewildcards_TypeWildCards_IntegerSupplier_$LambdaAdaptor, $function());
+ }
+ /** @nodts */
+ static $clinit() {
+  $LambdaAdaptor.$clinit = () =>{};
+  $LambdaAdaptor.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof $LambdaAdaptor;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+IntegerSupplier.$markImplementor($LambdaAdaptor);
+$Util.$setClassMetadata($LambdaAdaptor, 'typewildcards.TypeWildCards$IntegerSupplier$$LambdaAdaptor');
+
+exports = $LambdaAdaptor;
+
+//# sourceMappingURL=TypeWildCards$IntegerSupplier$$LambdaAdaptor.js.map
