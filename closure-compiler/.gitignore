@@ -1,0 +1,15 @@
+*~
+.checkstyle
+.classpath
+.project
+.settings
+/.metadata/
+/bin
+/node_modules
+/yarn.lock
+TESTS-TestSuites.xml
+bazel-*
+build/
+dependency-reduced-pom.xml
+junit*.properties
+target/
