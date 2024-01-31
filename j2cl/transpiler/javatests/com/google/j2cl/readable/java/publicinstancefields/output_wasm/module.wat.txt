@@ -1,0 +1,129 @@
+ ;;; Code for publicinstancefields.PublicInstanceFields [type definition]
+ (type $publicinstancefields.PublicInstanceFields (struct_subtype
+  (field $vtable (ref $publicinstancefields.PublicInstanceFields.vtable))
+  (field $itable (ref $itable))
+  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
+  (field $f_a__publicinstancefields_PublicInstanceFields i32)
+  (field $f_b__publicinstancefields_PublicInstanceFields (mut i32))
+  $java.lang.Object)
+ )
+ (type $publicinstancefields.PublicInstanceFields.vtable (struct_subtype
+  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+  (field $m_hashCode__int (ref $function.m_hashCode__int))
+  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
+  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+  $java.lang.Object.vtable)
+ )
+
+;;; Code for publicinstancefields.PublicInstanceFields [vtable.init]
+(global $publicinstancefields.PublicInstanceFields.vtable (ref $publicinstancefields.PublicInstanceFields.vtable)
+ (struct.new $publicinstancefields.PublicInstanceFields.vtable
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
+  (ref.func $$getClassImpl__java_lang_Class@publicinstancefields.PublicInstanceFields)
+ )
+)
+
+;;; Code for publicinstancefields.PublicInstanceFields [static fields]
+(global $f_$initialized__publicinstancefields_PublicInstanceFields (mut i32) (i32.const 0))
+(global $f_$class__publicinstancefields_PublicInstanceFields (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|publicinstan...|__publicinstancefields_PublicInstanceFields (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for publicinstancefields.PublicInstanceFields [methods]
+
+;;; PublicInstanceFields PublicInstanceFields.$create()
+(func $$create__@publicinstancefields.PublicInstanceFields
+ (result (ref null $publicinstancefields.PublicInstanceFields))
+ ;;@ publicinstancefields/PublicInstanceFields.java:18:13
+ (local $$instance (ref null $publicinstancefields.PublicInstanceFields))
+ (block
+  ;;@ publicinstancefields/PublicInstanceFields.java:18:13
+  (local.set $$instance (struct.new $publicinstancefields.PublicInstanceFields (ref.as_non_null (global.get $publicinstancefields.PublicInstanceFields.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (i32.const 1) (i32.const 0)))
+  ;;@ publicinstancefields/PublicInstanceFields.java:18:13
+  (call $$ctor__void_$p_publicinstancefields_PublicInstanceFields@publicinstancefields.PublicInstanceFields (ref.as_non_null (local.get $$instance)))
+  ;;@ publicinstancefields/PublicInstanceFields.java:18:13
+  (return (local.get $$instance))
+ )
+)
+
+;;; void PublicInstanceFields.$ctor()
+(func $$ctor__void_$p_publicinstancefields_PublicInstanceFields@publicinstancefields.PublicInstanceFields
+ (param $this (ref null $publicinstancefields.PublicInstanceFields))
+ ;;@ publicinstancefields/PublicInstanceFields.java:18:13
+ (block
+  ;;@ publicinstancefields/PublicInstanceFields.java:18:13
+  (call $$clinit__void@publicinstancefields.PublicInstanceFields )
+  ;;@ publicinstancefields/PublicInstanceFields.java:18:13
+  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
+  ;;@ publicinstancefields/PublicInstanceFields.java:18:13
+  (call $$init__void_$p_publicinstancefields_PublicInstanceFields@publicinstancefields.PublicInstanceFields (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; void PublicInstanceFields.$init()
+(func $$init__void_$p_publicinstancefields_PublicInstanceFields@publicinstancefields.PublicInstanceFields
+ (param $this (ref null $publicinstancefields.PublicInstanceFields))
+ ;;@ publicinstancefields/PublicInstanceFields.java:18:13
+ (block
+ )
+)
+
+;;; void PublicInstanceFields.$clinit()
+(func $$clinit__void@publicinstancefields.PublicInstanceFields
+ ;;@ publicinstancefields/PublicInstanceFields.java:18:13
+ (block
+  ;;@ publicinstancefields/PublicInstanceFields.java:18:13
+  (if (global.get $f_$initialized__publicinstancefields_PublicInstanceFields)
+   (then
+    ;;@ publicinstancefields/PublicInstanceFields.java:18:13
+    (return )
+   )
+  )
+  ;;@ publicinstancefields/PublicInstanceFields.java:18:13
+  (global.set $f_$initialized__publicinstancefields_PublicInstanceFields (i32.const 1))
+  ;;@ publicinstancefields/PublicInstanceFields.java:18:13
+  (call $$clinit__void@java.lang.Object )
+ )
+)
+
+;;; Class<T> PublicInstanceFields.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@publicinstancefields.PublicInstanceFields
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__publicinstancefields_PublicInstanceFields) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__publicinstancefields_PublicInstanceFields (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|publicinstan...|__java_lang_String (ref.func $$getString_|publicinstan...|__java_lang_String@publicinstancefields.PublicInstanceFields) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+   )
+  )
+  (return (global.get $f_$class__publicinstancefields_PublicInstanceFields))
+ )
+)
+
+;;; Class<?> PublicInstanceFields.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@publicinstancefields.PublicInstanceFields
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $publicinstancefields.PublicInstanceFields))
+ (local.set $this (ref.cast_static $publicinstancefields.PublicInstanceFields (local.get $this.untyped)))
+ (block
+  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@publicinstancefields.PublicInstanceFields) ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@publicinstancefields.PublicInstanceFields)
+
+;;; String PublicInstanceFields.$getString_|publicinstan...|()
+(func $$getString_|publicinstan...|__java_lang_String@publicinstancefields.PublicInstanceFields
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|publicinstan...|__publicinstancefields_PublicInstanceFields) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|publicinstan...|__publicinstancefields_PublicInstanceFields (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "publicinstancefields.PublicInstanceFields")))
+   )
+  )
+  (return (global.get $f_$string_|publicinstan...|__publicinstancefields_PublicInstanceFields))
+ )
+)

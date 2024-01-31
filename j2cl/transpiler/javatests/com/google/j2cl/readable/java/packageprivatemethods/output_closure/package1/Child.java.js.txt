@@ -1,0 +1,8 @@
+goog.module('packageprivatemethods.package1.Child');
+
+goog.require('nativebootstrap.Util');
+goog.require('packageprivatemethods.package1.Interface');
+goog.require('packageprivatemethods.package1.Parent');
+
+const Child = goog.require('packageprivatemethods.package1.Child$impl');
+exports = Child;

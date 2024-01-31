@@ -1,0 +1,50 @@
+goog.module('instancefieldinitializer.InstanceFieldInitializer$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+class InstanceFieldInitializer extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+  /**@type {number} @nodts*/
+  this.f_a__instancefieldinitializer_InstanceFieldInitializer = 0;
+  /**@type {number} @nodts*/
+  this.f_b__instancefieldinitializer_InstanceFieldInitializer = 0;
+ }
+ /** @nodts @return {!InstanceFieldInitializer} */
+ static $create__() {
+  InstanceFieldInitializer.$clinit();
+  let $instance = new InstanceFieldInitializer();
+  $instance.$ctor__instancefieldinitializer_InstanceFieldInitializer__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__instancefieldinitializer_InstanceFieldInitializer__void() {
+  this.$ctor__java_lang_Object__void();
+  this.$init__void_$p_instancefieldinitializer_InstanceFieldInitializer();
+ }
+ /** @private @nodts */
+ $init__void_$p_instancefieldinitializer_InstanceFieldInitializer() {
+  this.f_a__instancefieldinitializer_InstanceFieldInitializer = 1;
+  this.f_b__instancefieldinitializer_InstanceFieldInitializer = Math.imul(this.f_a__instancefieldinitializer_InstanceFieldInitializer, 2);
+ }
+ /** @nodts */
+ static $clinit() {
+  InstanceFieldInitializer.$clinit = () =>{};
+  InstanceFieldInitializer.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof InstanceFieldInitializer;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+$Util.$setClassMetadata(InstanceFieldInitializer, 'instancefieldinitializer.InstanceFieldInitializer');
+
+exports = InstanceFieldInitializer;
+
+//# sourceMappingURL=InstanceFieldInitializer.js.map

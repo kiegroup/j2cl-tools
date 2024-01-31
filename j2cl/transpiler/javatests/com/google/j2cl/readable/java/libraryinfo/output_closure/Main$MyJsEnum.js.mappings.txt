@@ -1,0 +1,4 @@
+[MyJsEnum] => [MyJsEnum]
+[A] => [A]
+[B] => [B]
+[C] => [C]

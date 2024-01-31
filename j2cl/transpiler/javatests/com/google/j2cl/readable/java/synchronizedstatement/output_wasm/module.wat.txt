@@ -1,0 +1,142 @@
+ ;;; Code for synchronizedstatement.SynchronizedStatement [type definition]
+ (type $synchronizedstatement.SynchronizedStatement (struct_subtype
+  (field $vtable (ref $synchronizedstatement.SynchronizedStatement.vtable))
+  (field $itable (ref $itable))
+  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
+  (field $f_a__synchronizedstatement_SynchronizedStatement_ (mut i32))
+  (field $f_b__synchronizedstatement_SynchronizedStatement_ (mut i32))
+  $java.lang.Object)
+ )
+ (type $synchronizedstatement.SynchronizedStatement.vtable (struct_subtype
+  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+  (field $m_hashCode__int (ref $function.m_hashCode__int))
+  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
+  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+  (field $m_main__void (ref $function.m_main__void))
+  $java.lang.Object.vtable)
+ )
+
+;;; Code for synchronizedstatement.SynchronizedStatement [vtable.init]
+(global $synchronizedstatement.SynchronizedStatement.vtable (ref $synchronizedstatement.SynchronizedStatement.vtable)
+ (struct.new $synchronizedstatement.SynchronizedStatement.vtable
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
+  (ref.func $$getClassImpl__java_lang_Class@synchronizedstatement.SynchronizedStatement)
+  (ref.func $m_main__void@synchronizedstatement.SynchronizedStatement)
+ )
+)
+
+;;; Code for synchronizedstatement.SynchronizedStatement [static fields]
+(global $f_$initialized__synchronizedstatement_SynchronizedStatement (mut i32) (i32.const 0))
+(global $f_$class__synchronizedstatement_SynchronizedStatement (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|synchronized...|__synchronizedstatement_SynchronizedStatement (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for synchronizedstatement.SynchronizedStatement [methods]
+
+;;; SynchronizedStatement SynchronizedStatement.$create()
+(func $$create__@synchronizedstatement.SynchronizedStatement
+ (result (ref null $synchronizedstatement.SynchronizedStatement))
+ ;;@ synchronizedstatement/SynchronizedStatement.java:18:13
+ (local $$instance (ref null $synchronizedstatement.SynchronizedStatement))
+ (block
+  ;;@ synchronizedstatement/SynchronizedStatement.java:18:13
+  (local.set $$instance (struct.new $synchronizedstatement.SynchronizedStatement (ref.as_non_null (global.get $synchronizedstatement.SynchronizedStatement.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (i32.const 0) (i32.const 0)))
+  ;;@ synchronizedstatement/SynchronizedStatement.java:18:13
+  (call $$ctor__void_$p_synchronizedstatement_SynchronizedStatement@synchronizedstatement.SynchronizedStatement (ref.as_non_null (local.get $$instance)))
+  ;;@ synchronizedstatement/SynchronizedStatement.java:18:13
+  (return (local.get $$instance))
+ )
+)
+
+;;; void SynchronizedStatement.$ctor()
+(func $$ctor__void_$p_synchronizedstatement_SynchronizedStatement@synchronizedstatement.SynchronizedStatement
+ (param $this (ref null $synchronizedstatement.SynchronizedStatement))
+ ;;@ synchronizedstatement/SynchronizedStatement.java:18:13
+ (block
+  ;;@ synchronizedstatement/SynchronizedStatement.java:18:13
+  (call $$clinit__void@synchronizedstatement.SynchronizedStatement )
+  ;;@ synchronizedstatement/SynchronizedStatement.java:18:13
+  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; void SynchronizedStatement.main()
+(func $m_main__void@synchronizedstatement.SynchronizedStatement
+ (type $function.m_main__void)
+ (param $this.untyped (ref $java.lang.Object))
+ ;;@ synchronizedstatement/SynchronizedStatement.java:22:14
+ (local $this (ref null $synchronizedstatement.SynchronizedStatement))
+ (local.set $this (ref.cast_static $synchronizedstatement.SynchronizedStatement (local.get $this.untyped)))
+ (block
+  ;;@ synchronizedstatement/SynchronizedStatement.java:23:4
+  ;;@ synchronizedstatement/SynchronizedStatement.java:23:4
+  (drop (local.get $this))
+  (block
+   ;;@ synchronizedstatement/SynchronizedStatement.java:24:6
+   (struct.set $synchronizedstatement.SynchronizedStatement $f_a__synchronizedstatement_SynchronizedStatement_ (local.get $this) (i32.add (struct.get $synchronizedstatement.SynchronizedStatement $f_a__synchronizedstatement_SynchronizedStatement_ (local.get $this)) (i32.const 1)))
+   ;;@ synchronizedstatement/SynchronizedStatement.java:25:6
+   (struct.set $synchronizedstatement.SynchronizedStatement $f_b__synchronizedstatement_SynchronizedStatement_ (local.get $this) (i32.sub (struct.get $synchronizedstatement.SynchronizedStatement $f_b__synchronizedstatement_SynchronizedStatement_ (local.get $this)) (i32.const 1)))
+  )
+ )
+)
+(elem declare func $m_main__void@synchronizedstatement.SynchronizedStatement)
+
+;;; void SynchronizedStatement.$clinit()
+(func $$clinit__void@synchronizedstatement.SynchronizedStatement
+ ;;@ synchronizedstatement/SynchronizedStatement.java:18:13
+ (block
+  ;;@ synchronizedstatement/SynchronizedStatement.java:18:13
+  (if (global.get $f_$initialized__synchronizedstatement_SynchronizedStatement)
+   (then
+    ;;@ synchronizedstatement/SynchronizedStatement.java:18:13
+    (return )
+   )
+  )
+  ;;@ synchronizedstatement/SynchronizedStatement.java:18:13
+  (global.set $f_$initialized__synchronizedstatement_SynchronizedStatement (i32.const 1))
+  ;;@ synchronizedstatement/SynchronizedStatement.java:18:13
+  (call $$clinit__void@java.lang.Object )
+ )
+)
+
+;;; Class<T> SynchronizedStatement.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@synchronizedstatement.SynchronizedStatement
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__synchronizedstatement_SynchronizedStatement) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__synchronizedstatement_SynchronizedStatement (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|synchronized...|__java_lang_String (ref.func $$getString_|synchronized...|__java_lang_String@synchronizedstatement.SynchronizedStatement) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+   )
+  )
+  (return (global.get $f_$class__synchronizedstatement_SynchronizedStatement))
+ )
+)
+
+;;; Class<?> SynchronizedStatement.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@synchronizedstatement.SynchronizedStatement
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $synchronizedstatement.SynchronizedStatement))
+ (local.set $this (ref.cast_static $synchronizedstatement.SynchronizedStatement (local.get $this.untyped)))
+ (block
+  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@synchronizedstatement.SynchronizedStatement) ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@synchronizedstatement.SynchronizedStatement)
+
+;;; String SynchronizedStatement.$getString_|synchronized...|()
+(func $$getString_|synchronized...|__java_lang_String@synchronizedstatement.SynchronizedStatement
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|synchronized...|__synchronizedstatement_SynchronizedStatement) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|synchronized...|__synchronizedstatement_SynchronizedStatement (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "synchronizedstatement.SynchronizedStatement")))
+   )
+  )
+  (return (global.get $f_$string_|synchronized...|__synchronizedstatement_SynchronizedStatement))
+ )
+)

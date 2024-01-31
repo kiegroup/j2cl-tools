@@ -1,0 +1,4 @@
+[NonNullBoundWithNonNullArgument] => [NonNullBoundWithNonNullArgument]
+[NonNullBoundWithNonNullArgument] => [$clinit]
+[NonNullBoundWithNonNullArgument] => [NonNullBoundWithNonNullArgument.$clinit = () =>{};] "nullability.defaultnullable.DefaultNullable$NonNullBoundWithNonNullArgument.<clinit>"
+[NonNullBoundWithNonNullArgument] => [NonNullBoundWithNonNullArgument.$loadModules();] "nullability.defaultnullable.DefaultNullable$NonNullBoundWithNonNullArgument.<clinit>"

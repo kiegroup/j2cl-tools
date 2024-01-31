@@ -1,0 +1,62 @@
+goog.module('staticfieldinitializer.StaticFieldInitializer$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+class StaticFieldInitializer extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!StaticFieldInitializer} */
+ static $create__() {
+  StaticFieldInitializer.$clinit();
+  let $instance = new StaticFieldInitializer();
+  $instance.$ctor__staticfieldinitializer_StaticFieldInitializer__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__staticfieldinitializer_StaticFieldInitializer__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @nodts @return {number} */
+ static get f_a__staticfieldinitializer_StaticFieldInitializer() {
+  return (StaticFieldInitializer.$clinit(), StaticFieldInitializer.$static_a__staticfieldinitializer_StaticFieldInitializer);
+ }
+ /** @nodts */
+ static set f_a__staticfieldinitializer_StaticFieldInitializer(/** number */ value) {
+  (StaticFieldInitializer.$clinit(), StaticFieldInitializer.$static_a__staticfieldinitializer_StaticFieldInitializer = value);
+ }
+ /** @nodts @return {number} */
+ static get f_b__staticfieldinitializer_StaticFieldInitializer() {
+  return (StaticFieldInitializer.$clinit(), StaticFieldInitializer.$static_b__staticfieldinitializer_StaticFieldInitializer);
+ }
+ /** @nodts */
+ static set f_b__staticfieldinitializer_StaticFieldInitializer(/** number */ value) {
+  (StaticFieldInitializer.$clinit(), StaticFieldInitializer.$static_b__staticfieldinitializer_StaticFieldInitializer = value);
+ }
+ /** @nodts */
+ static $clinit() {
+  StaticFieldInitializer.$clinit = () =>{};
+  StaticFieldInitializer.$loadModules();
+  j_l_Object.$clinit();
+  StaticFieldInitializer.$static_a__staticfieldinitializer_StaticFieldInitializer = 2;
+  StaticFieldInitializer.$static_b__staticfieldinitializer_StaticFieldInitializer = Math.imul(StaticFieldInitializer.$static_a__staticfieldinitializer_StaticFieldInitializer, 4);
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof StaticFieldInitializer;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+/**@private {number} @nodts*/
+StaticFieldInitializer.$static_a__staticfieldinitializer_StaticFieldInitializer = 0;
+/**@private {number} @nodts*/
+StaticFieldInitializer.$static_b__staticfieldinitializer_StaticFieldInitializer = 0;
+$Util.$setClassMetadata(StaticFieldInitializer, 'staticfieldinitializer.StaticFieldInitializer');
+
+exports = StaticFieldInitializer;
+
+//# sourceMappingURL=StaticFieldInitializer.js.map

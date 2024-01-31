@@ -1,0 +1,8 @@
+goog.module('innerclassinitorder.InnerClassInitOrder.$4');
+
+goog.require('innerclassinitorder.InnerClassInitOrder');
+goog.require('innerclassinitorder.InnerClassInitOrder.Outer.TestUnqualifiedSuperCall');
+goog.require('nativebootstrap.Util');
+
+const $4 = goog.require('innerclassinitorder.InnerClassInitOrder.$4$impl');
+exports = $4;

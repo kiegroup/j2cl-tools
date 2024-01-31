@@ -1,0 +1,45 @@
+goog.module('newinstance.NewInstanceExpr$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+class NewInstanceExpr extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!NewInstanceExpr} */
+ static $create__() {
+  NewInstanceExpr.$clinit();
+  let $instance = new NewInstanceExpr();
+  $instance.$ctor__newinstance_NewInstanceExpr__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__newinstance_NewInstanceExpr__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @nodts */
+ static m_main__arrayOf_java_lang_String__void(/** Array<?string> */ args) {
+  NewInstanceExpr.$clinit();
+  let a = NewInstanceExpr.$create__();
+ }
+ /** @nodts */
+ static $clinit() {
+  NewInstanceExpr.$clinit = () =>{};
+  NewInstanceExpr.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof NewInstanceExpr;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+$Util.$setClassMetadata(NewInstanceExpr, 'newinstance.NewInstanceExpr');
+
+exports = NewInstanceExpr;
+
+//# sourceMappingURL=NewInstanceExpr.js.map

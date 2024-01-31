@@ -1,0 +1,61 @@
+goog.module('autovalue.AutoValueWithFields$impl');
+
+const Parent = goog.require('autovalue.Parent$impl');
+const reflect = goog.require('goog.reflect');
+const Serializable = goog.require('java.io.Serializable$impl');
+const ValueType = goog.require('javaemul.internal.ValueType$impl');
+const $Long = goog.require('nativebootstrap.Long$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+/**
+ * @abstract
+ * @implements {Serializable}
+ */
+class AutoValueWithFields extends Parent {
+ /** @protected @nodts */
+ constructor() {
+  super();
+  /**@type {number} @nodts*/
+  this.f_userField2__autovalue_AutoValueWithFields = 0;
+  /**@type {number} @nodts*/
+  this.f_intField__autovalue_$AutoValue_AutoValueWithFields_ = 0;
+ }
+ /** @nodts @return {number} */
+ m_getMemoizedNative__int_$pp_autovalue() {
+  return Math.imul(this.m_getIntField__int(), 2);
+ }
+ /** @nodts */
+ $ctor__autovalue_AutoValueWithFields__int__void(/** number */ intField) {
+  this.$ctor__autovalue_Parent__void();
+  this.f_intField__autovalue_$AutoValue_AutoValueWithFields_ = intField;
+  $J2CL_PRESERVE$(this.f_intField__autovalue_$AutoValue_AutoValueWithFields_);
+ }
+ /** @nodts @return {number} */
+ m_getIntField__int() {
+  return this.f_intField__autovalue_$AutoValue_AutoValueWithFields_;
+ }
+ /** @nodts */
+ static $clinit() {
+  AutoValueWithFields.$clinit = () =>{};
+  AutoValueWithFields.$loadModules();
+  Parent.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof AutoValueWithFields;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+ValueType.mixin(AutoValueWithFields, ValueType, 7, reflect.objectProperty('f_userField2__autovalue_AutoValueWithFields', AutoValueWithFields), reflect.objectProperty('f_userField1__autovalue_Parent', AutoValueWithFields), reflect.objectProperty('f_getMemoizedNative__autovalue_AutoValue_AutoValueWithFields_', AutoValueWithFields), reflect.objectProperty('f_getMemoizedNative$Memoized__autovalue_AutoValue_AutoValueWithFields_', AutoValueWithFields));
+/**@const {!$Long} @nodts*/
+AutoValueWithFields.f_serialVersionUID__autovalue_AutoValueWithFields_ = $Long.fromInt(42);
+/**@const {!$Long} @nodts*/
+AutoValueWithFields.f_staticField__autovalue_AutoValueWithFields_ = $Long.fromInt(42);
+Serializable.$markImplementor(AutoValueWithFields);
+$Util.$setClassMetadata(AutoValueWithFields, 'autovalue.AutoValueWithFields');
+
+exports = AutoValueWithFields;
+
+//# sourceMappingURL=AutoValueWithFields.js.map

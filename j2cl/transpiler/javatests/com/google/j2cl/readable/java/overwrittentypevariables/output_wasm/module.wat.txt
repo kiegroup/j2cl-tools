@@ -1,0 +1,604 @@
+ ;;; Code for overwrittentypevariables.MyFunction [type definition]
+ (type $overwrittentypevariables.MyFunction.vtable (struct_subtype
+  (field $m_apply__java_lang_Object__java_lang_Object (ref $function.m_apply__java_lang_Object__java_lang_Object))
+  data)
+ )
+
+ ;;; Code for overwrittentypevariables.HashFunction [type definition]
+ (type $overwrittentypevariables.HashFunction.vtable (struct_subtype
+  data)
+ )
+
+ ;;; Code for overwrittentypevariables.HashFunctions [type definition]
+ (type $overwrittentypevariables.HashFunctions (struct_subtype
+  (field $vtable (ref $overwrittentypevariables.HashFunctions.vtable))
+  (field $itable (ref $itable))
+  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
+  $java.lang.Object)
+ )
+ (type $overwrittentypevariables.HashFunctions.vtable (struct_subtype
+  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+  (field $m_hashCode__int (ref $function.m_hashCode__int))
+  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
+  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+  $java.lang.Object.vtable)
+ )
+
+ ;;; Code for overwrittentypevariables.HashFunctions.1 [type definition]
+ (type $overwrittentypevariables.HashFunctions.1 (struct_subtype
+  (field $vtable (ref $overwrittentypevariables.HashFunctions.1.vtable))
+  (field $itable (ref $overwrittentypevariables.HashFunctions.1.itable))
+  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
+  $java.lang.Object)
+ )
+ (type $overwrittentypevariables.HashFunctions.1.vtable (struct_subtype
+  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+  (field $m_hashCode__int (ref $function.m_hashCode__int))
+  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
+  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+  (field $m_apply__java_lang_Object__java_lang_String (ref $function.m_apply__java_lang_Object__java_lang_String))
+  (field $m_apply__java_lang_Object__java_lang_Object (ref $function.m_apply__java_lang_Object__java_lang_Object))
+  $java.lang.Object.vtable)
+ )
+ (type $overwrittentypevariables.HashFunctions.1.itable (struct_subtype
+ (field $slot0 (ref $overwrittentypevariables.HashFunction.vtable))
+ (field $slot1 (ref $overwrittentypevariables.MyFunction.vtable))
+ (field $slot2 (ref null struct))
+ (field $slot3 (ref null struct))
+ (field $slot4 (ref null struct))
+ (field $slot5 (ref null struct))
+ (field $slot6 (ref null struct))
+  $itable))
+
+ ;;; Code for overwrittentypevariables.HashFunctions.2 [type definition]
+ (type $overwrittentypevariables.HashFunctions.2 (struct_subtype
+  (field $vtable (ref $overwrittentypevariables.HashFunctions.2.vtable))
+  (field $itable (ref $overwrittentypevariables.HashFunctions.2.itable))
+  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
+  $java.lang.Object)
+ )
+ (type $overwrittentypevariables.HashFunctions.2.vtable (struct_subtype
+  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+  (field $m_hashCode__int (ref $function.m_hashCode__int))
+  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
+  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+  (field $m_apply__java_lang_Enum__java_lang_String (ref $function.m_apply__java_lang_Enum__java_lang_String))
+  (field $m_apply__java_lang_Object__java_lang_Object (ref $function.m_apply__java_lang_Object__java_lang_Object))
+  $java.lang.Object.vtable)
+ )
+ (type $overwrittentypevariables.HashFunctions.2.itable (struct_subtype
+ (field $slot0 (ref $overwrittentypevariables.HashFunction.vtable))
+ (field $slot1 (ref $overwrittentypevariables.MyFunction.vtable))
+ (field $slot2 (ref null struct))
+ (field $slot3 (ref null struct))
+ (field $slot4 (ref null struct))
+ (field $slot5 (ref null struct))
+ (field $slot6 (ref null struct))
+  $itable))
+
+;;; Code for overwrittentypevariables.HashFunctions [vtable.init]
+(global $overwrittentypevariables.HashFunctions.vtable (ref $overwrittentypevariables.HashFunctions.vtable)
+ (struct.new $overwrittentypevariables.HashFunctions.vtable
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
+  (ref.func $$getClassImpl__java_lang_Class@overwrittentypevariables.HashFunctions)
+ )
+)
+
+;;; Code for overwrittentypevariables.HashFunctions.1 [vtable.init]
+(global $overwrittentypevariables.HashFunctions.1.vtable (ref $overwrittentypevariables.HashFunctions.1.vtable)
+ (struct.new $overwrittentypevariables.HashFunctions.1.vtable
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
+  (ref.func $$getClassImpl__java_lang_Class@overwrittentypevariables.HashFunctions.1)
+  (ref.func $m_apply__java_lang_Object__java_lang_String@overwrittentypevariables.HashFunctions.1)
+  (ref.func $m_apply__java_lang_Object__java_lang_Object@overwrittentypevariables.HashFunctions.1)
+ )
+)
+
+;;; Code for overwrittentypevariables.HashFunctions.1 [itable.init]
+(global $overwrittentypevariables.HashFunctions.1.itable (ref $overwrittentypevariables.HashFunctions.1.itable) (struct.new $overwrittentypevariables.HashFunctions.1.itable
+ (struct.new $overwrittentypevariables.HashFunction.vtable
+ )
+ (struct.new $overwrittentypevariables.MyFunction.vtable
+  (ref.func $m_apply__java_lang_Object__java_lang_Object@overwrittentypevariables.HashFunctions.1)
+ )
+  (ref.null struct)
+  (ref.null struct)
+  (ref.null struct)
+  (ref.null struct)
+  (ref.null struct)
+ ))
+
+;;; Code for overwrittentypevariables.HashFunctions.2 [vtable.init]
+(global $overwrittentypevariables.HashFunctions.2.vtable (ref $overwrittentypevariables.HashFunctions.2.vtable)
+ (struct.new $overwrittentypevariables.HashFunctions.2.vtable
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
+  (ref.func $$getClassImpl__java_lang_Class@overwrittentypevariables.HashFunctions.2)
+  (ref.func $m_apply__java_lang_Enum__java_lang_String@overwrittentypevariables.HashFunctions.2)
+  (ref.func $m_apply__java_lang_Object__java_lang_Object@overwrittentypevariables.HashFunctions.2)
+ )
+)
+
+;;; Code for overwrittentypevariables.HashFunctions.2 [itable.init]
+(global $overwrittentypevariables.HashFunctions.2.itable (ref $overwrittentypevariables.HashFunctions.2.itable) (struct.new $overwrittentypevariables.HashFunctions.2.itable
+ (struct.new $overwrittentypevariables.HashFunction.vtable
+ )
+ (struct.new $overwrittentypevariables.MyFunction.vtable
+  (ref.func $m_apply__java_lang_Object__java_lang_Object@overwrittentypevariables.HashFunctions.2)
+ )
+  (ref.null struct)
+  (ref.null struct)
+  (ref.null struct)
+  (ref.null struct)
+  (ref.null struct)
+ ))
+
+;;; Code for overwrittentypevariables.MyFunction [static fields]
+(global $f_$initialized__overwrittentypevariables_MyFunction (mut i32) (i32.const 0))
+(global $f_$class__overwrittentypevariables_MyFunction (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|overwrittent...|__overwrittentypevariables_MyFunction (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for overwrittentypevariables.HashFunction [static fields]
+(global $f_$initialized__overwrittentypevariables_HashFunction (mut i32) (i32.const 0))
+(global $f_$class__overwrittentypevariables_HashFunction (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|overwrittent...|__overwrittentypevariables_HashFunction (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for overwrittentypevariables.HashFunctions [static fields]
+(global $f_$initialized__overwrittentypevariables_HashFunctions (mut i32) (i32.const 0))
+(global $f_$class__overwrittentypevariables_HashFunctions (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|overwrittent...|__overwrittentypevariables_HashFunctions (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for overwrittentypevariables.HashFunctions.1 [static fields]
+(global $f_$initialized__overwrittentypevariables_HashFunctions_1 (mut i32) (i32.const 0))
+(global $f_$class__overwrittentypevariables_HashFunctions_1 (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|overwrittent...|__overwrittentypevariables_HashFunctions_1 (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for overwrittentypevariables.HashFunctions.2 [static fields]
+(global $f_$initialized__overwrittentypevariables_HashFunctions_2 (mut i32) (i32.const 0))
+(global $f_$class__overwrittentypevariables_HashFunctions_2 (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|overwrittent...|__overwrittentypevariables_HashFunctions_2 (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for overwrittentypevariables.MyFunction [methods]
+
+;;; void MyFunction.$clinit()
+(func $$clinit__void@overwrittentypevariables.MyFunction
+ ;;@ overwrittentypevariables/HashFunctions.java:18:10
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:18:10
+  (if (global.get $f_$initialized__overwrittentypevariables_MyFunction)
+   (then
+    ;;@ overwrittentypevariables/HashFunctions.java:18:10
+    (return )
+   )
+  )
+  ;;@ overwrittentypevariables/HashFunctions.java:18:10
+  (global.set $f_$initialized__overwrittentypevariables_MyFunction (i32.const 1))
+ )
+)
+
+;;; Class<T> MyFunction.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@overwrittentypevariables.MyFunction
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__overwrittentypevariables_MyFunction) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__overwrittentypevariables_MyFunction (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|overwrittent...|__java_lang_String (ref.func $$getString_|overwrittent...|__java_lang_String@overwrittentypevariables.MyFunction) )))
+   )
+  )
+  (return (global.get $f_$class__overwrittentypevariables_MyFunction))
+ )
+)
+
+;;; String MyFunction.$getString_|overwrittent...|()
+(func $$getString_|overwrittent...|__java_lang_String@overwrittentypevariables.MyFunction
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|overwrittent...|__overwrittentypevariables_MyFunction) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|overwrittent...|__overwrittentypevariables_MyFunction (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "overwrittentypevariables.MyFunction")))
+   )
+  )
+  (return (global.get $f_$string_|overwrittent...|__overwrittentypevariables_MyFunction))
+ )
+)
+
+;;; Code for overwrittentypevariables.HashFunction [methods]
+
+;;; void HashFunction.$clinit()
+(func $$clinit__void@overwrittentypevariables.HashFunction
+ ;;@ overwrittentypevariables/HashFunctions.java:22:10
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:22:10
+  (if (global.get $f_$initialized__overwrittentypevariables_HashFunction)
+   (then
+    ;;@ overwrittentypevariables/HashFunctions.java:22:10
+    (return )
+   )
+  )
+  ;;@ overwrittentypevariables/HashFunctions.java:22:10
+  (global.set $f_$initialized__overwrittentypevariables_HashFunction (i32.const 1))
+ )
+)
+
+;;; Class<T> HashFunction.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@overwrittentypevariables.HashFunction
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__overwrittentypevariables_HashFunction) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__overwrittentypevariables_HashFunction (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|overwrittent...|__java_lang_String (ref.func $$getString_|overwrittent...|__java_lang_String@overwrittentypevariables.HashFunction) )))
+   )
+  )
+  (return (global.get $f_$class__overwrittentypevariables_HashFunction))
+ )
+)
+
+;;; String HashFunction.$getString_|overwrittent...|()
+(func $$getString_|overwrittent...|__java_lang_String@overwrittentypevariables.HashFunction
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|overwrittent...|__overwrittentypevariables_HashFunction) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|overwrittent...|__overwrittentypevariables_HashFunction (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "overwrittentypevariables.HashFunction")))
+   )
+  )
+  (return (global.get $f_$string_|overwrittent...|__overwrittentypevariables_HashFunction))
+ )
+)
+
+;;; Code for overwrittentypevariables.HashFunctions [methods]
+
+;;; HashFunctions HashFunctions.$create()
+(func $$create__@overwrittentypevariables.HashFunctions
+ (result (ref null $overwrittentypevariables.HashFunctions))
+ ;;@ overwrittentypevariables/HashFunctions.java:24:13
+ (local $$instance (ref null $overwrittentypevariables.HashFunctions))
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:24:13
+  (local.set $$instance (struct.new $overwrittentypevariables.HashFunctions (ref.as_non_null (global.get $overwrittentypevariables.HashFunctions.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  ;;@ overwrittentypevariables/HashFunctions.java:24:13
+  (call $$ctor__void_$p_overwrittentypevariables_HashFunctions@overwrittentypevariables.HashFunctions (ref.as_non_null (local.get $$instance)))
+  ;;@ overwrittentypevariables/HashFunctions.java:24:13
+  (return (local.get $$instance))
+ )
+)
+
+;;; void HashFunctions.$ctor()
+(func $$ctor__void_$p_overwrittentypevariables_HashFunctions@overwrittentypevariables.HashFunctions
+ (param $this (ref null $overwrittentypevariables.HashFunctions))
+ ;;@ overwrittentypevariables/HashFunctions.java:24:13
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:24:13
+  (call $$clinit__void@overwrittentypevariables.HashFunctions )
+  ;;@ overwrittentypevariables/HashFunctions.java:24:13
+  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; HashFunction<T> HashFunctions.hashFunction()
+(func $m_hashFunction__overwrittentypevariables_HashFunction@overwrittentypevariables.HashFunctions
+ (result (ref null $java.lang.Object))
+ ;;@ overwrittentypevariables/HashFunctions.java:25:42
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:25:57
+  (call $$clinit__void@overwrittentypevariables.HashFunctions )
+  ;;@ overwrittentypevariables/HashFunctions.java:26:4
+  (return (call $$create__@overwrittentypevariables.HashFunctions.1 ))
+ )
+)
+
+;;; HashFunction<T> HashFunctions.enumHashFunction()
+(func $m_enumHashFunction__overwrittentypevariables_HashFunction@overwrittentypevariables.HashFunctions
+ (result (ref null $java.lang.Object))
+ ;;@ overwrittentypevariables/HashFunctions.java:34:58
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:34:77
+  (call $$clinit__void@overwrittentypevariables.HashFunctions )
+  ;;@ overwrittentypevariables/HashFunctions.java:35:4
+  (return (call $$create__@overwrittentypevariables.HashFunctions.2 ))
+ )
+)
+
+;;; void HashFunctions.$clinit()
+(func $$clinit__void@overwrittentypevariables.HashFunctions
+ ;;@ overwrittentypevariables/HashFunctions.java:24:13
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:24:13
+  (if (global.get $f_$initialized__overwrittentypevariables_HashFunctions)
+   (then
+    ;;@ overwrittentypevariables/HashFunctions.java:24:13
+    (return )
+   )
+  )
+  ;;@ overwrittentypevariables/HashFunctions.java:24:13
+  (global.set $f_$initialized__overwrittentypevariables_HashFunctions (i32.const 1))
+  ;;@ overwrittentypevariables/HashFunctions.java:24:13
+  (call $$clinit__void@java.lang.Object )
+ )
+)
+
+;;; Class<T> HashFunctions.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@overwrittentypevariables.HashFunctions
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__overwrittentypevariables_HashFunctions) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__overwrittentypevariables_HashFunctions (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|overwrittent...|__java_lang_String (ref.func $$getString_|overwrittent...|__java_lang_String@overwrittentypevariables.HashFunctions) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+   )
+  )
+  (return (global.get $f_$class__overwrittentypevariables_HashFunctions))
+ )
+)
+
+;;; Class<?> HashFunctions.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@overwrittentypevariables.HashFunctions
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $overwrittentypevariables.HashFunctions))
+ (local.set $this (ref.cast_static $overwrittentypevariables.HashFunctions (local.get $this.untyped)))
+ (block
+  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@overwrittentypevariables.HashFunctions) ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@overwrittentypevariables.HashFunctions)
+
+;;; String HashFunctions.$getString_|overwrittent...|()
+(func $$getString_|overwrittent...|__java_lang_String@overwrittentypevariables.HashFunctions
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|overwrittent...|__overwrittentypevariables_HashFunctions) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|overwrittent...|__overwrittentypevariables_HashFunctions (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "overwrittentypevariables.HashFunctions")))
+   )
+  )
+  (return (global.get $f_$string_|overwrittent...|__overwrittentypevariables_HashFunctions))
+ )
+)
+
+;;; Code for overwrittentypevariables.HashFunctions.1 [methods]
+
+;;; <anonymous> implements HashFunction<T><T> <anonymous> implements HashFunction<T>.$create()
+(func $$create__@overwrittentypevariables.HashFunctions.1
+ (result (ref null $overwrittentypevariables.HashFunctions.1))
+ ;;@ overwrittentypevariables/HashFunctions.java:26:33
+ (local $$instance (ref null $overwrittentypevariables.HashFunctions.1))
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:26:33
+  (local.set $$instance (struct.new $overwrittentypevariables.HashFunctions.1 (ref.as_non_null (global.get $overwrittentypevariables.HashFunctions.1.vtable)) (ref.as_non_null (global.get $overwrittentypevariables.HashFunctions.1.itable)) (i32.const 0)))
+  ;;@ overwrittentypevariables/HashFunctions.java:26:33
+  (call $$ctor__void_$p_overwrittentypevariables_HashFunctions_1@overwrittentypevariables.HashFunctions.1 (ref.as_non_null (local.get $$instance)))
+  ;;@ overwrittentypevariables/HashFunctions.java:26:33
+  (return (local.get $$instance))
+ )
+)
+
+;;; void <anonymous> implements HashFunction<T>.$ctor()
+(func $$ctor__void_$p_overwrittentypevariables_HashFunctions_1@overwrittentypevariables.HashFunctions.1
+ (param $this (ref null $overwrittentypevariables.HashFunctions.1))
+ ;;@ overwrittentypevariables/HashFunctions.java:26:33
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:26:33
+  (call $$clinit__void@overwrittentypevariables.HashFunctions.1 )
+  ;;@ overwrittentypevariables/HashFunctions.java:26:33
+  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; String <anonymous> implements HashFunction<T>.apply(T input)
+(func $m_apply__java_lang_Object__java_lang_String@overwrittentypevariables.HashFunctions.1
+ (type $function.m_apply__java_lang_Object__java_lang_String)
+ (param $this.untyped (ref $java.lang.Object))
+ (param $input (ref null $java.lang.Object))
+ (result (ref null $java.lang.String))
+ ;;@ overwrittentypevariables/HashFunctions.java:28:20
+ (local $this (ref null $overwrittentypevariables.HashFunctions.1))
+ (local.set $this (ref.cast_static $overwrittentypevariables.HashFunctions.1 (local.get $this.untyped)))
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:29:8
+  (return (call $function.no.side.effects.$getString_||__java_lang_String (ref.func $$getString_||__java_lang_String@java.lang.StackTraceElement) ))
+ )
+)
+(elem declare func $m_apply__java_lang_Object__java_lang_String@overwrittentypevariables.HashFunctions.1)
+
+;;; String <anonymous> implements HashFunction<T>.apply(F arg0)
+(func $m_apply__java_lang_Object__java_lang_Object@overwrittentypevariables.HashFunctions.1
+ (type $function.m_apply__java_lang_Object__java_lang_Object)
+ (param $this.untyped (ref $java.lang.Object))
+ (param $arg0 (ref null $java.lang.Object))
+ (result (ref null $java.lang.Object))
+ ;;@ overwrittentypevariables/HashFunctions.java:26:33
+ (local $this (ref null $overwrittentypevariables.HashFunctions.1))
+ (local.set $this (ref.cast_static $overwrittentypevariables.HashFunctions.1 (local.get $this.untyped)))
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:26:33
+  (return (call_ref $function.m_apply__java_lang_Object__java_lang_String (ref.as_non_null (local.get $this))(local.get $arg0)(struct.get $overwrittentypevariables.HashFunctions.1.vtable $m_apply__java_lang_Object__java_lang_String (struct.get $overwrittentypevariables.HashFunctions.1 $vtable(local.get $this)))))
+ )
+)
+(elem declare func $m_apply__java_lang_Object__java_lang_Object@overwrittentypevariables.HashFunctions.1)
+
+;;; void <anonymous> implements HashFunction<T>.$clinit()
+(func $$clinit__void@overwrittentypevariables.HashFunctions.1
+ ;;@ overwrittentypevariables/HashFunctions.java:26:33
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:26:33
+  (if (global.get $f_$initialized__overwrittentypevariables_HashFunctions_1)
+   (then
+    ;;@ overwrittentypevariables/HashFunctions.java:26:33
+    (return )
+   )
+  )
+  ;;@ overwrittentypevariables/HashFunctions.java:26:33
+  (global.set $f_$initialized__overwrittentypevariables_HashFunctions_1 (i32.const 1))
+  ;;@ overwrittentypevariables/HashFunctions.java:26:33
+  (call $$clinit__void@java.lang.Object )
+ )
+)
+
+;;; Class<T> <anonymous> implements HashFunction<T>.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@overwrittentypevariables.HashFunctions.1
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__overwrittentypevariables_HashFunctions_1) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__overwrittentypevariables_HashFunctions_1 (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|overwrittent...|__java_lang_String (ref.func $$getString_|overwrittent...|__java_lang_String@overwrittentypevariables.HashFunctions.1) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+   )
+  )
+  (return (global.get $f_$class__overwrittentypevariables_HashFunctions_1))
+ )
+)
+
+;;; Class<?> <anonymous> implements HashFunction<T>.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@overwrittentypevariables.HashFunctions.1
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $overwrittentypevariables.HashFunctions.1))
+ (local.set $this (ref.cast_static $overwrittentypevariables.HashFunctions.1 (local.get $this.untyped)))
+ (block
+  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@overwrittentypevariables.HashFunctions.1) ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@overwrittentypevariables.HashFunctions.1)
+
+;;; String <anonymous> implements HashFunction<T>.$getString_|overwrittent...|()
+(func $$getString_|overwrittent...|__java_lang_String@overwrittentypevariables.HashFunctions.1
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|overwrittent...|__overwrittentypevariables_HashFunctions_1) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|overwrittent...|__overwrittentypevariables_HashFunctions_1 (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "overwrittentypevariables.HashFunctions$1")))
+   )
+  )
+  (return (global.get $f_$string_|overwrittent...|__overwrittentypevariables_HashFunctions_1))
+ )
+)
+
+;;; Code for overwrittentypevariables.HashFunctions.2 [methods]
+
+;;; <anonymous> implements HashFunction<T><T> <anonymous> implements HashFunction<T>.$create()
+(func $$create__@overwrittentypevariables.HashFunctions.2
+ (result (ref null $overwrittentypevariables.HashFunctions.2))
+ ;;@ overwrittentypevariables/HashFunctions.java:35:33
+ (local $$instance (ref null $overwrittentypevariables.HashFunctions.2))
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:35:33
+  (local.set $$instance (struct.new $overwrittentypevariables.HashFunctions.2 (ref.as_non_null (global.get $overwrittentypevariables.HashFunctions.2.vtable)) (ref.as_non_null (global.get $overwrittentypevariables.HashFunctions.2.itable)) (i32.const 0)))
+  ;;@ overwrittentypevariables/HashFunctions.java:35:33
+  (call $$ctor__void_$p_overwrittentypevariables_HashFunctions_2@overwrittentypevariables.HashFunctions.2 (ref.as_non_null (local.get $$instance)))
+  ;;@ overwrittentypevariables/HashFunctions.java:35:33
+  (return (local.get $$instance))
+ )
+)
+
+;;; void <anonymous> implements HashFunction<T>.$ctor()
+(func $$ctor__void_$p_overwrittentypevariables_HashFunctions_2@overwrittentypevariables.HashFunctions.2
+ (param $this (ref null $overwrittentypevariables.HashFunctions.2))
+ ;;@ overwrittentypevariables/HashFunctions.java:35:33
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:35:33
+  (call $$clinit__void@overwrittentypevariables.HashFunctions.2 )
+  ;;@ overwrittentypevariables/HashFunctions.java:35:33
+  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; String <anonymous> implements HashFunction<T>.apply(T input)
+(func $m_apply__java_lang_Enum__java_lang_String@overwrittentypevariables.HashFunctions.2
+ (type $function.m_apply__java_lang_Enum__java_lang_String)
+ (param $this.untyped (ref $java.lang.Object))
+ (param $input (ref null $java.lang.Enum))
+ (result (ref null $java.lang.String))
+ ;;@ overwrittentypevariables/HashFunctions.java:37:20
+ (local $this (ref null $overwrittentypevariables.HashFunctions.2))
+ (local.set $this (ref.cast_static $overwrittentypevariables.HashFunctions.2 (local.get $this.untyped)))
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:38:8
+  (return (call $m_valueOf__int__java_lang_String@java.lang.String (call_ref $function.m_ordinal__int (ref.as_non_null (local.get $input))(struct.get $java.lang.Enum.vtable $m_ordinal__int (struct.get $java.lang.Enum $vtable(local.get $input))))))
+ )
+)
+(elem declare func $m_apply__java_lang_Enum__java_lang_String@overwrittentypevariables.HashFunctions.2)
+
+;;; String <anonymous> implements HashFunction<T>.apply(F arg0)
+(func $m_apply__java_lang_Object__java_lang_Object@overwrittentypevariables.HashFunctions.2
+ (type $function.m_apply__java_lang_Object__java_lang_Object)
+ (param $this.untyped (ref $java.lang.Object))
+ (param $arg0 (ref null $java.lang.Object))
+ (result (ref null $java.lang.Object))
+ ;;@ overwrittentypevariables/HashFunctions.java:35:33
+ (local $this (ref null $overwrittentypevariables.HashFunctions.2))
+ (local.set $this (ref.cast_static $overwrittentypevariables.HashFunctions.2 (local.get $this.untyped)))
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:35:33
+  (return (call_ref $function.m_apply__java_lang_Enum__java_lang_String (ref.as_non_null (local.get $this))(ref.cast_static $java.lang.Enum (local.get $arg0))(struct.get $overwrittentypevariables.HashFunctions.2.vtable $m_apply__java_lang_Enum__java_lang_String (struct.get $overwrittentypevariables.HashFunctions.2 $vtable(local.get $this)))))
+ )
+)
+(elem declare func $m_apply__java_lang_Object__java_lang_Object@overwrittentypevariables.HashFunctions.2)
+
+;;; void <anonymous> implements HashFunction<T>.$clinit()
+(func $$clinit__void@overwrittentypevariables.HashFunctions.2
+ ;;@ overwrittentypevariables/HashFunctions.java:35:33
+ (block
+  ;;@ overwrittentypevariables/HashFunctions.java:35:33
+  (if (global.get $f_$initialized__overwrittentypevariables_HashFunctions_2)
+   (then
+    ;;@ overwrittentypevariables/HashFunctions.java:35:33
+    (return )
+   )
+  )
+  ;;@ overwrittentypevariables/HashFunctions.java:35:33
+  (global.set $f_$initialized__overwrittentypevariables_HashFunctions_2 (i32.const 1))
+  ;;@ overwrittentypevariables/HashFunctions.java:35:33
+  (call $$clinit__void@java.lang.Object )
+ )
+)
+
+;;; Class<T> <anonymous> implements HashFunction<T>.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@overwrittentypevariables.HashFunctions.2
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__overwrittentypevariables_HashFunctions_2) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__overwrittentypevariables_HashFunctions_2 (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|overwrittent...|__java_lang_String (ref.func $$getString_|overwrittent...|__java_lang_String@overwrittentypevariables.HashFunctions.2) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+   )
+  )
+  (return (global.get $f_$class__overwrittentypevariables_HashFunctions_2))
+ )
+)
+
+;;; Class<?> <anonymous> implements HashFunction<T>.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@overwrittentypevariables.HashFunctions.2
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $overwrittentypevariables.HashFunctions.2))
+ (local.set $this (ref.cast_static $overwrittentypevariables.HashFunctions.2 (local.get $this.untyped)))
+ (block
+  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@overwrittentypevariables.HashFunctions.2) ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@overwrittentypevariables.HashFunctions.2)
+
+;;; String <anonymous> implements HashFunction<T>.$getString_|overwrittent...|()
+(func $$getString_|overwrittent...|__java_lang_String@overwrittentypevariables.HashFunctions.2
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|overwrittent...|__overwrittentypevariables_HashFunctions_2) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|overwrittent...|__overwrittentypevariables_HashFunctions_2 (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "overwrittentypevariables.HashFunctions$2")))
+   )
+  )
+  (return (global.get $f_$string_|overwrittent...|__overwrittentypevariables_HashFunctions_2))
+ )
+)

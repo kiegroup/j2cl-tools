@@ -1,0 +1,114 @@
+ ;;; Code for objectmap.ObjectMap.$Overlay [type definition]
+ (type $objectmap.ObjectMap.$Overlay (struct_subtype
+  (field $vtable (ref $objectmap.ObjectMap.$Overlay.vtable))
+  (field $itable (ref $itable))
+  data)
+ )
+ (type $objectmap.ObjectMap.$Overlay.vtable (struct_subtype
+  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+  data)
+ )
+
+ ;;; Code for objectmap.ObjectMap [type definition]
+
+;;; Code for objectmap.ObjectMap.$Overlay [vtable.init]
+(global $objectmap.ObjectMap.$Overlay.vtable (ref $objectmap.ObjectMap.$Overlay.vtable)
+ (struct.new $objectmap.ObjectMap.$Overlay.vtable
+  (ref.func $$getClassImpl__java_lang_Class@objectmap.ObjectMap.$Overlay)
+ )
+)
+
+;;; Code for objectmap.ObjectMap [static fields]
+
+;;; Code for objectmap.ObjectMap.$Overlay [static fields]
+(global $f_$initialized__objectmap_ObjectMap_$Overlay (mut i32) (i32.const 0))
+(global $f_$class__objectmap_ObjectMap_$Overlay (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|objectmap.Ob...|__objectmap_ObjectMap_$Overlay (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for objectmap.ObjectMap.$Overlay [methods]
+
+;;; ObjectMap<T> $Overlay.create()
+(func $m_create__objectmap_ObjectMap@objectmap.ObjectMap.$Overlay
+ (result (ref null extern))
+ ;;@ objectmap/ObjectMap.java:25:26
+ (block
+  ;;@ objectmap/ObjectMap.java:25:35
+  (call $$clinit__void@objectmap.ObjectMap.$Overlay )
+  ;;@ objectmap/ObjectMap.java:26:4
+  (return (ref.null extern))
+ )
+)
+
+;;; ObjectMap<String> $Overlay.createForString()
+(func $m_createForString__objectmap_ObjectMap@objectmap.ObjectMap.$Overlay
+ (result (ref null extern))
+ ;;@ objectmap/ObjectMap.java:30:27
+ (block
+  ;;@ objectmap/ObjectMap.java:30:45
+  (call $$clinit__void@objectmap.ObjectMap.$Overlay )
+  ;;@ objectmap/ObjectMap.java:31:4
+  (return (ref.null extern))
+ )
+)
+
+;;; void $Overlay.$clinit()
+(func $$clinit__void@objectmap.ObjectMap.$Overlay
+ ;;@ objectmap/ObjectMap.java:23:13
+ (block
+  ;;@ objectmap/ObjectMap.java:23:13
+  (if (global.get $f_$initialized__objectmap_ObjectMap_$Overlay)
+   (then
+    ;;@ objectmap/ObjectMap.java:23:13
+    (return )
+   )
+  )
+  ;;@ objectmap/ObjectMap.java:23:13
+  (global.set $f_$initialized__objectmap_ObjectMap_$Overlay (i32.const 1))
+ )
+)
+
+;;; Class<T> $Overlay.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@objectmap.ObjectMap.$Overlay
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__objectmap_ObjectMap_$Overlay) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__objectmap_ObjectMap_$Overlay (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|objectmap.Ob...|__java_lang_String (ref.func $$getString_|objectmap.Ob...|__java_lang_String@objectmap.ObjectMap.$Overlay) )(ref.null $java.lang.Class)))
+   )
+  )
+  (return (global.get $f_$class__objectmap_ObjectMap_$Overlay))
+ )
+)
+
+;;; Class<?> $Overlay.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@objectmap.ObjectMap.$Overlay
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $objectmap.ObjectMap.$Overlay))
+ (local.set $this (ref.cast_static $objectmap.ObjectMap.$Overlay (local.get $this.untyped)))
+ (block
+  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@objectmap.ObjectMap.$Overlay) ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@objectmap.ObjectMap.$Overlay)
+
+;;; String $Overlay.$getString_|objectmap.Ob...|()
+(func $$getString_|objectmap.Ob...|__java_lang_String@objectmap.ObjectMap.$Overlay
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|objectmap.Ob...|__objectmap_ObjectMap_$Overlay) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|objectmap.Ob...|__objectmap_ObjectMap_$Overlay (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "objectmap.ObjectMap$$Overlay")))
+   )
+  )
+  (return (global.get $f_$string_|objectmap.Ob...|__objectmap_ObjectMap_$Overlay))
+ )
+)
+
+;;; Code for objectmap.ObjectMap [methods]
+
+;;; ObjectMap()
+(func $m_<init>__@objectmap.ObjectMap (import "imports" "Object.constructor") 
+ (result (ref null extern))
+)

@@ -1,0 +1,58 @@
+goog.module('lambdas.Lambdas.$LambdaAdaptor$3$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const GenericFunctionalInterface = goog.require('lambdas.Lambdas.GenericFunctionalInterface$impl');
+const JustADefaultS = goog.require('lambdas.Lambdas.JustADefaultS$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+/**
+ * @template T, S
+ * @implements {GenericFunctionalInterface<T>}
+ * @implements {JustADefaultS<S>}
+ */
+class $LambdaAdaptor$3 extends j_l_Object {
+ /** @nodts */
+ constructor(/** ?function(T):T */ fn) {
+  $LambdaAdaptor$3.$clinit();
+  super();
+  /**@type {?function(T):T} @nodts*/
+  this.f_fn__lambdas_Lambdas_$LambdaAdaptor$3;
+  this.$ctor__lambdas_Lambdas_$LambdaAdaptor$3__lambdas_Lambdas_GenericFunctionalInterface_$JsFunction__void(fn);
+ }
+ /** @nodts */
+ $ctor__lambdas_Lambdas_$LambdaAdaptor$3__lambdas_Lambdas_GenericFunctionalInterface_$JsFunction__void(/** ?function(T):T */ fn) {
+  this.$ctor__java_lang_Object__void();
+  this.f_fn__lambdas_Lambdas_$LambdaAdaptor$3 = fn;
+ }
+ /** @override @nodts @return {T} */
+ m_m__java_lang_Object__java_lang_Object(/** T */ arg0) {
+  let /** ?function(T):T */ $function;
+  return ($function = this.f_fn__lambdas_Lambdas_$LambdaAdaptor$3, $function(arg0));
+ }
+ //Default method forwarding stub.
+ /** @override @nodts */
+ m_method__java_lang_Object__void(/** S */ arg0) {
+  JustADefaultS.m_method__$default__lambdas_Lambdas_JustADefaultS__java_lang_Object__void(this, arg0);
+ }
+ /** @nodts */
+ static $clinit() {
+  $LambdaAdaptor$3.$clinit = () =>{};
+  $LambdaAdaptor$3.$loadModules();
+  j_l_Object.$clinit();
+  JustADefaultS.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof $LambdaAdaptor$3;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+GenericFunctionalInterface.$markImplementor($LambdaAdaptor$3);
+JustADefaultS.$markImplementor($LambdaAdaptor$3);
+$Util.$setClassMetadata($LambdaAdaptor$3, 'lambdas.Lambdas$$LambdaAdaptor$3');
+
+exports = $LambdaAdaptor$3;
+
+//# sourceMappingURL=Lambdas$$LambdaAdaptor$3.js.map

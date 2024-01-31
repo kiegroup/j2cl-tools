@@ -1,0 +1,316 @@
+ ;;; Code for jstype.SomeJsType.Star [type definition]
+
+ ;;; Code for jstype.SomeJsType.Wildcard [type definition]
+
+ ;;; Code for jstype.SomeJsType.Star.$Overlay [type definition]
+ (type $jstype.SomeJsType.Star.$Overlay.vtable (struct_subtype
+  data)
+ )
+
+ ;;; Code for jstype.SomeJsType.Wildcard.$Overlay [type definition]
+ (type $jstype.SomeJsType.Wildcard.$Overlay.vtable (struct_subtype
+  data)
+ )
+
+ ;;; Code for jstype.SomeJsType [type definition]
+ (type $jstype.SomeJsType (struct_subtype
+  (field $vtable (ref $jstype.SomeJsType.vtable))
+  (field $itable (ref $itable))
+  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
+  (field $f_publicField__jstype_SomeJsType (mut i32))
+  (field $f_privateField__jstype_SomeJsType_ (mut i32))
+  (field $f_packageField__jstype_SomeJsType (mut i32))
+  (field $f_protectedField__jstype_SomeJsType (mut i32))
+  $java.lang.Object)
+ )
+ (type $jstype.SomeJsType.vtable (struct_subtype
+  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+  (field $m_hashCode__int (ref $function.m_hashCode__int))
+  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
+  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+  (field $m_publicMethod__void (ref $function.m_publicMethod__void))
+  (field $m_packageMethod__void_$pp_jstype (ref $function.m_packageMethod__void_$pp_jstype))
+  (field $m_protectedMethod__void (ref $function.m_protectedMethod__void))
+  (field $m_useFieldsAndMethods__void (ref $function.m_useFieldsAndMethods__void))
+  $java.lang.Object.vtable)
+ )
+
+;;; Code for jstype.SomeJsType [vtable.init]
+(global $jstype.SomeJsType.vtable (ref $jstype.SomeJsType.vtable)
+ (struct.new $jstype.SomeJsType.vtable
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
+  (ref.func $$getClassImpl__java_lang_Class@jstype.SomeJsType)
+  (ref.func $m_publicMethod__void@jstype.SomeJsType)
+  (ref.func $m_packageMethod__void_$pp_jstype@jstype.SomeJsType)
+  (ref.func $m_protectedMethod__void@jstype.SomeJsType)
+  (ref.func $m_useFieldsAndMethods__void@jstype.SomeJsType)
+ )
+)
+
+;;; Code for jstype.SomeJsType [static fields]
+(global $f_$initialized__jstype_SomeJsType (mut i32) (i32.const 0))
+(global $f_$class__jstype_SomeJsType (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|jstype.SomeJ...|__jstype_SomeJsType (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for jstype.SomeJsType.Star [static fields]
+
+;;; Code for jstype.SomeJsType.Wildcard [static fields]
+
+;;; Code for jstype.SomeJsType.Star.$Overlay [static fields]
+(global $f_$initialized__jstype_SomeJsType_Star_$Overlay (mut i32) (i32.const 0))
+(global $f_$class__jstype_SomeJsType_Star_$Overlay (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|jstype.SomeJ...|__jstype_SomeJsType_Star_$Overlay (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for jstype.SomeJsType.Wildcard.$Overlay [static fields]
+(global $f_$initialized__jstype_SomeJsType_Wildcard_$Overlay (mut i32) (i32.const 0))
+(global $f_$class__jstype_SomeJsType_Wildcard_$Overlay (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|jstype.SomeJ...|__jstype_SomeJsType_Wildcard_$Overlay (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for jstype.SomeJsType.Star [methods]
+
+;;; Code for jstype.SomeJsType.Wildcard [methods]
+
+;;; Code for jstype.SomeJsType.Star.$Overlay [methods]
+
+;;; void $Overlay.$clinit()
+(func $$clinit__void@jstype.SomeJsType.Star.$Overlay
+ ;;@ jstype/SomeJsType.java:47:12
+ (block
+  ;;@ jstype/SomeJsType.java:47:12
+  (if (global.get $f_$initialized__jstype_SomeJsType_Star_$Overlay)
+   (then
+    ;;@ jstype/SomeJsType.java:47:12
+    (return )
+   )
+  )
+  ;;@ jstype/SomeJsType.java:47:12
+  (global.set $f_$initialized__jstype_SomeJsType_Star_$Overlay (i32.const 1))
+ )
+)
+
+;;; Class<T> $Overlay.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@jstype.SomeJsType.Star.$Overlay
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__jstype_SomeJsType_Star_$Overlay) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__jstype_SomeJsType_Star_$Overlay (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jstype.SomeJ...|__java_lang_String (ref.func $$getString_|jstype.SomeJ...|__java_lang_String@jstype.SomeJsType.Star.$Overlay) )))
+   )
+  )
+  (return (global.get $f_$class__jstype_SomeJsType_Star_$Overlay))
+ )
+)
+
+;;; String $Overlay.$getString_|jstype.SomeJ...|()
+(func $$getString_|jstype.SomeJ...|__java_lang_String@jstype.SomeJsType.Star.$Overlay
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|jstype.SomeJ...|__jstype_SomeJsType_Star_$Overlay) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|jstype.SomeJ...|__jstype_SomeJsType_Star_$Overlay (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jstype.SomeJsType$Star$$Overlay")))
+   )
+  )
+  (return (global.get $f_$string_|jstype.SomeJ...|__jstype_SomeJsType_Star_$Overlay))
+ )
+)
+
+;;; Code for jstype.SomeJsType.Wildcard.$Overlay [methods]
+
+;;; void $Overlay.$clinit()
+(func $$clinit__void@jstype.SomeJsType.Wildcard.$Overlay
+ ;;@ jstype/SomeJsType.java:50:12
+ (block
+  ;;@ jstype/SomeJsType.java:50:12
+  (if (global.get $f_$initialized__jstype_SomeJsType_Wildcard_$Overlay)
+   (then
+    ;;@ jstype/SomeJsType.java:50:12
+    (return )
+   )
+  )
+  ;;@ jstype/SomeJsType.java:50:12
+  (global.set $f_$initialized__jstype_SomeJsType_Wildcard_$Overlay (i32.const 1))
+ )
+)
+
+;;; Class<T> $Overlay.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@jstype.SomeJsType.Wildcard.$Overlay
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__jstype_SomeJsType_Wildcard_$Overlay) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__jstype_SomeJsType_Wildcard_$Overlay (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jstype.SomeJ...|__java_lang_String (ref.func $$getString_|jstype.SomeJ...|__java_lang_String@jstype.SomeJsType.Wildcard.$Overlay) )))
+   )
+  )
+  (return (global.get $f_$class__jstype_SomeJsType_Wildcard_$Overlay))
+ )
+)
+
+;;; String $Overlay.$getString_|jstype.SomeJ...|()
+(func $$getString_|jstype.SomeJ...|__java_lang_String@jstype.SomeJsType.Wildcard.$Overlay
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|jstype.SomeJ...|__jstype_SomeJsType_Wildcard_$Overlay) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|jstype.SomeJ...|__jstype_SomeJsType_Wildcard_$Overlay (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jstype.SomeJsType$Wildcard$$Overlay")))
+   )
+  )
+  (return (global.get $f_$string_|jstype.SomeJ...|__jstype_SomeJsType_Wildcard_$Overlay))
+ )
+)
+
+;;; Code for jstype.SomeJsType [methods]
+
+;;; SomeJsType<T> SomeJsType.$create()
+(func $$create__@jstype.SomeJsType
+ (result (ref null $jstype.SomeJsType))
+ ;;@ jstype/SomeJsType.java:23:13
+ (local $$instance (ref null $jstype.SomeJsType))
+ (block
+  ;;@ jstype/SomeJsType.java:23:13
+  (local.set $$instance (struct.new $jstype.SomeJsType (ref.as_non_null (global.get $jstype.SomeJsType.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0)))
+  ;;@ jstype/SomeJsType.java:23:13
+  (call $$ctor__void_$p_jstype_SomeJsType@jstype.SomeJsType (ref.as_non_null (local.get $$instance)))
+  ;;@ jstype/SomeJsType.java:23:13
+  (return (local.get $$instance))
+ )
+)
+
+;;; void SomeJsType.$ctor()
+(func $$ctor__void_$p_jstype_SomeJsType@jstype.SomeJsType
+ (param $this (ref null $jstype.SomeJsType))
+ ;;@ jstype/SomeJsType.java:23:13
+ (block
+  ;;@ jstype/SomeJsType.java:23:13
+  (call $$clinit__void@jstype.SomeJsType )
+  ;;@ jstype/SomeJsType.java:23:13
+  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; void SomeJsType.publicMethod()
+(func $m_publicMethod__void@jstype.SomeJsType
+ (type $function.m_publicMethod__void)
+ (param $this.untyped (ref $java.lang.Object))
+ ;;@ jstype/SomeJsType.java:29:14
+ (local $this (ref null $jstype.SomeJsType))
+ (local.set $this (ref.cast_static $jstype.SomeJsType (local.get $this.untyped)))
+ (block
+ )
+)
+(elem declare func $m_publicMethod__void@jstype.SomeJsType)
+
+;;; void SomeJsType.privateMethod()
+(func $m_privateMethod__void_$p_jstype_SomeJsType@jstype.SomeJsType
+ (param $this (ref null $jstype.SomeJsType))
+ ;;@ jstype/SomeJsType.java:31:15
+ (block
+ )
+)
+
+;;; void SomeJsType.packageMethod()
+(func $m_packageMethod__void_$pp_jstype@jstype.SomeJsType
+ (type $function.m_packageMethod__void_$pp_jstype)
+ (param $this.untyped (ref $java.lang.Object))
+ ;;@ jstype/SomeJsType.java:33:7
+ (local $this (ref null $jstype.SomeJsType))
+ (local.set $this (ref.cast_static $jstype.SomeJsType (local.get $this.untyped)))
+ (block
+ )
+)
+(elem declare func $m_packageMethod__void_$pp_jstype@jstype.SomeJsType)
+
+;;; void SomeJsType.protectedMethod()
+(func $m_protectedMethod__void@jstype.SomeJsType
+ (type $function.m_protectedMethod__void)
+ (param $this.untyped (ref $java.lang.Object))
+ ;;@ jstype/SomeJsType.java:35:17
+ (local $this (ref null $jstype.SomeJsType))
+ (local.set $this (ref.cast_static $jstype.SomeJsType (local.get $this.untyped)))
+ (block
+ )
+)
+(elem declare func $m_protectedMethod__void@jstype.SomeJsType)
+
+;;; void SomeJsType.useFieldsAndMethods()
+(func $m_useFieldsAndMethods__void@jstype.SomeJsType
+ (type $function.m_useFieldsAndMethods__void)
+ (param $this.untyped (ref $java.lang.Object))
+ ;;@ jstype/SomeJsType.java:37:14
+ (local $value i32)
+ (local $this (ref null $jstype.SomeJsType))
+ (local.set $this (ref.cast_static $jstype.SomeJsType (local.get $this.untyped)))
+ (block
+  ;;@ jstype/SomeJsType.java:38:4
+  (local.set $value (i32.add (i32.add (i32.add (struct.get $jstype.SomeJsType $f_publicField__jstype_SomeJsType (local.get $this)) (struct.get $jstype.SomeJsType $f_privateField__jstype_SomeJsType_ (local.get $this))) (struct.get $jstype.SomeJsType $f_packageField__jstype_SomeJsType (local.get $this))) (struct.get $jstype.SomeJsType $f_protectedField__jstype_SomeJsType (local.get $this))))
+  ;;@ jstype/SomeJsType.java:40:4
+  (call_ref $function.m_publicMethod__void (ref.as_non_null (local.get $this))(struct.get $jstype.SomeJsType.vtable $m_publicMethod__void (struct.get $jstype.SomeJsType $vtable(local.get $this))))
+  ;;@ jstype/SomeJsType.java:41:4
+  (call $m_privateMethod__void_$p_jstype_SomeJsType@jstype.SomeJsType (ref.as_non_null (local.get $this)))
+  ;;@ jstype/SomeJsType.java:42:4
+  (call_ref $function.m_packageMethod__void_$pp_jstype (ref.as_non_null (local.get $this))(struct.get $jstype.SomeJsType.vtable $m_packageMethod__void_$pp_jstype (struct.get $jstype.SomeJsType $vtable(local.get $this))))
+  ;;@ jstype/SomeJsType.java:43:4
+  (call_ref $function.m_protectedMethod__void (ref.as_non_null (local.get $this))(struct.get $jstype.SomeJsType.vtable $m_protectedMethod__void (struct.get $jstype.SomeJsType $vtable(local.get $this))))
+ )
+)
+(elem declare func $m_useFieldsAndMethods__void@jstype.SomeJsType)
+
+;;; void SomeJsType.$clinit()
+(func $$clinit__void@jstype.SomeJsType
+ ;;@ jstype/SomeJsType.java:23:13
+ (block
+  ;;@ jstype/SomeJsType.java:23:13
+  (if (global.get $f_$initialized__jstype_SomeJsType)
+   (then
+    ;;@ jstype/SomeJsType.java:23:13
+    (return )
+   )
+  )
+  ;;@ jstype/SomeJsType.java:23:13
+  (global.set $f_$initialized__jstype_SomeJsType (i32.const 1))
+  ;;@ jstype/SomeJsType.java:23:13
+  (call $$clinit__void@java.lang.Object )
+ )
+)
+
+;;; Class<T> SomeJsType.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@jstype.SomeJsType
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__jstype_SomeJsType) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__jstype_SomeJsType (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jstype.SomeJ...|__java_lang_String (ref.func $$getString_|jstype.SomeJ...|__java_lang_String@jstype.SomeJsType) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+   )
+  )
+  (return (global.get $f_$class__jstype_SomeJsType))
+ )
+)
+
+;;; Class<?> SomeJsType.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@jstype.SomeJsType
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $jstype.SomeJsType))
+ (local.set $this (ref.cast_static $jstype.SomeJsType (local.get $this.untyped)))
+ (block
+  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@jstype.SomeJsType) ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@jstype.SomeJsType)
+
+;;; String SomeJsType.$getString_|jstype.SomeJ...|()
+(func $$getString_|jstype.SomeJ...|__java_lang_String@jstype.SomeJsType
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|jstype.SomeJ...|__jstype_SomeJsType) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|jstype.SomeJ...|__jstype_SomeJsType (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jstype.SomeJsType")))
+   )
+  )
+  (return (global.get $f_$string_|jstype.SomeJ...|__jstype_SomeJsType))
+ )
+)

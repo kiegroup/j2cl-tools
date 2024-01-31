@@ -1,0 +1,685 @@
+ ;;; Code for deprecated.DeprecatedExample.DeprecatedInterface [type definition]
+ (type $deprecated.DeprecatedExample.DeprecatedInterface.vtable (struct_subtype
+  (field $m_doAThing__int__void (ref $function.m_doAThing__int__void))
+  data)
+ )
+
+ ;;; Code for deprecated.DeprecatedExample.DeprecatedJsFunction [type definition]
+ (type $deprecated.DeprecatedExample.DeprecatedJsFunction.vtable (struct_subtype
+  (field $m_doAThing__java_lang_Object__void (ref $function.m_doAThing__java_lang_Object__void))
+  data)
+ )
+
+ ;;; Code for deprecated.DeprecatedExample [type definition]
+ (type $deprecated.DeprecatedExample (struct_subtype
+  (field $vtable (ref $deprecated.DeprecatedExample.vtable))
+  (field $itable (ref $itable))
+  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
+  (field $f_deprecatedInstanceField__deprecated_DeprecatedExample (ref null $java.lang.String))
+  $java.lang.Object)
+ )
+ (type $deprecated.DeprecatedExample.vtable (struct_subtype
+  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+  (field $m_hashCode__int (ref $function.m_hashCode__int))
+  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
+  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+  (field $m_deprecatedInstanceMethod__java_lang_String__void (ref $function.m_deprecatedInstanceMethod__java_lang_String__void))
+  $java.lang.Object.vtable)
+ )
+
+ ;;; Code for deprecated.DeprecatedExample.DeprecatedEnum [type definition]
+ (type $deprecated.DeprecatedExample.DeprecatedEnum (struct_subtype
+  (field $vtable (ref $deprecated.DeprecatedExample.DeprecatedEnum.vtable))
+  (field $itable (ref $deprecated.DeprecatedExample.DeprecatedEnum.itable))
+  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
+  (field $f_name__java_lang_Enum_ (mut (ref null $java.lang.String)))
+  (field $f_ordinal__java_lang_Enum_ (mut i32))
+  $java.lang.Enum)
+ )
+ (type $deprecated.DeprecatedExample.DeprecatedEnum.vtable (struct_subtype
+  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+  (field $m_hashCode__int (ref $function.m_hashCode__int))
+  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
+  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+  (field $m_getDeclaringClass__java_lang_Class (ref $function.m_getDeclaringClass__java_lang_Class))
+  (field $m_name__java_lang_String (ref $function.m_name__java_lang_String))
+  (field $m_ordinal__int (ref $function.m_ordinal__int))
+  (field $m_compareTo__java_lang_Enum__int (ref $function.m_compareTo__java_lang_Enum__int))
+  (field $m_compareTo__java_lang_Object__int (ref $function.m_compareTo__java_lang_Object__int))
+  $java.lang.Enum.vtable)
+ )
+ (type $deprecated.DeprecatedExample.DeprecatedEnum.itable (struct_subtype
+ (field $slot0 (ref $java.io.Serializable.vtable))
+ (field $slot1 (ref $java.lang.Comparable.vtable))
+ (field $slot2 (ref null struct))
+ (field $slot3 (ref null struct))
+ (field $slot4 (ref null struct))
+ (field $slot5 (ref null struct))
+ (field $slot6 (ref null struct))
+  $java.lang.Enum.itable))
+
+ ;;; Code for deprecated.DeprecatedExample.DeprecatedJsEnum [type definition]
+ (type $deprecated.DeprecatedExample.DeprecatedJsEnum (struct_subtype
+  (field $vtable (ref $deprecated.DeprecatedExample.DeprecatedJsEnum.vtable))
+  (field $itable (ref $deprecated.DeprecatedExample.DeprecatedJsEnum.itable))
+  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
+  (field $f_name__java_lang_Enum_ (mut (ref null $java.lang.String)))
+  (field $f_ordinal__java_lang_Enum_ (mut i32))
+  $java.lang.Enum)
+ )
+ (type $deprecated.DeprecatedExample.DeprecatedJsEnum.vtable (struct_subtype
+  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+  (field $m_hashCode__int (ref $function.m_hashCode__int))
+  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
+  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+  (field $m_getDeclaringClass__java_lang_Class (ref $function.m_getDeclaringClass__java_lang_Class))
+  (field $m_name__java_lang_String (ref $function.m_name__java_lang_String))
+  (field $m_ordinal__int (ref $function.m_ordinal__int))
+  (field $m_compareTo__java_lang_Enum__int (ref $function.m_compareTo__java_lang_Enum__int))
+  (field $m_compareTo__java_lang_Object__int (ref $function.m_compareTo__java_lang_Object__int))
+  $java.lang.Enum.vtable)
+ )
+ (type $deprecated.DeprecatedExample.DeprecatedJsEnum.itable (struct_subtype
+ (field $slot0 (ref $java.io.Serializable.vtable))
+ (field $slot1 (ref $java.lang.Comparable.vtable))
+ (field $slot2 (ref null struct))
+ (field $slot3 (ref null struct))
+ (field $slot4 (ref null struct))
+ (field $slot5 (ref null struct))
+ (field $slot6 (ref null struct))
+  $java.lang.Enum.itable))
+
+;;; Code for deprecated.DeprecatedExample [vtable.init]
+(global $deprecated.DeprecatedExample.vtable (ref $deprecated.DeprecatedExample.vtable)
+ (struct.new $deprecated.DeprecatedExample.vtable
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
+  (ref.func $$getClassImpl__java_lang_Class@deprecated.DeprecatedExample)
+  (ref.func $m_deprecatedInstanceMethod__java_lang_String__void@deprecated.DeprecatedExample)
+ )
+)
+
+;;; Code for deprecated.DeprecatedExample.DeprecatedEnum [vtable.init]
+(global $deprecated.DeprecatedExample.DeprecatedEnum.vtable (ref $deprecated.DeprecatedExample.DeprecatedEnum.vtable)
+ (struct.new $deprecated.DeprecatedExample.DeprecatedEnum.vtable
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Enum)
+  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
+  (ref.func $$getClassImpl__java_lang_Class@deprecated.DeprecatedExample.DeprecatedEnum)
+  (ref.func $m_getDeclaringClass__java_lang_Class@java.lang.Enum)
+  (ref.func $m_name__java_lang_String@java.lang.Enum)
+  (ref.func $m_ordinal__int@java.lang.Enum)
+  (ref.func $m_compareTo__java_lang_Enum__int@java.lang.Enum)
+  (ref.func $m_compareTo__java_lang_Object__int@java.lang.Enum)
+ )
+)
+
+;;; Code for deprecated.DeprecatedExample.DeprecatedEnum [itable.init]
+(global $deprecated.DeprecatedExample.DeprecatedEnum.itable (ref $deprecated.DeprecatedExample.DeprecatedEnum.itable) (struct.new $deprecated.DeprecatedExample.DeprecatedEnum.itable
+ (struct.new $java.io.Serializable.vtable
+ )
+ (struct.new $java.lang.Comparable.vtable
+  (ref.func $m_compareTo__java_lang_Object__int@java.lang.Enum)
+ )
+  (ref.null struct)
+  (ref.null struct)
+  (ref.null struct)
+  (ref.null struct)
+  (ref.null struct)
+ ))
+
+;;; Code for deprecated.DeprecatedExample.DeprecatedJsEnum [vtable.init]
+(global $deprecated.DeprecatedExample.DeprecatedJsEnum.vtable (ref $deprecated.DeprecatedExample.DeprecatedJsEnum.vtable)
+ (struct.new $deprecated.DeprecatedExample.DeprecatedJsEnum.vtable
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Enum)
+  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
+  (ref.func $$getClassImpl__java_lang_Class@deprecated.DeprecatedExample.DeprecatedJsEnum)
+  (ref.func $m_getDeclaringClass__java_lang_Class@java.lang.Enum)
+  (ref.func $m_name__java_lang_String@java.lang.Enum)
+  (ref.func $m_ordinal__int@java.lang.Enum)
+  (ref.func $m_compareTo__java_lang_Enum__int@java.lang.Enum)
+  (ref.func $m_compareTo__java_lang_Object__int@java.lang.Enum)
+ )
+)
+
+;;; Code for deprecated.DeprecatedExample.DeprecatedJsEnum [itable.init]
+(global $deprecated.DeprecatedExample.DeprecatedJsEnum.itable (ref $deprecated.DeprecatedExample.DeprecatedJsEnum.itable) (struct.new $deprecated.DeprecatedExample.DeprecatedJsEnum.itable
+ (struct.new $java.io.Serializable.vtable
+ )
+ (struct.new $java.lang.Comparable.vtable
+  (ref.func $m_compareTo__java_lang_Object__int@java.lang.Enum)
+ )
+  (ref.null struct)
+  (ref.null struct)
+  (ref.null struct)
+  (ref.null struct)
+  (ref.null struct)
+ ))
+
+;;; Code for deprecated.DeprecatedExample [static fields]
+(global $f_$initialized__deprecated_DeprecatedExample (mut i32) (i32.const 0))
+(global $f_$class__deprecated_DeprecatedExample (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|deprecated_f...|__deprecated_DeprecatedExample (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+(global $f_$string_|deprecated.D...|__deprecated_DeprecatedExample (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for deprecated.DeprecatedExample.DeprecatedInterface [static fields]
+(global $f_$initialized__deprecated_DeprecatedExample_DeprecatedInterface (mut i32) (i32.const 0))
+(global $f_$class__deprecated_DeprecatedExample_DeprecatedInterface (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedInterface (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for deprecated.DeprecatedExample.DeprecatedJsFunction [static fields]
+(global $f_$initialized__deprecated_DeprecatedExample_DeprecatedJsFunction (mut i32) (i32.const 0))
+(global $f_$class__deprecated_DeprecatedExample_DeprecatedJsFunction (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedJsFunction (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for deprecated.DeprecatedExample.DeprecatedEnum [static fields]
+(global $f_A_VALUE__deprecated_DeprecatedExample_DeprecatedEnum (mut (ref null $deprecated.DeprecatedExample.DeprecatedEnum)) (ref.null $deprecated.DeprecatedExample.DeprecatedEnum))
+(global $f_namesToValuesMap__deprecated_DeprecatedExample_DeprecatedEnum_ (mut (ref null $java.lang.Object)) (ref.null $java.lang.Object))
+(global $f_$initialized__deprecated_DeprecatedExample_DeprecatedEnum (mut i32) (i32.const 0))
+(global $f_$class__deprecated_DeprecatedExample_DeprecatedEnum (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|A_VALUE|__deprecated_DeprecatedExample_DeprecatedEnum (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+(global $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedEnum (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for deprecated.DeprecatedExample.DeprecatedJsEnum [static fields]
+(global $f_A_VALUE__deprecated_DeprecatedExample_DeprecatedJsEnum (mut (ref null $deprecated.DeprecatedExample.DeprecatedJsEnum)) (ref.null $deprecated.DeprecatedExample.DeprecatedJsEnum))
+(global $f_namesToValuesMap__deprecated_DeprecatedExample_DeprecatedJsEnum_ (mut (ref null $java.lang.Object)) (ref.null $java.lang.Object))
+(global $f_$initialized__deprecated_DeprecatedExample_DeprecatedJsEnum (mut i32) (i32.const 0))
+(global $f_$class__deprecated_DeprecatedExample_DeprecatedJsEnum (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
+(global $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedJsEnum (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+
+;;; Code for deprecated.DeprecatedExample.DeprecatedInterface [methods]
+
+;;; void DeprecatedInterface.$clinit()
+(func $$clinit__void@deprecated.DeprecatedExample.DeprecatedInterface
+ ;;@ deprecated/DeprecatedExample.java:41:12
+ (block
+  ;;@ deprecated/DeprecatedExample.java:41:12
+  (if (global.get $f_$initialized__deprecated_DeprecatedExample_DeprecatedInterface)
+   (then
+    ;;@ deprecated/DeprecatedExample.java:41:12
+    (return )
+   )
+  )
+  ;;@ deprecated/DeprecatedExample.java:41:12
+  (global.set $f_$initialized__deprecated_DeprecatedExample_DeprecatedInterface (i32.const 1))
+ )
+)
+
+;;; Class<T> DeprecatedInterface.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@deprecated.DeprecatedExample.DeprecatedInterface
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__deprecated_DeprecatedExample_DeprecatedInterface) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__deprecated_DeprecatedExample_DeprecatedInterface (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|deprecated.D...|__java_lang_String (ref.func $$getString_|deprecated.D...|__java_lang_String@deprecated.DeprecatedExample.DeprecatedInterface) )))
+   )
+  )
+  (return (global.get $f_$class__deprecated_DeprecatedExample_DeprecatedInterface))
+ )
+)
+
+;;; String DeprecatedInterface.$getString_|deprecated.D...|()
+(func $$getString_|deprecated.D...|__java_lang_String@deprecated.DeprecatedExample.DeprecatedInterface
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedInterface) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedInterface (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "deprecated.DeprecatedExample$DeprecatedInterface")))
+   )
+  )
+  (return (global.get $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedInterface))
+ )
+)
+
+;;; Code for deprecated.DeprecatedExample.DeprecatedJsFunction [methods]
+
+;;; void DeprecatedJsFunction.$clinit()
+(func $$clinit__void@deprecated.DeprecatedExample.DeprecatedJsFunction
+ ;;@ deprecated/DeprecatedExample.java:48:12
+ (block
+  ;;@ deprecated/DeprecatedExample.java:48:12
+  (if (global.get $f_$initialized__deprecated_DeprecatedExample_DeprecatedJsFunction)
+   (then
+    ;;@ deprecated/DeprecatedExample.java:48:12
+    (return )
+   )
+  )
+  ;;@ deprecated/DeprecatedExample.java:48:12
+  (global.set $f_$initialized__deprecated_DeprecatedExample_DeprecatedJsFunction (i32.const 1))
+ )
+)
+
+;;; Class<T> DeprecatedJsFunction.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@deprecated.DeprecatedExample.DeprecatedJsFunction
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__deprecated_DeprecatedExample_DeprecatedJsFunction) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__deprecated_DeprecatedExample_DeprecatedJsFunction (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|deprecated.D...|__java_lang_String (ref.func $$getString_|deprecated.D...|__java_lang_String@deprecated.DeprecatedExample.DeprecatedJsFunction) )))
+   )
+  )
+  (return (global.get $f_$class__deprecated_DeprecatedExample_DeprecatedJsFunction))
+ )
+)
+
+;;; String DeprecatedJsFunction.$getString_|deprecated.D...|()
+(func $$getString_|deprecated.D...|__java_lang_String@deprecated.DeprecatedExample.DeprecatedJsFunction
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedJsFunction) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedJsFunction (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "deprecated.DeprecatedExample$DeprecatedJsFunction")))
+   )
+  )
+  (return (global.get $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedJsFunction))
+ )
+)
+
+;;; Code for deprecated.DeprecatedExample [methods]
+
+;;; void DeprecatedExample.deprecatedStaticMethod(Object someObject)
+(func $m_deprecatedStaticMethod__java_lang_Object__void@deprecated.DeprecatedExample
+ (param $someObject (ref null $java.lang.Object))
+ ;;@ deprecated/DeprecatedExample.java:31:21
+ (block
+  ;;@ deprecated/DeprecatedExample.java:31:63
+  (call $$clinit__void@deprecated.DeprecatedExample )
+ )
+)
+
+;;; void DeprecatedExample.deprecatedInstanceMethod(String someArg)
+(func $m_deprecatedInstanceMethod__java_lang_String__void@deprecated.DeprecatedExample
+ (type $function.m_deprecatedInstanceMethod__java_lang_String__void)
+ (param $this.untyped (ref $java.lang.Object))
+ (param $someArg (ref null $java.lang.String))
+ ;;@ deprecated/DeprecatedExample.java:34:14
+ (local $this (ref null $deprecated.DeprecatedExample))
+ (local.set $this (ref.cast_static $deprecated.DeprecatedExample (local.get $this.untyped)))
+ (block
+ )
+)
+(elem declare func $m_deprecatedInstanceMethod__java_lang_String__void@deprecated.DeprecatedExample)
+
+;;; DeprecatedExample DeprecatedExample.$create()
+(func $$create__@deprecated.DeprecatedExample
+ (result (ref null $deprecated.DeprecatedExample))
+ ;;@ deprecated/DeprecatedExample.java:37:9
+ (local $$instance (ref null $deprecated.DeprecatedExample))
+ (block
+  ;;@ deprecated/DeprecatedExample.java:37:9
+  (local.set $$instance (struct.new $deprecated.DeprecatedExample (ref.as_non_null (global.get $deprecated.DeprecatedExample.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (call $function.no.side.effects.$getString_|deprecated_f...|__java_lang_String (ref.func $$getString_|deprecated_f...|__java_lang_String@deprecated.DeprecatedExample) )))
+  ;;@ deprecated/DeprecatedExample.java:37:9
+  (call $$ctor__void_$p_deprecated_DeprecatedExample@deprecated.DeprecatedExample (ref.as_non_null (local.get $$instance)))
+  ;;@ deprecated/DeprecatedExample.java:37:9
+  (return (local.get $$instance))
+ )
+)
+
+;;; void DeprecatedExample.$ctor()
+(func $$ctor__void_$p_deprecated_DeprecatedExample@deprecated.DeprecatedExample
+ (param $this (ref null $deprecated.DeprecatedExample))
+ ;;@ deprecated/DeprecatedExample.java:37:9
+ (block
+  ;;@ deprecated/DeprecatedExample.java:37:29
+  (call $$clinit__void@deprecated.DeprecatedExample )
+  ;;@ deprecated/DeprecatedExample.java:37:29
+  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
+  ;;@ deprecated/DeprecatedExample.java:37:29
+  (call $$init__void_$p_deprecated_DeprecatedExample@deprecated.DeprecatedExample (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; void DeprecatedExample.$init()
+(func $$init__void_$p_deprecated_DeprecatedExample@deprecated.DeprecatedExample
+ (param $this (ref null $deprecated.DeprecatedExample))
+ ;;@ deprecated/DeprecatedExample.java:25:13
+ (block
+ )
+)
+
+;;; void DeprecatedExample.$clinit()
+(func $$clinit__void@deprecated.DeprecatedExample
+ ;;@ deprecated/DeprecatedExample.java:25:13
+ (block
+  ;;@ deprecated/DeprecatedExample.java:25:13
+  (if (global.get $f_$initialized__deprecated_DeprecatedExample)
+   (then
+    ;;@ deprecated/DeprecatedExample.java:25:13
+    (return )
+   )
+  )
+  ;;@ deprecated/DeprecatedExample.java:25:13
+  (global.set $f_$initialized__deprecated_DeprecatedExample (i32.const 1))
+  ;;@ deprecated/DeprecatedExample.java:25:13
+  (call $$clinit__void@java.lang.Object )
+ )
+)
+
+;;; Class<T> DeprecatedExample.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@deprecated.DeprecatedExample
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__deprecated_DeprecatedExample) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__deprecated_DeprecatedExample (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|deprecated.D...|__java_lang_String (ref.func $$getString_|deprecated.D...|__java_lang_String@deprecated.DeprecatedExample) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+   )
+  )
+  (return (global.get $f_$class__deprecated_DeprecatedExample))
+ )
+)
+
+;;; Class<?> DeprecatedExample.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@deprecated.DeprecatedExample
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $deprecated.DeprecatedExample))
+ (local.set $this (ref.cast_static $deprecated.DeprecatedExample (local.get $this.untyped)))
+ (block
+  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@deprecated.DeprecatedExample) ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@deprecated.DeprecatedExample)
+
+;;; String DeprecatedExample.$getString_|deprecated_f...|()
+(func $$getString_|deprecated_f...|__java_lang_String@deprecated.DeprecatedExample
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|deprecated_f...|__deprecated_DeprecatedExample) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|deprecated_f...|__deprecated_DeprecatedExample (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "deprecated field")))
+   )
+  )
+  (return (global.get $f_$string_|deprecated_f...|__deprecated_DeprecatedExample))
+ )
+)
+
+;;; String DeprecatedExample.$getString_|deprecated.D...|()
+(func $$getString_|deprecated.D...|__java_lang_String@deprecated.DeprecatedExample
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|deprecated.D...|__deprecated_DeprecatedExample) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|deprecated.D...|__deprecated_DeprecatedExample (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "deprecated.DeprecatedExample")))
+   )
+  )
+  (return (global.get $f_$string_|deprecated.D...|__deprecated_DeprecatedExample))
+ )
+)
+
+;;; Code for deprecated.DeprecatedExample.DeprecatedEnum [methods]
+
+;;; DeprecatedEnum DeprecatedEnum.$create(String $name, int $ordinal)
+(func $$create__java_lang_String__int@deprecated.DeprecatedExample.DeprecatedEnum
+ (param $$name (ref null $java.lang.String))
+ (param $$ordinal i32)
+ (result (ref null $deprecated.DeprecatedExample.DeprecatedEnum))
+ ;;@ deprecated/DeprecatedExample.java:55:7
+ (local $$instance (ref null $deprecated.DeprecatedExample.DeprecatedEnum))
+ (block
+  ;;@ deprecated/DeprecatedExample.java:55:7
+  (local.set $$instance (struct.new $deprecated.DeprecatedExample.DeprecatedEnum (ref.as_non_null (global.get $deprecated.DeprecatedExample.DeprecatedEnum.vtable)) (ref.as_non_null (global.get $deprecated.DeprecatedExample.DeprecatedEnum.itable)) (i32.const 0) (ref.null $java.lang.String) (i32.const 0)))
+  ;;@ deprecated/DeprecatedExample.java:55:7
+  (call $$ctor__java_lang_String__int__void_$p_deprecated_DeprecatedExample_DeprecatedEnum@deprecated.DeprecatedExample.DeprecatedEnum (ref.as_non_null (local.get $$instance))(local.get $$name)(local.get $$ordinal))
+  ;;@ deprecated/DeprecatedExample.java:55:7
+  (return (local.get $$instance))
+ )
+)
+
+;;; void DeprecatedEnum.$ctor(String $name, int $ordinal)
+(func $$ctor__java_lang_String__int__void_$p_deprecated_DeprecatedExample_DeprecatedEnum@deprecated.DeprecatedExample.DeprecatedEnum
+ (param $this (ref null $deprecated.DeprecatedExample.DeprecatedEnum))
+ (param $$name (ref null $java.lang.String))
+ (param $$ordinal i32)
+ ;;@ deprecated/DeprecatedExample.java:55:7
+ (block
+  ;;@ deprecated/DeprecatedExample.java:55:7
+  (struct.set $java.lang.Enum $f_name__java_lang_Enum_ (local.get $this) (local.get $$name))
+  ;;@ deprecated/DeprecatedExample.java:55:7
+  (struct.set $java.lang.Enum $f_ordinal__java_lang_Enum_ (local.get $this) (local.get $$ordinal))
+  ;;@ deprecated/DeprecatedExample.java:55:7
+  (call $$ctor__java_lang_String__int__void_$p_java_lang_Enum@java.lang.Enum (ref.as_non_null (local.get $this))(local.get $$name)(local.get $$ordinal))
+ )
+)
+
+;;; DeprecatedEnum DeprecatedEnum.valueOf(String name)
+(func $m_valueOf__java_lang_String__deprecated_DeprecatedExample_DeprecatedEnum@deprecated.DeprecatedExample.DeprecatedEnum
+ (param $name (ref null $java.lang.String))
+ (result (ref null $deprecated.DeprecatedExample.DeprecatedEnum))
+ ;;@ deprecated/DeprecatedExample.java:55:7
+ (block
+  ;;@ deprecated/DeprecatedExample.java:55:7
+  (call $$clinit__void@deprecated.DeprecatedExample.DeprecatedEnum )
+  ;;@ deprecated/DeprecatedExample.java:55:7
+  (if (ref.is_null (global.get $f_namesToValuesMap__deprecated_DeprecatedExample_DeprecatedEnum_))
+   (then
+    (block
+     ;;@ deprecated/DeprecatedExample.java:55:7
+     (global.set $f_namesToValuesMap__deprecated_DeprecatedExample_DeprecatedEnum_ (call $m_createMapFromValues__arrayOf_java_lang_Enum__java_util_Map@javaemul.internal.Enums (call $m_values__arrayOf_deprecated_DeprecatedExample_DeprecatedEnum@deprecated.DeprecatedExample.DeprecatedEnum )))
+    )
+   )
+  )
+  ;;@ deprecated/DeprecatedExample.java:55:7
+  (return (ref.cast_static $deprecated.DeprecatedExample.DeprecatedEnum (call $m_getValueFromNameAndMap__java_lang_String__java_util_Map__java_lang_Object@javaemul.internal.Enums (local.get $name)(global.get $f_namesToValuesMap__deprecated_DeprecatedExample_DeprecatedEnum_))))
+ )
+)
+
+;;; DeprecatedEnum[] DeprecatedEnum.values()
+(func $m_values__arrayOf_deprecated_DeprecatedExample_DeprecatedEnum@deprecated.DeprecatedExample.DeprecatedEnum
+ (result (ref null $javaemul.internal.WasmArray.OfObject))
+ ;;@ deprecated/DeprecatedExample.java:55:7
+ (block
+  ;;@ deprecated/DeprecatedExample.java:55:7
+  (call $$clinit__void@deprecated.DeprecatedExample.DeprecatedEnum )
+  ;;@ deprecated/DeprecatedExample.java:55:7
+  (return (call $$create__arrayOf_java_lang_Object@javaemul.internal.WasmArray.OfObject (array.init_static $java.lang.Object.array (global.get $f_A_VALUE__deprecated_DeprecatedExample_DeprecatedEnum))))
+ )
+)
+
+;;; void DeprecatedEnum.$clinit()
+(func $$clinit__void@deprecated.DeprecatedExample.DeprecatedEnum
+ ;;@ deprecated/DeprecatedExample.java:55:7
+ (block
+  ;;@ deprecated/DeprecatedExample.java:55:7
+  (if (global.get $f_$initialized__deprecated_DeprecatedExample_DeprecatedEnum)
+   (then
+    ;;@ deprecated/DeprecatedExample.java:55:7
+    (return )
+   )
+  )
+  ;;@ deprecated/DeprecatedExample.java:55:7
+  (global.set $f_$initialized__deprecated_DeprecatedExample_DeprecatedEnum (i32.const 1))
+  ;;@ deprecated/DeprecatedExample.java:55:7
+  (call $$clinit__void@java.lang.Enum )
+  ;;@ deprecated/DeprecatedExample.java:56:4
+  (global.set $f_A_VALUE__deprecated_DeprecatedExample_DeprecatedEnum (call $$create__java_lang_String__int@deprecated.DeprecatedExample.DeprecatedEnum (call $function.no.side.effects.$getString_|A_VALUE|__java_lang_String (ref.func $$getString_|A_VALUE|__java_lang_String@deprecated.DeprecatedExample.DeprecatedEnum) )(i32.const 0)))
+ )
+)
+
+;;; Class<T> DeprecatedEnum.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@deprecated.DeprecatedExample.DeprecatedEnum
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__deprecated_DeprecatedExample_DeprecatedEnum) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__deprecated_DeprecatedExample_DeprecatedEnum (call $m_createForEnum__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|deprecated.D...|__java_lang_String (ref.func $$getString_|deprecated.D...|__java_lang_String@deprecated.DeprecatedExample.DeprecatedEnum) )))
+   )
+  )
+  (return (global.get $f_$class__deprecated_DeprecatedExample_DeprecatedEnum))
+ )
+)
+
+;;; Class<?> DeprecatedEnum.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@deprecated.DeprecatedExample.DeprecatedEnum
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $deprecated.DeprecatedExample.DeprecatedEnum))
+ (local.set $this (ref.cast_static $deprecated.DeprecatedExample.DeprecatedEnum (local.get $this.untyped)))
+ (block
+  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@deprecated.DeprecatedExample.DeprecatedEnum) ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@deprecated.DeprecatedExample.DeprecatedEnum)
+
+;;; String DeprecatedEnum.$getString_|A_VALUE|()
+(func $$getString_|A_VALUE|__java_lang_String@deprecated.DeprecatedExample.DeprecatedEnum
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|A_VALUE|__deprecated_DeprecatedExample_DeprecatedEnum) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|A_VALUE|__deprecated_DeprecatedExample_DeprecatedEnum (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "A_VALUE")))
+   )
+  )
+  (return (global.get $f_$string_|A_VALUE|__deprecated_DeprecatedExample_DeprecatedEnum))
+ )
+)
+
+;;; String DeprecatedEnum.$getString_|deprecated.D...|()
+(func $$getString_|deprecated.D...|__java_lang_String@deprecated.DeprecatedExample.DeprecatedEnum
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedEnum) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedEnum (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "deprecated.DeprecatedExample$DeprecatedEnum")))
+   )
+  )
+  (return (global.get $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedEnum))
+ )
+)
+
+;;; Code for deprecated.DeprecatedExample.DeprecatedJsEnum [methods]
+
+;;; DeprecatedJsEnum DeprecatedJsEnum.$create(String $name, int $ordinal)
+(func $$create__java_lang_String__int@deprecated.DeprecatedExample.DeprecatedJsEnum
+ (param $$name (ref null $java.lang.String))
+ (param $$ordinal i32)
+ (result (ref null $deprecated.DeprecatedExample.DeprecatedJsEnum))
+ ;;@ deprecated/DeprecatedExample.java:62:7
+ (local $$instance (ref null $deprecated.DeprecatedExample.DeprecatedJsEnum))
+ (block
+  ;;@ deprecated/DeprecatedExample.java:62:7
+  (local.set $$instance (struct.new $deprecated.DeprecatedExample.DeprecatedJsEnum (ref.as_non_null (global.get $deprecated.DeprecatedExample.DeprecatedJsEnum.vtable)) (ref.as_non_null (global.get $deprecated.DeprecatedExample.DeprecatedJsEnum.itable)) (i32.const 0) (ref.null $java.lang.String) (i32.const 0)))
+  ;;@ deprecated/DeprecatedExample.java:62:7
+  (call $$ctor__java_lang_String__int__void_$p_deprecated_DeprecatedExample_DeprecatedJsEnum@deprecated.DeprecatedExample.DeprecatedJsEnum (ref.as_non_null (local.get $$instance))(local.get $$name)(local.get $$ordinal))
+  ;;@ deprecated/DeprecatedExample.java:62:7
+  (return (local.get $$instance))
+ )
+)
+
+;;; void DeprecatedJsEnum.$ctor(String $name, int $ordinal)
+(func $$ctor__java_lang_String__int__void_$p_deprecated_DeprecatedExample_DeprecatedJsEnum@deprecated.DeprecatedExample.DeprecatedJsEnum
+ (param $this (ref null $deprecated.DeprecatedExample.DeprecatedJsEnum))
+ (param $$name (ref null $java.lang.String))
+ (param $$ordinal i32)
+ ;;@ deprecated/DeprecatedExample.java:62:7
+ (block
+  ;;@ deprecated/DeprecatedExample.java:62:7
+  (struct.set $java.lang.Enum $f_name__java_lang_Enum_ (local.get $this) (local.get $$name))
+  ;;@ deprecated/DeprecatedExample.java:62:7
+  (struct.set $java.lang.Enum $f_ordinal__java_lang_Enum_ (local.get $this) (local.get $$ordinal))
+  ;;@ deprecated/DeprecatedExample.java:62:7
+  (call $$ctor__java_lang_String__int__void_$p_java_lang_Enum@java.lang.Enum (ref.as_non_null (local.get $this))(local.get $$name)(local.get $$ordinal))
+ )
+)
+
+;;; DeprecatedJsEnum DeprecatedJsEnum.valueOf(String name)
+(func $m_valueOf__java_lang_String__deprecated_DeprecatedExample_DeprecatedJsEnum@deprecated.DeprecatedExample.DeprecatedJsEnum
+ (param $name (ref null $java.lang.String))
+ (result (ref null $deprecated.DeprecatedExample.DeprecatedJsEnum))
+ ;;@ deprecated/DeprecatedExample.java:62:7
+ (block
+  ;;@ deprecated/DeprecatedExample.java:62:7
+  (call $$clinit__void@deprecated.DeprecatedExample.DeprecatedJsEnum )
+  ;;@ deprecated/DeprecatedExample.java:62:7
+  (if (ref.is_null (global.get $f_namesToValuesMap__deprecated_DeprecatedExample_DeprecatedJsEnum_))
+   (then
+    (block
+     ;;@ deprecated/DeprecatedExample.java:62:7
+     (global.set $f_namesToValuesMap__deprecated_DeprecatedExample_DeprecatedJsEnum_ (call $m_createMapFromValues__arrayOf_java_lang_Enum__java_util_Map@javaemul.internal.Enums (call $m_values__arrayOf_deprecated_DeprecatedExample_DeprecatedJsEnum@deprecated.DeprecatedExample.DeprecatedJsEnum )))
+    )
+   )
+  )
+  ;;@ deprecated/DeprecatedExample.java:62:7
+  (return (ref.cast_static $deprecated.DeprecatedExample.DeprecatedJsEnum (call $m_getValueFromNameAndMap__java_lang_String__java_util_Map__java_lang_Object@javaemul.internal.Enums (local.get $name)(global.get $f_namesToValuesMap__deprecated_DeprecatedExample_DeprecatedJsEnum_))))
+ )
+)
+
+;;; DeprecatedJsEnum[] DeprecatedJsEnum.values()
+(func $m_values__arrayOf_deprecated_DeprecatedExample_DeprecatedJsEnum@deprecated.DeprecatedExample.DeprecatedJsEnum
+ (result (ref null $javaemul.internal.WasmArray.OfObject))
+ ;;@ deprecated/DeprecatedExample.java:62:7
+ (block
+  ;;@ deprecated/DeprecatedExample.java:62:7
+  (call $$clinit__void@deprecated.DeprecatedExample.DeprecatedJsEnum )
+  ;;@ deprecated/DeprecatedExample.java:62:7
+  (return (call $$create__arrayOf_java_lang_Object@javaemul.internal.WasmArray.OfObject (array.init_static $java.lang.Object.array (global.get $f_A_VALUE__deprecated_DeprecatedExample_DeprecatedJsEnum))))
+ )
+)
+
+;;; void DeprecatedJsEnum.$clinit()
+(func $$clinit__void@deprecated.DeprecatedExample.DeprecatedJsEnum
+ ;;@ deprecated/DeprecatedExample.java:62:7
+ (block
+  ;;@ deprecated/DeprecatedExample.java:62:7
+  (if (global.get $f_$initialized__deprecated_DeprecatedExample_DeprecatedJsEnum)
+   (then
+    ;;@ deprecated/DeprecatedExample.java:62:7
+    (return )
+   )
+  )
+  ;;@ deprecated/DeprecatedExample.java:62:7
+  (global.set $f_$initialized__deprecated_DeprecatedExample_DeprecatedJsEnum (i32.const 1))
+  ;;@ deprecated/DeprecatedExample.java:62:7
+  (call $$clinit__void@java.lang.Enum )
+  ;;@ deprecated/DeprecatedExample.java:63:4
+  (global.set $f_A_VALUE__deprecated_DeprecatedExample_DeprecatedJsEnum (call $$create__java_lang_String__int@deprecated.DeprecatedExample.DeprecatedJsEnum (call $function.no.side.effects.$getString_|A_VALUE|__java_lang_String (ref.func $$getString_|A_VALUE|__java_lang_String@deprecated.DeprecatedExample.DeprecatedEnum) )(i32.const 0)))
+ )
+)
+
+;;; Class<T> DeprecatedJsEnum.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class@deprecated.DeprecatedExample.DeprecatedJsEnum
+ (result (ref null $java.lang.Class))
+ (block
+  (if (ref.eq (global.get $f_$class__deprecated_DeprecatedExample_DeprecatedJsEnum) (ref.null $java.lang.Class))
+   (then
+    (global.set $f_$class__deprecated_DeprecatedExample_DeprecatedJsEnum (call $m_createForEnum__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|deprecated.D...|__java_lang_String (ref.func $$getString_|deprecated.D...|__java_lang_String@deprecated.DeprecatedExample.DeprecatedJsEnum) )))
+   )
+  )
+  (return (global.get $f_$class__deprecated_DeprecatedExample_DeprecatedJsEnum))
+ )
+)
+
+;;; Class<?> DeprecatedJsEnum.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@deprecated.DeprecatedExample.DeprecatedJsEnum
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $deprecated.DeprecatedExample.DeprecatedJsEnum))
+ (local.set $this (ref.cast_static $deprecated.DeprecatedExample.DeprecatedJsEnum (local.get $this.untyped)))
+ (block
+  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@deprecated.DeprecatedExample.DeprecatedJsEnum) ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@deprecated.DeprecatedExample.DeprecatedJsEnum)
+
+;;; String DeprecatedJsEnum.$getString_|deprecated.D...|()
+(func $$getString_|deprecated.D...|__java_lang_String@deprecated.DeprecatedExample.DeprecatedJsEnum
+ (result (ref null $java.lang.String))
+ (block
+  (if (ref.eq (global.get $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedJsEnum) (ref.null $java.lang.String))
+   (then
+    (global.set $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedJsEnum (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "deprecated.DeprecatedExample$DeprecatedJsEnum")))
+   )
+  )
+  (return (global.get $f_$string_|deprecated.D...|__deprecated_DeprecatedExample_DeprecatedJsEnum))
+ )
+)

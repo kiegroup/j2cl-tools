@@ -1,0 +1,40 @@
+goog.module('aptgeneratorplugin.Dummy$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+class Dummy extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!Dummy} */
+ static $create__() {
+  Dummy.$clinit();
+  let $instance = new Dummy();
+  $instance.$ctor__aptgeneratorplugin_Dummy__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__aptgeneratorplugin_Dummy__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @nodts */
+ static $clinit() {
+  Dummy.$clinit = () =>{};
+  Dummy.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof Dummy;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+$Util.$setClassMetadata(Dummy, 'aptgeneratorplugin.Dummy');
+
+exports = Dummy;
+
+//# sourceMappingURL=Dummy.js.map
