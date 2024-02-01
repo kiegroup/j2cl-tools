@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.vertispan.j2cl</groupId>
+  <groupId>org.kie.j2cl.tools</groupId>
   <artifactId>j2cl-tools</artifactId>
   <version>0.23-SNAPSHOT</version>
   <packaging>pom</packaging>
@@ -201,7 +201,7 @@
       </dependency>
 
       <dependency>
-        <groupId>com.vertispan.j2cl</groupId>
+        <groupId>org.kie.j2cl.tools</groupId>
         <artifactId>backend-libraryinfo</artifactId>
         <version>${j2cl.version}</version>
         <exclusions>
@@ -218,7 +218,7 @@
 
 
       <dependency>
-        <groupId>com.vertispan.javascript</groupId>
+        <groupId>org.kie.j2cl.tools</groupId>
         <artifactId>closure-compiler-unshaded</artifactId>
         <version>${closure.compiler.unshaded.version}</version>
         <exclusions>

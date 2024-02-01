@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.vertispan.j2cl</groupId>
+        <groupId>org.kie.j2cl.tools</groupId>
         <artifactId>j2cl-parent</artifactId>
         <version>0.11.0-9336533b6</version>
     </parent>
@@ -59,17 +59,17 @@
         </dependency>
 
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>ast</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>frontend-common</artifactId>
             <version>${project.version}</version>
         </dependency>

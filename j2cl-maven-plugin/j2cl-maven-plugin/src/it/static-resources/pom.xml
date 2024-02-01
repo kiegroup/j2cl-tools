@@ -28,19 +28,19 @@
         </dependency>
 
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>junit-annotations</artifactId>
             <version>@j2cl.version@</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>junit-emul</artifactId>
             <version>@j2cl.version@</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>junit-emul</artifactId>
             <version>@j2cl.version@</version>
             <classifier>sources</classifier>

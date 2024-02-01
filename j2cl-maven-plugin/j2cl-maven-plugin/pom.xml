@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.vertispan.j2cl</groupId>
+    <groupId>org.kie.j2cl.tools</groupId>
     <artifactId>j2cl-tools</artifactId>
     <version>0.23-SNAPSHOT</version>
   </parent>
@@ -60,7 +60,7 @@
       <scope>provided</scope>
     </dependency>
 
-    
+
 
     <!-- test goal dependencies -->
     <dependency>
@@ -91,13 +91,13 @@
     </dependency>
 
     <dependency>
-      <groupId>com.vertispan.j2cl</groupId>
+      <groupId>org.kie.j2cl.tools</groupId>
       <artifactId>build-caching</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>com.vertispan.j2cl</groupId>
+      <groupId>org.kie.j2cl.tools</groupId>
       <artifactId>j2cl-tasks</artifactId>
       <version>${project.version}</version>
     </dependency>

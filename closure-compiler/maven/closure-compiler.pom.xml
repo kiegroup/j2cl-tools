@@ -19,7 +19,7 @@
   >
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.vertispan.javascript</groupId>
+  <groupId>org.kie.j2cl.tools</groupId>
   <artifactId>closure-compiler</artifactId>
   <packaging>jar</packaging>
 
@@ -38,7 +38,7 @@
   <inceptionYear>2009</inceptionYear>
 
   <parent>
-    <groupId>com.vertispan.javascript</groupId>
+    <groupId>org.kie.j2cl.tools</groupId>
     <artifactId>closure-compiler-main</artifactId>
     <version>0.3-SNAPSHOT</version>
     <relativePath>closure-compiler-main.pom.xml</relativePath>

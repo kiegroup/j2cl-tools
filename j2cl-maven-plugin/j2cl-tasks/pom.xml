@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.vertispan.j2cl</groupId>
+        <groupId>org.kie.j2cl.tools</groupId>
         <artifactId>j2cl-tools</artifactId>
         <version>0.23-SNAPSHOT</version>
     </parent>
@@ -17,7 +17,7 @@
     <dependencies>
         <!-- j2cl dependencies -->
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>transpiler</artifactId>
             <version>${j2cl.version}</version>
             <exclusions>
@@ -28,12 +28,12 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>gwt-incompatible-stripper</artifactId>
             <version>${j2cl.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>frontend</artifactId>
             <version>${j2cl.version}</version>
             <exclusions>
@@ -44,14 +44,14 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>common</artifactId>
             <version>${j2cl.version}</version>
         </dependency>
 
         <!-- closure compiler dependencies -->
         <dependency>
-            <groupId>com.vertispan.javascript</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>closure-compiler-unshaded</artifactId>
         </dependency>
         <dependency>
@@ -72,7 +72,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>build-caching</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -93,7 +93,7 @@
                     <version>\${maven.jetty.plugin.version}</version>
                 </plugin>
                 <plugin>
-                    <groupId>com.vertispan.j2cl</groupId>
+                    <groupId>org.kie.j2cl.tools</groupId>
                     <artifactId>j2cl-maven-plugin</artifactId>
                     <version>\${j2cl.maven.plugin.version}</version>
                 </plugin>
@@ -105,7 +105,7 @@
             apply when a maven goal runs on this project - specifically, mvn j2cl:watch.
             -->
             <plugin>
-                <groupId>com.vertispan.j2cl</groupId>
+                <groupId>org.kie.j2cl.tools</groupId>
                 <artifactId>j2cl-maven-plugin</artifactId>
                 <inherited>false</inherited>
                 <configuration>
