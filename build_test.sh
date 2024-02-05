@@ -9,6 +9,7 @@ revision=$(cat revision.txt)
 modules=(
       jakarta-spec
       gwt-nio
+      mapper-xml
      )
 
 for module in "${modules[@]}"

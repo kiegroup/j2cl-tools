@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.kie.j2cl.tools.xml.mapper</groupId>
+  <artifactId>j2cl-demo</artifactId>
+  <packaging>war</packaging>
+  <version>1.0-SNAPSHOT</version>
+
+  <name>GWT/J2CL compatible JAXB-like XML marshallers J2CL demo</name>
+  <description>GWT/J2CL compatible JAXB-like XML marshallers J2CL demo</description>
+  <url>https://github.com/kiegroup/j2cl-tools</url>
+
+  <organization>
+    <name>JBoss by Red Hat</name>
+    <url>http://www.jboss.org/</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>All developers are listed in the KIE GitHub organization</name>
+      <url>https://github.com/orgs/kiegroup/people</url>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://github.com/kiegroup/j2cl-tools.git</connection>
+    <developerConnection>scm:git:ssh://github.com/kiegroup/j2cl-tools.git</developerConnection>
+    <url>https://github.com/kiegroup/j2cl-tools/tree/master</url>
+  </scm>
+
+  <properties>
+    <webappdir>${project.build.directory}/webapp</webappdir>
+    <webapp.libdir>${webappdir}/WEB-INF/lib</webapp.libdir>
+
+    <j2cl.maven.plugin.version>0.20</j2cl.maven.plugin.version>
+    <elemental2.version>1.1.0</elemental2.version>
+
+    <google.jsinterop.version>1.0.0</google.jsinterop.version>
+    <j2cl.version>0.10.0-3c97afeac</j2cl.version>
+    <j2cl.maven.plugin.version>0.19</j2cl.maven.plugin.version>
+
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>1.8</maven.compiler.source>
+
+    <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
+    <maven.tomcat7.plugin.version>2.2</maven.tomcat7.plugin.version>
+    <maven.jetty.plugin.version>9.4.26.v20200117</maven.jetty.plugin.version>
+    <maven.source.plugin.version>3.2.1</maven.source.plugin.version>
+    <maven.resources.plugin.version>3.1.0</maven.resources.plugin.version>
+    <maven.war.plugin.version>3.2.3</maven.war.plugin.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.kie.j2cl.tools.xml.mapper</groupId>
+      <artifactId>api</artifactId>
+      <version>0.7</version>
+    </dependency>
+    <dependency>
+      <groupId>org.kie.j2cl.tools.xml.mapper</groupId>
+      <artifactId>processor</artifactId>
+      <version>0.7</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>${maven.resources.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>custom-resources</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+              <resources>
+                <resource>
+                  <targetPath>${basedir}/target/gwt/launcherDir</targetPath>
+                  <directory>src/main/webapp</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+              <encoding>UTF-8</encoding>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven.compiler.plugin.version}</version>
+        <configuration>
+          <source>${maven.compiler.source}</source>
+          <target>${maven.compiler.target}</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>${maven.war.plugin.version}</version>
+        <configuration>
+          <packagingExcludes>WEB-INF/classes/**</packagingExcludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.2.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.vertispan.j2cl</groupId>
+        <artifactId>j2cl-maven-plugin</artifactId>
+        <version>${j2cl.maven.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>build-js</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <defaultWebappDirectory>${project.build.directory}/gwt/launcherDir</defaultWebappDirectory>
+          <compilationLevel>ADVANCED</compilationLevel>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.tomcat.maven</groupId>
+        <artifactId>tomcat7-maven-plugin</artifactId>
+        <version>${maven.tomcat7.plugin.version}</version>
+        <configuration>
+          <warSourceDirectory>target/gwt/launcherDir/</warSourceDirectory>
+          <path>/</path>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-maven-plugin</artifactId>
+        <version>${maven.jetty.plugin.version}</version>
+        <configuration>
+          <scanIntervalSeconds>2</scanIntervalSeconds>
+          <webApp>
+            <resourceBase>target/gwt/launcherDir/</resourceBase>
+            <contextPath>/</contextPath>
+          </webApp>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

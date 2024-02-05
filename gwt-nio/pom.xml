@@ -10,7 +10,7 @@
 
   <name>GWT NIO Parent</name>
   <description>Parent POM containing the gwt-nio module and the test modules (gwt2- and j2cl-tests)</description>
-  <url>https://github.com/gwtproject/gwt-nio</url>
+  <url>https://github.com/kiegroup/j2cl-toolso</url>
 
   <organization>
     <name>The GWT Authors</name>
@@ -32,9 +32,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git://github.com/gwtproject/gwt-nio.git</connection>
-    <developerConnection>scm:git:ssh://github.com/gwtproject/gwt-nio.git</developerConnection>
-    <url>https://github.com/gwtproject/gwt-nio/tree/master</url>
+    <connection>scm:git:git://github.com/kiegroup/j2cl-tools.git</connection>
+    <developerConnection>scm:git:ssh://github.com/kiegroup/j2cl-tools.git</developerConnection>
+    <url>https://github.com/kiegroup/j2cl-tools/tree/master</url>
   </scm>
 
   <inceptionYear>2020</inceptionYear>

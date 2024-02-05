@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.kie.j2cl.tools.xml.mapper</groupId>
+  <artifactId>gwt-demo</artifactId>
+  <packaging>war</packaging>
+  <version>1.0-SNAPSHOT</version>
+
+
+  <name>GWT/J2CL compatible JAXB-like XML marshallers GWT demo</name>
+  <description>GWT/J2CL compatible JAXB-like XML marshallers GWT demo</description>
+  <url>https://github.com/kiegroup/j2cl-tools</url>
+
+  <organization>
+    <name>JBoss by Red Hat</name>
+    <url>http://www.jboss.org/</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>All developers are listed in the KIE GitHub organization</name>
+      <url>https://github.com/orgs/kiegroup/people</url>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://github.com/kiegroup/j2cl-tools.git</connection>
+    <developerConnection>scm:git:ssh://github.com/kiegroup/j2cl-tools.git</developerConnection>
+    <url>https://github.com/kiegroup/j2cl-tools/tree/master</url>
+  </scm>
+
+  <properties>
+    <!-- Convenience property to set the GWT version -->
+    <gwt.version>2.10.0</gwt.version>
+
+    <!-- GWT 2.8 requires 1.8 -->
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.gwt</groupId>
+        <artifactId>gwt</artifactId>
+        <version>${gwt.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.google.gwt</groupId>
+      <artifactId>gwt-user</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.gwt</groupId>
+      <artifactId>gwt-dev</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kie.j2cl.tools.xml.mapper</groupId>
+      <artifactId>api</artifactId>
+      <version>0.7</version>
+    </dependency>
+    <dependency>
+      <groupId>org.kie.j2cl.tools.xml.mapper</groupId>
+      <artifactId>processor</artifactId>
+      <version>0.7</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <!-- Output classes directly into the webapp, so that IDEs and "mvn process-classes" update them in DevMode -->
+    <outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF/classes</outputDirectory>
+
+    <plugins>
+
+      <!-- Mojo's Maven Plugin for GWT -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>gwt-maven-plugin</artifactId>
+        <version>${gwt.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>test</goal>
+              <goal>generateAsync</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <runTarget>App.html</runTarget>
+          <modules>
+            <module>org.kie.j2cl.tools.xml.mapper.App</module>
+          </modules>
+          <logLevel>INFO</logLevel>
+          <noServer>false</noServer>
+          <extraJvmArgs>-Xmx2048m -XX:CompileThreshold=7000 -Djava.io.tmpdir=${project.build.directory}
+          </extraJvmArgs>
+          <disableCastChecking>true</disableCastChecking>
+          <soycDetailed>false</soycDetailed>
+          <hostedWebapp>src/main/webapp</hostedWebapp>
+          <strict>true</strict>
+          <compileReport>true</compileReport>
+          <saveSource>true</saveSource>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>2.4.1</version>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>${basedir}</directory>
+              <includes>
+                <include>src/main/webapp/App/</include>
+                <include>src/main/gwt-unitCache/</include>
+                <include>src/main/webapp/WEB-INF/deploy/</include>
+                <include>src/main/webapp/WEB-INF/classes/</include>
+                <include>src/main/webapp/WEB-INF/lib/*</include>
+                <include>src/main/webapp/WEB-INF/lib/**/*</include>
+              </includes>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.0</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
