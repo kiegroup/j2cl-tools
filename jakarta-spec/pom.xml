@@ -8,7 +8,7 @@
 
     <groupId>org.kie.j2cl.tools.jakarta</groupId>
     <artifactId>parent</artifactId>
-    <version>0.1</version>
+    <version>0.3</version>
     <packaging>pom</packaging>
 
     <name>GWT/J2CL compatible Jakarta Specs</name>
