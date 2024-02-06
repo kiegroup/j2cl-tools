@@ -1,0 +1,42 @@
+goog.module('libraryinfo.Main.MyJsType$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let Main = goog.forwardDeclare('libraryinfo.Main$impl');
+
+class MyJsType extends j_l_Object {
+ 
+ constructor() {
+  MyJsType.$clinit();
+  super();
+  /**@type {*} @nodts*/
+  this.f_someField__libraryinfo_Main_MyJsType;
+  this.$ctor__libraryinfo_Main_MyJsType__void();
+ }
+ /** @nodts */
+ $ctor__libraryinfo_Main_MyJsType__void() {
+  this.$ctor__java_lang_Object__void();
+  this.f_someField__libraryinfo_Main_MyJsType = Main.$create__();
+ }
+ /** @nodts */
+ static $clinit() {
+  MyJsType.$clinit = () =>{};
+  MyJsType.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof MyJsType;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {
+  Main = goog.module.get('libraryinfo.Main$impl');
+ }
+}
+$Util.$setClassMetadata(MyJsType, 'libraryinfo.Main$MyJsType');
+
+exports = MyJsType;
+
+//# sourceMappingURL=Main$MyJsType.js.map

@@ -1,0 +1,112 @@
+goog.module('implicitparenthesis.ImplicitParenthesis$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let Boolean = goog.forwardDeclare('java.lang.Boolean$impl');
+let Integer = goog.forwardDeclare('java.lang.Integer$impl');
+let $Asserts = goog.forwardDeclare('vmbootstrap.Asserts$impl');
+
+class ImplicitParenthesis extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!ImplicitParenthesis} */
+ static $create__() {
+  ImplicitParenthesis.$clinit();
+  let $instance = new ImplicitParenthesis();
+  $instance.$ctor__implicitparenthesis_ImplicitParenthesis__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__implicitparenthesis_ImplicitParenthesis__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @nodts */
+ m_test__void() {
+  ImplicitParenthesis.m_examples__void();
+  ImplicitParenthesis.m_nonExamples__void();
+ }
+ /** @nodts */
+ static m_examples__void() {
+  let /** number */ primitiveInt;
+  let /** Integer */ boxedInt;
+  {
+   primitiveInt = 5;
+   boxedInt = Integer.$create__int(10);
+   primitiveInt = (primitiveInt == 5 ? Integer.$create__int(15) : Integer.$create__int(30)).m_intValue__int();
+   $Asserts.$assert(primitiveInt == 15);
+  }
+  {
+   primitiveInt = 5;
+   boxedInt = Integer.$create__int(10);
+   primitiveInt = (boxedInt = Integer.m_valueOf__int__java_lang_Integer(boxedInt.m_intValue__int() + primitiveInt | 0)).m_intValue__int();
+   $Asserts.$assert(primitiveInt == 15);
+  }
+  {
+   primitiveInt = 5;
+   boxedInt = Integer.$create__int(10);
+   primitiveInt = (boxedInt = Integer.m_valueOf__int__java_lang_Integer(primitiveInt)).m_intValue__int();
+   $Asserts.$assert(primitiveInt == 5);
+  }
+  {
+   let /** Integer */ $value;
+   primitiveInt = 5;
+   boxedInt = Integer.$create__int(10);
+   primitiveInt = ($value = boxedInt, boxedInt = Integer.m_valueOf__int__java_lang_Integer(boxedInt.m_intValue__int() + 1 | 0), $value).m_intValue__int();
+   $Asserts.$assert(primitiveInt == 10);
+  }
+  {
+   primitiveInt = 5;
+   boxedInt = Integer.$create__int(10);
+   primitiveInt = (boxedInt = Integer.m_valueOf__int__java_lang_Integer(boxedInt.m_intValue__int() + 1 | 0)).m_intValue__int();
+   $Asserts.$assert(primitiveInt == 11);
+  }
+ }
+ /** @nodts */
+ static m_nonExamples__void() {
+  let /** number */ primitiveInt;
+  let /** Integer */ boxedInt;
+  let /** ?boolean */ boxedBoolean;
+  {
+   primitiveInt = 5;
+   boxedInt = Integer.$create__int(10);
+   primitiveInt = boxedInt.m_intValue__int() - primitiveInt | 0;
+   $Asserts.$assert(primitiveInt == 5);
+  }
+  {
+   primitiveInt = 5;
+   boxedInt = Integer.$create__int(10);
+   boxedBoolean = true;
+   boxedBoolean = boxedInt.m_intValue__int() == primitiveInt;
+   $Asserts.$assert(Boolean.m_booleanValue__java_lang_Boolean__boolean(boxedBoolean) == false);
+  }
+ }
+ /** @nodts */
+ static m_parenthesisRemoval__void() {
+  Integer.$create__int(1 + 2 | 0);
+ }
+ /** @nodts */
+ static $clinit() {
+  ImplicitParenthesis.$clinit = () =>{};
+  ImplicitParenthesis.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof ImplicitParenthesis;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {
+  Boolean = goog.module.get('java.lang.Boolean$impl');
+  Integer = goog.module.get('java.lang.Integer$impl');
+  $Asserts = goog.module.get('vmbootstrap.Asserts$impl');
+ }
+}
+$Util.$setClassMetadata(ImplicitParenthesis, 'implicitparenthesis.ImplicitParenthesis');
+
+exports = ImplicitParenthesis;
+
+//# sourceMappingURL=ImplicitParenthesis.js.map

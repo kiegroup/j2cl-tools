@@ -4,5 +4,5 @@
 
 # IntelliJ project files
 .idea
-
+**/.flattened-pom.xml
 target/

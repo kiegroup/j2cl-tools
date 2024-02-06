@@ -1,0 +1,68 @@
+goog.module('autovalue.DefaultConstructorAutoValue$impl');
+
+const ValueType = goog.require('javaemul.internal.ValueType$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let Builder = goog.forwardDeclare('autovalue.DefaultConstructorAutoValue.Builder$impl');
+
+class DefaultConstructorAutoValue extends ValueType {
+ /** @protected @nodts */
+ constructor() {
+  super();
+  /**@type {boolean} @nodts*/
+  this.f_booleanField__autovalue_AutoValue_DefaultConstructorAutoValue_ = false;
+ }
+ /** @nodts @return {!DefaultConstructorAutoValue} */
+ static $create__() {
+  DefaultConstructorAutoValue.$clinit();
+  let $instance = new DefaultConstructorAutoValue();
+  $instance.$ctor__autovalue_DefaultConstructorAutoValue__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__autovalue_DefaultConstructorAutoValue__void() {
+  this.$ctor__javaemul_internal_ValueType__void();
+ }
+ /** @nodts @return {DefaultConstructorAutoValue} */
+ static m_create__autovalue_DefaultConstructorAutoValue() {
+  DefaultConstructorAutoValue.$clinit();
+  return Builder.$create__().m_setBooleanField__boolean__autovalue_DefaultConstructorAutoValue_Builder_$pp_autovalue(true).m_build__autovalue_DefaultConstructorAutoValue();
+ }
+ /** @nodts @return {!DefaultConstructorAutoValue} */
+ static $create__boolean(/** boolean */ booleanField) {
+  DefaultConstructorAutoValue.$clinit();
+  let $instance = new DefaultConstructorAutoValue();
+  $instance.$ctor__autovalue_DefaultConstructorAutoValue__boolean__void(booleanField);
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__autovalue_DefaultConstructorAutoValue__boolean__void(/** boolean */ booleanField) {
+  this.$ctor__autovalue_DefaultConstructorAutoValue__void();
+  this.f_booleanField__autovalue_AutoValue_DefaultConstructorAutoValue_ = booleanField;
+  $J2CL_PRESERVE$(this.f_booleanField__autovalue_AutoValue_DefaultConstructorAutoValue_);
+ }
+ /** @nodts @return {boolean} */
+ m_getBooleanField__boolean() {
+  return this.f_booleanField__autovalue_AutoValue_DefaultConstructorAutoValue_;
+ }
+ /** @nodts */
+ static $clinit() {
+  DefaultConstructorAutoValue.$clinit = () =>{};
+  DefaultConstructorAutoValue.$loadModules();
+  ValueType.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof DefaultConstructorAutoValue;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {
+  Builder = goog.module.get('autovalue.DefaultConstructorAutoValue.Builder$impl');
+ }
+}
+$Util.$setClassMetadata(DefaultConstructorAutoValue, 'autovalue.DefaultConstructorAutoValue');
+
+exports = DefaultConstructorAutoValue;
+
+//# sourceMappingURL=DefaultConstructorAutoValue.js.map

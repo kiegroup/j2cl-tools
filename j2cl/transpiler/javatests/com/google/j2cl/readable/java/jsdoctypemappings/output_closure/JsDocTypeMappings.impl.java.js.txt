@@ -1,0 +1,183 @@
+goog.module('jsdoctypemappings.JsDocTypeMappings$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let Byte = goog.forwardDeclare('java.lang.Byte$impl');
+let Character = goog.forwardDeclare('java.lang.Character$impl');
+let Comparable = goog.forwardDeclare('java.lang.Comparable$impl');
+let Float = goog.forwardDeclare('java.lang.Float$impl');
+let Integer = goog.forwardDeclare('java.lang.Integer$impl');
+let Long = goog.forwardDeclare('java.lang.Long$impl');
+let Short = goog.forwardDeclare('java.lang.Short$impl');
+let Comparator = goog.forwardDeclare('java.util.Comparator$impl');
+let ExportedType = goog.forwardDeclare('jsdoctypemappings.JsDocTypeMappings.ExportedTypeNewName$impl');
+let $Long = goog.forwardDeclare('nativebootstrap.Long$impl');
+
+class JsDocTypeMappings extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!JsDocTypeMappings} */
+ static $create__() {
+  JsDocTypeMappings.$clinit();
+  let $instance = new JsDocTypeMappings();
+  $instance.$ctor__jsdoctypemappings_JsDocTypeMappings__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__jsdoctypemappings_JsDocTypeMappings__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @nodts @return {Comparator<?>} */
+ m_returnComparatorWildcard__java_util_Comparator_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {(Comparable|boolean|number|string)} */
+ m_returnComparable__java_lang_Comparable_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {?string} */
+ m_returnJavaLangString__java_lang_String_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {*} */
+ m_returnJavaLangObject__java_lang_Object_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {Byte} */
+ m_returnJavaLangByte__java_lang_Byte_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {Short} */
+ m_returnJavaLangShort__java_lang_Short_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {Integer} */
+ m_returnJavaLangInteger__java_lang_Integer_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {Long} */
+ m_returnJavaLangLong__java_lang_Long_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {Float} */
+ m_returnJavaLangFloat__java_lang_Float_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {?number} */
+ m_returnJavaLangDouble__java_lang_Double_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {Character} */
+ m_returnJavaLangCharacter__java_lang_Character_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {?boolean} */
+ m_returnJavaLangBoolean__java_lang_Boolean_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {number} */
+ m_returnByte__byte_$pp_jsdoctypemappings() {
+  return 0;
+ }
+ /** @nodts @return {number} */
+ m_returnShort__short_$pp_jsdoctypemappings() {
+  return 0;
+ }
+ /** @nodts @return {number} */
+ m_returnInt__int_$pp_jsdoctypemappings() {
+  return 0;
+ }
+ /** @nodts @return {!$Long} */
+ m_returnLong__long_$pp_jsdoctypemappings() {
+  return $Long.fromInt(0);
+ }
+ /** @nodts @return {number} */
+ m_returnFloat__float_$pp_jsdoctypemappings() {
+  return 0;
+ }
+ /** @nodts @return {number} */
+ m_returnDouble__double_$pp_jsdoctypemappings() {
+  return 0;
+ }
+ /** @nodts @return {number} */
+ m_returnChar__char_$pp_jsdoctypemappings() {
+  return 0 /* '\u0000' */;
+ }
+ /** @nodts @return {boolean} */
+ m_returnBoolean__boolean_$pp_jsdoctypemappings() {
+  return false;
+ }
+ /** @nodts */
+ m_returnVoid__void_$pp_jsdoctypemappings() {}
+ /** @nodts @return {?function():void} */
+ m_returnNativeFunction__jsdoctypemappings_JsDocTypeMappings_NativeFunction_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {Array} */
+ m_returnNativeType__jsdoctypemappings_JsDocTypeMappings_NativeType_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {ExportedType} */
+ m_returnExportedType__jsdoctypemappings_JsDocTypeMappings_ExportedType_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @template MethodTypeParameter @return {MethodTypeParameter} */
+ m_returnMethodTypeParameter__java_lang_Object_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {?number} */
+ m_returnNativeNumber__jsdoctypemappings_JsDocTypeMappings_NativeNumber_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {?boolean} */
+ m_returnNativeBoolean__jsdoctypemappings_JsDocTypeMappings_NativeBoolean_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {?string} */
+ m_returnNativeString__jsdoctypemappings_JsDocTypeMappings_NativeString_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {null} */
+ m_returnNativeNull__jsdoctypemappings_JsDocTypeMappings_NativeNull_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {?undefined} */
+ m_returnNativeUndefined__jsdoctypemappings_JsDocTypeMappings_NativeUndefined_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {?void} */
+ m_returnNativeVoid__jsdoctypemappings_JsDocTypeMappings_NativeVoid_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {*} */
+ m_returnStar__jsdoctypemappings_JsDocTypeMappings_NativeStar_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts @return {?} */
+ m_returnNativeWildcard__jsdoctypemappings_JsDocTypeMappings_NativeWildcard_$pp_jsdoctypemappings() {
+  return null;
+ }
+ /** @nodts */
+ static $clinit() {
+  JsDocTypeMappings.$clinit = () =>{};
+  JsDocTypeMappings.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof JsDocTypeMappings;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {
+  $Long = goog.module.get('nativebootstrap.Long$impl');
+ }
+}
+$Util.$setClassMetadata(JsDocTypeMappings, 'jsdoctypemappings.JsDocTypeMappings');
+
+exports = JsDocTypeMappings;
+
+//# sourceMappingURL=JsDocTypeMappings.js.map

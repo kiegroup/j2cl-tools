@@ -1,0 +1,52 @@
+goog.module('gwtincompatible.Implementor$impl');
+
+const Interface = goog.require('gwtincompatible.Interface$impl');
+const ClassWithAbstractMethod = goog.require('gwtincompatible.Interface.ClassWithAbstractMethod$impl');
+const NestedInterface = goog.require('gwtincompatible.Interface.NestedInterface$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+/**
+ * @implements {Interface}
+ * @implements {NestedInterface}
+ */
+class Implementor extends ClassWithAbstractMethod {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!Implementor} */
+ static $create__() {
+  Implementor.$clinit();
+  let $instance = new Implementor();
+  $instance.$ctor__gwtincompatible_Implementor__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__gwtincompatible_Implementor__void() {
+  this.$ctor__gwtincompatible_Interface_ClassWithAbstractMethod__void();
+ }
+ /** @nodts */
+ m_compatibleMethod__void() {
+  let a = 4;
+ }
+ /** @nodts */
+ static $clinit() {
+  Implementor.$clinit = () =>{};
+  Implementor.$loadModules();
+  ClassWithAbstractMethod.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof Implementor;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+Interface.$markImplementor(Implementor);
+NestedInterface.$markImplementor(Implementor);
+$Util.$setClassMetadata(Implementor, 'gwtincompatible.Implementor');
+
+exports = Implementor;
+
+//# sourceMappingURL=Implementor.js.map

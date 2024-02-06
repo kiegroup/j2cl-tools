@@ -1,0 +1,42 @@
+goog.module('intersectiontype.Setable$impl');
+
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let $LambdaAdaptor = goog.forwardDeclare('intersectiontype.Setable.$LambdaAdaptor$impl');
+
+/**
+ * @interface
+ */
+class Setable {
+ /** @abstract @nodts */
+ m_set__int__void(/** number */ i) {}
+ /** @nodts @return {Setable} */
+ static $adapt(/** ?function(number):void */ fn) {
+  Setable.$clinit();
+  return new $LambdaAdaptor(fn);
+ }
+ /** @nodts */
+ static $clinit() {
+  Setable.$clinit = () =>{};
+  Setable.$loadModules();
+ }
+ 
+ static $markImplementor(/** Function */ ctor) {
+  ctor.prototype.$implements__intersectiontype_Setable = true;
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance != null && !!instance.$implements__intersectiontype_Setable;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {
+  $LambdaAdaptor = goog.module.get('intersectiontype.Setable.$LambdaAdaptor$impl');
+ }
+}
+Setable.$markImplementor(/**@type {Function}*/ (Setable));
+$Util.$setClassMetadataForInterface(Setable, 'intersectiontype.Setable');
+
+exports = Setable;
+
+//# sourceMappingURL=Setable.js.map

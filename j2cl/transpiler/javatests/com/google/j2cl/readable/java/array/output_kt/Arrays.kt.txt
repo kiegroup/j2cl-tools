@@ -1,0 +1,209 @@
+// Generated from "array/Arrays.java"
+@file:OptIn(ExperimentalObjCName::class, ExperimentalObjCRefinement::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package array
+
+import javaemul.lang.*
+import java.io.Serializable
+import kotlin.Any
+import kotlin.Array
+import kotlin.Boolean
+import kotlin.Byte
+import kotlin.Char
+import kotlin.Cloneable
+import kotlin.Int
+import kotlin.IntArray
+import kotlin.Long
+import kotlin.LongArray
+import kotlin.OptIn
+import kotlin.String
+import kotlin.Suppress
+import kotlin.arrayOf
+import kotlin.arrayOfNulls
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.experimental.ExperimentalObjCRefinement
+import kotlin.intArrayOf
+import kotlin.jvm.JvmField
+import kotlin.longArrayOf
+import kotlin.native.HiddenFromObjC
+import kotlin.native.ObjCName
+
+@ObjCName("J2ktArrayArrays", exact = true)
+open class Arrays {
+ @ObjCName("testObjectArray")
+ open fun testObjectArray() {
+  var objects: Array<Any?>? = arrayOfNulls<Any>(100)
+  objects = arrayOfNulls<Any>(0)
+  objects = arrayOf<Any?>(null, null)
+  var objects2d: Array<Array<Any?>?>? = Array<Array<Any?>?>(5) {
+   arrayOfNulls<Any>(10)
+  }
+  objects2d = arrayOf<Array<Any?>?>(arrayOf<Any?>(null, null), null)
+  objects2d = arrayOfNulls<Array<Any?>>(20)
+  val arrayLiteral2d: Array<Array<Any?>?>? = arrayOf<Array<Any?>?>(arrayOf<Any?>(null, null), null)
+  var `object`: Any? = objects!![0]
+  `object` = objects2d!![0]!![1]
+  objects!![0] = null
+  objects2d!![0]!![1] = null
+ }
+
+ @ObjCName("testJavaTypeArray")
+ open fun testJavaTypeArray() {
+  var objects: Array<Arrays.SomeObject?>? = arrayOfNulls<Arrays.SomeObject>(100)
+  objects = arrayOfNulls<Arrays.SomeObject>(0)
+  objects = arrayOf<Arrays.SomeObject?>(null, null)
+  var objects2d: Array<Array<Arrays.SomeObject?>?>? = Array<Array<Arrays.SomeObject?>?>(5) {
+   arrayOfNulls<Arrays.SomeObject>(10)
+  }
+  objects2d = arrayOf<Array<Arrays.SomeObject?>?>(arrayOf<Arrays.SomeObject?>(null, null), null)
+  objects2d = arrayOfNulls<Array<Arrays.SomeObject?>>(20)
+  var someObject: Arrays.SomeObject? = objects!![0]
+  someObject = objects2d!![0]!![1]
+  objects!![0] = null
+  objects2d!![0]!![1] = null
+ }
+
+ @HiddenFromObjC
+ open fun testIntArrays_pp_array() {
+  var ints: IntArray? = IntArray(100)
+  ints = IntArray(0)
+  ints = intArrayOf(0, 1)
+  var ints2d: Array<IntArray?>? = Array<IntArray?>(5) {
+   IntArray(10)
+  }
+  ints2d = arrayOf<IntArray?>(intArrayOf(1, 2), null)
+  ints2d = arrayOfNulls<IntArray>(20)
+  var n: Int = ints!![0]
+  n = ints2d!![0]!![1]
+  ints!![0] = 1
+  ints2d!![0]!![1] = 1
+  val b: Byte = 1.toByte()
+  val c: Char = 'a'
+  ints = IntArray(b.toInt())
+  ints!![b.toInt()] = b.toInt()
+  ints = IntArray(c.code)
+  ints!![c.code] = c.code
+  ints = intArrayOf(b.toInt(), c.code)
+ }
+
+ @HiddenFromObjC
+ open fun testLongArrays_pp_array() {
+  var longs: LongArray? = LongArray(100)
+  longs = LongArray(0)
+  longs = longArrayOf(0L, 1L)
+  var longs2d: Array<LongArray?>? = Array<LongArray?>(5) {
+   LongArray(10)
+  }
+  longs2d = arrayOf<LongArray?>(longArrayOf(1L, 2L), null)
+  longs2d = arrayOfNulls<LongArray>(20)
+  var n: Long = longs!![0]
+  n = longs2d!![0]!![1]
+  longs!![0] = 1L
+  longs2d!![0]!![1] = 1L
+  val b: Byte = 1.toByte()
+  val c: Char = 'a'
+  longs = LongArray(b.toInt())
+  longs!![b.toInt()] = b.toLong()
+  longs = LongArray(c.code)
+  longs!![c.code] = c.code.toLong()
+  longs = longArrayOf(b.toLong(), c.code.toLong())
+ }
+
+ @HiddenFromObjC
+ open fun testDevirtualizedTypeArrays_pp_array() {
+  var booleans: Array<Boolean?>? = arrayOfNulls<Boolean>(100)
+  booleans = arrayOfNulls<Boolean>(0)
+  booleans = arrayOf<Boolean?>(Boolean.valueOf(true), Boolean.valueOf(false))
+  var booleans2d: Array<Array<Boolean?>?>? = Array<Array<Boolean?>?>(5) {
+   arrayOfNulls<Boolean>(10)
+  }
+  booleans2d = arrayOf<Array<Boolean?>?>(arrayOf<Boolean?>(Boolean.valueOf(true), Boolean.valueOf(false)), null)
+  booleans2d = arrayOfNulls<Array<Boolean?>>(20)
+  var b: Boolean = booleans!![0]!!.booleanValue()
+  b = booleans2d!![0]!![1]!!.booleanValue()
+  booleans!![0] = Boolean.valueOf(true)
+  booleans2d!![0]!![1] = Boolean.valueOf(false)
+ }
+
+ @HiddenFromObjC
+ open fun testStringArrays_pp_array() {
+  var strings: Array<String?>? = arrayOfNulls<String>(100)
+  strings = arrayOfNulls<String>(0)
+  strings = arrayOf<String?>(null, null)
+  var strings2d: Array<Array<String?>?>? = Array<Array<String?>?>(5) {
+   arrayOfNulls<String>(10)
+  }
+  strings2d = arrayOf<Array<String?>?>(arrayOf<String?>(null, null), null)
+  strings2d = arrayOfNulls<Array<String?>>(20)
+  var b: String? = strings!![0]
+  b = strings2d!![0]!![1]
+  strings!![0] = null
+  strings2d!![0]!![1] = null
+ }
+
+ @HiddenFromObjC
+ fun testNativeArray_private_2() {
+  var nativeObjects: Array<Arrays.NativeType?>? = arrayOfNulls<Arrays.NativeType>(100)
+  nativeObjects = arrayOfNulls<Arrays.NativeType>(0)
+  nativeObjects = arrayOf<Arrays.NativeType?>(null, null)
+  var nativeObjects2d: Array<Array<Arrays.NativeType?>?>? = Array<Array<Arrays.NativeType?>?>(5) {
+   arrayOfNulls<Arrays.NativeType>(10)
+  }
+  nativeObjects2d = arrayOf<Array<Arrays.NativeType?>?>(arrayOf<Arrays.NativeType?>(null, null), null)
+  nativeObjects2d = arrayOfNulls<Array<Arrays.NativeType?>>(20)
+  var nativeObject: Arrays.NativeType? = nativeObjects!![0]
+  nativeObject = nativeObjects2d!![0]!![1]
+  nativeObjects!![0] = null
+  nativeObjects2d!![0]!![1] = null
+ }
+
+ @ObjCName("testErasureCastsOnArrayAccess")
+ open fun testErasureCastsOnArrayAccess() {
+  val container: Arrays.ArrayContainer<String?>? = null
+  val s: String? = container!!.data_pp_array!![0]
+ }
+
+ @ObjCName("testCovariance")
+ open fun testCovariance() {
+  var objectArray: Array<Any?>? = null
+  val stringArray: Array<String?>? = null
+  objectArray = stringArray as Array<Any?>?
+ }
+
+ @ObjCName("testArraysSupertypeClosureTypes")
+ open fun testArraysSupertypeClosureTypes() {}
+
+ @ObjCName("consumesCloneable")
+ open fun consumesCloneable(
+  @ObjCName("withNSCopying") cloneable: Cloneable?
+ ) {}
+
+ @ObjCName("consumesSerializable")
+ open fun consumesSerializable(
+  @ObjCName("withJavaIoSerializable") serializable: Serializable?
+ ) {}
+
+ open inner class SomeObject {}
+
+ open class NativeType {}
+
+ open class ArrayContainer<T> {
+  @JvmField
+  @HiddenFromObjC
+  var data_pp_array: Array<T>? = null
+ }
+}

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.vertispan.j2cl</groupId>
+    <artifactId>j2cl-parent</artifactId>
+    <version>v20230718-1</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+  <artifactId>gwttestcase-emul</artifactId>
+  <packaging>pom</packaging>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.0.0</version>
+        <executions>
+          <execution>
+            <id>attach-artifacts</id>
+            <phase>package</phase>
+            <goals>
+              <goal>attach-artifact</goal>
+            </goals>
+            <configuration>
+              <artifacts>
+                <artifact>
+                  <file>../../../bazel-bin/jre/javatests/com/google/gwt/junit/libgwttestcase_emul.jar</file>
+                  <type>jar</type>
+                </artifact>
+                <artifact>
+                  <file>../../../bazel-bin/jre/javatests/com/google/gwt/junit/libgwttestcase_emul-src.jar</file>
+                  <type>jar</type>
+                  <classifier>sources</classifier>
+                </artifact>
+                <artifact>
+                  <file>../../../bazel-bin/jre/javatests/com/google/gwt/junit/gwttestcase_emul-javadoc.jar</file>
+                  <type>jar</type>
+                  <classifier>javadoc</classifier>
+                </artifact>
+              </artifacts>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>junit-emul</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>junit-emul</artifactId>
+      <version>${project.version}</version>
+      <classifier>sources</classifier>
+    </dependency>
+  </dependencies>
+</project>

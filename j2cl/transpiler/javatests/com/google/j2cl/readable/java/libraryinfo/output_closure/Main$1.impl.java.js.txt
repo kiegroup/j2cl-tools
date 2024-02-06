@@ -1,0 +1,42 @@
+goog.module('libraryinfo.Main.$1$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+class $1 extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!$1} */
+ static $create__() {
+  $1.$clinit();
+  let $instance = new $1();
+  $instance.$ctor__libraryinfo_Main_1__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__libraryinfo_Main_1__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ 
+ foo() {}
+ /** @nodts */
+ static $clinit() {
+  $1.$clinit = () =>{};
+  $1.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof $1;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+$Util.$setClassMetadata($1, 'libraryinfo.Main$1');
+
+exports = $1;
+
+//# sourceMappingURL=Main$1.js.map

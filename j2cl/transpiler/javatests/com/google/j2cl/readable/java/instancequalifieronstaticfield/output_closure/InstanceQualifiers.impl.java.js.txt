@@ -1,0 +1,107 @@
+goog.module('instancequalifieronstaticfield.InstanceQualifiers$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+class InstanceQualifiers extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!InstanceQualifiers} */
+ static $create__() {
+  InstanceQualifiers.$clinit();
+  let $instance = new InstanceQualifiers();
+  $instance.$ctor__instancequalifieronstaticfield_InstanceQualifiers__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__instancequalifieronstaticfield_InstanceQualifiers__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @nodts @return {number} */
+ static m_getStaticValue__int() {
+  InstanceQualifiers.$clinit();
+  return InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers;
+ }
+ /** @nodts @return {InstanceQualifiers} */
+ static m_getStaticInstanceQualifiers__instancequalifieronstaticfield_InstanceQualifiers() {
+  InstanceQualifiers.$clinit();
+  return null;
+ }
+ /** @nodts */
+ static m_main__arrayOf_java_lang_String__void(/** Array<?string> */ args) {
+  InstanceQualifiers.$clinit();
+  let main = InstanceQualifiers.$create__();
+  let i = 0;
+  {
+   InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers = 100;
+  }
+  {
+   InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers = 100;
+   {
+    InstanceQualifiers.m_getStaticInstanceQualifiers__instancequalifieronstaticfield_InstanceQualifiers();
+    InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers = 300;
+   }
+  }
+  {
+   i = InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers;
+   i = InstanceQualifiers.m_getStaticValue__int();
+   i = (InstanceQualifiers.m_getStaticInstanceQualifiers__instancequalifieronstaticfield_InstanceQualifiers(), InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers);
+  }
+  {
+   InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers = InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers + 100 | 0;
+   {
+    InstanceQualifiers.m_getStaticInstanceQualifiers__instancequalifieronstaticfield_InstanceQualifiers();
+    InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers = InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers + 100 | 0;
+   }
+  }
+  {
+   {
+    InstanceQualifiers.m_getStaticInstanceQualifiers__instancequalifieronstaticfield_InstanceQualifiers();
+    InstanceQualifiers.m_getStaticInstanceQualifiers__instancequalifieronstaticfield_InstanceQualifiers();
+    InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers = InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers + (InstanceQualifiers.m_getStaticInstanceQualifiers__instancequalifieronstaticfield_InstanceQualifiers(), InstanceQualifiers.m_getStaticInstanceQualifiers__instancequalifieronstaticfield_InstanceQualifiers(), InstanceQualifiers.m_getStaticValue__int()) | 0;
+   }
+  }
+ }
+ /** @nodts @return {number} */
+ static get f_staticField__instancequalifieronstaticfield_InstanceQualifiers() {
+  return (InstanceQualifiers.$clinit(), InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers);
+ }
+ /** @nodts */
+ static set f_staticField__instancequalifieronstaticfield_InstanceQualifiers(/** number */ value) {
+  (InstanceQualifiers.$clinit(), InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers = value);
+ }
+ /** @nodts @return {number} */
+ static get f_sideEffectCount__instancequalifieronstaticfield_InstanceQualifiers() {
+  return (InstanceQualifiers.$clinit(), InstanceQualifiers.$static_sideEffectCount__instancequalifieronstaticfield_InstanceQualifiers);
+ }
+ /** @nodts */
+ static set f_sideEffectCount__instancequalifieronstaticfield_InstanceQualifiers(/** number */ value) {
+  (InstanceQualifiers.$clinit(), InstanceQualifiers.$static_sideEffectCount__instancequalifieronstaticfield_InstanceQualifiers = value);
+ }
+ /** @nodts */
+ static $clinit() {
+  InstanceQualifiers.$clinit = () =>{};
+  InstanceQualifiers.$loadModules();
+  j_l_Object.$clinit();
+  InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers = 100;
+  InstanceQualifiers.$static_sideEffectCount__instancequalifieronstaticfield_InstanceQualifiers = 0;
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof InstanceQualifiers;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+/**@private {number} @nodts*/
+InstanceQualifiers.$static_staticField__instancequalifieronstaticfield_InstanceQualifiers = 0;
+/**@private {number} @nodts*/
+InstanceQualifiers.$static_sideEffectCount__instancequalifieronstaticfield_InstanceQualifiers = 0;
+$Util.$setClassMetadata(InstanceQualifiers, 'instancequalifieronstaticfield.InstanceQualifiers');
+
+exports = InstanceQualifiers;
+
+//# sourceMappingURL=InstanceQualifiers.js.map

@@ -1,0 +1,4 @@
+[NativeFunction] => [$Overlay]
+[NativeFunction] => [$clinit]
+[NativeFunction] => [$Overlay.$clinit = () =>{};] "importglobaljstypes.Number$NativeFunction$$Overlay.<clinit>"
+[NativeFunction] => [$Overlay.$loadModules();] "importglobaljstypes.Number$NativeFunction$$Overlay.<clinit>"

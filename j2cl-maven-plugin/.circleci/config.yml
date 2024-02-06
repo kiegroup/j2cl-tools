@@ -1,0 +1,44 @@
+defaults: &defaults
+    working_directory: ~/repo
+    docker:
+      - image: cimg/openjdk:11.0
+    filters:
+      branches:
+        only:
+          - main
+    environment:
+      MAVEN_OPTS: -Xmx3200m
+      _JAVA_OPTIONS: "-Xms1g -Xmx1g"
+
+version: 2
+jobs:
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v2-dependencies-{{ checksum "pom.xml" }}
+            # fallback to using the latest cache if no exact match is found
+            - v2-dependencies-
+
+      - run: mvn org.apache.maven.plugins:maven-dependency-plugin:3.2.0:go-offline -U
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v2-dependencies-{{ checksum "pom.xml" }}
+
+      - run:
+          name: Build and push to Artifactory
+          command: |
+            mvn deploy -s .circleci/settings.xml -Dinvoker.streamLogsOnFailures=true -Dartifactory.username=$ARTIFACTORY_USER -Dartifactory.password=$ARTIFACTORY_APIKEY
+
+workflows:
+  version: 2
+  ci_build:
+    jobs:
+      - build:
+          context: deploy-keys

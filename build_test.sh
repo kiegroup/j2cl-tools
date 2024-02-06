@@ -7,7 +7,11 @@ set -e
 revision=$(cat revision.txt)
 
 modules=(
+      gwt-nio
       jakarta-spec
+      mapper-xml
+      mapper-json
+      mapper-yaml
      )
 
 for module in "${modules[@]}"

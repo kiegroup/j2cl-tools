@@ -1,0 +1,4 @@
+[NativeObject] => [$Overlay]
+[NativeObject] => [$clinit]
+[NativeObject] => [$Overlay.$clinit = () =>{};] "jsvarargs.Main$NativeObject$$Overlay.<clinit>"
+[NativeObject] => [$Overlay.$loadModules();] "jsvarargs.Main$NativeObject$$Overlay.<clinit>"

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>j2cl-tests</artifactId>
+    <groupId>org.kie.j2cl.tools.json.mapper</groupId>
+    <version>0.4.1</version>
+
+    <name>GWT/J2CL Jakarta JSON Binding J2CL tests</name>
+    <description>GWT/J2CL Jakarta JSON Binding J2CL tests</description>
+    <url>https://github.com/kiegroup/j2cl-tools</url>
+
+    <organization>
+        <name>JBoss by Red Hat</name>
+        <url>http://www.jboss.org/</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>All developers are listed in the KIE GitHub organization</name>
+            <url>https://github.com/orgs/kiegroup/people</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/kiegroup/j2cl-tools.git</connection>
+        <developerConnection>scm:git:ssh://github.com/kiegroup/j2cl-tools.git</developerConnection>
+        <url>https://github.com/kiegroup/j2cl-tools/tree/master</url>
+    </scm>
+
+    <properties>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+
+        <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
+        <maven.surfire.plugin>3.0.0-M1</maven.surfire.plugin>
+        <j2cl.maven.plugin.version>0.19</j2cl.maven.plugin.version>
+        <elemental2.version>1.1.0</elemental2.version>
+        <jsinterop.base.version>1.0.0</jsinterop.base.version>
+        <j2cl.version>0.10.0-3c97afeac</j2cl.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.kie.j2cl.tools.json.mapper</groupId>
+            <artifactId>common</artifactId>
+            <version>0.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.kie.j2cl.tools.json.mapper</groupId>
+            <artifactId>processor</artifactId>
+            <version>0.4.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.vertispan.j2cl</groupId>
+            <artifactId>junit-annotations</artifactId>
+            <version>${j2cl.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.vertispan.j2cl</groupId>
+            <artifactId>gwttestcase-emul</artifactId>
+            <version>${j2cl.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.vertispan.j2cl</groupId>
+            <artifactId>junit-emul</artifactId>
+            <version>${j2cl.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+            <version>4.13.2</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.vertispan.j2cl</groupId>
+                <artifactId>j2cl-maven-plugin</artifactId>
+                <version>${j2cl.maven.plugin.version}</version>
+                <configuration>
+                    <compilationLevel>ADVANCED</compilationLevel>
+                    <webdriver>chrome</webdriver>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>j2cl-test</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven.surfire.plugin}</version>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

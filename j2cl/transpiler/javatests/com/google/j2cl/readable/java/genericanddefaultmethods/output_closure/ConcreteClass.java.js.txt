@@ -1,0 +1,8 @@
+goog.module('genericanddefaultmethods.ConcreteClass');
+
+goog.require('genericanddefaultmethods.GenericClass');
+goog.require('genericanddefaultmethods.InterfaceWithDefault');
+goog.require('nativebootstrap.Util');
+
+const ConcreteClass = goog.require('genericanddefaultmethods.ConcreteClass$impl');
+exports = ConcreteClass;

@@ -1,0 +1,54 @@
+goog.module('jsfunction.JsFunctionOptimization$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let $1 = goog.forwardDeclare('jsfunction.JsFunctionOptimization.$1$impl');
+let $2 = goog.forwardDeclare('jsfunction.JsFunctionOptimization.$2$impl');
+
+class JsFunctionOptimization extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!JsFunctionOptimization} */
+ static $create__() {
+  JsFunctionOptimization.$clinit();
+  let $instance = new JsFunctionOptimization();
+  $instance.$ctor__jsfunction_JsFunctionOptimization__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__jsfunction_JsFunctionOptimization__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @nodts */
+ m_main__int__void(/** number */ r) {
+  $1.$create__jsfunction_JsFunctionOptimization__int(this, r);
+ }
+ /** @nodts */
+ m_testParameterizedMethod__void() {
+  let c = $2.$create__jsfunction_JsFunctionOptimization(this);
+ }
+ /** @nodts */
+ static $clinit() {
+  JsFunctionOptimization.$clinit = () =>{};
+  JsFunctionOptimization.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof JsFunctionOptimization;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {
+  $1 = goog.module.get('jsfunction.JsFunctionOptimization.$1$impl');
+  $2 = goog.module.get('jsfunction.JsFunctionOptimization.$2$impl');
+ }
+}
+$Util.$setClassMetadata(JsFunctionOptimization, 'jsfunction.JsFunctionOptimization');
+
+exports = JsFunctionOptimization;
+
+//# sourceMappingURL=JsFunctionOptimization.js.map

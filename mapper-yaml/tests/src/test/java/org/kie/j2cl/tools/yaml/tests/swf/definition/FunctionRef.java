@@ -1,0 +1,72 @@
+/*
+ * Copyright 2022 Red Hat, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.kie.j2cl.tools.yaml.tests.swf.definition;
+
+import jsinterop.annotations.JsType;
+import org.kie.j2cl.tools.yaml.mapper.api.annotation.YAMLMapper;
+import org.kie.j2cl.tools.yaml.mapper.api.annotation.YamlPropertyOrder;
+import org.kie.j2cl.tools.yaml.mapper.api.annotation.YamlTypeDeserializer;
+import org.kie.j2cl.tools.yaml.mapper.api.annotation.YamlTypeSerializer;
+import org.kie.j2cl.tools.yaml.tests.swf.definition.custom.yaml.StringOrValueHolderYamlTypeSerializer;
+
+@YAMLMapper
+@JsType
+@YamlPropertyOrder({"refName", "selectionSet", "invoke", "arguments"})
+public class FunctionRef {
+
+  public String refName;
+
+  public String selectionSet;
+
+  public FunctionRefType invoke;
+
+  @YamlTypeSerializer(StringOrValueHolderYamlTypeSerializer.class)
+  @YamlTypeDeserializer(StringOrValueHolderYamlTypeSerializer.class)
+  private Object arguments;
+
+  public final String getRefName() {
+    return refName;
+  }
+
+  public final void setRefName(String refName) {
+    this.refName = refName;
+  }
+
+  public final String getSelectionSet() {
+    return selectionSet;
+  }
+
+  public final void setSelectionSet(String selectionSet) {
+    this.selectionSet = selectionSet;
+  }
+
+  public final FunctionRefType getInvoke() {
+    return invoke;
+  }
+
+  public final void setInvoke(FunctionRefType invoke) {
+    this.invoke = invoke;
+  }
+
+  public final Object getArguments() {
+    return arguments;
+  }
+
+  public final void setArguments(Object arguments) {
+    this.arguments = arguments;
+  }
+}

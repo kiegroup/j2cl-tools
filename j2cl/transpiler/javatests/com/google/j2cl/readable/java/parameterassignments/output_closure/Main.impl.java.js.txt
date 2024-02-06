@@ -1,0 +1,102 @@
+goog.module('parameterassignments.Main$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let Fn = goog.forwardDeclare('parameterassignments.Main.Fn$impl');
+let FnObjectVarargs = goog.forwardDeclare('parameterassignments.Main.FnObjectVarargs$impl');
+let FnPrimitiveVarargs = goog.forwardDeclare('parameterassignments.Main.FnPrimitiveVarargs$impl');
+let $Arrays = goog.forwardDeclare('vmbootstrap.Arrays$impl');
+let $$int = goog.forwardDeclare('vmbootstrap.primitives.$int$impl');
+
+class Main extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+  /**@type {Fn} @nodts*/
+  this.f_fn__parameterassignments_Main;
+  /**@type {FnPrimitiveVarargs} @nodts*/
+  this.f_fnPrimitiveVarargs__parameterassignments_Main;
+  /**@type {FnObjectVarargs} @nodts*/
+  this.f_fnObjectVarargs__parameterassignments_Main;
+ }
+ //Factory method corresponding to constructor 'Main(int, int, int)'.
+ /** @nodts @return {!Main} */
+ static $create__int__int__int(/** number */ nonFinal, /** number */ explicitFinal, /** number */ implicitFinal) {
+  Main.$clinit();
+  let $instance = new Main();
+  $instance.$ctor__parameterassignments_Main__int__int__int__void(nonFinal, explicitFinal, implicitFinal);
+  return $instance;
+ }
+ //Initialization from constructor 'Main(int, int, int)'.
+ /** @nodts */
+ $ctor__parameterassignments_Main__int__int__int__void(/** number */ nonFinal, /** number */ explicitFinal, /** number */ implicitFinal) {
+  this.$ctor__parameterassignments_Main__int__int__int__boolean__void(nonFinal, explicitFinal, implicitFinal, true);
+  nonFinal = nonFinal + explicitFinal + implicitFinal | 0;
+ }
+ //Factory method corresponding to constructor 'Main(int, int, int, boolean)'.
+ /** @nodts @return {!Main} */
+ static $create__int__int__int__boolean(/** number */ nonFinal, /** number */ explicitFinal, /** number */ implicitFinal, /** boolean */ flag) {
+  Main.$clinit();
+  let $instance = new Main();
+  $instance.$ctor__parameterassignments_Main__int__int__int__boolean__void(nonFinal, explicitFinal, implicitFinal, flag);
+  return $instance;
+ }
+ //Initialization from constructor 'Main(int, int, int, boolean)'.
+ /** @nodts */
+ $ctor__parameterassignments_Main__int__int__int__boolean__void(/** number */ nonFinal, /** number */ explicitFinal, /** number */ implicitFinal, /** boolean */ flag) {
+  this.$ctor__java_lang_Object__void();
+  this.$init__void_$p_parameterassignments_Main();
+  nonFinal = nonFinal + explicitFinal + implicitFinal | 0;
+ }
+ /** @nodts @return {number} */
+ m_test__int__int__int__int_$pp_parameterassignments(/** number */ nonFinal, /** number */ explicitFinal, /** number */ implicitFinal) {
+  nonFinal = nonFinal + explicitFinal + implicitFinal | 0;
+  return nonFinal;
+ }
+ /** @nodts */
+ m_testObjectVarargs__java_lang_Object__arrayOf_java_lang_Object__void_$pp_parameterassignments(/** * */ o, /** Array<*> */ oa) {
+  oa = [o, oa[0]];
+ }
+ /** @nodts */
+ m_testPrimitiveVarargs__int__arrayOf_int__void_$pp_parameterassignments(/** number */ i, /** Array<number> */ ia) {
+  ia = /**@type {!Array<number>}*/ ($Arrays.$init([i, ia[0]], $$int));
+ }
+ /** @private @nodts */
+ $init__void_$p_parameterassignments_Main() {
+  this.f_fn__parameterassignments_Main = Fn.$adapt((/** number */ nonFinal, /** number */ implicitFinal) =>{
+   nonFinal = nonFinal + implicitFinal | 0;
+   return nonFinal;
+  });
+  this.f_fnPrimitiveVarargs__parameterassignments_Main = FnPrimitiveVarargs.$adapt((/** number */ i, /** Array<number> */ is) =>{
+   $Arrays.$set(is, 0, is[1]);
+  });
+  this.f_fnObjectVarargs__parameterassignments_Main = FnObjectVarargs.$adapt((/** * */ o, /** Array<*> */ os) =>{
+   $Arrays.$set(os, 0, os[1]);
+  });
+ }
+ /** @nodts */
+ static $clinit() {
+  Main.$clinit = () =>{};
+  Main.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof Main;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {
+  Fn = goog.module.get('parameterassignments.Main.Fn$impl');
+  FnObjectVarargs = goog.module.get('parameterassignments.Main.FnObjectVarargs$impl');
+  FnPrimitiveVarargs = goog.module.get('parameterassignments.Main.FnPrimitiveVarargs$impl');
+  $Arrays = goog.module.get('vmbootstrap.Arrays$impl');
+  $$int = goog.module.get('vmbootstrap.primitives.$int$impl');
+ }
+}
+$Util.$setClassMetadata(Main, 'parameterassignments.Main');
+
+exports = Main;
+
+//# sourceMappingURL=Main.js.map

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module rename-to='App'>
+  <inherits name='com.google.gwt.user.User'/>
+
+  <inherits name="org.kie.j2cl.tools.yaml.mapper.Mapper"/>
+
+  <entry-point class='org.kie.j2cl.tools.yaml.mapper.client.App'/>
+  <source path='client'/>
+  <source path='shared'/>
+</module>
