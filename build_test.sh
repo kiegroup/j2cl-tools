@@ -10,6 +10,7 @@ modules=(
       jakarta-spec
       gwt-nio
       mapper-xml
+      mapper-json
      )
 
 for module in "${modules[@]}"

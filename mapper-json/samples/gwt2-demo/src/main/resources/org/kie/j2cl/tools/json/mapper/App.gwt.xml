@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module rename-to='App'>
+  <inherits name='com.google.gwt.user.User' />
+  <inherits name='org.kie.j2cl.tools.json.Mapper' />
+  <entry-point class='org.kie.j2cl.tools.json.mapper.client.App' />
+  <source path='client' />
+
+</module>
