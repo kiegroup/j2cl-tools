@@ -41,7 +41,7 @@
     <webappdir>${project.build.directory}/webapp</webappdir>
     <webapp.libdir>${webappdir}/WEB-INF/lib</webapp.libdir>
 
-    <j2cl.maven.plugin.version>0.21.0</j2cl.maven.plugin.version>
+    <j2cl.maven.plugin.version>0.22.0</j2cl.maven.plugin.version>
     <elemental2.version>1.0.0</elemental2.version>
 
     <google.jsinterop.version>1.0.0</google.jsinterop.version>

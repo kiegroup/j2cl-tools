@@ -2,7 +2,7 @@
 <module rename-to='App'>
   <inherits name='com.google.gwt.user.User'/>
 
-  <inherits name="org.kie.j2cl.tools.mapper.Mapper"/>
+  <inherits name="org.kie.j2cl.tools.xml.mapper.Mapper"/>
 
   <entry-point class='org.kie.j2cl.tools.xml.mapper.client.App'/>
   <source path='client'/>

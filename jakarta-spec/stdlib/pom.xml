@@ -23,7 +23,7 @@
             <artifactId>elemental2-webstorage</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.treblereel.gwt.nio</groupId>
+            <groupId>org.kie.j2cl.tools.nio</groupId>
             <artifactId>gwt-nio</artifactId>
         </dependency>
     </dependencies>
