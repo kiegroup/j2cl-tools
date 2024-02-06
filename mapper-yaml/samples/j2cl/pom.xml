@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.kie.j2cl.tools.yaml.demo.j2cl</groupId>
+  <artifactId>demo</artifactId>
+  <packaging>war</packaging>
+  <version>1.0-SNAPSHOT</version>
+
+  <name>YAML marshallers J2CL Demo</name>
+  <description>YAML marshallers J2CL Demo</description>
+  <url>https://github.com/kiegroup/j2cl-tools</url>
+
+  <organization>
+    <name>JBoss by Red Hat</name>
+    <url>http://www.jboss.org/</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>All developers are listed in the KIE GitHub organization</name>
+      <url>https://github.com/orgs/kiegroup/people</url>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://github.com/kiegroup/j2cl-tools.git</connection>
+    <developerConnection>scm:git:ssh://github.com/kiegroup/j2cl-tools.git</developerConnection>
+    <url>https://github.com/kiegroup/j2cl-tools/tree/master</url>
+  </scm>
+
+  <properties>
+    <webappdir>${project.build.directory}/webapp</webappdir>
+    <webapp.libdir>${webappdir}/WEB-INF/lib</webapp.libdir>
+
+    <j2cl.maven.plugin.version>0.21.0</j2cl.maven.plugin.version>
+    <elemental2.version>1.0.0</elemental2.version>
+
+    <google.jsinterop.version>1.0.0</google.jsinterop.version>
+    <j2cl.version>0.11.0-9336533b6</j2cl.version>
+
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>1.8</maven.compiler.source>
+
+    <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
+    <maven.source.plugin.version>3.0.1</maven.source.plugin.version>
+    <maven.resources.plugin.version>3.1.0</maven.resources.plugin.version>
+  </properties>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>org.kie.j2cl.tools.yaml.mapper</groupId>
+      <artifactId>common</artifactId>
+      <version>0.4</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kie.j2cl.tools.yaml.mapper</groupId>
+      <artifactId>processor</artifactId>
+      <version>0.4</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.elemental2</groupId>
+      <artifactId>elemental2-dom</artifactId>
+      <version>1.1.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.jsinterop</groupId>
+      <artifactId>base</artifactId>
+      <version>${google.jsinterop.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.vertispan.j2cl</groupId>
+      <artifactId>junit-annotations</artifactId>
+      <version>${j2cl.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.vertispan.j2cl</groupId>
+      <artifactId>gwttestcase-emul</artifactId>
+      <version>${j2cl.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.vertispan.j2cl</groupId>
+      <artifactId>gwttestcase-emul</artifactId>
+      <version>${j2cl.version}</version>
+      <classifier>sources</classifier>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.vertispan.j2cl</groupId>
+      <artifactId>junit-emul</artifactId>
+      <version>${j2cl.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.vertispan.j2cl</groupId>
+      <artifactId>junit-emul</artifactId>
+      <version>${j2cl.version}</version>
+      <classifier>sources</classifier>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <groupId>com.vertispan.j2cl</groupId>
+        <artifactId>j2cl-maven-plugin</artifactId>
+        <version>${j2cl.maven.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>build-js</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <webappDirectory>${project.build.directory}/gwt/launcherDir/</webappDirectory>
+          <compilationLevel>ADVANCED</compilationLevel>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>3.3.1</version>
+        <configuration>
+          <failOnMissingWebXml>false</failOnMissingWebXml>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
