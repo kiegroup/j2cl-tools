@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.kie.j2cl.tools.di</groupId>
+    <artifactId>parent</artifactId>
+    <version>0.6</version>
+    <packaging>pom</packaging>
+
+    <name>J2CL compatible Jakarta CDI-like dependency injection framework parent</name>
+    <description>J2CL compatible Jakarta CDI-like dependency injection framework parent</description>
+    <url>https://github.com/kiegroup/j2cl-tools</url>
+
+    <organization>
+        <name>JBoss by Red Hat</name>
+        <url>http://www.jboss.org/</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>All developers are listed in the KIE GitHub organization</name>
+            <url>https://github.com/orgs/kiegroup/people</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/kiegroup/j2cl-tools.git</connection>
+        <developerConnection>scm:git:ssh://github.com/kiegroup/j2cl-tools.git</developerConnection>
+        <url>https://github.com/kiegroup/j2cl-tools/tree/master</url>
+    </scm>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+
+        <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
+        <maven.source.plugin.version>3.0.1</maven.source.plugin.version>
+        <maven.deploy.plugin.version>3.0.0-M2</maven.deploy.plugin.version>
+        <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
+        <maven.scm.provider.gitexe.plugin.version>1.9.5</maven.scm.provider.gitexe.plugin.version>
+        <maven.enforcer.plugin.version>3.0.0-M3</maven.enforcer.plugin.version>
+        <maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
+        <maven.jar.plugin.version>3.2.0</maven.jar.plugin.version>
+        <maven.clean.plugin.version>3.1.0</maven.clean.plugin.version>
+        <maven.javadoc.plugin.version>3.2.0</maven.javadoc.plugin.version>
+        <maven.surefire.plugin.version>3.0.0-M5</maven.surefire.plugin.version>
+        <maven.flatten.plugin>1.2.2</maven.flatten.plugin>
+        <maven.checkstyle.plugin>3.2.0</maven.checkstyle.plugin>
+
+        <version.checkstyle>8.29</version.checkstyle>
+        <checkstyle.header.templateFile>LICENSE.header</checkstyle.header.templateFile>
+        <checkstyle.header.template
+        ><![CDATA[
+^\/\*$\n^
+\* Licensed to the Apache Software Foundation \(ASF\) under one$\n^
+\* or more contributor license agreements\.  See the NOTICE file$\n^
+\* distributed with this work for additional information$\n^
+\* regarding copyright ownership\.  The ASF licenses this file$\n^
+\* to you under the Apache License, Version 2\.0 \(the$\n^
+\* &quot;License&quot;\); you may not use this file except in compliance$\n^
+\* with the License\.  You may obtain a copy of the License at$\n^
+\*$\n^
+\*   http:\/\/www\.apache\.org\/licenses\/LICENSE-2\.0$\n^
+\*$\n^
+\* Unless required by applicable law or agreed to in writing,$\n^
+\* software distributed under the License is distributed on an$\n^
+\* &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY$\n^
+\* KIND, either express or implied\.  See the License for the$\n^
+\* specific language governing permissions and limitations$\n^
+\* under the License\.$\n^
+\*\/$
+]]>
+        </checkstyle.header.template>
+        <checkstyle.header.extensions>java</checkstyle.header.extensions>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.logViolationsToConsole>true</checkstyle.logViolationsToConsole>
+    </properties>
+
+    <modules>
+        <module>internal-bom</module>
+        <module>bom</module>
+        <module>annotations</module>
+        <module>processor</module>
+        <module>core</module>
+        <module>ui</module>
+        <module>tests</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.kie.j2cl.tools.di</groupId>
+                <artifactId>bom</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${maven.source.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven.compiler.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>${maven.shade.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${maven.jar.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>${maven.clean.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>${version.checkstyle.plugin}</version>
+                    <configuration>
+                        <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>${maven.enforcer.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>${maven.deploy.plugin.version}</version>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven.surefire.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${maven.javadoc.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>flatten-maven-plugin</artifactId>
+                    <version>${maven.flatten.plugin}</version>
+                    <configuration>
+                        <flattenMode>oss</flattenMode>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>flatten</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>flatten</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>flatten.clean</id>
+                            <phase>clean</phase>
+                            <goals>
+                                <goal>clean</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${maven.checkstyle.plugin}</version>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <checkstyleRules>
+                                <module name="Checker">
+                                    <!-- Checks for whitespace. -->
+                                    <module name="FileTabCharacter">
+                                        <property name="severity" value="error" />
+                                        <property name="eachLine" value="true" />
+                                    </module>
+                                    <module name="TreeWalker">
+                                        <!-- Import settings: getting rid of redundant import, forbid star notation, defined order of imports. -->
+                                        <module name="RedundantImport" />
+                                        <module name="AvoidStarImport">
+                                            <property name="allowClassImports" value="false" />
+                                            <property name="allowStaticMemberImports" value="false" />
+                                        </module>
+                                        <module name="CustomImportOrder">
+                                            <property
+                                                    name="customImportOrderRules"
+                                                    value="STANDARD_JAVA_PACKAGE###SPECIAL_IMPORTS###THIRD_PARTY_PACKAGE###STATIC"
+                                            />
+                                            <property name="specialImportsRegExp" value="^(jakarta|javax)\." />
+                                            <property name="standardPackageRegExp" value="^java\." />
+                                            <property name="sortImportsInGroupAlphabetically" value="true" />
+                                            <property name="separateLineBetweenGroups" value="true" />
+                                        </module>
+                                        <module name="UnusedImports" />
+                                        <module name="NeedBraces">
+                                            <property
+                                                    name="tokens"
+                                                    value="LITERAL_IF, LITERAL_ELSE, LITERAL_FOR, LITERAL_WHILE, LITERAL_DO"
+                                            />
+                                        </module>
+                                        <module name="EqualsHashCode" />
+                                    </module>
+                                    <module name="RegexpHeader">
+                                        <property name="header" value="${checkstyle.header.template}" />
+                                        <property name="fileExtensions" value="${checkstyle.header.extensions}" />
+                                    </module>
+                                </module>
+                            </checkstyleRules>
+                            <outputFile>${project.build.directory}/checkstyle.log</outputFile>
+                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                            <includeResources>true</includeResources>
+                            <includeTestResources>true</includeTestResources>
+                            <consoleOutput>false</consoleOutput>
+                            <logViolationsToConsole>${checkstyle.logViolationsToConsole}</logViolationsToConsole>
+                            <failsOnError>false</failsOnError>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>${version.checkstyle}</version>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>com.sun</groupId>
+                                <artifactId>tools</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <configuration>
+                    <skip>false</skip>
+                    <rules>
+                        <banDuplicatePomDependencyVersions/>
+                        <requireMavenVersion>
+                            <version>3.0</version>
+                        </requireMavenVersion>
+                        <requireJavaVersion>
+                            <version>(1.8.0,)</version>
+                        </requireJavaVersion>
+                    </rules>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>enforce-sane-versions</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>${maven.deploy.plugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <failOnError>false</failOnError>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- Specify that we will push snapshots and releases to sonatype's repos -->
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+</project>
