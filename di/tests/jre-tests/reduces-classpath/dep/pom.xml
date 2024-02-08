@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.kie.j2cl.tools.di.tests.jre</groupId>
+        <artifactId>reduces-classpath-parent</artifactId>
+        <version>0.6</version>
+    </parent>
+
+    <artifactId>reduces-classpath-dep</artifactId>
+    <packaging>jar</packaging>
+
+    <name>J2CL compatible Jakarta CDI-like dependency injection framework JRE reduces classpath tests dep</name>
+    <description>J2CL compatible Jakarta CDI-like dependency injection framework JRE reduces classpath tests dep</description>
+    <url>https://github.com/kiegroup/j2cl-tools</url>
+
+    <organization>
+        <name>JBoss by Red Hat</name>
+        <url>http://www.jboss.org/</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>All developers are listed in the KIE GitHub organization</name>
+            <url>https://github.com/orgs/kiegroup/people</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/kiegroup/j2cl-tools.git</connection>
+        <developerConnection>scm:git:ssh://github.com/kiegroup/j2cl-tools.git</developerConnection>
+        <url>https://github.com/kiegroup/j2cl-tools/tree/master</url>
+    </scm>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.kie.j2cl.tools.jakarta</groupId>
+            <artifactId>enterprise</artifactId>
+            <version>0.3</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

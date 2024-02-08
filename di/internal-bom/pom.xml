@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.kie.j2cl.tools.di</groupId>
+    <artifactId>internal-bom</artifactId>
+    <version>0.6</version>
+    <packaging>pom</packaging>
+
+    <name>J2CL compatible Jakarta CDI-like dependency injection framework Internal BOM</name>
+    <description>J2CL compatible Jakarta CDI-like dependency injection framework Internal BOM</description>
+    <url>https://github.com/kiegroup/j2cl-tools</url>
+
+    <organization>
+        <name>JBoss by Red Hat</name>
+        <url>http://www.jboss.org/</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>All developers are listed in the KIE GitHub organization</name>
+            <url>https://github.com/orgs/kiegroup/people</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/kiegroup/j2cl-tools.git</connection>
+        <developerConnection>scm:git:ssh://github.com/kiegroup/j2cl-tools.git</developerConnection>
+        <url>https://github.com/kiegroup/j2cl-tools/tree/master</url>
+    </scm>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+
+        <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
+        <maven.source.plugin.version>3.0.1</maven.source.plugin.version>
+        <maven.deploy.plugin.version>3.0.0-M2</maven.deploy.plugin.version>
+        <maven.license.plugin.version>3.0</maven.license.plugin.version>
+        <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
+        <maven.scm.provider.gitexe.plugin.version>1.9.5</maven.scm.provider.gitexe.plugin.version>
+        <maven.enforcer.plugin.version>3.0.0-M3</maven.enforcer.plugin.version>
+        <maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
+        <maven.jar.plugin.version>3.2.0</maven.jar.plugin.version>
+        <maven.clean.plugin.version>3.1.0</maven.clean.plugin.version>
+        <maven.formatter.plugin.version>2.17.0</maven.formatter.plugin.version>
+        <maven.license.plugin.version>3.0</maven.license.plugin.version>
+        <maven.javadoc.plugin.version>3.2.0</maven.javadoc.plugin.version>
+
+        <apache.commons.commons-text.version>1.6</apache.commons.commons-text.version>
+        <apache.commons.commons-lang3.version>3.11</apache.commons.commons-lang3.version>
+        <apache.commons.io.version>2.8.0</apache.commons.io.version>
+
+        <jsoup.version>1.11.3</jsoup.version>
+        <javax.inject.version>1</javax.inject.version>
+        <freemarker.version>2.3.30</freemarker.version>
+        <lesscss.version>1.10</lesscss.version>
+        <google.jsinterop.annotations.version>2.0.0</google.jsinterop.annotations.version>
+        <google.guava.version>28.1-jre</google.guava.version>
+        <classgraph.classgraph.version>4.8.156</classgraph.classgraph.version>
+        <org.kie.j2cl.tools.processors.version>0.6.4</org.kie.j2cl.tools.processors.version>
+        <org.kie.j2cl.tools.jakarta.version>0.3</org.kie.j2cl.tools.jakarta.version>
+
+        <javaparser.core.version>3.25.5</javaparser.core.version>
+        <elemental2.version>1.1.0</elemental2.version>
+        <auto.common.version>1.2.1</auto.common.version>
+        <auto.service.version>1.0-rc7</auto.service.version>
+        <mockito.core.version>4.6.1</mockito.core.version>
+        <junit.version>4.13.1</junit.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.kie.j2cl.tools.jakarta</groupId>
+                <artifactId>bom</artifactId>
+                <version>${org.kie.j2cl.tools.jakarta.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>javax.inject</groupId>
+                <artifactId>javax.inject</artifactId>
+                <version>${javax.inject.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.jsinterop</groupId>
+                <artifactId>jsinterop-annotations</artifactId>
+                <version>${google.jsinterop.annotations.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.elemental2</groupId>
+                <artifactId>elemental2-dom</artifactId>
+                <version>${elemental2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.auto</groupId>
+                <artifactId>auto-common</artifactId>
+                <version>${auto.common.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${apache.commons.commons-lang3.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.auto.service</groupId>
+                <artifactId>auto-service</artifactId>
+                <version>${auto.service.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${apache.commons.io.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.javaparser</groupId>
+                <artifactId>javaparser-core</artifactId>
+                <version>${javaparser.core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-text</artifactId>
+                <version>${apache.commons.commons-text.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.freemarker</groupId>
+                <artifactId>freemarker</artifactId>
+                <version>${freemarker.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven.scm</groupId>
+                <artifactId>maven-scm-provider-gitexe</artifactId>
+                <version>${maven.scm.provider.gitexe.plugin.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${google.guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.classgraph</groupId>
+                <artifactId>classgraph</artifactId>
+                <version>${classgraph.classgraph.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jsoup</groupId>
+                <artifactId>jsoup</artifactId>
+                <version>${jsoup.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.inetsoftware</groupId>
+                <artifactId>jlessc</artifactId>
+                <version>${lesscss.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.kie.j2cl.tools.processors</groupId>
+                <artifactId>utils</artifactId>
+                <version>${org.kie.j2cl.tools.processors.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.core.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven.gpg.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <version>${maven.deploy.plugin.version}</version>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+</project>

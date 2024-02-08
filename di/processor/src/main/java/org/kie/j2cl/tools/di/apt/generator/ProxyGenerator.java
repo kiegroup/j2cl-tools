@@ -1,0 +1,153 @@
+/*
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+
+package org.kie.j2cl.tools.di.apt.generator;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.TypeKind;
+
+import com.google.auto.common.MoreTypes;
+import org.kie.j2cl.tools.di.annotation.CircularDependency;
+import org.kie.j2cl.tools.di.apt.definition.BeanDefinition;
+import org.kie.j2cl.tools.di.apt.generator.api.ClassMetaInfo;
+import org.kie.j2cl.tools.di.apt.generator.api.Generator;
+import org.kie.j2cl.tools.di.apt.generator.api.IOCGenerator;
+import org.kie.j2cl.tools.di.apt.generator.api.WiringElementType;
+import org.kie.j2cl.tools.di.apt.generator.context.ExecutionEnv;
+import org.kie.j2cl.tools.di.apt.generator.context.IOCContext;
+import org.kie.j2cl.tools.di.apt.generator.helpers.FreemarkerTemplateGenerator;
+import org.kie.j2cl.tools.di.apt.logger.TreeLogger;
+import org.kie.j2cl.tools.di.apt.util.TypeUtils;
+import org.kie.j2cl.tools.di.core.internal.proxy.ProxyBeanFactory;
+
+@Generator
+public class ProxyGenerator extends IOCGenerator<BeanDefinition> {
+
+    private static List<String> OBJECT_METHODS = new ArrayList<>() {
+        {
+            add("wait");
+            add("finalize");
+        }
+    };
+    private final FreemarkerTemplateGenerator freemarkerTemplateGenerator =
+            new FreemarkerTemplateGenerator("proxy.ftlh");
+
+    public ProxyGenerator(TreeLogger treeLogger, IOCContext iocContext) {
+        super(treeLogger, iocContext);
+    }
+
+    @Override
+    public void register() {
+        iocContext.register(CircularDependency.class, WiringElementType.CLASS_DECORATOR, this);
+    }
+
+    public void generate(ClassMetaInfo classMetaInfo, BeanDefinition beanDefinition) {
+        Map<String, Object> root = new HashMap<>();
+        validate(beanDefinition);
+
+        classMetaInfo.addImport(ProxyBeanFactory.class);
+        root.put("package", beanDefinition.getPackageName());
+        root.put("bean", beanDefinition.getSimpleClassName());
+        root.put("jre", iocContext.getGenerationContext().getExecutionEnv().equals(ExecutionEnv.JRE));
+
+        String nullConstructorParams = null;
+        if (!beanDefinition.getConstructorParams().isEmpty()) {
+            nullConstructorParams =
+                    beanDefinition.getConstructorParams().stream().map(p -> p.getVariableElement().asType())
+                            .map(f -> String.format("(%s) null", f.toString())).collect(Collectors.joining(","));
+
+        }
+        root.put("nullConstructorParams", nullConstructorParams);
+
+        String params = null;
+        if (!beanDefinition.getConstructorParams().isEmpty()) {
+            params = beanDefinition.getConstructorParams().stream()
+                    .map(p -> "_constructor_" + p.getVariableElement().getSimpleName().toString())
+                    .map(f -> "addDependencyConstructor(this." + f + ".get(), deps)")
+                    .collect(Collectors.joining(","));
+        }
+
+        root.put("constructorParams", params);
+
+        Set<Method> methods = TypeUtils
+                .getAllMethodsIn(elements, MoreTypes.asTypeElement(beanDefinition.getType())).stream()
+                .filter(elm -> !elm.getModifiers().contains(javax.lang.model.element.Modifier.STATIC))
+                .filter(elm -> !elm.getModifiers().contains(javax.lang.model.element.Modifier.PRIVATE))
+                .filter(elm -> !elm.getModifiers().contains(javax.lang.model.element.Modifier.ABSTRACT))
+                .filter(elm -> !elm.getModifiers().contains(javax.lang.model.element.Modifier.NATIVE))
+                .filter(elm -> !elm.getModifiers().contains(javax.lang.model.element.Modifier.FINAL))
+                .filter(elm -> !OBJECT_METHODS.contains(elm.getSimpleName().toString()))
+                .map(this::addMethod).collect(Collectors.toSet());
+        root.put("methods", methods);
+
+        String source = freemarkerTemplateGenerator.toSource(root);
+        classMetaInfo.addToBody(() -> source);
+    }
+
+    private void validate(BeanDefinition beanDefinition) {
+        System.out.println("Validating " + beanDefinition.getType());
+    }
+
+    private Method addMethod(ExecutableElement elm) {
+        Method method = new Method();
+        method.name = elm.getSimpleName().toString();
+        method.returnType = elm.getReturnType().toString();
+        method.isVoid = elm.getReturnType().toString().equals("void");
+        method.parameters = elm.getParameters().stream()
+                .map(p -> (p.asType().getKind().equals(TypeKind.TYPEVAR) ? "Object" : p.asType().toString())
+                        + " " + p.getSimpleName().toString())
+                .collect(Collectors.joining(","));
+
+        method.parametersNames = elm.getParameters().stream().map(p -> p.getSimpleName().toString())
+                .collect(Collectors.joining(","));
+
+        return method;
+    }
+
+    public static class Method {
+        private String name;
+        private boolean isVoid;
+        private String returnType;
+        private String parameters;
+
+        private String parametersNames;
+
+        public String getName() {
+            return name;
+        }
+
+        public String getReturnType() {
+            return returnType;
+        }
+
+        public String getParameters() {
+            return parameters;
+        }
+
+        public String getParametersNames() {
+            return parametersNames;
+        }
+
+        public boolean isIsVoid() {
+            return isVoid;
+        }
+    }
+}

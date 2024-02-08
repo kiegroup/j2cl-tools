@@ -1,0 +1,58 @@
+/*
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package org.kie.j2cl.tools.di.core.internal;
+
+import java.util.function.Supplier;
+
+import jakarta.enterprise.context.Dependent;
+
+import org.kie.j2cl.tools.di.core.BeanManager;
+
+public class ProducesBeanFactory<T> extends BeanFactory<T> {
+
+  private final Supplier<T> producer;
+
+  public ProducesBeanFactory(BeanManager beanManager, Supplier<T> producer) {
+    super(beanManager);
+    this.producer = producer;
+  }
+
+  @Override()
+  public T createInstance() {
+    this.instance = producer.get();
+    return instance;
+  }
+
+  @Override()
+  public T getInstance() {
+    if (beanDef.getScope().equals(Dependent.class)) {
+      return producer.get();
+    } else {
+      if (instance == null) {
+        instance = producer.get();
+      }
+      return instance;
+    }
+  }
+
+  @Override
+  public void initInstance(T instance) {
+
+  }
+
+  @Override
+  protected void doInitInstance(T instance) {
+
+  }
+}

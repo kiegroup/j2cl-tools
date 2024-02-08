@@ -15,13 +15,13 @@
  */
 package org.kie.j2cl.tools.xml.mapper.client.tests.beans.inheritance;
 
-import static org.junit.Assert.assertEquals;
+import javax.xml.stream.XMLStreamException;
 
 import com.google.j2cl.junit.apt.J2clTestInput;
-import javax.xml.stream.XMLStreamException;
 import org.junit.Test;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 4/8/20 */
+import static org.junit.Assert.assertEquals;
+
 @J2clTestInput(InheritanceTest.class)
 public class InheritanceTest {
 
