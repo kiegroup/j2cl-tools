@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.kie.j2cl.tools</groupId>
         <artifactId>j2cl-tools</artifactId>
-        <version>0.23-SNAPSHOT</version>
+        <version>0.23.0</version>
     </parent>
     <artifactId>j2cl-tasks</artifactId>
 
@@ -17,7 +17,7 @@
     <dependencies>
         <!-- j2cl dependencies -->
         <dependency>
-            <groupId>org.kie.j2cl.tools</groupId>
+            <groupId>com.vertispan.j2cl</groupId>
             <artifactId>transpiler</artifactId>
             <version>${j2cl.version}</version>
             <exclusions>
@@ -28,12 +28,12 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.kie.j2cl.tools</groupId>
+            <groupId>com.vertispan.j2cl</groupId>
             <artifactId>gwt-incompatible-stripper</artifactId>
             <version>${j2cl.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.kie.j2cl.tools</groupId>
+            <groupId>com.vertispan.j2cl</groupId>
             <artifactId>frontend</artifactId>
             <version>${j2cl.version}</version>
             <exclusions>
@@ -44,15 +44,20 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.kie.j2cl.tools</groupId>
+            <groupId>com.vertispan.j2cl</groupId>
             <artifactId>common</artifactId>
             <version>${j2cl.version}</version>
         </dependency>
 
         <!-- closure compiler dependencies -->
         <dependency>
-            <groupId>org.kie.j2cl.tools</groupId>
+            <groupId>com.vertispan.javascript</groupId>
             <artifactId>closure-compiler-unshaded</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.protobuf</groupId>
+                    <artifactId>protobuf-java</artifactId>
+                </exclusion></exclusions>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
