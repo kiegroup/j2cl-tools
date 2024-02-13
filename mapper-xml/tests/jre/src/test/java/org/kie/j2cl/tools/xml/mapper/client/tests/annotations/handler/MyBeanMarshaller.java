@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +20,6 @@ import org.kie.j2cl.tools.xml.mapper.api.XMLSerializerParameters;
 import org.kie.j2cl.tools.xml.mapper.api.custom.CustomXMLSerializer;
 import org.kie.j2cl.tools.xml.mapper.api.stream.XMLWriter;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 5/17/20 */
 public class MyBeanMarshaller extends CustomXMLSerializer<MyBean> {
 
   @Override

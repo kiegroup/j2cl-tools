@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +24,6 @@ import org.junit.Test;
 import org.kie.j2cl.tools.xml.mapper.client.tests.beans.collection.BoxedLists;
 import org.kie.j2cl.tools.xml.mapper.client.tests.beans.collection.BoxedLists_XMLMapperImpl;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 3/29/20 */
 @J2clTestInput(BoxedListsTest.class)
 public class BoxedListsTest {
 

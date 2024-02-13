@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +22,6 @@ import javax.xml.stream.XMLStreamException;
 import org.junit.Test;
 import org.kie.j2cl.tools.xml.mapper.client.tests.annotations.xmladapter.MyCustomBean;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 9/29/20 */
 @J2clTestInput(MyTestBeanTest.class)
 public class MyTestBeanTest {
 

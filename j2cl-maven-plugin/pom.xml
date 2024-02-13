@@ -6,7 +6,7 @@
 
   <groupId>org.kie.j2cl.tools</groupId>
   <artifactId>j2cl-tools</artifactId>
-  <version>0.23-SNAPSHOT</version>
+  <version>0.23.0</version>
   <packaging>pom</packaging>
 
   <name>J2CL Build Tools</name>
@@ -218,7 +218,7 @@
 
 
       <dependency>
-        <groupId>org.kie.j2cl.tools</groupId>
+        <groupId>com.vertispan.javascript</groupId>
         <artifactId>closure-compiler-unshaded</artifactId>
         <version>${closure.compiler.unshaded.version}</version>
         <exclusions>

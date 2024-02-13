@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +21,6 @@ import java.util.List;
 import java.util.Objects;
 import org.kie.j2cl.tools.xml.mapper.client.tests.bpmn.drools.MetaData;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 4/6/20 */
 @XmlRootElement(name = "subProcess", namespace = "http://www.omg.org/spec/BPMN/20100524/MODEL")
 public class SubProcess {
 

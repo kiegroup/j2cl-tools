@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +21,6 @@ import org.kie.j2cl.tools.xml.mapper.api.custom.CustomXMLDeserializer;
 import org.kie.j2cl.tools.xml.mapper.api.exception.XMLDeserializationException;
 import org.kie.j2cl.tools.xml.mapper.api.stream.XMLReader;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 5/19/20 */
 public class MyBeanDemarshaller extends CustomXMLDeserializer<MyBean> {
 
   @Override

@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +17,6 @@ package org.kie.j2cl.tools.xml.mapper.client.tests.annotations.handler;
 import java.util.Objects;
 import org.kie.j2cl.tools.xml.mapper.api.annotation.XmlTypeAdapter;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 5/19/20 */
 @XmlTypeAdapter(serializer = MyBeanMarshaller.class, deserializer = MyBeanDemarshaller.class)
 public class MyBean {
 

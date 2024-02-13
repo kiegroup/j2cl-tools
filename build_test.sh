@@ -7,6 +7,7 @@ set -e
 revision=$(cat revision.txt)
 
 modules=(
+      j2cl-maven-plugin
       gwt3-processors
       gwt-nio
       jakarta-spec
@@ -14,6 +15,7 @@ modules=(
       mapper-json
       mapper-yaml
       di
+      bom
      )
 
 for module in "${modules[@]}"

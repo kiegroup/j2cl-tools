@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +23,6 @@ import org.junit.Test;
 import org.kie.j2cl.tools.xml.mapper.client.tests.beans.StringBean;
 import org.kie.j2cl.tools.xml.mapper.client.tests.beans.StringBean_XMLMapperImpl;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 3/26/20 */
 @J2clTestInput(StringTest.class)
 public class StringTest {
 

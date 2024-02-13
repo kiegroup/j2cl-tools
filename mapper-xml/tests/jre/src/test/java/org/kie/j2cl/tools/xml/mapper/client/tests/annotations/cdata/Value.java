@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +19,6 @@ import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlCData;
 import org.kie.j2cl.tools.xml.mapper.api.annotation.XMLMapper;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 9/8/20 */
 @XMLMapper
 public class Value {
 

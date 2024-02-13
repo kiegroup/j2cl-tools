@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +24,6 @@ import org.kie.j2cl.tools.xml.mapper.api.annotation.TargetNamespace;
 import org.kie.j2cl.tools.xml.mapper.api.annotation.XMLMapper;
 import org.kie.j2cl.tools.xml.mapper.client.tests.bpmn.bpmn.di.BPMNDiagram;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 4/6/20 */
 @XMLMapper
 @XmlRootElement(name = "definitions", namespace = "http://www.omg.org/spec/BPMN/20100524/MODEL")
 @TargetNamespace(prefix = "bpmn2", namespace = "http://www.omg.org/bpmn20")

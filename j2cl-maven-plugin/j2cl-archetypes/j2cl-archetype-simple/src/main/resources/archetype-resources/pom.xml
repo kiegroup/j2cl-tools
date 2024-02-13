@@ -37,21 +37,21 @@
     </dependency>
 
     <dependency>
-      <groupId>org.kie.j2cl.tools</groupId>
+      <groupId>com.vertispan.j2cl</groupId>
       <artifactId>junit-annotations</artifactId>
       <version>\${j2cl.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.kie.j2cl.tools</groupId>
+      <groupId>com.vertispan.j2cl</groupId>
       <artifactId>junit-emul</artifactId>
       <version>\${j2cl.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.kie.j2cl.tools</groupId>
+      <groupId>com.vertispan.j2cl</groupId>
       <artifactId>junit-emul</artifactId>
       <version>\${j2cl.version}</version>
       <classifier>sources</classifier>

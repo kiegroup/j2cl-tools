@@ -1,5 +1,4 @@
 /*
- * Copyright © 2021 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +24,6 @@ import java.util.Arrays;
 import javax.xml.stream.XMLStreamException;
 import org.junit.Test;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 7/8/21 */
 @J2clTestInput(BooleanArray2dTest.class)
 public class BooleanArray2dTest {
 

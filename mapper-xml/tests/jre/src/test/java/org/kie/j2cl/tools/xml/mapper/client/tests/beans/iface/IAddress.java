@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +14,6 @@
  */
 package org.kie.j2cl.tools.xml.mapper.client.tests.beans.iface;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 5/13/20 */
 public interface IAddress {
 
   String getAddress();

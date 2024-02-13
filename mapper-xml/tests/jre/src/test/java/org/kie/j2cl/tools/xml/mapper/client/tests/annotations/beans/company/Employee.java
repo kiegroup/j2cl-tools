@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +19,6 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import java.util.Objects;
 import org.kie.j2cl.tools.xml.mapper.api.annotation.XMLMapper;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 4/1/20 */
 @XMLMapper
 @XmlRootElement(name = "employee")
 public class Employee {

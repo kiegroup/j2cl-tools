@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +17,6 @@ package org.kie.j2cl.tools.xml.mapper.client.tests.annotations.xmladapter;
 
 import jakarta.xml.bind.annotation.XmlAttribute;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 9/30/20 */
 public class MyCustomBean2Type {
 
   @XmlAttribute private String value;

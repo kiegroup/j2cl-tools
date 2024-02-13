@@ -41,7 +41,7 @@
     <webappdir>${project.build.directory}/webapp</webappdir>
     <webapp.libdir>${webappdir}/WEB-INF/lib</webapp.libdir>
 
-    <j2cl.maven.plugin.version>0.22.0</j2cl.maven.plugin.version>
+    <j2cl.maven.plugin.version>0.23.0</j2cl.maven.plugin.version>
     <elemental2.version>1.0.0</elemental2.version>
 
     <google.jsinterop.version>1.0.0</google.jsinterop.version>
@@ -128,7 +128,7 @@
     </resources>
     <plugins>
       <plugin>
-        <groupId>com.vertispan.j2cl</groupId>
+        <groupId>org.kie.j2cl.tools</groupId>
         <artifactId>j2cl-maven-plugin</artifactId>
         <version>${j2cl.maven.plugin.version}</version>
         <executions>

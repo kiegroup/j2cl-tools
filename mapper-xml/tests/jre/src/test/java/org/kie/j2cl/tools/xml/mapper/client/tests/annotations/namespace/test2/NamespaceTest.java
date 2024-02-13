@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +22,6 @@ import javax.xml.stream.XMLStreamException;
 import org.junit.Assert;
 import org.junit.Test;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 10/4/20 */
 @J2clTestInput(NamespaceTest.class)
 public class NamespaceTest {
   NSTest_XMLMapperImpl mapper = NSTest_XMLMapperImpl.INSTANCE;

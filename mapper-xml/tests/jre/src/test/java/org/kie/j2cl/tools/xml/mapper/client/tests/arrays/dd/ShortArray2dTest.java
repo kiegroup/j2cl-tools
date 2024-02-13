@@ -1,5 +1,4 @@
 /*
- * Copyright © 2021 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +20,6 @@ import com.google.j2cl.junit.apt.J2clTestInput;
 import javax.xml.stream.XMLStreamException;
 import org.junit.Test;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 3/29/20 */
 @J2clTestInput(ShortArray2dTest.class)
 public class ShortArray2dTest {
 

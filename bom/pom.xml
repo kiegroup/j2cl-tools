@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.kie.j2cl.tools</groupId>
+    <artifactId>bom</artifactId>
+    <version>0.1</version>
+    <packaging>pom</packaging>
+
+    <name>J2CL Libraries Bill of Materials</name>
+    <description>J2CL Libraries Bill of Materials</description>
+    <url>https://github.com/kiegroup/j2cl-tools</url>
+
+    <organization>
+        <name>JBoss by Red Hat</name>
+        <url>http://www.jboss.org/</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>All developers are listed in the KIE GitHub organization</name>
+            <url>https://github.com/orgs/kiegroup/people</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/kiegroup/j2cl-tools.git</connection>
+        <developerConnection>scm:git:ssh://github.com/kiegroup/j2cl-tools.git</developerConnection>
+        <url>https://github.com/kiegroup/j2cl-tools/tree/master</url>
+    </scm>
+
+    <properties>
+        <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
+        <maven.deploy.plugin.version>3.0.0-M2</maven.deploy.plugin.version>
+
+        <gwt.nio.version>1.3</gwt.nio.version>
+        <gwt3.processors.version>0.6.4</gwt3.processors.version>
+        <jakarta4g.version>0.3</jakarta4g.version>
+        <dependency.inject.version>0.6</dependency.inject.version>
+        <json.mapper.version>0.4.1</json.mapper.version>
+        <xml.mapper.version>0.7</xml.mapper.version>
+        <yaml.mapper.version>0.4</yaml.mapper.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.kie.j2cl.tools.processors</groupId>
+                <artifactId>annotations</artifactId>
+                <version>${gwt3.processors.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.kie.j2cl.tools.processors</groupId>
+                <artifactId>common</artifactId>
+                <version>${gwt3.processors.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.kie.j2cl.tools.processors</groupId>
+                <artifactId>processors</artifactId>
+                <version>${gwt3.processors.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.kie.j2cl.tools.nio</groupId>
+                <artifactId>gwt-nio-parent</artifactId>
+                <version>${gwt.nio.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.kie.j2cl.tools.jakarta</groupId>
+                <artifactId>bom</artifactId>
+                <version>${jakarta4g.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.kie.j2cl.tools.di</groupId>
+                <artifactId>bom</artifactId>
+                <version>${dependency.inject.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.kie.j2cl.tools.json.mapper</groupId>
+                <artifactId>common</artifactId>
+                <version>${json.mapper.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.kie.j2cl.tools.json.mapper</groupId>
+                <artifactId>processor</artifactId>
+                <version>${json.mapper.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.kie.j2cl.tools.xml.mapper</groupId>
+                <artifactId>api</artifactId>
+                <version>${xml.mapper.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.kie.j2cl.tools.xml.mapper</groupId>
+                <artifactId>processor</artifactId>
+                <version>${xml.mapper.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.kie.j2cl.tools.yaml.mapper</groupId>
+                <artifactId>common</artifactId>
+                <version>${yaml.mapper.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.kie.j2cl.tools.yaml.mapper</groupId>
+                <artifactId>processor</artifactId>
+                <version>${yaml.mapper.version}</version>
+            </dependency>
+        </dependencies>
+
+    </dependencyManagement>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven.gpg.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <version>${maven.deploy.plugin.version}</version>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+</project>

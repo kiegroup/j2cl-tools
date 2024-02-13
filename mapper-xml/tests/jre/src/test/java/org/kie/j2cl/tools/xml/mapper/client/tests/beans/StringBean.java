@@ -17,7 +17,6 @@ package org.kie.j2cl.tools.xml.mapper.client.tests.beans;
 import java.util.Objects;
 import org.kie.j2cl.tools.xml.mapper.api.annotation.XMLMapper;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 3/27/20 */
 @XMLMapper
 public class StringBean {
 
