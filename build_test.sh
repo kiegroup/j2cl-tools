@@ -15,6 +15,7 @@ modules=(
       mapper-json
       mapper-yaml
       di
+      bom
      )
 
 for module in "${modules[@]}"
