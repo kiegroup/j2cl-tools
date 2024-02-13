@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +18,6 @@ import jakarta.xml.bind.annotation.XmlAttribute;
 import java.util.Date;
 import org.kie.j2cl.tools.xml.mapper.api.annotation.XMLMapper;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 3/27/20 */
 @XMLMapper
 public class DateBean {
 

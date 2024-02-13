@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +25,6 @@ import org.kie.j2cl.tools.xml.mapper.client.tests.annotations.namespace.test1.ci
 import org.kie.j2cl.tools.xml.mapper.client.tests.annotations.namespace.test1.ci.Tutorial_XMLMapperImpl;
 import org.kie.j2cl.tools.xml.mapper.client.tests.annotations.namespace.test1.cl.Name;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 4/28/20 */
 @J2clTestInput(TutorialTest.class)
 public class TutorialTest {
   private static final String XML =

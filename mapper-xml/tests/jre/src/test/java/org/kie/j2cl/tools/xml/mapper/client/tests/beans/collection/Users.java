@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +22,6 @@ import org.kie.j2cl.tools.xml.mapper.api.annotation.XMLMapper;
 import org.kie.j2cl.tools.xml.mapper.client.tests.beans.Address;
 import org.kie.j2cl.tools.xml.mapper.client.tests.beans.Person;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 3/30/20 */
 @XMLMapper
 public class Users {
 

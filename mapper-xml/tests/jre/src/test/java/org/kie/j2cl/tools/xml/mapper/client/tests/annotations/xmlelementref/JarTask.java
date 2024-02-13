@@ -1,5 +1,4 @@
 /*
- * Copyright © 2021 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +17,6 @@ package org.kie.j2cl.tools.xml.mapper.client.tests.annotations.xmlelementref;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 6/21/21 */
 @XmlRootElement(name = "jar")
 public class JarTask extends Task {
   private String firstName;

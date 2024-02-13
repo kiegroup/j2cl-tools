@@ -23,7 +23,6 @@ import javax.xml.stream.XMLStreamException;
 import org.junit.Test;
 import org.kie.j2cl.tools.xml.mapper.api.annotation.XMLMapper;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 4/22/20 */
 @J2clTestInput(IntegerBoxedTest.class)
 public class IntegerBoxedTest {
 

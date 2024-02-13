@@ -1,5 +1,4 @@
 /*
- * Copyright © 2021 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +17,6 @@ package org.kie.j2cl.tools.xml.mapper.client.tests.doctype;
 
 import org.kie.j2cl.tools.xml.mapper.api.annotation.XMLMapper;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 7/10/21 */
 @XMLMapper
 public class Doctyped {
 

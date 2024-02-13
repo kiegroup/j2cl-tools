@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +27,6 @@ import org.kie.j2cl.tools.xml.mapper.client.tests.bpmn.bpmn.di.BPMNPlane;
 import org.kie.j2cl.tools.xml.mapper.client.tests.bpmn.bpmn.di.BPMNShape;
 import org.kie.j2cl.tools.xml.mapper.client.tests.bpmn.drools.MetaData;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 4/6/20 */
 @J2clTestInput(BPMNTest.class)
 public class BPMNTest {
 

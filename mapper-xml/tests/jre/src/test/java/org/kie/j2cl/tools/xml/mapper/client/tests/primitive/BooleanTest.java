@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +25,6 @@ import org.junit.Test;
 import org.kie.j2cl.tools.xml.mapper.client.tests.beans.BooleanBean;
 import org.kie.j2cl.tools.xml.mapper.client.tests.beans.BooleanBean_XMLMapperImpl;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 4/22/20 */
 @J2clTestInput(BooleanTest.class)
 public class BooleanTest extends GWTTestCase {
 

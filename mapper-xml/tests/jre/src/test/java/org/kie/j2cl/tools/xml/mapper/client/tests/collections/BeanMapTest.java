@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +27,6 @@ import org.kie.j2cl.tools.xml.mapper.client.tests.beans.Person;
 import org.kie.j2cl.tools.xml.mapper.client.tests.beans.collection.Users;
 import org.kie.j2cl.tools.xml.mapper.client.tests.beans.collection.Users_XMLMapperImpl;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 3/30/20 */
 @J2clTestInput(BeanMapTest.class)
 public class BeanMapTest {
 

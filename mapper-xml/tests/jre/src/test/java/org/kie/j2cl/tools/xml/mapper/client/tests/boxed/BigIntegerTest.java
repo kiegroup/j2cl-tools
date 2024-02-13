@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +24,6 @@ import javax.xml.stream.XMLStreamException;
 import org.junit.Test;
 import org.kie.j2cl.tools.xml.mapper.api.annotation.XMLMapper;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 4/22/20 */
 @J2clTestInput(BigIntegerTest.class)
 public class BigIntegerTest {
   private static final String value = "1548784651132124566543513203245448715154542123114001571970";

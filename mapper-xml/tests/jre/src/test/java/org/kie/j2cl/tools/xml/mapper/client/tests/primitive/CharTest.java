@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +21,6 @@ import javax.xml.stream.XMLStreamException;
 import org.junit.Test;
 import org.kie.j2cl.tools.xml.mapper.api.annotation.XMLMapper;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 4/22/20 */
-// @J2clTestInput(CharTest.class) failed in htmlunit, works in browser
 public class CharTest {
   private static final String XML_EMPTY =
       "<?xml version='1.0' encoding='UTF-8'?><CharType><value/></CharType>";

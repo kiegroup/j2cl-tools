@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/** @author Dmitrii Tikhomirov Created by treblereel 4/5/20 */
 @XmlSchema(
     namespace = "http://www.omg.org/spec/DD/20100524/DC",
     elementFormDefault = XmlNsForm.QUALIFIED)

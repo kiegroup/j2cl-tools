@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +21,6 @@ import org.kie.j2cl.tools.xml.mapper.api.custom.CustomXMLSerializer;
 import org.kie.j2cl.tools.xml.mapper.api.stream.XMLWriter;
 import org.kie.j2cl.tools.xml.mapper.client.tests.annotations.handler.Bean;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 5/19/20 */
 public class IdMarshaller extends CustomXMLSerializer<Bean.Id> {
 
   @Override

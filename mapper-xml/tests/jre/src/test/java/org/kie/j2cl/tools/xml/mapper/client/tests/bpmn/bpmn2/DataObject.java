@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +18,6 @@ import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import java.util.Objects;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 4/6/20 */
 @XmlRootElement(name = "dataObject", namespace = "http://www.omg.org/spec/BPMN/20100524/MODEL")
 public class DataObject {
 

@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +18,6 @@ package org.kie.j2cl.tools.xml.mapper.client.tests.annotations.xmladapter.pkg;
 import org.kie.j2cl.tools.xml.mapper.api.annotation.XMLMapper;
 import org.kie.j2cl.tools.xml.mapper.client.tests.annotations.xmladapter.MyCustomBean;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 9/29/20 */
 @XMLMapper
 public class MyTestBean {
 

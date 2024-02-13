@@ -1,5 +1,4 @@
 /*
- * Copyright © 2021 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +20,6 @@ import jakarta.xml.bind.annotation.XmlValue;
 import java.util.Objects;
 import org.kie.j2cl.tools.xml.mapper.api.annotation.XMLMapper;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 11/07/21 */
 @XMLMapper
 public class XmlValueHolder {
   @XmlValue

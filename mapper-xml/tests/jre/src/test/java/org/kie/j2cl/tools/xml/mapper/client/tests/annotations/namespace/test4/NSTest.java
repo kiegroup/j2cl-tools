@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +18,6 @@ package org.kie.j2cl.tools.xml.mapper.client.tests.annotations.namespace.test4;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import org.kie.j2cl.tools.xml.mapper.api.annotation.XMLMapper;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 10/4/20 */
 @XMLMapper
 @XmlRootElement
 public class NSTest {

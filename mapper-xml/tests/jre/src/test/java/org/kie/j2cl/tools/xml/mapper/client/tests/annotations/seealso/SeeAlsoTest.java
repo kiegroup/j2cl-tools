@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +29,6 @@ import org.kie.j2cl.tools.xml.mapper.api.annotation.XMLMapper;
 import org.kie.j2cl.tools.xml.mapper.client.tests.annotations.seealso.type.SeeAlsoAnimalXsiTypeHolder;
 import org.kie.j2cl.tools.xml.mapper.client.tests.annotations.seealso.type.SeeAlsoAnimalXsiTypeHolder_XMLMapperImpl;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 7/1/20 */
 @J2clTestInput(SeeAlsoTest.class)
 public class SeeAlsoTest {
 

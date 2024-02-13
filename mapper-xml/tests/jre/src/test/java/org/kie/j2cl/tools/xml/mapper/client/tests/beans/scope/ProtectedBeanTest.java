@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +19,6 @@ import static org.junit.Assert.assertEquals;
 import javax.xml.stream.XMLStreamException;
 import org.junit.Test;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 5/13/20 */
 public class ProtectedBeanTest {
   ProtectedBean_XMLMapperImpl mapper = ProtectedBean_XMLMapperImpl.INSTANCE;
 

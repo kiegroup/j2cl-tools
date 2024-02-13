@@ -1,5 +1,4 @@
 /*
- * Copyright © 2020 Treblereel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +22,6 @@ import java.util.UUID;
 import javax.xml.stream.XMLStreamException;
 import org.junit.Test;
 
-/** @author Dmitrii Tikhomirov Created by treblereel 3/26/20 */
 @J2clTestInput(UUIDTest.class)
 public class UUIDTest {
 
