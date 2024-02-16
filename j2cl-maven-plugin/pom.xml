@@ -329,7 +329,6 @@
 
   <build>
     <plugins>
-      <!-- https://maven.apache.org/enforcer/enforcer-rules/dependencyConvergence.html -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
@@ -351,36 +350,19 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-site-plugin</artifactId>
-        <version>3.11.0</version>
-      </plugin>
     </plugins>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-scm-publish-plugin</artifactId>
-          <version>3.0.0</version>
-          <configuration>
-            <scmBranch>gh-pages</scmBranch>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
   </build>
 
   <distributionManagement>
     <repository>
-      <id>ossrh</id>
-      <name>Sonatype staging repository for Maven Central</name>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Repository Group</name>
+      <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
     </repository>
     <snapshotRepository>
-      <id>vertispan-snapshots</id>
-      <name>Vertispan hosted artifacts-snapshots</name>
-      <url>https://repo.vertispan.com/j2cl</url>
+      <id>jboss-snapshots-repository</id>
+      <name>JBoss Snapshot Repository</name>
+      <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
 
