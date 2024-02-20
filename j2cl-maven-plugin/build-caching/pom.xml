@@ -13,8 +13,6 @@
 
     <name>Build caching tools</name>
 
-
-
     <dependencies>
         <!-- watch service -->
         <dependency>
@@ -37,9 +35,5 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-
-
-
 
 </project>
