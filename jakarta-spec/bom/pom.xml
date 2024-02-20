@@ -13,6 +13,38 @@
 
     <name>GWT/J2CL Jakarta BOM</name>
     <description>GWT/J2CL Jakarta BOM</description>
+    <url>http://kogito.kie.org</url>
+    <inceptionYear>2021</inceptionYear>
+    <organization>
+        <name>JBoss by Red Hat</name>
+        <url>http://www.jboss.org/</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git@github.com:apache/incubator-kie-tools.git</connection>
+        <developerConnection>scm:git:git@github.com:apache/incubator-kie-tools.git</developerConnection>
+        <url>scm:git:git@github.com:apache/incubator-kie-tools.git</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <name>All developers are listed in the KIE GitHub organization</name>
+            <url>https://github.com/orgs/kiegroup/people</url>
+        </developer>
+    </developers>
+
+    <issueManagement>
+        <system>jira</system>
+        <url>https://issues.redhat.com/browse/KOGITO</url>
+    </issueManagement>
 
     <dependencyManagement>
         <dependencies>
@@ -58,4 +90,17 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <distributionManagement>
+        <repository>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Repository Group</name>
+            <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
+        </repository>
+        <snapshotRepository>
+            <id>jboss-snapshots-repository</id>
+            <name>JBoss Snapshot Repository</name>
+            <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
