@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.kie.j2cl.tools.archetypes</groupId>
         <artifactId>j2cl-archetypes-parent</artifactId>
-        <version>0.23.0</version>
+        <version>0.23.1</version>
     </parent>
     <artifactId>j2cl-archetype-servlet</artifactId>
     <packaging>maven-archetype</packaging>
