@@ -20,7 +20,7 @@ jobs:
           distribution: 'temurin'
       - name: Build and test
         run: |
-          sh build_test.sh
+          bash build_test.sh
       - name: Upload test results for review
         uses: actions/upload-artifact@v4
         if: always()
@@ -59,7 +59,7 @@ jobs:
           mvn wrapper:wrapper -Dmaven=${{ matrix.mvn }}
       - name: Build and test
         run: |
-          sh build_test.sh
+          bash build_test.sh
       - name: Upload test results for review
         uses: actions/upload-artifact@v4
         if: always()
