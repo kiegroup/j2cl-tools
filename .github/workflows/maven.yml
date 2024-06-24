@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mvn: ['3.9.8' '3.8.8', '3.6.3']
+        mvn: ['3.9.8', '3.8.8', '3.6.3']
         java: ['11']
         include:
           - mvn: '3.9.8'
