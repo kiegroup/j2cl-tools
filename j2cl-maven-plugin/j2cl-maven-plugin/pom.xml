@@ -158,6 +158,7 @@
           <cloneProjectsTo>${project.build.directory}/it-tests</cloneProjectsTo>
           <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
           <settingsFile>src/it/settings.xml</settingsFile>
+          <streamLogs>true</streamLogs>
           <goals>
             <goal>package -e</goal>
           </goals>
