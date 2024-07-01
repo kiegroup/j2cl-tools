@@ -1,0 +1,51 @@
+goog.module('woo.Foo$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let NativeBar = goog.forwardDeclare('packageinfosubpackage.subpackage.Bar');
+
+class Foo extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+  /**@type {NativeBar} @nodts*/
+  this.f_nativeBar__packageinfosubpackage_Foo_;
+ }
+ /** @nodts @return {!Foo} */
+ static $create__() {
+  Foo.$clinit();
+  let $instance = new Foo();
+  $instance.$ctor__packageinfosubpackage_Foo__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__packageinfosubpackage_Foo__void() {
+  this.$ctor__java_lang_Object__void();
+  this.$init__void_$p_packageinfosubpackage_Foo();
+ }
+ /** @private @nodts */
+ $init__void_$p_packageinfosubpackage_Foo() {
+  this.f_nativeBar__packageinfosubpackage_Foo_ = new NativeBar();
+ }
+ /** @nodts */
+ static $clinit() {
+  Foo.$clinit = () =>{};
+  Foo.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof Foo;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {
+  NativeBar = goog.module.get('packageinfosubpackage.subpackage.Bar');
+ }
+}
+$Util.$setClassMetadata(Foo, 'packageinfosubpackage.Foo');
+
+exports = Foo;
+
+//# sourceMappingURL=Foo.js.map

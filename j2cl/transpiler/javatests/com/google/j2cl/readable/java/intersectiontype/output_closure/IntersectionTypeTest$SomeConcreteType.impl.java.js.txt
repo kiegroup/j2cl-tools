@@ -1,0 +1,39 @@
+goog.module('intersectiontype.IntersectionTypeTest.SomeConcreteType$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+class SomeConcreteType extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!SomeConcreteType} */
+ static $create__() {
+  let $instance = new SomeConcreteType();
+  $instance.$ctor__intersectiontype_IntersectionTypeTest_SomeConcreteType__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__intersectiontype_IntersectionTypeTest_SomeConcreteType__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @nodts */
+ static $clinit() {
+  SomeConcreteType.$clinit = () =>{};
+  SomeConcreteType.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof SomeConcreteType;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+$Util.$setClassMetadata(SomeConcreteType, 'intersectiontype.IntersectionTypeTest$SomeConcreteType');
+
+exports = SomeConcreteType;
+
+//# sourceMappingURL=IntersectionTypeTest$SomeConcreteType.js.map

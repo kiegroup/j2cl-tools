@@ -1,0 +1,63 @@
+goog.module('overwrittentypevariables.HashFunctions$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let Enum = goog.forwardDeclare('java.lang.Enum$impl');
+let HashFunction = goog.forwardDeclare('overwrittentypevariables.HashFunction$impl');
+let $Casts = goog.forwardDeclare('vmbootstrap.Casts$impl');
+
+class HashFunctions extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!HashFunctions} */
+ static $create__() {
+  HashFunctions.$clinit();
+  let $instance = new HashFunctions();
+  $instance.$ctor__overwrittentypevariables_HashFunctions__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__overwrittentypevariables_HashFunctions__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @final @nodts @template T @return {HashFunction<T>} */
+ static m_hashFunction__overwrittentypevariables_HashFunction() {
+  HashFunctions.$clinit();
+  return HashFunction.$adapt((/** T */ input) =>{
+   return '';
+  });
+ }
+ /** @final @nodts @template T @return {HashFunction<T>} */
+ static m_enumHashFunction__overwrittentypevariables_HashFunction() {
+  HashFunctions.$clinit();
+  return HashFunction.$adapt((input) =>{
+   let input_1 = /**@type {Enum}*/ ($Casts.$to(input, Enum));
+   return '' + /**@type {!Enum<T>}*/ (input_1).ordinal();
+  });
+ }
+ /** @nodts */
+ static $clinit() {
+  HashFunctions.$clinit = () =>{};
+  HashFunctions.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof HashFunctions;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {
+  Enum = goog.module.get('java.lang.Enum$impl');
+  HashFunction = goog.module.get('overwrittentypevariables.HashFunction$impl');
+  $Casts = goog.module.get('vmbootstrap.Casts$impl');
+ }
+}
+$Util.$setClassMetadata(HashFunctions, 'overwrittentypevariables.HashFunctions');
+
+exports = HashFunctions;
+
+//# sourceMappingURL=HashFunctions.js.map

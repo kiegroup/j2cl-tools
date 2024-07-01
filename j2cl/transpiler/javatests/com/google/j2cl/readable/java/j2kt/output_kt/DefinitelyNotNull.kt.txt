@@ -1,0 +1,89 @@
+// Generated from "j2kt/DefinitelyNotNull.java"
+@file:OptIn(ExperimentalObjCName::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package j2kt
+
+import javaemul.lang.*
+import java.lang.RuntimeException
+import kotlin.Any
+import kotlin.Boolean
+import kotlin.OptIn
+import kotlin.Suppress
+import kotlin.collections.MutableIterable
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.jvm.JvmStatic
+import kotlin.native.ObjCName
+
+@ObjCName("J2ktJ2ktDefinitelyNotNull", exact = true)
+open class DefinitelyNotNull {
+ @ObjCName("J2ktJ2ktDefinitelyNotNullCompanion", exact = true)
+ companion object {
+  @JvmStatic
+  @ObjCName("testEquivalence")
+  fun <T> testEquivalence(
+   @ObjCName("withJ2ktDefinitelyNotNull_Equivalence") equivalence: DefinitelyNotNull.Equivalence<in T & Any>,
+   @ObjCName("withId") a: T?,
+   @ObjCName("withId") b: T?
+  ): Boolean {
+   return equivalence.equivalent(a, b)
+  }
+ }
+
+ open class Ordering<T> internal constructor() {
+  internal open fun <S: T> reverse_pp_j2kt(): DefinitelyNotNull.Ordering<S> {
+   throw RuntimeException()
+  }
+
+  companion object {
+   @JvmStatic
+   internal fun <E> reversed_pp_j2kt(ordering: DefinitelyNotNull.Ordering<in E>): DefinitelyNotNull.Ordering<in E> {
+    return ordering.reverse_pp_j2kt<E>()
+   }
+  }
+ }
+
+ @ObjCName("J2ktJ2ktDefinitelyNotNull_ImmutableList", exact = true)
+ open class ImmutableList<E: Any> {
+  @ObjCName("J2ktJ2ktDefinitelyNotNull_ImmutableListCompanion", exact = true)
+  companion object {
+   @JvmStatic
+   @ObjCName("copyOf")
+   fun <E: Any> copyOf(
+    @ObjCName("withJavaLangIterable") iterable: MutableIterable<E>
+   ): DefinitelyNotNull.ImmutableList<E> {
+    throw RuntimeException()
+   }
+
+   @JvmStatic
+   @ObjCName("copyOfNullable")
+   fun <E> copyOfNullable(
+    @ObjCName("withJavaLangIterable") iterable: MutableIterable<E>
+   ): DefinitelyNotNull.ImmutableList<E & Any> {
+    return DefinitelyNotNull.ImmutableList.copyOf<E & Any>(iterable as MutableIterable<E & Any>)
+   }
+  }
+ }
+
+ fun interface Equivalence<T: Any> {
+  @ObjCName("equivalent")
+  fun equivalent(
+   @ObjCName("withId") a: T?,
+   @ObjCName("withId") b: T?
+  ): Boolean
+ }
+}

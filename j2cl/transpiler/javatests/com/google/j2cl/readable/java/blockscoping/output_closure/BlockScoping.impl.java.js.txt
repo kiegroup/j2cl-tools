@@ -1,0 +1,62 @@
+goog.module('blockscoping.BlockScoping$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+class BlockScoping extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!BlockScoping} */
+ static $create__() {
+  BlockScoping.$clinit();
+  let $instance = new BlockScoping();
+  $instance.$ctor__blockscoping_BlockScoping__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__blockscoping_BlockScoping__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @nodts */
+ m_localScopes__void() {
+  {
+   let i = 0;
+  }
+  {
+   let i_1 = 1;
+  }
+ }
+ /** @nodts */
+ m_nestedScopes__void() {
+  let /** number */ x;
+  let /** number */ y;
+  {
+   x = 1;
+   {
+    y = 1;
+   }
+   y = y + 1 | 0;
+  }
+  x = x + 1 | 0;
+ }
+ /** @nodts */
+ static $clinit() {
+  BlockScoping.$clinit = () =>{};
+  BlockScoping.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof BlockScoping;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+$Util.$setClassMetadata(BlockScoping, 'blockscoping.BlockScoping');
+
+exports = BlockScoping;
+
+//# sourceMappingURL=BlockScoping.js.map

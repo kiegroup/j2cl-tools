@@ -1,0 +1,106 @@
+#macro( methodExecution $classOrInstance $testMethod)
+$classOrInstance.${testMethod.javaMethodName()}();
+#end
+#macro( methodExecutions $classOrInstance $testMethods)
+  #foreach($testMethod in $testMethods )
+#methodExecution( $classOrInstance $testMethod )
+  #end
+#end
+
+/**
+ * Generated test suite from j2kt_test target
+ */
+@file:Suppress("PackageName")
+package ${testClass.jsUnitPackageName()}
+
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+
+private var times = 0
+private fun beforeClass() {
+  #methodExecutions(${testClass.qualifiedName()} $testClass.beforeClassMethods())
+}
+
+private fun afterClass() {
+  #methodExecutions(${testClass.qualifiedName()} ${testClass.afterClassMethods()})
+}
+
+class ${testClass.jsUnitAdapterClassName()} {
+
+  val actualTest: ${testClass.qualifiedName()}
+  var skipAllTests = false
+  var skipCurrentTest = false
+
+  init {
+    try {
+      if (times++ == 0) {
+        beforeClass()
+      }
+    } catch (e: org.junit.AssumptionViolatedException) {
+      skipAllTests = true
+    ## Add try catch here for afterClass is guaranteed to run even if the
+    ## BeforeClass method throws an exception, in this case, AfterTest does not
+    ## run so we throw an exception here
+    } catch (e: Throwable) {
+      afterClass()
+      throw e
+    }
+
+    actualTest = ${testClass.qualifiedName()}()
+  }
+
+  @BeforeTest
+  fun setUp() {
+    if (skipAllTests) return
+    try {
+      #if($testClass.isJUnit3())
+      junit.framework.TestCaseViolator.callSetUp(actualTest);
+      #end
+      #methodExecutions( "actualTest" $testClass.beforeMethods() )
+    } catch (e: org.junit.AssumptionViolatedException) {
+      skipCurrentTest = true
+    }
+  }
+
+  @AfterTest
+  fun tearDown() {
+    try {
+      if (skipAllTests) return
+      if (skipCurrentTest) {
+        skipCurrentTest = false
+      }
+    #if($testClass.isJUnit3())
+      junit.framework.TestCaseViolator.callTearDown(actualTest)
+    #end
+    #methodExecutions( "actualTest" $testClass.afterMethods() )
+    } finally {
+      if (times == ${testClass.numberOfTestMethods()}) {
+        afterClass()
+      }
+    }
+  }
+
+#foreach($testMethod in ${testClass.testMethods()})
+  @Test
+  fun ${testMethod.javaMethodName()}()  {
+    if (skipAllTests || skipCurrentTest) return
+    try {
+      #if(${testMethod.isStatic()})
+      #methodExecution( ${testClass.qualifiedName()} $testMethod )
+      #else
+      #methodExecution( "actualTest" $testMethod )
+      #end
+    } catch (e: org.junit.AssumptionViolatedException) {
+      return
+#if ($testMethod.expectedExceptionQualifiedName())
+    } catch (e: ${testMethod.expectedExceptionQualifiedName()}) {
+      return
+    }
+    throw Exception("expected exception was not thrown")
+#else
+    }
+#end
+  }
+#end
+}

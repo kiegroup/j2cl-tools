@@ -1,0 +1,172 @@
+// Generated from "varargs/Varargs.java"
+@file:OptIn(ExperimentalObjCName::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package varargs
+
+import javaemul.lang.*
+import java.io.Serializable
+import kotlin.Any
+import kotlin.Array
+import kotlin.Cloneable
+import kotlin.Int
+import kotlin.Long
+import kotlin.Number
+import kotlin.OptIn
+import kotlin.String
+import kotlin.Suppress
+import kotlin.arrayOf
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
+import kotlin.native.ObjCName
+
+@ObjCName("J2ktVarargsVarargs", exact = true)
+open class Varargs {
+ @JvmField
+ internal var args_private_2: Array<Any?>? = null
+
+ constructor(
+  vararg @ObjCName("IntArray") args: Int
+ )
+
+ constructor(): this(1)
+
+ @ObjCName("test")
+ open fun test(
+  @ObjCName("withInt") a: Int,
+  vararg @ObjCName("withNSObjectArray") args: Any?
+ ) {
+  val args_1: Array<Any?>? = args as Array<Any?>?
+ }
+
+ @ObjCName("testCloneable")
+ open fun testCloneable(
+  vararg @ObjCName("withNSCopyingArray") args: Cloneable?
+ ) {
+  val args_1: Array<Cloneable?>? = args as Array<Cloneable?>?
+ }
+
+ @ObjCName("testSerializable")
+ open fun testSerializable(
+  vararg @ObjCName("withJavaIoSerializableArray") args: Serializable?
+ ) {
+  val args_1: Array<Serializable?>? = args as Array<Serializable?>?
+ }
+
+ @ObjCName("testAssignment")
+ open fun testAssignment(
+  vararg @ObjCName("withNSObjectArray") args: Any?
+ ) {
+  val args_1: Array<Any?>? = args as Array<Any?>?
+  this.args_private_2 = args_1 as Array<Any?>?
+ }
+
+ @ObjCName("testLambda")
+ open fun testLambda(
+  @ObjCName("withVarargsVarargs_FunctionalInterface") functionalInterface: Varargs.FunctionalInterface?
+ ) {}
+
+ @ObjCName("testOverloaded")
+ open fun testOverloaded(
+  @ObjCName("withId") o: Any?
+ ) {}
+
+ @ObjCName("testOverloaded")
+ open fun testOverloaded(
+  @ObjCName("withNSString") o: String?,
+  vararg @ObjCName("withNSObjectArray") rest: Any?
+ ) {
+  val rest_1: Array<Any?>? = rest as Array<Any?>?
+ }
+
+ @ObjCName("testOverloaded")
+ open fun testOverloaded(
+  @ObjCName("withLong") l: Long
+ ) {}
+
+ @ObjCName("testOverloaded")
+ open fun testOverloaded(
+  @ObjCName("withLong") l: Long,
+  vararg @ObjCName("withLongArray") rest: Long
+ ) {}
+
+ @ObjCName("main")
+ open fun main() {
+  val v: Varargs? = Varargs()
+  v!!.test(1)
+  v!!.test(1, Any())
+  v!!.test(1, *arrayOf<Any?>(Any())!!)
+  v!!.test(1, *arrayOf<Any?>()!!)
+  v!!.test(1, *(arrayOf<Array<Any?>?>() as Array<Any?>?)!!)
+  v!!.test(1, *(Varargs.passthrough<Array<String?>?>(arrayOf<String?>("a")) as Array<Any?>?)!!)
+  v!!.test(1, *null!!)
+  v!!.testCloneable(*(arrayOf<Array<Any?>?>() as Array<Cloneable?>?)!!)
+  v!!.testSerializable(*(arrayOf<Array<Any?>?>() as Array<Serializable?>?)!!)
+  v!!.testLambda(Varargs.FunctionalInterface { it: Array<out String?>? ->
+   val it_1: Array<String?>? = it as Array<String?>?
+   this.args_private_2 = it_1 as Array<Any?>?
+  })
+  v!!.testOverloaded("foo" as Any?)
+  v!!.testOverloaded("foo", "bar")
+  v!!.testOverloaded("foo" as Any)
+  v!!.testOverloaded(1.toLong())
+  v!!.testOverloaded(java.lang.Long.valueOf(1L) as Any?)
+  v!!.testOverloaded(1L)
+  v!!.testOverloaded(1L, 2L, 3L)
+  v!!.testOverloaded(1.toLong(), 2L, 3L)
+ }
+
+ @ObjCName("J2ktVarargsVarargsCompanion", exact = true)
+ companion object {
+  @JvmStatic
+  @ObjCName("fun")
+  fun <T: Number?> `fun`(
+   vararg @ObjCName("withNSNumberArray") elements: T
+  ) {
+   val elements_1: Array<T>? = elements as Array<T>?
+  }
+
+  @JvmStatic
+  @ObjCName("bar")
+  fun <E: Number?> bar(
+   @ObjCName("withNSNumber") a: E,
+   @ObjCName("withNSNumber") b: E
+  ) {
+   Varargs.`fun`<E>(a, b)
+  }
+
+  @JvmStatic
+  @ObjCName("passthrough")
+  fun <T> passthrough(
+   @ObjCName("withId") o: T
+  ): T {
+   return o
+  }
+ }
+
+ fun interface FunctionalInterface {
+  @ObjCName("apply")
+  fun apply(
+   vararg @ObjCName("withNSStringArray") strings: String?
+  )
+ }
+}
+
+open class Child: Varargs {
+ constructor(): super(1)
+}

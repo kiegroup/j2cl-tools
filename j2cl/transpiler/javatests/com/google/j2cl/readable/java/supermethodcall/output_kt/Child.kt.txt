@@ -1,0 +1,142 @@
+// Generated from "supermethodcall/Child.java"
+@file:OptIn(ExperimentalObjCName::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package supermethodcall
+
+import javaemul.lang.*
+import kotlin.Any
+import kotlin.Int
+import kotlin.OptIn
+import kotlin.String
+import kotlin.Suppress
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.native.ObjCName
+
+interface GrandParentInterface {
+ @ObjCName("defaultGrandParent")
+ fun defaultGrandParent() {}
+}
+
+interface ParentInterface {
+ @ObjCName("defaultParent")
+ fun defaultParent() {}
+}
+
+open class GrandParent internal constructor() {
+ @ObjCName("grandParentSimplest")
+ open fun grandParentSimplest() {}
+
+ @ObjCName("grandParentWithParams")
+ open fun grandParentWithParams(
+  @ObjCName("withInt") foo: Int
+ ) {}
+
+ @ObjCName("grandParentWithChangingReturn")
+ open fun grandParentWithChangingReturn(): Any? {
+  return null
+ }
+
+ @ObjCName("defaultParent")
+ open fun defaultParent() {}
+
+ @ObjCName("defaultGrandParent")
+ open fun defaultGrandParent() {}
+}
+
+open class Parent internal constructor(): GrandParent(), ParentInterface {
+ @ObjCName("parentSimplest")
+ open fun parentSimplest() {}
+
+ @ObjCName("parentWithParams")
+ open fun parentWithParams(
+  @ObjCName("withInt") foo: Int
+ ) {}
+
+ @ObjCName("parentWithChangingReturn")
+ open fun parentWithChangingReturn(): Any? {
+  return null
+ }
+
+ override fun defaultParent() {
+  super<GrandParent>.defaultParent()
+  super<ParentInterface>.defaultParent()
+ }
+}
+
+@ObjCName("J2ktSupermethodcallChild", exact = true)
+open class Child: Parent(), GrandParentInterface {
+ override fun parentSimplest() {
+  super<Parent>.parentSimplest()
+ }
+
+ override fun parentWithParams(foo: Int) {
+  super<Parent>.parentWithParams(foo)
+ }
+
+ override fun parentWithChangingReturn(): Child? {
+  super<Parent>.parentWithChangingReturn()
+  return this
+ }
+
+ override fun grandParentSimplest() {
+  super<Parent>.grandParentSimplest()
+ }
+
+ override fun grandParentWithParams(foo: Int) {
+  super<Parent>.grandParentWithParams(foo)
+ }
+
+ override fun grandParentWithChangingReturn(): Child? {
+  super<Parent>.grandParentWithChangingReturn()
+  return this
+ }
+
+ override fun defaultGrandParent() {
+  super<Parent>.defaultGrandParent()
+  super<GrandParentInterface>.defaultGrandParent()
+ }
+}
+
+interface I1 {
+ @ObjCName("m")
+ fun m() {}
+}
+
+fun interface I2 {
+ @ObjCName("m")
+ fun m()
+}
+
+interface I3: I1 {}
+
+open class Super internal constructor() {
+ @ObjCName("m")
+ open fun m() {}
+}
+
+open class Sub internal constructor(): Super(), I2, I3 {
+ override fun m() {
+  super<I3>.m()
+ }
+}
+
+abstract class SuperToStringTest internal constructor(): I1 {
+ override fun toString(): String {
+  return super.toString()
+ }
+}

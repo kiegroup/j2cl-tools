@@ -1,0 +1,106 @@
+// Generated from "classliteral/ClassLiteral.java"
+@file:OptIn(ExperimentalObjCName::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package classliteral
+
+import javaemul.lang.*
+import java.lang.Void
+import kotlin.Any
+import kotlin.Array
+import kotlin.Boolean
+import kotlin.BooleanArray
+import kotlin.Byte
+import kotlin.ByteArray
+import kotlin.Char
+import kotlin.CharArray
+import kotlin.Double
+import kotlin.DoubleArray
+import kotlin.Float
+import kotlin.FloatArray
+import kotlin.Int
+import kotlin.IntArray
+import kotlin.Long
+import kotlin.LongArray
+import kotlin.OptIn
+import kotlin.Short
+import kotlin.ShortArray
+import kotlin.Suppress
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.jvm.javaObjectType
+import kotlin.jvm.javaPrimitiveType
+import kotlin.native.ObjCName
+
+@ObjCName("J2ktClassliteralClassLiteral", exact = true)
+open class ClassLiteral {
+ @ObjCName("main")
+ open fun main() {
+  var o: Any? = null
+  o = Void::class.javaPrimitiveType!!
+  o = Boolean::class.javaPrimitiveType!!
+  o = BooleanArray::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Boolean::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Char::class.javaPrimitiveType!!
+  o = CharArray::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Char::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Byte::class.javaPrimitiveType!!
+  o = ByteArray::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Byte::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Short::class.javaPrimitiveType!!
+  o = ShortArray::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Short::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Int::class.javaPrimitiveType!!
+  o = IntArray::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Int::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Long::class.javaPrimitiveType!!
+  o = LongArray::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Long::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Float::class.javaPrimitiveType!!
+  o = FloatArray::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Float::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Double::class.javaPrimitiveType!!
+  o = DoubleArray::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Double::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = ClassLiteral::class.javaObjectType
+  o = Array::class.javaObjectType
+  o = Array::class.javaObjectType
+ }
+}

@@ -1,0 +1,91 @@
+package javaemul.internal;
+
+import java.io.Serializable;
+import javaemul.internal.annotations.Wasm;
+import jsinterop.annotations.JsMethod;
+
+/**
+ * A common base abstraction for the arrays in Wasm.
+ *
+ * <p>NOTE: All arrays declared as fields, parameters, etc in the subclasses of WasmArray will be
+ * considered native WASM arrays, whereas all arrays declared in the WasmArray class itself will be
+ * rewritten to be instances of one of the subclasses.
+ */
+abstract class WasmArray implements Serializable, Cloneable {
+
+  @Wasm("array")
+  private static interface ArrayRef { }
+
+  // TODO(b/296475021): Cleanup the handling of the elements field.
+  // Special treated by compiler and merged with subtype's element field; needs to be the
+  // only field in this class.
+  ArrayRef elements;
+
+  public final int getLength() {
+    return arrayLen(elements);
+  }
+
+  @Wasm("array.len")
+  private static final native int arrayLen(ArrayRef elements);
+
+  /** Create a new array of same type with given length. */
+  abstract Object newArray(int length);
+
+  abstract void copyFrom(int offset, WasmArray values, int valueOffset, int len);
+
+  /**
+   * Sorts the array between the specified indices.
+   *
+   * @param fromIndex the starting index, inclusive.
+   * @param toIndex the ending index, exclusive.
+   */
+  abstract void sort(int fromIndex, int toIndex);
+
+  public static Object[] createMultiDimensional(int[] dimensionLengths, int leafType) {
+    return (Object[]) createRecursively(dimensionLengths, 0, leafType);
+  }
+
+  private static Object createRecursively(int[] dimensions, int dimensionIndex, int leafType) {
+    int length = dimensions[dimensionIndex];
+    if (length == -1) {
+      // We reach a sub array that doesn't have a dimension (e.g. 3rd dimension in int[3][2][][])
+      return null;
+    }
+
+    if (dimensionIndex == dimensions.length - 1) {
+      // We have reached the leaf dimension.
+      return createLeaf(length, leafType);
+    } else {
+      Object[] array = new Object[length];
+      for (int i = 0; i < length; i++) {
+        array[i] = createRecursively(dimensions, dimensionIndex + 1, leafType);
+      }
+      return array;
+    }
+  }
+
+  private static Object createLeaf(int length, int leafType) {
+    switch (leafType) {
+      case 1:
+        return new boolean[length];
+      case 2:
+        return new byte[length];
+      case 3:
+        return new short[length];
+      case 4:
+        return new char[length];
+      case 5:
+        return new int[length];
+      case 6:
+        return new long[length];
+      case 7:
+        return new float[length];
+      case 8:
+        return new double[length];
+      default:
+        return new Object[length];
+    }
+  }
+
+  %SUBTYPES%
+}

@@ -1,0 +1,62 @@
+// Generated from "j2kt/GenericMethodReferences.java"
+@file:OptIn(ExperimentalObjCName::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package j2kt
+
+import javaemul.lang.*
+import j2kt.InterfaceWithGenericMethod
+import kotlin.OptIn
+import kotlin.Suppress
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.jvm.JvmStatic
+import kotlin.native.ObjCName
+
+@ObjCName("J2ktJ2ktGenericMethodReferences", exact = true)
+open class GenericMethodReferences {
+ internal open fun <T> instanceGenericMethod_pp_j2kt(t: T): T {
+  return t
+ }
+
+ internal open fun accept_pp_j2kt(fn: InterfaceWithGenericMethod?) {}
+
+ internal open fun test_pp_j2kt(instance: GenericMethodReferences?) {
+  this.accept_pp_j2kt(object : InterfaceWithGenericMethod {
+   override fun <T> apply(arg0: T): T {
+    return GenericMethodReferences.staticGenericMethod_pp_j2kt<T>(arg0)
+   }
+  })
+  this.accept_pp_j2kt(object : InterfaceWithGenericMethod {
+   override fun <T> apply(arg0: T): T {
+    return this@GenericMethodReferences.instanceGenericMethod_pp_j2kt<T>(arg0)
+   }
+  })
+  this.accept_pp_j2kt(object : InterfaceWithGenericMethod {
+   override fun <T> apply(arg0: T): T {
+    return instance!!.instanceGenericMethod_pp_j2kt<T>(arg0)
+   }
+  })
+ }
+
+ @ObjCName("J2ktJ2ktGenericMethodReferencesCompanion", exact = true)
+ companion object {
+  @JvmStatic
+  internal fun <T> staticGenericMethod_pp_j2kt(t: T): T {
+   return t
+  }
+ }
+}

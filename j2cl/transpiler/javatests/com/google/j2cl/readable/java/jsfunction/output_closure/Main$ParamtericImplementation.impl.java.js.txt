@@ -1,0 +1,54 @@
+goog.module('jsfunction.Main.ParamtericImplementation$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+const $JavaScriptFunction = goog.require('vmbootstrap.JavaScriptFunction$impl');
+
+/**
+ * @final
+ * @template T
+ */
+class ParamtericImplementation extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @template T @return {function(T):void} */
+ static $create__() {
+  ParamtericImplementation.$clinit();
+  let $instance = new ParamtericImplementation();
+  $instance.$ctor__jsfunction_Main_ParamtericImplementation__void();
+  return $Util.$makeLambdaFunction(ParamtericImplementation.prototype.m_call__java_lang_Object__void, $instance, ParamtericImplementation.$copy);
+ }
+ /** @nodts */
+ $ctor__jsfunction_Main_ParamtericImplementation__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ 
+ m_call__java_lang_Object__void(/** T */ t) {
+  let o = /**@type {T}*/ (t);
+ }
+ /** @nodts */
+ static $clinit() {
+  ParamtericImplementation.$clinit = () =>{};
+  ParamtericImplementation.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance != null && !!instance.$is__jsfunction_Main_ParamtericImplementation;
+ }
+ /** @nodts */
+ static $copy(/** ? */ from, /** ? */ to) {
+  to.$is__jsfunction_Main_ParamtericImplementation = true;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+$JavaScriptFunction.$markImplementor(ParamtericImplementation);
+$Util.$setClassMetadata(ParamtericImplementation, 'jsfunction.Main$ParamtericImplementation');
+
+exports = ParamtericImplementation;
+
+//# sourceMappingURL=Main$ParamtericImplementation.js.map

@@ -1,0 +1,62 @@
+// Generated from "genericequals/GenericEquals.java"
+@file:OptIn(ExperimentalObjCName::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package genericequals
+
+import javaemul.lang.*
+import kotlin.Any
+import kotlin.Boolean
+import kotlin.OptIn
+import kotlin.Suppress
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.jvm.JvmField
+import kotlin.native.ObjCName
+
+@ObjCName("J2ktGenericequalsGenericEquals", exact = true)
+open class GenericEquals<T> {
+ @JvmField
+ internal val value_private_2: T
+
+ @JvmField
+ internal val value2_private_2: GenericEquals<T>?
+
+ constructor(
+  @ObjCName("Id") value: T
+ ) {
+  this.value_private_2 = value
+  this.value2_private_2 = null
+ }
+
+ @ObjCName("foo")
+ open fun foo(
+  @ObjCName("withGenericequalsGenericEquals") other: GenericEquals<*>?
+ ): Any? {
+  return ((other as GenericEquals<Any?>?)!!.value2_private_2 as GenericEquals<Any?>?)!!.value_private_2
+ }
+
+ override fun equals(obj: Any?): Boolean {
+  if (obj === this) {
+   return true
+  }
+  if (!(obj is GenericEquals<*>)) {
+   return false
+  }
+  val other: GenericEquals<*>? = obj as GenericEquals<*>?
+  return this.value_private_2!!.equals((other as GenericEquals<Any?>?)!!.value_private_2)
+ }
+}

@@ -1,0 +1,73 @@
+// Generated from "jsinnerclass/Main.java"
+@file:OptIn(ExperimentalObjCName::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package jsinnerclass
+
+import javaemul.lang.*
+import jsinterop.annotations.JsType
+import kotlin.Array
+import kotlin.Int
+import kotlin.OptIn
+import kotlin.String
+import kotlin.Suppress
+import kotlin.assert
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
+import kotlin.native.ObjCName
+
+@ObjCName("J2ktJsinnerclassMain", exact = true)
+open class Main {
+ @ObjCName("J2ktJsinnerclassMainCompanion", exact = true)
+ companion object {
+  @JvmStatic
+  @ObjCName("main")
+  fun main(
+   vararg @ObjCName("withNSStringArray") args: String?
+  ) {
+   val args_1: Array<String?>? = args as Array<String?>?
+   assert(Main.Outer().method() == 5)
+  }
+ }
+
+ open class Outer internal constructor() {
+  @JvmField
+  internal var a_pp_jsinnerclass: Int = 2
+
+  @ObjCName("method")
+  open fun method(): Int {
+   return Inner().getB() + this.a_pp_jsinnerclass
+  }
+
+  @ObjCName("J2ktJsinnerclassMain_Outer_Inner", exact = true)
+  @JsType(namespace = "com.google.test")
+  open inner class Inner constructor() {
+   @JvmField
+   internal var b_private_2: Int = 0
+
+   init {
+    this.b_private_2 = this@Outer.a_pp_jsinnerclass + 1
+   }
+
+   @ObjCName("getB")
+   open fun getB(): Int {
+    return this.b_private_2
+   }
+  }
+ }
+}

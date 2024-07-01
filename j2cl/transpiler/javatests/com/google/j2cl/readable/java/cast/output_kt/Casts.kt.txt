@@ -1,0 +1,152 @@
+// Generated from "cast/Casts.java"
+@file:OptIn(ExperimentalObjCName::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package cast
+
+import javaemul.lang.*
+import java.io.Serializable
+import kotlin.Any
+import kotlin.Array
+import kotlin.Boolean
+import kotlin.Byte
+import kotlin.Char
+import kotlin.Double
+import kotlin.Float
+import kotlin.Int
+import kotlin.Long
+import kotlin.Number
+import kotlin.OptIn
+import kotlin.Short
+import kotlin.String
+import kotlin.Suppress
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.jvm.JvmField
+import kotlin.native.ObjCName
+
+@ObjCName("J2ktCastCasts", exact = true)
+open class Casts {
+ @ObjCName("testCastToClass")
+ open fun testCastToClass() {
+  val o: Any? = Any()
+  val c: Casts? = o as Casts?
+ }
+
+ @ObjCName("testCasToInterface")
+ open fun testCasToInterface() {
+  val o: Any? = Any()
+  val s: Serializable? = o as Serializable?
+ }
+
+ @ObjCName("testCastToBoxedType")
+ open fun testCastToBoxedType() {
+  val o: Any? = Int(1)
+  val b: Byte? = o as Byte?
+  val d: Double? = o as Double?
+  val f: Float? = o as Float?
+  val i: Int? = o as Int?
+  val l: Long? = o as Long?
+  val s: Short? = o as Short?
+  val n: Number? = o as Number?
+  val c: Char? = o as Char?
+  val bool: Boolean? = o as Boolean?
+ }
+
+ @ObjCName("testCastToArray")
+ open fun testCastToArray() {
+  val foo: Any? = null as Array<Any?>?
+  val bar: Any? = null as Array<Array<Any?>?>?
+ }
+
+ internal fun functionForInstanceofTest_private_2() {}
+
+ @ObjCName("testCastObjectAfterInstanceOf")
+ open fun testCastObjectAfterInstanceOf() {
+  var o: Any? = Any()
+  if (o is Casts) {
+   val c: Casts? = o as Casts?
+  }
+  if (o is Casts) {
+   val cAvoidsCastsTo: Casts? = o as Casts?
+   o = Any()
+   val cNotAvoidCastsTo: Casts? = o as Casts?
+  }
+  if (o is Casts) {
+   val cAvoidsCastsTo_1: Casts? = o as Casts?
+   o = Foo()
+   val cNotAvoidCastsTo_1: Casts? = o as Casts?
+  }
+  if (o is Casts) {
+   val cAvoidsCastsTo_2: Casts? = o as Casts?
+   o = Any()
+   val cAvoidCastsTo: Casts? = o as Casts?
+  }
+  if (o is Casts) {
+   val cAvoidsCastsTo_3: Casts? = o as Casts?
+   this.functionForInstanceofTest_private_2()
+   val cNotAvoidCastsTo_2: Casts? = o as Casts?
+  }
+ }
+
+ @ObjCName("testCastFieldAfterInstanceOf")
+ open fun testCastFieldAfterInstanceOf() {
+  var foo: Casts.Foo? = Foo()
+  if (foo!!.field is Casts) {
+   val c: Casts? = foo!!.field as Casts?
+  }
+  if (foo!!.field is Casts) {
+   val cAvoidsCastsTo: Casts? = foo!!.field as Casts?
+   foo!!.field = Any()
+   val cNotAvoidCastsTo: Casts? = foo!!.field as Casts?
+  }
+  if (foo!!.field is Casts) {
+   val cAvoidsCastsTo_1: Casts? = foo!!.field as Casts?
+   foo = Foo()
+   val cNotAvoidCastsTo_1: Casts? = foo!!.field as Casts?
+  }
+  if (foo!!.field is Casts) {
+   val cAvoidsCastsTo_2: Casts? = foo!!.field as Casts?
+   this.functionForInstanceofTest_private_2()
+   val cNotAvoidCastsTo_2: Casts? = foo!!.field as Casts?
+  }
+ }
+
+ @ObjCName("testCaseMethodAfterInstanceOf")
+ open fun testCaseMethodAfterInstanceOf() {
+  val foo: Casts.Foo? = Foo()
+  if (foo!!.method() is Casts) {
+   val cNotAvoidCastsTo: Casts? = foo!!.method() as Casts?
+  }
+ }
+
+ @ObjCName("testPrecedence")
+ open fun testPrecedence() {
+  val foo: Any? = "foo"
+  val bar: Any? = "bar"
+  val s: String? = (if (false) foo else bar) as String?
+ }
+
+ open inner class Foo internal constructor() {
+  @JvmField
+  var field: Any? = Any()
+
+  @ObjCName("method")
+  open fun method(): Any? {
+   return Any()
+  }
+ }
+}

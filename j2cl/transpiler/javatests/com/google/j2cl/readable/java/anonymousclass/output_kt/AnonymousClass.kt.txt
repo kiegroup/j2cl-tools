@@ -1,0 +1,130 @@
+// Generated from "anonymousclass/AnonymousClass.java"
+@file:OptIn(ExperimentalObjCName::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package anonymousclass
+
+import javaemul.lang.*
+import jsinterop.annotations.JsConstructor
+import kotlin.Any
+import kotlin.Boolean
+import kotlin.Int
+import kotlin.OptIn
+import kotlin.String
+import kotlin.Suppress
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
+import kotlin.native.ObjCName
+
+abstract class SomeClass {
+ @ObjCName("foo")
+ abstract fun foo(): String?
+
+ internal constructor(i: Int)
+}
+
+abstract class SomeClassWithStaticMembers {
+ @ObjCName("foo")
+ abstract fun foo(): String?
+
+ internal constructor(i: Int)
+
+ companion object {
+  @JvmStatic
+  internal fun staticMethod_pp_anonymousclass() {}
+ }
+}
+
+@ObjCName("J2ktAnonymousclassAnonymousClass", exact = true)
+open class AnonymousClass {
+ @JvmField
+ internal var i_pp_anonymousclass: Int = 0
+
+ @JvmField
+ internal var o_pp_anonymousclass: Any? = null
+
+ constructor(
+  @ObjCName("Id") a: Any?
+ ) {
+  this.o_pp_anonymousclass = object : SomeClass(0) {
+   @JvmField
+   internal var outer_pp_anonymousclass: Any? = this@AnonymousClass
+
+   @JvmField
+   internal var other_pp_anonymousclass: Any? = a
+
+   override fun foo(): String? {
+    return "" + this@AnonymousClass.i_pp_anonymousclass
+   }
+  }
+ }
+
+ @ObjCName("main")
+ open fun main() {
+  val instance: SomeClass? = object : SomeClass(this@AnonymousClass.i_pp_anonymousclass) {
+   @JvmField
+   internal var object_pp_anonymousclass: Any? = this
+
+   @JvmField
+   internal var outer_pp_anonymousclass: Any? = this@AnonymousClass
+
+   override fun foo(): String? {
+    return "a"
+   }
+  }
+  val instanceWithStaticMembers: SomeClassWithStaticMembers? = object : SomeClassWithStaticMembers(this@AnonymousClass.i_pp_anonymousclass) {
+   @JvmField
+   internal var object_pp_anonymousclass: Any? = this
+
+   @JvmField
+   internal var outer_pp_anonymousclass: Any? = this@AnonymousClass
+
+   override fun foo(): String? {
+    return "a"
+   }
+  }
+ }
+}
+
+interface SomeInterface {
+ companion object {
+  @JvmField
+  val implicitlyStatic: SomeClass? = object : SomeClass(1) {
+   override fun foo(): String? {
+    return "a"
+   }
+  }
+ }
+}
+
+open class JsConstructorClass {
+ @JsConstructor
+ internal constructor(o: Any?)
+
+ internal constructor(): this(if (JsConstructorClass.trueVar_pp_anonymousclass) object : Any() {} else null)
+
+ companion object {
+  @JvmField
+  internal var trueVar_pp_anonymousclass: Boolean = true
+ }
+}
+
+open class JsConstructorSubclass: JsConstructorClass {
+ @JsConstructor
+ internal constructor(): super(if (JsConstructorClass.trueVar_pp_anonymousclass) object : Any() {} else null)
+}

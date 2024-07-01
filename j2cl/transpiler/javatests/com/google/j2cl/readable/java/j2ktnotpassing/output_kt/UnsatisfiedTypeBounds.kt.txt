@@ -1,0 +1,56 @@
+// Generated from "j2ktnotpassing/UnsatisfiedTypeBounds.java"
+@file:OptIn(ExperimentalObjCName::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package j2ktnotpassing
+
+import javaemul.lang.*
+import kotlin.Any
+import kotlin.OptIn
+import kotlin.Suppress
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.jvm.JvmStatic
+import kotlin.native.ObjCName
+
+open class UnsatisfiedTypeBounds internal constructor() {
+ companion object {
+  @JvmStatic
+  internal fun <T: Any> methodWithTypeConstraints_pp_j2ktnotpassing(helper: UnsatisfiedTypeBounds.Helper<T>, foo: UnsatisfiedTypeBounds.Foo<out T>): T {
+   return foo.get()
+  }
+
+  @JvmStatic
+  internal fun test_pp_j2ktnotpassing() {
+   val command: UnsatisfiedTypeBounds.Command? = UnsatisfiedTypeBounds.methodWithTypeConstraints_pp_j2ktnotpassing<UnsatisfiedTypeBounds.Command>(UnsatisfiedTypeBounds.Helper<UnsatisfiedTypeBounds.Command>(), UnsatisfiedTypeBounds.FooCommand())
+  }
+ }
+
+ fun interface Foo<T: UnsatisfiedTypeBounds.Foo<T>> {
+  @ObjCName("get")
+  fun get(): T
+ }
+
+ interface Command {}
+
+ open class FooCommand internal constructor(): UnsatisfiedTypeBounds.Foo<UnsatisfiedTypeBounds.FooCommand>, UnsatisfiedTypeBounds.Command {
+  override fun get(): UnsatisfiedTypeBounds.FooCommand {
+   return this
+  }
+ }
+
+ class Helper<T: Any> internal constructor() {}
+}

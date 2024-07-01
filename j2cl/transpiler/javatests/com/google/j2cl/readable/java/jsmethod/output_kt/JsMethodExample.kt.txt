@@ -1,0 +1,123 @@
+// Generated from "jsmethod/JsMethodExample.java"
+@file:OptIn(ExperimentalObjCName::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package jsmethod
+
+import javaemul.lang.*
+import java.util.ArrayList
+import jsinterop.annotations.JsMethod
+import jsinterop.annotations.JsType
+import kotlin.OptIn
+import kotlin.String
+import kotlin.Suppress
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.jvm.JvmStatic
+import kotlin.native.ObjCName
+
+@ObjCName("J2ktJsmethodJsMethodExample", exact = true)
+open class JsMethodExample {
+ @ObjCName("testMethod")
+ @JsMethod
+ external open fun <T: ArrayList<String?>?> testMethod(): T
+
+ abstract class Base<T> internal constructor() {
+  @JsMethod(name = "m")
+  internal open fun m_pp_jsmethod(t: T) {}
+ }
+
+ fun interface I {
+  @ObjCName("m")
+  @JsMethod(name = "mString")
+  fun m(
+   @ObjCName("withNSString") s: String?
+  )
+ }
+
+ open class Sub internal constructor(): JsMethodExample.Base<String?>(), JsMethodExample.I {
+  override fun m(s: String?) {}
+
+  internal override fun m_pp_jsmethod(arg0: String?) {
+   this.m(arg0)
+  }
+ }
+
+ @JsType
+ open class SubJsType internal constructor(): JsMethodExample.Base<String?>() {
+  @ObjCName("m")
+  public open fun m(
+   @ObjCName("withNSString") s: String?
+  ) {}
+
+  override fun m_pp_jsmethod(arg0: String?) {
+   this.m(arg0)
+  }
+
+  companion object {
+   @JvmStatic
+   internal fun n_pp_jsmethod() {}
+  }
+ }
+
+ @JsType
+ open class SubGenericsJsType<T> internal constructor(): JsMethodExample.Base<T>() {
+  @ObjCName("m")
+  public open fun m(
+   @ObjCName("withId") s: T
+  ) {}
+
+  override fun m_pp_jsmethod(arg0: T) {
+   this.m(arg0)
+  }
+ }
+
+ @JsType
+ open class SubJsTypeWithRenamedJsMethod internal constructor(): JsMethodExample.Base<String?>() {
+  @ObjCName("m")
+  @JsMethod(name = "renamedM")
+  public open fun m(
+   @ObjCName("withNSString") s: String?
+  ) {}
+
+  override fun m_pp_jsmethod(arg0: String?) {
+   this.m(arg0)
+  }
+ }
+
+ interface InterfaceWithMethod {
+  @ObjCName("m")
+  fun m()
+
+  @ObjCName("n")
+  fun n()
+ }
+
+ fun interface InterfaceExposingJsMethods: JsMethodExample.InterfaceWithMethod {
+  @JsMethod
+  override fun m() {}
+
+  @JsMethod
+  override fun n()
+ }
+
+ open class SuperClassWithFinalMethod internal constructor() {
+  @ObjCName("n")
+  fun n() {}
+ }
+
+ open class ExposesOverrideableJsMethod internal constructor(): JsMethodExample.SuperClassWithFinalMethod(), JsMethodExample.InterfaceExposingJsMethods {}
+}

@@ -1,0 +1,135 @@
+goog.module('varargs.Varargs$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let Serializable = goog.forwardDeclare('java.io.Serializable$impl');
+let Cloneable = goog.forwardDeclare('java.lang.Cloneable$impl');
+let Long = goog.forwardDeclare('java.lang.Long$impl');
+let Number = goog.forwardDeclare('java.lang.Number$impl');
+let j_l_String = goog.forwardDeclare('java.lang.String$impl');
+let $Long = goog.forwardDeclare('nativebootstrap.Long$impl');
+let FunctionalInterface = goog.forwardDeclare('varargs.Varargs.FunctionalInterface$impl');
+let $Arrays = goog.forwardDeclare('vmbootstrap.Arrays$impl');
+let $$int = goog.forwardDeclare('vmbootstrap.primitives.$int$impl');
+let $$long = goog.forwardDeclare('vmbootstrap.primitives.$long$impl');
+
+class Varargs extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+  /**@type {Array<*>} @nodts*/
+  this.f_args__varargs_Varargs_;
+ }
+ //Factory method corresponding to constructor 'Varargs(int...)'.
+ /** @nodts @return {!Varargs} */
+ static $create__arrayOf_int(/** Array<number> */ args) {
+  Varargs.$clinit();
+  let $instance = new Varargs();
+  $instance.$ctor__varargs_Varargs__arrayOf_int__void(args);
+  return $instance;
+ }
+ //Initialization from constructor 'Varargs(int...)'.
+ /** @nodts */
+ $ctor__varargs_Varargs__arrayOf_int__void(/** Array<number> */ args) {
+  this.$ctor__java_lang_Object__void();
+ }
+ //Factory method corresponding to constructor 'Varargs()'.
+ /** @nodts @return {!Varargs} */
+ static $create__() {
+  Varargs.$clinit();
+  let $instance = new Varargs();
+  $instance.$ctor__varargs_Varargs__void();
+  return $instance;
+ }
+ //Initialization from constructor 'Varargs()'.
+ /** @nodts */
+ $ctor__varargs_Varargs__void() {
+  this.$ctor__varargs_Varargs__arrayOf_int__void(/**@type {!Array<number>}*/ ($Arrays.$stampType([1], $$int)));
+ }
+ /** @nodts */
+ m_test__int__arrayOf_java_lang_Object__void(/** number */ a, /** Array<*> */ args) {}
+ /** @nodts */
+ m_testCloneable__arrayOf_java_lang_Cloneable__void(/** Array<(Cloneable|Array)> */ args) {}
+ /** @nodts */
+ m_testSerializable__arrayOf_java_io_Serializable__void(/** Array<(Serializable|Array)> */ args) {}
+ /** @nodts */
+ m_testAssignment__arrayOf_java_lang_Object__void(/** Array<*> */ args) {
+  this.f_args__varargs_Varargs_ = args;
+ }
+ /** @nodts */
+ m_testLambda__varargs_Varargs_FunctionalInterface__void(/** FunctionalInterface */ functionalInterface) {}
+ /** @nodts @template T */
+ static m_fun__arrayOf_java_lang_Number__void(/** Array<T> */ elements) {
+  Varargs.$clinit();
+ }
+ /** @nodts @template E */
+ static m_bar__java_lang_Number__java_lang_Number__void(/** E */ a, /** E */ b) {
+  Varargs.$clinit();
+  Varargs.m_fun__arrayOf_java_lang_Number__void(/**@type {!Array<E>}*/ ($Arrays.$stampType([a, b], Number)));
+ }
+ /** @nodts @template T @return {T} */
+ static m_passthrough__java_lang_Object__java_lang_Object(/** T */ o) {
+  Varargs.$clinit();
+  return o;
+ }
+ /** @nodts */
+ m_testOverloaded__java_lang_Object__void(/** * */ o) {}
+ /** @nodts */
+ m_testOverloaded__java_lang_String__arrayOf_java_lang_Object__void(/** ?string */ o, /** Array<*> */ rest) {}
+ /** @nodts */
+ m_testOverloaded__long__void(/** !$Long */ l) {}
+ /** @nodts */
+ m_testOverloaded__long__arrayOf_long__void(/** !$Long */ l, /** Array<!$Long> */ rest) {}
+ /** @nodts */
+ m_main__void() {
+  let v = Varargs.$create__();
+  v.m_test__int__arrayOf_java_lang_Object__void(1, []);
+  v.m_test__int__arrayOf_java_lang_Object__void(1, [j_l_Object.$create__()]);
+  v.m_test__int__arrayOf_java_lang_Object__void(1, [j_l_Object.$create__()]);
+  v.m_test__int__arrayOf_java_lang_Object__void(1, []);
+  v.m_test__int__arrayOf_java_lang_Object__void(1, /**@type {!Array<Array<*>>}*/ ($Arrays.$create([0, null], j_l_Object)));
+  v.m_test__int__arrayOf_java_lang_Object__void(1, /**@type {Array<*>}*/ ($Arrays.$castTo(Varargs.m_passthrough__java_lang_Object__java_lang_Object(/**@type {!Array<?string>}*/ ($Arrays.$stampType(['a'], j_l_String))), j_l_Object, 1)));
+  v.m_test__int__arrayOf_java_lang_Object__void(1, null);
+  v.m_testCloneable__arrayOf_java_lang_Cloneable__void(/**@type {!Array<Array<*>>}*/ ($Arrays.$create([0, null], j_l_Object)));
+  v.m_testSerializable__arrayOf_java_io_Serializable__void(/**@type {!Array<Array<*>>}*/ ($Arrays.$create([0, null], j_l_Object)));
+  v.m_testLambda__varargs_Varargs_FunctionalInterface__void(FunctionalInterface.$adapt((/** Array<?string> */ it) =>{
+   this.f_args__varargs_Varargs_ = it;
+  }));
+  v.m_testOverloaded__java_lang_Object__void('foo');
+  v.m_testOverloaded__java_lang_String__arrayOf_java_lang_Object__void('foo', ['bar']);
+  v.m_testOverloaded__java_lang_Object__void('foo');
+  v.m_testOverloaded__long__void($Long.fromInt(1));
+  v.m_testOverloaded__java_lang_Object__void(Long.m_valueOf__long__java_lang_Long($Long.fromInt(1)));
+  v.m_testOverloaded__long__void($Long.fromInt(1));
+  v.m_testOverloaded__long__arrayOf_long__void($Long.fromInt(1), /**@type {!Array<!$Long>}*/ ($Arrays.$stampType([$Long.fromInt(2), $Long.fromInt(3)], $$long)));
+  v.m_testOverloaded__long__arrayOf_long__void($Long.fromInt(1), /**@type {!Array<!$Long>}*/ ($Arrays.$stampType([$Long.fromInt(2), $Long.fromInt(3)], $$long)));
+ }
+ /** @nodts */
+ static $clinit() {
+  Varargs.$clinit = () =>{};
+  Varargs.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof Varargs;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {
+  Long = goog.module.get('java.lang.Long$impl');
+  Number = goog.module.get('java.lang.Number$impl');
+  j_l_String = goog.module.get('java.lang.String$impl');
+  $Long = goog.module.get('nativebootstrap.Long$impl');
+  FunctionalInterface = goog.module.get('varargs.Varargs.FunctionalInterface$impl');
+  $Arrays = goog.module.get('vmbootstrap.Arrays$impl');
+  $$int = goog.module.get('vmbootstrap.primitives.$int$impl');
+  $$long = goog.module.get('vmbootstrap.primitives.$long$impl');
+ }
+}
+$Util.$setClassMetadata(Varargs, 'varargs.Varargs');
+
+exports = Varargs;
+
+//# sourceMappingURL=Varargs.js.map

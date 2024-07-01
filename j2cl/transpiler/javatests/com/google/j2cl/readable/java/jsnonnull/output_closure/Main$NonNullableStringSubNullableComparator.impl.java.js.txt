@@ -1,0 +1,44 @@
+goog.module('jsnonnull.Main.NonNullableStringSubNullableComparator$impl');
+
+const NullableStringComparator = goog.require('jsnonnull.Main.NullableStringComparator$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+class NonNullableStringSubNullableComparator extends NullableStringComparator {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!NonNullableStringSubNullableComparator} */
+ static $create__() {
+  NonNullableStringSubNullableComparator.$clinit();
+  let $instance = new NonNullableStringSubNullableComparator();
+  $instance.$ctor__jsnonnull_Main_NonNullableStringSubNullableComparator__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__jsnonnull_Main_NonNullableStringSubNullableComparator__void() {
+  this.$ctor__jsnonnull_Main_NullableStringComparator__void();
+ }
+ /** @override @nodts @return {number} */
+ m_compare__java_lang_String__java_lang_String__int(/** string */ a, /** string */ b) {
+  return 0;
+ }
+ /** @nodts */
+ static $clinit() {
+  NonNullableStringSubNullableComparator.$clinit = () =>{};
+  NonNullableStringSubNullableComparator.$loadModules();
+  NullableStringComparator.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof NonNullableStringSubNullableComparator;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+$Util.$setClassMetadata(NonNullableStringSubNullableComparator, 'jsnonnull.Main$NonNullableStringSubNullableComparator');
+
+exports = NonNullableStringSubNullableComparator;
+
+//# sourceMappingURL=Main$NonNullableStringSubNullableComparator.js.map

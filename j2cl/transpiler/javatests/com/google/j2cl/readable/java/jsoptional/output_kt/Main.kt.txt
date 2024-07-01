@@ -1,0 +1,145 @@
+// Generated from "jsoptional/Main.java"
+@file:OptIn(ExperimentalObjCName::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package jsoptional
+
+import javaemul.lang.*
+import jsinterop.annotations.JsConstructor
+import jsinterop.annotations.JsFunction
+import jsinterop.annotations.JsMethod
+import jsinterop.annotations.JsOptional
+import jsinterop.annotations.JsType
+import kotlin.Any
+import kotlin.Array
+import kotlin.Boolean
+import kotlin.Double
+import kotlin.Int
+import kotlin.OptIn
+import kotlin.String
+import kotlin.Suppress
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
+import kotlin.native.ObjCName
+
+@ObjCName("J2ktJsoptionalMain", exact = true)
+open class Main {
+ @ObjCName("method1")
+ @JsMethod
+ open fun method1(
+  @ObjCName("withInt") i1: Int,
+  @ObjCName("withJavaLangDouble") @JsOptional d: Double?,
+  @ObjCName("withJavaLangInteger") @JsOptional i: Int?
+ ) {}
+
+ @ObjCName("method2")
+ @JsMethod
+ open fun method2(
+  @ObjCName("withNSString") s1: String?,
+  @ObjCName("withJavaLangDouble") @JsOptional d: Double?,
+  vararg @ObjCName("withJavaLangBooleanArray") i: Boolean?
+ ) {
+  val i_1: Array<Boolean?>? = i as Array<Boolean?>?
+ }
+
+ @JvmField
+ internal var f_pp_jsoptional: Main.Function? = Main.Function { s: String?, varargs: Array<*>? ->
+  val varargs_1: Array<Any?>? = varargs as Array<Any?>?
+  return@Function s
+ }
+
+ @JsConstructor
+ constructor(
+  @ObjCName("NSString") @JsOptional a: String?
+ )
+
+ @ObjCName("testFunction")
+ open fun testFunction(
+  @ObjCName("withJsoptionalMain_Function") f: Main.Function?
+ ) {}
+
+ @ObjCName("testOptionalFunction")
+ @JsMethod
+ open fun testOptionalFunction(
+  @ObjCName("withJsoptionalMain_Function") @JsOptional f: Main.Function?
+ ) {}
+
+ @ObjCName("J2ktJsoptionalMainCompanion", exact = true)
+ companion object {
+  @JvmStatic
+  @ObjCName("staticMethod1")
+  @JsMethod
+  fun staticMethod1(
+   @ObjCName("withInt") i1: Int,
+   @ObjCName("withJavaLangDouble") @JsOptional d: Double?,
+   @ObjCName("withJavaLangInteger") @JsOptional i: Int?
+  ) {}
+
+  @JvmStatic
+  @ObjCName("staticMethod2")
+  @JsMethod
+  fun staticMethod2(
+   @ObjCName("withNSString") s1: String?,
+   @ObjCName("withJavaLangDouble") @JsOptional d: Double?,
+   vararg @ObjCName("withJavaLangBooleanArray") i: Boolean?
+  ) {
+   val i_1: Array<Boolean?>? = i as Array<Boolean?>?
+  }
+ }
+
+ @JsFunction
+ fun interface Function {
+  @ObjCName("f1")
+  fun f1(
+   @ObjCName("withNSString") @JsOptional s: String?,
+   vararg @ObjCName("withNSObjectArray") args: Any?
+  ): Any?
+ }
+
+ class AFunction internal constructor(): Main.Function {
+  override fun f1(@JsOptional i: String?, vararg args: Any?): Any? {
+   val args_1: Array<Any?>? = args as Array<Any?>?
+   return args_1!![0]
+  }
+ }
+
+ @JsType
+ fun interface I<T> {
+  @ObjCName("m")
+  fun m(
+   @ObjCName("withId") t: T,
+   @ObjCName("withId") @JsOptional o: Any?
+  )
+ }
+
+ @JsType
+ open class TemplatedSubtype<T: String?> internal constructor(): Main.I<T> {
+  override fun m(t: T, @JsOptional o: Any?) {}
+ }
+
+ @JsType
+ open inner class SpecializedSubtype constructor(
+  @ObjCName("Id") @JsOptional a: Any?
+ ): Main.I<String?> {
+  override fun m(t: String?, @JsOptional o: Any?) {}
+ }
+
+ open class NonJsTypeSubtype internal constructor(): Main.I<String?> {
+  override fun m(t: String?, @JsOptional o: Any?) {}
+ }
+}

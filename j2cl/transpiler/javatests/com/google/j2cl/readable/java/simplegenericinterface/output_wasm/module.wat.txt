@@ -1,0 +1,47 @@
+;;; Code for simplegenericinterface.SimpleGenericInterface [type definition]
+(type $simplegenericinterface.SimpleGenericInterface.vtable (sub (struct
+ (field $m_fun__java_lang_Object__java_lang_Object (ref $function.m_fun__java_lang_Object__java_lang_Object))
+ ))
+)
+
+;;; Code for simplegenericinterface.SimpleGenericInterface [imports]
+
+;;; Code for simplegenericinterface.SimpleGenericInterface [static fields]
+(global $$class-initialized@simplegenericinterface.SimpleGenericInterface (mut i32)
+ (i32.const 0)
+)
+(global $$class@simplegenericinterface.SimpleGenericInterface (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for simplegenericinterface.SimpleGenericInterface [methods]
+
+;;; void SimpleGenericInterface.$clinit()
+(func $$clinit__void_<once>_@simplegenericinterface.SimpleGenericInterface
+ ;;@ simplegenericinterface/SimpleGenericInterface.java:18:17
+ (block
+  ;;@ simplegenericinterface/SimpleGenericInterface.java:18:17
+  (if (global.get $$class-initialized@simplegenericinterface.SimpleGenericInterface)
+   (then
+    ;;@ simplegenericinterface/SimpleGenericInterface.java:18:17
+    (return )
+   )
+  )
+  ;;@ simplegenericinterface/SimpleGenericInterface.java:18:17
+  (global.set $$class-initialized@simplegenericinterface.SimpleGenericInterface (i32.const 1))
+ )
+)
+
+;;; Class<T> SimpleGenericInterface.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class_<once>_@simplegenericinterface.SimpleGenericInterface
+ (result (ref null $java.lang.Class))
+ (block
+  (if (i32.eqz (ref.is_null (global.get $$class@simplegenericinterface.SimpleGenericInterface)))
+   (then
+    (return (global.get $$class@simplegenericinterface.SimpleGenericInterface))
+   )
+  )
+  (global.set $$class@simplegenericinterface.SimpleGenericInterface (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $$getString_|simplegeneri...|__java_lang_String_<once>_@simplegenericinterface.SimpleGenericInterface )))
+  (return (global.get $$class@simplegenericinterface.SimpleGenericInterface))
+ )
+)

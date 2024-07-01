@@ -1,0 +1,50 @@
+goog.module('rawtype.RawType.RawSubclass$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+const GenericSuperclass = goog.require('rawtype.RawType.GenericSuperclass$impl');
+
+let RawType = goog.forwardDeclare('rawtype.RawType$impl');
+
+/**
+ * @implements {GenericSuperclass}
+ */
+class RawSubclass extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!RawSubclass} */
+ static $create__() {
+  RawSubclass.$clinit();
+  let $instance = new RawSubclass();
+  $instance.$ctor__rawtype_RawType_RawSubclass__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__rawtype_RawType_RawSubclass__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @override @nodts */
+ m_f__rawtype_RawType__void(/** RawType */ t) {}
+ /** @nodts */
+ static $clinit() {
+  RawSubclass.$clinit = () =>{};
+  RawSubclass.$loadModules();
+  j_l_Object.$clinit();
+  GenericSuperclass.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof RawSubclass;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+GenericSuperclass.$markImplementor(RawSubclass);
+$Util.$setClassMetadata(RawSubclass, 'rawtype.RawType$RawSubclass');
+
+exports = RawSubclass;
+
+//# sourceMappingURL=RawType$RawSubclass.js.map

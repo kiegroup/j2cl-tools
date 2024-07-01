@@ -1,0 +1,66 @@
+goog.module('foreachstatement.ForEachStatement.Exception1$impl');
+
+const Exception = goog.require('java.lang.Exception$impl');
+const Iterable = goog.require('java.lang.Iterable$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let Number = goog.forwardDeclare('java.lang.Number$impl');
+let Iterator = goog.forwardDeclare('java.util.Iterator$impl');
+let Spliterator = goog.forwardDeclare('java.util.Spliterator$impl');
+let Consumer = goog.forwardDeclare('java.util.function.Consumer$impl');
+
+/**
+ * @implements {Iterable<(Number|number)>}
+ */
+class Exception1 extends Exception {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!Exception1} */
+ static $create__() {
+  Exception1.$clinit();
+  let $instance = new Exception1();
+  $instance.$ctor__foreachstatement_ForEachStatement_Exception1__void();
+  $instance.m_privateInitError__javaemul_internal_ThrowableUtils_JsObject__void_$pp_java_lang(new Error($instance));
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__foreachstatement_ForEachStatement_Exception1__void() {
+  this.$ctor__java_lang_Exception__void();
+ }
+ /** @override @nodts @return {Iterator<(Number|number)>} */
+ m_iterator__java_util_Iterator() {
+  return null;
+ }
+ //Default method forwarding stub.
+ /** @override @nodts */
+ m_forEach__java_util_function_Consumer__void(/** Consumer<?> */ arg0) {
+  Iterable.m_forEach__$default__java_lang_Iterable__java_util_function_Consumer__void(this, arg0);
+ }
+ //Default method forwarding stub.
+ /** @override @nodts @return {Spliterator<(Number|number)>} */
+ m_spliterator__java_util_Spliterator() {
+  return /**@type {Spliterator<(Number|number)>}*/ (Iterable.m_spliterator__$default__java_lang_Iterable__java_util_Spliterator(this));
+ }
+ /** @nodts */
+ static $clinit() {
+  Exception1.$clinit = () =>{};
+  Exception1.$loadModules();
+  Exception.$clinit();
+  Iterable.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof Exception1;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+Iterable.$markImplementor(Exception1);
+$Util.$setClassMetadata(Exception1, 'foreachstatement.ForEachStatement$Exception1');
+
+exports = Exception1;
+
+//# sourceMappingURL=ForEachStatement$Exception1.js.map

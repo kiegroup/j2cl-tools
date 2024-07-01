@@ -1,0 +1,197 @@
+goog.module('nullability.Nullability$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let j_l_String = goog.forwardDeclare('java.lang.String$impl');
+let ArrayList = goog.forwardDeclare('java.util.ArrayList$impl');
+let List = goog.forwardDeclare('java.util.List$impl');
+let Marker = goog.forwardDeclare('nullability.Marker$impl');
+let ParameterizedDefaultNullability = goog.forwardDeclare('nullability.Nullability.ParameterizedDefaultNullability$impl');
+let ParameterizedNonNullable = goog.forwardDeclare('nullability.Nullability.ParameterizedNonNullable$impl');
+let ParameterizedNullable = goog.forwardDeclare('nullability.Nullability.ParameterizedNullable$impl');
+let Recursive = goog.forwardDeclare('nullability.Nullability.Recursive$impl');
+let RecursiveChild = goog.forwardDeclare('nullability.Nullability.RecursiveChild$impl');
+let RecursiveNullable = goog.forwardDeclare('nullability.Nullability.RecursiveNullable$impl');
+let RecursiveNullableChild = goog.forwardDeclare('nullability.Nullability.RecursiveNullableChild$impl');
+let RecursiveNullableParam = goog.forwardDeclare('nullability.Nullability.RecursiveNullableParam$impl');
+let RecursiveParam = goog.forwardDeclare('nullability.Nullability.RecursiveParam$impl');
+let $Arrays = goog.forwardDeclare('vmbootstrap.Arrays$impl');
+let $Casts = goog.forwardDeclare('vmbootstrap.Casts$impl');
+
+class Nullability extends j_l_Object {
+ 
+ constructor(/** string */ a) {
+  Nullability.$clinit();
+  super();
+  /**@type {string} @nodts*/
+  this.f_f1__nullability_Nullability_;
+  /**@type {?string} @nodts*/
+  this.f_f2__nullability_Nullability_;
+  /**@type {?string} @nodts*/
+  this.f_f3__nullability_Nullability_;
+  /**@type {!List<string>} @nodts*/
+  this.f_f4__nullability_Nullability_;
+  /**@type {List<string>} @nodts*/
+  this.f_f5__nullability_Nullability_;
+  /**@type {!List<?string>} @nodts*/
+  this.f_f6__nullability_Nullability_;
+  /**@type {List<?string>} @nodts*/
+  this.f_f7__nullability_Nullability_;
+  /**@type {!Array<string>} @nodts*/
+  this.f_f8__nullability_Nullability_;
+  /**@type {!Array<?string>} @nodts*/
+  this.f_f9__nullability_Nullability_;
+  /**@type {Array<string>} @nodts*/
+  this.f_f10__nullability_Nullability_;
+  /**@type {List<?string>} @nodts*/
+  this.f_f12__nullability_Nullability_;
+  /**@type {!*} @nodts*/
+  this.f_f13__nullability_Nullability_;
+  /**@type {*} @nodts*/
+  this.f_f14__nullability_Nullability_;
+  this.$ctor__nullability_Nullability__java_lang_String__void(a);
+ }
+ /** @nodts */
+ $ctor__nullability_Nullability__java_lang_String__void(/** string */ a) {
+  this.$ctor__java_lang_Object__void();
+  this.$init__void_$p_nullability_Nullability();
+  this.f_f13__nullability_Nullability_ = j_l_Object.$create__();
+ }
+ /** @nodts @return {string} */
+ m_m1__java_lang_String__java_util_List__java_lang_String__java_lang_String(/** string */ a, /** !List<number> */ b, /** ?string */ c) {
+  return '';
+ }
+ /** @nodts @return {?string} */
+ m_m2__java_lang_String__java_util_List__java_lang_String(/** ?string */ a, /** !List<?number> */ b) {
+  return '';
+ }
+ /** @return {?string} */
+ m3(/** string */ a, .../** ...string */ args) {
+  $Arrays.$stampType(args, j_l_String);
+  return null;
+ }
+ /** @nodts */
+ m_m4__nullability_Nullability_MyFunction__void(/** function(string):string */ f) {}
+ /** @nodts @template T */
+ static m_testDefaultNullabilityBounds__nullability_Nullability_ParameterizedDefaultNullability__void(/** ParameterizedDefaultNullability<T> */ defaultNullability) {
+  Nullability.$clinit();
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(defaultNullability.m_getNonNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(defaultNullability.m_getNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(defaultNullability.m_getDefaultNullability__java_lang_Object_$pp_nullability(), j_l_String)));
+ }
+ /** @nodts @template T */
+ static m_testDefaultNullabilityBounds__nullability_Nullability_ParameterizedNullable__void(/** ParameterizedNullable<T> */ nullable) {
+  Nullability.$clinit();
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nullable.m_getNonNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nullable.m_getNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nullable.m_getDefaultNullability__java_lang_Object_$pp_nullability(), j_l_String)));
+ }
+ /** @nodts @template T */
+ static m_testNullableBounds__nullability_Nullability_ParameterizedDefaultNullability__void(/** ParameterizedDefaultNullability<T> */ defaultNullability) {
+  Nullability.$clinit();
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(defaultNullability.m_getNonNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(defaultNullability.m_getNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(defaultNullability.m_getDefaultNullability__java_lang_Object_$pp_nullability(), j_l_String)));
+ }
+ /** @nodts @template T */
+ static m_testNullableBounds__nullability_Nullability_ParameterizedNullable__void(/** ParameterizedNullable<T> */ nullable) {
+  Nullability.$clinit();
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nullable.m_getNonNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nullable.m_getNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nullable.m_getDefaultNullability__java_lang_Object_$pp_nullability(), j_l_String)));
+ }
+ /** @nodts @template T */
+ static m_testNonNullableBounds__nullability_Nullability_ParameterizedDefaultNullability__void(/** ParameterizedDefaultNullability<T> */ defaultNullability) {
+  Nullability.$clinit();
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(defaultNullability.m_getNonNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(defaultNullability.m_getNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(defaultNullability.m_getDefaultNullability__java_lang_Object_$pp_nullability(), j_l_String)));
+ }
+ /** @nodts @template T */
+ static m_testNonNullableBounds__nullability_Nullability_ParameterizedNullable__void(/** ParameterizedNullable<T> */ nullable) {
+  Nullability.$clinit();
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nullable.m_getNonNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nullable.m_getNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nullable.m_getDefaultNullability__java_lang_Object_$pp_nullability(), j_l_String)));
+ }
+ /** @nodts @template T */
+ static m_testNonNullableBounds__nullability_Nullability_ParameterizedNonNullable__void(/** ParameterizedNonNullable<T> */ nonNullable) {
+  Nullability.$clinit();
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nonNullable.m_getNonNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nonNullable.m_getNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nonNullable.m_getDefaultNullability__java_lang_Object_$pp_nullability(), j_l_String)));
+ }
+ /** @nodts */
+ static m_testDefaultNullabilityWildcards__nullability_Nullability_ParameterizedDefaultNullability__void(/** ParameterizedDefaultNullability<?> */ nonNullable) {
+  Nullability.$clinit();
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nonNullable.m_getNonNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nonNullable.m_getNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nonNullable.m_getDefaultNullability__java_lang_Object_$pp_nullability(), j_l_String)));
+ }
+ /** @nodts */
+ static m_testDefaultNullabilityWildcards__nullability_Nullability_ParameterizedNullable__void(/** ParameterizedNullable<?> */ nonNullable) {
+  Nullability.$clinit();
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nonNullable.m_getNonNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nonNullable.m_getNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nonNullable.m_getDefaultNullability__java_lang_Object_$pp_nullability(), j_l_String)));
+ }
+ /** @nodts */
+ static m_testDefaultNullabilityWildcards__nullability_Nullability_ParameterizedNonNullable__void(/** ParameterizedNonNullable<?> */ nonNullable) {
+  Nullability.$clinit();
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nonNullable.m_getNonNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nonNullable.m_getNullable__java_lang_Object_$pp_nullability(), j_l_String)));
+  j_l_String.m_length__java_lang_String__int(/**@type {string}*/ ($Casts.$to(nonNullable.m_getDefaultNullability__java_lang_Object_$pp_nullability(), j_l_String)));
+ }
+ /** @nodts @template T */
+ static m_testRecursive__void() {
+  Nullability.$clinit();
+  let generic = /**@type {!RecursiveParam<T>}*/ (RecursiveParam.$create__());
+  let parametrized = /**@type {!RecursiveParam<RecursiveChild>}*/ (RecursiveParam.$create__());
+ }
+ /** @nodts @template T */
+ static m_testRecursiveNullable__void() {
+  Nullability.$clinit();
+  let generic = /**@type {!RecursiveNullableParam<T>}*/ (RecursiveNullableParam.$create__());
+  let parametrized = /**@type {!RecursiveNullableParam<RecursiveNullableChild>}*/ (RecursiveNullableParam.$create__());
+ }
+ /** @private @nodts */
+ $init__void_$p_nullability_Nullability() {
+  this.f_f1__nullability_Nullability_ = 'Hello';
+  this.f_f2__nullability_Nullability_ = null;
+  this.f_f3__nullability_Nullability_ = null;
+  this.f_f4__nullability_Nullability_ = /**@type {!ArrayList<string>}*/ (ArrayList.$create__());
+  this.f_f5__nullability_Nullability_ = /**@type {!ArrayList<string>}*/ (ArrayList.$create__());
+  this.f_f6__nullability_Nullability_ = /**@type {!ArrayList<?string>}*/ (ArrayList.$create__());
+  this.f_f7__nullability_Nullability_ = null;
+  this.f_f8__nullability_Nullability_ = /**@type {!Array<string>}*/ ($Arrays.$create([0], j_l_String));
+  this.f_f9__nullability_Nullability_ = /**@type {!Array<?string>}*/ ($Arrays.$create([0], j_l_String));
+  this.f_f10__nullability_Nullability_ = /**@type {!Array<string>}*/ ($Arrays.$create([0], j_l_String));
+  this.f_f12__nullability_Nullability_ = /**@type {!ArrayList<?string>}*/ (ArrayList.$create__());
+ }
+ /** @nodts */
+ static $clinit() {
+  Nullability.$clinit = () =>{};
+  Nullability.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof Nullability;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {
+  j_l_String = goog.module.get('java.lang.String$impl');
+  ArrayList = goog.module.get('java.util.ArrayList$impl');
+  RecursiveNullableParam = goog.module.get('nullability.Nullability.RecursiveNullableParam$impl');
+  RecursiveParam = goog.module.get('nullability.Nullability.RecursiveParam$impl');
+  $Arrays = goog.module.get('vmbootstrap.Arrays$impl');
+  $Casts = goog.module.get('vmbootstrap.Casts$impl');
+ }
+}
+$Util.$setClassMetadata(Nullability, 'nullability.Nullability');
+
+exports = Nullability;
+
+//# sourceMappingURL=Nullability.js.map

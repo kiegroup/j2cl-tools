@@ -1,0 +1,45 @@
+// Generated from "supercallnondefault/Child.java"
+@file:OptIn(ExperimentalObjCName::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package supercallnondefault
+
+import javaemul.lang.*
+import kotlin.Int
+import kotlin.OptIn
+import kotlin.Suppress
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.jvm.JvmField
+import kotlin.native.ObjCName
+
+open class Parent {
+ @JvmField
+ var field: Int = 0
+
+ constructor(
+  @ObjCName("Int") f: Int
+ ) {
+  this.field = f
+ }
+}
+
+@ObjCName("J2ktSupercallnondefaultChild", exact = true)
+open class Child: Parent {
+ constructor(
+  @ObjCName("Int") a: Int
+ ): super(a)
+}

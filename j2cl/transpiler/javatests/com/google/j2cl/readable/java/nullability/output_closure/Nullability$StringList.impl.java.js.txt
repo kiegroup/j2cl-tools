@@ -1,0 +1,35 @@
+goog.module('nullability.Nullability.StringList$impl');
+
+const List = goog.require('java.util.List$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+/**
+ * @interface
+ * @extends {List<?string>}
+ */
+class StringList {
+ /** @nodts */
+ static $clinit() {
+  StringList.$clinit = () =>{};
+  StringList.$loadModules();
+  List.$clinit();
+ }
+ 
+ static $markImplementor(/** Function */ ctor) {
+  List.$markImplementor(ctor);
+  ctor.prototype.$implements__nullability_Nullability_StringList = true;
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance != null && !!instance.$implements__nullability_Nullability_StringList;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+StringList.$markImplementor(/**@type {Function}*/ (StringList));
+$Util.$setClassMetadataForInterface(StringList, 'nullability.Nullability$StringList');
+
+exports = StringList;
+
+//# sourceMappingURL=Nullability$StringList.js.map

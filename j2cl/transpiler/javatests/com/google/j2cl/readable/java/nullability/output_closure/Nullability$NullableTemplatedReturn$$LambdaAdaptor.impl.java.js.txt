@@ -1,0 +1,49 @@
+goog.module('nullability.Nullability.NullableTemplatedReturn.$LambdaAdaptor$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+const NullableTemplatedReturn = goog.require('nullability.Nullability.NullableTemplatedReturn$impl');
+
+/**
+ * @template T
+ * @implements {NullableTemplatedReturn<T>}
+ */
+class $LambdaAdaptor extends j_l_Object {
+ /** @nodts */
+ constructor(/** ?function():T */ fn) {
+  $LambdaAdaptor.$clinit();
+  super();
+  /**@type {?function():T} @nodts*/
+  this.f_fn__nullability_Nullability_NullableTemplatedReturn_$LambdaAdaptor;
+  this.$ctor__nullability_Nullability_NullableTemplatedReturn_$LambdaAdaptor__nullability_Nullability_NullableTemplatedReturn_$JsFunction__void(fn);
+ }
+ /** @nodts */
+ $ctor__nullability_Nullability_NullableTemplatedReturn_$LambdaAdaptor__nullability_Nullability_NullableTemplatedReturn_$JsFunction__void(/** ?function():T */ fn) {
+  this.$ctor__java_lang_Object__void();
+  this.f_fn__nullability_Nullability_NullableTemplatedReturn_$LambdaAdaptor = fn;
+ }
+ /** @override @nodts @return {T} */
+ m_foo__java_lang_Object() {
+  let /** ?function():T */ $function;
+  return ($function = this.f_fn__nullability_Nullability_NullableTemplatedReturn_$LambdaAdaptor, $function());
+ }
+ /** @nodts */
+ static $clinit() {
+  $LambdaAdaptor.$clinit = () =>{};
+  $LambdaAdaptor.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof $LambdaAdaptor;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+NullableTemplatedReturn.$markImplementor($LambdaAdaptor);
+$Util.$setClassMetadata($LambdaAdaptor, 'nullability.Nullability$NullableTemplatedReturn$$LambdaAdaptor');
+
+exports = $LambdaAdaptor;
+
+//# sourceMappingURL=Nullability$NullableTemplatedReturn$$LambdaAdaptor.js.map

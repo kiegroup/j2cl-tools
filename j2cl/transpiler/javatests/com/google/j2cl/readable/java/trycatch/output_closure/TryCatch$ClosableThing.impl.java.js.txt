@@ -1,0 +1,47 @@
+goog.module('trycatch.TryCatch.ClosableThing$impl');
+
+const AutoCloseable = goog.require('java.lang.AutoCloseable$impl');
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+/**
+ * @implements {AutoCloseable}
+ */
+class ClosableThing extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+ }
+ /** @nodts @return {!ClosableThing} */
+ static $create__() {
+  ClosableThing.$clinit();
+  let $instance = new ClosableThing();
+  $instance.$ctor__trycatch_TryCatch_ClosableThing__void();
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__trycatch_TryCatch_ClosableThing__void() {
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @override @nodts */
+ m_close__void() {}
+ /** @nodts */
+ static $clinit() {
+  ClosableThing.$clinit = () =>{};
+  ClosableThing.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof ClosableThing;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+AutoCloseable.$markImplementor(ClosableThing);
+$Util.$setClassMetadata(ClosableThing, 'trycatch.TryCatch$ClosableThing');
+
+exports = ClosableThing;
+
+//# sourceMappingURL=TryCatch$ClosableThing.js.map

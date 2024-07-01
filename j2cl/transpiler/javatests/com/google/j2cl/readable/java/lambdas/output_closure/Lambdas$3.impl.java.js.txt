@@ -1,0 +1,45 @@
+goog.module('lambdas.Lambdas.$3$impl');
+
+const j_l_Object = goog.require('java.lang.Object$impl');
+const $Util = goog.require('nativebootstrap.Util$impl');
+
+let Lambdas = goog.forwardDeclare('lambdas.Lambdas$impl');
+
+class $3 extends j_l_Object {
+ /** @protected @nodts */
+ constructor() {
+  super();
+  /**@type {Lambdas} @nodts*/
+  this.$outer_this__lambdas_Lambdas_3;
+ }
+ /** @nodts @return {!$3} */
+ static $create__lambdas_Lambdas(/** Lambdas */ $outer_this) {
+  $3.$clinit();
+  let $instance = new $3();
+  $instance.$ctor__lambdas_Lambdas_3__lambdas_Lambdas__void($outer_this);
+  return $instance;
+ }
+ /** @nodts */
+ $ctor__lambdas_Lambdas_3__lambdas_Lambdas__void(/** Lambdas */ $outer_this) {
+  this.$outer_this__lambdas_Lambdas_3 = $outer_this;
+  this.$ctor__java_lang_Object__void();
+ }
+ /** @nodts */
+ static $clinit() {
+  $3.$clinit = () =>{};
+  $3.$loadModules();
+  j_l_Object.$clinit();
+ }
+ /** @nodts @return {boolean} */
+ static $isInstance(/** ? */ instance) {
+  return instance instanceof $3;
+ }
+ 
+ /** @nodts */
+ static $loadModules() {}
+}
+$Util.$setClassMetadata($3, 'lambdas.Lambdas$3');
+
+exports = $3;
+
+//# sourceMappingURL=Lambdas$3.js.map

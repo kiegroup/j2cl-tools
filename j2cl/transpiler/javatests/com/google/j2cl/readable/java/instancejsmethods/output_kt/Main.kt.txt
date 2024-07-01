@@ -1,0 +1,133 @@
+// Generated from "instancejsmethods/Main.java"
+@file:OptIn(ExperimentalObjCName::class)
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "REPEATED_BOUND",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+
+package instancejsmethods
+
+import javaemul.lang.*
+import jsinterop.annotations.JsMethod
+import kotlin.Int
+import kotlin.OptIn
+import kotlin.Suppress
+import kotlin.experimental.ExperimentalObjCName
+import kotlin.jvm.JvmStatic
+import kotlin.native.ObjCName
+
+fun interface MyInterface {
+ @ObjCName("intfFoo")
+ fun intfFoo(): Int
+}
+
+open class SuperParent internal constructor() {
+ @ObjCName("fun")
+ open fun `fun`(
+  @ObjCName("withInt") a: Int,
+  @ObjCName("withInt") b: Int
+ ): Int {
+  return a + b + 111
+ }
+
+ @ObjCName("bar")
+ open fun bar(
+  @ObjCName("withInt") a: Int,
+  @ObjCName("withInt") b: Int
+ ): Int {
+  return a * b + 222
+ }
+}
+
+open class Parent internal constructor(): SuperParent() {
+ @JsMethod(name = "sum")
+ override fun `fun`(a: Int, b: Int): Int {
+  return a + b
+ }
+
+ @JsMethod
+ override fun bar(a: Int, b: Int): Int {
+  return a * b
+ }
+
+ @ObjCName("foo")
+ @JsMethod(name = "myFoo")
+ open fun foo(
+  @ObjCName("withInt") a: Int
+ ): Int {
+  return a
+ }
+}
+
+open class Child internal constructor(): Parent(), MyInterface {
+ override fun `fun`(a: Int, b: Int): Int {
+  return a + b + 1
+ }
+
+ override fun bar(a: Int, b: Int): Int {
+  return a * b + 1
+ }
+
+ @JsMethod(name = "myFoo")
+ override fun foo(a: Int): Int {
+  return a
+ }
+
+ @JsMethod
+ override fun intfFoo(): Int {
+  return 1
+ }
+}
+
+@ObjCName("J2ktInstancejsmethodsMain", exact = true)
+open class Main {
+ @ObjCName("testCallBySuperParent")
+ open fun testCallBySuperParent() {
+  val sp: SuperParent? = SuperParent()
+  val p: SuperParent? = Parent()
+  val c: SuperParent? = Child()
+  val pp: Parent? = Parent()
+  val cc: Parent? = Child()
+  val intf: MyInterface? = Child()
+  sp!!.`fun`(12, 35)
+  sp!!.bar(6, 7)
+  p!!.`fun`(12, 35)
+  p!!.bar(6, 7)
+  c!!.`fun`(12, 35)
+  c!!.bar(6, 7)
+  pp!!.foo(1)
+  cc!!.foo(1)
+  intf!!.intfFoo()
+ }
+
+ @ObjCName("J2ktInstancejsmethodsMainCompanion", exact = true)
+ companion object {
+  @JvmStatic
+  @ObjCName("testCallByConcreteType")
+  fun testCallByConcreteType() {
+   val sp: SuperParent? = SuperParent()
+   val p: Parent? = Parent()
+   val c: Child? = Child()
+   sp!!.`fun`(12, 35)
+   sp!!.bar(6, 7)
+   p!!.`fun`(12, 35)
+   p!!.bar(6, 7)
+   p!!.foo(1)
+   c!!.`fun`(12, 35)
+   c!!.bar(6, 7)
+   c!!.foo(1)
+   c!!.intfFoo()
+  }
+ }
+}
