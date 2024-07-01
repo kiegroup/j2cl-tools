@@ -1,9 +1,0 @@
-goog.module('mixednestings.MixedNestings.A');
-
-goog.require('java.lang.Object');
-goog.require('mixednestings.MixedNestings');
-goog.require('mixednestings.MixedNestings.A.$1B');
-goog.require('nativebootstrap.Util');
-
-const A = goog.require('mixednestings.MixedNestings.A$impl');
-exports = A;

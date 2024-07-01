@@ -1,8 +1,0 @@
-goog.module('lambdas.Lambdas.Function.$LambdaAdaptor');
-
-goog.require('java.lang.Object');
-goog.require('lambdas.Lambdas.Function');
-goog.require('nativebootstrap.Util');
-
-const $LambdaAdaptor = goog.require('lambdas.Lambdas.Function.$LambdaAdaptor$impl');
-exports = $LambdaAdaptor;

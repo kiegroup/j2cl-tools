@@ -1,7 +1,0 @@
-goog.module('implementsgenericinterface.GenericSubInterface');
-
-goog.require('implementsgenericinterface.GenericInterface');
-goog.require('nativebootstrap.Util');
-
-const GenericSubInterface = goog.require('implementsgenericinterface.GenericSubInterface$impl');
-exports = GenericSubInterface;

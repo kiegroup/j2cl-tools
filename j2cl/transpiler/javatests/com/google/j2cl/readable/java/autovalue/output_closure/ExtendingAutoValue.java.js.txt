@@ -1,9 +1,0 @@
-goog.module('autovalue.ExtendingAutoValue');
-
-goog.require('autovalue.BaseClass');
-goog.require('java.util.Objects');
-goog.require('javaemul.internal.ValueType');
-goog.require('nativebootstrap.Util');
-
-const ExtendingAutoValue = goog.require('autovalue.ExtendingAutoValue$impl');
-exports = ExtendingAutoValue;

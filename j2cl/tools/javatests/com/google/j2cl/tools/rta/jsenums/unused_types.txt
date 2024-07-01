@@ -1,4 +1,0 @@
-com.google.j2cl.tools.rta.jsenums.Main.UnusedJsEnum.$Overlay
-com.google.j2cl.tools.rta.jsenums.Main.AccessedJsEnum.$Overlay
-com.google.j2cl.tools.rta.jsenums.Main.UsedJsEnum.$Overlay
-com.google.j2cl.tools.rta.jsenums.Main.UnusedJsEnumWithOverlay.$Overlay

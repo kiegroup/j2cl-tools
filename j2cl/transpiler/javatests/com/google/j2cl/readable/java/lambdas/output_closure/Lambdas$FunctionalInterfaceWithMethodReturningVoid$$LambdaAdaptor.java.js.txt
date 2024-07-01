@@ -1,8 +1,0 @@
-goog.module('lambdas.Lambdas.FunctionalInterfaceWithMethodReturningVoid.$LambdaAdaptor');
-
-goog.require('java.lang.Object');
-goog.require('lambdas.Lambdas.FunctionalInterfaceWithMethodReturningVoid');
-goog.require('nativebootstrap.Util');
-
-const $LambdaAdaptor = goog.require('lambdas.Lambdas.FunctionalInterfaceWithMethodReturningVoid.$LambdaAdaptor$impl');
-exports = $LambdaAdaptor;

@@ -1,6 +1,0 @@
-goog.module('jsoverlay.ParameterizedNativeInterface.$Overlay');
-
-
-const $Overlay = goog.require('jsoverlay.ParameterizedNativeInterface.$Overlay$impl');
-/** @nodts */
-exports = $Overlay;

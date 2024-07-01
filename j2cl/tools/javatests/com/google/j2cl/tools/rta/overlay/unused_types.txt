@@ -1,3 +1,0 @@
-com.google.j2cl.tools.rta.overlay.UnusedNativeType.$Overlay
-
-com.google.j2cl.tools.rta.overlay.OtherNativeType.$Overlay#$clinit

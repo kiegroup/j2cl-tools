@@ -1,6 +1,0 @@
-goog.module('functiontype.Function');
-
-goog.require('nativebootstrap.Util');
-
-const functiontype_Function = goog.require('functiontype.Function$impl');
-exports = functiontype_Function;

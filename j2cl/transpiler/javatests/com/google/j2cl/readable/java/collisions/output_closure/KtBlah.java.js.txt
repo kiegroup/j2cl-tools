@@ -1,7 +1,0 @@
-goog.module('collisions.KtBlah');
-
-goog.require('java.lang.Object');
-goog.require('nativebootstrap.Util');
-
-const KtBlah = goog.require('collisions.KtBlah$impl');
-exports = KtBlah;

@@ -1,8 +1,0 @@
-goog.module('jsmethod.JsMethodExample.ExposesOverrideableJsMethod');
-
-goog.require('jsmethod.JsMethodExample.InterfaceExposingJsMethods');
-goog.require('jsmethod.JsMethodExample.SuperClassWithFinalMethod');
-goog.require('nativebootstrap.Util');
-
-const ExposesOverrideableJsMethod = goog.require('jsmethod.JsMethodExample.ExposesOverrideableJsMethod$impl');
-exports = ExposesOverrideableJsMethod;

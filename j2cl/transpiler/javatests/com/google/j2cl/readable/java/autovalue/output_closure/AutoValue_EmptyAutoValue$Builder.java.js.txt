@@ -1,9 +1,0 @@
-goog.module('autovalue.AutoValue_EmptyAutoValue.Builder');
-
-goog.require('autovalue.AutoValue_EmptyAutoValue');
-goog.require('autovalue.EmptyAutoValue');
-goog.require('autovalue.EmptyAutoValue.Builder');
-goog.require('nativebootstrap.Util');
-
-const Builder = goog.require('autovalue.AutoValue_EmptyAutoValue.Builder$impl');
-exports = Builder;

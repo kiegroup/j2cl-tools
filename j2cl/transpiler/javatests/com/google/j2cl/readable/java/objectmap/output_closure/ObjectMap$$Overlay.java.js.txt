@@ -1,7 +1,0 @@
-goog.module('objectmap.ObjectMap.$Overlay');
-
-goog.require('nativebootstrap.Util');
-
-const $Overlay = goog.require('objectmap.ObjectMap.$Overlay$impl');
-/** @nodts */
-exports = $Overlay;

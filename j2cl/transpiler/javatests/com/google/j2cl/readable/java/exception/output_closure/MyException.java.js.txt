@@ -1,8 +1,0 @@
-goog.module('exception.MyException');
-
-goog.require('java.lang.Exception');
-goog.require('java.lang.Throwable');
-goog.require('nativebootstrap.Util');
-
-const MyException = goog.require('exception.MyException$impl');
-exports = MyException;

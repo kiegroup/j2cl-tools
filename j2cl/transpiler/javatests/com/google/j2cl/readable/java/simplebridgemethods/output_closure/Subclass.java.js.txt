@@ -1,9 +1,0 @@
-goog.module('simplebridgemethods.Subclass');
-
-goog.require('java.lang.AssertionError');
-goog.require('nativebootstrap.Util');
-goog.require('simplebridgemethods.Superclass');
-goog.require('vmbootstrap.Casts');
-
-const Subclass = goog.require('simplebridgemethods.Subclass$impl');
-exports = Subclass;

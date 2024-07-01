@@ -1,7 +1,0 @@
-goog.module('jsmethod.JsMethodExample.I');
-
-goog.require('jsmethod.JsMethodExample.I.$LambdaAdaptor');
-goog.require('nativebootstrap.Util');
-
-const I = goog.require('jsmethod.JsMethodExample.I$impl');
-exports = I;

@@ -1,5 +1,0 @@
-goog.module('jsenum.Main.NonNullableStringJsEnum');
-
-
-const NonNullableStringJsEnum = goog.require('jsenum.Main.NonNullableStringJsEnum$impl');
-exports = NonNullableStringJsEnum;

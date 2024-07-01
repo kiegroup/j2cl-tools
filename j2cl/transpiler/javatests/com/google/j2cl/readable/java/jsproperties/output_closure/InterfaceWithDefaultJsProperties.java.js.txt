@@ -1,6 +1,0 @@
-goog.module('jsproperties.InterfaceWithDefaultJsProperties');
-
-goog.require('nativebootstrap.Util');
-
-const InterfaceWithDefaultJsProperties = goog.require('jsproperties.InterfaceWithDefaultJsProperties$impl');
-exports = InterfaceWithDefaultJsProperties;

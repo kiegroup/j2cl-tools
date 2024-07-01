@@ -1,8 +1,0 @@
-goog.module('jsdoctypemappings.JsDocTypeMappings.ExportedTypeNewName');
-
-goog.require('java.lang.Object');
-goog.require('jsdoctypemappings.JsDocTypeMappings');
-goog.require('nativebootstrap.Util');
-
-const ExportedType = goog.require('jsdoctypemappings.JsDocTypeMappings.ExportedTypeNewName$impl');
-exports = ExportedType;
