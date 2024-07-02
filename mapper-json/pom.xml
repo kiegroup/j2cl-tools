@@ -7,7 +7,7 @@
     <groupId>org.kie.j2cl.tools.json.mapper</groupId>
     <artifactId>mapper-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.1</version>
+    <version>0.5.0</version>
     <modules>
         <module>json-impl</module>
         <module>common</module>
@@ -67,7 +67,7 @@
         <maven.gpg.plugin>1.6</maven.gpg.plugin>
         <maven.javadoc.plugin>3.2.0</maven.javadoc.plugin>
         <maven.source.plugin>3.2.1</maven.source.plugin>
-        <maven.j2cl.plugin>0.23.0</maven.j2cl.plugin>
+        <maven.j2cl.plugin>0.23.1</maven.j2cl.plugin>
         <maven.release.plugin>2.5.3</maven.release.plugin>
         <maven.surfire.plugin>3.0.0-M1</maven.surfire.plugin>
         <maven.nexus.staging.plugin>1.6.8</maven.nexus.staging.plugin>
@@ -84,8 +84,8 @@
 
         <!-- J2CL deps -->
         <com.google.jsinterop.base.version>1.0.0</com.google.jsinterop.base.version>
-        <elemental2.version>1.1.0</elemental2.version>
-        <j2cl.version>0.11.0-9336533b6</j2cl.version>
+        <elemental2.version>1.2.1</elemental2.version>
+        <j2cl.version>v20240622-1</j2cl.version>
 
         <!-- Testing -->
         <junit.version>4.13.1</junit.version>

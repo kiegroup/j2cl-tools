@@ -6,7 +6,7 @@
 
     <artifactId>j2cl-tests</artifactId>
     <groupId>org.kie.j2cl.tools.json.mapper</groupId>
-    <version>0.4.1</version>
+    <version>0.5.0</version>
 
     <name>GWT/J2CL Jakarta JSON Binding J2CL tests</name>
     <description>GWT/J2CL Jakarta JSON Binding J2CL tests</description>
@@ -38,27 +38,27 @@
     </scm>
 
     <properties>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
 
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <maven.surfire.plugin>3.0.0-M1</maven.surfire.plugin>
         <j2cl.maven.plugin.version>0.19</j2cl.maven.plugin.version>
-        <elemental2.version>1.1.0</elemental2.version>
+        <elemental2.version>1.2.1</elemental2.version>
         <jsinterop.base.version>1.0.0</jsinterop.base.version>
-        <j2cl.version>0.10.0-3c97afeac</j2cl.version>
+        <j2cl.version>v20240622-1</j2cl.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.kie.j2cl.tools.json.mapper</groupId>
             <artifactId>common</artifactId>
-            <version>0.4.1</version>
+            <version>0.5.0</version>
         </dependency>
         <dependency>
             <groupId>org.kie.j2cl.tools.json.mapper</groupId>
             <artifactId>processor</artifactId>
-            <version>0.4.1</version>
+            <version>0.5.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
