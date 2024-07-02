@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.kie.j2cl.tools.di.tests.jre</groupId>
         <artifactId>reduces-classpath-parent</artifactId>
-        <version>0.6</version>
+        <version>0.7</version>
     </parent>
 
     <artifactId>reduces-classpath-dep</artifactId>

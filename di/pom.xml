@@ -5,7 +5,7 @@
 
     <groupId>org.kie.j2cl.tools.di</groupId>
     <artifactId>parent</artifactId>
-    <version>0.6</version>
+    <version>0.7</version>
     <packaging>pom</packaging>
 
     <name>J2CL compatible Jakarta CDI-like dependency injection framework parent</name>
@@ -282,7 +282,7 @@
                             <version>3.0</version>
                         </requireMavenVersion>
                         <requireJavaVersion>
-                            <version>(1.8.0,)</version>
+                            <version>(11.0,)</version>
                         </requireJavaVersion>
                     </rules>
                 </configuration>
