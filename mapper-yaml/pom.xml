@@ -4,7 +4,7 @@
 
     <groupId>org.kie.j2cl.tools.yaml.mapper</groupId>
     <artifactId>yaml-parent</artifactId>
-    <version>0.4</version>
+    <version>0.5</version>
     <packaging>pom</packaging>
 
     <name>GWT/J2CL compatible YAML marshallers parent</name>
@@ -37,8 +37,8 @@
     </scm>
 
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -52,7 +52,7 @@
         <maven.gpg.plugin>1.6</maven.gpg.plugin>
         <maven.javadoc.plugin>3.2.0</maven.javadoc.plugin>
         <maven.source.plugin>3.2.1</maven.source.plugin>
-        <maven.j2cl.plugin>0.23.0</maven.j2cl.plugin>
+        <maven.j2cl.plugin>0.23.1</maven.j2cl.plugin>
         <maven.release.plugin>2.5.3</maven.release.plugin>
         <maven.surfire.plugin>3.0.0-M1</maven.surfire.plugin>
         <maven.nexus.staging.plugin>1.6.8</maven.nexus.staging.plugin>
@@ -62,12 +62,12 @@
         <auto.common.version>0.11</auto.common.version>
         <auto.service.version>1.0-rc6</auto.service.version>
 
-        <gwt.nio.version>1.3</gwt.nio.version>
-        <gwt.jakarta.version>0.3</gwt.jakarta.version>
+        <gwt.nio.version>1.4</gwt.nio.version>
+        <gwt.jakarta.version>0.4</gwt.jakarta.version>
         <!-- J2CL deps -->
         <com.google.jsinterop.base.version>1.0.0</com.google.jsinterop.base.version>
-        <elemental2.version>1.1.0</elemental2.version>
-        <j2cl.version>0.11.0-9336533b6</j2cl.version>
+        <elemental2.version>1.2.1</elemental2.version>
+        <j2cl.version>v20240622-1</j2cl.version>
 
         <junit.version>4.13.1</junit.version>
     </properties>
