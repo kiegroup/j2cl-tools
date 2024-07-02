@@ -15,14 +15,14 @@
 
 package org.kie.j2cl.tools.commons;
 
+import static org.junit.Assert.assertEquals;
+
 import com.google.j2cl.junit.apt.J2clTestInput;
 import elemental2.dom.DomGlobal;
 import elemental2.dom.HTMLScriptElement;
 import jsinterop.base.Js;
 import org.junit.Test;
 import org.kie.j2cl.tools.processors.common.injectors.ScriptInjector;
-
-import static org.junit.Assert.assertEquals;
 
 @J2clTestInput(ScriptInjectorTest.class)
 public class ScriptInjectorTest {

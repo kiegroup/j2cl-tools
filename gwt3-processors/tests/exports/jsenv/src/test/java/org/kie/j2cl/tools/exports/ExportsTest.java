@@ -1,17 +1,16 @@
 package org.kie.j2cl.tools.exports;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.net.MalformedURLException;
+import java.nio.file.Path;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-
-import java.net.MalformedURLException;
-import java.nio.file.Path;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class ExportsTest {
 
@@ -280,8 +279,7 @@ public class ExportsTest {
 
   @Test
   public void testJsTypeClassTest5() {
-    String script =
-        "return new org.kie.j2cl.tools.exports.JsMethodsTester().test5() === 'qwerty';";
+    String script = "return new org.kie.j2cl.tools.exports.JsMethodsTester().test5() === 'qwerty';";
     Boolean result = (Boolean) driver.executeScript(script);
     assertTrue(result);
   }

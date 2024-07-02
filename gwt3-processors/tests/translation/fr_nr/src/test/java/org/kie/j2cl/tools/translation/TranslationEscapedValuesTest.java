@@ -1,9 +1,9 @@
 package org.kie.j2cl.tools.translation;
 
+import static org.junit.Assert.assertEquals;
+
 import com.google.j2cl.junit.apt.J2clTestInput;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 @J2clTestInput(TranslationEscapedValuesTest.class)
 public class TranslationEscapedValuesTest {

@@ -15,14 +15,13 @@
 
 package org.kie.j2cl.tools.processors.test;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class TextResourcesTest {
 
@@ -45,14 +44,14 @@ public class TextResourcesTest {
 
   @Test
   public void testEscape() {
-      String content = readFileAsString("escape.txt");
-      assertEquals(content, TextTestResourceImpl.INSTANCE.escape().getText());
+    String content = readFileAsString("escape.txt");
+    assertEquals(content, TextTestResourceImpl.INSTANCE.escape().getText());
   }
 
   @Test
   public void testBigTxt() {
-      String content = readFileAsString("bigtextresource.txt");
-      assertEquals(content, TextTestResourceImpl.INSTANCE.getBig().getText());
+    String content = readFileAsString("bigtextresource.txt");
+    assertEquals(content, TextTestResourceImpl.INSTANCE.getBig().getText());
   }
 
   @Test
@@ -108,6 +107,6 @@ public class TextResourcesTest {
   }
 
   private String normalize(String s) {
-    return s.replace("\r\n","\n");
+    return s.replace("\r\n", "\n");
   }
 }
