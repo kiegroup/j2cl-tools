@@ -58,7 +58,7 @@ import org.kie.j2cl.tools.di.apt.task.TaskGroup;
 
 
 @AutoService(Processor.class)
-@SupportedSourceVersion(SourceVersion.RELEASE_8)
+@SupportedSourceVersion(SourceVersion.RELEASE_11)
 public class ApplicationProcessor extends AbstractProcessor {
 
     @Override

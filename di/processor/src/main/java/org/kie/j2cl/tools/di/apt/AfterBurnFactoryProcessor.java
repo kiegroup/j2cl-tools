@@ -43,7 +43,7 @@ import org.kie.j2cl.tools.di.apt.task.TaskGroup;
 import org.kie.j2cl.tools.di.core.internal.step.AfterBurnFactoryStep;
 
 @AutoService(Processor.class)
-@SupportedSourceVersion(SourceVersion.RELEASE_8)
+@SupportedSourceVersion(SourceVersion.RELEASE_11)
 public class AfterBurnFactoryProcessor extends AbstractProcessor {
 
   private static final TreeLogger logger = new PrintWriterTreeLogger();
