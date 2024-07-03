@@ -5,9 +5,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.vertispan.j2cl.external</groupId>
+    <groupId>org.kie.j2cl.tools.external</groupId>
     <artifactId>external-dependencies</artifactId>
-    <version>v20240622-1</version>
+    <version>v20240622-2</version>
   </parent>
   <artifactId>org.eclipse</artifactId>
   <packaging>pom</packaging>

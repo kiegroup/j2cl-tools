@@ -59,7 +59,7 @@
         <maven.scm.provider.gitexe>1.9.5</maven.scm.provider.gitexe>
 
         <elemental2.version>1.2.1</elemental2.version>
-        <j2cl.version>v20240622-1</j2cl.version>
+        <j2cl.version>v20240622-2</j2cl.version>
         <javax.annotation.api.version>1.3.1</javax.annotation.api.version>
         <javaparser.core.version>3.13.1</javaparser.core.version>
         <apache.commons.lang3.version>3.9</apache.commons.lang3.version>

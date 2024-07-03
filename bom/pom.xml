@@ -6,7 +6,7 @@
 
     <groupId>org.kie.j2cl.tools</groupId>
     <artifactId>bom</artifactId>
-    <version>0.1</version>
+    <version>0.2</version>
     <packaging>pom</packaging>
 
     <name>J2CL Libraries Bill of Materials</name>

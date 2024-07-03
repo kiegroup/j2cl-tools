@@ -43,7 +43,7 @@
     <elemental2.version>1.0.0</elemental2.version>
 
     <google.jsinterop.version>1.0.0</google.jsinterop.version>
-    <j2cl.version>v20240622-1</j2cl.version>
+    <j2cl.version>v20240622-2</j2cl.version>
 
     <maven.compiler.target>11</maven.compiler.target>
     <maven.compiler.source>11</maven.compiler.source>

@@ -53,7 +53,7 @@
     <jsinterop.base.version>1.0.0</jsinterop.base.version>
     <elemental2.version>1.2.1</elemental2.version>
     <!-- CI -->
-    <j2cl.version>v20240622-1</j2cl.version>
+    <j2cl.version>v20240622-2</j2cl.version>
     <junit.version>4.11</junit.version>
     <selenium.chrome.driver.version>4.12.1</selenium.chrome.driver.version>
 

@@ -7,9 +7,9 @@
   <parent>
     <groupId>org.kie.j2cl.tools</groupId>
     <artifactId>j2cl-parent</artifactId>
-    <version>v20240622-1</version>
+    <version>v20240622-2</version>
   </parent>
-  <groupId>com.vertispan.j2cl.external</groupId>
+  <groupId>org.kie.j2cl.tools.external</groupId>
   <artifactId>external-dependencies</artifactId>
   <packaging>pom</packaging>
   <modules>

@@ -58,7 +58,7 @@
     <dependency>
       <groupId>org.kie.j2cl.tools</groupId>
       <artifactId>junit-annotations</artifactId>
-      <version>v20240622-1</version>
+      <version>v20240622-2</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>

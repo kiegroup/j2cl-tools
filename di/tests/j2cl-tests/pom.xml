@@ -61,7 +61,7 @@
         <maven.surefire.plugin.version>3.0.0-M5</maven.surefire.plugin.version>
         <maven.flatten.plugin>1.2.2</maven.flatten.plugin>
         <maven.j2cl.plugin>0.23.1</maven.j2cl.plugin>
-        <j2cl.version>v20240622-1</j2cl.version>
+        <j2cl.version>v20240622-2</j2cl.version>
         <junit.version>4.13.1</junit.version>
     </properties>
 
