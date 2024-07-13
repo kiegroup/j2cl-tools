@@ -1,28 +1,24 @@
 /*
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ * Copyright © 2021 j2cl-maven-plugin authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package com.vertispan.j2cl.build.provided;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
-import com.google.debugging.sourcemap.SourceMapConsumerV3;
-import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.javascript.jscomp.Compiler;
@@ -51,13 +47,11 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FilterWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -142,7 +136,6 @@ public class ClosureBundleTask extends TaskFactory {
             List<DependencyInfoAndSource> dependencyInfos = new ArrayList<>();
             Compiler jsCompiler = new Compiler(System.err);//TODO before merge, write this to the log
 
-            Path sourcesPath = context.outputPath().resolve(Closure.SOURCES_DIRECTORY_NAME);
             if (incrementalEnabled && context.lastSuccessfulOutput().isPresent()) {
                 // collect any dep info from disk for existing files
                 final Map<String, DependencyInfoAndSource> depInfoMap;
@@ -167,7 +160,7 @@ public class ClosureBundleTask extends TaskFactory {
                         } else {
                             // ADD or MODIFY
                             CompilerInput input = new CompilerInput(SourceFile.builder()
-                                    .withPath(sourcesPath.resolve(change.getSourcePath()))
+                                    .withPath(context.outputPath().resolve(Closure.SOURCES_DIRECTORY_NAME).resolve(change.getSourcePath()))
                                     .withOriginalPath(change.getSourcePath().toString())
                                     .build());
                             input.setCompiler(jsCompiler);
@@ -188,7 +181,7 @@ public class ClosureBundleTask extends TaskFactory {
                 for (Input jsInput : js) {
                     for (CachedPath path : jsInput.getFilesAndHashes()) {
                         CompilerInput input = new CompilerInput(SourceFile.builder()
-                                .withPath(sourcesPath.resolve(path.getSourcePath()))
+                                .withPath(context.outputPath().resolve(Closure.SOURCES_DIRECTORY_NAME).resolve(path.getSourcePath()))
                                 .withOriginalPath(path.getSourcePath().toString())
                                 .build());
                         input.setCompiler(jsCompiler);
@@ -204,8 +197,6 @@ public class ClosureBundleTask extends TaskFactory {
 
             // TODO optional/stretch-goal find first change in the list, so we can keep old prefix of bundle output
 
-            SourceMapGeneratorV3 sourceMapGenerator = new SourceMapGeneratorV3();
-
             // rebundle all (optional: remaining) files using this already handled sort
             ClosureBundler bundler = new ClosureBundler(Transpiler.NULL, new BaseTranspiler(
                     new BaseTranspiler.CompilerSupplier(
@@ -219,52 +210,27 @@ public class ClosureBundleTask extends TaskFactory {
                             ImmutableMap.of()
                     ),
                     ""
-            )).useEval(false);
+            )).useEval(true);
 
-            String sourcemapOutFileName = fileNameKey + ".bundle.js.map";
-
-            try (OutputStream outputStream = Files.newOutputStream(outputFilePath);
-                 BufferedWriter bundleOut = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
-                 LineCountingWriter writer = new LineCountingWriter(bundleOut)) {
+            try (OutputStream outputStream = Files.newOutputStream(Paths.get(outputFile));
+                 BufferedWriter bundleOut = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
                 for (DependencyInfoAndSource info : sorter.getSortedList()) {
                     String code = info.getSource();
                     String name = info.getName();
-                    String sourcemapContents = info.loadSourcemap(sourcesPath);
 
                     //TODO do we actually need this?
                     if (Compiler.isFillFileName(name) && code.isEmpty()) {
                         continue;
                     }
 
-                    writer.append("//").append(name).append("\n");
-
-                    if (sourcemapContents != null) {
-                        sourceMapGenerator.setStartingPosition(writer.getLine(), 0);
-                        SourceMapConsumerV3 section = new SourceMapConsumerV3();
-                        section.parse(sourcemapContents);
-                        section.visitMappings((sourceName, symbolName, sourceStartPosition, startPosition, endPosition) -> sourceMapGenerator.addMapping(Paths.get(name).resolveSibling(sourceName).toString(), symbolName, sourceStartPosition, startPosition, endPosition));
-                        for (String source : section.getOriginalSources()) {
-                            String content = Files.readString(sourcesPath.resolve(name).resolveSibling(source));
-                            sourceMapGenerator.addSourcesContent(Paths.get(name).resolveSibling(source).toString(), content);
-                        }
-                    }
-
                     // append this file and a comment where it came from
-                    bundler.withPath(name).appendTo(writer, info, code);
-                    writer.append("\n");
+                    bundleOut.append("//").append(name).append("\n");
+                    bundler.withPath(name).withSourceUrl(Closure.SOURCES_DIRECTORY_NAME + "/" + name).appendTo(bundleOut, info, code);
+                    bundleOut.append("\n");
+
                 }
 
-                // write a reference to our new sourcemaps
-//                writer.append("// " + writer.getLine()).append("\n");
-                writer.append("//# sourceMappingURL=").append(sourcemapOutFileName).append('\n');
             }
-
-            // TODO hash in the name
-            try (OutputStream outputStream = Files.newOutputStream(outputFilePath.resolveSibling(sourcemapOutFileName));
-                 BufferedWriter smOut = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
-                sourceMapGenerator.appendTo(smOut, fileNameKey);
-            }
-
             // append dependency info to deserialize on some incremental rebuild
             try (OutputStream outputStream = Files.newOutputStream(context.outputPath().resolve("depInfo.json"));
                  BufferedWriter jsonOut = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
@@ -285,56 +251,6 @@ public class ClosureBundleTask extends TaskFactory {
             Files.move(outputFilePath, outputFilePath.resolveSibling(fileNameKey + "-" + murmur.getValueHexString() + BUNDLE_JS_EXTENSION));
             //TODO when back to keyboard rename sourcemap? is that a thing we need to do?
         };
-    }
-
-
-    public static class LineCountingWriter extends FilterWriter {
-        private int line;
-        protected LineCountingWriter(Writer out) {
-            super(out);
-        }
-
-        public int getLine() {
-            return line;
-        }
-
-        @Override
-        public void write(int c) throws IOException {
-            if (c == '\n') {
-                line++;
-            }
-            super.write(c);
-        }
-
-        @Override
-        public void write(char[] cbuf, int off, int len) throws IOException {
-            for (char c : cbuf) {
-                if (c == '\n') {
-                    line++;
-                }
-            }
-            super.write(cbuf, off, len);
-        }
-
-        @Override
-        public void write(String str, int off, int len) throws IOException {
-            str.chars().skip(off).limit(len).forEach(c -> {
-                if (c == '\n') {
-                    line++;
-                }
-            });
-            super.write(str, off, len);
-        }
-
-        @Override
-        public void write(char[] cbuf) throws IOException {
-            for (char c : cbuf) {
-                if (c == '\n') {
-                    line++;
-                }
-            }
-            super.write(cbuf);
-        }
     }
 
     public interface SourceSupplier {
@@ -408,24 +324,13 @@ public class ClosureBundleTask extends TaskFactory {
         public boolean getHasNoCompileAnnotation() {
             return delegate.getHasNoCompileAnnotation();
         }
-
-        public String loadSourcemap(Path outPath) throws IOException {
-            String sourceMappingUrlMarker = "//# sourceMappingURL=";
-            int offset = getSource().lastIndexOf(sourceMappingUrlMarker);
-            if (offset == -1) {
-                return null;
-            }
-            int urlPos = offset + sourceMappingUrlMarker.length();
-            String sourcemapName = getSource().substring(urlPos).split("\\s")[0];
-            return Files.readString(outPath.resolve(getName()).resolveSibling(sourcemapName));
-        }
     }
 
     public static class DependencyInfoFormat implements DependencyInfo {
         private String name;
-        //        private String pathRelativeToClosureBase = name;
+//        private String pathRelativeToClosureBase = name;
         private List<String> provides;
-        //        private List<RequireFormat> requires; //skipping requires as it isnt used by the dep sorter
+//        private List<RequireFormat> requires; //skipping requires as it isnt used by the dep sorter
         private List<String> requiredSymbols;
         private List<String> typeRequires;
         private Map<String, String> loadFlags;

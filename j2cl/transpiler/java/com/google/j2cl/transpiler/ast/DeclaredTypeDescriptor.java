@@ -30,6 +30,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.j2cl.common.ThreadLocalInterner;
+import com.google.j2cl.common.visitor.Processor;
+import com.google.j2cl.common.visitor.Visitable;
 import com.google.j2cl.transpiler.ast.FieldDescriptor.FieldOrigin;
 import com.google.j2cl.transpiler.ast.MethodDescriptor.MethodOrigin;
 import com.google.j2cl.transpiler.ast.MethodDescriptor.ParameterDescriptor;
@@ -53,6 +55,7 @@ import javax.annotation.Nullable;
  * <p>Some properties are lazily calculated since type relationships are a graph (not a tree) and
  * this class is a value type. Those properties are set through {@code DescriptorFactory}.
  */
+@Visitable
 @AutoValue
 public abstract class DeclaredTypeDescriptor extends TypeDescriptor
     implements HasUnusableByJsSuppression {
@@ -243,6 +246,12 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
     return getTypeDeclaration().hasOverlayImplementationType();
   }
 
+  @Memoized
+  public boolean hasCustomIsInstanceMethod() {
+    return getDeclaredMethodDescriptors().stream()
+        .anyMatch(MethodDescriptor::isCustomIsInstanceMethod);
+  }
+
   @Override
   public DeclaredTypeDescriptor toRawTypeDescriptor() {
     return getTypeDeclaration().toRawTypeDescriptor();
@@ -368,19 +377,31 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
 
   public abstract TypeDeclaration getTypeDeclaration();
 
-  /** Returns the class initializer method descriptor for a particular type */
+  /** Returns the class initializer method descriptor for a particular type. */
   @Memoized
   public MethodDescriptor getClinitMethodDescriptor() {
     return MethodDescriptor.newBuilder()
         .setName(MethodDescriptor.CLINIT_METHOD_NAME)
         .setEnclosingTypeDescriptor(this)
         .setOrigin(MethodOrigin.SYNTHETIC_CLASS_INITIALIZER)
-        .setOriginalJsInfo(isNative() ? JsInfo.RAW_OVERLAY : JsInfo.RAW)
+        .setOriginalJsInfo(isNative() || isJsFunctionInterface() ? JsInfo.RAW_OVERLAY : JsInfo.RAW)
         .setStatic(true)
         .build();
   }
 
-  /** Returns the instance initializer method descriptor for a particular type */
+  /** Returns the class initializer property as a field for a particular type. */
+  @Memoized
+  public FieldDescriptor getClinitFieldDescriptor() {
+    return FieldDescriptor.newBuilder()
+        .setEnclosingTypeDescriptor(this)
+        .setTypeDescriptor(TypeDescriptors.get().nativeFunction)
+        .setName(MethodDescriptor.CLINIT_METHOD_NAME)
+        .setOriginalJsInfo(isNative() || isJsFunctionInterface() ? JsInfo.RAW_OVERLAY : JsInfo.RAW)
+        .setStatic(true)
+        .build();
+  }
+
+  /** Returns the instance initializer method descriptor for a particular type. */
   @Memoized
   public MethodDescriptor getInitMethodDescriptor() {
     return MethodDescriptor.newBuilder()
@@ -399,7 +420,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
         .setEnclosingTypeDescriptor(getMetadataTypeDeclaration().toUnparameterizedTypeDescriptor())
         .setParameterTypeDescriptors(TypeDescriptors.getUnknownType())
         .setReturnTypeDescriptor(PrimitiveTypes.BOOLEAN)
-        .setOrigin(MethodOrigin.INSTANCE_OF_SUPPORT_METHOD)
+        .setOrigin(MethodOrigin.SYNTHETIC_INSTANCE_OF_SUPPORT_METHOD)
         .setStatic(true)
         .build();
   }
@@ -412,7 +433,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
         .setEnclosingTypeDescriptor(getMetadataTypeDeclaration().toUnparameterizedTypeDescriptor())
         .setParameterTypeDescriptors(TypeDescriptors.get().nativeFunction)
         .setReturnTypeDescriptor(PrimitiveTypes.VOID)
-        .setOrigin(MethodOrigin.INSTANCE_OF_SUPPORT_METHOD)
+        .setOrigin(MethodOrigin.SYNTHETIC_INSTANCE_OF_SUPPORT_METHOD)
         .setStatic(true)
         .build();
   }
@@ -424,7 +445,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
         .setName(isJsFunctionImplementation() ? "$is" : "$implements")
         .setEnclosingTypeDescriptor(this)
         .setTypeDescriptor(PrimitiveTypes.BOOLEAN)
-        .setOrigin(FieldOrigin.INSTANCE_OF_SUPPORT_FIELD)
+        .setOrigin(FieldOrigin.SYNTHETIC_INSTANCE_OF_SUPPORT_FIELD)
         .build();
   }
 
@@ -440,8 +461,24 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
         .setParameterTypeDescriptors(
             TypeDescriptors.getUnknownType(), TypeDescriptors.getUnknownType())
         .setReturnTypeDescriptor(PrimitiveTypes.VOID)
-        .setOrigin(MethodOrigin.INSTANCE_OF_SUPPORT_METHOD)
+        .setOrigin(MethodOrigin.SYNTHETIC_INSTANCE_OF_SUPPORT_METHOD)
         .setStatic(true)
+        .build();
+  }
+
+  /** Returns the FieldDescriptor corresponding to the enclosing class instance. */
+  public FieldDescriptor getFieldDescriptorForEnclosingInstance() {
+    return FieldDescriptor.newBuilder()
+        .setEnclosingTypeDescriptor(toUnparameterizedTypeDescriptor())
+        .setName("$outer_this")
+        .setTypeDescriptor(
+            getEnclosingTypeDescriptor()
+                // Consider the outer instance type to be nullable to be make the type consistent
+                // across all places where it is used (backing field and constructor parameters).
+                .toNullable())
+        .setFinal(true)
+        .setSynthetic(true)
+        .setOrigin(FieldOrigin.SYNTHETIC_OUTER_FIELD)
         .build();
   }
 
@@ -503,6 +540,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
    * there is a method with that signature.
    */
   @Nullable
+  @Override
   public MethodDescriptor getMethodDescriptor(String methodName, TypeDescriptor... parameters) {
     String targetSignature = MethodDescriptor.buildMethodSignature(methodName, parameters);
     return getMethodDescriptors().stream()
@@ -513,15 +551,17 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
   }
 
   /**
-   * Returns a method descriptor for a method declered in this type named {@code name}.
+   * Returns a method descriptor for a method declared in this type named {@code name}.
    *
-   * <p>Fails if not method with {@code name} is declared in the type or if there are multiple
-   * overloads declared in the type with the same {@code name}.
+   * <p>Returns {@code null} if no method with {@code name} is declared in the type. Fails if there
+   * are multiple overloads declared in the type with the same {@code name}.
    */
+  @Nullable
   public MethodDescriptor getMethodDescriptorByName(String name) {
     return getDeclaredMethodDescriptors().stream()
         .filter(m -> m.getName().equals(name))
-        .collect(onlyElement());
+        .collect(toOptional())
+        .orElse(null);
   }
 
   /** The list of all methods available on a given type. */
@@ -835,7 +875,8 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
     TypeDeclaration candidateDeclaration =
         candidateMethod.getEnclosingTypeDescriptor().getTypeDeclaration();
     TypeDeclaration currentDeclaration = method.getEnclosingTypeDescriptor().getTypeDeclaration();
-    return candidateDeclaration.getMaxInterfaceDepth() >= currentDeclaration.getMaxInterfaceDepth();
+    return candidateDeclaration.getTypeHierarchyDepth()
+        >= currentDeclaration.getTypeHierarchyDepth();
   }
 
   /** Returns true if the method needs a specializing bridge. */
@@ -882,7 +923,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
         .setTypeParameterTypeDescriptors(targetMethodDescriptor.getTypeParameterTypeDescriptors())
         .setOriginalJsInfo(bridgeMethodDescriptor.getJsInfo())
         .setEnclosingTypeDescriptor(this)
-        .setDeclarationDescriptor(null)
+        .setTypeArgumentTypeDescriptors(ImmutableList.of())
         .makeBridge(origin, bridgeMethodDescriptor, targetMethodDescriptor)
         .setFinal(isFinal)
         .build();
@@ -910,7 +951,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
         // which would be the right one that is consistent with the overridden method.
         parameterDescriptors.add(fromBridge);
       } else if (fromTarget.getTypeDescriptor() != fromBridgeDeclaration.getTypeDescriptor()
-          && AstUtils.isNonNativeJsEnum(fromTarget.getTypeDescriptor())) {
+          && AstUtils.needsJsEnumBoxingBridges(fromTarget.getTypeDescriptor())) {
         // Type was specialized to a non-native JsEnum, use the boxed type in the bridge
         // parameter.
         parameterDescriptors.add(
@@ -952,7 +993,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
       // Kotlin bridges to method that specializes the return to primitive.
       return bridgeReturnTypeDescriptor;
     }
-    if (AstUtils.isNonNativeJsEnum(targetReturnTypeDescriptor)
+    if (AstUtils.needsJsEnumBoxingBridges(targetReturnTypeDescriptor)
         && bridgeMethodDescriptor.getDeclarationDescriptor().getReturnTypeDescriptor()
             != targetReturnTypeDescriptor) {
       // Return type descriptor specialized to non native enum, expose it with the proper boxed
@@ -1205,6 +1246,11 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
   boolean hasReferenceTo(TypeVariable typeVariable, ImmutableSet<TypeVariable> seen) {
     return getTypeArgumentDescriptors().stream()
         .anyMatch(it -> it.hasReferenceTo(typeVariable, seen));
+  }
+
+  @Override
+  TypeDescriptor acceptInternal(Processor processor) {
+    return Visitor_DeclaredTypeDescriptor.visit(processor, this);
   }
 
   abstract Builder toBuilder();

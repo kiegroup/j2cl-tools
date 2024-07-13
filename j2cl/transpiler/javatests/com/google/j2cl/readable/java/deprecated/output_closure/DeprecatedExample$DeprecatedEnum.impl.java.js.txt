@@ -8,7 +8,6 @@ let $Arrays = goog.forwardDeclare('vmbootstrap.Arrays$impl');
 let $Enums = goog.forwardDeclare('vmbootstrap.Enums$impl');
 
 /**
- * @final
  * @extends {Enum<DeprecatedEnum>}
  * @deprecated
  */
@@ -40,7 +39,7 @@ class DeprecatedEnum extends Enum {
  /** @return {!Array<!DeprecatedEnum>} */
  static values() {
   DeprecatedEnum.$clinit();
-  return /**@type {!Array<DeprecatedEnum>}*/ ($Arrays.$init([DeprecatedEnum.A_VALUE], DeprecatedEnum));
+  return /**@type {!Array<DeprecatedEnum>}*/ ($Arrays.$stampType([DeprecatedEnum.A_VALUE], DeprecatedEnum));
  }
  /** @nodts */
  static $clinit() {

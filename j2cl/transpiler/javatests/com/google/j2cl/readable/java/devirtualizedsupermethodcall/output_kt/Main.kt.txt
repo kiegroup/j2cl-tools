@@ -9,6 +9,7 @@
  "UNNECESSARY_LATEINIT",
  "UNNECESSARY_NOT_NULL_ASSERTION",
  "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
  "UNUSED_PARAMETER",
  "UNUSED_VARIABLE",
  "USELESS_CAST",
@@ -28,26 +29,26 @@ import kotlin.Suppress
 import kotlin.experimental.ExperimentalObjCName
 import kotlin.native.ObjCName
 
-open class SubNumber: JavaNumber() {
- open override fun toInt(): Int {
+open class SubNumber internal constructor(): JavaNumber() {
+ override fun toInt(): Int {
   return 0
  }
 
- open override fun toLong(): Long {
+ override fun toLong(): Long {
   return 0.toLong()
  }
 
- open override fun toFloat(): Float {
+ override fun toFloat(): Float {
   return 0.0f
  }
 
- open override fun toDouble(): Double {
+ override fun toDouble(): Double {
   return 0.0
  }
 }
 
-open class FooCallsSuperObjectMethod {
- open override fun hashCode(): Int {
+open class FooCallsSuperObjectMethod internal constructor() {
+ override fun hashCode(): Int {
   return super.hashCode()
  }
 }

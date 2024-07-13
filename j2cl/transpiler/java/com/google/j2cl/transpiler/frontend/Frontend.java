@@ -41,7 +41,7 @@ public enum Frontend {
               /* useTargetPath= */ options.getGenerateKytheIndexingMetadata(),
               options.getForbiddenAnnotations());
       problems.abortIfHasErrors();
-      return CompilationUnitBuilder.build(compilationUnitsAndTypeBindings);
+      return CompilationUnitBuilder.build(compilationUnitsAndTypeBindings, parser);
     }
 
     @Override
@@ -75,7 +75,11 @@ public enum Frontend {
         Constructor<?> parserCtor =
             Iterables.getOnlyElement(Arrays.asList(kotlinParser.getDeclaredConstructors()));
         Object parserInstance =
-            parserCtor.newInstance(options.getClasspaths(), options.getKotlincOptions(), problems);
+            parserCtor.newInstance(
+                options.getClasspaths(),
+                options.getKotlincOptions(),
+                problems,
+                options.getTargetLabel());
         @SuppressWarnings("unchecked")
         List<CompilationUnit> compilationUnits =
             (List<CompilationUnit>)

@@ -38,8 +38,7 @@ final class RyuDouble {
   private static final int POW5_INV_QUARTER_BITCOUNT = 31;
   private static final int[][] POW5_INV_SPLIT = new int[NEG_TABLE_SIZE][4];
 
-  private static final int BUFFER_SIZE = 24;
-  private static final char[] BUFFER = new char[BUFFER_SIZE];
+  private static final char[] BUFFER = new char[24];
 
   static {
     BigInteger mask =
@@ -77,24 +76,24 @@ final class RyuDouble {
     }
   }
 
-  public static String doubleToString(AbstractStringBuilder sb, double value) {
+  public static String doubleToString(double value) {
     // Step 1: Decode the floating point number, and unify normalized and subnormal cases.
     // First, handle all the trivial cases.
     if (Double.isNaN(value)) {
-      return resultOrSideEffect(sb, "NaN");
+      return "NaN";
     }
     if (value == Double.POSITIVE_INFINITY) {
-      return resultOrSideEffect(sb, "Infinity");
+      return "Infinity";
     }
     if (value == Double.NEGATIVE_INFINITY) {
-      return resultOrSideEffect(sb, "-Infinity");
+      return "-Infinity";
     }
     long bits = Double.doubleToLongBits(value);
     if (bits == 0) {
-      return resultOrSideEffect(sb, "0.0");
+      return "0.0";
     }
     if (bits == 0x8000000000000000L) {
-      return resultOrSideEffect(sb, "-0.0");
+      return "-0.0";
     }
 
     // Otherwise extract the mantissa and exponent bits and run the full algorithm.
@@ -237,7 +236,7 @@ final class RyuDouble {
 
     // Step 5: Print the decimal representation.
     // We follow Double.toString semantics here.
-    char[] result = (String.STRINGREF_ENABLED || sb != null) ? BUFFER : new char[BUFFER_SIZE];
+    char[] result = BUFFER;
     int index = 0;
     if (sign) {
       result[index++] = '-';
@@ -313,11 +312,7 @@ final class RyuDouble {
         index += olength + 1;
       }
     }
-    if (sb == null) {
-      return new String(0, index, result);
-    }
-    sb.append0(result, 0, index);
-    return null;
+    return new String(result, 0, index);
   }
 
   private static int pow5bits(int e) {
@@ -464,13 +459,5 @@ final class RyuDouble {
                 >>> 21)
             + (bits13 << 10))
         >>> actualShift;
-  }
-
-  private static String resultOrSideEffect(AbstractStringBuilder sb, String s) {
-    if (sb != null) {
-      sb.append0(s);
-      return null;
-    }
-    return s;
   }
 }

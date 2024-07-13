@@ -15,8 +15,10 @@
  */
 package com.google.j2cl.jre.java.util;
 
+import static com.google.j2cl.jre.testing.TestUtils.isWasm;
 import static java.util.Arrays.asList;
 
+import com.google.j2cl.jre.testing.J2ktIncompatible;
 import com.google.j2cl.jre.testing.TestUtils;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -25,8 +27,11 @@ import java.util.ConcurrentModificationException;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /** Tests ArrayDeque class. */
+@NullMarked
 public class ArrayDequeTest extends TestCollection {
 
   public void testAdd() throws Exception {
@@ -107,6 +112,18 @@ public class ArrayDequeTest extends TestCollection {
 
   public void testConstructorFromCollection() {
     assertEquals(0, new ArrayDeque<>(new ArrayList<>()).size());
+
+    Collection<Object> collection = new ArrayList<>(asList(getFullNonNullElements()));
+    checkDequeSizeAndContent(new ArrayDeque<>(collection), getFullNonNullElements());
+  }
+
+  @J2ktIncompatible // Not nullable according to Jspecify
+  public void testConstructorFromCollection_null() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when NPE on dereference is supported
+      return;
+    }
+
     try {
       new ArrayDeque<>(null);
       fail();
@@ -119,9 +136,6 @@ public class ArrayDequeTest extends TestCollection {
       fail();
     } catch (NullPointerException expected) {
     }
-
-    Collection<Object> collection = new ArrayList<>(asList(getFullNonNullElements()));
-    checkDequeSizeAndContent(new ArrayDeque<>(collection), getFullNonNullElements());
   }
 
   public void testContains() {
@@ -884,7 +898,7 @@ public class ArrayDequeTest extends TestCollection {
 
   /** Null elements are prohibited in ArrayDeque. */
   @Override
-  protected Object[] getFullElements() {
+  protected @Nullable Object[] getFullElements() {
     return getFullNonNullElements();
   }
 

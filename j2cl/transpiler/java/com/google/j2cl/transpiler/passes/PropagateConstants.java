@@ -18,6 +18,7 @@ package com.google.j2cl.transpiler.passes;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.j2cl.transpiler.ast.AbstractRewriter;
+import com.google.j2cl.transpiler.ast.AstUtils;
 import com.google.j2cl.transpiler.ast.Expression;
 import com.google.j2cl.transpiler.ast.Field;
 import com.google.j2cl.transpiler.ast.FieldAccess;
@@ -26,12 +27,21 @@ import com.google.j2cl.transpiler.ast.Library;
 import com.google.j2cl.transpiler.ast.Literal;
 import com.google.j2cl.transpiler.ast.Node;
 import com.google.j2cl.transpiler.ast.StringLiteral;
-import com.google.j2cl.transpiler.ast.TypeLiteral;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-/** Propagates compile time constant fields. */
+/**
+ * Propagates constant fields.
+ *
+ * <p>This pass propagates fields that are either compile time constants or that are final static
+ * fields initialized to a string or class literal.
+ *
+ * <p>Some static final fields end up being initialized to string literal as a result of previous
+ * passes. E.g. System.getProperty calls get rewritten into literals and might become the
+ * initializers of a static final fields. In fact this is the approach that has the checks in
+ * InternalPreconditions removed in optimized builds at generation time.
+ */
 public class PropagateConstants extends LibraryNormalizationPass {
 
   @Override
@@ -71,7 +81,10 @@ public class PropagateConstants extends LibraryNormalizationPass {
         new AbstractRewriter() {
           @Override
           public Node rewriteFieldAccess(FieldAccess fieldAccess) {
-            FieldDescriptor target = fieldAccess.getTarget();
+            if (!shouldPropagateConstant(fieldAccess.getTarget())) {
+              return fieldAccess;
+            }
+            FieldDescriptor target = getConstantFieldDescriptor(fieldAccess);
             Expression literal = literalsByField.get(target.getDeclarationDescriptor());
             if (literal == null) {
               return fieldAccess;
@@ -84,14 +97,27 @@ public class PropagateConstants extends LibraryNormalizationPass {
         });
   }
 
-  private static boolean isCompileTimeConstant(Field field) {
+  /** Gets the relevant field descriptor for the specified {@link FieldAccess}. */
+  protected FieldDescriptor getConstantFieldDescriptor(FieldAccess fieldAccess) {
+    return fieldAccess.getTarget();
+  }
+
+  private boolean isCompileTimeConstant(Field field) {
+    if (!shouldPropagateConstant(field.getDescriptor())) {
+      return false;
+    }
     return field.isCompileTimeConstant()
         // Consider final static fields that are initialized to literals to be compile time
         // constants. These might be driven from TypeLiterals or System.getProperty calls and it
         // ensures removal of clinits in some of the JRE classes.
         || (field.getDescriptor().isFinal()
             && field.isStatic()
-            && (field.getInitializer() instanceof TypeLiteral
-                || field.getInitializer() instanceof StringLiteral));
+            && (field.getInitializer() instanceof StringLiteral));
+  }
+
+  protected boolean shouldPropagateConstant(FieldDescriptor fieldDescriptor) {
+    // Skip JsEnum constants, which must be handled separately.
+    return !(fieldDescriptor.isEnumConstant()
+        && AstUtils.isNonNativeJsEnum(fieldDescriptor.getEnclosingTypeDescriptor()));
   }
 }

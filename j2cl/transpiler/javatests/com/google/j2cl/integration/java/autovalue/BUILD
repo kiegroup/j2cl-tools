@@ -1,8 +1,8 @@
+load("//build_defs:rules.bzl", "j2wasm_library")
 load(
     "//transpiler/javatests/com/google/j2cl/integration:integration_test.bzl",
     "integration_test",
 )
-load("//build_defs:rules.bzl", "j2wasm_library")
 
 package(
     default_applicable_licenses = ["//:j2cl_license"],
@@ -19,7 +19,7 @@ j2wasm_library(
     deps = [
         "//jre/java:javaemul_internal_annotations-j2wasm",
         "//third_party:auto_value-j2wasm",
-        "//third_party:gwt-jsinterop-annotations-j2wasm",
+        "//third_party:jsinterop-annotations-j2wasm",
         "//transpiler/javatests/com/google/j2cl/integration/testing:testing-j2wasm",
     ],
 )
@@ -29,7 +29,6 @@ integration_test(
     srcs = glob(["*.java"]),
     closure_defines = {"jre.classMetadata": "'STRIPPED'"},
     enable_kt = False,
-    optimize_autovalue = True,
     deps = [
         "//third_party:auto_value",
     ],

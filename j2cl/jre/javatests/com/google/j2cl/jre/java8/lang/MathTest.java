@@ -308,10 +308,8 @@ public class MathTest extends GWTTestCase {
     candidates.add(1);
     candidates.add(Integer.MAX_VALUE / 2);
     candidates.add(Integer.MAX_VALUE / 2 - 1);
-    candidates.add(Integer.MAX_VALUE / 2 + 1);
     candidates.add(Integer.MIN_VALUE / 2);
     candidates.add(Integer.MIN_VALUE / 2 - 1);
-    candidates.add(Integer.MIN_VALUE / 2 + 1);
     candidates.add(Integer.MAX_VALUE - 1);
     candidates.add(Integer.MAX_VALUE);
     candidates.add(Integer.MIN_VALUE + 1);
@@ -328,10 +326,8 @@ public class MathTest extends GWTTestCase {
 
     candidates.add(Long.MAX_VALUE / 2);
     candidates.add(Long.MAX_VALUE / 2 - 1);
-    candidates.add(Long.MAX_VALUE / 2 + 1);
     candidates.add(Long.MIN_VALUE / 2);
     candidates.add(Long.MIN_VALUE / 2 - 1);
-    candidates.add(Long.MIN_VALUE / 2 + 1);
     candidates.add(Integer.MAX_VALUE + 1L);
     candidates.add(Long.MAX_VALUE - 1L);
     candidates.add(Long.MAX_VALUE);

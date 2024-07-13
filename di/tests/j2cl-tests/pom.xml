@@ -6,7 +6,7 @@
 
     <groupId>org.kie.j2cl.tools.di.tests</groupId>
     <artifactId>j2cl-tests</artifactId>
-    <version>0.6</version>
+    <version>0.7</version>
     <packaging>jar</packaging>
 
     <name>J2CL compatible Jakarta CDI-like dependency injection framework J2CL tests</name>
@@ -60,8 +60,8 @@
         <maven.javadoc.plugin.version>3.2.0</maven.javadoc.plugin.version>
         <maven.surefire.plugin.version>3.0.0-M5</maven.surefire.plugin.version>
         <maven.flatten.plugin>1.2.2</maven.flatten.plugin>
-        <maven.j2cl.plugin>0.23.0</maven.j2cl.plugin>
-        <j2cl.version>0.11.0-9336533b6</j2cl.version>
+        <maven.j2cl.plugin>0.23.1</maven.j2cl.plugin>
+        <j2cl.version>v20240622-2</j2cl.version>
         <junit.version>4.13.1</junit.version>
     </properties>
 
@@ -78,19 +78,19 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>junit-annotations</artifactId>
             <version>${j2cl.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>gwttestcase-emul</artifactId>
             <version>${j2cl.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>junit-emul</artifactId>
             <version>${j2cl.version}</version>
             <scope>test</scope>

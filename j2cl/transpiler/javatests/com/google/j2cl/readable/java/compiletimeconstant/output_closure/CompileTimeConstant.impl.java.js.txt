@@ -53,6 +53,15 @@ class CompileTimeConstant extends j_l_Object {
   let m = CompileTimeConstant.f_M__compiletimeconstant_CompileTimeConstant;
   let n = CompileTimeConstant.f_N__compiletimeconstant_CompileTimeConstant;
   let c = CompileTimeConstant.$static_classLiteral__compiletimeconstant_CompileTimeConstant;
+  let minByte = - 128 | 0;
+  let minShort = - 32768 | 0;
+  let minInt = -2147483648;
+  let minLong = $Long.fromBits(0, -2147483648) /* -9223372036854775808 */;
+  let intUnaryMinusOverflow = - -2147483648 | 0;
+  let intPlusOverflow = 2147483647 + 1 | 0;
+  let intMinusOverflow = -2147483648 - 1 | 0;
+  let intTimesOverflow = Math.imul(2147483647, 2);
+  let intShlOverflow = 2147483647 << 2;
  }
  /** @nodts @return {*} */
  static get f_OBJ__compiletimeconstant_CompileTimeConstant() {
@@ -89,6 +98,8 @@ class CompileTimeConstant extends j_l_Object {
 /**@private {*} @nodts*/
 CompileTimeConstant.$static_OBJ__compiletimeconstant_CompileTimeConstant;
 /**@const {number} @nodts*/
+CompileTimeConstant.f_DEFAULT__compiletimeconstant_CompileTimeConstant = 0;
+/**@const {number} @nodts*/
 CompileTimeConstant.f_A__compiletimeconstant_CompileTimeConstant = 10;
 /**@const {number} @nodts*/
 CompileTimeConstant.f_B__compiletimeconstant_CompileTimeConstant = 20;
@@ -120,6 +131,10 @@ CompileTimeConstant.f_I__compiletimeconstant_CompileTimeConstant = true;
 CompileTimeConstant.f_MIN_BYTE__compiletimeconstant_CompileTimeConstant = -128;
 /**@const {number} @nodts*/
 CompileTimeConstant.f_MIN_SHORT__compiletimeconstant_CompileTimeConstant = -32768;
+/**@const {number} @nodts*/
+CompileTimeConstant.f_MIN_INT__compiletimeconstant_CompileTimeConstant = -2147483648;
+/**@const {!$Long} @nodts*/
+CompileTimeConstant.f_MIN_LONG__compiletimeconstant_CompileTimeConstant = $Long.fromBits(0, -2147483648) /* -9223372036854775808 */;
 /**@const {number} @nodts*/
 CompileTimeConstant.f_MIN_BYTE_WITH_CAST__compiletimeconstant_CompileTimeConstant = -128;
 /**@const {number} @nodts*/

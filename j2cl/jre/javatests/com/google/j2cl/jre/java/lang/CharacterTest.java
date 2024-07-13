@@ -24,20 +24,20 @@ import java.util.Arrays;
 public class CharacterTest extends GWTTestCase {
 
   private static class CharSequenceAdapter implements CharSequence {
-    private char[] charArray;
-    private int start;
-    private int end;
+    private final char[] charArray;
+    private final int start;
+    private final int end;
 
     public CharSequenceAdapter(char[] charArray) {
       this(charArray, 0, charArray.length);
     }
-    
+
     public CharSequenceAdapter(char[] charArray, int start, int end) {
       this.charArray = charArray;
       this.start = start;
       this.end = end;
     }
-    
+
     @Override
     public char charAt(int index) {
       return charArray[index + start];
@@ -49,18 +49,16 @@ public class CharacterTest extends GWTTestCase {
     }
 
     @Override
-    public java.lang.CharSequence subSequence(int start, int end) {
-      return new CharSequenceAdapter(charArray, this.start + start,
-          this.start + end);
+    public CharSequence subSequence(int start, int end) {
+      return new CharSequenceAdapter(charArray, this.start + start, this.start + end);
     }
   }
 
   /**
-   * Helper class which applies some arbitrary char mutation function
-   * to a string and returns it.
+   * Helper class which applies some arbitrary char mutation function to a string and returns it.
    */
-  public abstract class Changer {
-    String original;
+  private abstract static class Changer {
+    final String original;
 
     public Changer(String o) {
       original = o;
@@ -69,19 +67,19 @@ public class CharacterTest extends GWTTestCase {
     public abstract char change(char c);
 
     public String changed() {
-      StringBuffer buf = new StringBuffer();
+      StringBuilder buf = new StringBuilder();
       for (int i = 0; i < original.length(); i++) {
         buf.append(change(original.charAt(i)));
       }
       return buf.toString();
     }
   }
+
   /**
-   * Helper class which collects the set of characters which pass some
-   * arbitrary boolean function. 
+   * Helper class which collects the set of characters which pass some arbitrary boolean function.
    */
-  public abstract class Judge {
-    String original;
+  private abstract static class Judge {
+    final String original;
 
     public Judge(String o) {
       original = o;
@@ -100,7 +98,7 @@ public class CharacterTest extends GWTTestCase {
     public abstract boolean pass(char c);
   }
 
-  class LowerCaseJudge extends Judge {
+  private static class LowerCaseJudge extends Judge {
     public LowerCaseJudge(String s) {
       super(s);
     }
@@ -111,7 +109,7 @@ public class CharacterTest extends GWTTestCase {
     }
   }
 
-  class UpperCaseJudge extends Judge {
+  private static class UpperCaseJudge extends Judge {
     public UpperCaseJudge(String s) {
       super(s);
     }
@@ -122,57 +120,62 @@ public class CharacterTest extends GWTTestCase {
     }
   }
 
-  public static String allChars;
-
-  public static final int NUM_CHARS_HANDLED = 127;
+  private static final int NUM_CHARS_HANDLED = 127;
+  private static final String ALL_CHARS;
 
   static {
-    StringBuffer b = new StringBuffer();
+    StringBuilder b = new StringBuilder();
     for (char c = 0; c < NUM_CHARS_HANDLED; c++) {
       b.append(c);
     }
-    allChars = b.toString();
+    ALL_CHARS = b.toString();
   }
 
-  Judge digitJudge = new Judge(allChars) {
-    @Override
-    public boolean pass(char c) {
-      return Character.isDigit(c);
-    }
-  };
-  Judge letterJudge = new Judge(allChars) {
-    @Override
-    public boolean pass(char c) {
-      return Character.isLetter(c);
-    }
-  };
-  Judge letterOrDigitJudge = new Judge(allChars) {
-    @Override
-    public boolean pass(char c) {
-      return Character.isLetterOrDigit(c);
-    }
-  };
-  Changer lowerCaseChanger = new Changer(allChars) {
-    @Override
-    public char change(char c) {
-      return Character.toLowerCase(c);
-    }
-  };
-  Judge lowerCaseJudge = new LowerCaseJudge(allChars);
-  Judge spaceJudge = new Judge(allChars) {
-    @Override
-    @SuppressWarnings("deprecation") // Character.isSpace()
-    public boolean pass(char c) {
-      return Character.isSpace(c); // suppress deprecation
-    }
-  };
-  Changer upperCaseChanger = new Changer(allChars) {
-    @Override
-    public char change(char c) {
-      return Character.toUpperCase(c);
-    }
-  };
-  Judge upperCaseJudge = new UpperCaseJudge(allChars);
+  private static final Judge digitJudge =
+      new Judge(ALL_CHARS) {
+        @Override
+        public boolean pass(char c) {
+          return Character.isDigit(c);
+        }
+      };
+  private static final Judge letterJudge =
+      new Judge(ALL_CHARS) {
+        @Override
+        public boolean pass(char c) {
+          return Character.isLetter(c);
+        }
+      };
+  private static final Judge letterOrDigitJudge =
+      new Judge(ALL_CHARS) {
+        @Override
+        public boolean pass(char c) {
+          return Character.isLetterOrDigit(c);
+        }
+      };
+  private static final Changer lowerCaseChanger =
+      new Changer(ALL_CHARS) {
+        @Override
+        public char change(char c) {
+          return Character.toLowerCase(c);
+        }
+      };
+  private static final Judge lowerCaseJudge = new LowerCaseJudge(ALL_CHARS);
+  private static final Judge spaceJudge =
+      new Judge(ALL_CHARS) {
+        @Override
+        @SuppressWarnings("deprecation") // Character.isSpace()
+        public boolean pass(char c) {
+          return Character.isSpace(c); // suppress deprecation
+        }
+      };
+  private static final Changer upperCaseChanger =
+      new Changer(ALL_CHARS) {
+        @Override
+        public char change(char c) {
+          return Character.toUpperCase(c);
+        }
+      };
+  private static final Judge upperCaseJudge = new UpperCaseJudge(ALL_CHARS);
 
   @Override
   public String getModuleName() {
@@ -184,7 +187,7 @@ public class CharacterTest extends GWTTestCase {
   }
 
   public void testCodePoint() {
-    assertEquals(1, Character.charCount(65));
+    assertEquals("65 is a single character", 1, Character.charCount(65));
     assertEquals(2, Character.charCount(Character.MIN_SUPPLEMENTARY_CODE_POINT));
     char[] testPlain = new char[] { 'C', 'A', 'T' };
     char[] testUnicode = new char[] { 'C', '\uD801', '\uDF00', 'T' };
@@ -206,16 +209,16 @@ public class CharacterTest extends GWTTestCase {
         Character.codePointBefore(unicodeSequence, 3));
     assertEquals("codePointBefore fails on second char of surrogate pair",
         0xDF00, Character.codePointBefore(testUnicode, 3, 2));
-    assertEquals("codePointCount(plain): ", 3,
-        Character.codePointCount(testPlain, 0, 3));
-    assertEquals("codePointCount(plain): ", 3,
-        Character.codePointCount(plainSequence, 0, 3));
+    assertEquals("codePointCount(testPlain): ", 3, Character.codePointCount(testPlain, 0, 3));
+    assertEquals(
+        "codePointCount(plainSequence): ", 3, Character.codePointCount(plainSequence, 0, 3));
     assertEquals("codePointCount(unicode): ", 3,
         Character.codePointCount(testUnicode, 0, 4));
     assertEquals("codePointCount(unicode): ", 3,
         Character.codePointCount(unicodeSequence, 0, 4));
-    assertEquals(1, Character.codePointCount(testPlain, 1, 1));
-    assertEquals(1, Character.codePointCount(plainSequence, 1, 2));
+    assertEquals("codePointCount(testPlain): ", 1, Character.codePointCount(testPlain, 1, 1));
+    assertEquals(
+        "codePoinntCount(plainSequence): ", 1, Character.codePointCount(plainSequence, 1, 2));
     assertEquals(1, Character.codePointCount(testUnicode, 1, 2));
     assertEquals(1, Character.codePointCount(unicodeSequence, 1, 3));
     assertEquals(2, Character.codePointCount(testUnicode, 2, 2));
@@ -230,8 +233,14 @@ public class CharacterTest extends GWTTestCase {
         Character.offsetByCodePoints(testUnicode, 0, 4, 2, 1));
     assertEquals("offsetByCodePoints(2,1): ", 3,
         Character.offsetByCodePoints(unicodeSequence, 2, 1));
-    assertEquals(4, Character.offsetByCodePoints(testUnicode, 0, 4, 3, 1));
-    assertEquals(4, Character.offsetByCodePoints(unicodeSequence, 3, 1));
+    assertEquals(
+        "offsetByCodePoints(testUnicode, 0, 4, 3, 1)",
+        4,
+        Character.offsetByCodePoints(testUnicode, 0, 4, 3, 1));
+    assertEquals(
+        "offsetByCodePoints(unicodeSequence, 3, 1)",
+        4,
+        Character.offsetByCodePoints(unicodeSequence, 3, 1));
     assertEquals(1, Character.offsetByCodePoints(testUnicode, 0, 4, 2, -1));
     assertEquals(1, Character.offsetByCodePoints(unicodeSequence, 2, -1));
     assertEquals(1, Character.offsetByCodePoints(testUnicode, 0, 4, 3, -1));
@@ -268,7 +277,7 @@ public class CharacterTest extends GWTTestCase {
   public void testDigit() {
     assertEquals("wrong number of digits", 10, digitJudge.allPass().length());
   }
-  
+
   public void testSurrogates() {
     assertFalse(Character.isHighSurrogate('\uDF46'));
     assertTrue(Character.isLowSurrogate('\uDF46'));
@@ -286,9 +295,13 @@ public class CharacterTest extends GWTTestCase {
     char[] chars = Character.toChars(0x10346);
     assertEquals(0xD800, chars[0]);
     assertEquals(0xDF46, chars[1]);
+    assertEquals(0xD800, Character.highSurrogate(0x10346));
+    assertEquals(0xDF46, Character.lowSurrogate(0x10346));
     assertEquals(2, Character.toChars(67328, chars, 0));
     assertEquals(0xD801, chars[0]);
     assertEquals(0xDF00, chars[1]);
+    assertEquals(0xD801, Character.highSurrogate(67328));
+    assertEquals(0xDF00, Character.lowSurrogate(67328));
     assertEquals(1, Character.toChars(65, chars, 0));
     assertEquals('A', chars[0]);
     assertTrue(Character.isSupplementaryCodePoint(0x10346));
@@ -297,6 +310,9 @@ public class CharacterTest extends GWTTestCase {
     assertTrue(Character.isValidCodePoint(65));
     assertFalse(Character.isValidCodePoint(0x1FFFFFFF));
     assertEquals(0x10346, Character.toCodePoint('\uD800', '\uDF46'));
+    assertEquals(
+        0x10346,
+        Character.toCodePoint(Character.highSurrogate(0x10346), Character.lowSurrogate(0x10346)));
   }
 
   public void testLetter() {

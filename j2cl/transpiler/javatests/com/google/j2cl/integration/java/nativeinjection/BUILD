@@ -14,9 +14,12 @@ j2cl_library(
     srcs = glob([
         "super/**/*.java",
         "super/**/*.native.js",
+        "super-j2cl/**/*.java",
+        "super-j2cl/**/*.native.js",
     ]),
     generate_j2kt_jvm_library = False,
     generate_j2kt_native_library = False,
+    deps = ["//third_party:jsinterop-annotations-j2cl"],
 )
 
 integration_test(
@@ -24,6 +27,7 @@ integration_test(
     srcs = glob([
         "*.java",
         "*.js",
+        "native_srcs/*.native.js",
     ]),
     # Contains JsInterop features which are only applicable for JS output.
     enable_jvm_test = False,

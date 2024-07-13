@@ -18,7 +18,6 @@ package java.lang;
 
 import javaemul.internal.JsUtils;
 import javaemul.internal.Platform;
-import jsinterop.annotations.JsMethod;
 
 /**
  * Wraps a primitive <code>double</code> as an object.
@@ -52,7 +51,8 @@ public final class Double extends Number implements Comparable<Double> {
     return doubleToRawLongBits(value);
   }
 
-  public static long doubleToRawLongBits(double value) {
+  // This method is kept private since it returns canonical NaN in Firefox.
+  private static long doubleToRawLongBits(double value) {
     return Platform.doubleToRawLongBits(value);
   }
 
@@ -182,10 +182,7 @@ public final class Double extends Number implements Comparable<Double> {
     return toString(doubleValue());
   }
 
-  // CHECKSTYLE_OFF: Utility Methods for unboxed Double.
-  @JsMethod
-  protected static boolean $isInstance(Object instance) {
+  static boolean $isInstance(Object instance) {
     return "number".equals(JsUtils.typeOf(instance));
   }
-  //CHECKSTYLE_ON: End utility methods
 }

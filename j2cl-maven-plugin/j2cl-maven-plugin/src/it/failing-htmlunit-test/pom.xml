@@ -9,26 +9,26 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>junit-annotations</artifactId>
             <version>@j2cl.version@</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>junit-emul</artifactId>
             <version>@j2cl.version@</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>junit-emul</artifactId>
             <version>@j2cl.version@</version>
             <classifier>sources</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.vertispan.j2cl</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>gwttestcase-emul</artifactId>
             <version>@j2cl.version@</version>
             <scope>test</scope>
@@ -71,8 +71,8 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.6.1</version>
                     <configuration>
-                        <source>1.8</source>
-                        <target>1.8</target>
+                        <source>11</source>
+                        <target>11</target>
                     </configuration>
                 </plugin>
             </plugins>

@@ -32,7 +32,7 @@ import org.kie.j2cl.tools.processors.generator.TranslationGenerator;
 import org.kie.j2cl.tools.processors.generator.resources.GWT3ResourceGenerator;
 
 @AutoService(Processor.class)
-@SupportedSourceVersion(SourceVersion.RELEASE_8)
+@SupportedSourceVersion(SourceVersion.RELEASE_11)
 @SupportedAnnotationTypes({
   "org.kie.j2cl.tools.processors.annotations.GWT3EntryPoint",
   "org.kie.j2cl.tools.processors.annotations.ES6Module",

@@ -1,8 +1,10 @@
 """Common utilities for creating J2CL targets and providers."""
 
-load(":provider.bzl", "J2clInfo")
-load(":j2cl_js_common.bzl", "J2CL_JS_TOOLCHAIN_ATTRS", "create_js_lib_struct", "j2cl_js_provider")
+load("@rules_java//java:defs.bzl", "java_common")
+
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
+load(":j2cl_js_common.bzl", "J2CL_JS_TOOLCHAIN_ATTRS", "j2cl_js_provider")
+load(":provider.bzl", "J2clInfo")
 
 def _get_jsinfo_provider(j2cl_info):
     return j2cl_info._private_.js_info
@@ -11,8 +13,6 @@ def _compile(
         ctx,
         srcs = [],
         kt_common_srcs = [],
-        kt_friend_jars = depset(),
-        kt_exported_friend_jars = depset(),
         deps = [],
         exports = [],
         plugins = [],
@@ -24,7 +24,7 @@ def _compile(
         internal_transpiler_flags = {},
         artifact_suffix = ""):
     name = ctx.label.name + artifact_suffix
-
+    java_toolchain = _get_java_toolchain(ctx)
     jvm_srcs, js_srcs = split_srcs(srcs)
 
     has_srcs_to_transpile = (jvm_srcs or kt_common_srcs)
@@ -50,6 +50,7 @@ def _compile(
         jvm_provider = _java_compile(
             ctx,
             name,
+            java_toolchain,
             jvm_srcs,
             jvm_deps,
             jvm_exports,
@@ -62,6 +63,7 @@ def _compile(
         jvm_provider = _kt_compile(
             ctx,
             name,
+            java_toolchain,
             jvm_srcs,
             kt_common_srcs,
             jvm_deps,
@@ -71,7 +73,6 @@ def _compile(
             output_jar,
             javac_opts,
             kotlincopts = kotlincopts,
-            friend_jars = kt_friend_jars,
         )
 
     if has_srcs_to_transpile:
@@ -87,7 +88,6 @@ def _compile(
             internal_transpiler_flags,
             kt_common_srcs,
             kotlincopts,
-            kt_friend_jars,
         )
         library_info = [output_library_info]
     else:
@@ -98,19 +98,38 @@ def _compile(
     # This case happens when j2cl_library exports another j2cl_library.
     js_provider_srcs = [output_js] if has_srcs_to_transpile else []
 
+    # TODO(b/284654149): Use the same provider for Closure and Wasm once the modular pipeline
+    # graduates from being a prototype.
+    if backend == "CLOSURE":
+        js_info = j2cl_js_provider(
+            ctx,
+            js_provider_srcs,
+            js_deps,
+            js_exports,
+            artifact_suffix,
+        )
+    else:
+        # The reason to have special case here and create a different provider for Wasm is to avoid
+        # running the modular transpilation action when building the monolithic j2wasm_application.
+        # This provider avoid triggering the transpiler by avoiding using js_provider_sources which
+        # are part of the output of the tranpilation. Instead this js provider will use the
+        # js that are inputs to the rule.
+        js_info = j2cl_js_provider(
+            ctx = ctx,
+            srcs = js_srcs,
+            # These are exports, because they will need to be referenced by the j2wasm_application
+            # eventually downstream, since the j2wasm application is built using the transitive
+            # sources and will need the transitive dependencies exposed.
+            exports = js_deps + js_exports,
+            artifact_suffix = artifact_suffix,
+        )
+
     return J2clInfo(
         _private_ = struct(
             java_info = jvm_provider,
             library_info = library_info,
             output_js = output_js,
-            js_info = j2cl_js_provider(
-                ctx,
-                js_provider_srcs,
-                js_deps,
-                js_exports,
-                artifact_suffix,
-            ),
-            kt_exported_friend_jars = kt_exported_friend_jars,
+            js_info = js_info,
         ),
         _is_j2cl_provider = 1,
     )
@@ -143,6 +162,7 @@ def split_deps(deps):
 def _java_compile(
         ctx,
         name,
+        java_toolchain,
         srcs = [],
         deps = [],
         exports = [],
@@ -169,7 +189,7 @@ def _java_compile(
             plugins = plugins,
             exported_plugins = exported_plugins,
             output = indexed_output_jar,
-            java_toolchain = _get_java_toolchain(ctx),
+            java_toolchain = java_toolchain,
             javac_opts = javac_opts,
         )
 
@@ -181,13 +201,14 @@ def _java_compile(
         plugins = plugins,
         exported_plugins = exported_plugins,
         output = output_jar,
-        java_toolchain = _get_java_toolchain(ctx),
+        java_toolchain = java_toolchain,
         javac_opts = javac_opts,
     )
 
 def _kt_compile(
         ctx,
         name,
+        java_toolchain,
         srcs = [],
         common_srcs = [],
         deps = [],
@@ -196,12 +217,11 @@ def _kt_compile(
         exported_plugins = [],
         output_jar = None,
         javac_opts = [],
-        kotlincopts = [],
-        friend_jars = depset()):
+        kotlincopts = []):
     fail("Kotlin frontend is disabled")
 
 def _get_java_toolchain(ctx):
-    return ctx.attr._java_toolchain[java_common.JavaToolchainInfo]
+    return ctx.attr._j2cl_java_toolchain[java_common.JavaToolchainInfo]
 
 def _strip_incompatible_annotation(ctx, name, java_srcs, mnemonic, strip_annotation):
     # Paths are matched by Kythe to identify generated J2CL sources.
@@ -236,8 +256,7 @@ def _j2cl_transpile(
         backend,
         internal_transpiler_flags,
         kt_common_srcs,
-        kotlincopts,
-        kt_friend_jars):
+        kotlincopts):
     """ Takes Java provider and translates it into Closure style JS in a zip bundle."""
 
     # Using source_jars from the jvm compilation since that includes APT generated src.
@@ -268,6 +287,10 @@ def _j2cl_transpile(
     args.use_param_file("@%s", use_always = True)
     args.set_param_file_format("multiline")
     args.add_joined("-classpath", classpath, join_with = ctx.configuration.host_path_separator)
+
+    # Explicitly format this as Bazel target labels can start with a @, which
+    # can be misinterpreted as a flag file to load.
+    args.add(ctx.label, format = "-targetLabel=%s")
     args.add("-output", output_dir.path)
     args.add("-libraryinfooutput", library_info_output)
     args.add("-experimentalJavaFrontend", ctx.attr._java_frontend[BuildSettingInfo].value)
@@ -282,7 +305,7 @@ def _j2cl_transpile(
     ):
         args.add("-generatekytheindexingmetadata")
     args.add_all(kotlincopts, format_each = "-kotlincOptions=%s")
-    args.add_joined(kt_friend_jars, format_joined = "-kotlincOptions=-Xfriend-paths=%s", join_with = ",")
+    args.add("-forbiddenAnnotation", "GwtIncompatible")
     args.add_all(srcs)
 
     #  TODO(b/217287994): Remove the ability to do transpiler override.
@@ -296,21 +319,24 @@ def _j2cl_transpile(
         # kt_common_srcs are not read by the transpiler as they are already
         # included in the srcjars of srcs. However, params.add_all requires them
         # to be inputs in order to be properly expanded out into params.
-        inputs = depset(srcs + kt_common_srcs, transitive = [classpath, kt_friend_jars]),
+        inputs = depset(srcs + kt_common_srcs, transitive = [classpath]),
         outputs = [output_dir, library_info_output],
         executable = j2cl_transpiler_override or ctx.executable._j2cl_transpiler,
         arguments = [args],
         env = dict(LANG = "en_US.UTF-8"),
         execution_requirements = {"supports-workers": "1"},
-        mnemonic = "J2cl",
+        mnemonic = "J2cl" if backend == "CLOSURE" else "J2wasm",
     )
+
+def _create_js_lib_struct(j2cl_info, extra_providers = []):
+    return [j2cl_info, j2cl_info._private_.js_info] + extra_providers
 
 DEFAULT_J2CL_JAVAC_OPTS = [
     # Avoid log site injection which introduces calls to unsupported APIs.
     "-XDinjectLogSites=false",
     # Avoid optimized JVM String concat which introduces calls to unsupported APIs.
     "-XDstringConcat=inline",
-    # Explicitly enable Java 11. Neeeded for open-source
+    # Explicitly enable Java 11. Needed for open-source
     "-source 11",
     "-target 11",
 ]
@@ -324,10 +350,15 @@ DEFAULT_J2CL_KOTLINCOPTS = [
     # some instances, ex. a lambda within an inline member. See: b/263391416
     # TODO(b/264661698): Reduce to just serialization of inline functions.
     "-Xserialize-ir=all",
+    # Have kotlinc's IR lowering passes generate objects for SAM implementations.
+    # J2CL lowering passes cannot handle invokedynamic-based representations.
+    "-Xsam-conversions=class",
+    # TODO(b/317551802): Remove this once the language version is updated.
+    "-language-version=1.9",
 ]
 
 J2CL_JAVA_TOOLCHAIN_ATTRS = {
-    "_java_toolchain": attr.label(
+    "_j2cl_java_toolchain": attr.label(
         default = Label("//build_defs/internal_do_not_use:j2cl_java_toolchain"),
     ),
     "_j2cl_stripper": attr.label(
@@ -358,7 +389,7 @@ J2CL_TOOLCHAIN_ATTRS.update(J2CL_JS_TOOLCHAIN_ATTRS)
 
 j2cl_common = struct(
     compile = _compile,
-    create_js_lib_struct = create_js_lib_struct,
+    create_js_lib_struct = _create_js_lib_struct,
     get_jsinfo_provider = _get_jsinfo_provider,
     java_compile = _java_compile,
 )

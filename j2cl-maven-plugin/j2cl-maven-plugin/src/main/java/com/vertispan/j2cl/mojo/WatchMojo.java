@@ -1,20 +1,18 @@
 /*
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ * Copyright © 2021 j2cl-maven-plugin authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package com.vertispan.j2cl.mojo;
 
 import com.vertispan.j2cl.build.BuildService;
@@ -48,6 +46,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
@@ -153,6 +153,12 @@ public class WatchMojo extends AbstractBuildMojo {
     @Parameter(defaultValue = "SORT_ONLY")
     protected String dependencyMode;
 
+    /**
+     * Arguments to pass to annotation processors, in the form of key-value pairs.
+     */
+    @Parameter
+    protected Map<String, String> annotationProcessorsArgs = new TreeMap<>();
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         PluginDescriptor pluginDescriptor = (PluginDescriptor) getPluginContext().get("pluginDescriptor");
@@ -183,7 +189,7 @@ public class WatchMojo extends AbstractBuildMojo {
                 getFileWithMavenCoords(internalAnnotationsJar),
                 getFileWithMavenCoords(jsinteropAnnotationsJar),
                 getFileWithMavenCoords("com.vertispan.jsinterop:base:" + Versions.VERTISPAN_JSINTEROP_BASE_VERSION),//TODO stop hardcoding this when goog releases a "base" which actually works on both platforms
-                getFileWithMavenCoords("com.vertispan.j2cl:junit-processor:" + Versions.J2CL_VERSION),
+                getFileWithMavenCoords("org.kie.j2cl.tools:junit-processor:" + Versions.J2CL_VERSION),
                 getFileWithMavenCoords(junitAnnotations)
         );
 

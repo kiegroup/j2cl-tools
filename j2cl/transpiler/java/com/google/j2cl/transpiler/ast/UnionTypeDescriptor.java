@@ -23,6 +23,8 @@ import com.google.auto.value.extension.memoized.Memoized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.j2cl.common.ThreadLocalInterner;
+import com.google.j2cl.common.visitor.Processor;
+import com.google.j2cl.common.visitor.Visitable;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -45,6 +47,7 @@ import javax.annotation.Nullable;
  * </code>
  * </pre>
  */
+@Visitable
 @AutoValue
 public abstract class UnionTypeDescriptor extends TypeDescriptor {
 
@@ -103,6 +106,15 @@ public abstract class UnionTypeDescriptor extends TypeDescriptor {
         .map(TypeDescriptor::getAllTypeVariables)
         .flatMap(Set::stream)
         .collect(Collectors.toSet());
+  }
+
+  @Override
+  @Nullable
+  public MethodDescriptor getMethodDescriptor(String methodName, TypeDescriptor... parameters) {
+    // There might be different methods in the different components of the union with/ different
+    // parameterizations, so this method should return one with a parameterization that
+    // consistent with all components. For this reason the method is not supported.
+    throw new UnsupportedOperationException("getMethodDescriptor is unsupported in union types.");
   }
 
   @Override
@@ -197,6 +209,11 @@ public abstract class UnionTypeDescriptor extends TypeDescriptor {
   @Override
   boolean hasReferenceTo(TypeVariable typeVariable, ImmutableSet<TypeVariable> seen) {
     return getUnionTypeDescriptors().stream().anyMatch(it -> it.hasReferenceTo(typeVariable, seen));
+  }
+
+  @Override
+  TypeDescriptor acceptInternal(Processor processor) {
+    return Visitor_UnionTypeDescriptor.visit(processor, this);
   }
 
   public static Builder newBuilder() {

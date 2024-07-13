@@ -20,13 +20,10 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.MoreCollectors.onlyElement;
 import static java.util.Arrays.stream;
-import static java.util.Map.Entry.comparingByKey;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Iterables;
 import com.google.j2cl.common.FilePosition;
 import com.google.j2cl.common.SourcePosition;
@@ -96,17 +93,16 @@ import com.google.j2cl.transpiler.ast.VariableDeclarationExpression;
 import com.google.j2cl.transpiler.ast.VariableDeclarationFragment;
 import com.google.j2cl.transpiler.ast.WhileStatement;
 import com.google.j2cl.transpiler.frontend.common.AbstractCompilationUnitBuilder;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import javax.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
-import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.ArrayType;
@@ -117,7 +113,6 @@ import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.ExpressionMethodReference;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.IAnnotationBinding;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -126,6 +121,7 @@ import org.eclipse.jdt.core.dom.Initializer;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
@@ -136,32 +132,28 @@ import org.eclipse.jdt.core.dom.VariableDeclaration;
 /** Creates a J2CL Java AST from the AST provided by JDT. */
 public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
 
-  private final JdtEnvironment environment = new JdtEnvironment();
+  private final JdtEnvironment environment;
 
   private class ASTConverter {
     private org.eclipse.jdt.core.dom.CompilationUnit jdtCompilationUnit;
     private final Map<IVariableBinding, Variable> variableByJdtBinding = new HashMap<>();
-    private final Map<String, Label> labelsInScope = new HashMap<>();
+
+    // Keeps track of labels that are currently in scope. Even though labels cannot have the
+    // same name if they are nested in the same method body, labels with the same name could
+    // be lexically nested by being in different methods bodies, e.g. from local or anonymous
+    // classes or lambdas.
+    private final Map<String, Deque<Label>> labelsInScope = new HashMap<>();
 
     private CompilationUnit convert(
         String sourceFilePath, org.eclipse.jdt.core.dom.CompilationUnit jdtCompilationUnit) {
       this.jdtCompilationUnit = jdtCompilationUnit;
 
       setCurrentSourceFile(sourceFilePath);
+      PackageDeclaration packageDeclaration = jdtCompilationUnit.getPackage();
       String packageName =
-          jdtCompilationUnit.getPackage() == null
-              ? ""
-              : jdtCompilationUnit.getPackage().getName().getFullyQualifiedName();
+          packageDeclaration == null ? "" : packageDeclaration.getName().getFullyQualifiedName();
       setCurrentCompilationUnit(CompilationUnit.createForFile(sourceFilePath, packageName));
-      // Records information about package-info files supplied as source code.
-      if (getCurrentSourceFile().endsWith("package-info.java")
-          && jdtCompilationUnit.getPackage() != null) {
-        setPackagePropertiesFromSource(
-            packageName,
-            getPackageJsNamespace(jdtCompilationUnit),
-            getObjectiveCName(jdtCompilationUnit),
-            isNullMarked(jdtCompilationUnit));
-      }
+
       for (Object object : jdtCompilationUnit.types()) {
         AbstractTypeDeclaration abstractTypeDeclaration = (AbstractTypeDeclaration) object;
         getCurrentCompilationUnit().addType(convert(abstractTypeDeclaration));
@@ -169,49 +161,6 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
 
       return getCurrentCompilationUnit();
     }
-
-    @Nullable
-    private IAnnotationBinding getAnnotationBinding(
-        org.eclipse.jdt.core.dom.CompilationUnit jdtCompilationUnit,
-        Predicate<IAnnotationBinding> whichAnnotation) {
-      List<Annotation> packageAnnotations =
-          JdtEnvironment.asTypedList(jdtCompilationUnit.getPackage().annotations());
-      if (packageAnnotations == null) {
-        return null;
-      }
-
-      Optional<IAnnotationBinding> annotationBinding =
-          packageAnnotations.stream()
-              .map(Annotation::resolveAnnotationBinding)
-              .filter(whichAnnotation)
-              .findFirst();
-
-      return annotationBinding.orElse(null);
-    }
-
-    @Nullable
-    private String getObjectiveCName(org.eclipse.jdt.core.dom.CompilationUnit jdtCompilationUnit) {
-      IAnnotationBinding annotationBinding =
-          getAnnotationBinding(jdtCompilationUnit, KtInteropAnnotationUtils::isKtObjectiveCName);
-      return annotationBinding != null
-          ? KtInteropAnnotationUtils.getKtObjectiveCName(annotationBinding)
-          : null;
-    }
-
-    @Nullable
-    private String getPackageJsNamespace(
-        org.eclipse.jdt.core.dom.CompilationUnit jdtCompilationUnit) {
-      IAnnotationBinding annotationBinding =
-          getAnnotationBinding(jdtCompilationUnit, JsInteropAnnotationUtils::isJsPackageAnnotation);
-      return annotationBinding != null
-          ? JsInteropAnnotationUtils.getJsNamespace(annotationBinding)
-          : null;
-    }
-
-    private boolean isNullMarked(org.eclipse.jdt.core.dom.CompilationUnit jdtCompilationUnit) {
-      return JdtEnvironment.isNullMarked(jdtCompilationUnit.getPackage());
-    }
-
     private Type convert(AbstractTypeDeclaration typeDeclaration) {
       switch (typeDeclaration.getNodeType()) {
         case ASTNode.ANNOTATION_TYPE_DECLARATION:
@@ -459,12 +408,16 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
               getCurrentType().getDeclaration().isNullMarked());
 
       Expression castExpression = convert(expression.getExpression());
+
+      if (!castExpression.canBeNull()) {
+        castTypeDescriptor = castTypeDescriptor.toNonNullable();
+      } else if (castExpression.getTypeDescriptor().isNullable()) {
+        castTypeDescriptor = castTypeDescriptor.toNullable();
+      }
+
       return CastExpression.newBuilder()
           .setExpression(castExpression)
-          .setCastTypeDescriptor(
-              // TODO(b/236987392): review the inference when the modeling of type variables
-              // includes the third state.
-              castTypeDescriptor.toNullable(castExpression.getTypeDescriptor().isNullable()))
+          .setCastTypeDescriptor(castTypeDescriptor)
           .build();
     }
 
@@ -637,8 +590,8 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
       Expression falseExpression = convert(conditionalExpression.getElseExpression());
       return ConditionalExpression.newBuilder()
           .setTypeDescriptor(
-              trueExpression.getTypeDescriptor().isNullable()
-                      || falseExpression.getTypeDescriptor().isNullable()
+              trueExpression.getTypeDescriptor().canBeNull()
+                      || falseExpression.getTypeDescriptor().canBeNull()
                   ? conditionalTypeDescriptor.toNullable()
                   : conditionalTypeDescriptor)
           .setConditionExpression(condition)
@@ -739,15 +692,15 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
 
     private LabeledStatement convert(org.eclipse.jdt.core.dom.LabeledStatement statement) {
       Label label = Label.newBuilder().setName(statement.getLabel().getIdentifier()).build();
-      checkState(labelsInScope.put(label.getName(), label) == null);
-      LabeledStatement labeledStatment =
+      labelsInScope.computeIfAbsent(label.getName(), n -> new ArrayDeque<>()).push(label);
+      LabeledStatement labeledStatement =
           LabeledStatement.newBuilder()
               .setSourcePosition(getSourcePosition(statement))
               .setLabel(label)
               .setStatement(convert(statement.getBody()))
               .build();
-      labelsInScope.remove(label.getName());
-      return labeledStatment;
+      labelsInScope.get(label.getName()).pop();
+      return labeledStatement;
     }
 
     private BreakStatement convert(org.eclipse.jdt.core.dom.BreakStatement statement) {
@@ -766,7 +719,9 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
 
     @Nullable
     private LabelReference getLabelReferenceOrNull(SimpleName label) {
-      return label == null ? null : labelsInScope.get(label.getIdentifier()).createReference();
+      return label == null
+          ? null
+          : labelsInScope.get(label.getIdentifier()).peek().createReference();
     }
 
     private ForStatement convert(org.eclipse.jdt.core.dom.ForStatement statement) {
@@ -1471,44 +1426,29 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
   }
 
   public static List<CompilationUnit> build(
-      CompilationUnitsAndTypeBindings compilationUnitsAndTypeBindings) {
+      CompilationUnitsAndTypeBindings compilationUnitsAndTypeBindings, JdtParser jdtParser) {
+    JdtEnvironment environment =
+        new JdtEnvironment(
+            PackageAnnotationsResolver.create(
+                compilationUnitsAndTypeBindings.getCompilationUnitsByFilePath().entrySet().stream()
+                    .filter(e -> e.getKey().endsWith("package-info.java"))
+                    .map(Entry::getValue),
+                jdtParser));
 
     Map<String, org.eclipse.jdt.core.dom.CompilationUnit> jdtUnitsByFilePath =
         compilationUnitsAndTypeBindings.getCompilationUnitsByFilePath();
-    Iterable<ITypeBinding> wellKnownTypeBindings =
-        compilationUnitsAndTypeBindings.getTypeBindings();
+    List<ITypeBinding> wellKnownTypeBindings = compilationUnitsAndTypeBindings.getTypeBindings();
     CompilationUnitBuilder compilationUnitBuilder =
-        new CompilationUnitBuilder(wellKnownTypeBindings);
+        new CompilationUnitBuilder(wellKnownTypeBindings, environment);
 
-    List<Entry<String, org.eclipse.jdt.core.dom.CompilationUnit>> entries =
-        new ArrayList<>(jdtUnitsByFilePath.entrySet());
-    // Ensure that all source package-info classes come before all other classes so that the
-    // freshness of the PackageInfoCache can be trusted.
-    sortPackageInfoFirst(entries);
-
-    return entries.stream()
+    return jdtUnitsByFilePath.entrySet().stream()
         .map(entry -> compilationUnitBuilder.buildCompilationUnit(entry.getKey(), entry.getValue()))
         .collect(toImmutableList());
   }
 
-  private static void sortPackageInfoFirst(
-      List<Entry<String, org.eclipse.jdt.core.dom.CompilationUnit>> entries) {
-    // Ensure that all source package-info classes come before all other classes so that the
-    // freshness of the PackageInfoCache can be trusted.
-    Collections.sort(
-        entries,
-        comparingByKey(
-            (thisFilePath, thatFilePath) -> {
-              boolean thisIsPackageInfo = thisFilePath.endsWith("package-info.java");
-              boolean thatIsPackageInfo = thatFilePath.endsWith("package-info.java");
-              return ComparisonChain.start()
-                  .compareTrueFirst(thisIsPackageInfo, thatIsPackageInfo)
-                  .compare(thisFilePath, thatFilePath)
-                  .result();
-            }));
-  }
-
-  private CompilationUnitBuilder(Iterable<ITypeBinding> wellKnownTypeBindings) {
+  private CompilationUnitBuilder(
+      List<ITypeBinding> wellKnownTypeBindings, JdtEnvironment environment) {
+    this.environment = environment;
     environment.initWellKnownTypes(wellKnownTypeBindings);
   }
 }

@@ -13,6 +13,7 @@ readable_example(
         "*.java",
         "*.native.js",
     ]),
-    generate_wasm_readables = False,
-    deps = ["//third_party:gwt-jsinterop-annotations-j2cl"],
+    # TODO(b/325056024): Enable when jsenum is supported in the modular pipeline.
+    use_modular_pipeline = False,
+    deps = ["//third_party:jsinterop-annotations-j2cl"],
 )

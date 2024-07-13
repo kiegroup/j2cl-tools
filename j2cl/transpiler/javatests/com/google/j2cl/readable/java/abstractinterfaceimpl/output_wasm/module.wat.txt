@@ -1,85 +1,74 @@
- ;;; Code for abstractinterfaceimpl.MyInterface [type definition]
- (type $abstractinterfaceimpl.MyInterface.vtable (struct_subtype
-  (field $m_foo__int (ref $function.m_foo__int))
-  data)
- )
+;;; Code for abstractinterfaceimpl.MyInterface [type definition]
+(type $abstractinterfaceimpl.MyInterface.vtable (sub (struct
+ (field $m_foo__int (ref $function.m_foo__int))
+ ))
+)
 
- ;;; Code for abstractinterfaceimpl.AbstractInterfaceImpl [type definition]
- (type $abstractinterfaceimpl.AbstractInterfaceImpl (struct_subtype
-  (field $vtable (ref $abstractinterfaceimpl.AbstractInterfaceImpl.vtable))
-  (field $itable (ref $abstractinterfaceimpl.AbstractInterfaceImpl.itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $abstractinterfaceimpl.AbstractInterfaceImpl.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  $java.lang.Object.vtable)
- )
- (type $abstractinterfaceimpl.AbstractInterfaceImpl.itable (struct_subtype
- (field $slot0 (ref $abstractinterfaceimpl.MyInterface.vtable))
- (field $slot1 (ref null struct))
- (field $slot2 (ref null struct))
- (field $slot3 (ref null struct))
- (field $slot4 (ref null struct))
- (field $slot5 (ref null struct))
- (field $slot6 (ref null struct))
-  $itable))
+;;; Code for abstractinterfaceimpl.AbstractInterfaceImpl [type definition]
+(type $abstractinterfaceimpl.AbstractInterfaceImpl.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_foo__int (ref $function.m_foo__int))
+ ))
+)
+(type $abstractinterfaceimpl.AbstractInterfaceImpl (sub $java.lang.Object (struct
+ (field $vtable (ref $abstractinterfaceimpl.AbstractInterfaceImpl.vtable))
+ (field $itable (ref $abstractinterfaceimpl.AbstractInterfaceImpl.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
+;;; Code for abstractinterfaceimpl.MyInterface [imports]
+
+;;; Code for abstractinterfaceimpl.AbstractInterfaceImpl [imports]
 
 ;;; Code for abstractinterfaceimpl.MyInterface [static fields]
-(global $f_$initialized__abstractinterfaceimpl_MyInterface (mut i32) (i32.const 0))
-(global $f_$class__abstractinterfaceimpl_MyInterface (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|abstractinte...|__abstractinterfaceimpl_MyInterface (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+(global $$class-initialized@abstractinterfaceimpl.MyInterface (mut i32)
+ (i32.const 0)
+)
+(global $$class@abstractinterfaceimpl.MyInterface (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
 
 ;;; Code for abstractinterfaceimpl.AbstractInterfaceImpl [static fields]
-(global $f_$initialized__abstractinterfaceimpl_AbstractInterfaceImpl (mut i32) (i32.const 0))
-(global $f_$class__abstractinterfaceimpl_AbstractInterfaceImpl (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|abstractinte...|__abstractinterfaceimpl_AbstractInterfaceImpl (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+(global $$class-initialized@abstractinterfaceimpl.AbstractInterfaceImpl (mut i32)
+ (i32.const 0)
+)
+(global $$class@abstractinterfaceimpl.AbstractInterfaceImpl (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
 
 ;;; Code for abstractinterfaceimpl.MyInterface [methods]
 
 ;;; void MyInterface.$clinit()
-(func $$clinit__void@abstractinterfaceimpl.MyInterface
+(func $$clinit__void_<once>_@abstractinterfaceimpl.MyInterface
  ;;@ abstractinterfaceimpl/AbstractInterfaceImpl.java:18:10
  (block
   ;;@ abstractinterfaceimpl/AbstractInterfaceImpl.java:18:10
-  (if (global.get $f_$initialized__abstractinterfaceimpl_MyInterface)
+  (if (global.get $$class-initialized@abstractinterfaceimpl.MyInterface)
    (then
     ;;@ abstractinterfaceimpl/AbstractInterfaceImpl.java:18:10
     (return )
    )
   )
   ;;@ abstractinterfaceimpl/AbstractInterfaceImpl.java:18:10
-  (global.set $f_$initialized__abstractinterfaceimpl_MyInterface (i32.const 1))
+  (global.set $$class-initialized@abstractinterfaceimpl.MyInterface (i32.const 1))
  )
 )
 
 ;;; Class<T> MyInterface.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@abstractinterfaceimpl.MyInterface
+(func $$getClassMetadata__java_lang_Class_<once>_@abstractinterfaceimpl.MyInterface
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__abstractinterfaceimpl_MyInterface) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@abstractinterfaceimpl.MyInterface)))
    (then
-    (global.set $f_$class__abstractinterfaceimpl_MyInterface (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|abstractinte...|__java_lang_String (ref.func $$getString_|abstractinte...|__java_lang_String@abstractinterfaceimpl.MyInterface) )))
+    (return (global.get $$class@abstractinterfaceimpl.MyInterface))
    )
   )
-  (return (global.get $f_$class__abstractinterfaceimpl_MyInterface))
- )
-)
-
-;;; String MyInterface.$getString_|abstractinte...|()
-(func $$getString_|abstractinte...|__java_lang_String@abstractinterfaceimpl.MyInterface
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|abstractinte...|__abstractinterfaceimpl_MyInterface) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|abstractinte...|__abstractinterfaceimpl_MyInterface (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "abstractinterfaceimpl.MyInterface")))
-   )
-  )
-  (return (global.get $f_$string_|abstractinte...|__abstractinterfaceimpl_MyInterface))
+  (global.set $$class@abstractinterfaceimpl.MyInterface (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $$getString_|abstractinte...|__java_lang_String_<once>_@abstractinterfaceimpl.MyInterface )))
+  (return (global.get $$class@abstractinterfaceimpl.MyInterface))
  )
 )
 
@@ -91,52 +80,38 @@
  ;;@ abstractinterfaceimpl/AbstractInterfaceImpl.java:22:22
  (block
   ;;@ abstractinterfaceimpl/AbstractInterfaceImpl.java:22:22
-  (call $$clinit__void@abstractinterfaceimpl.AbstractInterfaceImpl )
-  ;;@ abstractinterfaceimpl/AbstractInterfaceImpl.java:22:22
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; void AbstractInterfaceImpl.$clinit()
-(func $$clinit__void@abstractinterfaceimpl.AbstractInterfaceImpl
+(func $$clinit__void_<once>_@abstractinterfaceimpl.AbstractInterfaceImpl
  ;;@ abstractinterfaceimpl/AbstractInterfaceImpl.java:22:22
  (block
   ;;@ abstractinterfaceimpl/AbstractInterfaceImpl.java:22:22
-  (if (global.get $f_$initialized__abstractinterfaceimpl_AbstractInterfaceImpl)
+  (if (global.get $$class-initialized@abstractinterfaceimpl.AbstractInterfaceImpl)
    (then
     ;;@ abstractinterfaceimpl/AbstractInterfaceImpl.java:22:22
     (return )
    )
   )
   ;;@ abstractinterfaceimpl/AbstractInterfaceImpl.java:22:22
-  (global.set $f_$initialized__abstractinterfaceimpl_AbstractInterfaceImpl (i32.const 1))
+  (global.set $$class-initialized@abstractinterfaceimpl.AbstractInterfaceImpl (i32.const 1))
   ;;@ abstractinterfaceimpl/AbstractInterfaceImpl.java:22:22
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> AbstractInterfaceImpl.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@abstractinterfaceimpl.AbstractInterfaceImpl
+(func $$getClassMetadata__java_lang_Class_<once>_@abstractinterfaceimpl.AbstractInterfaceImpl
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__abstractinterfaceimpl_AbstractInterfaceImpl) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@abstractinterfaceimpl.AbstractInterfaceImpl)))
    (then
-    (global.set $f_$class__abstractinterfaceimpl_AbstractInterfaceImpl (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|abstractinte...|__java_lang_String (ref.func $$getString_|abstractinte...|__java_lang_String@abstractinterfaceimpl.AbstractInterfaceImpl) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@abstractinterfaceimpl.AbstractInterfaceImpl))
    )
   )
-  (return (global.get $f_$class__abstractinterfaceimpl_AbstractInterfaceImpl))
- )
-)
-
-;;; String AbstractInterfaceImpl.$getString_|abstractinte...|()
-(func $$getString_|abstractinte...|__java_lang_String@abstractinterfaceimpl.AbstractInterfaceImpl
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|abstractinte...|__abstractinterfaceimpl_AbstractInterfaceImpl) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|abstractinte...|__abstractinterfaceimpl_AbstractInterfaceImpl (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "abstractinterfaceimpl.AbstractInterfaceImpl")))
-   )
-  )
-  (return (global.get $f_$string_|abstractinte...|__abstractinterfaceimpl_AbstractInterfaceImpl))
+  (global.set $$class@abstractinterfaceimpl.AbstractInterfaceImpl (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|abstractinte...|__java_lang_String_<once>_@abstractinterfaceimpl.AbstractInterfaceImpl )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@abstractinterfaceimpl.AbstractInterfaceImpl))
  )
 )

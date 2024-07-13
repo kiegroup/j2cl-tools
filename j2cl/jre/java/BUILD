@@ -2,8 +2,8 @@
 #   j2cl/jre: JRE subset for transpilation.
 #
 
-load("//build_defs:rules.bzl", "j2cl_import", "j2cl_library", "j2wasm_library")
 load("@io_bazel_rules_closure//closure:defs.bzl", "closure_js_library")
+load("//build_defs:rules.bzl", "j2cl_import", "j2cl_library", "j2wasm_library")
 load(":j2cl_java_toolchain.bzl", "j2cl_java_toolchain")
 load(":package_sources.bzl", "package_sources")
 
@@ -27,6 +27,8 @@ JRE_JAVAC_VERSION_OPTS = [
     "-XDstringConcat=inline",
     # Remove warnings that are not relevant to JRE since it is actually a JRE implementaiton.
     "-Xep:ShouldNotSubclass:OFF",
+    # Remove crv since we don't want to dep on ErrorProne annotations from JRE.
+    "-Xep:CheckReturnValue:OFF",
     # Enable Java 11 for the JRE sources
     "-source",
     "11",
@@ -47,6 +49,7 @@ java_library(
         "//jre/javatests:__subpackages__",
         "@com_google_jsinterop_base//:__subpackages__",
         "//transpiler/javatests:__subpackages__",
+        "//junit/generator/java/com/google/j2cl/junit/runtime:__pkg__",
     ],
 )
 
@@ -56,6 +59,8 @@ j2cl_import(
     visibility = [
         "//benchmarking/java:__subpackages__",
         "//jre/javatests:__subpackages__",
+        "//junit/generator/java/com/google/j2cl/junit/runtime:__pkg__",
+        "@com_google_j2cl_proto//java/com/google/protobuf/contrib/j2cl/runtime:__pkg__",
         "@com_google_jsinterop_base//:__subpackages__",
         "//transpiler/javatests:__subpackages__",
     ],
@@ -71,43 +76,20 @@ package_sources(
     srcs = BASE_JRE_SRCS,
 )
 
-WASM_EXCLUDED_SRCS = [
-    "java/util/InternalHashCodeMap.java",  # J2WASM HashMap doesn't need it.
-    "java/util/InternalJsMap.java",  # J2WASM HashMap doesn't need it.
-    "java/util/InternalStringMap.java",  # J2WASM HashMap doesn't need it.
-    "java/util/AbstractHashMap.java",  # J2WASM HashMap doesn't need it.
-    "javaemul/internal/Casts.java",  # J2WASM doesn't need it.
-    "javaemul/internal/ArrayStamper.java",  # Unused in Wasm
-    "javaemul/internal/Comparables.java",  # Unused in Wasm
-    "javaemul/internal/Objects.java",  # Unused in Wasm
-]
-
 package_sources(
     name = "jre_java_files-j2wasm",
     srcs = BASE_JRE_SRCS,
-    excludes = WASM_EXCLUDED_SRCS,
-    super_srcs = glob(["super-wasm/**/*.java"]) + [
-        "//jre/java/super-wasm/javaemul/internal/wasmarray",
+    excludes = [
+        "java/util/InternalHashCodeMap.java",  # J2WASM HashMap doesn't need it.
+        "java/util/InternalJsMap.java",  # J2WASM HashMap doesn't need it.
+        "java/util/InternalStringMap.java",  # J2WASM HashMap doesn't need it.
+        "java/util/AbstractHashMap.java",  # J2WASM HashMap doesn't need it.
+        "javaemul/internal/Casts.java",  # J2WASM doesn't need it.
+        "javaemul/internal/ArrayStamper.java",  # Unused in Wasm
+        "javaemul/internal/Comparables.java",  # Unused in Wasm
+        "javaemul/internal/Objects.java",  # Unused in Wasm
     ],
-)
-
-package_sources(
-    name = "jre_java_files-alt-j2wasm",
-    srcs = BASE_JRE_SRCS,
-    excludes = WASM_EXCLUDED_SRCS,
-    super_srcs = glob(
-        [
-            "super-wasm/**/*.java",
-            "super-wasm-alt/**/*.java",
-        ],
-        exclude = [
-            # We provide alternative implementation for following sources.
-            "super-wasm/java/lang/AbstractStringBuilder.java",
-            "super-wasm/java/lang/CaseMapper.java",
-            "super-wasm/java/lang/IntegralToString.java",
-            "super-wasm/java/lang/String.java",
-        ],
-    ) + [
+    super_srcs = glob(["super-wasm/**/*.java"]) + [
         "//jre/java/super-wasm/javaemul/internal/wasmarray",
     ],
 )
@@ -137,30 +119,16 @@ j2wasm_library(
     name = "jre-j2wasm",
     srcs = [
         ":jre_java_files-j2wasm",
-    ],
+    ] + glob(["super-wasm/*.js"]),
     javacopts = JRE_JAVAC_OPTS,
     visibility = [
         "//build_defs/internal_do_not_use:__pkg__",
         "//transpiler/javatests/com/google/j2cl/transpiler:__pkg__",
     ],
     deps = [
-        ":j2wasm_jsutils",
         ":javaemul_internal_annotations-j2wasm",
-        "//third_party:gwt-jsinterop-annotations-j2wasm",
+        "//third_party:jsinterop-annotations-j2wasm",
     ],
-)
-
-closure_js_library(
-    name = "j2wasm_jsutils",
-    srcs = [
-        "super-wasm/array_utils.js",
-        "super-wasm/char_utils.js",
-        "super-wasm/console_utils.js",
-        "super-wasm/double_utils.js",
-        "super-wasm/exception_utils.js",
-        "super-wasm/string_utils.js",
-    ],
-    visibility = ["//visibility:private"],
 )
 
 j2cl_library(
@@ -183,7 +151,7 @@ j2cl_library(
         ":jre_externs",
         "//third_party:closure_math_long",
         "//third_party:closure_reflect",
-        "//third_party:gwt-jsinterop-annotations-j2cl",
+        "//third_party:jsinterop-annotations-j2cl",
     ],
 )
 
@@ -196,7 +164,7 @@ java_library(
     visibility = ["//transpiler/javatests/com/google/j2cl/transpiler:__pkg__"],
     deps = [
         ":javaemul_internal_annotations",
-        "//third_party:gwt-jsinterop-annotations",
+        "//third_party:jsinterop-annotations-j2cl_jar",
     ],
 )
 
@@ -207,7 +175,7 @@ java_library(
     visibility = ["//transpiler/javatests/com/google/j2cl/transpiler:__pkg__"],
     deps = [
         ":javaemul_internal_annotations",
-        "//third_party:gwt-jsinterop-annotations",
+        "//third_party:jsinterop-annotations-j2cl_jar",
     ],
 )
 

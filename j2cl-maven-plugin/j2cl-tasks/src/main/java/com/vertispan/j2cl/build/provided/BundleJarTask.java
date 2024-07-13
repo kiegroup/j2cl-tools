@@ -1,20 +1,18 @@
 /*
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ * Copyright © 2021 j2cl-maven-plugin authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package com.vertispan.j2cl.build.provided;
 
 import com.google.auto.service.AutoService;
@@ -22,10 +20,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.javascript.jscomp.deps.ClosureBundler;
 import com.vertispan.j2cl.build.task.*;
+import com.vertispan.j2cl.tools.Closure;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
@@ -67,7 +68,7 @@ public class BundleJarTask extends TaskFactory {
                                 .map(inputs(OutputTypes.BUNDLED_JS)),
                         Stream.of(input(project, OutputTypes.BUNDLED_JS))
                 )
-                .map(i -> i.filter(BUNDLE_JS, withSuffix(".bundle.js.map")))
+                .map(i -> i.filter(BUNDLE_JS))
                 .collect(Collectors.toUnmodifiableList());
 
         // Sort the projects, to try to include them in order. We can't be sure that all project
@@ -127,12 +128,12 @@ public class BundleJarTask extends TaskFactory {
                     Files.copy(bundle.getAbsolutePath(), targetFile, StandardCopyOption.REPLACE_EXISTING);
                 }
 
-//                File destSourcesDir = outputDir.toPath().resolve(Closure.SOURCES_DIRECTORY_NAME).toFile();
-//                destSourcesDir.mkdirs();
-//                for (Path dir : jsSources.stream().map(Input::getParentPaths).flatMap(Collection::stream).map(p -> p.resolve(Closure
-//                        .SOURCES_DIRECTORY_NAME)).collect(Collectors.toSet())) {
-//                    FileUtils.copyDirectory(dir.toFile(), destSourcesDir);
-//                }
+                File destSourcesDir = outputDir.toPath().resolve(Closure.SOURCES_DIRECTORY_NAME).toFile();
+                destSourcesDir.mkdirs();
+                for (Path dir : jsSources.stream().map(Input::getParentPaths).flatMap(Collection::stream).map(p -> p.resolve(Closure
+                        .SOURCES_DIRECTORY_NAME)).collect(Collectors.toSet())) {
+                    FileUtils.copyDirectory(dir.toFile(), destSourcesDir);
+                }
 
                 try {
                     Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -140,7 +141,6 @@ public class BundleJarTask extends TaskFactory {
                             .flatMap(i -> i.getFilesAndHashes().stream())
                             .map(CachedPath::getSourcePath)
                             .map(Path::toString)
-                            .filter(s -> s.endsWith(".js"))
                             .collect(Collectors.toUnmodifiableList())
                     );
                     // unconditionally set this to false, so that our dependency order works, since we're always in BUNDLE now

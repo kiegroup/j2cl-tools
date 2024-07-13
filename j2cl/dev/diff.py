@@ -71,7 +71,7 @@ def _create_target_info(target):
     blaze_target += ".js"
   if rule_kind == "_j2wasm_application":
     blaze_target += ".wasm"
-  elif rule_kind == "_size_report_rule":
+  elif rule_kind == "_size_report":
     # Size report targets doesn't need extension.
     pass
   elif rule_kind:
@@ -106,26 +106,46 @@ def main(argv):
 def _diff(original, modified, filter_noise):
   print("Constructing a diff of changes in '%s'" % modified.blaze_target)
 
+  is_wasm = modified.blaze_target.endswith(".wasm")
+
+  original_targets = [original.blaze_target]
+  modified_targets = [modified.blaze_target]
+  if is_wasm:
+    original_targets += [original.blaze_target + ".map"]
+    modified_targets += [modified.blaze_target + ".map"]
+
   print("  Building targets.")
   repo_util.build_targets_with_workspace(
-      [original.blaze_target],
-      [modified.blaze_target],
+      original_targets,
+      modified_targets,
       original.workspace_path,
       modified.workspace_path,
       ["--define=J2CL_APP_STYLE=PRETTY"],
   )
 
-  if modified.blaze_target.endswith(".wasm"):
+  if is_wasm:
     print("  Disassembling.")
     repo_util.build(["//third_party/binaryen:wasm-dis"])
     wasm_dis_cmd = ["blaze-bin/third_party/binaryen/wasm-dis", "--enable-gc"]
     repo_util.run_cmd(
         wasm_dis_cmd
-        + [original.get_output_file(), "-o", original.get_formatted_file()]
+        + [
+            original.get_output_file(),
+            "--source-map",
+            original.get_output_file() + ".map",
+            "-o",
+            original.get_formatted_file(),
+        ]
     )
     repo_util.run_cmd(
         wasm_dis_cmd
-        + [modified.get_output_file(), "-o", modified.get_formatted_file()]
+        + [
+            modified.get_output_file(),
+            "--source-map",
+            modified.get_output_file() + ".map",
+            "-o",
+            modified.get_formatted_file(),
+        ]
     )
   else:
     print("  Formatting.")
@@ -140,18 +160,17 @@ def _diff(original, modified, filter_noise):
 
   if filter_noise:
     print("  Reducing noise.")
-    # Replace the numeric part of the variable id generation from JsCompiler to
-    # reduce noise in the final diff.
+    # Replace the numeric part of the variable id generation from JsCompiler
+    # or binaryen to reduce noise in the final diff.
     # The patterns we want to match are:
-    #   $jscomp$1234
-    #   $jscomp$inline_1234
-    #   JSC$1234
+    #   $jscomp$1234, $jscomp$inline_1234, JSC$1234,
+    #   type $1234, call_ref $1234, ref $1234
     # The numeric part of these patterns will be replaced by the character '#'
     repo_util.run_cmd([
         "sed",
         "-i",
         "-E",
-        r"s/(\$jscomp\$(inline_)?|JSC\$)[0-9]+/\1#/g",
+        r"s/(\$jscomp\$(inline_)?|JSC\$|((type|call_ref|ref)\ \$))[0-9]+/\1#/g",
         original.get_formatted_file(),
         modified.get_formatted_file(),
     ])

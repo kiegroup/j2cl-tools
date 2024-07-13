@@ -1,36 +1,39 @@
- ;;; Code for longparametersignature.LongParameterSignature [type definition]
- (type $longparametersignature.LongParameterSignature (struct_subtype
-  (field $vtable (ref $longparametersignature.LongParameterSignature.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $longparametersignature.LongParameterSignature.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_main__long__void (ref $function.m_main__long__void))
-  $java.lang.Object.vtable)
- )
+;;; Code for longparametersignature.LongParameterSignature [type definition]
+(type $longparametersignature.LongParameterSignature.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_main__long__void (ref $function.m_main__long__void))
+ ))
+)
+(type $longparametersignature.LongParameterSignature (sub $java.lang.Object (struct
+ (field $vtable (ref $longparametersignature.LongParameterSignature.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
+;;; Code for longparametersignature.LongParameterSignature [imports]
+
+;;; Code for longparametersignature.LongParameterSignature [static fields]
+(global $$class-initialized@longparametersignature.LongParameterSignature (mut i32)
+ (i32.const 0)
+)
+(global $$class@longparametersignature.LongParameterSignature (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
 
 ;;; Code for longparametersignature.LongParameterSignature [vtable.init]
 (global $longparametersignature.LongParameterSignature.vtable (ref $longparametersignature.LongParameterSignature.vtable)
  (struct.new $longparametersignature.LongParameterSignature.vtable
+  (ref.func $$getClassImpl__java_lang_Class@longparametersignature.LongParameterSignature)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@longparametersignature.LongParameterSignature)
   (ref.func $m_main__long__void@longparametersignature.LongParameterSignature)
  )
 )
-
-;;; Code for longparametersignature.LongParameterSignature [static fields]
-(global $f_$initialized__longparametersignature_LongParameterSignature (mut i32) (i32.const 0))
-(global $f_$class__longparametersignature_LongParameterSignature (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|longparamete...|__longparametersignature_LongParameterSignature (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
 
 ;;; Code for longparametersignature.LongParameterSignature [methods]
 
@@ -40,6 +43,8 @@
  ;;@ longparametersignature/LongParameterSignature.java:18:13
  (local $$instance (ref null $longparametersignature.LongParameterSignature))
  (block
+  ;;@ longparametersignature/LongParameterSignature.java:18:13
+  (call $$clinit__void_<once>_@longparametersignature.LongParameterSignature )
   ;;@ longparametersignature/LongParameterSignature.java:18:13
   (local.set $$instance (struct.new $longparametersignature.LongParameterSignature (ref.as_non_null (global.get $longparametersignature.LongParameterSignature.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
   ;;@ longparametersignature/LongParameterSignature.java:18:13
@@ -55,8 +60,6 @@
  ;;@ longparametersignature/LongParameterSignature.java:18:13
  (block
   ;;@ longparametersignature/LongParameterSignature.java:18:13
-  (call $$clinit__void@longparametersignature.LongParameterSignature )
-  ;;@ longparametersignature/LongParameterSignature.java:18:13
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -68,40 +71,41 @@
  (param $foo i64)
  ;;@ longparametersignature/LongParameterSignature.java:19:14
  (local $this (ref null $longparametersignature.LongParameterSignature))
- (local.set $this (ref.cast_static $longparametersignature.LongParameterSignature (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $longparametersignature.LongParameterSignature) (local.get $this.untyped)))
  (block
  )
 )
 (elem declare func $m_main__long__void@longparametersignature.LongParameterSignature)
 
 ;;; void LongParameterSignature.$clinit()
-(func $$clinit__void@longparametersignature.LongParameterSignature
+(func $$clinit__void_<once>_@longparametersignature.LongParameterSignature
  ;;@ longparametersignature/LongParameterSignature.java:18:13
  (block
   ;;@ longparametersignature/LongParameterSignature.java:18:13
-  (if (global.get $f_$initialized__longparametersignature_LongParameterSignature)
+  (if (global.get $$class-initialized@longparametersignature.LongParameterSignature)
    (then
     ;;@ longparametersignature/LongParameterSignature.java:18:13
     (return )
    )
   )
   ;;@ longparametersignature/LongParameterSignature.java:18:13
-  (global.set $f_$initialized__longparametersignature_LongParameterSignature (i32.const 1))
+  (global.set $$class-initialized@longparametersignature.LongParameterSignature (i32.const 1))
   ;;@ longparametersignature/LongParameterSignature.java:18:13
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> LongParameterSignature.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@longparametersignature.LongParameterSignature
+(func $$getClassMetadata__java_lang_Class_<once>_@longparametersignature.LongParameterSignature
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__longparametersignature_LongParameterSignature) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@longparametersignature.LongParameterSignature)))
    (then
-    (global.set $f_$class__longparametersignature_LongParameterSignature (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|longparamete...|__java_lang_String (ref.func $$getString_|longparamete...|__java_lang_String@longparametersignature.LongParameterSignature) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@longparametersignature.LongParameterSignature))
    )
   )
-  (return (global.get $f_$class__longparametersignature_LongParameterSignature))
+  (global.set $$class@longparametersignature.LongParameterSignature (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|longparamete...|__java_lang_String_<once>_@longparametersignature.LongParameterSignature )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@longparametersignature.LongParameterSignature))
  )
 )
 
@@ -111,22 +115,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $longparametersignature.LongParameterSignature))
- (local.set $this (ref.cast_static $longparametersignature.LongParameterSignature (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $longparametersignature.LongParameterSignature) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@longparametersignature.LongParameterSignature) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@longparametersignature.LongParameterSignature ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@longparametersignature.LongParameterSignature)
-
-;;; String LongParameterSignature.$getString_|longparamete...|()
-(func $$getString_|longparamete...|__java_lang_String@longparametersignature.LongParameterSignature
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|longparamete...|__longparametersignature_LongParameterSignature) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|longparamete...|__longparametersignature_LongParameterSignature (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "longparametersignature.LongParameterSignature")))
-   )
-  )
-  (return (global.get $f_$string_|longparamete...|__longparametersignature_LongParameterSignature))
- )
-)

@@ -16,6 +16,7 @@
 package javaemul.internal;
 
 import static javaemul.internal.InternalPreconditions.checkCriticalArrayBounds;
+import static javaemul.internal.InternalPreconditions.checkCriticalArrayCopyIndices;
 
 import java.util.Comparator;
 import javaemul.internal.annotations.DoNotAutobox;
@@ -30,8 +31,8 @@ public final class ArrayHelper {
   public static final int ARRAY_PROCESS_BATCH_SIZE = 10000;
 
   public static <T> T clone(T array) {
-    Object result = asNativeArray(array).slice();
-    return ArrayStamper.stampJavaTypeInfo(JsUtils.uncheckedCast(result), array);
+    Object[] result = asNativeArray(array).slice();
+    return (T) ArrayStamper.stampJavaTypeInfo(result, array);
   }
 
   public static <T> T clone(T array, int fromIndex, int toIndex) {
@@ -49,7 +50,7 @@ public final class ArrayHelper {
         }
       }
     }
-    return ArrayStamper.stampJavaTypeInfo(JsUtils.uncheckedCast(result), array);
+    return (T) ArrayStamper.stampJavaTypeInfo(result, array);
   }
 
   /**
@@ -71,11 +72,21 @@ public final class ArrayHelper {
     return asNativeArray(array).length;
   }
 
-  public static void setLength(Object array, int length) {
+  /** Sets the length of an array to particular size. */
+  public static <T> T setLength(T array, int length) {
     asNativeArray(array).length = length;
+    return array;
   }
 
-  public static void push(Object array, @DoNotAutobox Object o) {
+  /**
+   * Resize the array to accommodate requested length. For JavaScript this is same as setting the
+   * length.
+   */
+  public static <T> T grow(T array, int length) {
+    return setLength(array, length);
+  }
+
+  public static void push(Object[] array, Object o) {
     asNativeArray(array).push(o);
   }
 
@@ -88,37 +99,12 @@ public final class ArrayHelper {
     asNativeArray(array).fill(value);
   }
 
-  /**
-   * Sets an element of an array.
-   *
-   * <p>In GWT, the naive approach of checking or setting an element which may be out of bounds is
-   * optimal. This method always returns the original value, or null for out of bounds.
-   */
-  public static <T> T setAt(T[] array, int index, T value) {
-    T originalValue = array[index];
-    array[index] = value;
-    return originalValue;
-  }
-
   public static void removeFrom(Object[] array, int index, int deleteCount) {
     asNativeArray(array).splice(index, deleteCount);
   }
 
   public static void insertTo(Object[] array, int index, Object value) {
     asNativeArray(array).splice(index, 0, value);
-  }
-
-  public static void insertTo(Object[] array, int insertIndex, Object[] values) {
-    int newLength = array.length + values.length;
-    setLength(array, newLength);
-
-    // Make room for the values that will be inserted by moving the existing elements to the
-    // end so that they are not overwritten.
-    int insertEndIndex = insertIndex + values.length;
-    copy(array, insertIndex, array, insertEndIndex, newLength - insertEndIndex);
-
-    // Copy new values into the insert location.
-    copy(values, 0, array, insertIndex, values.length);
   }
 
   public static void copy(Object array, int srcOfs, Object dest, int destOfs, int len) {
@@ -131,6 +117,9 @@ public final class ArrayHelper {
   }
 
   private static void copy(Object[] src, int srcOfs, Object[] dest, int destOfs, int len) {
+    // Critical check since we may cause infinite loop below otherwise.
+    checkCriticalArrayCopyIndices(src, srcOfs, dest, destOfs, len);
+
     if (len == 0) {
       return;
     }
@@ -149,10 +138,10 @@ public final class ArrayHelper {
   }
 
   public static <T> T concat(T a, T b) {
-    Object[] result = asNativeArray(a).slice();
-    ArrayStamper.stampJavaTypeInfo(result, a);
+    Object result = clone(a);
+    setLength(result, getLength(a) + getLength(b));
     copy(b, 0, result, getLength(a), getLength(b));
-    return JsUtils.uncheckedCast(result);
+    return (T) result;
   }
 
   public static boolean equals(double[] array1, double[] array2) {
@@ -304,7 +293,7 @@ public final class ArrayHelper {
 
     NativeArray(int length) {}
 
-    native void push(@DoNotAutobox Object item);
+    native void push(Object item);
 
     native Object[] slice();
 

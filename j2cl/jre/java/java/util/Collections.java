@@ -18,10 +18,13 @@ package java.util;
 import static javaemul.internal.InternalPreconditions.checkArgument;
 import static javaemul.internal.InternalPreconditions.checkElementIndex;
 import static javaemul.internal.InternalPreconditions.checkNotNull;
+import static javaemul.internal.InternalPreconditions.isApiChecked;
 
 import java.io.Serializable;
+import java.util.Map.Entry;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
+import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsNonNull;
 
 /**
@@ -1189,11 +1192,11 @@ public class Collections {
   }
 
   public static <T> List<T> nCopies(int n, T o) {
-    ArrayList<T> list = new ArrayList<T>();
-    for (int i = 0; i < n; ++i) {
-      list.add(o);
+    T[] array = (T[]) new Object[n];
+    if (o != null) {
+      Arrays.fill(array, o);
     }
-    return unmodifiableList(list);
+    return unmodifiableList(Arrays.asList(array));
   }
 
   public static <T> boolean replaceAll(List<T> list, T oldVal, T newVal) {
@@ -1352,6 +1355,61 @@ public class Collections {
     return (list instanceof RandomAccess)
         ? new UnmodifiableRandomAccessList<T>(list) : new UnmodifiableList<T>(
             list);
+  }
+
+  static <E> List<E> internalListOf(E[] elements) {
+    if (isApiChecked()) {
+      for (int i = 0; i < elements.length; i++) {
+        checkNotNull(elements[i]);
+      }
+    }
+    return new UnmodifiableRandomAccessList<E>(
+        elements.length == 0 ? emptyList() : Arrays.asList(elements));
+  }
+
+  static <E> Set<E> internalSetOf(E[] elements, boolean allowDuplicates) {
+    if (elements.length == 0) {
+      return Collections.unmodifiableSet(emptySet());
+    }
+
+    Set<E> set = new HashSet<>();
+    for (int i = 0; i < elements.length; i++) {
+      boolean added = set.add(checkNotNull(elements[i]));
+      if (!allowDuplicates) {
+        checkArgument(added, "Duplicate element");
+      }
+    }
+    return Collections.unmodifiableSet(set);
+  }
+
+  // Marked as JsMethod to take advantage of JS varargs.
+  @JsMethod
+  static <K, V> Map<K, V> internalMapOf(Object... elements) {
+    if (elements.length == 0) {
+      return Collections.unmodifiableMap(emptyMap());
+    }
+
+    Map<K, V> map = new HashMap<>();
+    for (int i = 0; i < elements.length; i = i + 2) {
+      V old = map.put((K) checkNotNull(elements[i]), (V) checkNotNull(elements[i + 1]));
+      checkArgument(old == null, "Duplicate element");
+    }
+    return Collections.unmodifiableMap(map);
+  }
+
+  static <K, V> Map<K, V> internalMapFromEntries(
+      Collection<? extends Entry<? extends K, ? extends V>> entries) {
+    if (entries.isEmpty()) {
+      return Collections.unmodifiableMap(emptyMap());
+    }
+
+    Map<K, V> map = new HashMap<>();
+    for (Entry<? extends K, ? extends V> entry : entries) {
+      checkNotNull(entry);
+      V old = map.put(checkNotNull(entry.getKey()), checkNotNull(entry.getValue()));
+      checkArgument(old == null, "Duplicate element");
+    }
+    return Collections.unmodifiableMap(map);
   }
 
   public static <K, V> Map<K, V> unmodifiableMap(

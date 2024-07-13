@@ -95,11 +95,26 @@ public final class J2clCommandLineRunner extends CommandLineTool {
       hidden = true)
   Backend backend = Backend.CLOSURE;
 
+  @Option(
+      name =
+          "-experimentalenablejspecifysupportdonotenablewithoutjspecifystaticcheckingoryoumightcauseanoutage",
+      usage =
+          "Enables support for JSpecify semantics. Do not use if the code is not being actually"
+              + " separately checked by a static checker. When these annotations applied the code"
+              + " will mislead developers to think that a null check is unnecessary without the"
+              + " compile time validation. Such misleading code has caused outages in the past for"
+              + " products.",
+      hidden = true)
+  boolean enableJSpecifySupport = false;
+
   @Option(name = "-kotlincOptions", hidden = true)
   List<String> kotlincOptions = new ArrayList<>();
 
   @Option(name = "-generateWasmExport", hidden = true)
   List<String> wasmEntryPoints = new ArrayList<>();
+
+  @Option(name = "-forbiddenAnnotation", hidden = true)
+  List<String> forbiddenAnnotations = new ArrayList<>();
 
   @Option(name = "-defineForWasm", handler = MapOptionHandler.class, hidden = true)
   Map<String, String> definesForWasm = new HashMap<>();
@@ -154,10 +169,12 @@ public final class J2clCommandLineRunner extends CommandLineTool {
         .setOptimizeAutoValue(this.optimizeAutoValue)
         .setGenerateKytheIndexingMetadata(this.generateKytheIndexingMetadata)
         .setFrontend(this.frontEnd)
+        .setNullMarkedSupported(this.enableJSpecifySupport)
         .setKotlincOptions(ImmutableList.copyOf(kotlincOptions))
         .setBackend(this.backend)
         .setWasmEntryPointStrings(ImmutableList.copyOf(wasmEntryPoints))
         .setDefinesForWasm(ImmutableMap.copyOf(definesForWasm))
+        .setForbiddenAnnotations(ImmutableList.copyOf(forbiddenAnnotations))
         .build(problems);
   }
 

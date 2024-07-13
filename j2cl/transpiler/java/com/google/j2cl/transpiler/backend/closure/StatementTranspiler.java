@@ -28,6 +28,7 @@ import com.google.j2cl.transpiler.ast.ExpressionStatement;
 import com.google.j2cl.transpiler.ast.FieldDeclarationStatement;
 import com.google.j2cl.transpiler.ast.ForStatement;
 import com.google.j2cl.transpiler.ast.IfStatement;
+import com.google.j2cl.transpiler.ast.JsForInStatement;
 import com.google.j2cl.transpiler.ast.LabeledStatement;
 import com.google.j2cl.transpiler.ast.Node;
 import com.google.j2cl.transpiler.ast.ReturnStatement;
@@ -37,37 +38,22 @@ import com.google.j2cl.transpiler.ast.SwitchStatement;
 import com.google.j2cl.transpiler.ast.SynchronizedStatement;
 import com.google.j2cl.transpiler.ast.ThrowStatement;
 import com.google.j2cl.transpiler.ast.TryStatement;
+import com.google.j2cl.transpiler.ast.VariableDeclarationExpression;
 import com.google.j2cl.transpiler.ast.WhileStatement;
 import com.google.j2cl.transpiler.backend.common.SourceBuilder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Transforms Statements to JavaScript source strings.
- */
+/** Transforms Statements to JavaScript source strings. */
 public class StatementTranspiler {
-  SourceBuilder builder;
-  ClosureGenerationEnvironment environment;
 
-  public StatementTranspiler(SourceBuilder builder, ClosureGenerationEnvironment environment) {
-    this.builder = builder;
-    this.environment = environment;
-  }
+  public static void render(
+      Statement statement,
+      final ClosureGenerationEnvironment environment,
+      final SourceBuilder builder) {
 
-  public void renderStatements(Collection<Statement> statements) {
-    statements.forEach(
-        s -> {
-          builder.newLine();
-          renderStatement(s);
-        });
-  }
-
-  public void renderStatement(Statement statement) {
     class SourceTransformer extends AbstractVisitor {
-      private void render(Node node) {
-        node.accept(this);
-      }
 
       @Override
       public boolean enterAssertStatement(AssertStatement assertStatement) {
@@ -89,7 +75,10 @@ public class StatementTranspiler {
             () -> {
               builder.append("break");
               if (breakStatement.getLabelReference() != null) {
-                builder.append(" " + breakStatement.getLabelReference().getTarget().getName());
+                builder.append(
+                    " "
+                        + environment.getUniqueNameForVariable(
+                            breakStatement.getLabelReference().getTarget()));
               }
               builder.append(";");
             });
@@ -109,7 +98,10 @@ public class StatementTranspiler {
             () -> {
               builder.append("continue");
               if (continueStatement.getLabelReference() != null) {
-                builder.append(" " + continueStatement.getLabelReference().getTarget().getName());
+                builder.append(
+                    " "
+                        + environment.getUniqueNameForVariable(
+                            continueStatement.getLabelReference().getTarget()));
               }
               builder.append(";");
             });
@@ -154,6 +146,24 @@ public class StatementTranspiler {
               renderSeparated(", ", forStatement.getUpdates());
               builder.append(") ");
               render(forStatement.getBody());
+            });
+        return false;
+      }
+
+      @Override
+      public boolean enterJsForInStatement(JsForInStatement jsForInStatement) {
+        builder.emitWithMapping(
+            jsForInStatement.getSourcePosition(),
+            () -> {
+              builder.append("for(");
+              renderExpression(
+                  VariableDeclarationExpression.newBuilder()
+                      .addVariableDeclarations(jsForInStatement.getLoopVariable())
+                      .build());
+              builder.append(" in ");
+              renderExpression(jsForInStatement.getIterableExpression());
+              builder.append(") ");
+              render(jsForInStatement.getBody());
             });
         return false;
       }
@@ -221,17 +231,9 @@ public class StatementTranspiler {
         builder.emitWithMapping(
             labelStatement.getSourcePosition(),
             () -> {
-              builder.append(labelStatement.getLabel().getName() + ": ");
-
-              Statement innerStatement = labelStatement.getStatement();
-              // TODO(b/174246745): Remove block braces once the underlying jscompiler bug is fixed.
-              if (innerStatement instanceof LabeledStatement) {
-                builder.openBrace();
-              }
-              render(innerStatement);
-              if (innerStatement instanceof LabeledStatement) {
-                builder.closeBrace();
-              }
+              builder.append(
+                  environment.getUniqueNameForVariable(labelStatement.getLabel()) + ": ");
+              render(labelStatement.getStatement());
             });
         return false;
       }
@@ -337,13 +339,20 @@ public class StatementTranspiler {
         return false;
       }
 
-      @Override
-      public String toString() {
-        return builder.build();
+      private void render(Node node) {
+        node.accept(this);
       }
 
       private void renderExpression(Expression expression) {
         ExpressionTranspiler.render(expression, environment, builder);
+      }
+
+      private void renderStatements(Collection<Statement> statements) {
+        statements.forEach(
+            s -> {
+              builder.newLine();
+              render(s);
+            });
       }
 
       private void renderSeparated(String separator, List<? extends Expression> expressions) {
@@ -356,6 +365,8 @@ public class StatementTranspiler {
       }
     }
 
-    statement.accept(new SourceTransformer());
+    new SourceTransformer().render(statement);
   }
+
+  private StatementTranspiler() {}
 }

@@ -210,9 +210,7 @@ public class BigIntegerConstructorsTest extends EmulTestBase {
     assertTrue("incorrect bitLength", aNumber.bitLength() == bitLen);
   }
 
-  /**
-   * Create a prime number of 2 bits length.
-   */
+  /** Create a prime number of 2 bits length. */
   public void testConstructorPrime2() {
     int bitLen = 2;
     Random rnd = new Random();

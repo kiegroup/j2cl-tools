@@ -23,79 +23,74 @@ import com.google.j2cl.transpiler.ast.FunctionExpression
 import com.google.j2cl.transpiler.ast.HasName
 import com.google.j2cl.transpiler.ast.Library
 import com.google.j2cl.transpiler.backend.common.UniqueNamesResolver.computeUniqueNames
-import com.google.j2cl.transpiler.backend.kotlin.common.buildMap
-import com.google.j2cl.transpiler.backend.kotlin.common.buildSet
-import com.google.j2cl.transpiler.backend.kotlin.source.emptyLineSeparated
-import com.google.j2cl.transpiler.backend.kotlin.source.plusNewLine
+import com.google.j2cl.transpiler.backend.kotlin.source.Source
 
 /**
  * The OutputGeneratorStage contains all necessary information for generating the Kotlin output for
  * the transpiler. It is responsible for generating implementation files for each Java file.
+ *
+ * @property output output for generated sources
+ * @property problems problems collected during generation
  */
 class KotlinGeneratorStage(private val output: OutputUtils.Output, private val problems: Problems) {
+  /** Generate outputs for a library. */
   fun generateOutputs(library: Library) {
     library.compilationUnits.forEach { generateOutputs(it) }
   }
 
+  /** Generate all outputs for a compilation unit. */
   private fun generateOutputs(compilationUnit: CompilationUnit) {
     generateKtOutputs(compilationUnit)
     generateObjCOutputs(compilationUnit)
   }
 
+  /** Generate Kotlin outputs for a compilation unit. */
   private fun generateKtOutputs(compilationUnit: CompilationUnit) {
-    val source = ktSource(compilationUnit)
+    val source = ktSource(compilationUnit).buildString().trimTrailingWhitespaces()
     val path = compilationUnit.packageRelativePath.replace(".java", ".kt")
     output.write(path, source)
   }
 
+  /** Generate ObjC outputs for a compilation unit. */
   private fun generateObjCOutputs(compilationUnit: CompilationUnit) {
     val source = compilationUnit.j2ObjCCompatHeaderSource
-    if (!source.isEmpty) {
+    if (!source.isEmpty()) {
       val path = compilationUnit.packageRelativePath.replace(".java", "+J2ObjCCompat.h")
-      output.write(path, source.toString())
+      output.write(path, source.buildString())
     }
   }
 
-  private fun ktSource(compilationUnit: CompilationUnit): String {
+  /** Returns Kotlin source for a compilation unit. */
+  private fun ktSource(compilationUnit: CompilationUnit): Source {
     val nameToIdentifierMap = compilationUnit.buildNameToIdentifierMap()
 
     val environment =
       Environment(
         nameToIdentifierMap = nameToIdentifierMap,
-        identifierSet = nameToIdentifierMap.values.toSet()
+        identifierSet = nameToIdentifierMap.values.toSet(),
       )
 
-    val renderer =
-      Renderer(
-        environment,
-        problems,
-        topLevelQualifiedNames = compilationUnit.topLevelQualifiedNames
-      )
+    val nameRenderer =
+      NameRenderer(environment).plusLocalTypeNameMap(compilationUnit.localTypeNames)
 
-    // Render types, collecting qualified names to import
-    val typesSource = renderer.typesSource(compilationUnit)
+    val compilationUnitRenderer = CompilationUnitRenderer(nameRenderer)
 
-    // Render file header, collecting qualified names to import
-    val fileHeaderSource = renderer.fileHeaderSource(compilationUnit)
-
-    // Render package and collected imports
-    val packageAndImportsSource = renderer.packageAndImportsSource(compilationUnit)
-
-    val completeSource = emptyLineSeparated(fileHeaderSource, packageAndImportsSource, typesSource)
-
-    return completeSource.plusNewLine.toString().trimTrailingWhitespaces()
+    return compilationUnitRenderer.source(compilationUnit)
   }
 }
 
+/** Returns string with trimmed trailing whitespaces. */
 private fun String.trimTrailingWhitespaces() = lines().joinToString("\n") { it.trimEnd() }
 
+/** Returns a map from all named nodes in this compilation unit to rendered identifier strings. */
 private fun CompilationUnit.buildNameToIdentifierMap(): Map<HasName, String> = buildMap {
-  buildForbiddenNamesSet().let { forbiddenNames ->
-    streamTypes().forEach { type -> putAll(computeUniqueNames(forbiddenNames, type)) }
+  buildForbiddenIdentifierSet().let { forbiddenIdentifiers ->
+    streamTypes().forEach { type -> putAll(computeUniqueNames(forbiddenIdentifiers, type)) }
   }
 }
 
-private fun CompilationUnit.buildForbiddenNamesSet(): Set<String> = buildSet {
+/** Returns a set with forbidden identifier strings in this compilation unit. */
+private fun CompilationUnit.buildForbiddenIdentifierSet(): Set<String> = buildSet {
   accept(
     object : AbstractVisitor() {
       override fun enterFunctionExpression(functionExpression: FunctionExpression): Boolean {

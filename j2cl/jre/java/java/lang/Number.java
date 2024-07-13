@@ -32,9 +32,6 @@ public abstract class Number implements Serializable {
    */
   private static NativeRegExp floatRegex;
 
-  // CHECKSTYLE_OFF: A special need to use unusual identifiers to avoid
-  // introducing name collisions.
-
   static class __Decode {
     public final String payload;
     public final int radix;
@@ -131,8 +128,7 @@ public abstract class Number implements Serializable {
   @JsType(isNative = true, name = "Number$impl", namespace = "java.lang")
   private static class JavaLangNumber { }
 
-  @JsMethod
-  private static boolean $isInstance(Object instance) {
+  static boolean $isInstance(Object instance) {
     return "number".equals(JsUtils.typeOf(instance)) || instance instanceof JavaLangNumber;
   }
 
@@ -347,8 +343,6 @@ public abstract class Number implements Serializable {
 
   @JsMethod(namespace = JsPackage.GLOBAL)
   private static native int parseInt(String s, int radix);
-
-  // CHECKSTYLE_ON
 
   public byte byteValue() {
     return (byte) intValue();

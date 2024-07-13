@@ -20,6 +20,15 @@ j2cl_test_integration_test_data(
     ],
 )
 
+j2cl_test_integration_test_data(
+    name = "KotlinDuplicateFileNameStacktraceTest",
+    extra_defs = ["--inline_functions=false"],
+    deps = [
+        ":base",
+        ":duplicate_names",
+    ],
+)
+
 java_and_j2cl_library(
     name = "duplicate_names",
     srcs = [
@@ -35,7 +44,19 @@ j2cl_test_integration_test_data(
 )
 
 j2cl_test_integration_test_data(
+    name = "KotlinAnonymousClassesStacktraceTest",
+    extra_defs = ["--inline_functions=false"],
+    deps = [":base"],
+)
+
+j2cl_test_integration_test_data(
     name = "CustomExceptionStacktraceTest",
+    extra_defs = ["--inline_functions=false"],
+    deps = [":base"],
+)
+
+j2cl_test_integration_test_data(
+    name = "KotlinCustomExceptionStacktraceTest",
     extra_defs = ["--inline_functions=false"],
     deps = [":base"],
 )
@@ -45,7 +66,16 @@ j2cl_test_integration_test_data(
     extra_defs = ["--inline_functions=false"],
     deps = [
         ":base",
-        "//third_party:gwt-jsinterop-annotations",
+        "//third_party:jsinterop-annotations",
+    ],
+)
+
+j2cl_test_integration_test_data(
+    name = "KotlinJsExceptionStacktraceTest",
+    extra_defs = ["--inline_functions=false"],
+    deps = [
+        ":base",
+        "//third_party:jsinterop-annotations",
     ],
 )
 
@@ -54,12 +84,27 @@ j2cl_test_integration_test_data(
     extra_defs = ["--inline_functions=false"],
     deps = [
         ":base",
-        "//third_party:gwt-jsinterop-annotations",
+        "//third_party:jsinterop-annotations",
+    ],
+)
+
+j2cl_test_integration_test_data(
+    name = "KotlinJsExceptionNonJsConstructorStacktraceTest",
+    extra_defs = ["--inline_functions=false"],
+    deps = [
+        ":base",
+        "//third_party:jsinterop-annotations",
     ],
 )
 
 j2cl_test_integration_test_data(
     name = "LambdaStacktraceTest",
+    extra_defs = ["--inline_functions=false"],
+    deps = [":base"],
+)
+
+j2cl_test_integration_test_data(
+    name = "KotlinLambdaStacktraceTest",
     extra_defs = ["--inline_functions=false"],
     deps = [":base"],
 )
@@ -75,7 +120,22 @@ j2cl_test_integration_test_data(
 )
 
 j2cl_test_integration_test_data(
+    name = "SimpleKotlinThrowingStacktraceTest",
+    extra_defs = ["--inline_functions=false"],
+    platforms = [
+        "CLOSURE",
+    ],
+    deps = [":base"],
+)
+
+j2cl_test_integration_test_data(
     name = "FillInStacktraceTest",
+    extra_defs = ["--inline_functions=false"],
+    deps = [":base"],
+)
+
+j2cl_test_integration_test_data(
+    name = "KotlinFillInStacktraceTest",
     extra_defs = ["--inline_functions=false"],
     deps = [":base"],
 )
@@ -87,7 +147,19 @@ j2cl_test_integration_test_data(
 )
 
 j2cl_test_integration_test_data(
+    name = "KotlinRecursiveStacktraceTest",
+    extra_defs = ["--inline_functions=false"],
+    deps = [":base"],
+)
+
+j2cl_test_integration_test_data(
     name = "ThrowsInInstanceInitializer",
+    extra_defs = ["--inline_functions=false"],
+    deps = [":base"],
+)
+
+j2cl_test_integration_test_data(
+    name = "KotlinThrowsInInstanceInitializer",
     extra_defs = ["--inline_functions=false"],
     deps = [":base"],
 )
@@ -99,7 +171,19 @@ j2cl_test_integration_test_data(
 )
 
 j2cl_test_integration_test_data(
+    name = "KotlinThrowsInBridgeMethod",
+    extra_defs = ["--inline_functions=false"],
+    deps = [":base"],
+)
+
+j2cl_test_integration_test_data(
     name = "ThrowsInClassInitializer",
+    extra_defs = ["--inline_functions=false"],
+    deps = [":base"],
+)
+
+j2cl_test_integration_test_data(
+    name = "KotlinThrowsInClassInitializer",
     extra_defs = ["--inline_functions=false"],
     deps = [":base"],
 )
@@ -111,11 +195,26 @@ j2cl_test_integration_test_data(
 )
 
 j2cl_test_integration_test_data(
+    name = "KotlinThrowsInConstructorTest",
+    extra_defs = ["--inline_functions=false"],
+    deps = [":base"],
+)
+
+j2cl_test_integration_test_data(
     name = "ThrowsInJsConstructorTest",
     extra_defs = ["--inline_functions=false"],
     deps = [
         ":base",
-        "//third_party:gwt-jsinterop-annotations",
+        "//third_party:jsinterop-annotations",
+    ],
+)
+
+j2cl_test_integration_test_data(
+    name = "KotlinThrowsInJsConstructorTest",
+    extra_defs = ["--inline_functions=false"],
+    deps = [
+        ":base",
+        "//third_party:jsinterop-annotations",
     ],
 )
 
@@ -125,7 +224,17 @@ j2cl_test_integration_test_data(
     native_srcs = ["ThrowsInNativeJs.native.js"],
     deps = [
         ":base",
-        "//third_party:gwt-jsinterop-annotations",
+        "//third_party:jsinterop-annotations",
+    ],
+)
+
+j2cl_test_integration_test_data(
+    name = "KotlinThrowsInNativeJs",
+    extra_defs = ["--inline_functions=false"],
+    native_srcs = ["KotlinThrowsInNativeJs.native.js"],
+    deps = [
+        ":base",
+        "//third_party:jsinterop-annotations",
     ],
 )
 
@@ -134,7 +243,16 @@ j2cl_test_integration_test_data(
     extra_defs = ["--inline_functions=false"],
     deps = [
         ":base",
-        "//third_party:gwt-jsinterop-annotations",
+        "//third_party:jsinterop-annotations",
+    ],
+)
+
+j2cl_test_integration_test_data(
+    name = "KotlinThrowsInJsFunction",
+    extra_defs = ["--inline_functions=false"],
+    deps = [
+        ":base",
+        "//third_party:jsinterop-annotations",
     ],
 )
 
@@ -143,12 +261,27 @@ j2cl_test_integration_test_data(
     extra_defs = ["--inline_functions=false"],
     deps = [
         ":base",
-        "//third_party:gwt-jsinterop-annotations",
+        "//third_party:jsinterop-annotations",
+    ],
+)
+
+j2cl_test_integration_test_data(
+    name = "KotlinThrowsInJsProperty",
+    extra_defs = ["--inline_functions=false"],
+    deps = [
+        ":base",
+        "//third_party:jsinterop-annotations",
     ],
 )
 
 j2cl_test_integration_test_data(
     name = "ExceptionWithCauseStacktraceTest",
+    extra_defs = ["--inline_functions=false"],
+    deps = [":base"],
+)
+
+j2cl_test_integration_test_data(
+    name = "KotlinExceptionWithCauseStacktraceTest",
     extra_defs = ["--inline_functions=false"],
     deps = [":base"],
 )
@@ -172,7 +305,17 @@ j2cl_test_integration_test_data(
     native_deps = [":stacktrace"],
     deps = [
         ":base",
-        "//third_party:gwt-jsinterop-annotations",
+        "//third_party:jsinterop-annotations",
+    ],
+)
+
+j2cl_test_integration_test_data(
+    name = "KotlinNativeStacktraceTest",
+    extra_defs = ["--inline_functions=false"],
+    native_deps = [":stacktrace"],
+    deps = [
+        ":base",
+        "//third_party:jsinterop-annotations",
     ],
 )
 

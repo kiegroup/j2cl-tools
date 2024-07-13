@@ -1,42 +1,45 @@
- ;;; Code for simplelongs.SimpleLongs [type definition]
- (type $simplelongs.SimpleLongs (struct_subtype
-  (field $vtable (ref $simplelongs.SimpleLongs.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  (field $f_foo__simplelongs_SimpleLongs (mut i64))
-  (field $f_sideEffect__simplelongs_SimpleLongs_ (mut i32))
-  $java.lang.Object)
- )
- (type $simplelongs.SimpleLongs.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_getBar__long (ref $function.m_getBar__long))
-  (field $m_getWithSideEffect__simplelongs_SimpleLongs (ref $function.m_getWithSideEffect__simplelongs_SimpleLongs))
-  (field $m_main__void (ref $function.m_main__void))
-  $java.lang.Object.vtable)
- )
+;;; Code for simplelongs.SimpleLongs [type definition]
+(type $simplelongs.SimpleLongs.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_getBar__long (ref $function.m_getBar__long))
+ (field $m_getWithSideEffect__simplelongs_SimpleLongs (ref $function.m_getWithSideEffect__simplelongs_SimpleLongs))
+ (field $m_main__void (ref $function.m_main__void))
+ ))
+)
+(type $simplelongs.SimpleLongs (sub $java.lang.Object (struct
+ (field $vtable (ref $simplelongs.SimpleLongs.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $foo@simplelongs.SimpleLongs (mut i64))
+ (field $sideEffect@simplelongs.SimpleLongs (mut i32))
+ ))
+)
+
+;;; Code for simplelongs.SimpleLongs [imports]
+
+;;; Code for simplelongs.SimpleLongs [static fields]
+(global $$class-initialized@simplelongs.SimpleLongs (mut i32)
+ (i32.const 0)
+)
+(global $$class@simplelongs.SimpleLongs (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
 
 ;;; Code for simplelongs.SimpleLongs [vtable.init]
 (global $simplelongs.SimpleLongs.vtable (ref $simplelongs.SimpleLongs.vtable)
  (struct.new $simplelongs.SimpleLongs.vtable
+  (ref.func $$getClassImpl__java_lang_Class@simplelongs.SimpleLongs)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@simplelongs.SimpleLongs)
   (ref.func $m_getBar__long@simplelongs.SimpleLongs)
   (ref.func $m_getWithSideEffect__simplelongs_SimpleLongs@simplelongs.SimpleLongs)
   (ref.func $m_main__void@simplelongs.SimpleLongs)
  )
 )
-
-;;; Code for simplelongs.SimpleLongs [static fields]
-(global $f_$initialized__simplelongs_SimpleLongs (mut i32) (i32.const 0))
-(global $f_$class__simplelongs_SimpleLongs (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|simplelongs....|__simplelongs_SimpleLongs (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
 
 ;;; Code for simplelongs.SimpleLongs [methods]
 
@@ -46,6 +49,8 @@
  ;;@ simplelongs/SimpleLongs.java:18:13
  (local $$instance (ref null $simplelongs.SimpleLongs))
  (block
+  ;;@ simplelongs/SimpleLongs.java:18:13
+  (call $$clinit__void_<once>_@simplelongs.SimpleLongs )
   ;;@ simplelongs/SimpleLongs.java:18:13
   (local.set $$instance (struct.new $simplelongs.SimpleLongs (ref.as_non_null (global.get $simplelongs.SimpleLongs.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (i64.const 0) (i32.const 0)))
   ;;@ simplelongs/SimpleLongs.java:18:13
@@ -61,8 +66,6 @@
  ;;@ simplelongs/SimpleLongs.java:18:13
  (block
   ;;@ simplelongs/SimpleLongs.java:18:13
-  (call $$clinit__void@simplelongs.SimpleLongs )
-  ;;@ simplelongs/SimpleLongs.java:18:13
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
   ;;@ simplelongs/SimpleLongs.java:18:13
   (call $$init__void_$p_simplelongs_SimpleLongs@simplelongs.SimpleLongs (ref.as_non_null (local.get $this)))
@@ -76,7 +79,7 @@
  (result i64)
  ;;@ simplelongs/SimpleLongs.java:21:14
  (local $this (ref null $simplelongs.SimpleLongs))
- (local.set $this (ref.cast_static $simplelongs.SimpleLongs (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $simplelongs.SimpleLongs) (local.get $this.untyped)))
  (block
   ;;@ simplelongs/SimpleLongs.java:22:4
   (return (i64.const 0))
@@ -91,10 +94,10 @@
  (result (ref null $simplelongs.SimpleLongs))
  ;;@ simplelongs/SimpleLongs.java:28:21
  (local $this (ref null $simplelongs.SimpleLongs))
- (local.set $this (ref.cast_static $simplelongs.SimpleLongs (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $simplelongs.SimpleLongs) (local.get $this.untyped)))
  (block
   ;;@ simplelongs/SimpleLongs.java:29:4
-  (struct.set $simplelongs.SimpleLongs $f_sideEffect__simplelongs_SimpleLongs_ (local.get $this) (i32.add (struct.get $simplelongs.SimpleLongs $f_sideEffect__simplelongs_SimpleLongs_ (local.get $this)) (i32.const 1)))
+  (struct.set $simplelongs.SimpleLongs $sideEffect@simplelongs.SimpleLongs (local.get $this) (i32.add (struct.get $simplelongs.SimpleLongs $sideEffect@simplelongs.SimpleLongs (local.get $this)) (i32.const 1)))
   ;;@ simplelongs/SimpleLongs.java:30:4
   (return (local.get $this))
  )
@@ -122,7 +125,7 @@
  (local $$value_4 i64)
  (local $g i64)
  (local $this (ref null $simplelongs.SimpleLongs))
- (local.set $this (ref.cast_static $simplelongs.SimpleLongs (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $simplelongs.SimpleLongs) (local.get $this.untyped)))
  (block
   ;;@ simplelongs/SimpleLongs.java:36:4
   (local.set $a (i64.const 0))
@@ -150,16 +153,16 @@
   ;;@ simplelongs/SimpleLongs.java:52:4
   (local.set $e (block (result i64)
    (local.set $$qualifier (local.get $this))
-   (local.set $$value (i64.add (struct.get $simplelongs.SimpleLongs $f_foo__simplelongs_SimpleLongs (local.get $this)) (i64.const 1)))
-   (struct.set $simplelongs.SimpleLongs $f_foo__simplelongs_SimpleLongs (local.get $$qualifier) (local.get $$value))
+   (local.set $$value (i64.add (struct.get $simplelongs.SimpleLongs $foo@simplelongs.SimpleLongs (local.get $this)) (i64.const 1)))
+   (struct.set $simplelongs.SimpleLongs $foo@simplelongs.SimpleLongs (local.get $$qualifier) (local.get $$value))
    (local.get $$value)
   ))
   ;;@ simplelongs/SimpleLongs.java:53:4
   (local.set $e (block (result i64)
    (local.set $$qualifier_1 (call_ref $function.m_getWithSideEffect__simplelongs_SimpleLongs (ref.as_non_null (local.get $this))(struct.get $simplelongs.SimpleLongs.vtable $m_getWithSideEffect__simplelongs_SimpleLongs (struct.get $simplelongs.SimpleLongs $vtable(local.get $this)))))
    (local.set $$qualifier_2 (local.get $$qualifier_1))
-   (local.set $$value_1 (i64.add (struct.get $simplelongs.SimpleLongs $f_foo__simplelongs_SimpleLongs (local.get $$qualifier_1)) (i64.const 1)))
-   (struct.set $simplelongs.SimpleLongs $f_foo__simplelongs_SimpleLongs (local.get $$qualifier_2) (local.get $$value_1))
+   (local.set $$value_1 (i64.add (struct.get $simplelongs.SimpleLongs $foo@simplelongs.SimpleLongs (local.get $$qualifier_1)) (i64.const 1)))
+   (struct.set $simplelongs.SimpleLongs $foo@simplelongs.SimpleLongs (local.get $$qualifier_2) (local.get $$value_1))
    (local.get $$value_1)
   ))
   ;;@ simplelongs/SimpleLongs.java:56:4
@@ -170,19 +173,19 @@
   ))
   ;;@ simplelongs/SimpleLongs.java:57:4
   (local.set $f (block (result i64)
-   (local.set $$value_3 (struct.get $simplelongs.SimpleLongs $f_foo__simplelongs_SimpleLongs (local.get $this)))
-   (struct.set $simplelongs.SimpleLongs $f_foo__simplelongs_SimpleLongs (local.get $this) (i64.add (struct.get $simplelongs.SimpleLongs $f_foo__simplelongs_SimpleLongs (local.get $this)) (i64.const 1)))
+   (local.set $$value_3 (struct.get $simplelongs.SimpleLongs $foo@simplelongs.SimpleLongs (local.get $this)))
+   (struct.set $simplelongs.SimpleLongs $foo@simplelongs.SimpleLongs (local.get $this) (i64.add (struct.get $simplelongs.SimpleLongs $foo@simplelongs.SimpleLongs (local.get $this)) (i64.const 1)))
    (local.get $$value_3)
   ))
   ;;@ simplelongs/SimpleLongs.java:58:4
   (local.set $f (block (result i64)
    (local.set $$qualifier_3 (call_ref $function.m_getWithSideEffect__simplelongs_SimpleLongs (ref.as_non_null (local.get $this))(struct.get $simplelongs.SimpleLongs.vtable $m_getWithSideEffect__simplelongs_SimpleLongs (struct.get $simplelongs.SimpleLongs $vtable(local.get $this)))))
-   (local.set $$value_4 (struct.get $simplelongs.SimpleLongs $f_foo__simplelongs_SimpleLongs (local.get $$qualifier_3)))
-   (struct.set $simplelongs.SimpleLongs $f_foo__simplelongs_SimpleLongs (local.get $$qualifier_3) (i64.add (struct.get $simplelongs.SimpleLongs $f_foo__simplelongs_SimpleLongs (local.get $$qualifier_3)) (i64.const 1)))
+   (local.set $$value_4 (struct.get $simplelongs.SimpleLongs $foo@simplelongs.SimpleLongs (local.get $$qualifier_3)))
+   (struct.set $simplelongs.SimpleLongs $foo@simplelongs.SimpleLongs (local.get $$qualifier_3) (i64.add (struct.get $simplelongs.SimpleLongs $foo@simplelongs.SimpleLongs (local.get $$qualifier_3)) (i64.const 1)))
    (local.get $$value_4)
   ))
   ;;@ simplelongs/SimpleLongs.java:61:4
-  (local.set $g (struct.get $simplelongs.SimpleLongs $f_foo__simplelongs_SimpleLongs (local.get $this)))
+  (local.set $g (struct.get $simplelongs.SimpleLongs $foo@simplelongs.SimpleLongs (local.get $this)))
   ;;@ simplelongs/SimpleLongs.java:62:4
   (local.set $g (call_ref $function.m_getBar__long (ref.as_non_null (local.get $this))(struct.get $simplelongs.SimpleLongs.vtable $m_getBar__long (struct.get $simplelongs.SimpleLongs $vtable(local.get $this)))))
  )
@@ -195,38 +198,39 @@
  ;;@ simplelongs/SimpleLongs.java:18:13
  (block
   ;;@ simplelongs/SimpleLongs.java:19:2
-  (struct.set $simplelongs.SimpleLongs $f_foo__simplelongs_SimpleLongs (local.get $this) (i64.const 0))
+  (struct.set $simplelongs.SimpleLongs $foo@simplelongs.SimpleLongs (local.get $this) (i64.const 0))
  )
 )
 
 ;;; void SimpleLongs.$clinit()
-(func $$clinit__void@simplelongs.SimpleLongs
+(func $$clinit__void_<once>_@simplelongs.SimpleLongs
  ;;@ simplelongs/SimpleLongs.java:18:13
  (block
   ;;@ simplelongs/SimpleLongs.java:18:13
-  (if (global.get $f_$initialized__simplelongs_SimpleLongs)
+  (if (global.get $$class-initialized@simplelongs.SimpleLongs)
    (then
     ;;@ simplelongs/SimpleLongs.java:18:13
     (return )
    )
   )
   ;;@ simplelongs/SimpleLongs.java:18:13
-  (global.set $f_$initialized__simplelongs_SimpleLongs (i32.const 1))
+  (global.set $$class-initialized@simplelongs.SimpleLongs (i32.const 1))
   ;;@ simplelongs/SimpleLongs.java:18:13
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> SimpleLongs.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@simplelongs.SimpleLongs
+(func $$getClassMetadata__java_lang_Class_<once>_@simplelongs.SimpleLongs
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__simplelongs_SimpleLongs) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@simplelongs.SimpleLongs)))
    (then
-    (global.set $f_$class__simplelongs_SimpleLongs (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|simplelongs....|__java_lang_String (ref.func $$getString_|simplelongs....|__java_lang_String@simplelongs.SimpleLongs) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@simplelongs.SimpleLongs))
    )
   )
-  (return (global.get $f_$class__simplelongs_SimpleLongs))
+  (global.set $$class@simplelongs.SimpleLongs (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|simplelongs....|__java_lang_String_<once>_@simplelongs.SimpleLongs )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@simplelongs.SimpleLongs))
  )
 )
 
@@ -236,22 +240,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $simplelongs.SimpleLongs))
- (local.set $this (ref.cast_static $simplelongs.SimpleLongs (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $simplelongs.SimpleLongs) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@simplelongs.SimpleLongs) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@simplelongs.SimpleLongs ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@simplelongs.SimpleLongs)
-
-;;; String SimpleLongs.$getString_|simplelongs....|()
-(func $$getString_|simplelongs....|__java_lang_String@simplelongs.SimpleLongs
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|simplelongs....|__simplelongs_SimpleLongs) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|simplelongs....|__simplelongs_SimpleLongs (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "simplelongs.SimpleLongs")))
-   )
-  )
-  (return (global.get $f_$string_|simplelongs....|__simplelongs_SimpleLongs))
- )
-)

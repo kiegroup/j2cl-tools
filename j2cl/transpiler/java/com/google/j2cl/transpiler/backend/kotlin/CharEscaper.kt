@@ -15,6 +15,9 @@
  */
 package com.google.j2cl.transpiler.backend.kotlin
 
+import com.google.j2cl.transpiler.backend.kotlin.common.inDoubleQuotes
+import com.google.j2cl.transpiler.backend.kotlin.common.inSingleQuotes
+
 /**
  * Returns escape identifier for this char if present
  * (https://kotlinlang.org/spec/syntax-and-grammar.html#grammar-rule-EscapedIdentifier).
@@ -39,27 +42,29 @@ private val Char.identifierEscapedStringOrNull: String?
 
 /** Returns true if this char should be escaped using Unicode escaping. */
 private val Char.needsUnicodeEscaping: Boolean
-  get() = toInt().let { it < 0x20 || it >= 0x7f }
+  get() = code !in 0x20..0x7e
 
 /**
  * Returns escaped string using Unicode escaping, or null if it does not need to be escaped
  * (https://kotlinlang.org/spec/syntax-and-grammar.html#grammar-rule-UniCharacterLiteral).
  */
 private val Char.unicodeEscapedStringOrNull: String?
-  get() = takeIf { it.needsUnicodeEscaping }?.let { String.format("\\u%04X", it.toInt()) }
+  get() = takeIf { it.needsUnicodeEscaping }?.let { String.format("\\u%04X", it.code) }
 
 /** Returns escaped string. */
-val Char.escapedString: String
+private val Char.escapedString: String
   get() = identifierEscapedStringOrNull ?: unicodeEscapedStringOrNull ?: toString()
 
 /** Returns escaped string. */
-val String.escapedString: String
+private val String.escapedString: String
   get() =
     // Surrogate pairs must be escaped separately in Kotlin, so escaping each Char separately is OK.
     StringBuilder().also { builder -> forEach { builder.append(it.escapedString) } }.toString()
 
-val Char.literalString: String
-  get() = "'$escapedString'"
+/** Returns string with literal representation of this char. */
+internal val Char.literalString: String
+  get() = escapedString.inSingleQuotes
 
-val String.literalString: String
-  get() = "\"$escapedString\""
+/** Returns string with literal representation of this string. */
+internal val String.literalString: String
+  get() = escapedString.inDoubleQuotes

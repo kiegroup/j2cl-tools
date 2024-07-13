@@ -182,7 +182,8 @@ public class ResolveCaptures extends NormalizationPass {
             if (type.getDeclaration().isCapturingEnclosingInstance()) {
               type.addMember(
                   0,
-                  Field.Builder.from(getFieldDescriptorForEnclosingInstance(type.getDeclaration()))
+                  Field.Builder.from(
+                          type.getTypeDescriptor().getFieldDescriptorForEnclosingInstance())
                       .setSourcePosition(type.getSourcePosition())
                       .build());
             }
@@ -227,9 +228,8 @@ public class ResolveCaptures extends NormalizationPass {
                       0,
                       invocation.getQualifier(),
                       // Consider the outer instance type to be nullable to be make the type
-                      // consistent
-                      // accross all places where it is used (backing field and constructor
-                      // parameters).
+                      // consistent across all places where it is used (backing field and
+                      // constructor parameters).
                       targetTypeDescriptor.getEnclosingTypeDescriptor().toNullable())
                   .setQualifier(null);
             }
@@ -256,6 +256,18 @@ public class ResolveCaptures extends NormalizationPass {
             boolean isDelegatingConstructor = AstUtils.hasThisCall(method);
             Map<Variable, Variable> parameterByCapturedVariable = new HashMap<>();
 
+            // If this is a JsConstructor, ensure we don't put any statements before the super()
+            // call.
+            int statementOffset =
+                method.getDescriptor().isJsConstructor()
+                        && getCurrentType().getSuperTypeDescriptor().hasJsConstructor()
+                    ? method
+                            .getBody()
+                            .getStatements()
+                            .indexOf(AstUtils.getConstructorInvocationStatement(method))
+                        + 1
+                    : 0;
+
             // Declare a parameter for each captured variable and initialize the backing field
             // only if this constructor is not a delegating constructor.
             int i = 0;
@@ -264,6 +276,7 @@ public class ResolveCaptures extends NormalizationPass {
                   addParameterAndInitializeBackingField(
                       methodBuilder,
                       i++,
+                      statementOffset,
                       getFieldDescriptorForCapture(typeDeclaration, variable),
                       isDelegatingConstructor,
                       // Keep the source position of the original variable to keep the name mapping.
@@ -271,13 +284,15 @@ public class ResolveCaptures extends NormalizationPass {
               parameterByCapturedVariable.put(variable, parameter);
             }
 
-            // add enclosing instance enclosingInstanceParameter and initialize it.
             Variable enclosingInstanceParameter =
                 typeDeclaration.isCapturingEnclosingInstance()
                     ? addParameterAndInitializeBackingField(
                         methodBuilder,
                         0,
-                        getFieldDescriptorForEnclosingInstance(typeDeclaration),
+                        statementOffset,
+                        getCurrentType()
+                            .getTypeDescriptor()
+                            .getFieldDescriptorForEnclosingInstance(),
                         isDelegatingConstructor,
                         getCurrentType().getSourcePosition())
                     : null;
@@ -294,6 +309,7 @@ public class ResolveCaptures extends NormalizationPass {
   private Variable addParameterAndInitializeBackingField(
       Method.Builder methodBuilder,
       int position,
+      int statementOffsetPosition,
       FieldDescriptor captureBackingField,
       boolean isDelegatingConstructor,
       SourcePosition sourcePosition) {
@@ -304,7 +320,7 @@ public class ResolveCaptures extends NormalizationPass {
     if (!isDelegatingConstructor) {
       // Assign the parameter to the backing field.
       methodBuilder.addStatement(
-          position,
+          statementOffsetPosition + position,
           BinaryExpression.Builder.asAssignmentTo(captureBackingField)
               .setRightOperand(parameter.createReference())
               .build()
@@ -398,9 +414,7 @@ public class ResolveCaptures extends NormalizationPass {
             do {
               outerFieldAccess =
                   FieldAccess.newBuilder()
-                      .setTarget(
-                          getFieldDescriptorForEnclosingInstance(
-                              currentTypeDescriptor.getTypeDeclaration()))
+                      .setTarget(currentTypeDescriptor.getFieldDescriptorForEnclosingInstance())
                       .setQualifier(outerFieldAccess)
                       .build();
               currentTypeDescriptor = currentTypeDescriptor.getEnclosingTypeDescriptor();
@@ -420,33 +434,12 @@ public class ResolveCaptures extends NormalizationPass {
       TypeDeclaration typeDeclaration, Variable capturedVariable) {
     return FieldDescriptor.newBuilder()
         .setEnclosingTypeDescriptor(typeDeclaration.toUnparameterizedTypeDescriptor())
-        .setName(capturedVariable.getName())
+        .setName("$captured_" + capturedVariable.getName())
         .setTypeDescriptor(capturedVariable.getTypeDescriptor())
-        .setStatic(false)
         .setStatic(false)
         .setFinal(true)
         .setSynthetic(true)
         .setOrigin(FieldOrigin.SYNTHETIC_CAPTURE_FIELD)
-        .build();
-  }
-
-  /** Returns the FieldDescriptor corresponding to the enclosing class instance. */
-  private FieldDescriptor getFieldDescriptorForEnclosingInstance(
-      TypeDeclaration innerTypeDescriptor) {
-    return FieldDescriptor.newBuilder()
-        .setEnclosingTypeDescriptor(innerTypeDescriptor.toUnparameterizedTypeDescriptor())
-        .setName("this")
-        .setTypeDescriptor(
-            innerTypeDescriptor
-                .getEnclosingTypeDeclaration()
-                .toUnparameterizedTypeDescriptor()
-                // Consider the outer instance type to be nullable to be make the type consistent
-                // accross all places where it is used (backing field and constructor parameters).
-                .toNullable())
-        .setSynthetic(true)
-        .setFinal(true)
-        .setSynthetic(true)
-        .setOrigin(FieldOrigin.SYNTHETIC_OUTER_FIELD)
         .build();
   }
 

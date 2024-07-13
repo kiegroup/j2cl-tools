@@ -28,6 +28,7 @@ import com.google.j2cl.common.SourcePosition;
 import com.google.j2cl.transpiler.ast.FieldDescriptor.FieldOrigin;
 import com.google.j2cl.transpiler.ast.MethodDescriptor.MethodOrigin;
 import com.google.j2cl.transpiler.ast.MethodDescriptor.ParameterDescriptor;
+import com.google.j2cl.transpiler.ast.TypeDeclaration.Kind;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -194,8 +195,6 @@ public final class AstUtils {
       MethodDescriptor toMethodDescriptor,
       String jsDocDescription,
       boolean isStaticDispatch) {
-    checkArgument(!fromMethodDescriptor.getEnclosingTypeDescriptor().isInterface());
-
     List<Variable> parameters =
         createParameterVariables(fromMethodDescriptor.getParameterTypeDescriptors());
 
@@ -609,6 +608,7 @@ public final class AstUtils {
           Variable.newBuilder()
               .setName(parameterName)
               .setTypeDescriptor(parameterTypeDescriptor)
+              .setParameter(true)
               .build());
       index++;
     }
@@ -901,24 +901,6 @@ public final class AstUtils {
         Iterables.getLast(methodDescriptor.getParameterDescriptors());
     ArrayTypeDescriptor varargsTypeDescriptor =
         (ArrayTypeDescriptor) varargsParameterDescriptor.getTypeDescriptor();
-
-    if (AstUtils.isNonNativeJsEnum(varargsTypeDescriptor.getComponentTypeDescriptor())) {
-      // TODO(b/118615488): remove this when BoxedLightEnums are surfaces to J2CL.
-      //
-      // Here we create an array using the bound of declarated type T[] instead of the actual
-      // inferred type JsEnum[] since non-native JsEnum arrays are forbidden.
-      // We have chosen this workaround instead of banning T[] when T is inferred to be a non-native
-      // JsEnum. It is quite uncommon to have code that observes the implications of using a
-      // array of the supertype in the implicit array creation due to varargs, instead of an array
-      // of the inferred subtype. Making this choice allows the use of common varargs APIs such as
-      // Arrays.asList() with JsEnum values.
-      varargsTypeDescriptor =
-          (ArrayTypeDescriptor)
-              Iterables.getLast(
-                      methodDescriptor.getDeclarationDescriptor().getParameterDescriptors())
-                  .getTypeDescriptor()
-                  .toRawTypeDescriptor();
-    }
     if (arguments.size() < parametersLength) {
       // no argument for the varargs, add an empty array.
       return new ArrayLiteral(varargsTypeDescriptor);
@@ -936,6 +918,61 @@ public final class AstUtils {
               : arguments.get(i));
     }
     return new ArrayLiteral(varargsTypeDescriptor, valueExpressions);
+  }
+
+  /**
+   * For method calls with varargs, erases the array component of the vararg if it's specialized to
+   * a JsEnum type.
+   *
+   * <p>Calls with varargs should have already be packed into an array literal before this is
+   * called.
+   *
+   * <p>For example: {@code foo(nonVararg, new SomeJsEnum[] {SomeJsEnum.A, SomeJsEnum.B}} would be
+   * rewritten to {@code foo(nonVararg, new Object[] {SomeJsEnum.A, SomeJsEnum.B}}.
+   */
+  public static MethodCall maybeEraseJsEnumVarargsArrayType(MethodCall methodCall) {
+    if (!methodCall.getTarget().isVarargs()) {
+      return methodCall;
+    }
+
+    checkArgument(
+        methodCall.getTarget().getParameterDescriptors().size() == methodCall.getArguments().size(),
+        "maybeEraseJsEnumVarargsArrayType should only be called after varargs have been packaged"
+            + " into an array literal.");
+
+    Expression lastArgument = Iterables.getLast(methodCall.getArguments());
+    var varargsTypeDescriptor =
+        (ArrayTypeDescriptor)
+            Iterables.getLast(methodCall.getTarget().getParameterDescriptors()).getTypeDescriptor();
+
+    if (!isNonNativeJsEnum(varargsTypeDescriptor.getComponentTypeDescriptor())
+        || !(lastArgument instanceof ArrayLiteral)) {
+      return methodCall;
+    }
+
+    var updatedArguments =
+        new ArrayList<>(methodCall.getArguments().subList(0, methodCall.getArguments().size() - 1));
+
+    // TODO(b/118615488): remove this when BoxedLightEnums are surfaces to J2CL.
+    //
+    // Here we create an array using the bound of declarated type T[] instead of the actual
+    // inferred type JsEnum[] since non-native JsEnum arrays are forbidden.
+    // We have chosen this workaround instead of banning T[] when T is inferred to be a
+    // non-native
+    // JsEnum. It is quite uncommon to have code that observes the implications of using a
+    // array of the supertype in the implicit array creation due to varargs, instead of an
+    // array
+    // of the inferred subtype. Making this choice allows the use of common varargs APIs
+    // such as
+    // Arrays.asList() with JsEnum values.
+    var parameterDeclaration =
+        Iterables.getLast(
+            methodCall.getTarget().getDeclarationDescriptor().getParameterDescriptors());
+    updatedArguments.add(
+        new ArrayLiteral(
+            (ArrayTypeDescriptor) parameterDeclaration.getTypeDescriptor().toRawTypeDescriptor(),
+            ((ArrayLiteral) lastArgument).getValueExpressions()));
+    return MethodCall.Builder.from(methodCall).setArguments(updatedArguments).build();
   }
 
   /** Whether the function is the identity function. */
@@ -974,6 +1011,18 @@ public final class AstUtils {
         .build();
   }
 
+  /** Returns the type of the iterable element for a type might appear in a foreach statement. */
+  public static TypeDescriptor getIterableElement(TypeDescriptor typeDescriptor) {
+    if (typeDescriptor.isArray()) {
+      return ((ArrayTypeDescriptor) typeDescriptor).getComponentTypeDescriptor();
+    }
+
+    TypeDescriptor iteratorTypeDescriptor =
+        typeDescriptor.getMethodDescriptor("iterator").getReturnTypeDescriptor();
+
+    return iteratorTypeDescriptor.getMethodDescriptor("next").getReturnTypeDescriptor();
+  }
+
   private static MethodDescriptor.Builder createMethodDescriptorBuilderFrom(
       FieldDescriptor fieldDescriptor) {
     return MethodDescriptor.newBuilder()
@@ -990,8 +1039,10 @@ public final class AstUtils {
       FieldDescriptor fieldDescriptor) {
     checkArgument(fieldDescriptor.isStatic());
     return FieldDescriptor.Builder.from(fieldDescriptor)
+        .setName("$ordinal_" + fieldDescriptor.getName())
         .setEnumConstant(false)
         .setCompileTimeConstant(true)
+        .setConstantValue(fieldDescriptor.getEnumOrdinalValue())
         .setSynthetic(true)
         .setTypeDescriptor(PrimitiveTypes.INT)
         .setOriginalJsInfo(JsInfo.NONE)
@@ -1015,9 +1066,37 @@ public final class AstUtils {
         && memberDescriptor.getEnclosingTypeDescriptor().isJsEnum();
   }
 
+  public static boolean isPrimitiveNonNativeJsEnum(TypeDescriptor typeDescriptor) {
+    return typeDescriptor.isJsEnum()
+        && getJsEnumValueFieldType(((DeclaredTypeDescriptor) typeDescriptor).getTypeDeclaration())
+            .isPrimitive();
+  }
+
+  public static FieldDescriptor createJsEnumConstantFieldDescriptor(
+      FieldDescriptor fieldDescriptor) {
+    TypeDescriptor enumValueType =
+        getJsEnumValueFieldType(fieldDescriptor.getEnclosingTypeDescriptor().getTypeDeclaration());
+    return FieldDescriptor.Builder.from(fieldDescriptor)
+        .setTypeDescriptor(enumValueType)
+        .setFinal(true)
+        .setCompileTimeConstant(true)
+        .setEnumConstant(true)
+        .build();
+  }
+
+  public static TypeDescriptor getJsEnumValueFieldType(TypeDescriptor typeDescriptor) {
+    checkState(typeDescriptor.isJsEnum());
+    return getJsEnumValueFieldType(((DeclaredTypeDescriptor) typeDescriptor).getTypeDeclaration());
+  }
+
   /** Returns the value field for a JsEnum. */
   public static TypeDescriptor getJsEnumValueFieldType(TypeDeclaration typeDeclaration) {
     FieldDescriptor valueFieldDescriptor = getJsEnumValueFieldDescriptor(typeDeclaration);
+    // This method should be used carefully. A properly declared JsEnum will always have
+    // a value field if it has a custom value (after validation); but due to header compilation
+    // removing private fields, the field might not be visible across compilation boundaries and
+    // and this method could give incorrect information in that case.
+    checkState(valueFieldDescriptor != null || !typeDeclaration.getJsEnumInfo().hasCustomValue());
     return valueFieldDescriptor == null
         ? PrimitiveTypes.INT
         : valueFieldDescriptor.getTypeDescriptor();
@@ -1042,6 +1121,37 @@ public final class AstUtils {
     }
   }
 
+  /** Return the static field that will hold the value for a system property. */
+  public static MethodDescriptor getSystemGetPropertyGetter(
+      String systemPropertyString, boolean requiredProperty) {
+    return MethodDescriptor.newBuilder()
+        .setEnclosingTypeDescriptor(getSystemPropertyHolder().toUnparameterizedTypeDescriptor())
+        // TODO(rluble): Sanitize the system property string.
+        .setName(systemPropertyString)
+        .setReturnTypeDescriptor(TypeDescriptors.get().javaLangString)
+        .setOrigin(
+            requiredProperty
+                ? MethodOrigin.SYNTHETIC_SYSTEM_PROPERTY_GETTER_REQUIRED
+                : MethodOrigin.SYNTHETIC_SYSTEM_PROPERTY_GETTER_OPTIONAL)
+        .setStatic(true)
+        .setSynthetic(true)
+        .setVisibility(Visibility.PRIVATE)
+        .build();
+  }
+
+  /** Return the type descriptor for the holder of system properties. */
+  public static TypeDeclaration getSystemPropertyHolder() {
+    return TypeDeclaration.newBuilder()
+        .setClassComponents(ImmutableList.of("javaemul.internal.SystemPropertyPool"))
+        .setKind(Kind.INTERFACE)
+        .build();
+  }
+
+  /** Returns true if {@code methodCall} is a call to {@link System#getProperty}. */
+  public static boolean isSystemGetPropertyCall(MethodCall methodCall) {
+    return "java.lang.System.getProperty".equals(methodCall.getTarget().getQualifiedBinaryName());
+  }
+
   /**
    * Returns true if {@code typeDescriptor} is a non native JsEnum, i.e. a JsEnum that requires
    * boxing.
@@ -1050,13 +1160,71 @@ public final class AstUtils {
     return typeDescriptor.isJsEnum() && !typeDescriptor.isNative();
   }
 
+  /** Returns true {@code typeDescriptor} requires bridges be generated for boxing/unboxing. */
+  public static boolean needsJsEnumBoxingBridges(TypeDescriptor typeDescriptor) {
+    // Check if the JsEnum boxed type exists for the current backend. Not all backends utilize
+    // JsEnum semantics.
+    return TypeDescriptors.get().javaemulInternalBoxedLightEnum != null
+        && isNonNativeJsEnum(typeDescriptor);
+  }
+
+  /**
+   * Returns true if {@code typeDescriptor} is a non native JsEnum, i.e. a JsEnum that requires
+   * boxing.
+   */
+  public static boolean isNonNativeJsEnum(TypeDeclaration typeDeclaration) {
+    return typeDeclaration.isJsEnum() && !typeDeclaration.isNative();
+  }
+
   /** Returns true if {@code typeDescriptor} is a non native JsEnum array. */
   public static boolean isNonNativeJsEnumArray(TypeDescriptor typeDescriptor) {
     return typeDescriptor.isArray()
         && isNonNativeJsEnum(((ArrayTypeDescriptor) typeDescriptor).getLeafTypeDescriptor());
   }
 
-  /** Retuns a list of null values. */
+  /** Gets the initial value for a field or variable for the be assigned to a Wasm variable. */
+  public static Expression getInitialValue(TypeDescriptor typeDescriptor) {
+    // JsEnum default values are special case.
+    // TODO(b/299984505): Is there a better way to do this?
+    if (isNonNativeJsEnum(typeDescriptor)) {
+      TypeDescriptor valueTypeDescriptor = getJsEnumValueFieldType(typeDescriptor);
+      return valueTypeDescriptor.isPrimitive()
+          ? valueTypeDescriptor.toBoxedType().getFieldDescriptor("MIN_VALUE").getConstantValue()
+          : valueTypeDescriptor.getDefaultValue();
+    }
+
+    return typeDescriptor.getDefaultValue();
+  }
+
+  /** Inserts type-consistency casts for JsEnum values when used as their value type. */
+  public static Expression castJsEnumToValue(
+      Expression jsEnumExpression, TypeDescriptor valueTypeDescriptor) {
+    checkArgument(jsEnumExpression.getTypeDescriptor().isJsEnum());
+    // In order to preserve type consistency, expressions like
+    //
+    //     getEnum()  // where getEnum() returns MyJsEnum.
+    //
+    // will be rewritten as
+    //
+    //     /** @type {int} */ ((MyJsEnum) getEnum())
+    //
+    // The inner Java cast to MyJsEnum guarantees that any conversion for getEnum() is preserved
+    // (e.g. erasure casts if getEnum() returned T and was specialized to MyJsEnum in the calling
+    // context; this allows the expression to be unboxed if needed).
+    // The outer JsDoc cast guarantees that the expression is treated as of being the type of value
+    // and conversions such as boxing are correctly preserved (e.g. if the expression was assigned
+    // to an Integer variable).
+    return JsDocCastExpression.newBuilder()
+        .setCastType(valueTypeDescriptor)
+        .setExpression(
+            CastExpression.newBuilder()
+                .setCastTypeDescriptor(jsEnumExpression.getTypeDescriptor())
+                .setExpression(jsEnumExpression)
+                .build())
+        .build();
+  }
+
+  /** Returns a list of null values. */
   public static List<Expression> createListOfNullValues(int size) {
     return Collections.nCopies(size, TypeDescriptors.get().javaLangObject.getNullValue());
   }

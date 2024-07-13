@@ -1,5 +1,5 @@
 // Generated from "switchstatement/SwitchStatement.java"
-@file:OptIn(ExperimentalObjCName::class, ExperimentalObjCRefinement::class)
+@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -9,6 +9,7 @@
  "UNNECESSARY_LATEINIT",
  "UNNECESSARY_NOT_NULL_ASSERTION",
  "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
  "UNUSED_PARAMETER",
  "UNUSED_VARIABLE",
  "USELESS_CAST",
@@ -27,9 +28,7 @@ import kotlin.Short
 import kotlin.Suppress
 import kotlin.assert
 import kotlin.experimental.ExperimentalObjCName
-import kotlin.experimental.ExperimentalObjCRefinement
 import kotlin.jvm.JvmStatic
-import kotlin.native.HiddenFromObjC
 import kotlin.native.ObjCName
 
 enum class Numbers {
@@ -87,8 +86,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testCaseExpressionTypes_private_2(ch: Char, i: Int, b: Byte, s: Short) {
+ internal fun testCaseExpressionTypes_private_2(ch: Char, i: Int, b: Byte, s: Short) {
   SWITCH@ do {
    when (ch) {
     'a' -> {
@@ -159,8 +157,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testBlocksInSwitchCase_private_2(i: Int) {
+ internal fun testBlocksInSwitchCase_private_2(i: Int) {
   SWITCH@ do {
    when (i) {
     1 -> {
@@ -176,8 +173,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testLabelInSwitchCase_private_2(i: Int) {
+ internal fun testLabelInSwitchCase_private_2(i: Int) {
   SWITCH@ do {
    CASE@ do {
     CASE_1@ do {
@@ -198,8 +194,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testNonFallThroughBreakCase_private_2(i: Int) {
+ internal fun testNonFallThroughBreakCase_private_2(i: Int) {
   SWITCH@ do {
    when (i) {
     1 -> {
@@ -214,8 +209,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testNonFallThroughBreakOuterCase_private_2(i: Int) {
+ internal fun testNonFallThroughBreakOuterCase_private_2(i: Int) {
   OUTER_LABEL@ do {
    SWITCH@ do {
     when (i) {
@@ -232,8 +226,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testNonFallThroughContinueCase_private_2(i: Int) {
+ internal fun testNonFallThroughContinueCase_private_2(i: Int) {
   LOOP@ do {
    SWITCH@ do {
     when (i) {
@@ -250,8 +243,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testNonFallThroughReturnCase_private_2(i: Int) {
+ internal fun testNonFallThroughReturnCase_private_2(i: Int) {
   SWITCH@ do {
    when (i) {
     4 -> {
@@ -266,8 +258,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testNonFallThroughThrowCase_private_2(i: Int) {
+ internal fun testNonFallThroughThrowCase_private_2(i: Int) {
   SWITCH@ do {
    when (i) {
     5 -> {
@@ -282,8 +273,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testNonFallThroughIfCase_private_2(i: Int) {
+ internal fun testNonFallThroughIfCase_private_2(i: Int) {
   SWITCH@ do {
    when (i) {
     1 -> {
@@ -302,8 +292,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testNonFallThroughBlockCase_private_2(i: Int) {
+ internal fun testNonFallThroughBlockCase_private_2(i: Int) {
   SWITCH@ do {
    when (i) {
     1 -> {
@@ -318,8 +307,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testNonFallThrough_defaultIsNotLast_private_2(i: Int) {
+ internal fun testNonFallThrough_defaultIsNotLast_private_2(i: Int) {
   SWITCH@ do {
    CASE@ do {
     CASE_1@ do {
@@ -355,8 +343,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testFallThroughCase_private_2(i: Int) {
+ internal fun testFallThroughCase_private_2(i: Int) {
   SWITCH@ do {
    CASE@ do {
     CASE_1@ do {
@@ -377,8 +364,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testFallThroughBreakInnerCase_private_2(i: Int) {
+ internal fun testFallThroughBreakInnerCase_private_2(i: Int) {
   SWITCH@ do {
    CASE@ do {
     CASE_1@ do {
@@ -402,8 +388,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testFallThroughContinueInnerCase_private_2(i: Int) {
+ internal fun testFallThroughContinueInnerCase_private_2(i: Int) {
   SWITCH@ do {
    CASE@ do {
     CASE_1@ do {
@@ -427,8 +412,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testFallThroughLabeledStatement_private_2(i: Int) {
+ internal fun testFallThroughLabeledStatement_private_2(i: Int) {
   SWITCH@ do {
    CASE@ do {
     CASE_1@ do {
@@ -454,8 +438,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testFallThroughIfCase_private_2(i: Int) {
+ internal fun testFallThroughIfCase_private_2(i: Int) {
   SWITCH@ do {
    CASE@ do {
     CASE_1@ do {
@@ -479,8 +462,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testFallThroughIfElseCase_private_2(i: Int) {
+ internal fun testFallThroughIfElseCase_private_2(i: Int) {
   SWITCH@ do {
    CASE@ do {
     CASE_1@ do {
@@ -506,8 +488,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testFallThoughLastCase_private_2(i: Int) {
+ internal fun testFallThoughLastCase_private_2(i: Int) {
   SWITCH@ do {
    when (i) {
     1 -> {
@@ -521,8 +502,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testDefaultIsNotLast_fallThrough_private_2(i: Int) {
+ internal fun testDefaultIsNotLast_fallThrough_private_2(i: Int) {
   SWITCH@ do {
    CASE@ do {
     CASE_1@ do {
@@ -554,8 +534,7 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun testDefaultNotLast_fallThroughCase_private_2(i: Int): Int {
+ internal fun testDefaultNotLast_fallThroughCase_private_2(i: Int): Int {
   var result: Int = 0
   SWITCH@ do {
    CASE@ do {
@@ -584,8 +563,7 @@ open class SwitchStatement {
   return result
  }
 
- @HiddenFromObjC
- fun testDefaultNotLast_fallThroughDefault_private_2(i: Int): Int {
+ internal fun testDefaultNotLast_fallThroughDefault_private_2(i: Int): Int {
   var result: Int = 0
   SWITCH@ do {
    CASE@ do {
@@ -614,8 +592,7 @@ open class SwitchStatement {
   return result
  }
 
- @HiddenFromObjC
- fun testNonExhaustive_private_2(numbers: Numbers?): Int {
+ internal fun testNonExhaustive_private_2(numbers: Numbers?): Int {
   when (numbers!!) {
    Numbers.ONE -> {
     return 1
@@ -628,8 +605,7 @@ open class SwitchStatement {
   return 3
  }
 
- @HiddenFromObjC
- fun testNonExhaustive_fallThrough_private_2(numbers: Numbers?) {
+ internal fun testNonExhaustive_fallThrough_private_2(numbers: Numbers?) {
   SWITCH@ do {
    CASE@ do {
     CASE_1@ do {
@@ -655,14 +631,12 @@ open class SwitchStatement {
   } while (false)
  }
 
- @HiddenFromObjC
- fun foo_private_2(i: Int) {}
+ internal fun foo_private_2(i: Int) {}
 
  @ObjCName("J2ktSwitchstatementSwitchStatementCompanion", exact = true)
  companion object {
   @JvmStatic
-  @HiddenFromObjC
-  fun testSwitchVariableDeclarations_private_2() {
+  internal fun testSwitchVariableDeclarations_private_2() {
    val unassigned: Int = 0
    val unassigned2: Int = 0
    var i: Int = 0

@@ -6,7 +6,7 @@
 
     <groupId>org.kie.j2cl.tools</groupId>
     <artifactId>bom</artifactId>
-    <version>0.1</version>
+    <version>0.2</version>
     <packaging>pom</packaging>
 
     <name>J2CL Libraries Bill of Materials</name>
@@ -42,13 +42,13 @@
         <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
         <maven.deploy.plugin.version>3.0.0-M2</maven.deploy.plugin.version>
 
-        <gwt.nio.version>1.3</gwt.nio.version>
-        <gwt3.processors.version>0.6.4</gwt3.processors.version>
-        <jakarta4g.version>0.3</jakarta4g.version>
-        <dependency.inject.version>0.6</dependency.inject.version>
-        <json.mapper.version>0.4.1</json.mapper.version>
-        <xml.mapper.version>0.7</xml.mapper.version>
-        <yaml.mapper.version>0.4</yaml.mapper.version>
+        <gwt.nio.version>1.4</gwt.nio.version>
+        <gwt3.processors.version>0.7.0</gwt3.processors.version>
+        <jakarta4g.version>0.4</jakarta4g.version>
+        <dependency.inject.version>0.7</dependency.inject.version>
+        <json.mapper.version>0.5.0</json.mapper.version>
+        <xml.mapper.version>0.8</xml.mapper.version>
+        <yaml.mapper.version>0.5</yaml.mapper.version>
     </properties>
 
     <dependencyManagement>

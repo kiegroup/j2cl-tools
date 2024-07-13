@@ -1,6 +1,7 @@
 goog.module('foreachstatement.ForEachStatement.Exception2');
 
 goog.require('java.lang.Exception');
+goog.require('java.lang.Integer');
 goog.require('java.lang.Iterable');
 goog.require('java.util.Iterator');
 goog.require('java.util.Spliterator');

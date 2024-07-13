@@ -19,12 +19,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.j2cl.common.InternalCompilerError;
+import com.google.j2cl.common.visitor.Processor;
+import com.google.j2cl.common.visitor.Visitable;
 import com.google.j2cl.transpiler.ast.MethodDescriptor.MethodOrigin;
 import java.util.Map;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /** Abstract base class for member descriptors. */
+@Visitable
 public abstract class MemberDescriptor
     implements HasJsNameInfo, HasReadableDescription, HasUnusableByJsSuppression {
 
@@ -34,7 +37,7 @@ public abstract class MemberDescriptor
     String getPrefix();
 
     /** Returns whether this member is supporting the implementation of the instanceof operation. */
-    boolean isInstanceOfSupportMember();
+    boolean isSyntheticInstanceOfSupportMember();
   }
 
   /** Return JsInfo from the member's annotation. */
@@ -162,6 +165,8 @@ public abstract class MemberDescriptor
     return getJsInfo().getJsMemberType() == JsMemberType.SETTER;
   }
 
+  public abstract boolean isJsProperty();
+
   public boolean isJsMethod() {
     return getJsInfo().getJsMemberType() == JsMemberType.METHOD;
   }
@@ -182,6 +187,11 @@ public abstract class MemberDescriptor
     return JsUtils.isGlobal(getJsNamespace())
         || (getEnclosingTypeDescriptor().getTypeDeclaration().isExtern()
             && getJsNamespace().equals(getEnclosingTypeDescriptor().getQualifiedJsName()));
+  }
+
+  /** Returns true if this is a user written $isInstance method. */
+  public boolean isCustomIsInstanceMethod() {
+    return false;
   }
 
   /** Whether this member overrides a java.lang.Object method. */
@@ -319,4 +329,8 @@ public abstract class MemberDescriptor
 
   public abstract MemberDescriptor specializeTypeVariables(
       Function<TypeVariable, ? extends TypeDescriptor> replacingTypeDescriptorByTypeVariable);
+
+  MemberDescriptor acceptInternal(Processor processor) {
+    return Visitor_MemberDescriptor.visit(processor, this);
+  }
 }

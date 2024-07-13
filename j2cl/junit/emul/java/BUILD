@@ -21,6 +21,9 @@ java_library(
         "//:__pkg__",
         "//jre:__subpackages__",
     ],
+    deps = [
+        "//junit/generator/java/com/google/j2cl/junit/runtime:internal_assumption_violated_exception",
+    ],
 )
 
 j2cl_library(
@@ -34,9 +37,9 @@ j2cl_library(
     javacopts = [
         "-Xep:DoNotCall:OFF",
     ],
-    visibility = [
-        "//:__pkg__",
-        "//jre:__subpackages__",
+    visibility = ["//:__pkg__", "//jre:__subpackages__"],
+    deps = [
+        "//junit/generator/java/com/google/j2cl/junit/runtime:internal_assumption_violated_exception-j2cl",
     ],
 )
 
@@ -60,9 +63,9 @@ j2kt_native_library(
     javacopts = [
         "-Xep:DoNotCall:OFF",
     ],
-    visibility = [
-        "//:__pkg__",
-        "//jre:__subpackages__",
+    visibility = ["//:__pkg__", "//jre:__subpackages__"],
+    deps = [
+        "//junit/generator/java/com/google/j2cl/junit/runtime:internal_assumption_violated_exception-j2kt-native",
     ],
 )
 javadoc_library(
@@ -70,5 +73,6 @@ javadoc_library(
     srcs = glob(["**/*.java"]),
     deps = [
         ":junit_emul",
+        "//junit/generator/java/com/google/j2cl/junit/runtime:internal_assumption_violated_exception",
     ],
 )

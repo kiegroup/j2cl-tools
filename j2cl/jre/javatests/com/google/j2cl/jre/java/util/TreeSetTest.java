@@ -15,6 +15,9 @@
  */
 package com.google.j2cl.jre.java.util;
 
+import static com.google.j2cl.jre.testing.TestUtils.isWasm;
+
+import com.google.j2cl.jre.testing.J2ktIncompatible;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,6 +30,8 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Tests <code>TreeSet</code>.
@@ -36,6 +41,7 @@ import java.util.TreeSet;
  *
  * @param <E> The key type for the underlying TreeSet
  */
+@NullMarked
 abstract class TreeSetTest<E extends Comparable<E>> extends TestSet {
 
   /**
@@ -98,7 +104,7 @@ abstract class TreeSetTest<E extends Comparable<E>> extends TestSet {
   }
 
   /** comparator used when creating the SortedSet. */
-  private Comparator<E> comparator = null;
+  private @Nullable Comparator<E> comparator = null;
 
   private final boolean isAddSupported = true;
   private final boolean isClearSupported = true;
@@ -182,7 +188,13 @@ abstract class TreeSetTest<E extends Comparable<E>> extends TestSet {
    * @see java.util.Set#add(Object)
    */
   @SuppressWarnings("unchecked")
+  @J2ktIncompatible // Kotlin native comparators don't expose this behavior and currently we
+  // don't plan to emulate this.
   public void testAdd_throwsClassCastException_key() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when CCE is supported
+      return;
+    }
     // The _throwsUnsupportedOperationException version of this test will
     // verify that the method is not supported.
     if (isAddSupported) {
@@ -203,7 +215,13 @@ abstract class TreeSetTest<E extends Comparable<E>> extends TestSet {
    * @see java.util.Set#add(Object)
    */
   @SuppressWarnings("unchecked")
+  @J2ktIncompatible // Kotlin native comparators don't expose this behavior and currently we
+  // don't plan to emulate this.
   public void testAdd_throwsClassCastException_value() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when CCE is supported
+      return;
+    }
     // The _throwsUnsupportedOperationException version of this test will
     // verify that the method is not supported.
     if (isAddSupported) {
@@ -343,7 +361,13 @@ abstract class TreeSetTest<E extends Comparable<E>> extends TestSet {
    * @see java.util.Set#addAll(Map)
    */
   @SuppressWarnings("unchecked")
+  @J2ktIncompatible // Kotlin native comparators don't expose this behavior and currently we
+  // don't plan to emulate this.
   public void testAddAll_throwsClassCastException() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when CCE is supported
+      return;
+    }
     // The _throwsUnsupportedOperationException version of this test will
     // verify that the method is not supported.
     if (isPutAllSupported) {
@@ -586,7 +610,13 @@ abstract class TreeSetTest<E extends Comparable<E>> extends TestSet {
    *
    * @see java.util.Set#contains(Object)
    */
+  @J2ktIncompatible // Kotlin native comparators don't expose this behavior and currently we
+  // don't plan to emulate this.
   public void testContains_throwsClassCastException() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when CCE is supported
+      return;
+    }
     Set<E> set = createSet();
     set.add(getKeys()[0]);
     try {
@@ -768,7 +798,13 @@ abstract class TreeSetTest<E extends Comparable<E>> extends TestSet {
    * @see java.util.SortedSet#headSet(Object)
    */
   @SuppressWarnings("unchecked")
+  @J2ktIncompatible // Kotlin native comparators don't expose this behavior and currently we
+  // don't plan to emulate this.
   public void testHeadMap_throwsClassCastException() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when CCE is supported
+      return;
+    }
     SortedSet sortedSet = createNavigableSet();
     sortedSet.add(getKeys()[0]);
     if (isNaturalOrder()) {
@@ -1014,7 +1050,13 @@ abstract class TreeSetTest<E extends Comparable<E>> extends TestSet {
    *
    * @see java.util.Set#remove(Object)
    */
+  @J2ktIncompatible // Kotlin native comparators don't expose this behavior and currently we
+  // don't plan to emulate this.
   public void testRemove_throwsClassCastException() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when CCE is supported
+      return;
+    }
     // The _throwsUnsupportedOperationException version of this test will
     // verify that the method is not supported.
     if (isRemoveSupported) {
@@ -1086,7 +1128,13 @@ abstract class TreeSetTest<E extends Comparable<E>> extends TestSet {
    * @see java.util.SortedSet#subSet(Object, Object)
    */
   @SuppressWarnings("unchecked")
+  @J2ktIncompatible // Kotlin native comparators don't expose this behavior and currently we
+  // don't plan to emulate this.
   public void testSubMap_throwsClassCastException() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when CCE is supported
+      return;
+    }
     SortedSet sortedSet = createNavigableSet();
     sortedSet.add(getKeys()[0]);
     try {
@@ -1306,7 +1354,13 @@ abstract class TreeSetTest<E extends Comparable<E>> extends TestSet {
    * @see java.util.SortedSet#tailSet(Object)
    */
   @SuppressWarnings("unchecked")
+  @J2ktIncompatible // Kotlin native comparators don't expose this behavior and currently we
+  // don't plan to emulate this.
   public void testTailSet_throwsClassCastException() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when CCE is supported
+      return;
+    }
     SortedSet sortedSet = createNavigableSet();
     sortedSet.add(getKeys()[0]);
     if (isNaturalOrder()) {
@@ -1330,7 +1384,7 @@ abstract class TreeSetTest<E extends Comparable<E>> extends TestSet {
     // TODO I don't know of any case where this could happen.
   }
 
-  protected Comparator<E> getComparator() {
+  protected @Nullable Comparator<E> getComparator() {
     return comparator;
   }
 
@@ -1339,7 +1393,7 @@ abstract class TreeSetTest<E extends Comparable<E>> extends TestSet {
   protected abstract Object getConflictingValue();
 
   @Override
-  protected Object[] getFullElements() {
+  protected @Nullable Object[] getFullElements() {
     return getKeys();
   }
 
@@ -1358,11 +1412,12 @@ abstract class TreeSetTest<E extends Comparable<E>> extends TestSet {
   }
 
   @Override
-  protected Set makeEmptySet() {
-    return createTreeSet();
+  protected Set<@Nullable Object> makeEmptySet() {
+    Object result = createTreeSet();
+    return (Set<@Nullable Object>) result;
   }
 
-  protected void setComparator(Comparator<E> comparator) {
+  protected void setComparator(@Nullable Comparator<E> comparator) {
     this.comparator = comparator;
   }
 

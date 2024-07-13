@@ -16,6 +16,7 @@
 
 package java.lang;
 
+import static javaemul.internal.InternalPreconditions.checkArgument;
 import static javaemul.internal.InternalPreconditions.checkCriticalStringBounds;
 import static javaemul.internal.InternalPreconditions.checkNotNull;
 import static javaemul.internal.InternalPreconditions.checkPositionIndexes;
@@ -34,7 +35,6 @@ import javaemul.internal.EmulatedCharset;
 import javaemul.internal.JsUtils;
 import javaemul.internal.NativeRegExp;
 import javaemul.internal.StringUtil;
-import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsNonNull;
 import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsProperty;
@@ -237,15 +237,6 @@ public final class String implements Comparable<String>, CharSequence,
     this.value = createImpl(bytes, charset);
   }
 
-  private static String createImpl(byte[] bytes, Charset charset) {
-    return createImpl(bytes, 0, bytes.length, charset);
-  }
-
-  private static String createImpl(byte[] bytes, int ofs, int len, Charset charset) {
-    checkPositionIndexes(ofs, ofs + len, bytes.length);
-    return String.valueOf(((EmulatedCharset) charset).decodeString(bytes, ofs, len));
-  }
-
   public String(char value[]) {
     this.value = String.valueOf(value);
   }
@@ -255,12 +246,25 @@ public final class String implements Comparable<String>, CharSequence,
   }
 
   public String(int[] codePoints, int offset, int count) {
+    this.value = createImpl(codePoints, offset, count);
+  }
+
+  private static String createImpl(byte[] bytes, Charset charset) {
+    return createImpl(bytes, 0, bytes.length, charset);
+  }
+
+  private static String createImpl(byte[] bytes, int ofs, int len, Charset charset) {
+    checkPositionIndexes(ofs, ofs + len, bytes.length);
+    return String.valueOf(((EmulatedCharset) charset).decodeString(bytes, ofs, len));
+  }
+
+  private static String createImpl(int[] codePoints, int offset, int count) {
     char[] chars = new char[count * 2];
     int charIdx = 0;
     while (count-- > 0) {
       charIdx += Character.toChars(codePoints[offset++], chars, charIdx);
     }
-    this.value = String.valueOf(chars, 0, charIdx);
+    return String.valueOf(chars, 0, charIdx);
   }
 
   public String(String other) {
@@ -466,6 +470,11 @@ public final class String implements Comparable<String>, CharSequence,
 
   public boolean regionMatches(int toffset, String other, int ooffset, int len) {
     return regionMatches(false, toffset, other, ooffset, len);
+  }
+
+  public String repeat(int count) {
+    checkArgument(count >= 0);
+    return asNativeString().repeat(count);
   }
 
   public String replace(char from, char to) {
@@ -679,6 +688,8 @@ public final class String implements Comparable<String>, CharSequence,
 
     public native int lastIndexOf(String str, int start);
 
+    public native String repeat(int count);
+
     public native String replace(NativeRegExp regex, String replace);
 
     public native String substr(int beginIndex);
@@ -694,10 +705,7 @@ public final class String implements Comparable<String>, CharSequence,
     public native String toUpperCase();
   }
 
-  // CHECKSTYLE_OFF: Utility Methods for unboxed String.
-  @JsMethod
-  protected static boolean $isInstance(Object instance) {
+  static boolean $isInstance(Object instance) {
     return "string".equals(JsUtils.typeOf(instance));
   }
-  // CHECKSTYLE_ON: end utility methods
 }

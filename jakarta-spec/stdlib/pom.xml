@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.kie.j2cl.tools.jakarta</groupId>
     <artifactId>stdlib</artifactId>
-    <version>0.3</version>
+    <version>0.4</version>
     <packaging>jar</packaging>
 
     <name>GWT/J2CL compatible missed classes from stdlib</name>
@@ -47,8 +47,8 @@
     </issueManagement>
 
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <maven.compiler.version>3.8.0</maven.compiler.version>
@@ -65,8 +65,8 @@
 
         <!-- J2CL deps -->
         <com.google.jsinterop.base.version>1.0.0</com.google.jsinterop.base.version>
-        <gwt.nio.version>1.3</gwt.nio.version>
-        <elemental2.version>1.1.0</elemental2.version>
+        <gwt.nio.version>1.4</gwt.nio.version>
+        <elemental2.version>1.2.1</elemental2.version>
         <sonar.skip>true</sonar.skip>
     </properties>
 
@@ -112,84 +112,16 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven.compiler.version}</version>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>com.coveo</groupId>
-                <artifactId>fmt-maven-plugin</artifactId>
-                <version>${maven.fmt.plugin}</version>
                 <executions>
                     <execution>
+                        <id>default-compile</id>
+                        <phase>compile</phase>
                         <goals>
-                            <goal>check</goal>
+                            <goal>compile</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>${maven.deploy.plugin}</version>
-                <executions>
-                    <execution>
-                        <id>default-deploy</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>deploy</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>${maven.release.plugin}</version>
-                <configuration>
-                    <localCheckout>true</localCheckout>
-                    <pushChanges>false</pushChanges>
-                    <mavenExecutorId>forked-path</mavenExecutorId>
-                    <arguments>-Dgpg.passphrase=${gpg.passphrase}</arguments>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.maven.scm</groupId>
-                        <artifactId>maven-scm-provider-gitexe</artifactId>
-                        <version>${maven.scm.provider.gitexe}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${maven.javadoc.plugin}</version>
-                <configuration>
-                    <failOnError>false</failOnError>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>flatten-maven-plugin</artifactId>
-                <configuration>
-                    <flattenMode>oss</flattenMode>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>flatten</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>flatten</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>flatten.clean</id>
-                        <phase>clean</phase>
-                        <goals>
-                            <goal>clean</goal>
-                        </goals>
+                        <configuration>
+                            <skipMain>true</skipMain>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

@@ -27,6 +27,7 @@ import com.google.j2cl.transpiler.ast.TypeDescriptors.isJavaLangVoid
 import com.google.j2cl.transpiler.ast.TypeVariable
 import com.google.j2cl.transpiler.ast.UnionTypeDescriptor
 import com.google.j2cl.transpiler.backend.kotlin.common.runIf
+import kotlin.streams.asSequence
 
 internal val TypeDescriptor.isImplicitUpperBound
   get() = this == nullableAnyTypeDescriptor
@@ -42,8 +43,11 @@ internal fun DeclaredTypeDescriptor.directlyDeclaredNonRawTypeArgumentDescriptor
   else
     projectToWildcards.or(typeDeclaration.hasRecursiveTypeBounds()).let { mapToWildcard ->
       typeDeclaration.directlyDeclaredTypeParameterDescriptors.map {
-        if (mapToWildcard) TypeVariable.createWildcard()
-        else it.upperBoundTypeDescriptor.toRawTypeDescriptor()
+        if (mapToWildcard) {
+          TypeVariable.createWildcard()
+        } else {
+          it.upperBoundTypeDescriptor.toRawTypeDescriptor()
+        }
       }
     }
 
@@ -52,9 +56,10 @@ internal fun DeclaredTypeDescriptor.directSuperTypeForMethodCall(
   methodDescriptor: MethodDescriptor
 ): DeclaredTypeDescriptor? =
   superTypesStream
+    .asSequence()
     // Skip java.lang.Object as a supertype of interfaces.
     .filter { superType -> superType.isInterface || !isInterface }
-    .map { superType ->
+    .mapNotNull { superType ->
       // See if the method is in this supertype (in which case we are done) or if it is
       // overridden here (in which case this supertype is not the target).
       val declaredSuperMethodDescriptor =
@@ -72,21 +77,19 @@ internal fun DeclaredTypeDescriptor.directSuperTypeForMethodCall(
         else -> null
       }
     }
-    .filter { it != null }
-    .findFirst()
-    .orElse(null)
+    .firstOrNull()
 
 internal fun TypeDescriptor.contains(
   typeVariable: TypeVariable,
-  seenTypeVariables: Set<TypeVariable> = setOf()
+  seenTypeVariables: Set<TypeVariable> = setOf(),
 ): Boolean =
   when (this) {
     is DeclaredTypeDescriptor ->
       typeArgumentDescriptors.any { it.contains(typeVariable, seenTypeVariables) }
     is IntersectionTypeDescriptor ->
       intersectionTypeDescriptors.any { it.contains(typeVariable, seenTypeVariables) }
-    is ArrayTypeDescriptor -> componentTypeDescriptor?.contains(typeVariable, seenTypeVariables)
-        ?: false
+    is ArrayTypeDescriptor ->
+      componentTypeDescriptor?.contains(typeVariable, seenTypeVariables) ?: false
     is TypeVariable ->
       if (seenTypeVariables.contains(this)) false
       else
@@ -136,13 +139,18 @@ internal fun TypeDescriptor.makeNonNull(): TypeDescriptor =
       is DeclaredTypeDescriptor -> toNonNullable()
       is TypeVariable ->
         if (!isWildcardOrCapture) {
+          // TODO(b/328541289): Here it should be just `toNonNullable()`, in fact the handing below
+          // for wildcards and captures should also be done by `toNonNullable()`. The only
+          // kotlin output specific piece is the handling of `*`.
           if (hasNullableBounds) {
             // Convert to {@code T & Any}
             IntersectionTypeDescriptor.newBuilder()
-              .setIntersectionTypeDescriptors(listOf(toNonNullable(), anyTypeDescriptor))
+              .setIntersectionTypeDescriptors(
+                listOf(withoutNullabilityAnnotations(), anyTypeDescriptor)
+              )
               .build()
           } else {
-            toNonNullable()
+            withoutNullabilityAnnotations()
           }
         } else if (upperBoundTypeDescriptor.isImplicitUpperBound) {
           // Ignore type variables which will be rendered as star (unbounded wildcard).

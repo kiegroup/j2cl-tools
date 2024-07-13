@@ -82,7 +82,7 @@ public final class LibraryInfoBuilder {
 
     for (DeclaredTypeDescriptor superInterfaceType : type.getSuperInterfaceTypeDescriptors()) {
       if (!superInterfaceType.isNative() && !superInterfaceType.isJsFunctionInterface()) {
-        typeInfoBuilder.addImplementsType(getTypeId(superInterfaceType));
+        typeInfoBuilder.addImplementsTypes(getTypeId(superInterfaceType));
       }
     }
 
@@ -103,10 +103,10 @@ public final class LibraryInfoBuilder {
         continue;
       }
 
-      if (memberDescriptor.getOrigin().isInstanceOfSupportMember()) {
-        // InstanceOf support members should not be considered methods that are prunable if there
-        // are no references, since the references are hidden by the runtime. In the end
-        // InstanceOf support members are live whenever the type is live.
+      if (memberDescriptor.getOrigin().isSyntheticInstanceOfSupportMember()) {
+        // Synthetic instanceof support members should not be considered methods that are prunable
+        // if there are no references, since the references are hidden by the runtime. In the end
+        // instanceof support members are live whenever the type is live.
         continue;
       }
 
@@ -170,8 +170,8 @@ public final class LibraryInfoBuilder {
           MemberInfo.newBuilder().setName("$js_entry$").setStatic(true).setJsAccessible(true));
     }
 
-    libraryInfo.addType(
-        typeInfoBuilder.addAllMember(
+    libraryInfo.addTypes(
+        typeInfoBuilder.addAllMembers(
             memberInfoBuilders.values().stream()
                 .map(MemberInfo.Builder::build)
                 .collect(toImmutableList())));
@@ -202,6 +202,10 @@ public final class LibraryInfoBuilder {
 
   private void collectReferencedTypesAndMethodInvocations(
       Member member, MemberInfo.Builder memberInfoBuilder) {
+    // Setters and getters share the same member info for rta purposes but are traversed separately
+    // so when collecting references for the current member, a member info might already have
+    // been constructed for the corresponding accessor and its information is passed in the
+    // memberInfoBuilder.
     Set<MethodInvocation> invokedMethods =
         new LinkedHashSet<>(memberInfoBuilder.getInvokedMethodsList());
 
@@ -279,6 +283,14 @@ public final class LibraryInfoBuilder {
               return;
             }
 
+            if (target.getOrigin().isSyntheticInstanceOfSupportMember()) {
+              // Don't record calls to synthetic instance of support members since these are not
+              // kept in the library info.
+              // NOTE: Explicit calls to `$isInstance` are part of the translation of the
+              // 'instanceof' operator; and because static calls have the type as a qualifier, the
+              // type will be considered referenced.
+              return;
+            }
             // Only record a $clinit call if it is from a clinit itself. All other clinit calls are
             // from the entry points of the class and doesn't need recording since RapidTypeAnalyser
             // will make the clinit alive when it arrives to an entry point.
@@ -326,11 +338,11 @@ public final class LibraryInfoBuilder {
   }
 
   private LibraryInfo build() {
-    libraryInfo.clearTypeMap();
+    libraryInfo.clearTypeNames();
     String[] typeMap = new String[types.size() + 1];
     typeMap[NULL_TYPE] = "<no-type>";
     types.forEach((name, i) -> typeMap[i] = name);
-    libraryInfo.addAllTypeMap(Arrays.asList(typeMap));
+    libraryInfo.addAllTypeNames(Arrays.asList(typeMap));
     return libraryInfo.build();
   }
 

@@ -51,8 +51,7 @@ final class RyuFloat {
   private static final int POW5_INV_HALF_BITCOUNT = 31;
   private static final int[][] POW5_INV_SPLIT = new int[INV_TABLE_SIZE][2];
 
-  private static final int BUFFER_SIZE = 15;
-  private static final char[] BUFFER = new char[BUFFER_SIZE];
+  private static final char[] BUFFER = new char[15];
 
   static {
     BigInteger mask = BigInteger.valueOf(1).shiftLeft(POW5_HALF_BITCOUNT).subtract(BigInteger.ONE);
@@ -79,24 +78,24 @@ final class RyuFloat {
     }
   }
 
-  public static String floatToString(AbstractStringBuilder sb, float value) {
+  public static String floatToString(float value) {
     // Step 1: Decode the floating point number, and unify normalized and subnormal cases.
     // First, handle all the trivial cases.
     if (Float.isNaN(value)) {
-      return resultOrSideEffect(sb, "NaN");
+      return "NaN";
     }
     if (value == Float.POSITIVE_INFINITY) {
-      return resultOrSideEffect(sb, "Infinity");
+      return "Infinity";
     }
     if (value == Float.NEGATIVE_INFINITY) {
-      return resultOrSideEffect(sb, "-Infinity");
+      return "-Infinity";
     }
     int bits = Float.floatToIntBits(value);
     if (bits == 0) {
-      return resultOrSideEffect(sb, "0.0");
+      return "0.0";
     }
     if (bits == 0x80000000) {
-      return resultOrSideEffect(sb, "-0.0");
+      return "-0.0";
     }
 
     // Otherwise extract the mantissa and exponent bits and run the full algorithm.
@@ -224,8 +223,7 @@ final class RyuFloat {
 
     // Step 5: Print the decimal representation.
     // We follow Float.toString semantics here.
-    // TODO: do not regress stringref version!
-    char[] result = (String.STRINGREF_ENABLED || sb != null) ? BUFFER : new char[BUFFER_SIZE];
+    char[] result = BUFFER;
     int index = 0;
     if (sign) {
       result[index++] = '-';
@@ -296,11 +294,7 @@ final class RyuFloat {
         index += olength + 1;
       }
     }
-    if (sb == null) {
-      return new String(0, index, result);
-    }
-    sb.append0(result, 0, index);
-    return null;
+    return new String(result, 0, index);
   }
 
   private static int pow5bits(int e) {
@@ -357,13 +351,5 @@ final class RyuFloat {
       factor /= 10;
     }
     return length;
-  }
-
-  private static String resultOrSideEffect(AbstractStringBuilder sb, String s) {
-    if (sb != null) {
-      sb.append0(s);
-      return null;
-    }
-    return s;
   }
 }

@@ -227,7 +227,7 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "  public static final int display = 0;",
             "}")
         .assertErrorsWithoutSourcePosition(
-            "'Buggy.show' and 'Buggy.display' cannot both use the same "
+            "'Buggy.display' and 'Buggy.show' cannot both use the same "
                 + "JavaScript name 'show'.");
   }
 
@@ -1406,6 +1406,7 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "   @JsMethod(namespace = JsPackage.GLOBAL) public static void m() {}",
             "   @JsProperty(namespace = JsPackage.GLOBAL) public static int n;",
             "}",
+            "@JsType(namespace = \"\") class NonNativeClass {}",
             "@JsEnum(isNative = true, namespace = \"=\") enum NativeEnum { }",
             "@JsEnum(namespace = \"^\") enum MyJsEnum { }")
         .assertErrorsWithoutSourcePosition(
@@ -1421,7 +1422,8 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "Non-native member 'JsTypeOnWindow.r' cannot declare a namespace.",
             "Non-native member 'void JsTypeOnWindow.s()' cannot declare a namespace.",
             "Non-native member 'void InvalidGlobal.m()' cannot declare a namespace.",
-            "Non-native member 'InvalidGlobal.n' cannot declare a namespace.");
+            "Non-native member 'InvalidGlobal.n' cannot declare a namespace.",
+            "'NonNativeClass' cannot have an empty namespace.");
   }
 
   public void testJsNameGlobalNamespacesSucceeds() {
@@ -1452,6 +1454,15 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "@JsType(isNative = true, namespace = JsPackage.GLOBAL, name = \"?\")",
             "interface Wildcard {",
             "}")
+        .assertNoWarnings();
+  }
+
+  public void testNativeJsTypeEmptyNamespaceSucceeds() {
+    assertTranspileSucceeds(
+            "test.Buggy",
+            "import jsinterop.annotations.*;",
+            "@JsType(isNative = true, namespace = \"\", name = \"a.c\")",
+            "class NativeOnTopLevelNamespace {}")
         .assertNoWarnings();
   }
 
@@ -1626,8 +1637,8 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "    T extends Comparable<T> & TypeVariableWithIntersectionBound<T>> {",
             "  void m(T f);",
             "}",
-            "@JsFunction interface JsFunctionWithRecursiveBoundInMethod {",
-            "  <T extends JsFunctionWithRecursiveBoundInMethod> void m(T f);",
+            "@JsFunction interface JsFunctionWithMethodDefinedTypeVariable {",
+            "  <T> void m();",
             "}",
             "class Main {",
             "  public static void main() {",
@@ -1695,8 +1706,9 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "JsFunction 'void IndirectReferenceThroughJsFunction.m("
                 + "JsFunctionNotInvolvedInCycle<IndirectReferenceThroughJsFunction> f)' cannot "
                 + "refer recursively to itself (b/153591461).",
-            "JsFunction 'void JsFunctionWithRecursiveBoundInMethod.m(T f)' cannot refer "
-                + "recursively to itself (b/153591461).");
+            "JsFunction 'void JsFunctionWithMethodDefinedTypeVariable.m()' cannot declare type"
+                + " parameters. Type parameters must be declared on the enclosing interface"
+                + " instead.");
   }
 
   public void testNativeJsTypeStaticInitializerSucceeds() {
@@ -1976,10 +1988,24 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "  InvalidCustomValueType(long value) { this.value = value; }",
             "}",
             "@JsEnum(hasCustomValue = true)",
+            "enum InvalidCustomValueType2 {",
+            "  A(false);",
+            "  boolean value;",
+            "  InvalidCustomValueType2(boolean value) { this.value = value; }",
+            "}",
+            "@JsEnum(hasCustomValue = true)",
             "enum InvalidCustomValueInitializer {",
             "  A(\"  \".length());",
             "  int value = 5;",
             "  InvalidCustomValueInitializer(int value) { this.value = value; }",
+            "}",
+            "@JsEnum(hasCustomValue = true)",
+            "enum CustomValueWithIntegerMinValue {",
+            "  A(Integer.MIN_VALUE),",
+            "  B(-2147483648),",
+            "  C(Integer.MIN_VALUE + 1 - 1);",
+            "  int value;",
+            "  CustomValueWithIntegerMinValue(int value) { this.value = value; }",
             "}",
             "@JsEnum(hasCustomValue = true)",
             "enum InvalidCustomValueConstructor {",
@@ -2007,8 +2033,12 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
                 + "to the value field.",
             "Custom-valued JsEnum value field 'CustomValued.value' cannot be static nor "
                 + "JsOverlay nor JsMethod nor JsProperty.",
-            "Custom-valued JsEnum value field 'InvalidCustomValueType.value' cannot have the "
-                + "type 'long'.",
+            "Custom-valued JsEnum value field 'InvalidCustomValueType.value' cannot have the type"
+                + " 'long'. The only valid value types are 'int' and 'java.lang.String'."
+                + " (b/295240966)",
+            "Custom-valued JsEnum value field 'InvalidCustomValueType2.value' cannot have the type"
+                + " 'boolean'. The only valid value types are 'int' and 'java.lang.String'."
+                + " (b/295240966)",
             "Custom-valued JsEnum value field 'InvalidCustomValueInitializer.value' cannot "
                 + "have initializer.",
             "Custom-valued JsEnum 'CustomValueMissingConstructor' should have a constructor.",
@@ -2016,6 +2046,12 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
                 + "static nor JsOverlay nor JsMethod nor JsProperty.",
             "Custom-valued JsEnum constant 'InvalidCustomValueInitializer.A' cannot have a "
                 + "non-literal value.",
+            "Custom-valued JsEnum constant 'CustomValueWithIntegerMinValue.A' cannot be equal to"
+                + " Integer.MIN_VALUE.",
+            "Custom-valued JsEnum constant 'CustomValueWithIntegerMinValue.B' cannot be equal to"
+                + " Integer.MIN_VALUE.",
+            "Custom-valued JsEnum constant 'CustomValueWithIntegerMinValue.C' cannot be equal to"
+                + " Integer.MIN_VALUE.",
             "JsEnum 'CustomValued' does not support 'String Enum.name()'.",
             "Custom-valued JsEnum 'CustomValued' does not support 'int Enum.ordinal()'.",
             "Custom-valued JsEnum 'CustomValued' does not support "
@@ -2035,12 +2071,12 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "import jsinterop.annotations.*;",
             "@JsEnum(hasCustomValue = true)",
             "public enum CustomValued {",
-            "  A(true),",
-            "  B(!true),",
-            "  C(false),",
-            "  D(true);",
-            "  final boolean value;",
-            "  CustomValued(boolean value) { this.value = value;}",
+            "  A(1),",
+            "  B(-1),",
+            "  C(0),",
+            "  D(1 + 1);",
+            "  final int value;",
+            "  CustomValued(int value) { this.value = value;}",
             "}")
         .assertNoWarnings();
   }
@@ -2074,7 +2110,7 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "enum NativeJsEnumNotDeclaringCustomValueButWithValueField {",
             "  A,",
             "  B;",
-            "  boolean value = true;",
+            "  int value = 1;",
             "}")
         .assertErrorsWithoutSourcePosition(
             "JsEnum 'Native' does not support 'String Enum.name()'.",
@@ -2181,14 +2217,15 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "    acceptsEnum(MyJsEnum.A);",
             "    acceptsEnum(JsEnumWithCustomValue.A);",
             "    acceptsComparable(JsEnumWithCustomValue.A);",
+            "    List<Enum> l1 = null; l1.add(MyJsEnum.A);",
             // TODO(b/114468916): The following should have failed. But for now they will be caught
             // by runtime checks when the erasure cast to Enum occurs.
-            "    List<Enum> l1 = null; l1.add(MyJsEnum.A);",
             "    List<? extends Enum> l2 = new ArrayList<MyJsEnum>();",
             "  }",
             "}")
         .assertErrorsWithoutSourcePosition(
             "JsEnum 'Native' cannot be assigned to 'Enum'.",
+            "JsEnum 'MyJsEnum' cannot be assigned to 'Enum'.",
             "JsEnum 'MyJsEnum' cannot be assigned to 'Enum'.",
             "JsEnum 'JsEnumWithCustomValue' cannot be assigned to 'Enum'.",
             "Custom-valued JsEnum 'JsEnumWithCustomValue' cannot be assigned to 'Comparable'.");
@@ -2291,6 +2328,8 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "Returned type in call to method 'MyJsEnum[] Main.returnsTArray(MyJsEnum)' cannot be "
                 + "of type 'MyJsEnum[]'. (b/118299062)",
             "Reference to field 'Main<MyJsEnum>.tArray' cannot be of type 'MyJsEnum[]'."
+                + " (b/118299062)",
+            "Object creation 'new Main.<init>()' cannot be of type 'Main<MyJsEnum[]>'."
                 + " (b/118299062)",
             "Reference to field 'Main<MyJsEnum[]>.t' cannot be of type 'MyJsEnum[]'."
                 + " (b/118299062)");
@@ -2483,16 +2522,19 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
   }
 
   public void testJsOptionalSucceeds() {
-    assertTranspileSucceeds(
+    newTesterWithDefaults()
+        .addCompilationUnit("org.jspecify.annotations.Nullable", "public @interface Nullable {}")
+        .addCompilationUnit(
             "test.Buggy",
             "import jsinterop.annotations.*;",
+            "import org.jspecify.annotations.*;",
             "public class Buggy<T> {",
             "  @JsConstructor public Buggy(@JsOptional Object a) {}",
             "  @JsMethod public void foo(int a, Object b, @JsOptional String c) {}",
             "  @JsMethod public void bar(int a, @JsOptional Object b, @JsOptional String c) {}",
             "  @JsMethod public void baz(@JsOptional String a, @JsOptional Object b) {}",
             "  @JsMethod public void qux(@JsOptional String c, Object... os) {}",
-            "  @JsMethod public void corge(int a, @JsOptional T b, Object... c) {}",
+            "  @JsMethod public void corge(int a, @JsOptional @Nullable T b, Object... c) {}",
             "}",
             "class SubBuggy extends Buggy<String> {",
             "  @JsConstructor",
@@ -2511,13 +2553,17 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "    o = (Function) (String s, @JsOptional String b) -> {};",
             "  }",
             "}")
+        .assertTranspileSucceeds()
         .assertNoWarnings();
   }
 
   public void testJsOptionalNotJsOptionalOverrideFails() {
-    assertTranspileFails(
+    newTesterWithDefaults()
+        .addCompilationUnit("org.jspecify.annotations.Nullable", "public @interface Nullable {}")
+        .addCompilationUnit(
             "test.Buggy",
             "import jsinterop.annotations.*;",
+            "import org.jspecify.annotations.*;",
             "interface Interface {",
             "  @JsMethod void foo(@JsOptional Object o);",
             "  @JsMethod Object bar(@JsOptional Object o);",
@@ -2529,7 +2575,7 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "  @JsMethod public String bar(Object o) { return null; }",
             "}",
             "interface I<T> {",
-            "  @JsMethod void m(@JsOptional T t);",
+            "  @JsMethod void m(@JsOptional @Nullable T t);",
             "}",
             "class Implementor implements I<Integer> {",
             "  public void m(Integer i) {}",
@@ -2544,6 +2590,7 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "    o = (Function) (String s, String b) -> {};",
             "  }",
             "}")
+        .assertTranspileFails()
         .assertErrorsWithoutSourcePosition(
             "Method 'void Buggy.foo(Object o)' should declare parameter 'o' as JsOptional.",
             "Method 'String Buggy.bar(Object o)' should declare parameter 'o' as JsOptional.",
@@ -2586,6 +2633,43 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "JsOptional parameter 'a' in method '" + "Buggy(int a)' cannot be of a primitive type.",
             "JsOptional parameter 'c' in method "
                 + "'void Buggy.bar(int a, Object b, String... c)' cannot be a varargs parameter.");
+  }
+
+  public void testJsOptionalOnNonNullableParameterFails() {
+    newTesterWithDefaults()
+        .addCompilationUnit(
+            "test.Buggy",
+            "import jsinterop.annotations.*;",
+            "public class Buggy {",
+            "   @JsMethod public <T> void bar(@JsOptional @JsNonNull T a, @JsOptional @JsNonNull"
+                + " String b) {}",
+            "}")
+        .assertTranspileFails()
+        .assertErrorsWithoutSourcePosition(
+            "JsOptional parameter 'a' in method 'void Buggy.bar(T a, String b)' has to be"
+                + " nullable.",
+            "JsOptional parameter 'b' in method 'void Buggy.bar(T a, String b)' has to be"
+                + " nullable.");
+  }
+
+  public void testJsOptionalOnNullableTypeVariableParameterSucceeds() {
+    newTesterWithDefaults()
+        .addArgs(
+            "-experimentalenablejspecifysupportdonotenablewithoutjspecifystaticcheckingoryoumightcauseanoutage")
+        .addCompilationUnit(
+            "org.jspecify.annotations.NullMarked", "public @interface NullMarked {}")
+        .addCompilationUnit("org.jspecify.annotations.Nullable", "public @interface Nullable {}")
+        .addCompilationUnit(
+            "test.Buggy",
+            "import jsinterop.annotations.*;",
+            "import org.jspecify.annotations.*;",
+            "@NullMarked",
+            "public class Buggy {",
+            "   @JsMethod public <T extends @Nullable Object> void bar(@JsOptional @Nullable T a,"
+                + " @JsOptional @Nullable String b) {}",
+            "}")
+        .assertTranspileSucceeds()
+        .assertNoWarnings();
   }
 
   public void testJsOptionalOnNonJsExposedMethodsFails() {
@@ -2709,7 +2793,7 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "}")
         .assertErrorsWithoutSourcePosition(
             "JsOverlay field 'Buggy.f2' can only be static.",
-            "JsOverlay method 'void Buggy.m()' cannot be non-final.");
+            "JsOverlay method 'void Buggy.m()' has to be final.");
   }
 
   public void testJsOverlayWithStaticInitializerSucceeds() {
@@ -2740,16 +2824,18 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
             "test.Buggy",
             "import jsinterop.annotations.*;",
             "@JsType(isNative=true) public class Buggy {",
+            "  @JsProperty @JsOverlay public int a;",
+            "  @JsProperty @JsOverlay public static int b;",
             "  @JsMethod @JsOverlay public final void m() { }",
             "  @JsMethod @JsOverlay public static void n() { }",
             "  @JsProperty @JsOverlay public static void setA(String value) { }",
             "}")
         .assertErrorsWithoutSourcePosition(
-            "JsOverlay method 'void Buggy.m()' cannot be nor override "
-                + "a JsProperty or a JsMethod.",
-            "JsOverlay method 'void Buggy.n()' cannot be nor override "
-                + "a JsProperty or a JsMethod.",
-            "JsOverlay method 'void Buggy.setA(String)' cannot be nor override "
+            "JsOverlay 'Buggy.a' cannot be nor override a JsProperty or a JsMethod.",
+            "JsOverlay 'Buggy.b' cannot be nor override a JsProperty or a JsMethod.",
+            "JsOverlay 'void Buggy.m()' cannot be nor override a JsProperty or a JsMethod.",
+            "JsOverlay 'void Buggy.n()' cannot be nor override a JsProperty or a JsMethod.",
+            "JsOverlay 'void Buggy.setA(String)' cannot be nor override "
                 + "a JsProperty or a JsMethod.");
   }
 
@@ -3290,7 +3376,7 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
         .assertNoWarnings();
   }
 
-  public void testJsAsyncSucceeeds() {
+  public void testJsAsyncSucceeds() {
     assertTranspileSucceeds(
             "test.Buggy",
             "import jsinterop.annotations.*;",
@@ -3340,6 +3426,70 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
                 + " returns 'Promise[]'.",
             "JsAsync method 'double A.e()' should return either 'IThenable' or 'Promise' but"
                 + " returns 'double'.");
+  }
+
+  public void testCustomIsInstanceSucceeds() {
+    assertTranspileSucceeds(
+            "test.Buggy",
+            "import jsinterop.annotations.*;",
+            "interface InterfaceWithCustomIsInstance {",
+            "  public static boolean $isInstance(Object o) { return true; }",
+            "}",
+            "class ClassWithCustomIsInstance {",
+            "  static boolean $isInstance(Object o) { return true; }",
+            "}",
+            "@JsType(isNative = true)",
+            "interface NativeInterfaceWithCustomIsInstance {",
+            "  @JsOverlay",
+            "  static boolean $isInstance(Object o) { return true; }",
+            "}",
+            "@JsType(isNative = true)",
+            "class NativeClassWithCustomIsInstance {",
+            "  @JsOverlay",
+            "  protected static boolean $isInstance(Object o) { return true; }",
+            "}",
+            "@JsType(isNative = true)",
+            "class ClassWithNativeIsInstance {",
+            "  static native boolean $isInstance(Object o);",
+            "}",
+            "class Buggy {",
+            "  static void main() {",
+            "    Object o = null;",
+            "    boolean b = o instanceof InterfaceWithCustomIsInstance;",
+            "    b = o instanceof ClassWithCustomIsInstance;",
+            "    b = o instanceof NativeInterfaceWithCustomIsInstance;",
+            "    b = o instanceof NativeClassWithCustomIsInstance;",
+            "  }",
+            "}")
+        .assertNoWarnings();
+  }
+
+  public void testCustomIsInstanceFails() {
+    assertTranspileFails(
+            "test.Buggy",
+            "import jsinterop.annotations.*;",
+            "interface BadIsInstanceVisibility {",
+            "  private static boolean $isInstance(Object o) { return true; }",
+            "}",
+            "class BadIsInstanceReturnType {",
+            "  static void $isInstance(Object o) { }",
+            "}",
+            "class BadIsInstanceMembership {",
+            "  boolean $isInstance(Object o) { return true; }",
+            "}",
+            "@JsType(isNative = true)",
+            "class BadIsInstanceOnNativeType {",
+            "  static boolean $isInstance(Object o) { return true; }",
+            "}")
+        .assertErrorsWithoutSourcePosition(
+            "Custom '$isInstance' method 'boolean BadIsInstanceVisibility.$isInstance(Object o)'"
+                + " has to be static and non private.",
+            "Custom '$isInstance' method 'void BadIsInstanceReturnType.$isInstance(Object o)' has"
+                + " to return 'boolean'.",
+            "Custom '$isInstance' method 'boolean BadIsInstanceMembership.$isInstance(Object o)'"
+                + " has to be static and non private.",
+            "Native JsType method 'boolean BadIsInstanceOnNativeType.$isInstance(Object o)' should"
+                + " be native, abstract or JsOverlay.");
   }
 
   public void testUnusableByJsSuppressionSucceeds() {
@@ -3531,9 +3681,10 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
   public void testNullMarkedFails() {
     newTesterWithDefaults()
         // Define the annotation here since we don't have it as a dependency.
-        .addCompilationUnit("org.jspecify.nullness.NullMarked", "public @interface NullMarked {}")
         .addCompilationUnit(
-            "test.Buggy", "@org.jspecify.nullness.NullMarked", "class NullMarkedType {", "}")
+            "org.jspecify.annotations.NullMarked", "public @interface NullMarked {}")
+        .addCompilationUnit(
+            "test.Buggy", "@org.jspecify.annotations.NullMarked", "class NullMarkedType {", "}")
         .assertTranspileFails()
         .assertErrorsWithoutSourcePosition(
             "@NullMarked annotation is not supported without enabling static analysis.");
@@ -3604,9 +3755,7 @@ public class JsInteropRestrictionsCheckerTest extends TestCase {
         .assertErrorsWithSourcePosition(
             "Error:Buggy.java:4: 'Promise' has invalid name 'invalid.Promise'.",
             "Error:Buggy.java:6: 'void Promise.method()' has invalid name 'invalid.method'.",
-            // TODO(b/65465035): Expressions do not have source position, so the method source
-            // position is used here.
-            "Error:Buggy.java:6: JsEnum 'MyJsEnum' cannot be assigned to 'Enum'.",
+            "Error:Buggy.java:7: JsEnum 'MyJsEnum' cannot be assigned to 'Enum'.",
             "Error:Buggy.java:9: 'Promise.field' has invalid name 'invalid.field'.");
   }
 

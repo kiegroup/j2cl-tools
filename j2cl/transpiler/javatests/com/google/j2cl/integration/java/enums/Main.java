@@ -15,25 +15,28 @@
  */
 package enums;
 
+import static com.google.j2cl.integration.testing.Asserts.assertEquals;
 import static com.google.j2cl.integration.testing.Asserts.assertTrue;
 
 import java.util.function.Function;
 
 /** Contains test for enums that cannot be optimized according to go/j2cl-enums-optimization. */
 public class Main {
-  public static void main(String[] args) {
+  public static void main(String... args) {
     testOrdinal();
     testName();
     testInstanceMethod();
     testStaticFields();
     testEnumInitializedWithLambdas();
     testEnumWithConstructors();
+    testEnumWithOverriddenMethodsInSeparateLibrary();
   }
 
   private static void testOrdinal() {
     assertTrue(Foo.FOO.ordinal() == 0);
     assertTrue(Foo.FOZ.ordinal() == 1);
 
+    
     assertTrue(Bar.FOO.ordinal() == 0);
     assertTrue(Bar.BAR.ordinal() == 1);
     assertTrue(Bar.BAZ.ordinal() == 2);
@@ -133,5 +136,11 @@ public class Main {
     Functions(Function<Integer, Integer> function) {
       this.function = function;
     }
+  }
+
+  private static void testEnumWithOverriddenMethodsInSeparateLibrary() {
+    // Repro for b/341721484.
+    assertEquals("A", EnumWithOverriddenMethods.A.getConstName());
+    assertEquals("B", EnumWithOverriddenMethods.B.getConstName());
   }
 }

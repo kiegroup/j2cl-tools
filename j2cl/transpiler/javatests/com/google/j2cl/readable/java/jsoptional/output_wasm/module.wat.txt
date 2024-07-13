@@ -1,178 +1,206 @@
- ;;; Code for jsoptional.Main.Function [type definition]
- (type $jsoptional.Main.Function.vtable (struct_subtype
-  (field $m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object (ref $function.m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object))
-  data)
- )
+;;; Code for jsoptional.Main.Function [type definition]
+(type $jsoptional.Main.Function.vtable (sub (struct
+ (field $m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object (ref $function.m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object))
+ ))
+)
 
- ;;; Code for jsoptional.Main.I [type definition]
- (type $jsoptional.Main.I.vtable (struct_subtype
-  (field $m_m__java_lang_Object__java_lang_Object__void (ref $function.m_m__java_lang_Object__java_lang_Object__void))
-  data)
- )
+;;; Code for jsoptional.Main.I [type definition]
+(type $jsoptional.Main.I.vtable (sub (struct
+ (field $m_m__java_lang_Object__java_lang_Object__void (ref $function.m_m__java_lang_Object__java_lang_Object__void))
+ ))
+)
 
- ;;; Code for jsoptional.Main [type definition]
- (type $jsoptional.Main (struct_subtype
-  (field $vtable (ref $jsoptional.Main.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  (field $f_f__jsoptional_Main (mut (ref null $java.lang.Object)))
-  $java.lang.Object)
- )
- (type $jsoptional.Main.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_method1__int__java_lang_Double__java_lang_Integer__void (ref $function.m_method1__int__java_lang_Double__java_lang_Integer__void))
-  (field $m_method2__java_lang_String__java_lang_Double__arrayOf_java_lang_Boolean__void (ref $function.m_method2__java_lang_String__java_lang_Double__arrayOf_java_lang_Boolean__void))
-  (field $m_testFunction__jsoptional_Main_Function__void (ref $function.m_testFunction__jsoptional_Main_Function__void))
-  (field $m_testOptionalFunction__jsoptional_Main_Function__void (ref $function.m_testOptionalFunction__jsoptional_Main_Function__void))
-  $java.lang.Object.vtable)
- )
+;;; Code for jsoptional.Main [type definition]
+(type $jsoptional.Main.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_method1__int__java_lang_Double__java_lang_Integer__void (ref $function.m_method1__int__java_lang_Double__java_lang_Integer__void))
+ (field $m_method2__java_lang_String__java_lang_Double__arrayOf_java_lang_Boolean__void (ref $function.m_method2__java_lang_String__java_lang_Double__arrayOf_java_lang_Boolean__void))
+ (field $m_testFunction__jsoptional_Main_Function__void (ref $function.m_testFunction__jsoptional_Main_Function__void))
+ (field $m_testOptionalFunction__jsoptional_Main_Function__void (ref $function.m_testOptionalFunction__jsoptional_Main_Function__void))
+ ))
+)
+(type $jsoptional.Main (sub $java.lang.Object (struct
+ (field $vtable (ref $jsoptional.Main.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $f@jsoptional.Main (mut (ref null $java.lang.Object)))
+ ))
+)
 
- ;;; Code for jsoptional.Main.$LambdaImplementor$1 [type definition]
- (type $jsoptional.Main.$LambdaImplementor$1 (struct_subtype
-  (field $vtable (ref $jsoptional.Main.$LambdaImplementor$1.vtable))
-  (field $itable (ref $jsoptional.Main.$LambdaImplementor$1.itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $jsoptional.Main.$LambdaImplementor$1.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object (ref $function.m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object))
-  $java.lang.Object.vtable)
- )
- (type $jsoptional.Main.$LambdaImplementor$1.itable (struct_subtype
- (field $slot0 (ref $jsoptional.Main.Function.vtable))
- (field $slot1 (ref null struct))
- (field $slot2 (ref null struct))
- (field $slot3 (ref null struct))
- (field $slot4 (ref null struct))
- (field $slot5 (ref null struct))
- (field $slot6 (ref null struct))
-  $itable))
+;;; Code for jsoptional.Main.$LambdaImplementor$1 [type definition]
+(type $jsoptional.Main.$LambdaImplementor$1.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object (ref $function.m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object))
+ ))
+)
+(type $jsoptional.Main.$LambdaImplementor$1 (sub $java.lang.Object (struct
+ (field $vtable (ref $jsoptional.Main.$LambdaImplementor$1.vtable))
+ (field $itable (ref $jsoptional.Main.$LambdaImplementor$1.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 
- ;;; Code for jsoptional.Main.AFunction [type definition]
- (type $jsoptional.Main.AFunction (struct_subtype
-  (field $vtable (ref $jsoptional.Main.AFunction.vtable))
-  (field $itable (ref $jsoptional.Main.AFunction.itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $jsoptional.Main.AFunction.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object (ref $function.m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object))
-  $java.lang.Object.vtable)
- )
- (type $jsoptional.Main.AFunction.itable (struct_subtype
- (field $slot0 (ref $jsoptional.Main.Function.vtable))
- (field $slot1 (ref null struct))
- (field $slot2 (ref null struct))
- (field $slot3 (ref null struct))
- (field $slot4 (ref null struct))
- (field $slot5 (ref null struct))
- (field $slot6 (ref null struct))
-  $itable))
+;;; Code for jsoptional.Main.AFunction [type definition]
+(type $jsoptional.Main.AFunction.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object (ref $function.m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object))
+ ))
+)
+(type $jsoptional.Main.AFunction (sub $java.lang.Object (struct
+ (field $vtable (ref $jsoptional.Main.AFunction.vtable))
+ (field $itable (ref $jsoptional.Main.AFunction.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 
- ;;; Code for jsoptional.Main.TemplatedSubtype [type definition]
- (type $jsoptional.Main.TemplatedSubtype (struct_subtype
-  (field $vtable (ref $jsoptional.Main.TemplatedSubtype.vtable))
-  (field $itable (ref $jsoptional.Main.TemplatedSubtype.itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $jsoptional.Main.TemplatedSubtype.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_m__java_lang_String__java_lang_Object__void (ref $function.m_m__java_lang_String__java_lang_Object__void))
-  (field $m_m__java_lang_Object__java_lang_Object__void (ref $function.m_m__java_lang_Object__java_lang_Object__void))
-  $java.lang.Object.vtable)
- )
- (type $jsoptional.Main.TemplatedSubtype.itable (struct_subtype
- (field $slot0 (ref $jsoptional.Main.I.vtable))
- (field $slot1 (ref null struct))
- (field $slot2 (ref null struct))
- (field $slot3 (ref null struct))
- (field $slot4 (ref null struct))
- (field $slot5 (ref null struct))
- (field $slot6 (ref null struct))
-  $itable))
+;;; Code for jsoptional.Main.TemplatedSubtype [type definition]
+(type $jsoptional.Main.TemplatedSubtype.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_m__java_lang_Object__java_lang_Object__void (ref $function.m_m__java_lang_Object__java_lang_Object__void))
+ (field $m_m__java_lang_String__java_lang_Object__void (ref $function.m_m__java_lang_String__java_lang_Object__void))
+ ))
+)
+(type $jsoptional.Main.TemplatedSubtype (sub $java.lang.Object (struct
+ (field $vtable (ref $jsoptional.Main.TemplatedSubtype.vtable))
+ (field $itable (ref $jsoptional.Main.TemplatedSubtype.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 
- ;;; Code for jsoptional.Main.SpecializedSubtype [type definition]
- (type $jsoptional.Main.SpecializedSubtype (struct_subtype
-  (field $vtable (ref $jsoptional.Main.SpecializedSubtype.vtable))
-  (field $itable (ref $jsoptional.Main.SpecializedSubtype.itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  (field $$outer_this__jsoptional_Main_SpecializedSubtype (ref null $jsoptional.Main))
-  $java.lang.Object)
- )
- (type $jsoptional.Main.SpecializedSubtype.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_m__java_lang_String__java_lang_Object__void (ref $function.m_m__java_lang_String__java_lang_Object__void))
-  (field $m_m__java_lang_Object__java_lang_Object__void (ref $function.m_m__java_lang_Object__java_lang_Object__void))
-  $java.lang.Object.vtable)
- )
- (type $jsoptional.Main.SpecializedSubtype.itable (struct_subtype
- (field $slot0 (ref $jsoptional.Main.I.vtable))
- (field $slot1 (ref null struct))
- (field $slot2 (ref null struct))
- (field $slot3 (ref null struct))
- (field $slot4 (ref null struct))
- (field $slot5 (ref null struct))
- (field $slot6 (ref null struct))
-  $itable))
+;;; Code for jsoptional.Main.SpecializedSubtype [type definition]
+(type $jsoptional.Main.SpecializedSubtype.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_m__java_lang_Object__java_lang_Object__void (ref $function.m_m__java_lang_Object__java_lang_Object__void))
+ (field $m_m__java_lang_String__java_lang_Object__void (ref $function.m_m__java_lang_String__java_lang_Object__void))
+ ))
+)
+(type $jsoptional.Main.SpecializedSubtype (sub $java.lang.Object (struct
+ (field $vtable (ref $jsoptional.Main.SpecializedSubtype.vtable))
+ (field $itable (ref $jsoptional.Main.SpecializedSubtype.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $$outer_this@jsoptional.Main.SpecializedSubtype (mut (ref null $jsoptional.Main)))
+ ))
+)
 
- ;;; Code for jsoptional.Main.NonJsTypeSubtype [type definition]
- (type $jsoptional.Main.NonJsTypeSubtype (struct_subtype
-  (field $vtable (ref $jsoptional.Main.NonJsTypeSubtype.vtable))
-  (field $itable (ref $jsoptional.Main.NonJsTypeSubtype.itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $jsoptional.Main.NonJsTypeSubtype.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_m__java_lang_String__java_lang_Object__void (ref $function.m_m__java_lang_String__java_lang_Object__void))
-  (field $m_m__java_lang_Object__java_lang_Object__void (ref $function.m_m__java_lang_Object__java_lang_Object__void))
-  $java.lang.Object.vtable)
- )
- (type $jsoptional.Main.NonJsTypeSubtype.itable (struct_subtype
- (field $slot0 (ref $jsoptional.Main.I.vtable))
- (field $slot1 (ref null struct))
- (field $slot2 (ref null struct))
- (field $slot3 (ref null struct))
- (field $slot4 (ref null struct))
- (field $slot5 (ref null struct))
- (field $slot6 (ref null struct))
-  $itable))
+;;; Code for jsoptional.Main.NonJsTypeSubtype [type definition]
+(type $jsoptional.Main.NonJsTypeSubtype.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_m__java_lang_Object__java_lang_Object__void (ref $function.m_m__java_lang_Object__java_lang_Object__void))
+ (field $m_m__java_lang_String__java_lang_Object__void (ref $function.m_m__java_lang_String__java_lang_Object__void))
+ ))
+)
+(type $jsoptional.Main.NonJsTypeSubtype (sub $java.lang.Object (struct
+ (field $vtable (ref $jsoptional.Main.NonJsTypeSubtype.vtable))
+ (field $itable (ref $jsoptional.Main.NonJsTypeSubtype.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
+;;; Code for jsoptional.Main.Function [imports]
+
+;;; Code for jsoptional.Main.I [imports]
+
+;;; Code for jsoptional.Main [imports]
+
+;;; Code for jsoptional.Main.$LambdaImplementor$1 [imports]
+
+;;; Code for jsoptional.Main.AFunction [imports]
+
+;;; Code for jsoptional.Main.TemplatedSubtype [imports]
+
+;;; Code for jsoptional.Main.SpecializedSubtype [imports]
+
+;;; Code for jsoptional.Main.NonJsTypeSubtype [imports]
+
+;;; Code for jsoptional.Main [static fields]
+(global $$class-initialized@jsoptional.Main (mut i32)
+ (i32.const 0)
+)
+(global $$class@jsoptional.Main (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for jsoptional.Main.$LambdaImplementor$1 [static fields]
+(global $$class-initialized@jsoptional.Main.$LambdaImplementor$1 (mut i32)
+ (i32.const 0)
+)
+(global $$class@jsoptional.Main.$LambdaImplementor$1 (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for jsoptional.Main.Function [static fields]
+(global $$class-initialized@jsoptional.Main.Function (mut i32)
+ (i32.const 0)
+)
+(global $$class@jsoptional.Main.Function (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for jsoptional.Main.AFunction [static fields]
+(global $$class-initialized@jsoptional.Main.AFunction (mut i32)
+ (i32.const 0)
+)
+(global $$class@jsoptional.Main.AFunction (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for jsoptional.Main.I [static fields]
+(global $$class-initialized@jsoptional.Main.I (mut i32)
+ (i32.const 0)
+)
+(global $$class@jsoptional.Main.I (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for jsoptional.Main.TemplatedSubtype [static fields]
+(global $$class-initialized@jsoptional.Main.TemplatedSubtype (mut i32)
+ (i32.const 0)
+)
+(global $$class@jsoptional.Main.TemplatedSubtype (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for jsoptional.Main.SpecializedSubtype [static fields]
+(global $$class-initialized@jsoptional.Main.SpecializedSubtype (mut i32)
+ (i32.const 0)
+)
+(global $$class@jsoptional.Main.SpecializedSubtype (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for jsoptional.Main.NonJsTypeSubtype [static fields]
+(global $$class-initialized@jsoptional.Main.NonJsTypeSubtype (mut i32)
+ (i32.const 0)
+)
+(global $$class@jsoptional.Main.NonJsTypeSubtype (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
 
 ;;; Code for jsoptional.Main [vtable.init]
 (global $jsoptional.Main.vtable (ref $jsoptional.Main.vtable)
  (struct.new $jsoptional.Main.vtable
+  (ref.func $$getClassImpl__java_lang_Class@jsoptional.Main)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@jsoptional.Main)
   (ref.func $m_method1__int__java_lang_Double__java_lang_Integer__void@jsoptional.Main)
   (ref.func $m_method2__java_lang_String__java_lang_Double__arrayOf_java_lang_Boolean__void@jsoptional.Main)
   (ref.func $m_testFunction__jsoptional_Main_Function__void@jsoptional.Main)
@@ -183,256 +211,147 @@
 ;;; Code for jsoptional.Main.$LambdaImplementor$1 [vtable.init]
 (global $jsoptional.Main.$LambdaImplementor$1.vtable (ref $jsoptional.Main.$LambdaImplementor$1.vtable)
  (struct.new $jsoptional.Main.$LambdaImplementor$1.vtable
+  (ref.func $$getClassImpl__java_lang_Class@jsoptional.Main.$LambdaImplementor$1)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@jsoptional.Main.$LambdaImplementor$1)
   (ref.func $m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object@jsoptional.Main.$LambdaImplementor$1)
  )
 )
-
-;;; Code for jsoptional.Main.$LambdaImplementor$1 [itable.init]
-(global $jsoptional.Main.$LambdaImplementor$1.itable (ref $jsoptional.Main.$LambdaImplementor$1.itable) (struct.new $jsoptional.Main.$LambdaImplementor$1.itable
+(global $jsoptional.Main.Function.vtable@$jsoptional.Main.$LambdaImplementor$1 (ref $jsoptional.Main.Function.vtable)
  (struct.new $jsoptional.Main.Function.vtable
   (ref.func $m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object@jsoptional.Main.$LambdaImplementor$1)
  )
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
- ))
+)
 
 ;;; Code for jsoptional.Main.AFunction [vtable.init]
 (global $jsoptional.Main.AFunction.vtable (ref $jsoptional.Main.AFunction.vtable)
  (struct.new $jsoptional.Main.AFunction.vtable
+  (ref.func $$getClassImpl__java_lang_Class@jsoptional.Main.AFunction)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@jsoptional.Main.AFunction)
   (ref.func $m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object@jsoptional.Main.AFunction)
  )
 )
-
-;;; Code for jsoptional.Main.AFunction [itable.init]
-(global $jsoptional.Main.AFunction.itable (ref $jsoptional.Main.AFunction.itable) (struct.new $jsoptional.Main.AFunction.itable
+(global $jsoptional.Main.Function.vtable@$jsoptional.Main.AFunction (ref $jsoptional.Main.Function.vtable)
  (struct.new $jsoptional.Main.Function.vtable
   (ref.func $m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object@jsoptional.Main.AFunction)
  )
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
- ))
+)
 
 ;;; Code for jsoptional.Main.TemplatedSubtype [vtable.init]
 (global $jsoptional.Main.TemplatedSubtype.vtable (ref $jsoptional.Main.TemplatedSubtype.vtable)
  (struct.new $jsoptional.Main.TemplatedSubtype.vtable
+  (ref.func $$getClassImpl__java_lang_Class@jsoptional.Main.TemplatedSubtype)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@jsoptional.Main.TemplatedSubtype)
-  (ref.func $m_m__java_lang_String__java_lang_Object__void@jsoptional.Main.TemplatedSubtype)
   (ref.func $m_m__java_lang_Object__java_lang_Object__void@jsoptional.Main.TemplatedSubtype)
+  (ref.func $m_m__java_lang_String__java_lang_Object__void@jsoptional.Main.TemplatedSubtype)
  )
 )
-
-;;; Code for jsoptional.Main.TemplatedSubtype [itable.init]
-(global $jsoptional.Main.TemplatedSubtype.itable (ref $jsoptional.Main.TemplatedSubtype.itable) (struct.new $jsoptional.Main.TemplatedSubtype.itable
+(global $jsoptional.Main.I.vtable@$jsoptional.Main.TemplatedSubtype (ref $jsoptional.Main.I.vtable)
  (struct.new $jsoptional.Main.I.vtable
   (ref.func $m_m__java_lang_Object__java_lang_Object__void@jsoptional.Main.TemplatedSubtype)
  )
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
- ))
+)
 
 ;;; Code for jsoptional.Main.SpecializedSubtype [vtable.init]
 (global $jsoptional.Main.SpecializedSubtype.vtable (ref $jsoptional.Main.SpecializedSubtype.vtable)
  (struct.new $jsoptional.Main.SpecializedSubtype.vtable
+  (ref.func $$getClassImpl__java_lang_Class@jsoptional.Main.SpecializedSubtype)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@jsoptional.Main.SpecializedSubtype)
-  (ref.func $m_m__java_lang_String__java_lang_Object__void@jsoptional.Main.SpecializedSubtype)
   (ref.func $m_m__java_lang_Object__java_lang_Object__void@jsoptional.Main.SpecializedSubtype)
+  (ref.func $m_m__java_lang_String__java_lang_Object__void@jsoptional.Main.SpecializedSubtype)
  )
 )
-
-;;; Code for jsoptional.Main.SpecializedSubtype [itable.init]
-(global $jsoptional.Main.SpecializedSubtype.itable (ref $jsoptional.Main.SpecializedSubtype.itable) (struct.new $jsoptional.Main.SpecializedSubtype.itable
+(global $jsoptional.Main.I.vtable@$jsoptional.Main.SpecializedSubtype (ref $jsoptional.Main.I.vtable)
  (struct.new $jsoptional.Main.I.vtable
   (ref.func $m_m__java_lang_Object__java_lang_Object__void@jsoptional.Main.SpecializedSubtype)
  )
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
- ))
+)
 
 ;;; Code for jsoptional.Main.NonJsTypeSubtype [vtable.init]
 (global $jsoptional.Main.NonJsTypeSubtype.vtable (ref $jsoptional.Main.NonJsTypeSubtype.vtable)
  (struct.new $jsoptional.Main.NonJsTypeSubtype.vtable
+  (ref.func $$getClassImpl__java_lang_Class@jsoptional.Main.NonJsTypeSubtype)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@jsoptional.Main.NonJsTypeSubtype)
-  (ref.func $m_m__java_lang_String__java_lang_Object__void@jsoptional.Main.NonJsTypeSubtype)
   (ref.func $m_m__java_lang_Object__java_lang_Object__void@jsoptional.Main.NonJsTypeSubtype)
+  (ref.func $m_m__java_lang_String__java_lang_Object__void@jsoptional.Main.NonJsTypeSubtype)
  )
 )
-
-;;; Code for jsoptional.Main.NonJsTypeSubtype [itable.init]
-(global $jsoptional.Main.NonJsTypeSubtype.itable (ref $jsoptional.Main.NonJsTypeSubtype.itable) (struct.new $jsoptional.Main.NonJsTypeSubtype.itable
+(global $jsoptional.Main.I.vtable@$jsoptional.Main.NonJsTypeSubtype (ref $jsoptional.Main.I.vtable)
  (struct.new $jsoptional.Main.I.vtable
   (ref.func $m_m__java_lang_Object__java_lang_Object__void@jsoptional.Main.NonJsTypeSubtype)
  )
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
- ))
-
-;;; Code for jsoptional.Main [static fields]
-(global $f_$initialized__jsoptional_Main (mut i32) (i32.const 0))
-(global $f_$class__jsoptional_Main (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|jsoptional.Main|__jsoptional_Main (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for jsoptional.Main.$LambdaImplementor$1 [static fields]
-(global $f_$initialized__jsoptional_Main_$LambdaImplementor$1 (mut i32) (i32.const 0))
-(global $f_$class__jsoptional_Main_$LambdaImplementor$1 (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|jsoptional.M...|__jsoptional_Main_$LambdaImplementor$1 (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for jsoptional.Main.Function [static fields]
-(global $f_$initialized__jsoptional_Main_Function (mut i32) (i32.const 0))
-(global $f_$class__jsoptional_Main_Function (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|jsoptional.M...|__jsoptional_Main_Function (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for jsoptional.Main.AFunction [static fields]
-(global $f_$initialized__jsoptional_Main_AFunction (mut i32) (i32.const 0))
-(global $f_$class__jsoptional_Main_AFunction (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|jsoptional.M...|__jsoptional_Main_AFunction (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for jsoptional.Main.I [static fields]
-(global $f_$initialized__jsoptional_Main_I (mut i32) (i32.const 0))
-(global $f_$class__jsoptional_Main_I (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|jsoptional.M...|__jsoptional_Main_I (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for jsoptional.Main.TemplatedSubtype [static fields]
-(global $f_$initialized__jsoptional_Main_TemplatedSubtype (mut i32) (i32.const 0))
-(global $f_$class__jsoptional_Main_TemplatedSubtype (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|jsoptional.M...|__jsoptional_Main_TemplatedSubtype (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for jsoptional.Main.SpecializedSubtype [static fields]
-(global $f_$initialized__jsoptional_Main_SpecializedSubtype (mut i32) (i32.const 0))
-(global $f_$class__jsoptional_Main_SpecializedSubtype (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|jsoptional.M...|__jsoptional_Main_SpecializedSubtype (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for jsoptional.Main.NonJsTypeSubtype [static fields]
-(global $f_$initialized__jsoptional_Main_NonJsTypeSubtype (mut i32) (i32.const 0))
-(global $f_$class__jsoptional_Main_NonJsTypeSubtype (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|jsoptional.M...|__jsoptional_Main_NonJsTypeSubtype (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+)
 
 ;;; Code for jsoptional.Main.Function [methods]
 
 ;;; void Function.$clinit()
-(func $$clinit__void@jsoptional.Main.Function
- ;;@ jsoptional/Main.java:32:12
+(func $$clinit__void_<once>_@jsoptional.Main.Function
+ ;;@ jsoptional/Main.java:38:12
  (block
-  ;;@ jsoptional/Main.java:32:12
-  (if (global.get $f_$initialized__jsoptional_Main_Function)
+  ;;@ jsoptional/Main.java:38:12
+  (if (global.get $$class-initialized@jsoptional.Main.Function)
    (then
-    ;;@ jsoptional/Main.java:32:12
+    ;;@ jsoptional/Main.java:38:12
     (return )
    )
   )
-  ;;@ jsoptional/Main.java:32:12
-  (global.set $f_$initialized__jsoptional_Main_Function (i32.const 1))
+  ;;@ jsoptional/Main.java:38:12
+  (global.set $$class-initialized@jsoptional.Main.Function (i32.const 1))
  )
 )
 
 ;;; Class<T> Function.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@jsoptional.Main.Function
+(func $$getClassMetadata__java_lang_Class_<once>_@jsoptional.Main.Function
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__jsoptional_Main_Function) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@jsoptional.Main.Function)))
    (then
-    (global.set $f_$class__jsoptional_Main_Function (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jsoptional.M...|__java_lang_String (ref.func $$getString_|jsoptional.M...|__java_lang_String@jsoptional.Main.Function) )))
+    (return (global.get $$class@jsoptional.Main.Function))
    )
   )
-  (return (global.get $f_$class__jsoptional_Main_Function))
- )
-)
-
-;;; String Function.$getString_|jsoptional.M...|()
-(func $$getString_|jsoptional.M...|__java_lang_String@jsoptional.Main.Function
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|jsoptional.M...|__jsoptional_Main_Function) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|jsoptional.M...|__jsoptional_Main_Function (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jsoptional.Main$Function")))
-   )
-  )
-  (return (global.get $f_$string_|jsoptional.M...|__jsoptional_Main_Function))
+  (global.set $$class@jsoptional.Main.Function (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $$getString_|jsoptional.M...|__java_lang_String_<once>_@jsoptional.Main.Function )))
+  (return (global.get $$class@jsoptional.Main.Function))
  )
 )
 
 ;;; Code for jsoptional.Main.I [methods]
 
 ;;; void I.$clinit()
-(func $$clinit__void@jsoptional.Main.I
- ;;@ jsoptional/Main.java:54:12
+(func $$clinit__void_<once>_@jsoptional.Main.I
+ ;;@ jsoptional/Main.java:60:12
  (block
-  ;;@ jsoptional/Main.java:54:12
-  (if (global.get $f_$initialized__jsoptional_Main_I)
+  ;;@ jsoptional/Main.java:60:12
+  (if (global.get $$class-initialized@jsoptional.Main.I)
    (then
-    ;;@ jsoptional/Main.java:54:12
+    ;;@ jsoptional/Main.java:60:12
     (return )
    )
   )
-  ;;@ jsoptional/Main.java:54:12
-  (global.set $f_$initialized__jsoptional_Main_I (i32.const 1))
+  ;;@ jsoptional/Main.java:60:12
+  (global.set $$class-initialized@jsoptional.Main.I (i32.const 1))
  )
 )
 
 ;;; Class<T> I.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@jsoptional.Main.I
+(func $$getClassMetadata__java_lang_Class_<once>_@jsoptional.Main.I
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__jsoptional_Main_I) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@jsoptional.Main.I)))
    (then
-    (global.set $f_$class__jsoptional_Main_I (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jsoptional.M...|__java_lang_String (ref.func $$getString_|jsoptional.M...|__java_lang_String@jsoptional.Main.I) )))
+    (return (global.get $$class@jsoptional.Main.I))
    )
   )
-  (return (global.get $f_$class__jsoptional_Main_I))
- )
-)
-
-;;; String I.$getString_|jsoptional.M...|()
-(func $$getString_|jsoptional.M...|__java_lang_String@jsoptional.Main.I
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|jsoptional.M...|__jsoptional_Main_I) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|jsoptional.M...|__jsoptional_Main_I (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jsoptional.Main$I")))
-   )
-  )
-  (return (global.get $f_$string_|jsoptional.M...|__jsoptional_Main_I))
+  (global.set $$class@jsoptional.Main.I (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $$getString_|jsoptional.M...|__java_lang_String_<once>_@jsoptional.Main.I )))
+  (return (global.get $$class@jsoptional.Main.I))
  )
 )
 
@@ -447,7 +366,7 @@
  (param $i (ref null $java.lang.Integer))
  ;;@ jsoptional/Main.java:26:14
  (local $this (ref null $jsoptional.Main))
- (local.set $this (ref.cast_static $jsoptional.Main (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main) (local.get $this.untyped)))
  (block
  )
 )
@@ -462,24 +381,50 @@
  (param $i (ref null $javaemul.internal.WasmArray.OfObject))
  ;;@ jsoptional/Main.java:29:14
  (local $this (ref null $jsoptional.Main))
- (local.set $this (ref.cast_static $jsoptional.Main (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main) (local.get $this.untyped)))
  (block
  )
 )
 (elem declare func $m_method2__java_lang_String__java_lang_Double__arrayOf_java_lang_Boolean__void@jsoptional.Main)
 
+;;; void Main.staticMethod1(int i1, Double d, Integer i)
+(func $m_staticMethod1__int__java_lang_Double__java_lang_Integer__void@jsoptional.Main
+ (param $i1 i32)
+ (param $d (ref null $java.lang.Double))
+ (param $i (ref null $java.lang.Integer))
+ ;;@ jsoptional/Main.java:32:21
+ (block
+  ;;@ jsoptional/Main.java:32:88
+  (call $$clinit__void_<once>_@jsoptional.Main )
+ )
+)
+
+;;; void Main.staticMethod2(String s1, Double d, Boolean... i)
+(func $m_staticMethod2__java_lang_String__java_lang_Double__arrayOf_java_lang_Boolean__void@jsoptional.Main
+ (param $s1 (ref null $java.lang.String))
+ (param $d (ref null $java.lang.Double))
+ (param $i (ref null $javaemul.internal.WasmArray.OfObject))
+ ;;@ jsoptional/Main.java:35:21
+ (block
+  ;;@ jsoptional/Main.java:35:82
+  (call $$clinit__void_<once>_@jsoptional.Main )
+ )
+)
+
 ;;; Main Main.$create(String a)
 (func $$create__java_lang_String@jsoptional.Main
  (param $a (ref null $java.lang.String))
  (result (ref null $jsoptional.Main))
- ;;@ jsoptional/Main.java:39:9
+ ;;@ jsoptional/Main.java:45:9
  (local $$instance (ref null $jsoptional.Main))
  (block
-  ;;@ jsoptional/Main.java:39:9
+  ;;@ jsoptional/Main.java:45:9
+  (call $$clinit__void_<once>_@jsoptional.Main )
+  ;;@ jsoptional/Main.java:45:9
   (local.set $$instance (struct.new $jsoptional.Main (ref.as_non_null (global.get $jsoptional.Main.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (ref.null $java.lang.Object)))
-  ;;@ jsoptional/Main.java:39:9
+  ;;@ jsoptional/Main.java:45:9
   (call $$ctor__java_lang_String__void_$p_jsoptional_Main@jsoptional.Main (ref.as_non_null (local.get $$instance))(local.get $a))
-  ;;@ jsoptional/Main.java:39:9
+  ;;@ jsoptional/Main.java:45:9
   (return (local.get $$instance))
  )
 )
@@ -488,13 +433,11 @@
 (func $$ctor__java_lang_String__void_$p_jsoptional_Main@jsoptional.Main
  (param $this (ref null $jsoptional.Main))
  (param $a (ref null $java.lang.String))
- ;;@ jsoptional/Main.java:39:9
+ ;;@ jsoptional/Main.java:45:9
  (block
-  ;;@ jsoptional/Main.java:39:36
-  (call $$clinit__void@jsoptional.Main )
-  ;;@ jsoptional/Main.java:39:36
+  ;;@ jsoptional/Main.java:45:36
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
-  ;;@ jsoptional/Main.java:39:36
+  ;;@ jsoptional/Main.java:45:36
   (call $$init__void_$p_jsoptional_Main@jsoptional.Main (ref.as_non_null (local.get $this)))
  )
 )
@@ -504,9 +447,9 @@
  (type $function.m_testFunction__jsoptional_Main_Function__void)
  (param $this.untyped (ref $java.lang.Object))
  (param $f (ref null $java.lang.Object))
- ;;@ jsoptional/Main.java:48:14
+ ;;@ jsoptional/Main.java:54:14
  (local $this (ref null $jsoptional.Main))
- (local.set $this (ref.cast_static $jsoptional.Main (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main) (local.get $this.untyped)))
  (block
  )
 )
@@ -517,9 +460,9 @@
  (type $function.m_testOptionalFunction__jsoptional_Main_Function__void)
  (param $this.untyped (ref $java.lang.Object))
  (param $f (ref null $java.lang.Object))
- ;;@ jsoptional/Main.java:51:14
+ ;;@ jsoptional/Main.java:57:14
  (local $this (ref null $jsoptional.Main))
- (local.set $this (ref.cast_static $jsoptional.Main (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main) (local.get $this.untyped)))
  (block
  )
 )
@@ -530,39 +473,40 @@
  (param $this (ref null $jsoptional.Main))
  ;;@ jsoptional/Main.java:24:13
  (block
-  ;;@ jsoptional/Main.java:36:2
-  (struct.set $jsoptional.Main $f_f__jsoptional_Main (local.get $this) (call $$create__@jsoptional.Main.$LambdaImplementor$1 ))
+  ;;@ jsoptional/Main.java:42:2
+  (struct.set $jsoptional.Main $f@jsoptional.Main (local.get $this) (call $$create__@jsoptional.Main.$LambdaImplementor$1 ))
  )
 )
 
 ;;; void Main.$clinit()
-(func $$clinit__void@jsoptional.Main
+(func $$clinit__void_<once>_@jsoptional.Main
  ;;@ jsoptional/Main.java:24:13
  (block
   ;;@ jsoptional/Main.java:24:13
-  (if (global.get $f_$initialized__jsoptional_Main)
+  (if (global.get $$class-initialized@jsoptional.Main)
    (then
     ;;@ jsoptional/Main.java:24:13
     (return )
    )
   )
   ;;@ jsoptional/Main.java:24:13
-  (global.set $f_$initialized__jsoptional_Main (i32.const 1))
+  (global.set $$class-initialized@jsoptional.Main (i32.const 1))
   ;;@ jsoptional/Main.java:24:13
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> Main.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@jsoptional.Main
+(func $$getClassMetadata__java_lang_Class_<once>_@jsoptional.Main
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__jsoptional_Main) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@jsoptional.Main)))
    (then
-    (global.set $f_$class__jsoptional_Main (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jsoptional.Main|__java_lang_String (ref.func $$getString_|jsoptional.Main|__java_lang_String@jsoptional.Main) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@jsoptional.Main))
    )
   )
-  (return (global.get $f_$class__jsoptional_Main))
+  (global.set $$class@jsoptional.Main (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|jsoptional.Main|__java_lang_String_<once>_@jsoptional.Main )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@jsoptional.Main))
  )
 )
 
@@ -572,39 +516,28 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $jsoptional.Main))
- (local.set $this (ref.cast_static $jsoptional.Main (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@jsoptional.Main) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@jsoptional.Main ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@jsoptional.Main)
-
-;;; String Main.$getString_|jsoptional.Main|()
-(func $$getString_|jsoptional.Main|__java_lang_String@jsoptional.Main
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|jsoptional.Main|__jsoptional_Main) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|jsoptional.Main|__jsoptional_Main (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jsoptional.Main")))
-   )
-  )
-  (return (global.get $f_$string_|jsoptional.Main|__jsoptional_Main))
- )
-)
 
 ;;; Code for jsoptional.Main.$LambdaImplementor$1 [methods]
 
 ;;; <anonymous> implements Function <anonymous> implements Function.$create()
 (func $$create__@jsoptional.Main.$LambdaImplementor$1
  (result (ref null $jsoptional.Main.$LambdaImplementor$1))
- ;;@ jsoptional/Main.java:36:15
+ ;;@ jsoptional/Main.java:42:15
  (local $$instance (ref null $jsoptional.Main.$LambdaImplementor$1))
  (block
-  ;;@ jsoptional/Main.java:36:15
+  ;;@ jsoptional/Main.java:42:15
+  (call $$clinit__void_<once>_@jsoptional.Main.$LambdaImplementor$1 )
+  ;;@ jsoptional/Main.java:42:15
   (local.set $$instance (struct.new $jsoptional.Main.$LambdaImplementor$1 (ref.as_non_null (global.get $jsoptional.Main.$LambdaImplementor$1.vtable)) (ref.as_non_null (global.get $jsoptional.Main.$LambdaImplementor$1.itable)) (i32.const 0)))
-  ;;@ jsoptional/Main.java:36:15
+  ;;@ jsoptional/Main.java:42:15
   (call $$ctor__void_$p_jsoptional_Main_$LambdaImplementor$1@jsoptional.Main.$LambdaImplementor$1 (ref.as_non_null (local.get $$instance)))
-  ;;@ jsoptional/Main.java:36:15
+  ;;@ jsoptional/Main.java:42:15
   (return (local.get $$instance))
  )
 )
@@ -612,11 +545,9 @@
 ;;; void <anonymous> implements Function.$ctor()
 (func $$ctor__void_$p_jsoptional_Main_$LambdaImplementor$1@jsoptional.Main.$LambdaImplementor$1
  (param $this (ref null $jsoptional.Main.$LambdaImplementor$1))
- ;;@ jsoptional/Main.java:36:15
+ ;;@ jsoptional/Main.java:42:15
  (block
-  ;;@ jsoptional/Main.java:36:15
-  (call $$clinit__void@jsoptional.Main.$LambdaImplementor$1 )
-  ;;@ jsoptional/Main.java:36:15
+  ;;@ jsoptional/Main.java:42:15
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -628,44 +559,45 @@
  (param $s (ref null $java.lang.String))
  (param $varargs (ref null $javaemul.internal.WasmArray.OfObject))
  (result (ref null $java.lang.Object))
- ;;@ jsoptional/Main.java:36:15
+ ;;@ jsoptional/Main.java:42:15
  (local $this (ref null $jsoptional.Main.$LambdaImplementor$1))
- (local.set $this (ref.cast_static $jsoptional.Main.$LambdaImplementor$1 (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main.$LambdaImplementor$1) (local.get $this.untyped)))
  (block
-  ;;@ jsoptional/Main.java:36:31
+  ;;@ jsoptional/Main.java:42:31
   (return (local.get $s))
  )
 )
 (elem declare func $m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object@jsoptional.Main.$LambdaImplementor$1)
 
 ;;; void <anonymous> implements Function.$clinit()
-(func $$clinit__void@jsoptional.Main.$LambdaImplementor$1
- ;;@ jsoptional/Main.java:36:15
+(func $$clinit__void_<once>_@jsoptional.Main.$LambdaImplementor$1
+ ;;@ jsoptional/Main.java:42:15
  (block
-  ;;@ jsoptional/Main.java:36:15
-  (if (global.get $f_$initialized__jsoptional_Main_$LambdaImplementor$1)
+  ;;@ jsoptional/Main.java:42:15
+  (if (global.get $$class-initialized@jsoptional.Main.$LambdaImplementor$1)
    (then
-    ;;@ jsoptional/Main.java:36:15
+    ;;@ jsoptional/Main.java:42:15
     (return )
    )
   )
-  ;;@ jsoptional/Main.java:36:15
-  (global.set $f_$initialized__jsoptional_Main_$LambdaImplementor$1 (i32.const 1))
-  ;;@ jsoptional/Main.java:36:15
-  (call $$clinit__void@java.lang.Object )
+  ;;@ jsoptional/Main.java:42:15
+  (global.set $$class-initialized@jsoptional.Main.$LambdaImplementor$1 (i32.const 1))
+  ;;@ jsoptional/Main.java:42:15
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> <anonymous> implements Function.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@jsoptional.Main.$LambdaImplementor$1
+(func $$getClassMetadata__java_lang_Class_<once>_@jsoptional.Main.$LambdaImplementor$1
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__jsoptional_Main_$LambdaImplementor$1) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@jsoptional.Main.$LambdaImplementor$1)))
    (then
-    (global.set $f_$class__jsoptional_Main_$LambdaImplementor$1 (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jsoptional.M...|__java_lang_String (ref.func $$getString_|jsoptional.M...|__java_lang_String@jsoptional.Main.$LambdaImplementor$1) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@jsoptional.Main.$LambdaImplementor$1))
    )
   )
-  (return (global.get $f_$class__jsoptional_Main_$LambdaImplementor$1))
+  (global.set $$class@jsoptional.Main.$LambdaImplementor$1 (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|jsoptional.M...|__java_lang_String_<once>_@jsoptional.Main.$LambdaImplementor$1 )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@jsoptional.Main.$LambdaImplementor$1))
  )
 )
 
@@ -675,39 +607,28 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $jsoptional.Main.$LambdaImplementor$1))
- (local.set $this (ref.cast_static $jsoptional.Main.$LambdaImplementor$1 (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main.$LambdaImplementor$1) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@jsoptional.Main.$LambdaImplementor$1) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@jsoptional.Main.$LambdaImplementor$1 ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@jsoptional.Main.$LambdaImplementor$1)
-
-;;; String <anonymous> implements Function.$getString_|jsoptional.M...|()
-(func $$getString_|jsoptional.M...|__java_lang_String@jsoptional.Main.$LambdaImplementor$1
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|jsoptional.M...|__jsoptional_Main_$LambdaImplementor$1) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|jsoptional.M...|__jsoptional_Main_$LambdaImplementor$1 (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jsoptional.Main$$LambdaImplementor$1")))
-   )
-  )
-  (return (global.get $f_$string_|jsoptional.M...|__jsoptional_Main_$LambdaImplementor$1))
- )
-)
 
 ;;; Code for jsoptional.Main.AFunction [methods]
 
 ;;; AFunction AFunction.$create()
 (func $$create__@jsoptional.Main.AFunction
  (result (ref null $jsoptional.Main.AFunction))
- ;;@ jsoptional/Main.java:41:21
+ ;;@ jsoptional/Main.java:47:21
  (local $$instance (ref null $jsoptional.Main.AFunction))
  (block
-  ;;@ jsoptional/Main.java:41:21
+  ;;@ jsoptional/Main.java:47:21
+  (call $$clinit__void_<once>_@jsoptional.Main.AFunction )
+  ;;@ jsoptional/Main.java:47:21
   (local.set $$instance (struct.new $jsoptional.Main.AFunction (ref.as_non_null (global.get $jsoptional.Main.AFunction.vtable)) (ref.as_non_null (global.get $jsoptional.Main.AFunction.itable)) (i32.const 0)))
-  ;;@ jsoptional/Main.java:41:21
+  ;;@ jsoptional/Main.java:47:21
   (call $$ctor__void_$p_jsoptional_Main_AFunction@jsoptional.Main.AFunction (ref.as_non_null (local.get $$instance)))
-  ;;@ jsoptional/Main.java:41:21
+  ;;@ jsoptional/Main.java:47:21
   (return (local.get $$instance))
  )
 )
@@ -715,11 +636,9 @@
 ;;; void AFunction.$ctor()
 (func $$ctor__void_$p_jsoptional_Main_AFunction@jsoptional.Main.AFunction
  (param $this (ref null $jsoptional.Main.AFunction))
- ;;@ jsoptional/Main.java:41:21
+ ;;@ jsoptional/Main.java:47:21
  (block
-  ;;@ jsoptional/Main.java:41:21
-  (call $$clinit__void@jsoptional.Main.AFunction )
-  ;;@ jsoptional/Main.java:41:21
+  ;;@ jsoptional/Main.java:47:21
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -731,44 +650,45 @@
  (param $i (ref null $java.lang.String))
  (param $args (ref null $javaemul.internal.WasmArray.OfObject))
  (result (ref null $java.lang.Object))
- ;;@ jsoptional/Main.java:43:18
+ ;;@ jsoptional/Main.java:49:18
  (local $this (ref null $jsoptional.Main.AFunction))
- (local.set $this (ref.cast_static $jsoptional.Main.AFunction (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main.AFunction) (local.get $this.untyped)))
  (block
-  ;;@ jsoptional/Main.java:44:6
-  (return (array.get $java.lang.Object.array (struct.get $javaemul.internal.WasmArray.OfObject $f_elements__javaemul_internal_WasmArray_OfObject (local.get $args)) (i32.const 0)))
+  ;;@ jsoptional/Main.java:50:6
+  (return (array.get $java.lang.Object.array (struct.get $javaemul.internal.WasmArray.OfObject $elements@javaemul.internal.WasmArray.OfObject (local.get $args)) (i32.const 0)))
  )
 )
 (elem declare func $m_f1__java_lang_String__arrayOf_java_lang_Object__java_lang_Object@jsoptional.Main.AFunction)
 
 ;;; void AFunction.$clinit()
-(func $$clinit__void@jsoptional.Main.AFunction
- ;;@ jsoptional/Main.java:41:21
+(func $$clinit__void_<once>_@jsoptional.Main.AFunction
+ ;;@ jsoptional/Main.java:47:21
  (block
-  ;;@ jsoptional/Main.java:41:21
-  (if (global.get $f_$initialized__jsoptional_Main_AFunction)
+  ;;@ jsoptional/Main.java:47:21
+  (if (global.get $$class-initialized@jsoptional.Main.AFunction)
    (then
-    ;;@ jsoptional/Main.java:41:21
+    ;;@ jsoptional/Main.java:47:21
     (return )
    )
   )
-  ;;@ jsoptional/Main.java:41:21
-  (global.set $f_$initialized__jsoptional_Main_AFunction (i32.const 1))
-  ;;@ jsoptional/Main.java:41:21
-  (call $$clinit__void@java.lang.Object )
+  ;;@ jsoptional/Main.java:47:21
+  (global.set $$class-initialized@jsoptional.Main.AFunction (i32.const 1))
+  ;;@ jsoptional/Main.java:47:21
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> AFunction.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@jsoptional.Main.AFunction
+(func $$getClassMetadata__java_lang_Class_<once>_@jsoptional.Main.AFunction
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__jsoptional_Main_AFunction) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@jsoptional.Main.AFunction)))
    (then
-    (global.set $f_$class__jsoptional_Main_AFunction (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jsoptional.M...|__java_lang_String (ref.func $$getString_|jsoptional.M...|__java_lang_String@jsoptional.Main.AFunction) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@jsoptional.Main.AFunction))
    )
   )
-  (return (global.get $f_$class__jsoptional_Main_AFunction))
+  (global.set $$class@jsoptional.Main.AFunction (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|jsoptional.M...|__java_lang_String_<once>_@jsoptional.Main.AFunction )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@jsoptional.Main.AFunction))
  )
 )
 
@@ -778,39 +698,28 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $jsoptional.Main.AFunction))
- (local.set $this (ref.cast_static $jsoptional.Main.AFunction (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main.AFunction) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@jsoptional.Main.AFunction) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@jsoptional.Main.AFunction ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@jsoptional.Main.AFunction)
-
-;;; String AFunction.$getString_|jsoptional.M...|()
-(func $$getString_|jsoptional.M...|__java_lang_String@jsoptional.Main.AFunction
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|jsoptional.M...|__jsoptional_Main_AFunction) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|jsoptional.M...|__jsoptional_Main_AFunction (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jsoptional.Main$AFunction")))
-   )
-  )
-  (return (global.get $f_$string_|jsoptional.M...|__jsoptional_Main_AFunction))
- )
-)
 
 ;;; Code for jsoptional.Main.TemplatedSubtype [methods]
 
 ;;; TemplatedSubtype<T> TemplatedSubtype.$create()
 (func $$create__@jsoptional.Main.TemplatedSubtype
  (result (ref null $jsoptional.Main.TemplatedSubtype))
- ;;@ jsoptional/Main.java:59:15
+ ;;@ jsoptional/Main.java:65:15
  (local $$instance (ref null $jsoptional.Main.TemplatedSubtype))
  (block
-  ;;@ jsoptional/Main.java:59:15
+  ;;@ jsoptional/Main.java:65:15
+  (call $$clinit__void_<once>_@jsoptional.Main.TemplatedSubtype )
+  ;;@ jsoptional/Main.java:65:15
   (local.set $$instance (struct.new $jsoptional.Main.TemplatedSubtype (ref.as_non_null (global.get $jsoptional.Main.TemplatedSubtype.vtable)) (ref.as_non_null (global.get $jsoptional.Main.TemplatedSubtype.itable)) (i32.const 0)))
-  ;;@ jsoptional/Main.java:59:15
+  ;;@ jsoptional/Main.java:65:15
   (call $$ctor__void_$p_jsoptional_Main_TemplatedSubtype@jsoptional.Main.TemplatedSubtype (ref.as_non_null (local.get $$instance)))
-  ;;@ jsoptional/Main.java:59:15
+  ;;@ jsoptional/Main.java:65:15
   (return (local.get $$instance))
  )
 )
@@ -818,11 +727,9 @@
 ;;; void TemplatedSubtype.$ctor()
 (func $$ctor__void_$p_jsoptional_Main_TemplatedSubtype@jsoptional.Main.TemplatedSubtype
  (param $this (ref null $jsoptional.Main.TemplatedSubtype))
- ;;@ jsoptional/Main.java:59:15
+ ;;@ jsoptional/Main.java:65:15
  (block
-  ;;@ jsoptional/Main.java:59:15
-  (call $$clinit__void@jsoptional.Main.TemplatedSubtype )
-  ;;@ jsoptional/Main.java:59:15
+  ;;@ jsoptional/Main.java:65:15
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -833,9 +740,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (param $t (ref null $java.lang.String))
  (param $o (ref null $java.lang.Object))
- ;;@ jsoptional/Main.java:61:16
+ ;;@ jsoptional/Main.java:67:16
  (local $this (ref null $jsoptional.Main.TemplatedSubtype))
- (local.set $this (ref.cast_static $jsoptional.Main.TemplatedSubtype (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main.TemplatedSubtype) (local.get $this.untyped)))
  (block
  )
 )
@@ -847,44 +754,45 @@
  (param $this.untyped (ref $java.lang.Object))
  (param $arg0 (ref null $java.lang.Object))
  (param $arg1 (ref null $java.lang.Object))
- ;;@ jsoptional/Main.java:59:15
+ ;;@ jsoptional/Main.java:65:15
  (local $this (ref null $jsoptional.Main.TemplatedSubtype))
- (local.set $this (ref.cast_static $jsoptional.Main.TemplatedSubtype (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main.TemplatedSubtype) (local.get $this.untyped)))
  (block
-  ;;@ jsoptional/Main.java:59:15
-  (call_ref $function.m_m__java_lang_String__java_lang_Object__void (ref.as_non_null (local.get $this))(ref.cast_static $java.lang.String (local.get $arg0))(local.get $arg1)(struct.get $jsoptional.Main.TemplatedSubtype.vtable $m_m__java_lang_String__java_lang_Object__void (struct.get $jsoptional.Main.TemplatedSubtype $vtable(local.get $this))))
+  ;;@ jsoptional/Main.java:65:15
+  (call_ref $function.m_m__java_lang_String__java_lang_Object__void (ref.as_non_null (local.get $this))(ref.cast (ref null $java.lang.String) (local.get $arg0))(local.get $arg1)(struct.get $jsoptional.Main.TemplatedSubtype.vtable $m_m__java_lang_String__java_lang_Object__void (struct.get $jsoptional.Main.TemplatedSubtype $vtable(local.get $this))))
  )
 )
 (elem declare func $m_m__java_lang_Object__java_lang_Object__void@jsoptional.Main.TemplatedSubtype)
 
 ;;; void TemplatedSubtype.$clinit()
-(func $$clinit__void@jsoptional.Main.TemplatedSubtype
- ;;@ jsoptional/Main.java:59:15
+(func $$clinit__void_<once>_@jsoptional.Main.TemplatedSubtype
+ ;;@ jsoptional/Main.java:65:15
  (block
-  ;;@ jsoptional/Main.java:59:15
-  (if (global.get $f_$initialized__jsoptional_Main_TemplatedSubtype)
+  ;;@ jsoptional/Main.java:65:15
+  (if (global.get $$class-initialized@jsoptional.Main.TemplatedSubtype)
    (then
-    ;;@ jsoptional/Main.java:59:15
+    ;;@ jsoptional/Main.java:65:15
     (return )
    )
   )
-  ;;@ jsoptional/Main.java:59:15
-  (global.set $f_$initialized__jsoptional_Main_TemplatedSubtype (i32.const 1))
-  ;;@ jsoptional/Main.java:59:15
-  (call $$clinit__void@java.lang.Object )
+  ;;@ jsoptional/Main.java:65:15
+  (global.set $$class-initialized@jsoptional.Main.TemplatedSubtype (i32.const 1))
+  ;;@ jsoptional/Main.java:65:15
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> TemplatedSubtype.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@jsoptional.Main.TemplatedSubtype
+(func $$getClassMetadata__java_lang_Class_<once>_@jsoptional.Main.TemplatedSubtype
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__jsoptional_Main_TemplatedSubtype) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@jsoptional.Main.TemplatedSubtype)))
    (then
-    (global.set $f_$class__jsoptional_Main_TemplatedSubtype (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jsoptional.M...|__java_lang_String (ref.func $$getString_|jsoptional.M...|__java_lang_String@jsoptional.Main.TemplatedSubtype) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@jsoptional.Main.TemplatedSubtype))
    )
   )
-  (return (global.get $f_$class__jsoptional_Main_TemplatedSubtype))
+  (global.set $$class@jsoptional.Main.TemplatedSubtype (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|jsoptional.M...|__java_lang_String_<once>_@jsoptional.Main.TemplatedSubtype )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@jsoptional.Main.TemplatedSubtype))
  )
 )
 
@@ -894,25 +802,12 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $jsoptional.Main.TemplatedSubtype))
- (local.set $this (ref.cast_static $jsoptional.Main.TemplatedSubtype (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main.TemplatedSubtype) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@jsoptional.Main.TemplatedSubtype) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@jsoptional.Main.TemplatedSubtype ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@jsoptional.Main.TemplatedSubtype)
-
-;;; String TemplatedSubtype.$getString_|jsoptional.M...|()
-(func $$getString_|jsoptional.M...|__java_lang_String@jsoptional.Main.TemplatedSubtype
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|jsoptional.M...|__jsoptional_Main_TemplatedSubtype) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|jsoptional.M...|__jsoptional_Main_TemplatedSubtype (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jsoptional.Main$TemplatedSubtype")))
-   )
-  )
-  (return (global.get $f_$string_|jsoptional.M...|__jsoptional_Main_TemplatedSubtype))
- )
-)
 
 ;;; Code for jsoptional.Main.SpecializedSubtype [methods]
 
@@ -921,14 +816,16 @@
  (param $$outer_this (ref null $jsoptional.Main))
  (param $a (ref null $java.lang.Object))
  (result (ref null $jsoptional.Main.SpecializedSubtype))
- ;;@ jsoptional/Main.java:68:11
+ ;;@ jsoptional/Main.java:74:11
  (local $$instance (ref null $jsoptional.Main.SpecializedSubtype))
  (block
-  ;;@ jsoptional/Main.java:68:11
-  (local.set $$instance (struct.new $jsoptional.Main.SpecializedSubtype (ref.as_non_null (global.get $jsoptional.Main.SpecializedSubtype.vtable)) (ref.as_non_null (global.get $jsoptional.Main.SpecializedSubtype.itable)) (i32.const 0) (local.get $$outer_this)))
-  ;;@ jsoptional/Main.java:68:11
+  ;;@ jsoptional/Main.java:74:11
+  (call $$clinit__void_<once>_@jsoptional.Main.SpecializedSubtype )
+  ;;@ jsoptional/Main.java:74:11
+  (local.set $$instance (struct.new $jsoptional.Main.SpecializedSubtype (ref.as_non_null (global.get $jsoptional.Main.SpecializedSubtype.vtable)) (ref.as_non_null (global.get $jsoptional.Main.SpecializedSubtype.itable)) (i32.const 0) (ref.null $jsoptional.Main)))
+  ;;@ jsoptional/Main.java:74:11
   (call $$ctor__jsoptional_Main__java_lang_Object__void_$p_jsoptional_Main_SpecializedSubtype@jsoptional.Main.SpecializedSubtype (ref.as_non_null (local.get $$instance))(local.get $$outer_this)(local.get $a))
-  ;;@ jsoptional/Main.java:68:11
+  ;;@ jsoptional/Main.java:74:11
   (return (local.get $$instance))
  )
 )
@@ -938,11 +835,11 @@
  (param $this (ref null $jsoptional.Main.SpecializedSubtype))
  (param $$outer_this (ref null $jsoptional.Main))
  (param $a (ref null $java.lang.Object))
- ;;@ jsoptional/Main.java:68:11
+ ;;@ jsoptional/Main.java:74:11
  (block
-  ;;@ jsoptional/Main.java:68:52
-  (call $$clinit__void@jsoptional.Main.SpecializedSubtype )
-  ;;@ jsoptional/Main.java:68:52
+  ;;@ jsoptional/Main.java:72:8
+  (struct.set $jsoptional.Main.SpecializedSubtype $$outer_this@jsoptional.Main.SpecializedSubtype (local.get $this) (local.get $$outer_this))
+  ;;@ jsoptional/Main.java:74:52
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -953,9 +850,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (param $t (ref null $java.lang.String))
  (param $o (ref null $java.lang.Object))
- ;;@ jsoptional/Main.java:71:16
+ ;;@ jsoptional/Main.java:77:16
  (local $this (ref null $jsoptional.Main.SpecializedSubtype))
- (local.set $this (ref.cast_static $jsoptional.Main.SpecializedSubtype (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main.SpecializedSubtype) (local.get $this.untyped)))
  (block
  )
 )
@@ -967,44 +864,45 @@
  (param $this.untyped (ref $java.lang.Object))
  (param $arg0 (ref null $java.lang.Object))
  (param $arg1 (ref null $java.lang.Object))
- ;;@ jsoptional/Main.java:66:8
+ ;;@ jsoptional/Main.java:72:8
  (local $this (ref null $jsoptional.Main.SpecializedSubtype))
- (local.set $this (ref.cast_static $jsoptional.Main.SpecializedSubtype (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main.SpecializedSubtype) (local.get $this.untyped)))
  (block
-  ;;@ jsoptional/Main.java:66:8
-  (call_ref $function.m_m__java_lang_String__java_lang_Object__void (ref.as_non_null (local.get $this))(ref.cast_static $java.lang.String (local.get $arg0))(local.get $arg1)(struct.get $jsoptional.Main.SpecializedSubtype.vtable $m_m__java_lang_String__java_lang_Object__void (struct.get $jsoptional.Main.SpecializedSubtype $vtable(local.get $this))))
+  ;;@ jsoptional/Main.java:72:8
+  (call_ref $function.m_m__java_lang_String__java_lang_Object__void (ref.as_non_null (local.get $this))(ref.cast (ref null $java.lang.String) (local.get $arg0))(local.get $arg1)(struct.get $jsoptional.Main.SpecializedSubtype.vtable $m_m__java_lang_String__java_lang_Object__void (struct.get $jsoptional.Main.SpecializedSubtype $vtable(local.get $this))))
  )
 )
 (elem declare func $m_m__java_lang_Object__java_lang_Object__void@jsoptional.Main.SpecializedSubtype)
 
 ;;; void SpecializedSubtype.$clinit()
-(func $$clinit__void@jsoptional.Main.SpecializedSubtype
- ;;@ jsoptional/Main.java:66:8
+(func $$clinit__void_<once>_@jsoptional.Main.SpecializedSubtype
+ ;;@ jsoptional/Main.java:72:8
  (block
-  ;;@ jsoptional/Main.java:66:8
-  (if (global.get $f_$initialized__jsoptional_Main_SpecializedSubtype)
+  ;;@ jsoptional/Main.java:72:8
+  (if (global.get $$class-initialized@jsoptional.Main.SpecializedSubtype)
    (then
-    ;;@ jsoptional/Main.java:66:8
+    ;;@ jsoptional/Main.java:72:8
     (return )
    )
   )
-  ;;@ jsoptional/Main.java:66:8
-  (global.set $f_$initialized__jsoptional_Main_SpecializedSubtype (i32.const 1))
-  ;;@ jsoptional/Main.java:66:8
-  (call $$clinit__void@java.lang.Object )
+  ;;@ jsoptional/Main.java:72:8
+  (global.set $$class-initialized@jsoptional.Main.SpecializedSubtype (i32.const 1))
+  ;;@ jsoptional/Main.java:72:8
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> SpecializedSubtype.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@jsoptional.Main.SpecializedSubtype
+(func $$getClassMetadata__java_lang_Class_<once>_@jsoptional.Main.SpecializedSubtype
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__jsoptional_Main_SpecializedSubtype) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@jsoptional.Main.SpecializedSubtype)))
    (then
-    (global.set $f_$class__jsoptional_Main_SpecializedSubtype (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jsoptional.M...|__java_lang_String (ref.func $$getString_|jsoptional.M...|__java_lang_String@jsoptional.Main.SpecializedSubtype) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@jsoptional.Main.SpecializedSubtype))
    )
   )
-  (return (global.get $f_$class__jsoptional_Main_SpecializedSubtype))
+  (global.set $$class@jsoptional.Main.SpecializedSubtype (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|jsoptional.M...|__java_lang_String_<once>_@jsoptional.Main.SpecializedSubtype )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@jsoptional.Main.SpecializedSubtype))
  )
 )
 
@@ -1014,39 +912,28 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $jsoptional.Main.SpecializedSubtype))
- (local.set $this (ref.cast_static $jsoptional.Main.SpecializedSubtype (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main.SpecializedSubtype) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@jsoptional.Main.SpecializedSubtype) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@jsoptional.Main.SpecializedSubtype ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@jsoptional.Main.SpecializedSubtype)
-
-;;; String SpecializedSubtype.$getString_|jsoptional.M...|()
-(func $$getString_|jsoptional.M...|__java_lang_String@jsoptional.Main.SpecializedSubtype
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|jsoptional.M...|__jsoptional_Main_SpecializedSubtype) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|jsoptional.M...|__jsoptional_Main_SpecializedSubtype (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jsoptional.Main$SpecializedSubtype")))
-   )
-  )
-  (return (global.get $f_$string_|jsoptional.M...|__jsoptional_Main_SpecializedSubtype))
- )
-)
 
 ;;; Code for jsoptional.Main.NonJsTypeSubtype [methods]
 
 ;;; NonJsTypeSubtype NonJsTypeSubtype.$create()
 (func $$create__@jsoptional.Main.NonJsTypeSubtype
  (result (ref null $jsoptional.Main.NonJsTypeSubtype))
- ;;@ jsoptional/Main.java:74:15
+ ;;@ jsoptional/Main.java:80:15
  (local $$instance (ref null $jsoptional.Main.NonJsTypeSubtype))
  (block
-  ;;@ jsoptional/Main.java:74:15
+  ;;@ jsoptional/Main.java:80:15
+  (call $$clinit__void_<once>_@jsoptional.Main.NonJsTypeSubtype )
+  ;;@ jsoptional/Main.java:80:15
   (local.set $$instance (struct.new $jsoptional.Main.NonJsTypeSubtype (ref.as_non_null (global.get $jsoptional.Main.NonJsTypeSubtype.vtable)) (ref.as_non_null (global.get $jsoptional.Main.NonJsTypeSubtype.itable)) (i32.const 0)))
-  ;;@ jsoptional/Main.java:74:15
+  ;;@ jsoptional/Main.java:80:15
   (call $$ctor__void_$p_jsoptional_Main_NonJsTypeSubtype@jsoptional.Main.NonJsTypeSubtype (ref.as_non_null (local.get $$instance)))
-  ;;@ jsoptional/Main.java:74:15
+  ;;@ jsoptional/Main.java:80:15
   (return (local.get $$instance))
  )
 )
@@ -1054,11 +941,9 @@
 ;;; void NonJsTypeSubtype.$ctor()
 (func $$ctor__void_$p_jsoptional_Main_NonJsTypeSubtype@jsoptional.Main.NonJsTypeSubtype
  (param $this (ref null $jsoptional.Main.NonJsTypeSubtype))
- ;;@ jsoptional/Main.java:74:15
+ ;;@ jsoptional/Main.java:80:15
  (block
-  ;;@ jsoptional/Main.java:74:15
-  (call $$clinit__void@jsoptional.Main.NonJsTypeSubtype )
-  ;;@ jsoptional/Main.java:74:15
+  ;;@ jsoptional/Main.java:80:15
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -1069,9 +954,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (param $t (ref null $java.lang.String))
  (param $o (ref null $java.lang.Object))
- ;;@ jsoptional/Main.java:76:16
+ ;;@ jsoptional/Main.java:82:16
  (local $this (ref null $jsoptional.Main.NonJsTypeSubtype))
- (local.set $this (ref.cast_static $jsoptional.Main.NonJsTypeSubtype (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main.NonJsTypeSubtype) (local.get $this.untyped)))
  (block
  )
 )
@@ -1083,44 +968,45 @@
  (param $this.untyped (ref $java.lang.Object))
  (param $arg0 (ref null $java.lang.Object))
  (param $arg1 (ref null $java.lang.Object))
- ;;@ jsoptional/Main.java:74:15
+ ;;@ jsoptional/Main.java:80:15
  (local $this (ref null $jsoptional.Main.NonJsTypeSubtype))
- (local.set $this (ref.cast_static $jsoptional.Main.NonJsTypeSubtype (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main.NonJsTypeSubtype) (local.get $this.untyped)))
  (block
-  ;;@ jsoptional/Main.java:74:15
-  (call_ref $function.m_m__java_lang_String__java_lang_Object__void (ref.as_non_null (local.get $this))(ref.cast_static $java.lang.String (local.get $arg0))(local.get $arg1)(struct.get $jsoptional.Main.NonJsTypeSubtype.vtable $m_m__java_lang_String__java_lang_Object__void (struct.get $jsoptional.Main.NonJsTypeSubtype $vtable(local.get $this))))
+  ;;@ jsoptional/Main.java:80:15
+  (call_ref $function.m_m__java_lang_String__java_lang_Object__void (ref.as_non_null (local.get $this))(ref.cast (ref null $java.lang.String) (local.get $arg0))(local.get $arg1)(struct.get $jsoptional.Main.NonJsTypeSubtype.vtable $m_m__java_lang_String__java_lang_Object__void (struct.get $jsoptional.Main.NonJsTypeSubtype $vtable(local.get $this))))
  )
 )
 (elem declare func $m_m__java_lang_Object__java_lang_Object__void@jsoptional.Main.NonJsTypeSubtype)
 
 ;;; void NonJsTypeSubtype.$clinit()
-(func $$clinit__void@jsoptional.Main.NonJsTypeSubtype
- ;;@ jsoptional/Main.java:74:15
+(func $$clinit__void_<once>_@jsoptional.Main.NonJsTypeSubtype
+ ;;@ jsoptional/Main.java:80:15
  (block
-  ;;@ jsoptional/Main.java:74:15
-  (if (global.get $f_$initialized__jsoptional_Main_NonJsTypeSubtype)
+  ;;@ jsoptional/Main.java:80:15
+  (if (global.get $$class-initialized@jsoptional.Main.NonJsTypeSubtype)
    (then
-    ;;@ jsoptional/Main.java:74:15
+    ;;@ jsoptional/Main.java:80:15
     (return )
    )
   )
-  ;;@ jsoptional/Main.java:74:15
-  (global.set $f_$initialized__jsoptional_Main_NonJsTypeSubtype (i32.const 1))
-  ;;@ jsoptional/Main.java:74:15
-  (call $$clinit__void@java.lang.Object )
+  ;;@ jsoptional/Main.java:80:15
+  (global.set $$class-initialized@jsoptional.Main.NonJsTypeSubtype (i32.const 1))
+  ;;@ jsoptional/Main.java:80:15
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> NonJsTypeSubtype.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@jsoptional.Main.NonJsTypeSubtype
+(func $$getClassMetadata__java_lang_Class_<once>_@jsoptional.Main.NonJsTypeSubtype
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__jsoptional_Main_NonJsTypeSubtype) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@jsoptional.Main.NonJsTypeSubtype)))
    (then
-    (global.set $f_$class__jsoptional_Main_NonJsTypeSubtype (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jsoptional.M...|__java_lang_String (ref.func $$getString_|jsoptional.M...|__java_lang_String@jsoptional.Main.NonJsTypeSubtype) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@jsoptional.Main.NonJsTypeSubtype))
    )
   )
-  (return (global.get $f_$class__jsoptional_Main_NonJsTypeSubtype))
+  (global.set $$class@jsoptional.Main.NonJsTypeSubtype (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|jsoptional.M...|__java_lang_String_<once>_@jsoptional.Main.NonJsTypeSubtype )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@jsoptional.Main.NonJsTypeSubtype))
  )
 )
 
@@ -1130,22 +1016,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $jsoptional.Main.NonJsTypeSubtype))
- (local.set $this (ref.cast_static $jsoptional.Main.NonJsTypeSubtype (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsoptional.Main.NonJsTypeSubtype) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@jsoptional.Main.NonJsTypeSubtype) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@jsoptional.Main.NonJsTypeSubtype ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@jsoptional.Main.NonJsTypeSubtype)
-
-;;; String NonJsTypeSubtype.$getString_|jsoptional.M...|()
-(func $$getString_|jsoptional.M...|__java_lang_String@jsoptional.Main.NonJsTypeSubtype
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|jsoptional.M...|__jsoptional_Main_NonJsTypeSubtype) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|jsoptional.M...|__jsoptional_Main_NonJsTypeSubtype (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jsoptional.Main$NonJsTypeSubtype")))
-   )
-  )
-  (return (global.get $f_$string_|jsoptional.M...|__jsoptional_Main_NonJsTypeSubtype))
- )
-)

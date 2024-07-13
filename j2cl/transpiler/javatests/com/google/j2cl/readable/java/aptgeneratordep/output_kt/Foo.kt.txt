@@ -9,6 +9,7 @@
  "UNNECESSARY_LATEINIT",
  "UNNECESSARY_NOT_NULL_ASSERTION",
  "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
  "UNUSED_PARAMETER",
  "UNUSED_VARIABLE",
  "USELESS_CAST",
@@ -28,7 +29,7 @@ import kotlin.native.ObjCName
 
 @ObjCName("J2ktAptgeneratordepFoo", exact = true)
 open class Foo {
- open override fun hashCode(): Int {
+ override fun hashCode(): Int {
   return Dummy::class.javaObjectType.hashCode()
  }
 }

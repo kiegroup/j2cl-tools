@@ -15,16 +15,14 @@
  */
 package javaemul.internal;
 
+import static javaemul.internal.InternalPreconditions.checkArrayCopyIndices;
 import static javaemul.internal.InternalPreconditions.checkCriticalArrayBounds;
 
 import java.util.Comparator;
+import javaemul.internal.annotations.Wasm;
 
 /** Provides utilities to perform operations on Arrays. */
 public final class ArrayHelper {
-
-  public static <T> T clone(T array) {
-    return (T) cloneImpl(array, 0, getLength(array));
-  }
 
   public static <T> T clone(T array, int fromIndex, int toIndex) {
     return (T) cloneImpl(array, fromIndex, toIndex);
@@ -36,8 +34,9 @@ public final class ArrayHelper {
 
   private static Object cloneImpl(Object array, int fromIndex, int toIndex) {
     int newLength = toIndex - fromIndex;
-    Object targetArray = asWasmArray(array).newArray(newLength);
-    int endIndex = Math.min(getLength(array), toIndex);
+    WasmArray wasmArray = asWasmArray(array);
+    Object targetArray = wasmArray.newArray(newLength);
+    int endIndex = Math.min(wasmArray.getLength(), toIndex);
     copy(array, fromIndex, targetArray, 0, endIndex - fromIndex);
     return targetArray;
   }
@@ -54,151 +53,125 @@ public final class ArrayHelper {
     return asWasmArray(array).getLength();
   }
 
-  public static void setLength(Object array, int length) {
-    asWasmArray(array).setLength(length);
+  public static <T> T setLength(T array, int newLength) {
+    return getLength(array) == newLength ? array : clone(array, 0, newLength);
   }
 
-  public static void push(Object[] array, Object o) {
-    ((WasmArray.OfObject) asWasmArray(array)).push(o);
+  /**
+   * Resize the array to accommodate requested length. For Wasm, the size is increased in larger
+   * chunks to amortize cost of growing similar to JavaScript.
+   */
+  public static <T> T grow(T array, int length) {
+    return clone(array, 0, getNewCapacity(getLength(array), length));
   }
 
-  public static void push(byte[] array, byte o) {
-    ((WasmArray.OfByte) asWasmArray(array)).push(o);
-  }
-
-  public static void push(int[] array, int o) {
-    ((WasmArray.OfInt) asWasmArray(array)).push(o);
-  }
-
-  public static void push(long[] array, long o) {
-    ((WasmArray.OfLong) asWasmArray(array)).push(o);
-  }
-
-  public static void push(double[] array, double o) {
-    ((WasmArray.OfDouble) asWasmArray(array)).push(o);
+  public static int getNewCapacity(int originalCapacity, int requestedCapacity) {
+    // Grow roughly with 1.5x rate at minimum.
+    int minCapacity = originalCapacity + (originalCapacity >> 1) + 1;
+    return Math.max(minCapacity, requestedCapacity);
   }
 
   public static void fill(int[] array, int value) {
-    fill(array, value, 0, getLength(array));
+    nativeFill(array, 0, value, array.length);
   }
 
   public static void fill(int[] array, int value, int fromIndex, int toIndex) {
-    for (int i = fromIndex; i < toIndex; i++) {
-      array[i] = value;
-    }
+    nativeFill(array, fromIndex, value, toIndex - fromIndex);
   }
 
+  @Wasm("array.fill $int.array")
+  private static native void nativeFill(int[] array, int offset, int value, int size);
+
   public static void fill(double[] array, double value) {
-    fill(array, value, 0, getLength(array));
+    nativeFill(array, 0, value, array.length);
   }
 
   public static void fill(double[] array, double value, int fromIndex, int toIndex) {
-    for (int i = fromIndex; i < toIndex; i++) {
-      array[i] = value;
-    }
+    nativeFill(array, fromIndex, value, toIndex - fromIndex);
   }
 
+  @Wasm("array.fill $double.array")
+  private static native void nativeFill(double[] array, int offset, double value, int size);
+
   public static void fill(float[] array, float value) {
-    fill(array, value, 0, getLength(array));
+    nativeFill(array, 0, value, array.length);
   }
 
   public static void fill(float[] array, float value, int fromIndex, int toIndex) {
-    for (int i = fromIndex; i < toIndex; i++) {
-      array[i] = value;
-    }
+    nativeFill(array, fromIndex, value, toIndex - fromIndex);
   }
 
+  @Wasm("array.fill $float.array")
+  private static native void nativeFill(float[] array, int offset, float value, int size);
+
   public static void fill(short[] array, short value) {
-    fill(array, value, 0, getLength(array));
+    nativeFill(array, 0, value, array.length);
   }
 
   public static void fill(short[] array, short value, int fromIndex, int toIndex) {
-    for (int i = fromIndex; i < toIndex; i++) {
-      array[i] = value;
-    }
+    nativeFill(array, fromIndex, value, toIndex - fromIndex);
   }
 
+  @Wasm("array.fill $short.array")
+  private static native void nativeFill(short[] array, int offset, short value, int size);
+
   public static void fill(long[] array, long value) {
-    fill(array, value, 0, getLength(array));
+    nativeFill(array, 0, value, array.length);
   }
 
   public static void fill(long[] array, long value, int fromIndex, int toIndex) {
-    for (int i = fromIndex; i < toIndex; i++) {
-      array[i] = value;
-    }
+    nativeFill(array, fromIndex, value, toIndex - fromIndex);
   }
 
+  @Wasm("array.fill $long.array")
+  private static native void nativeFill(long[] array, int offset, long value, int size);
+
   public static void fill(byte[] array, byte value) {
-    fill(array, value, 0, getLength(array));
+    nativeFill(array, 0, value, array.length);
   }
 
   public static void fill(byte[] array, byte value, int fromIndex, int toIndex) {
-    for (int i = fromIndex; i < toIndex; i++) {
-      array[i] = value;
-    }
+    nativeFill(array, fromIndex, value, toIndex - fromIndex);
   }
 
+  @Wasm("array.fill $byte.array")
+  private static native void nativeFill(byte[] array, int offset, byte value, int size);
+
   public static void fill(char[] array, char value) {
-    fill(array, value, 0, getLength(array));
+    nativeFill(array, 0, value, array.length);
   }
 
   public static void fill(char[] array, char value, int fromIndex, int toIndex) {
-    for (int i = fromIndex; i < toIndex; i++) {
-      array[i] = value;
-    }
+    nativeFill(array, fromIndex, value, toIndex - fromIndex);
   }
 
+  @Wasm("array.fill $char.array")
+  private static native void nativeFill(char[] array, int offset, char value, int size);
+
   public static void fill(boolean[] array, boolean value) {
-    fill(array, value, 0, getLength(array));
+    nativeFill(array, 0, value, array.length);
   }
 
   public static void fill(boolean[] array, boolean value, int fromIndex, int toIndex) {
-    for (int i = fromIndex; i < toIndex; i++) {
-      array[i] = value;
-    }
+    nativeFill(array, fromIndex, value, toIndex - fromIndex);
   }
 
+  @Wasm("array.fill $boolean.array")
+  private static native void nativeFill(boolean[] array, int offset, boolean value, int size);
+
   public static <T> void fill(T[] array, T value) {
-    fill(array, value, 0, getLength(array));
+    nativeFill(array, 0, value, array.length);
   }
 
   public static <T> void fill(T[] array, T value, int fromIndex, int toIndex) {
-    for (int i = fromIndex; i < toIndex; i++) {
-      array[i] = value;
-    }
+    nativeFill(array, fromIndex, value, toIndex - fromIndex);
   }
 
-  public static <T> T setAt(T[] array, int index, T value) {
-    WasmArray wasmArray = asWasmArray(array);
-    T originalValue;
-    if (wasmArray.getLength() < index + 1) {
-      wasmArray.setLength(index + 1);
-      originalValue = null;
-    } else {
-      originalValue = array[index];
-    }
-    array[index] = value;
-    return originalValue;
-  }
-
-  public static void removeFrom(Object[] array, int index, int deleteCount) {
-    // Copy the items after deletion end, overwriting deleted items.
-    int copyFrom = index + deleteCount;
-    copy(array, copyFrom, array, index, array.length - copyFrom);
-    // Trim the end array.
-    setLength(array, array.length - deleteCount);
-  }
-
-  public static void insertTo(Object[] array, int index, Object value) {
-    insertTo(array, index, new Object[] {value});
-  }
-
-  public static void insertTo(Object[] array, int index, Object[] values) {
-    ((WasmArray.OfObject) asWasmArray(array))
-        .insertFrom(index, (WasmArray.OfObject) asWasmArray(values));
-  }
+  @Wasm("array.fill $java.lang.Object.array")
+  private static native void nativeFill(Object[] array, int offset, Object value, int size);
 
   public static void copy(Object array, int srcOfs, Object dest, int destOfs, int len) {
+    checkArrayCopyIndices(array, srcOfs, dest, destOfs, len);
     asWasmArray(dest).copyFrom(destOfs, asWasmArray(array), srcOfs, len);
   }
 

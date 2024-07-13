@@ -35,10 +35,9 @@ import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
 
-/**
- * Tests {@link Stream}.
- */
+/** Tests {@link Stream}. */
 public class StreamTest extends EmulTestBase {
 
   public void testEmptyStream() {
@@ -127,9 +126,55 @@ public class StreamTest extends EmulTestBase {
   }
 
   public void testIterate() {
+    assertEquals(new Integer[] {0, 1, 2, 3, 4}, Stream.iterate(0, i -> i + 1).limit(5).toArray());
     assertEquals(
         new Integer[] {10, 11, 12, 13, 14},
         Stream.iterate(0, i -> i + 1).skip(10).limit(5).toArray(Integer[]::new));
+
+    // Check that the function is called the correct number of times
+    int[] calledCount = {0};
+    Integer[] array =
+        Stream.iterate(
+                0,
+                val -> {
+                  calledCount[0]++;
+                  return val + 1;
+                })
+            .limit(5)
+            .toArray(Integer[]::new);
+    // Verify that the function was called for each value after the seed
+    assertEquals(array.length - 1, calledCount[0]);
+    // Sanity check the values returned
+    assertEquals(new Integer[] {0, 1, 2, 3, 4}, array);
+  }
+
+  public void testIterate_predicate() {
+    // Check that base case works
+    assertEquals(
+        new Integer[] {1, 2, 3, 4},
+        Stream.iterate(1, x -> x < 5, x -> x + 1).toArray(Integer[]::new));
+
+    // Check that negative to positive works
+    assertEquals(
+        new Integer[] {-2, -1, 0, 1, 2},
+        Stream.iterate(-2, x -> x <= 2, x -> x + 1).toArray(Integer[]::new));
+
+    // Check the initial element is not included if the predicate is x -> false
+    assertEquals(new Integer[0], Stream.iterate(1, x -> false, x -> x + 1).toArray());
+
+    // Check non incrementing sequence with limit 0
+    assertEquals(
+        new Integer[0], Stream.iterate(1, x -> x < 5, x -> x).limit(0).toArray(Integer[]::new));
+
+    // Check decreasing sequence
+    assertEquals(
+        new Integer[] {8, 4, 2, 1},
+        Stream.iterate(8, x -> x > 0, x -> x / 2).toArray(Integer[]::new));
+
+    // Test with zero increment sequence
+    assertEquals(
+        new Integer[] {1, 1, 1, 1},
+        Stream.iterate(1, x -> x < 5, x -> x).limit(4).toArray(Integer[]::new));
   }
 
   public void testGenerate() {
@@ -306,11 +351,12 @@ public class StreamTest extends EmulTestBase {
 
     // With null values.
     // all
-    assertTrue(Stream.of(null, "a", "b").anyMatch(s -> true));
+    // TODO(b/315476228): Remove explicit type here and below
+    assertTrue(Stream.<@Nullable String>of(null, "a", "b").anyMatch(s -> true));
     // some
-    assertTrue(Stream.of(null, "a", "b").anyMatch(s ->  s == null));
+    assertTrue(Stream.<@Nullable String>of(null, "a", "b").anyMatch(s -> s == null));
     // none
-    assertFalse(Stream.of(null, "a", "b").anyMatch(s -> false));
+    assertFalse(Stream.<@Nullable String>of(null, "a", "b").anyMatch(s -> false));
   }
 
   public void testAllMatch() {
@@ -323,11 +369,11 @@ public class StreamTest extends EmulTestBase {
 
     // With null values.
     // all
-    assertTrue(Stream.of(null, "a", "b").allMatch(s -> true));
+    assertTrue(Stream.<@Nullable String>of(null, "a", "b").allMatch(s -> true));
     // some
-    assertFalse(Stream.of(null, "a", "b").allMatch(s -> s != null));
+    assertFalse(Stream.<@Nullable String>of(null, "a", "b").allMatch(s -> s != null));
     // none
-    assertFalse(Stream.of(null, "a", "b").allMatch(s -> false));
+    assertFalse(Stream.<@Nullable String>of(null, "a", "b").allMatch(s -> false));
   }
 
   public void testNoneMatch() {
@@ -340,11 +386,11 @@ public class StreamTest extends EmulTestBase {
 
     // With null values.
     // all
-    assertFalse(Stream.of(null, "a", "b").noneMatch(s -> true));
+    assertFalse(Stream.<@Nullable String>of(null, "a", "b").noneMatch(s -> true));
     // some
-    assertFalse(Stream.of(null, "a", "b").noneMatch(s -> s == null));
+    assertFalse(Stream.<@Nullable String>of(null, "a", "b").noneMatch(s -> s == null));
     // none
-    assertTrue(Stream.of(null, "a", "b").noneMatch(s -> false));
+    assertTrue(Stream.<@Nullable String>of(null, "a", "b").noneMatch(s -> false));
   }
 
   public void testFlatMap() {

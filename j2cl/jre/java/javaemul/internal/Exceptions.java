@@ -15,10 +15,12 @@
  */
 package javaemul.internal;
 
+import javaemul.internal.ThrowableUtils.JsObject;
 import jsinterop.annotations.JsType;
 
+/** Provides helper methods to deal with Exceptions. */
 @JsType(namespace = "vmbootstrap")
-class Exceptions {
+public class Exceptions {
 
   /**
    * A try with resource block uses safeClose to close resources that have been opened. If an
@@ -41,11 +43,11 @@ class Exceptions {
     return currentException;
   }
 
-  public static Throwable toJava(Object e) {
+  public static Throwable toJava(JsObject e) {
     return Throwable.of(e);
   }
 
-  public static Object toJs(Throwable t) {
+  public static JsObject toJs(Throwable t) {
     return t.getBackingJsObject();
   }
 }

@@ -17,6 +17,8 @@ package com.google.j2cl.transpiler.frontend.javac;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.HAS_NO_SIDE_EFFECTS_ANNOTATION_NAME;
+import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.UNCHECKED_CAST_ANNOTATION_NAME;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +34,6 @@ import com.google.j2cl.transpiler.ast.FieldDescriptor;
 import com.google.j2cl.transpiler.ast.IntersectionTypeDescriptor;
 import com.google.j2cl.transpiler.ast.JsEnumInfo;
 import com.google.j2cl.transpiler.ast.JsInfo;
-import com.google.j2cl.transpiler.ast.JsMemberType;
 import com.google.j2cl.transpiler.ast.Literal;
 import com.google.j2cl.transpiler.ast.MethodDescriptor;
 import com.google.j2cl.transpiler.ast.MethodDescriptor.ParameterDescriptor;
@@ -853,12 +854,6 @@ class JavaEnvironment {
               .build());
     }
 
-    if (enclosingTypeDescriptor.getTypeDeclaration().isAnonymous()
-        && isConstructor
-        && enclosingTypeDescriptor.getSuperTypeDescriptor().hasJsConstructor()) {
-      jsInfo = JsInfo.Builder.from(jsInfo).setJsMemberType(JsMemberType.CONSTRUCTOR).build();
-    }
-
     boolean hasUncheckedCast = hasUncheckedCastAnnotation(declarationMethodElement);
     return MethodDescriptor.newBuilder()
         .setEnclosingTypeDescriptor(enclosingTypeDescriptor)
@@ -887,12 +882,12 @@ class JavaEnvironment {
 
   /** Returns true if the element is annotated with @UncheckedCast. */
   private static boolean hasUncheckedCastAnnotation(Element element) {
-    return AnnotationUtils.hasAnnotation(element, "javaemul.internal.annotations.UncheckedCast");
+    return AnnotationUtils.hasAnnotation(element, UNCHECKED_CAST_ANNOTATION_NAME);
   }
 
   /** Returns true if the element is annotated with @HasNoSideEffects. */
   private static boolean isAnnotatedWithHasNoSideEffects(Element element) {
-    return AnnotationUtils.hasAnnotation(element, "javaemul.internal.annotations.HasNoSideEffects");
+    return AnnotationUtils.hasAnnotation(element, HAS_NO_SIDE_EFFECTS_ANNOTATION_NAME);
   }
 
   private boolean isJavaLangObjectOverride(MethodSymbol method) {
@@ -1214,7 +1209,10 @@ class JavaEnvironment {
     // Compute these first since they're reused in other calculations.
     String packageName = getPackageOf(typeElement).getQualifiedName().toString();
     boolean isAbstract = isAbstract(typeElement) && !isInterface(typeElement);
-    boolean isFinal = isFinal(typeElement);
+    Kind kind = getKindFromTypeBinding(typeElement);
+    // TODO(b/341721484): Even though enums can not have the final modifier, turbine make them final
+    // in the header jars.
+    boolean isFinal = isFinal(typeElement) && kind != Kind.ENUM;
 
     Supplier<ImmutableList<MethodDescriptor>> declaredMethods =
         () -> {
@@ -1262,7 +1260,8 @@ class JavaEnvironment {
         .setUnparameterizedTypeDescriptorFactory(
             () -> createDeclaredTypeDescriptor(typeElement.asType()))
         .setHasAbstractModifier(isAbstract)
-        .setKind(getKindFromTypeBinding(typeElement))
+        .setKind(kind)
+        .setAnnotation(isAnnotation(typeElement))
         .setCapturingEnclosingInstance(capturesEnclosingInstance((ClassSymbol) typeElement))
         .setFinal(isFinal)
         .setFunctionalInterface(isFunctionalInterface(typeElement.asType()))
@@ -1275,6 +1274,8 @@ class JavaEnvironment {
         .setSimpleJsName(getJsName(typeElement))
         .setCustomizedJsNamespace(getJsNamespace(typeElement, packageInfoCache))
         .setNullMarked(isNullMarked)
+        .setOriginalSimpleSourceName(
+            typeElement.getSimpleName() != null ? typeElement.getSimpleName().toString() : null)
         .setPackageName(packageName)
         .setSuperTypeDescriptorFactory(
             () ->
@@ -1423,6 +1424,10 @@ class JavaEnvironment {
 
   private static boolean isEnum(TypeElement typeElement) {
     return typeElement.getKind() == ElementKind.ENUM;
+  }
+
+  private static boolean isAnnotation(TypeElement typeElement) {
+    return typeElement.getKind() == ElementKind.ANNOTATION_TYPE;
   }
 
   private static boolean isAnonymous(TypeElement typeElement) {

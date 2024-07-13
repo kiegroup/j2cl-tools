@@ -26,8 +26,8 @@ import com.google.j2cl.common.visitor.Visitable;
 /** Class for a reference to an array creation. */
 @Visitable
 public class ArrayCreationReference extends Expression {
-  private final ArrayTypeDescriptor targetTypeDescriptor;
-  private final MethodDescriptor interfaceMethodDescriptor;
+  @Visitable ArrayTypeDescriptor targetTypeDescriptor;
+  @Visitable MethodDescriptor interfaceMethodDescriptor;
   private final SourcePosition sourcePosition;
 
   private ArrayCreationReference(
@@ -60,6 +60,11 @@ public class ArrayCreationReference extends Expression {
   @Override
   public Precedence getPrecedence() {
     return Precedence.FUNCTION;
+  }
+
+  @Override
+  public boolean canBeNull() {
+    return false;
   }
 
   @Override

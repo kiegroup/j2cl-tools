@@ -1,20 +1,18 @@
 /*
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ * Copyright © 2021 j2cl-maven-plugin authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package com.vertispan.j2cl.mojo;
 
 import com.vertispan.j2cl.build.Dependency;
@@ -72,28 +70,34 @@ public abstract class AbstractBuildMojo extends AbstractCacheMojo {
     @Component
     protected ProjectBuilder projectBuilder;
 
-    @Parameter(defaultValue = "com.vertispan.j2cl:javac-bootstrap-classpath:" + Versions.J2CL_VERSION, required = true, alias = "javacBootstrapClasspathJar")
+    @Parameter(defaultValue = "org.kie.j2cl.tools:javac-bootstrap-classpath:" + Versions.J2CL_VERSION, required = true, alias = "javacBootstrapClasspathJar")
     protected String bootstrapClasspath;
 
-    @Parameter(defaultValue = "com.vertispan.j2cl:jre:" + Versions.J2CL_VERSION, required = true)
+    @Parameter(defaultValue = "org.kie.j2cl.tools:jre:" + Versions.J2CL_VERSION, required = true)
     protected String jreJar;
-    @Parameter(defaultValue = "com.vertispan.j2cl:jre:zip:jszip:" + Versions.J2CL_VERSION, required = true)
+    @Parameter(defaultValue = "org.kie.j2cl.tools:jre:zip:jszip:" + Versions.J2CL_VERSION, required = true)
     protected String jreJsZip;
 
-    @Parameter(defaultValue = "com.vertispan.j2cl:bootstrap:zip:jszip:" + Versions.J2CL_VERSION, required = true)
+    @Parameter(defaultValue = "org.kie.j2cl.tools:bootstrap:zip:jszip:" + Versions.J2CL_VERSION, required = true)
     protected String bootstrapJsZip;
 
-    @Parameter(defaultValue = "com.vertispan.j2cl:closure-test:zip:jszip:" + Versions.J2CL_VERSION, required = true)
+    @Parameter(defaultValue = "org.kie.j2cl.tools:closure-test:zip:jszip:" + Versions.J2CL_VERSION, required = true)
     protected String testJsZip;
 
-    @Parameter(defaultValue = "com.vertispan.j2cl:gwt-internal-annotations:" + Versions.J2CL_VERSION, required = true)
+    @Parameter(defaultValue = "org.kie.j2cl.tools:gwt-internal-annotations:" + Versions.J2CL_VERSION, required = true)
     protected String internalAnnotationsJar;
 
     @Parameter(defaultValue = "com.google.jsinterop:jsinterop-annotations:2.0.0", required = true)
     protected String jsinteropAnnotationsJar;
 
-    @Parameter(defaultValue = "com.vertispan.j2cl:junit-annotations:" + Versions.J2CL_VERSION, required = true)
+    @Parameter(defaultValue = "org.kie.j2cl.tools:junit-annotations:" + Versions.J2CL_VERSION, required = true)
     protected String junitAnnotations;
+
+    @Parameter(defaultValue = "org.kie.j2cl.tools:junit-runtime:" + Versions.J2CL_VERSION, required = true)
+    protected String runtime;
+
+    @Parameter(defaultValue = "org.kie.j2cl.tools:junit-runtime:zip:jszip:" + Versions.J2CL_VERSION, required = true)
+    protected String runtimeJsZip;
 
     // optional, if not specified, we'll use the defaults
     @Parameter

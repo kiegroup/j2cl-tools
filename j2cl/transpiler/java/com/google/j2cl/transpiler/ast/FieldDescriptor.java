@@ -15,11 +15,15 @@
  */
 package com.google.j2cl.transpiler.ast;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.extension.memoized.Memoized;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.j2cl.common.ThreadLocalInterner;
+import com.google.j2cl.common.visitor.Processor;
+import com.google.j2cl.common.visitor.Visitable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -27,8 +31,17 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /** A (by signature) reference to a field. */
+@Visitable
 @AutoValue
 public abstract class FieldDescriptor extends MemberDescriptor {
+
+  // TODO(b/317164851): Remove hack that makes jsinfo ignored for non-native types in Wasm.
+  private static final ThreadLocal<Boolean> ignoreNonNativeJsInfo =
+      ThreadLocal.withInitial(() -> false);
+
+  public static void setIgnoreNonNativeJsInfo() {
+    ignoreNonNativeJsInfo.set(true);
+  }
 
   public abstract TypeDescriptor getTypeDescriptor();
 
@@ -49,28 +62,29 @@ public abstract class FieldDescriptor extends MemberDescriptor {
 
   /** Whether this field originates in the source code or is synthetic. */
   public enum FieldOrigin implements MemberDescriptor.Origin {
-    SOURCE("f_"),
-    SYNTHETIC_OUTER_FIELD("$outer_"),
-    SYNTHETIC_CAPTURE_FIELD("$captured_"),
-    SYNTHETIC_BACKING_FIELD("$static_"),
-    SYNTHETIC_ORDINAL_FIELD("$ordinal_"),
-    INSTANCE_OF_SUPPORT_FIELD(""),
+    SOURCE,
+    SYNTHETIC_OUTER_FIELD,
+    SYNTHETIC_CAPTURE_FIELD,
+    SYNTHETIC_BACKING_FIELD,
+    SYNTHETIC_ORDINAL_FIELD,
+    SYNTHETIC_INSTANCE_OF_SUPPORT_FIELD,
     ;
-
-    private final String prefix;
-
-    FieldOrigin(String prefix) {
-      this.prefix = prefix;
-    }
 
     @Override
     public String getPrefix() {
-      return prefix;
+      switch (this) {
+          // User written methods and bridges need to be mangled the same way.
+        case SOURCE:
+          return "f_";
+          // Don't prefix the rest, they all start with "$"
+        default:
+          return "";
+      }
     }
 
     @Override
-    public boolean isInstanceOfSupportMember() {
-      return this == INSTANCE_OF_SUPPORT_FIELD;
+    public boolean isSyntheticInstanceOfSupportMember() {
+      return this == SYNTHETIC_INSTANCE_OF_SUPPORT_FIELD;
     }
   }
 
@@ -125,6 +139,7 @@ public abstract class FieldDescriptor extends MemberDescriptor {
         || getOrigin() == FieldOrigin.SYNTHETIC_OUTER_FIELD;
   }
 
+  @Override
   public boolean isJsProperty() {
     return getJsInfo().getJsMemberType() == JsMemberType.PROPERTY;
   }
@@ -164,6 +179,20 @@ public abstract class FieldDescriptor extends MemberDescriptor {
   @Override
   public String getMangledName() {
     return computePropertyMangledName();
+  }
+
+  @Memoized
+  public Literal getEnumOrdinalValue() {
+    checkState(isEnumConstant());
+    if (!isDeclaration()) {
+      return getDeclarationDescriptor().getEnumOrdinalValue();
+    }
+
+    return checkNotNull(
+        getEnclosingTypeDescriptor()
+            .getTypeDeclaration()
+            .getOrdinalValueByEnumFieldName()
+            .get(getName()));
   }
 
   @Override
@@ -219,6 +248,11 @@ public abstract class FieldDescriptor extends MemberDescriptor {
     return String.format("%s.%s", getEnclosingTypeDescriptor().getReadableDescription(), getName());
   }
 
+  @Override
+  MemberDescriptor acceptInternal(Processor processor) {
+    return Visitor_FieldDescriptor.visit(processor, this);
+  }
+
   /** A Builder for FieldDescriptors. */
   @AutoValue.Builder
   public abstract static class Builder {
@@ -255,6 +289,7 @@ public abstract class FieldDescriptor extends MemberDescriptor {
 
     public abstract Builder setOrigin(FieldOrigin fieldOrigin);
 
+    @CanIgnoreReturnValue
     public Builder setDeclarationDescriptor(FieldDescriptor declarationFieldDescriptor) {
       return setDeclarationDescriptorOrNullIfSelf(declarationFieldDescriptor);
     }
@@ -270,11 +305,19 @@ public abstract class FieldDescriptor extends MemberDescriptor {
 
     abstract boolean isCompileTimeConstant();
 
+    abstract DeclaredTypeDescriptor getEnclosingTypeDescriptor();
+
     abstract FieldDescriptor autoBuild();
 
     public FieldDescriptor build() {
       checkState(getName().isPresent());
       checkState(getConstantValue() == null || isCompileTimeConstant());
+
+      boolean isNative = getEnclosingTypeDescriptor().isNative();
+      if (!isNative && ignoreNonNativeJsInfo.get()) {
+        setOriginalJsInfo(JsInfo.NONE);
+      }
+
       FieldDescriptor fieldDescriptor = autoBuild();
 
       return interner.intern(fieldDescriptor);

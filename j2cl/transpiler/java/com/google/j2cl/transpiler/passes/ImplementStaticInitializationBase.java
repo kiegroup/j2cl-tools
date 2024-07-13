@@ -15,11 +15,11 @@
  */
 package com.google.j2cl.transpiler.passes;
 
-
 import com.google.common.base.Joiner;
 import com.google.j2cl.common.SourcePosition;
 import com.google.j2cl.transpiler.ast.AbstractRewriter;
 import com.google.j2cl.transpiler.ast.AbstractVisitor;
+import com.google.j2cl.transpiler.ast.AstUtils;
 import com.google.j2cl.transpiler.ast.Block;
 import com.google.j2cl.transpiler.ast.CompilationUnit;
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
@@ -28,12 +28,10 @@ import com.google.j2cl.transpiler.ast.MemberDescriptor;
 import com.google.j2cl.transpiler.ast.MemberReference;
 import com.google.j2cl.transpiler.ast.Method;
 import com.google.j2cl.transpiler.ast.MethodCall;
-import com.google.j2cl.transpiler.ast.MethodDescriptor.MethodOrigin;
 import com.google.j2cl.transpiler.ast.Statement;
 import com.google.j2cl.transpiler.ast.Type;
 import com.google.j2cl.transpiler.ast.TypeDeclaration;
 import com.google.j2cl.transpiler.ast.TypeDescriptor;
-import com.google.j2cl.transpiler.ast.TypeDescriptors;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -41,13 +39,6 @@ import java.util.Set;
 public abstract class ImplementStaticInitializationBase extends NormalizationPass {
 
   private final Set<String> privateMembersCalledFromOtherClasses = new HashSet<>();
-
-  // TODO(b/187218486): Remove after adding a pass to convert constructors to static methods.
-  private final boolean triggerClinitInConstructors;
-
-  public ImplementStaticInitializationBase(boolean triggerClinitInConstructors) {
-    this.triggerClinitInConstructors = triggerClinitInConstructors;
-  }
 
   @Override
   public final void applyTo(CompilationUnit compilationUnit) {
@@ -57,7 +48,6 @@ public abstract class ImplementStaticInitializationBase extends NormalizationPas
       if (type.isNative()) {
         continue;
       }
-      synthesizeClinitCallsInMethods(type);
       synthesizeSuperClinitCalls(type);
       // Apply the additional normalizations defined in subclasses.
       applyTo(type);
@@ -78,7 +68,7 @@ public abstract class ImplementStaticInitializationBase extends NormalizationPas
   /** Records access to member {@code targetMember} from type {@code callerEnclosingType}. */
   private void recordMemberReference(
       TypeDeclaration callerEnclosingType, MemberDescriptor targetMember) {
-    if (!targetMember.getVisibility().isPrivate()) {
+    if (!isEffectivelyPrivate(targetMember)) {
       return;
     }
 
@@ -96,7 +86,7 @@ public abstract class ImplementStaticInitializationBase extends NormalizationPas
   }
 
   /** Add clinit calls to methods and (real js) constructors. */
-  private void synthesizeClinitCallsInMethods(Type type) {
+  public void synthesizeClinitCallsInMethods(Type type) {
     type.accept(
         new AbstractRewriter() {
           @Override
@@ -179,39 +169,35 @@ public abstract class ImplementStaticInitializationBase extends NormalizationPas
       return false;
     }
 
+    if (memberDescriptor.isEnumConstant()
+        && AstUtils.isNonNativeJsEnum(memberDescriptor.getEnclosingTypeDescriptor())) {
+      // Skip accesses to JsEnum constants. This may not be normalized out on all backends.
+      return false;
+    }
+
     if (memberDescriptor.isCompileTimeConstant()) {
       // Compile time constants do not trigger clinit.
       return false;
     }
 
-    if (memberDescriptor.getVisibility().isPrivate()
+    if (isEffectivelyPrivate(memberDescriptor)
         && !memberDescriptor.isJsMember()
         && !isCalledFromOtherClasses(memberDescriptor)) {
-      // This is an effectively private member, which means that when this member is access clinit
-      // is already guaranteed to have been called.
+      // This is an effectively private member, which means that when this member is accessed,
+      //  clinit is already guaranteed to have been called.
       return false;
     }
 
-    return memberDescriptor.isStatic()
-        || memberDescriptor.isJsConstructor()
-        || (triggerClinitInConstructors
-            && memberDescriptor.isConstructor()
-            && !enclosingType.isOptimizedEnum())
-        // non-private instance methods (except the synthetic ctor) of an optimized enum will
-        // trigger clinit, since the constructor will not.
-        || (triggersClinitInInstanceMethods(enclosingType) && isInstanceMethod(memberDescriptor));
+    return memberDescriptor.isStatic() || memberDescriptor.isJsConstructor();
   }
 
-  private static boolean triggersClinitInInstanceMethods(Type type) {
-    return type.isOptimizedEnum()
-        || TypeDescriptors.isJavaLangEnum(type.getTypeDescriptor())
-        || TypeDescriptors.isJavaLangObject(type.getTypeDescriptor());
-  }
-
-  private static boolean isInstanceMethod(MemberDescriptor memberDescriptor) {
-    return memberDescriptor.isMethod()
-        && memberDescriptor.isInstanceMember()
-        && memberDescriptor.getOrigin() != MethodOrigin.SYNTHETIC_CTOR_FOR_CONSTRUCTOR;
+  private static boolean isEffectivelyPrivate(MemberDescriptor memberDescriptor) {
+    return memberDescriptor.getVisibility().isPrivate()
+        || memberDescriptor
+            .getEnclosingTypeDescriptor()
+            .getTypeDeclaration()
+            .getVisibility()
+            .isPrivate();
   }
 
   private boolean isCalledFromOtherClasses(MemberDescriptor memberDescriptor) {

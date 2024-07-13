@@ -19,11 +19,14 @@ import com.google.auto.value.AutoValue;
 import com.google.auto.value.extension.memoized.Memoized;
 import com.google.common.collect.ImmutableSet;
 import com.google.j2cl.common.ThreadLocalInterner;
+import com.google.j2cl.common.visitor.Processor;
+import com.google.j2cl.common.visitor.Visitable;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /** An array type. */
+@Visitable
 @AutoValue
 public abstract class ArrayTypeDescriptor extends TypeDescriptor {
 
@@ -71,11 +74,32 @@ public abstract class ArrayTypeDescriptor extends TypeDescriptor {
         || (TypeDescriptors.isJavaLangObject(rawLeafTypeDescriptor) && getDimensions() == 1);
   }
 
+  /** Returns true if the leaf type is native. */
+  @Override
+  public boolean isNativeJsArray() {
+    return getLeafTypeDescriptor().toRawTypeDescriptor().isNative();
+  }
+
   /**
    * Returns true for arrays where raw wasm array representation is enough. These arrays are located
    * in {@see javaemul.internal.WasmArrays}.
    */
-  public abstract boolean isNativeWasmArray();
+  public abstract boolean isMarkedAsNativeWasmArray();
+
+  @Override
+  public boolean isNativeWasmArray() {
+    if (isMarkedAsNativeWasmArray()) {
+      return true;
+    }
+
+    if (getComponentTypeDescriptor().toRawTypeDescriptor() instanceof DeclaredTypeDescriptor) {
+      DeclaredTypeDescriptor componentTypeDescriptor =
+          (DeclaredTypeDescriptor) getComponentTypeDescriptor().toRawTypeDescriptor();
+      return componentTypeDescriptor.getTypeDeclaration().getWasmInfo() != null;
+    }
+
+    return false;
+  }
 
   @Override
   public abstract boolean isNullable();
@@ -93,6 +117,12 @@ public abstract class ArrayTypeDescriptor extends TypeDescriptor {
   @Nullable
   public TypeDeclaration getMetadataTypeDeclaration() {
     return null;
+  }
+
+  @Override
+  @Nullable
+  public MethodDescriptor getMethodDescriptor(String methodName, TypeDescriptor... parameters) {
+    return TypeDescriptors.get().javaLangObject.getMethodDescriptor(methodName, parameters);
   }
 
   @Override
@@ -222,13 +252,18 @@ public abstract class ArrayTypeDescriptor extends TypeDescriptor {
     return getComponentTypeDescriptor().hasReferenceTo(typeVariable, seen);
   }
 
+  @Override
+  TypeDescriptor acceptInternal(Processor processor) {
+    return Visitor_ArrayTypeDescriptor.visit(processor, this);
+  }
+
   abstract Builder toBuilder();
 
   public static Builder newBuilder() {
     return new AutoValue_ArrayTypeDescriptor.Builder()
         // Default values.
         .setNullable(true)
-        .setNativeWasmArray(false);
+        .setMarkedAsNativeWasmArray(false);
   }
 
   /** Builder for an ArrayTypeDescriptor. */
@@ -242,7 +277,7 @@ public abstract class ArrayTypeDescriptor extends TypeDescriptor {
 
     public abstract Builder setNullable(boolean isNullable);
 
-    public abstract Builder setNativeWasmArray(boolean wasmNative);
+    public abstract Builder setMarkedAsNativeWasmArray(boolean wasmNative);
 
     abstract ArrayTypeDescriptor autoBuild();
 

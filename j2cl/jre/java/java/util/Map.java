@@ -21,8 +21,8 @@ import java.io.Serializable;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-
 import jsinterop.annotations.JsIgnore;
+import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsNonNull;
 import jsinterop.annotations.JsType;
 
@@ -35,6 +35,137 @@ import jsinterop.annotations.JsType;
 @JsType
 public interface Map<K, V> {
 
+  @JsIgnore
+  static <K, V> Map<K, V> of() {
+    return Collections.internalMapOf();
+  }
+
+  @JsIgnore
+  static <K, V> Map<K, V> of(K key, V value) {
+    return Collections.internalMapOf(key, value);
+  }
+
+  @JsIgnore
+  static <K, V> Map<K, V> of(K k1, V v1, K k2, V v2) {
+    return Collections.internalMapOf(k1, v1, k2, v2);
+  }
+
+  @JsIgnore
+  static <K, V> Map<K, V> of(K k1, V v1, K k2, V v2, K k3, V v3) {
+    return Collections.internalMapOf(k1, v1, k2, v2, k3, v3);
+  }
+
+  @JsIgnore
+  static <K, V> Map<K, V> of(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4) {
+    return Collections.internalMapOf(k1, v1, k2, v2, k3, v3, k4, v4);
+  }
+
+  @JsIgnore
+  static <K, V> Map<K, V> of(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5) {
+    return Collections.internalMapOf(k1, v1, k2, v2, k3, v3, k4, v4, k5, v5);
+  }
+
+  @JsIgnore
+  static <K, V> Map<K, V> of(
+      K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6) {
+    return Collections.internalMapOf(k1, v1, k2, v2, k3, v3, k4, v4, k5, v5, k6, v6);
+  }
+
+  @JsIgnore
+  static <K, V> Map<K, V> of(
+      K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7) {
+    return Collections.internalMapOf(k1, v1, k2, v2, k3, v3, k4, v4, k5, v5, k6, v6, k7, v7);
+  }
+
+  @JsIgnore
+  static <K, V> Map<K, V> of(
+      K k1,
+      V v1,
+      K k2,
+      V v2,
+      K k3,
+      V v3,
+      K k4,
+      V v4,
+      K k5,
+      V v5,
+      K k6,
+      V v6,
+      K k7,
+      V v7,
+      K k8,
+      V v8) {
+    return Collections.internalMapOf(
+        k1, v1, k2, v2, k3, v3, k4, v4, k5, v5, k6, v6, k7, v7, k8, v8);
+  }
+
+  @JsIgnore
+  static <K, V> Map<K, V> of(
+      K k1,
+      V v1,
+      K k2,
+      V v2,
+      K k3,
+      V v3,
+      K k4,
+      V v4,
+      K k5,
+      V v5,
+      K k6,
+      V v6,
+      K k7,
+      V v7,
+      K k8,
+      V v8,
+      K k9,
+      V v9) {
+    return Collections.internalMapOf(
+        k1, v1, k2, v2, k3, v3, k4, v4, k5, v5, k6, v6, k7, v7, k8, v8, k9, v9);
+  }
+
+  @JsIgnore
+  static <K, V> Map<K, V> of(
+      K k1,
+      V v1,
+      K k2,
+      V v2,
+      K k3,
+      V v3,
+      K k4,
+      V v4,
+      K k5,
+      V v5,
+      K k6,
+      V v6,
+      K k7,
+      V v7,
+      K k8,
+      V v8,
+      K k9,
+      V v9,
+      K k10,
+      V v10) {
+    return Collections.internalMapOf(
+        k1, v1, k2, v2, k3, v3, k4, v4, k5, v5, k6, v6, k7, v7, k8, v8, k9, v9, k10, v10);
+  }
+
+  @JsIgnore
+  static <K, V> Entry<K, V> entry(K key, V value) {
+    // This isn't quite consistent with the javadoc, since this is serializable, while entry()
+    // need not be serializable.
+    return new AbstractMap.SimpleImmutableEntry<>(checkNotNull(key), checkNotNull(value));
+  }
+
+  @JsIgnore
+  static <K, V> Map<K, V> ofEntries(Entry<? extends K, ? extends V>... entries) {
+    return Collections.internalMapFromEntries(Arrays.asList(entries));
+  }
+
+  @JsIgnore
+  static <A, B> Map<A, B> copyOf(Map<? extends A, ? extends B> map) {
+    return Collections.internalMapFromEntries(map.entrySet());
+  }
+
   /**
    * Represents an individual map entry.
    */
@@ -42,13 +173,16 @@ public interface Map<K, V> {
     @Override
     boolean equals(Object o);
 
+    @JsMethod
     K getKey();
 
+    @JsMethod
     V getValue();
 
     @Override
     int hashCode();
 
+    @JsMethod
     V setValue(V value);
 
     static <K extends Comparable<? super K>, V> Comparator<Map.Entry<K,V>> comparingByKey() {
@@ -122,7 +256,6 @@ public interface Map<K, V> {
 
   boolean containsValue(Object value);
 
-  @JsIgnore
   Set<Entry<K, V>> entrySet();
 
   @JsIgnore

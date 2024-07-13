@@ -5,9 +5,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.vertispan.j2cl</groupId>
+    <groupId>org.kie.j2cl.tools</groupId>
     <artifactId>j2cl-parent</artifactId>
-    <version>v20230718-1</version>
+    <version>v20240622-2</version>
   </parent>
   <artifactId>gwt-incompatible-stripper</artifactId>
   <packaging>pom</packaging>
@@ -62,17 +62,17 @@
       <artifactId>guava</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.vertispan.j2cl.external</groupId>
+      <groupId>org.kie.j2cl.tools.external</groupId>
       <artifactId>org.eclipse.jdt.core</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.vertispan.j2cl</groupId>
+      <groupId>org.kie.j2cl.tools</groupId>
       <artifactId>common</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.vertispan.j2cl</groupId>
+      <groupId>org.kie.j2cl.tools</groupId>
       <artifactId>frontend-jdt</artifactId>
       <version>${project.version}</version>
     </dependency>

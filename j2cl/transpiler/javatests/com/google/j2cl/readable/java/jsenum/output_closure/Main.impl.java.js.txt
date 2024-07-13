@@ -14,12 +14,13 @@ let Foo = goog.forwardDeclare('jsenum.Main.Foo$impl');
 let IntJsEnum = goog.forwardDeclare('jsenum.Main.IntJsEnum$impl');
 let IntJsEnum_$Overlay = goog.forwardDeclare('jsenum.Main.IntJsEnum.$Overlay$impl');
 let NativeStringEnum = goog.forwardDeclare('jsenum.Main.NonNullableStringJsEnum');
+let SomeJsEnum = goog.forwardDeclare('jsenum.Main.SomeJsEnum$impl');
+let SomeJsEnum_$Overlay = goog.forwardDeclare('jsenum.Main.SomeJsEnum.$Overlay$impl');
 let StringJsEnum = goog.forwardDeclare('jsenum.Main.StringJsEnum$impl');
 let StringJsEnum_$Overlay = goog.forwardDeclare('jsenum.Main.StringJsEnum.$Overlay$impl');
 let Supplier = goog.forwardDeclare('jsenum.Main.Supplier$impl');
 let TemplatedField = goog.forwardDeclare('jsenum.Main.TemplatedField$impl');
 let $Equality = goog.forwardDeclare('nativebootstrap.Equality$impl');
-let $Casts = goog.forwardDeclare('vmbootstrap.Casts$impl');
 let $Comparables = goog.forwardDeclare('vmbootstrap.Comparables$impl');
 let $Enums = goog.forwardDeclare('vmbootstrap.Enums$impl');
 let $Enums_BoxedComparableLightEnum = goog.forwardDeclare('vmbootstrap.Enums.BoxedComparableLightEnum$impl');
@@ -45,40 +46,38 @@ class Main extends j_l_Object {
  /** @nodts */
  static m_testJsEnumSwitch__void() {
   Main.$clinit();
-  let comparableJsEnum = $Overlay.m_getValue__$devirt__jsenum_Main_ComparableJsEnum__int(ComparableJsEnum.ONE) == 1 ? ComparableJsEnum.TWO : /**@type {?ComparableJsEnum}*/ ($Enums.unbox(null));
-  switch (InternalPreconditions.m_checkNotNull__java_lang_Object__java_lang_Object(comparableJsEnum)) {
+  let comparableJsEnum = $Overlay.m_getValue__$devirt__jsenum_Main_ComparableJsEnum__int(ComparableJsEnum.ONE) == 1 ? ComparableJsEnum.TWO : /**@type {?ComparableJsEnum}*/ ($Enums.unbox(null, $Overlay));
+  switch ((InternalPreconditions.m_checkNotNull__boolean__void(!$Equality.$same(comparableJsEnum, null)), comparableJsEnum)) {
    case ComparableJsEnum.TWO: 
     break;
    default: 
   }
   let comparable = /**@type {$Enums_BoxedComparableLightEnum<?ComparableJsEnum>}*/ ($Enums.boxComparable(comparableJsEnum, $Overlay));
-  comparableJsEnum = /**@type {?ComparableJsEnum}*/ ($Enums.unbox(/**@type {$Enums_BoxedComparableLightEnum<?ComparableJsEnum>}*/ ($Casts.$to(comparable, $Overlay))));
-  let intJsEnum = IntJsEnum_$Overlay.m_getValue__$devirt__jsenum_Main_IntJsEnum__int(IntJsEnum.ELEVEN) == 10 ? IntJsEnum.ELEVEN : /**@type {?IntJsEnum}*/ ($Enums.unbox(null));
-  switch (InternalPreconditions.m_checkNotNull__java_lang_Object__java_lang_Object(intJsEnum)) {
+  comparableJsEnum = /**@type {?ComparableJsEnum}*/ ($Enums.unbox(comparable, $Overlay));
+  let intJsEnum = IntJsEnum_$Overlay.m_getValue__$devirt__jsenum_Main_IntJsEnum__int(IntJsEnum.ELEVEN) == 10 ? IntJsEnum.ELEVEN : /**@type {?IntJsEnum}*/ ($Enums.unbox(null, IntJsEnum_$Overlay));
+  switch ((InternalPreconditions.m_checkNotNull__boolean__void(!$Equality.$same(intJsEnum, null)), intJsEnum)) {
    case IntJsEnum.TWENTY: 
     break;
    default: 
   }
   let o = /**@type {$Enums_BoxedLightEnum<?IntJsEnum>}*/ ($Enums.box(intJsEnum, IntJsEnum_$Overlay));
-  intJsEnum = /**@type {?IntJsEnum}*/ ($Enums.unbox(/**@type {$Enums_BoxedLightEnum<?IntJsEnum>}*/ ($Casts.$to(o, IntJsEnum_$Overlay))));
+  intJsEnum = /**@type {?IntJsEnum}*/ ($Enums.unbox(o, IntJsEnum_$Overlay));
   let equal = $Equality.$same(intJsEnum, IntJsEnum.TWENTY);
   let isInstance = !$Equality.$same(intJsEnum, null);
   isInstance = Comparable.$isInstance(/**@type {$Enums_BoxedLightEnum<?IntJsEnum>}*/ ($Enums.box(intJsEnum, IntJsEnum_$Overlay)));
-  let stringJsEnum = $Equality.$same(StringJsEnum_$Overlay.m_getValue__$devirt__jsenum_Main_StringJsEnum__java_lang_String(StringJsEnum.ONE), '10') ? StringJsEnum.THREE : /**@type {?StringJsEnum}*/ ($Enums.unbox(null));
-  switch (InternalPreconditions.m_checkNotNull__java_lang_Object__java_lang_Object(stringJsEnum)) {
+  let stringJsEnum = $Equality.$same(StringJsEnum_$Overlay.m_getValue__$devirt__jsenum_Main_StringJsEnum__java_lang_String(StringJsEnum.ONE), '10') ? StringJsEnum.THREE : /**@type {?StringJsEnum}*/ ($Enums.unbox(null, StringJsEnum_$Overlay));
+  switch ((InternalPreconditions.m_checkNotNull__boolean__void(!$Equality.$same(stringJsEnum, null)), stringJsEnum)) {
    case StringJsEnum.ONE: 
     break;
    default: 
   }
   $Comparables.m_compareTo__java_lang_Comparable__java_lang_Object__int(NativeStringEnum.ONE, NativeStringEnum.THREE);
   $Objects.m_equals__java_lang_Object__java_lang_Object__boolean(NativeStringEnum.ONE, NativeStringEnum.THREE);
-  $Comparables.m_compareTo__java_lang_Comparable__java_lang_Object__int(/**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay)), /**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ZERO, $Overlay)));
-  $Objects.m_equals__java_lang_Object__java_lang_Object__boolean(/**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay)), /**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ZERO, $Overlay)));
   let supplier = Supplier.$adapt(() =>{
    return /**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay));
   });
   let consummer = Consumer.$adapt((e) =>{
-   let e_1 = /**@type {?ComparableJsEnum}*/ ($Enums.unbox(/**@type {$Enums_BoxedComparableLightEnum<?ComparableJsEnum>}*/ ($Casts.$to(e, $Overlay))));
+   let e_1 = /**@type {?ComparableJsEnum}*/ ($Enums.unbox(e, $Overlay));
   });
   Main.m_acceptsJsFunctionSupplier__jsenum_Main_JsFunctionSuppiler__void(() =>{
    return /**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay));
@@ -90,17 +89,58 @@ class Main extends j_l_Object {
   }));
  }
  /** @nodts */
+ static m_testJsEnumAutoboxingSpecialMethods__void() {
+  let stringJsEnum = StringJsEnum.ONE;
+  let nullStringJsEnum = /**@type {?StringJsEnum}*/ ($Enums.unbox(null, StringJsEnum_$Overlay));
+  let jsEnum = ComparableJsEnum.ONE;
+  let nullJsEnum = /**@type {?ComparableJsEnum}*/ ($Enums.unbox(null, $Overlay));
+  let o = /**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay));
+  $Enums.equals(StringJsEnum.ONE, StringJsEnum.THREE);
+  $Enums.equals(StringJsEnum.ONE, stringJsEnum);
+  $Enums.equals(StringJsEnum.ONE, nullStringJsEnum);
+  $Objects.m_equals__java_lang_Object__java_lang_Object__boolean(/**@type {$Enums_BoxedLightEnum<!StringJsEnum>}*/ ($Enums.box(StringJsEnum.ONE, StringJsEnum_$Overlay)), null);
+  $Objects.m_equals__java_lang_Object__java_lang_Object__boolean(/**@type {$Enums_BoxedLightEnum<!StringJsEnum>}*/ ($Enums.box(StringJsEnum.ONE, StringJsEnum_$Overlay)), o);
+  $Objects.m_equals__java_lang_Object__java_lang_Object__boolean(o, /**@type {$Enums_BoxedLightEnum<!StringJsEnum>}*/ ($Enums.box(StringJsEnum.THREE, StringJsEnum_$Overlay)));
+  $Enums.compareTo(ComparableJsEnum.ONE, ComparableJsEnum.ZERO);
+  $Comparables.m_compareTo__java_lang_Comparable__java_lang_Object__int(/**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay)), null);
+  $Enums.equals(ComparableJsEnum.ONE, ComparableJsEnum.ZERO);
+  $Enums.equals(ComparableJsEnum.ONE, jsEnum);
+  $Enums.equals(ComparableJsEnum.ONE, nullJsEnum);
+  $Objects.m_equals__java_lang_Object__java_lang_Object__boolean(/**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay)), null);
+  $Objects.m_equals__java_lang_Object__java_lang_Object__boolean(/**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay)), o);
+  $Objects.m_equals__java_lang_Object__java_lang_Object__boolean(o, /**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ZERO, $Overlay)));
+  $Objects.m_equals__java_lang_Object__java_lang_Object__boolean(/**@type {$Enums_BoxedLightEnum<!StringJsEnum>}*/ ($Enums.box(StringJsEnum.ONE, StringJsEnum_$Overlay)), /**@type {$Enums_BoxedComparableLightEnum<?ComparableJsEnum>}*/ ($Enums.boxComparable(jsEnum, $Overlay)));
+  $Enums.equals(/**@type {?ComparableJsEnum}*/ ($Enums.unbox(Main.m_boxingPassthrough__java_lang_Object__java_lang_Object(/**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay))), $Overlay)), /**@type {?ComparableJsEnum}*/ ($Enums.unbox(Main.m_boxingPassthrough__java_lang_Object__java_lang_Object(/**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay))), $Overlay)));
+  $Objects.m_equals__java_lang_Object__java_lang_Object__boolean(/**@type {$Enums_BoxedComparableLightEnum<?ComparableJsEnum>}*/ ($Enums.boxComparable(/**@type {?ComparableJsEnum}*/ ($Enums.unbox(Main.m_boxingPassthrough__java_lang_Object__java_lang_Object(/**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay))), $Overlay)), $Overlay)), /**@type {$Enums_BoxedLightEnum<?StringJsEnum>}*/ ($Enums.box(/**@type {?StringJsEnum}*/ ($Enums.unbox(Main.m_boxingPassthrough__java_lang_Object__java_lang_Object(/**@type {$Enums_BoxedLightEnum<!StringJsEnum>}*/ ($Enums.box(StringJsEnum.ONE, StringJsEnum_$Overlay))), StringJsEnum_$Overlay)), StringJsEnum_$Overlay)));
+ }
+ /** @nodts */
  static m_acceptsJsFunctionSupplier__jsenum_Main_JsFunctionSuppiler__void(/** ?function():$Enums_BoxedComparableLightEnum<?ComparableJsEnum> */ supplier) {}
  /** @nodts */
  static m_acceptsSupplierOfSupplier__jsenum_Main_Supplier__void(/** Supplier<Supplier<$Enums_BoxedComparableLightEnum<?ComparableJsEnum>>> */ supplier) {}
  /** @nodts */
+ static m_testReturnsAndParameters__void() {
+  let returnedValue = Main.m_returnsJsEnum__jsenum_Main_ComparableJsEnum();
+  let returnedNullValue = Main.m_returnsNullJsEnum__jsenum_Main_ComparableJsEnum();
+  Main.m_takesJsEnum__jsenum_Main_ComparableJsEnum__void(ComparableJsEnum.ONE);
+ }
+ /** @nodts @return {?ComparableJsEnum} */
+ static m_returnsJsEnum__jsenum_Main_ComparableJsEnum() {
+  return ComparableJsEnum.ONE;
+ }
+ /** @nodts @return {?ComparableJsEnum} */
+ static m_returnsNullJsEnum__jsenum_Main_ComparableJsEnum() {
+  return /**@type {?ComparableJsEnum}*/ ($Enums.unbox(null, $Overlay));
+ }
+ /** @nodts */
+ static m_takesJsEnum__jsenum_Main_ComparableJsEnum__void(/** ?ComparableJsEnum */ value) {}
+ /** @nodts */
  static m_testBoxUnboxWithTypeInference__void() {
   let templatedField = /**@type {!TemplatedField<$Enums_BoxedComparableLightEnum<?ComparableJsEnum>>}*/ (TemplatedField.$create__java_lang_Object(/**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay))));
-  let unboxed = /**@type {?ComparableJsEnum}*/ ($Enums.unbox(/**@type {$Enums_BoxedComparableLightEnum<?ComparableJsEnum>}*/ ($Casts.$to(templatedField.m_getValue__java_lang_Object_$pp_jsenum(), $Overlay))));
-  unboxed = /**@type {?ComparableJsEnum}*/ ($Enums.unbox(/**@type {$Enums_BoxedComparableLightEnum<?ComparableJsEnum>}*/ ($Casts.$to(templatedField.f_value__jsenum_Main_TemplatedField, $Overlay))));
+  let unboxed = /**@type {?ComparableJsEnum}*/ ($Enums.unbox(templatedField.m_getValue__java_lang_Object_$pp_jsenum(), $Overlay));
+  unboxed = /**@type {?ComparableJsEnum}*/ ($Enums.unbox(templatedField.f_value__jsenum_Main_TemplatedField, $Overlay));
   templatedField.f_value__jsenum_Main_TemplatedField = /**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay));
   Arrays.m_asList__arrayOf_java_lang_Object__java_util_List([/**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay))]);
-  $Enums.unbox(/**@type {$Enums_BoxedComparableLightEnum<?ComparableJsEnum>}*/ ($Casts.$to(templatedField.m_getValue__java_lang_Object_$pp_jsenum(), $Overlay)));
+  $Enums.unbox(templatedField.m_getValue__java_lang_Object_$pp_jsenum(), $Overlay);
   let b = $Equality.$same(/**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay)), Main.m_boxingPassthrough__java_lang_Object__java_lang_Object(/**@type {$Enums_BoxedComparableLightEnum<!ComparableJsEnum>}*/ ($Enums.boxComparable(ComparableJsEnum.ONE, $Overlay))));
  }
  /** @nodts @template T @return {T} */
@@ -111,6 +151,18 @@ class Main extends j_l_Object {
  static m_boxingWithGenerics__void() {
   Main.$clinit();
   Foo.$create__java_util_Optional(/**@type {Optional<$Enums_BoxedLightEnum<?IntJsEnum>>}*/ (Optional.m_of__java_lang_Object__java_util_Optional(/**@type {$Enums_BoxedLightEnum<!IntJsEnum>}*/ ($Enums.box(IntJsEnum.MINUSONE, IntJsEnum_$Overlay)))));
+ }
+ /** @nodts @template T @return {T} */
+ static m_varargsConsumer__arrayOf_java_lang_Object__java_lang_Object(/** Array<T> */ args) {
+  return args[0];
+ }
+ /** @nodts */
+ static m_testVarargs__void() {
+  Main.m_varargsConsumer__arrayOf_java_lang_Object__java_lang_Object([/**@type {$Enums_BoxedComparableLightEnum<!SomeJsEnum>}*/ ($Enums.boxComparable(SomeJsEnum.A, SomeJsEnum_$Overlay)), /**@type {$Enums_BoxedComparableLightEnum<!SomeJsEnum>}*/ ($Enums.boxComparable(SomeJsEnum.A, SomeJsEnum_$Overlay))]);
+  let consumer = Consumer.$adapt((arg0) =>{
+   let arg0_1 = /**@type {?SomeJsEnum}*/ ($Enums.unbox(arg0, SomeJsEnum_$Overlay));
+   Main.m_varargsConsumer__arrayOf_java_lang_Object__java_lang_Object([/**@type {$Enums_BoxedComparableLightEnum<?SomeJsEnum>}*/ ($Enums.boxComparable(arg0_1, SomeJsEnum_$Overlay))]);
+  });
  }
  /** @nodts */
  static $clinit() {
@@ -136,12 +188,13 @@ class Main extends j_l_Object {
   IntJsEnum = goog.module.get('jsenum.Main.IntJsEnum$impl');
   IntJsEnum_$Overlay = goog.module.get('jsenum.Main.IntJsEnum.$Overlay$impl');
   NativeStringEnum = goog.module.get('jsenum.Main.NonNullableStringJsEnum');
+  SomeJsEnum = goog.module.get('jsenum.Main.SomeJsEnum$impl');
+  SomeJsEnum_$Overlay = goog.module.get('jsenum.Main.SomeJsEnum.$Overlay$impl');
   StringJsEnum = goog.module.get('jsenum.Main.StringJsEnum$impl');
   StringJsEnum_$Overlay = goog.module.get('jsenum.Main.StringJsEnum.$Overlay$impl');
   Supplier = goog.module.get('jsenum.Main.Supplier$impl');
   TemplatedField = goog.module.get('jsenum.Main.TemplatedField$impl');
   $Equality = goog.module.get('nativebootstrap.Equality$impl');
-  $Casts = goog.module.get('vmbootstrap.Casts$impl');
   $Comparables = goog.module.get('vmbootstrap.Comparables$impl');
   $Enums = goog.module.get('vmbootstrap.Enums$impl');
   $Objects = goog.module.get('vmbootstrap.Objects$impl');

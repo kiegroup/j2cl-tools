@@ -7,11 +7,13 @@
     <parent>
         <groupId>org.kie.j2cl.tools</groupId>
         <artifactId>j2cl-tools</artifactId>
-        <version>0.23.0</version>
+        <version>0.23.1</version>
     </parent>
     <artifactId>build-caching</artifactId>
 
     <name>Build caching tools</name>
+
+
 
     <dependencies>
         <!-- watch service -->
@@ -35,5 +37,9 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+
+
+
 
 </project>

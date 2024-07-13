@@ -38,7 +38,7 @@ public interface BackendOptions {
 
   ImmutableList<EntryPointPattern> getWasmEntryPointPatterns();
 
-  boolean getWasmRemoveAssertStatement();
+  boolean getWasmEnableNonNativeJsEnum();
 
   boolean getOptimizeAutoValue();
 

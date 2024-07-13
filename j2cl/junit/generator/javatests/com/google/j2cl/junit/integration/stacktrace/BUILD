@@ -57,3 +57,40 @@ j2cl_test_integration_test(
         "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:SimpleThrowingStacktraceTest",
     ],
 )
+
+j2cl_test_integration_test(
+    name = "KotlinStacktraceIntegration1Test",
+    extra_data = [
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:stacktrace-files",
+    ],
+    test_data = [
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinAnonymousClassesStacktraceTest",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinCustomExceptionStacktraceTest",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinFillInStacktraceTest",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinJsExceptionNonJsConstructorStacktraceTest",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinJsExceptionStacktraceTest",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinLambdaStacktraceTest",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinRecursiveStacktraceTest",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinThrowsInBridgeMethod",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinThrowsInClassInitializer",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinThrowsInConstructorTest",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinThrowsInInstanceInitializer",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinThrowsInJsConstructorTest",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:SimpleKotlinThrowingStacktraceTest",
+    ],
+)
+
+j2cl_test_integration_test(
+    name = "KotlinStacktraceIntegration2Test",
+    extra_data = [
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:stacktrace-files",
+    ],
+    test_data = [
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinDuplicateFileNameStacktraceTest",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinExceptionWithCauseStacktraceTest",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinNativeStacktraceTest",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinThrowsInJsFunction",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinThrowsInJsProperty",
+        "//junit/generator/javatests/com/google/j2cl/junit/integration/stacktrace/data:KotlinThrowsInNativeJs",
+    ],
+)

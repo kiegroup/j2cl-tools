@@ -19,7 +19,7 @@ j2wasm_library(
     ],
     deps = [
         "//jre/java:javaemul_internal_annotations-j2wasm",
-        "//third_party:gwt-jsinterop-annotations-j2wasm",
+        "//third_party:jsinterop-annotations-j2wasm",
     ],
 )
 
@@ -29,11 +29,11 @@ j2kt_jvm_library(
         "Asserts.java",
         "AssertsBase.java",
         "TestUtils.java",
-        "super-j2kt/Platform.java",
+        "super-j2kt-jvm/Platform.java",
     ],
     deps = [
         "//jre/java:javaemul_internal_annotations-j2kt-jvm",
-        "//third_party:gwt-jsinterop-annotations-j2kt-jvm",
+        "//third_party:jsinterop-annotations-j2kt-jvm",
     ],
 )
 
@@ -43,11 +43,11 @@ j2kt_native_library(
         "Asserts.java",
         "AssertsBase.java",
         "TestUtils.java",
-        "super-j2kt/Platform.java",
+        "super-j2kt-native/Platform.java",
     ],
     deps = [
         "//jre/java:javaemul_internal_annotations-j2kt-native",
-        "//third_party:gwt-jsinterop-annotations-j2kt-native",
+        "//third_party:jsinterop-annotations-j2kt-native",
     ],
 )
 
@@ -61,7 +61,7 @@ j2cl_library(
     ],
     deps = [
         "//jre/java:javaemul_internal_annotations-j2cl",
-        "//third_party:gwt-jsinterop-annotations-j2cl",
+        "//third_party:jsinterop-annotations-j2cl",
     ],
 )
 
@@ -75,6 +75,6 @@ java_library(
     ],
     deps = [
         "//jre/java:javaemul_internal_annotations",
-        "//third_party:gwt-jsinterop-annotations",
+        "//third_party:jsinterop-annotations",
     ],
 )

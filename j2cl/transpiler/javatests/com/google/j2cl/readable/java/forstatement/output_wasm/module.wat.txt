@@ -1,42 +1,45 @@
- ;;; Code for forstatement.ForStatement [type definition]
- (type $forstatement.ForStatement (struct_subtype
-  (field $vtable (ref $forstatement.ForStatement.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $forstatement.ForStatement.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_test__void (ref $function.m_test__void))
-  (field $m_testContinue__void (ref $function.m_testContinue__void))
-  (field $m_testInitializeInForCondition__void (ref $function.m_testInitializeInForCondition__void))
-  (field $m_testForStatementInsideDeadCode__void (ref $function.m_testForStatementInsideDeadCode__void))
-  $java.lang.Object.vtable)
- )
+;;; Code for forstatement.ForStatement [type definition]
+(type $forstatement.ForStatement.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_testContinue__void (ref $function.m_testContinue__void))
+ (field $m_testForStatementInsideDeadCode__void (ref $function.m_testForStatementInsideDeadCode__void))
+ (field $m_testInitializeInForCondition__void (ref $function.m_testInitializeInForCondition__void))
+ (field $m_test__void (ref $function.m_test__void))
+ ))
+)
+(type $forstatement.ForStatement (sub $java.lang.Object (struct
+ (field $vtable (ref $forstatement.ForStatement.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
+;;; Code for forstatement.ForStatement [imports]
+
+;;; Code for forstatement.ForStatement [static fields]
+(global $$class-initialized@forstatement.ForStatement (mut i32)
+ (i32.const 0)
+)
+(global $$class@forstatement.ForStatement (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
 
 ;;; Code for forstatement.ForStatement [vtable.init]
 (global $forstatement.ForStatement.vtable (ref $forstatement.ForStatement.vtable)
  (struct.new $forstatement.ForStatement.vtable
+  (ref.func $$getClassImpl__java_lang_Class@forstatement.ForStatement)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@forstatement.ForStatement)
-  (ref.func $m_test__void@forstatement.ForStatement)
   (ref.func $m_testContinue__void@forstatement.ForStatement)
-  (ref.func $m_testInitializeInForCondition__void@forstatement.ForStatement)
   (ref.func $m_testForStatementInsideDeadCode__void@forstatement.ForStatement)
+  (ref.func $m_testInitializeInForCondition__void@forstatement.ForStatement)
+  (ref.func $m_test__void@forstatement.ForStatement)
  )
 )
-
-;;; Code for forstatement.ForStatement [static fields]
-(global $f_$initialized__forstatement_ForStatement (mut i32) (i32.const 0))
-(global $f_$class__forstatement_ForStatement (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|forstatement...|__forstatement_ForStatement (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
 
 ;;; Code for forstatement.ForStatement [methods]
 
@@ -46,6 +49,8 @@
  ;;@ forstatement/ForStatement.java:18:13
  (local $$instance (ref null $forstatement.ForStatement))
  (block
+  ;;@ forstatement/ForStatement.java:18:13
+  (call $$clinit__void_<once>_@forstatement.ForStatement )
   ;;@ forstatement/ForStatement.java:18:13
   (local.set $$instance (struct.new $forstatement.ForStatement (ref.as_non_null (global.get $forstatement.ForStatement.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
   ;;@ forstatement/ForStatement.java:18:13
@@ -60,8 +65,6 @@
  (param $this (ref null $forstatement.ForStatement))
  ;;@ forstatement/ForStatement.java:18:13
  (block
-  ;;@ forstatement/ForStatement.java:18:13
-  (call $$clinit__void@forstatement.ForStatement )
   ;;@ forstatement/ForStatement.java:18:13
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
@@ -79,7 +82,7 @@
  (local $a i32)
  (local $b i32)
  (local $this (ref null $forstatement.ForStatement))
- (local.set $this (ref.cast_static $forstatement.ForStatement (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $forstatement.ForStatement) (local.get $this.untyped)))
  (block
   ;;@ forstatement/ForStatement.java:20:4
   (local.set $i (i32.const 0))
@@ -172,7 +175,7 @@
  (local $k i32)
  (local $l i32)
  (local $this (ref null $forstatement.ForStatement))
- (local.set $this (ref.cast_static $forstatement.ForStatement (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $forstatement.ForStatement) (local.get $this.untyped)))
  (block
   ;;@ forstatement/ForStatement.java:38:4
   (local.set $i (i32.const 0))
@@ -235,7 +238,7 @@
  (local $x i32)
  (local $y i32)
  (local $this (ref null $forstatement.ForStatement))
- (local.set $this (ref.cast_static $forstatement.ForStatement (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $forstatement.ForStatement) (local.get $this.untyped)))
  (block
   ;;@ forstatement/ForStatement.java:52:4
   (local.set $i (i32.const 0))
@@ -268,7 +271,7 @@
  ;;@ forstatement/ForStatement.java:58:14
  (local $i i32)
  (local $this (ref null $forstatement.ForStatement))
- (local.set $this (ref.cast_static $forstatement.ForStatement (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $forstatement.ForStatement) (local.get $this.untyped)))
  (block
   ;;@ forstatement/ForStatement.java:59:4
   (if (i32.const 0)
@@ -305,33 +308,34 @@
 )
 
 ;;; void ForStatement.$clinit()
-(func $$clinit__void@forstatement.ForStatement
+(func $$clinit__void_<once>_@forstatement.ForStatement
  ;;@ forstatement/ForStatement.java:18:13
  (block
   ;;@ forstatement/ForStatement.java:18:13
-  (if (global.get $f_$initialized__forstatement_ForStatement)
+  (if (global.get $$class-initialized@forstatement.ForStatement)
    (then
     ;;@ forstatement/ForStatement.java:18:13
     (return )
    )
   )
   ;;@ forstatement/ForStatement.java:18:13
-  (global.set $f_$initialized__forstatement_ForStatement (i32.const 1))
+  (global.set $$class-initialized@forstatement.ForStatement (i32.const 1))
   ;;@ forstatement/ForStatement.java:18:13
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> ForStatement.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@forstatement.ForStatement
+(func $$getClassMetadata__java_lang_Class_<once>_@forstatement.ForStatement
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__forstatement_ForStatement) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@forstatement.ForStatement)))
    (then
-    (global.set $f_$class__forstatement_ForStatement (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|forstatement...|__java_lang_String (ref.func $$getString_|forstatement...|__java_lang_String@forstatement.ForStatement) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@forstatement.ForStatement))
    )
   )
-  (return (global.get $f_$class__forstatement_ForStatement))
+  (global.set $$class@forstatement.ForStatement (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|forstatement...|__java_lang_String_<once>_@forstatement.ForStatement )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@forstatement.ForStatement))
  )
 )
 
@@ -341,22 +345,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $forstatement.ForStatement))
- (local.set $this (ref.cast_static $forstatement.ForStatement (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $forstatement.ForStatement) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@forstatement.ForStatement) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@forstatement.ForStatement ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@forstatement.ForStatement)
-
-;;; String ForStatement.$getString_|forstatement...|()
-(func $$getString_|forstatement...|__java_lang_String@forstatement.ForStatement
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|forstatement...|__forstatement_ForStatement) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|forstatement...|__forstatement_ForStatement (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "forstatement.ForStatement")))
-   )
-  )
-  (return (global.get $f_$string_|forstatement...|__forstatement_ForStatement))
- )
-)

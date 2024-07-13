@@ -20,18 +20,21 @@ import com.google.j2cl.common.Problems;
 import com.google.j2cl.transpiler.ast.Library;
 import com.google.j2cl.transpiler.backend.closure.OutputGeneratorStage;
 import com.google.j2cl.transpiler.backend.kotlin.KotlinGeneratorStage;
-import com.google.j2cl.transpiler.backend.wasm.WasmOutputsGenerator;
+import com.google.j2cl.transpiler.backend.wasm.WasmGeneratorStage;
 import com.google.j2cl.transpiler.passes.AddAbstractMethodStubs;
 import com.google.j2cl.transpiler.passes.AddBridgeMethods;
+import com.google.j2cl.transpiler.passes.AddDisambiguatingOverloadResolutionCastsJ2kt;
 import com.google.j2cl.transpiler.passes.AddDisambiguatingSuperMethodForwardingStubs;
 import com.google.j2cl.transpiler.passes.AddEntryPointBridgesWasm;
 import com.google.j2cl.transpiler.passes.AddEnumImplicitMethods;
+import com.google.j2cl.transpiler.passes.AddJavaLangObjectForwardingMethods;
 import com.google.j2cl.transpiler.passes.AddNothingReturnStatements;
 import com.google.j2cl.transpiler.passes.AddVisibilityMethodBridgesJ2kt;
 import com.google.j2cl.transpiler.passes.ConvertMethodReferencesToLambdas;
 import com.google.j2cl.transpiler.passes.CreateImplicitConstructors;
 import com.google.j2cl.transpiler.passes.DevirtualizeBoxedTypesAndJsFunctionImplementations;
 import com.google.j2cl.transpiler.passes.DevirtualizeMethodCalls;
+import com.google.j2cl.transpiler.passes.ErasePackagedJsEnumVarargs;
 import com.google.j2cl.transpiler.passes.ExpandCompoundAssignments;
 import com.google.j2cl.transpiler.passes.ExtractNonIdempotentExpressions;
 import com.google.j2cl.transpiler.passes.FilloutMissingSourceMapInformation;
@@ -48,6 +51,7 @@ import com.google.j2cl.transpiler.passes.ImplementInstanceOfs;
 import com.google.j2cl.transpiler.passes.ImplementJsFunctionCopyMethod;
 import com.google.j2cl.transpiler.passes.ImplementLambdaExpressionsViaImplementorClasses;
 import com.google.j2cl.transpiler.passes.ImplementLambdaExpressionsViaJsFunctionAdaptor;
+import com.google.j2cl.transpiler.passes.ImplementNotNullOperator;
 import com.google.j2cl.transpiler.passes.ImplementStaticInitializationViaClinitFunctionRedirection;
 import com.google.j2cl.transpiler.passes.ImplementStaticInitializationViaConditionChecks;
 import com.google.j2cl.transpiler.passes.ImplementStringCompileTimeConstants;
@@ -85,7 +89,6 @@ import com.google.j2cl.transpiler.passes.InsertWideningPrimitiveConversions;
 import com.google.j2cl.transpiler.passes.InsertWideningPrimitiveConversionsJ2kt;
 import com.google.j2cl.transpiler.passes.J2ktRestrictionsChecker;
 import com.google.j2cl.transpiler.passes.JsInteropRestrictionsChecker;
-import com.google.j2cl.transpiler.passes.MakeFieldsFinal;
 import com.google.j2cl.transpiler.passes.MakeVariablesFinal;
 import com.google.j2cl.transpiler.passes.MoveNestedClassesToTop;
 import com.google.j2cl.transpiler.passes.MoveVariableDeclarationsToEnclosingBlock;
@@ -103,6 +106,7 @@ import com.google.j2cl.transpiler.passes.NormalizeEnumClasses;
 import com.google.j2cl.transpiler.passes.NormalizeEquality;
 import com.google.j2cl.transpiler.passes.NormalizeFieldInitialization;
 import com.google.j2cl.transpiler.passes.NormalizeFieldInitializationJ2kt;
+import com.google.j2cl.transpiler.passes.NormalizeForEachIterable;
 import com.google.j2cl.transpiler.passes.NormalizeForEachStatement;
 import com.google.j2cl.transpiler.passes.NormalizeForEachStatementJ2kt;
 import com.google.j2cl.transpiler.passes.NormalizeForStatements;
@@ -114,14 +118,17 @@ import com.google.j2cl.transpiler.passes.NormalizeInterfaceMethods;
 import com.google.j2cl.transpiler.passes.NormalizeInterfaces;
 import com.google.j2cl.transpiler.passes.NormalizeJsAwaitMethodInvocations;
 import com.google.j2cl.transpiler.passes.NormalizeJsDocCastExpressions;
+import com.google.j2cl.transpiler.passes.NormalizeJsEnumInstanceOfAndCasts;
 import com.google.j2cl.transpiler.passes.NormalizeJsEnums;
 import com.google.j2cl.transpiler.passes.NormalizeJsFunctionPropertyInvocations;
 import com.google.j2cl.transpiler.passes.NormalizeJsVarargs;
 import com.google.j2cl.transpiler.passes.NormalizeLabeledStatements;
 import com.google.j2cl.transpiler.passes.NormalizeLabels;
+import com.google.j2cl.transpiler.passes.NormalizeLambdaExpressionsJ2kt;
 import com.google.j2cl.transpiler.passes.NormalizeLiterals;
 import com.google.j2cl.transpiler.passes.NormalizeLongs;
 import com.google.j2cl.transpiler.passes.NormalizeMethodParametersJ2kt;
+import com.google.j2cl.transpiler.passes.NormalizeMinValueIntegralLiterals;
 import com.google.j2cl.transpiler.passes.NormalizeMultiExpressions;
 import com.google.j2cl.transpiler.passes.NormalizeNativePropertyAccesses;
 import com.google.j2cl.transpiler.passes.NormalizeNullLiterals;
@@ -135,6 +142,7 @@ import com.google.j2cl.transpiler.passes.NormalizeSuperMemberReferences;
 import com.google.j2cl.transpiler.passes.NormalizeSwitchStatements;
 import com.google.j2cl.transpiler.passes.NormalizeSwitchStatementsJ2kt;
 import com.google.j2cl.transpiler.passes.NormalizeSynchronizedMethods;
+import com.google.j2cl.transpiler.passes.NormalizeSystemGetPropertyCalls;
 import com.google.j2cl.transpiler.passes.NormalizeTryWithResources;
 import com.google.j2cl.transpiler.passes.NormalizeVarargInvocationsJ2kt;
 import com.google.j2cl.transpiler.passes.NormalizeVarargParametersJ2kt;
@@ -142,30 +150,36 @@ import com.google.j2cl.transpiler.passes.NormalizeVariableInitialization;
 import com.google.j2cl.transpiler.passes.OptimizeAnonymousInnerClassesToFunctionExpressions;
 import com.google.j2cl.transpiler.passes.OptimizeAutoValue;
 import com.google.j2cl.transpiler.passes.OptimizeEnums;
+import com.google.j2cl.transpiler.passes.OptimizeImplicitConstructors;
+import com.google.j2cl.transpiler.passes.OptimizeImplicitSuperCalls;
+import com.google.j2cl.transpiler.passes.OptimizeKotlinCompanions;
+import com.google.j2cl.transpiler.passes.OptimizeXplatForEach;
+import com.google.j2cl.transpiler.passes.PropagateCompileTimeConstants;
 import com.google.j2cl.transpiler.passes.PropagateConstants;
+import com.google.j2cl.transpiler.passes.PropagateJsEnumConstants;
 import com.google.j2cl.transpiler.passes.PropagateNullabilityJ2kt;
 import com.google.j2cl.transpiler.passes.RecoverShortcutBooleanOperator;
-import com.google.j2cl.transpiler.passes.RemoveAssertStatements;
-import com.google.j2cl.transpiler.passes.RemoveIsInstanceMethods;
+import com.google.j2cl.transpiler.passes.RemoveCustomIsInstanceMethods;
 import com.google.j2cl.transpiler.passes.RemoveNativeTypes;
 import com.google.j2cl.transpiler.passes.RemoveNestedBlocks;
 import com.google.j2cl.transpiler.passes.RemoveNoopStatements;
+import com.google.j2cl.transpiler.passes.RemoveUnnecessaryLabels;
 import com.google.j2cl.transpiler.passes.RemoveUnneededCasts;
 import com.google.j2cl.transpiler.passes.RemoveUnneededJsDocCasts;
+import com.google.j2cl.transpiler.passes.RemoveUnneededNotNullChecks;
 import com.google.j2cl.transpiler.passes.RemoveUnreachableCode;
-import com.google.j2cl.transpiler.passes.RemoveUnusedLabeledStatements;
 import com.google.j2cl.transpiler.passes.RemoveWasmAnnotatedMethodBodies;
 import com.google.j2cl.transpiler.passes.ResolveCaptures;
 import com.google.j2cl.transpiler.passes.ResolveImplicitInstanceQualifiers;
 import com.google.j2cl.transpiler.passes.ResolveImplicitStaticQualifiers;
 import com.google.j2cl.transpiler.passes.RestoreVariableScoping;
 import com.google.j2cl.transpiler.passes.RewriteAssignmentExpressions;
+import com.google.j2cl.transpiler.passes.RewriteJsEnumNullChecks;
 import com.google.j2cl.transpiler.passes.RewriteReferenceEqualityOperations;
 import com.google.j2cl.transpiler.passes.RewriteShortcutOperators;
 import com.google.j2cl.transpiler.passes.RewriteUnaryExpressions;
 import com.google.j2cl.transpiler.passes.StaticallyEvaluateStringComparison;
 import com.google.j2cl.transpiler.passes.StaticallyEvaluateStringConcatenation;
-import com.google.j2cl.transpiler.passes.UpgradeInterfaceDispatch;
 import com.google.j2cl.transpiler.passes.VerifyNormalizedUnits;
 import com.google.j2cl.transpiler.passes.VerifyParamAndArgCounts;
 import com.google.j2cl.transpiler.passes.VerifyReferenceScoping;
@@ -195,7 +209,12 @@ public enum Backend {
           // depend on Expression.isEffectivelyInvariant it can take advantage.
           MakeVariablesFinal::new,
           ConvertMethodReferencesToLambdas::new,
+          ErasePackagedJsEnumVarargs::new,
           ResolveImplicitInstanceQualifiers::new,
+          // Must be run before NormalizeForEachStatement.
+          OptimizeXplatForEach::new,
+          NormalizeForEachIterable::new,
+          // Must run after NormalizeForEachIterable.
           () -> new NormalizeForEachStatement(/* useDoubleForIndexVariable= */ true),
           RestoreVariableScoping::new,
           NormalizeSuperMemberReferences::new,
@@ -207,7 +226,7 @@ public enum Backend {
       JsInteropRestrictionsChecker.check(
           library,
           problems,
-          /* enableWasm= */ false,
+          /* checkWasmRestrictions= */ false,
           /* isNullMarkedSupported= */ options.isNullMarkedSupported(),
           /* optimizeAutoValue= */ options.getOptimizeAutoValue());
     }
@@ -229,6 +248,7 @@ public enum Backend {
           // classes requires inlining the bridges as well.
           AddBridgeMethods::new,
           () -> new OptimizeAutoValue(options.getOptimizeAutoValue()),
+          OptimizeKotlinCompanions::new,
 
           // Default constructors and explicit super calls should be synthesized first.
           CreateImplicitConstructors::new,
@@ -322,6 +342,10 @@ public enum Backend {
           RemoveUnneededJsDocCasts::new,
           NormalizeJsDocCastExpressions::new,
           NormalizeJsAwaitMethodInvocations::new,
+          RemoveUnneededNotNullChecks::new,
+          ImplementNotNullOperator::new,
+          NormalizeLabels::new,
+          RemoveUnnecessaryLabels::new,
           RemoveUnreachableCode::new,
           RemoveNoopStatements::new,
 
@@ -344,8 +368,8 @@ public enum Backend {
   WASM {
     @Override
     public void generateOutputs(BackendOptions options, Library library, Problems problems) {
-      new WasmOutputsGenerator(options.getOutput(), options.getLibraryInfoOutput(), problems)
-          .generateMonolithicOutput(library);
+      WasmGeneratorStage.generateMonolithicOutput(
+          library, options.getOutput(), options.getLibraryInfoOutput(), problems);
     }
 
     @Override
@@ -357,7 +381,10 @@ public enum Backend {
           // removed.
           MakeVariablesFinal::new,
           ConvertMethodReferencesToLambdas::new,
+          ErasePackagedJsEnumVarargs::new,
           ResolveImplicitInstanceQualifiers::new,
+          NormalizeForEachIterable::new,
+          // Must run after NormalizeForEachIterable.
           () -> new NormalizeForEachStatement(/* useDoubleForIndexVariable= */ false),
           NormalizeSuperMemberReferences::new,
           RemoveWasmAnnotatedMethodBodies::new);
@@ -368,7 +395,7 @@ public enum Backend {
       JsInteropRestrictionsChecker.check(
           library,
           problems,
-          /* enableWasm= */ true,
+          /* checkWasmRestrictions= */ true,
           /* isNullMarkedSupported= */ options.isNullMarkedSupported(),
           /* optimizeAutoValue= */ options.getOptimizeAutoValue());
     }
@@ -392,21 +419,23 @@ public enum Backend {
           MoveNestedClassesToTop::new,
           AddBridgeMethods::new,
           AddEnumImplicitMethods::new,
-          () -> new ImplementSystemGetProperty(options.getDefinesForWasm()),
           NormalizeTryWithResources::new,
           NormalizeCatchClauses::new,
+          () -> new NormalizeEnumClasses(/* useMakeEnumNameIndirection= */ false),
+          // Must run after NormalizeEnumClasses and before NormalizeOverlayMembers.
+          NormalizeJsEnums::new,
           NormalizeOverlayMembers::new,
           NormalizeInstanceCompileTimeConstants::new,
-          () -> new NormalizeEnumClasses(/* useMakeEnumNameIndirection= */ false),
           () -> new NormalizeShifts(/* narrowAllToInt= */ false),
           NormalizeStaticMemberQualifiers::new,
           NormalizeMultiExpressions::new,
+          // needs to run before ImplementSystemGetProperty
+          () -> new ImplementAssertStatements(/* useWasmDebugFlag= */ true),
+          () -> new ImplementSystemGetProperty(options.getDefinesForWasm()),
 
           // Rewrite operations that do not have direct support in wasm into ones that have.
           () -> new ExpandCompoundAssignments(/* expandAll= */ true),
           InsertErasureTypeSafetyCasts::new,
-          // Rewrite 'a != b' to '!(a == b)'
-          RewriteReferenceEqualityOperations::new,
           RewriteUnaryExpressions::new,
           NormalizeSwitchStatements::new,
           // Propagate constants needs to run after NormalizeSwitchStatements since it introduces
@@ -414,12 +443,24 @@ public enum Backend {
           PropagateConstants::new,
           StaticallyEvaluateStringConcatenation::new,
           StaticallyEvaluateStringComparison::new,
+          () -> new InsertStringConversions(/* skipPrimitivesAndNonNullableString= */ false),
           ImplementStringConcatenation::new,
+          // Must run after NormalizeSwitchStatements, ImplementStringConcatenation.
+          InsertJsEnumBoxingAndUnboxingConversions::new,
+          PropagateJsEnumConstants::new,
           InsertNarrowingReferenceConversions::new,
           () -> new InsertUnboxingConversions(/* areBooleanAndDoubleBoxed= */ true),
           () -> new InsertBoxingConversions(/* areBooleanAndDoubleBoxed= */ true),
           () -> new InsertNarrowingPrimitiveConversions(/* treatFloatAsDouble= */ false),
           () -> new InsertWideningPrimitiveConversions(/* needFloatOrDoubleWidening= */ true),
+          // Must run after primitive conversions, otherwise it will remove int conversions.
+          // Must run before RewriteReferenceEqualityOperations, because it could introduce null
+          // checks.
+          NormalizeJsEnumInstanceOfAndCasts::new,
+          // Rewrite 'a != b' to '!(a == b)'
+          // Must run after InsertJsEnumBoxingAndUnboxingConversions.
+          RewriteReferenceEqualityOperations::new,
+          RewriteJsEnumNullChecks::new,
           ImplementDivisionOperations::new,
           ImplementFloatingPointRemainderOperation::new,
           // Rewrite 'a || b' into 'a ? true : b' and 'a && b' into 'a ? b : false'
@@ -427,14 +468,12 @@ public enum Backend {
           NormalizeFieldInitialization::new,
           ImplementInstanceInitialization::new,
           NormalizeLabels::new,
+          NormalizeInstantiationThroughFactoryMethods::new,
           ImplementStaticInitializationViaConditionChecks::new,
           ImplementClassMetadataViaGetters::new,
           ImplementStringCompileTimeConstants::new,
           NormalizeArrayCreationsWasm::new,
           InsertCastOnArrayAccess::new,
-          options.getWasmRemoveAssertStatement()
-              ? RemoveAssertStatements::new
-              : ImplementAssertStatements::new,
 
           // Normalize multiexpressions before rewriting assignments so that whenever there is a
           // multiexpression, the result is used.
@@ -448,21 +487,22 @@ public enum Backend {
           // extracted. After extracting qualifiers, we must again normalize multi-expressions.
           ExtractNonIdempotentExpressions::new,
           NormalizeMultiExpressions::new,
-          InsertExternConversionsWasm::new,
           () -> new AddEntryPointBridgesWasm(options.getWasmEntryPointPatterns()),
           ImplementFinallyViaControlFlow::new,
 
           // Needs to run at the end as the types in the ast will be invalid after the pass.
           ImplementArraysAsClasses::new,
+          InsertExceptionConversions::new,
           InsertExceptionConversionsWasm::new,
-
-          // Passes required for immutable fields.
-          MakeFieldsFinal::new,
-          NormalizeInstantiationThroughFactoryMethods::new,
-          NormalizeNullLiterals::new,
-          RemoveIsInstanceMethods::new,
+          InsertExternConversionsWasm::new,
+          RemoveCustomIsInstanceMethods::new,
           RemoveNoopStatements::new,
-          UpgradeInterfaceDispatch::new,
+
+          // Passes that transform the AST to match the requirements of the Wasm instruction set.
+          // Make null literals to have the type required by their use.
+          NormalizeNullLiterals::new,
+          // Rewrite 'a != b' to '!(a == b)'
+          RewriteReferenceEqualityOperations::new,
 
           // Post-verifications
           VerifySingleAstReference::new,
@@ -479,8 +519,8 @@ public enum Backend {
   WASM_MODULAR {
     @Override
     public void generateOutputs(BackendOptions options, Library library, Problems problems) {
-      new WasmOutputsGenerator(options.getOutput(), options.getLibraryInfoOutput(), problems)
-          .generateModularOutput(library);
+      WasmGeneratorStage.generateModularOutput(
+          library, options.getOutput(), options.getLibraryInfoOutput(), problems);
     }
 
     @Override
@@ -492,7 +532,10 @@ public enum Backend {
           // removed.
           MakeVariablesFinal::new,
           ConvertMethodReferencesToLambdas::new,
+          ErasePackagedJsEnumVarargs::new,
           ResolveImplicitInstanceQualifiers::new,
+          NormalizeForEachIterable::new,
+          // Must run after NormalizeForEachIterable.
           () -> new NormalizeForEachStatement(/* useDoubleForIndexVariable= */ false),
           NormalizeSuperMemberReferences::new,
           RemoveWasmAnnotatedMethodBodies::new);
@@ -503,7 +546,7 @@ public enum Backend {
       JsInteropRestrictionsChecker.check(
           library,
           problems,
-          /* enableWasm= */ true,
+          /* checkWasmRestrictions= */ true,
           /* isNullMarkedSupported= */ options.isNullMarkedSupported(),
           /* optimizeAutoValue= */ options.getOptimizeAutoValue());
     }
@@ -527,13 +570,14 @@ public enum Backend {
           MoveNestedClassesToTop::new,
           AddBridgeMethods::new,
           AddEnumImplicitMethods::new,
-          // TODO(b/283156060): Implement the modular version of System.getProperty.
-          // () -> new ImplementSystemGetProperty(options.getDefinesForWasm()),
+          NormalizeSystemGetPropertyCalls::new,
           NormalizeTryWithResources::new,
           NormalizeCatchClauses::new,
+          () -> new NormalizeEnumClasses(/* useMakeEnumNameIndirection= */ false),
+          // Must run after NormalizeEnumClasses
+          NormalizeJsEnums::new,
           NormalizeOverlayMembers::new,
           NormalizeInstanceCompileTimeConstants::new,
-          () -> new NormalizeEnumClasses(/* useMakeEnumNameIndirection= */ false),
           () -> new NormalizeShifts(/* narrowAllToInt= */ false),
           NormalizeStaticMemberQualifiers::new,
           NormalizeMultiExpressions::new,
@@ -541,21 +585,30 @@ public enum Backend {
           // Rewrite operations that do not have direct support in wasm into ones that have.
           () -> new ExpandCompoundAssignments(/* expandAll= */ true),
           InsertErasureTypeSafetyCasts::new,
-          // Rewrite 'a != b' to '!(a == b)'
-          RewriteReferenceEqualityOperations::new,
           RewriteUnaryExpressions::new,
           NormalizeSwitchStatements::new,
           // Propagate constants needs to run after NormalizeSwitchStatements since it introduces
           // field references to constant fields.
-          PropagateConstants::new,
+          PropagateCompileTimeConstants::new,
           StaticallyEvaluateStringConcatenation::new,
           StaticallyEvaluateStringComparison::new,
+          () -> new InsertStringConversions(/* skipPrimitivesAndNonNullableString= */ false),
           ImplementStringConcatenation::new,
+          // Must run after NormalizeSwitchStatements, ImplementStringConcatenation.
+          InsertJsEnumBoxingAndUnboxingConversions::new,
           InsertNarrowingReferenceConversions::new,
           () -> new InsertUnboxingConversions(/* areBooleanAndDoubleBoxed= */ true),
           () -> new InsertBoxingConversions(/* areBooleanAndDoubleBoxed= */ true),
           () -> new InsertNarrowingPrimitiveConversions(/* treatFloatAsDouble= */ false),
           () -> new InsertWideningPrimitiveConversions(/* needFloatOrDoubleWidening= */ true),
+          // Must run after primitive conversions, otherwise it will remove int conversions.
+          // Must run before RewriteReferenceEqualityOperations, because it could introduce null
+          // checks.
+          NormalizeJsEnumInstanceOfAndCasts::new,
+          // Rewrite 'a != b' to '!(a == b)'
+          // Must run after InsertJsEnumBoxingAndUnboxingConversions.
+          RewriteReferenceEqualityOperations::new,
+          RewriteJsEnumNullChecks::new,
           ImplementDivisionOperations::new,
           ImplementFloatingPointRemainderOperation::new,
           // Rewrite 'a || b' into 'a ? true : b' and 'a && b' into 'a ? b : false'
@@ -563,14 +616,12 @@ public enum Backend {
           NormalizeFieldInitialization::new,
           ImplementInstanceInitialization::new,
           NormalizeLabels::new,
+          NormalizeInstantiationThroughFactoryMethods::new,
           ImplementStaticInitializationViaConditionChecks::new,
           ImplementClassMetadataViaGetters::new,
-          ImplementStringCompileTimeConstants::new,
           NormalizeArrayCreationsWasm::new,
           InsertCastOnArrayAccess::new,
-          options.getWasmRemoveAssertStatement()
-              ? RemoveAssertStatements::new
-              : ImplementAssertStatements::new,
+          () -> new ImplementAssertStatements(/* useWasmDebugFlag= */ true),
 
           // Normalize multiexpressions before rewriting assignments so that whenever there is a
           // multiexpression, the result is used.
@@ -584,18 +635,21 @@ public enum Backend {
           // extracted. After extracting qualifiers, we must again normalize multi-expressions.
           ExtractNonIdempotentExpressions::new,
           NormalizeMultiExpressions::new,
-          InsertExternConversionsWasm::new,
           ImplementFinallyViaControlFlow::new,
 
           // Needs to run at the end as the types in the ast will be invalid after the pass.
           ImplementArraysAsClasses::new,
+          InsertExceptionConversions::new,
           InsertExceptionConversionsWasm::new,
-
-          // TODO(b/283154656): Fork the instantiation code for the modular pipeline.
-          // NormalizeInstantiationThroughFactoryMethods::new,
-          NormalizeNullLiterals::new,
-          RemoveIsInstanceMethods::new,
+          InsertExternConversionsWasm::new,
+          RemoveCustomIsInstanceMethods::new,
           RemoveNoopStatements::new,
+
+          // Passes that transform the AST to match the requirements of the Wasm instruction set.
+          // Make null literals to have the type required by their use.
+          NormalizeNullLiterals::new,
+          // Rewrite 'a != b' to '!(a == b)'
+          RewriteReferenceEqualityOperations::new,
 
           // Post-verifications
           VerifySingleAstReference::new,
@@ -620,7 +674,8 @@ public enum Backend {
     @Override
     public ImmutableList<Supplier<NormalizationPass>> getDesugaringPassFactories() {
       return ImmutableList.of(
-          () -> new ConvertMethodReferencesToLambdas(/* preserveTypeParameters= */ true),
+          MakeVariablesFinal::new,
+          ConvertMethodReferencesToLambdas::new,
           ResolveImplicitInstanceQualifiers::new);
     }
 
@@ -638,14 +693,22 @@ public enum Backend {
           VerifyReferenceScoping::new,
 
           // Normalizations
+          NormalizeMinValueIntegralLiterals::new,
+          CreateImplicitConstructors::new,
+          InsertExplicitSuperCalls::new,
+          NormalizeLambdaExpressionsJ2kt::new,
+          AddJavaLangObjectForwardingMethods::new,
           AddDisambiguatingSuperMethodForwardingStubs::new,
+          AddDisambiguatingOverloadResolutionCastsJ2kt::new,
           AddVisibilityMethodBridgesJ2kt::new,
           NormalizeSynchronizedMethods::new,
           PropagateNullabilityJ2kt::new,
           NormalizeInterfaces::new,
           NormalizeTryWithResources::new,
+          NormalizeForEachIterable::new,
+          // Must run after NormalizeForEachIterable and benefits from running
+          // after MakeVariablesFinal.
           NormalizeForEachStatementJ2kt::new,
-          NormalizeArrayCreationsJ2kt::new,
           NormalizeStaticMemberQualifiers::new,
           () -> new MoveVariableDeclarationsToEnclosingBlock(/* fromSwitchStatementsOnly= */ true),
           NormalizeMultiExpressions::new,
@@ -682,13 +745,15 @@ public enum Backend {
 
           // Needs to run after NormalizeNonFinalVariablesJ2kt.
           InsertExplicitArrayCoercionCasts::new,
-          RemoveUnusedLabeledStatements::new,
           NormalizeMultiExpressions::new,
           RemoveNestedBlocks::new,
           RemoveNoopStatements::new,
 
           // Passes that breaks the invariants for running ConversionContextVisitor related passes.
           NormalizeVarargInvocationsJ2kt::new,
+          NormalizeArrayCreationsJ2kt::new,
+          OptimizeImplicitSuperCalls::new,
+          OptimizeImplicitConstructors::new,
 
           // Verification
           VerifySingleAstReference::new,

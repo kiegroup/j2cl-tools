@@ -1,372 +1,114 @@
- ;;; Code for collisions.Blah.$Overlay [type definition]
- (type $collisions.Blah.$Overlay (struct_subtype
-  (field $vtable (ref $collisions.Blah.$Overlay.vtable))
-  (field $itable (ref $itable))
-  data)
- )
- (type $collisions.Blah.$Overlay.vtable (struct_subtype
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  data)
- )
-
- ;;; Code for collisions.goog [type definition]
- (type $collisions.goog (struct_subtype
-  (field $vtable (ref $collisions.goog.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $collisions.goog.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  $java.lang.Object.vtable)
- )
-
- ;;; Code for collisions.Blah [type definition]
-
- ;;; Code for collisions.KtBlah [type definition]
- (type $collisions.KtBlah (struct_subtype
-  (field $vtable (ref $collisions.KtBlah.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $collisions.KtBlah.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  $java.lang.Object.vtable)
- )
-
- ;;; Code for collisions.foo [type definition]
- (type $collisions.foo (struct_subtype
-  (field $vtable (ref $collisions.foo.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $collisions.foo.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  $java.lang.Object.vtable)
- )
-
- ;;; Code for collisions.bar [type definition]
- (type $collisions.bar (struct_subtype
-  (field $vtable (ref $collisions.bar.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $collisions.bar.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  $java.lang.Object.vtable)
- )
-
- ;;; Code for collisions.Other [type definition]
- (type $collisions.Other (struct_subtype
-  (field $vtable (ref $collisions.Other.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $collisions.Other.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_m__java_lang_Object_$pp_collisions (ref $function.m_m__java_lang_Object_$pp_collisions))
-  $java.lang.Object.vtable)
- )
-
- ;;; Code for collisions.T [type definition]
- (type $collisions.T (struct_subtype
-  (field $vtable (ref $collisions.T.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $collisions.T.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_m__java_lang_Number_$pp_collisions (ref $function.m_m__java_lang_Number_$pp_collisions))
-  (field $m_n__java_lang_Number_$pp_collisions (ref $function.m_n__java_lang_Number_$pp_collisions))
-  $java.lang.Object.vtable)
- )
-
-;;; Code for collisions.goog [vtable.init]
-(global $collisions.goog.vtable (ref $collisions.goog.vtable)
- (struct.new $collisions.goog.vtable
-  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
-  (ref.func $m_hashCode__int@java.lang.Object)
-  (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@collisions.goog)
- )
+;;; Code for collisions.Blah.$Overlay [type definition]
+(type $collisions.Blah.$Overlay.vtable (sub (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ ))
+)
+(type $collisions.Blah.$Overlay (sub (struct
+ (field $vtable (ref $collisions.Blah.$Overlay.vtable))
+ (field $itable (ref $itable))
+ ))
 )
 
-;;; Code for collisions.KtBlah [vtable.init]
-(global $collisions.KtBlah.vtable (ref $collisions.KtBlah.vtable)
- (struct.new $collisions.KtBlah.vtable
-  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
-  (ref.func $m_hashCode__int@java.lang.Object)
-  (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@collisions.KtBlah)
- )
+;;; Code for collisions.goog [type definition]
+(type $collisions.goog.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ ))
+)
+(type $collisions.goog (sub $java.lang.Object (struct
+ (field $vtable (ref $collisions.goog.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
 )
 
-;;; Code for collisions.foo [vtable.init]
-(global $collisions.foo.vtable (ref $collisions.foo.vtable)
- (struct.new $collisions.foo.vtable
-  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
-  (ref.func $m_hashCode__int@java.lang.Object)
-  (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@collisions.foo)
- )
+;;; Code for collisions.Blah [type definition]
+
+;;; Code for collisions.KtBlah [type definition]
+(type $collisions.KtBlah.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ ))
+)
+(type $collisions.KtBlah (sub $java.lang.Object (struct
+ (field $vtable (ref $collisions.KtBlah.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
 )
 
-;;; Code for collisions.bar [vtable.init]
-(global $collisions.bar.vtable (ref $collisions.bar.vtable)
- (struct.new $collisions.bar.vtable
-  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
-  (ref.func $m_hashCode__int@java.lang.Object)
-  (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@collisions.bar)
- )
+;;; Code for collisions.foo [type definition]
+(type $collisions.foo.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ ))
+)
+(type $collisions.foo (sub $java.lang.Object (struct
+ (field $vtable (ref $collisions.foo.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
 )
 
-;;; Code for collisions.Other [vtable.init]
-(global $collisions.Other.vtable (ref $collisions.Other.vtable)
- (struct.new $collisions.Other.vtable
-  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
-  (ref.func $m_hashCode__int@java.lang.Object)
-  (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@collisions.Other)
-  (ref.func $m_m__java_lang_Object_$pp_collisions@collisions.Other)
- )
+;;; Code for collisions.bar [type definition]
+(type $collisions.bar.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ ))
+)
+(type $collisions.bar (sub $java.lang.Object (struct
+ (field $vtable (ref $collisions.bar.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
 )
 
-;;; Code for collisions.T [vtable.init]
-(global $collisions.T.vtable (ref $collisions.T.vtable)
- (struct.new $collisions.T.vtable
-  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
-  (ref.func $m_hashCode__int@java.lang.Object)
-  (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@collisions.T)
-  (ref.func $m_m__java_lang_Number_$pp_collisions@collisions.T)
-  (ref.func $m_n__java_lang_Number_$pp_collisions@collisions.T)
- )
+;;; Code for collisions.Other [type definition]
+(type $collisions.Other.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_m__java_lang_Object_$pp_collisions (ref $function.m_m__java_lang_Object_$pp_collisions))
+ ))
+)
+(type $collisions.Other (sub $java.lang.Object (struct
+ (field $vtable (ref $collisions.Other.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
 )
 
-;;; Code for collisions.Blah.$Overlay [vtable.init]
-(global $collisions.Blah.$Overlay.vtable (ref $collisions.Blah.$Overlay.vtable)
- (struct.new $collisions.Blah.$Overlay.vtable
-  (ref.func $$getClassImpl__java_lang_Class@collisions.Blah.$Overlay)
- )
+;;; Code for collisions.T [type definition]
+(type $collisions.T.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_m__java_lang_Number_$pp_collisions (ref $function.m_m__java_lang_Number_$pp_collisions))
+ (field $m_n__java_lang_Number_$pp_collisions (ref $function.m_n__java_lang_Number_$pp_collisions))
+ ))
+)
+(type $collisions.T (sub $java.lang.Object (struct
+ (field $vtable (ref $collisions.T.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
 )
 
-;;; Code for collisions.goog [static fields]
-(global $f_$initialized__collisions_goog (mut i32) (i32.const 0))
-(global $f_$class__collisions_goog (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|collisions.goog|__collisions_goog (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+;;; Code for collisions.Blah.$Overlay [imports]
 
-;;; Code for collisions.Blah [static fields]
+;;; Code for collisions.goog [imports]
 
-;;; Code for collisions.KtBlah [static fields]
-(global $f_$initialized__collisions_KtBlah (mut i32) (i32.const 0))
-(global $f_$class__collisions_KtBlah (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|collisions.K...|__collisions_KtBlah (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for collisions.foo [static fields]
-(global $f_$initialized__collisions_foo (mut i32) (i32.const 0))
-(global $f_$class__collisions_foo (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|collisions.foo|__collisions_foo (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for collisions.bar [static fields]
-(global $f_$initialized__collisions_bar (mut i32) (i32.const 0))
-(global $f_$class__collisions_bar (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|collisions.bar|__collisions_bar (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for collisions.Other [static fields]
-(global $f_$initialized__collisions_Other (mut i32) (i32.const 0))
-(global $f_$class__collisions_Other (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|collisions.O...|__collisions_Other (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for collisions.T [static fields]
-(global $f_$initialized__collisions_T (mut i32) (i32.const 0))
-(global $f_$class__collisions_T (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|collisions.T|__collisions_T (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for collisions.Blah.$Overlay [static fields]
-(global $f_$initialized__collisions_Blah_$Overlay (mut i32) (i32.const 0))
-(global $f_$class__collisions_Blah_$Overlay (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|collisions.B...|__collisions_Blah_$Overlay (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for collisions.Blah.$Overlay [methods]
-
-;;; void $Overlay.$clinit()
-(func $$clinit__void@collisions.Blah.$Overlay
- ;;@ collisions/goog.java:28:6
- (block
-  ;;@ collisions/goog.java:28:6
-  (if (global.get $f_$initialized__collisions_Blah_$Overlay)
-   (then
-    ;;@ collisions/goog.java:28:6
-    (return )
-   )
-  )
-  ;;@ collisions/goog.java:28:6
-  (global.set $f_$initialized__collisions_Blah_$Overlay (i32.const 1))
- )
-)
-
-;;; Class<T> $Overlay.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@collisions.Blah.$Overlay
- (result (ref null $java.lang.Class))
- (block
-  (if (ref.eq (global.get $f_$class__collisions_Blah_$Overlay) (ref.null $java.lang.Class))
-   (then
-    (global.set $f_$class__collisions_Blah_$Overlay (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|collisions.B...|__java_lang_String (ref.func $$getString_|collisions.B...|__java_lang_String@collisions.Blah.$Overlay) )(ref.null $java.lang.Class)))
-   )
-  )
-  (return (global.get $f_$class__collisions_Blah_$Overlay))
- )
-)
-
-;;; Class<?> $Overlay.$getClassImpl()
-(func $$getClassImpl__java_lang_Class@collisions.Blah.$Overlay
- (type $function.$getClassImpl__java_lang_Class)
- (param $this.untyped (ref $java.lang.Object))
- (result (ref null $java.lang.Class))
- (local $this (ref null $collisions.Blah.$Overlay))
- (local.set $this (ref.cast_static $collisions.Blah.$Overlay (local.get $this.untyped)))
- (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@collisions.Blah.$Overlay) ))
- )
-)
-(elem declare func $$getClassImpl__java_lang_Class@collisions.Blah.$Overlay)
-
-;;; String $Overlay.$getString_|collisions.B...|()
-(func $$getString_|collisions.B...|__java_lang_String@collisions.Blah.$Overlay
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|collisions.B...|__collisions_Blah_$Overlay) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|collisions.B...|__collisions_Blah_$Overlay (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "collisions.Blah$$Overlay")))
-   )
-  )
-  (return (global.get $f_$string_|collisions.B...|__collisions_Blah_$Overlay))
- )
-)
-
-;;; Code for collisions.goog [methods]
-
-;;; goog goog.$create()
-(func $$create__@collisions.goog
- (result (ref null $collisions.goog))
- ;;@ collisions/goog.java:24:13
- (local $$instance (ref null $collisions.goog))
- (block
-  ;;@ collisions/goog.java:24:13
-  (local.set $$instance (struct.new $collisions.goog (ref.as_non_null (global.get $collisions.goog.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
-  ;;@ collisions/goog.java:24:13
-  (call $$ctor__void_$p_collisions_goog@collisions.goog (ref.as_non_null (local.get $$instance)))
-  ;;@ collisions/goog.java:24:13
-  (return (local.get $$instance))
- )
-)
-
-;;; void goog.$ctor()
-(func $$ctor__void_$p_collisions_goog@collisions.goog
- (param $this (ref null $collisions.goog))
- ;;@ collisions/goog.java:24:13
- (block
-  ;;@ collisions/goog.java:24:13
-  (call $$clinit__void@collisions.goog )
-  ;;@ collisions/goog.java:24:13
-  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
- )
-)
-
-;;; void goog.$clinit()
-(func $$clinit__void@collisions.goog
- ;;@ collisions/goog.java:24:13
- (block
-  ;;@ collisions/goog.java:24:13
-  (if (global.get $f_$initialized__collisions_goog)
-   (then
-    ;;@ collisions/goog.java:24:13
-    (return )
-   )
-  )
-  ;;@ collisions/goog.java:24:13
-  (global.set $f_$initialized__collisions_goog (i32.const 1))
-  ;;@ collisions/goog.java:24:13
-  (call $$clinit__void@java.lang.Object )
- )
-)
-
-;;; Class<T> goog.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@collisions.goog
- (result (ref null $java.lang.Class))
- (block
-  (if (ref.eq (global.get $f_$class__collisions_goog) (ref.null $java.lang.Class))
-   (then
-    (global.set $f_$class__collisions_goog (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|collisions.goog|__java_lang_String (ref.func $$getString_|collisions.goog|__java_lang_String@collisions.goog) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
-   )
-  )
-  (return (global.get $f_$class__collisions_goog))
- )
-)
-
-;;; Class<?> goog.$getClassImpl()
-(func $$getClassImpl__java_lang_Class@collisions.goog
- (type $function.$getClassImpl__java_lang_Class)
- (param $this.untyped (ref $java.lang.Object))
- (result (ref null $java.lang.Class))
- (local $this (ref null $collisions.goog))
- (local.set $this (ref.cast_static $collisions.goog (local.get $this.untyped)))
- (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@collisions.goog) ))
- )
-)
-(elem declare func $$getClassImpl__java_lang_Class@collisions.goog)
-
-;;; String goog.$getString_|collisions.goog|()
-(func $$getString_|collisions.goog|__java_lang_String@collisions.goog
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|collisions.goog|__collisions_goog) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|collisions.goog|__collisions_goog (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "collisions.goog")))
-   )
-  )
-  (return (global.get $f_$string_|collisions.goog|__collisions_goog))
- )
-)
-
-;;; Code for collisions.Blah [methods]
+;;; Code for collisions.Blah [imports]
 
 ;;; Blah()
 (func $m_<init>__@collisions.Blah (import "imports" "String.constructor") 
@@ -382,6 +124,263 @@
  (result f64)
 )
 
+;;; Code for collisions.KtBlah [imports]
+
+;;; Code for collisions.foo [imports]
+
+;;; Code for collisions.bar [imports]
+
+;;; Code for collisions.Other [imports]
+
+;;; Code for collisions.T [imports]
+
+;;; Code for collisions.goog [static fields]
+(global $$class-initialized@collisions.goog (mut i32)
+ (i32.const 0)
+)
+(global $$class@collisions.goog (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for collisions.KtBlah [static fields]
+(global $$class-initialized@collisions.KtBlah (mut i32)
+ (i32.const 0)
+)
+(global $$class@collisions.KtBlah (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for collisions.foo [static fields]
+(global $$class-initialized@collisions.foo (mut i32)
+ (i32.const 0)
+)
+(global $$class@collisions.foo (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for collisions.bar [static fields]
+(global $$class-initialized@collisions.bar (mut i32)
+ (i32.const 0)
+)
+(global $$class@collisions.bar (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for collisions.Other [static fields]
+(global $$class-initialized@collisions.Other (mut i32)
+ (i32.const 0)
+)
+(global $$class@collisions.Other (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for collisions.T [static fields]
+(global $$class-initialized@collisions.T (mut i32)
+ (i32.const 0)
+)
+(global $$class@collisions.T (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for collisions.Blah.$Overlay [static fields]
+(global $$class-initialized@collisions.Blah.$Overlay (mut i32)
+ (i32.const 0)
+)
+(global $$class@collisions.Blah.$Overlay (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for collisions.goog [vtable.init]
+(global $collisions.goog.vtable (ref $collisions.goog.vtable)
+ (struct.new $collisions.goog.vtable
+  (ref.func $$getClassImpl__java_lang_Class@collisions.goog)
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+ )
+)
+
+;;; Code for collisions.KtBlah [vtable.init]
+(global $collisions.KtBlah.vtable (ref $collisions.KtBlah.vtable)
+ (struct.new $collisions.KtBlah.vtable
+  (ref.func $$getClassImpl__java_lang_Class@collisions.KtBlah)
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+ )
+)
+
+;;; Code for collisions.foo [vtable.init]
+(global $collisions.foo.vtable (ref $collisions.foo.vtable)
+ (struct.new $collisions.foo.vtable
+  (ref.func $$getClassImpl__java_lang_Class@collisions.foo)
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+ )
+)
+
+;;; Code for collisions.bar [vtable.init]
+(global $collisions.bar.vtable (ref $collisions.bar.vtable)
+ (struct.new $collisions.bar.vtable
+  (ref.func $$getClassImpl__java_lang_Class@collisions.bar)
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+ )
+)
+
+;;; Code for collisions.Other [vtable.init]
+(global $collisions.Other.vtable (ref $collisions.Other.vtable)
+ (struct.new $collisions.Other.vtable
+  (ref.func $$getClassImpl__java_lang_Class@collisions.Other)
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+  (ref.func $m_m__java_lang_Object_$pp_collisions@collisions.Other)
+ )
+)
+
+;;; Code for collisions.T [vtable.init]
+(global $collisions.T.vtable (ref $collisions.T.vtable)
+ (struct.new $collisions.T.vtable
+  (ref.func $$getClassImpl__java_lang_Class@collisions.T)
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+  (ref.func $m_m__java_lang_Number_$pp_collisions@collisions.T)
+  (ref.func $m_n__java_lang_Number_$pp_collisions@collisions.T)
+ )
+)
+
+;;; Code for collisions.Blah.$Overlay [vtable.init]
+(global $collisions.Blah.$Overlay.vtable (ref $collisions.Blah.$Overlay.vtable)
+ (struct.new $collisions.Blah.$Overlay.vtable
+  (ref.func $$getClassImpl__java_lang_Class@collisions.Blah.$Overlay)
+ )
+)
+
+;;; Code for collisions.Blah.$Overlay [methods]
+
+;;; void $Overlay.$clinit()
+(func $$clinit__void_<once>_@collisions.Blah.$Overlay
+ ;;@ collisions/goog.java:28:6
+ (block
+  ;;@ collisions/goog.java:28:6
+  (if (global.get $$class-initialized@collisions.Blah.$Overlay)
+   (then
+    ;;@ collisions/goog.java:28:6
+    (return )
+   )
+  )
+  ;;@ collisions/goog.java:28:6
+  (global.set $$class-initialized@collisions.Blah.$Overlay (i32.const 1))
+ )
+)
+
+;;; Class<T> $Overlay.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class_<once>_@collisions.Blah.$Overlay
+ (result (ref null $java.lang.Class))
+ (block
+  (if (i32.eqz (ref.is_null (global.get $$class@collisions.Blah.$Overlay)))
+   (then
+    (return (global.get $$class@collisions.Blah.$Overlay))
+   )
+  )
+  (global.set $$class@collisions.Blah.$Overlay (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|collisions.B...|__java_lang_String_<once>_@collisions.Blah.$Overlay )(ref.null $java.lang.Class)))
+  (return (global.get $$class@collisions.Blah.$Overlay))
+ )
+)
+
+;;; Class<?> $Overlay.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@collisions.Blah.$Overlay
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $collisions.Blah.$Overlay))
+ (local.set $this (ref.cast (ref $collisions.Blah.$Overlay) (local.get $this.untyped)))
+ (block
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@collisions.Blah.$Overlay ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@collisions.Blah.$Overlay)
+
+;;; Code for collisions.goog [methods]
+
+;;; goog goog.$create()
+(func $$create__@collisions.goog
+ (result (ref null $collisions.goog))
+ ;;@ collisions/goog.java:24:13
+ (local $$instance (ref null $collisions.goog))
+ (block
+  ;;@ collisions/goog.java:24:13
+  (call $$clinit__void_<once>_@collisions.goog )
+  ;;@ collisions/goog.java:24:13
+  (local.set $$instance (struct.new $collisions.goog (ref.as_non_null (global.get $collisions.goog.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  ;;@ collisions/goog.java:24:13
+  (call $$ctor__void_$p_collisions_goog@collisions.goog (ref.as_non_null (local.get $$instance)))
+  ;;@ collisions/goog.java:24:13
+  (return (local.get $$instance))
+ )
+)
+
+;;; void goog.$ctor()
+(func $$ctor__void_$p_collisions_goog@collisions.goog
+ (param $this (ref null $collisions.goog))
+ ;;@ collisions/goog.java:24:13
+ (block
+  ;;@ collisions/goog.java:24:13
+  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; void goog.$clinit()
+(func $$clinit__void_<once>_@collisions.goog
+ ;;@ collisions/goog.java:24:13
+ (block
+  ;;@ collisions/goog.java:24:13
+  (if (global.get $$class-initialized@collisions.goog)
+   (then
+    ;;@ collisions/goog.java:24:13
+    (return )
+   )
+  )
+  ;;@ collisions/goog.java:24:13
+  (global.set $$class-initialized@collisions.goog (i32.const 1))
+  ;;@ collisions/goog.java:24:13
+  (call $$clinit__void_<once>_@java.lang.Object )
+ )
+)
+
+;;; Class<T> goog.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class_<once>_@collisions.goog
+ (result (ref null $java.lang.Class))
+ (block
+  (if (i32.eqz (ref.is_null (global.get $$class@collisions.goog)))
+   (then
+    (return (global.get $$class@collisions.goog))
+   )
+  )
+  (global.set $$class@collisions.goog (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|collisions.goog|__java_lang_String_<once>_@collisions.goog )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@collisions.goog))
+ )
+)
+
+;;; Class<?> goog.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@collisions.goog
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $collisions.goog))
+ (local.set $this (ref.cast (ref $collisions.goog) (local.get $this.untyped)))
+ (block
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@collisions.goog ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@collisions.goog)
+
+;;; Code for collisions.Blah [methods]
+
 ;;; Code for collisions.KtBlah [methods]
 
 ;;; KtBlah KtBlah.$create()
@@ -390,6 +389,8 @@
  ;;@ collisions/goog.java:36:6
  (local $$instance (ref null $collisions.KtBlah))
  (block
+  ;;@ collisions/goog.java:36:6
+  (call $$clinit__void_<once>_@collisions.KtBlah )
   ;;@ collisions/goog.java:36:6
   (local.set $$instance (struct.new $collisions.KtBlah (ref.as_non_null (global.get $collisions.KtBlah.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
   ;;@ collisions/goog.java:36:6
@@ -405,8 +406,6 @@
  ;;@ collisions/goog.java:36:6
  (block
   ;;@ collisions/goog.java:36:6
-  (call $$clinit__void@collisions.KtBlah )
-  ;;@ collisions/goog.java:36:6
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -416,7 +415,7 @@
  ;;@ collisions/goog.java:37:14
  (block
   ;;@ collisions/goog.java:37:18
-  (call $$clinit__void@collisions.KtBlah )
+  (call $$clinit__void_<once>_@collisions.KtBlah )
  )
 )
 
@@ -426,40 +425,41 @@
  ;;@ collisions/goog.java:39:16
  (block
   ;;@ collisions/goog.java:39:23
-  (call $$clinit__void@collisions.KtBlah )
+  (call $$clinit__void_<once>_@collisions.KtBlah )
   ;;@ collisions/goog.java:40:4
   (return (f64.const 1.0))
  )
 )
 
 ;;; void KtBlah.$clinit()
-(func $$clinit__void@collisions.KtBlah
+(func $$clinit__void_<once>_@collisions.KtBlah
  ;;@ collisions/goog.java:36:6
  (block
   ;;@ collisions/goog.java:36:6
-  (if (global.get $f_$initialized__collisions_KtBlah)
+  (if (global.get $$class-initialized@collisions.KtBlah)
    (then
     ;;@ collisions/goog.java:36:6
     (return )
    )
   )
   ;;@ collisions/goog.java:36:6
-  (global.set $f_$initialized__collisions_KtBlah (i32.const 1))
+  (global.set $$class-initialized@collisions.KtBlah (i32.const 1))
   ;;@ collisions/goog.java:36:6
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> KtBlah.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@collisions.KtBlah
+(func $$getClassMetadata__java_lang_Class_<once>_@collisions.KtBlah
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__collisions_KtBlah) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@collisions.KtBlah)))
    (then
-    (global.set $f_$class__collisions_KtBlah (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|collisions.K...|__java_lang_String (ref.func $$getString_|collisions.K...|__java_lang_String@collisions.KtBlah) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@collisions.KtBlah))
    )
   )
-  (return (global.get $f_$class__collisions_KtBlah))
+  (global.set $$class@collisions.KtBlah (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|collisions.K...|__java_lang_String_<once>_@collisions.KtBlah )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@collisions.KtBlah))
  )
 )
 
@@ -469,25 +469,12 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $collisions.KtBlah))
- (local.set $this (ref.cast_static $collisions.KtBlah (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $collisions.KtBlah) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@collisions.KtBlah) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@collisions.KtBlah ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@collisions.KtBlah)
-
-;;; String KtBlah.$getString_|collisions.K...|()
-(func $$getString_|collisions.K...|__java_lang_String@collisions.KtBlah
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|collisions.K...|__collisions_KtBlah) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|collisions.K...|__collisions_KtBlah (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "collisions.KtBlah")))
-   )
-  )
-  (return (global.get $f_$string_|collisions.K...|__collisions_KtBlah))
- )
-)
 
 ;;; Code for collisions.foo [methods]
 
@@ -497,6 +484,8 @@
  ;;@ collisions/goog.java:44:6
  (local $$instance (ref null $collisions.foo))
  (block
+  ;;@ collisions/goog.java:44:6
+  (call $$clinit__void_<once>_@collisions.foo )
   ;;@ collisions/goog.java:44:6
   (local.set $$instance (struct.new $collisions.foo (ref.as_non_null (global.get $collisions.foo.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
   ;;@ collisions/goog.java:44:6
@@ -512,40 +501,39 @@
  ;;@ collisions/goog.java:44:6
  (block
   ;;@ collisions/goog.java:44:6
-  (call $$clinit__void@collisions.foo )
-  ;;@ collisions/goog.java:44:6
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; void foo.$clinit()
-(func $$clinit__void@collisions.foo
+(func $$clinit__void_<once>_@collisions.foo
  ;;@ collisions/goog.java:44:6
  (block
   ;;@ collisions/goog.java:44:6
-  (if (global.get $f_$initialized__collisions_foo)
+  (if (global.get $$class-initialized@collisions.foo)
    (then
     ;;@ collisions/goog.java:44:6
     (return )
    )
   )
   ;;@ collisions/goog.java:44:6
-  (global.set $f_$initialized__collisions_foo (i32.const 1))
+  (global.set $$class-initialized@collisions.foo (i32.const 1))
   ;;@ collisions/goog.java:44:6
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> foo.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@collisions.foo
+(func $$getClassMetadata__java_lang_Class_<once>_@collisions.foo
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__collisions_foo) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@collisions.foo)))
    (then
-    (global.set $f_$class__collisions_foo (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|collisions.foo|__java_lang_String (ref.func $$getString_|collisions.foo|__java_lang_String@collisions.foo) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@collisions.foo))
    )
   )
-  (return (global.get $f_$class__collisions_foo))
+  (global.set $$class@collisions.foo (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|collisions.foo|__java_lang_String_<once>_@collisions.foo )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@collisions.foo))
  )
 )
 
@@ -555,25 +543,12 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $collisions.foo))
- (local.set $this (ref.cast_static $collisions.foo (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $collisions.foo) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@collisions.foo) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@collisions.foo ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@collisions.foo)
-
-;;; String foo.$getString_|collisions.foo|()
-(func $$getString_|collisions.foo|__java_lang_String@collisions.foo
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|collisions.foo|__collisions_foo) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|collisions.foo|__collisions_foo (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "collisions.foo")))
-   )
-  )
-  (return (global.get $f_$string_|collisions.foo|__collisions_foo))
- )
-)
 
 ;;; Code for collisions.bar [methods]
 
@@ -583,6 +558,8 @@
  ;;@ collisions/goog.java:46:6
  (local $$instance (ref null $collisions.bar))
  (block
+  ;;@ collisions/goog.java:46:6
+  (call $$clinit__void_<once>_@collisions.bar )
   ;;@ collisions/goog.java:46:6
   (local.set $$instance (struct.new $collisions.bar (ref.as_non_null (global.get $collisions.bar.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
   ;;@ collisions/goog.java:46:6
@@ -597,8 +574,6 @@
  (param $this (ref null $collisions.bar))
  ;;@ collisions/goog.java:46:6
  (block
-  ;;@ collisions/goog.java:46:6
-  (call $$clinit__void@collisions.bar )
   ;;@ collisions/goog.java:46:6
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
   ;;@ collisions/goog.java:46:6
@@ -638,33 +613,34 @@
 )
 
 ;;; void bar.$clinit()
-(func $$clinit__void@collisions.bar
+(func $$clinit__void_<once>_@collisions.bar
  ;;@ collisions/goog.java:46:6
  (block
   ;;@ collisions/goog.java:46:6
-  (if (global.get $f_$initialized__collisions_bar)
+  (if (global.get $$class-initialized@collisions.bar)
    (then
     ;;@ collisions/goog.java:46:6
     (return )
    )
   )
   ;;@ collisions/goog.java:46:6
-  (global.set $f_$initialized__collisions_bar (i32.const 1))
+  (global.set $$class-initialized@collisions.bar (i32.const 1))
   ;;@ collisions/goog.java:46:6
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> bar.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@collisions.bar
+(func $$getClassMetadata__java_lang_Class_<once>_@collisions.bar
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__collisions_bar) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@collisions.bar)))
    (then
-    (global.set $f_$class__collisions_bar (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|collisions.bar|__java_lang_String (ref.func $$getString_|collisions.bar|__java_lang_String@collisions.bar) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@collisions.bar))
    )
   )
-  (return (global.get $f_$class__collisions_bar))
+  (global.set $$class@collisions.bar (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|collisions.bar|__java_lang_String_<once>_@collisions.bar )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@collisions.bar))
  )
 )
 
@@ -674,25 +650,12 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $collisions.bar))
- (local.set $this (ref.cast_static $collisions.bar (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $collisions.bar) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@collisions.bar) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@collisions.bar ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@collisions.bar)
-
-;;; String bar.$getString_|collisions.bar|()
-(func $$getString_|collisions.bar|__java_lang_String@collisions.bar
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|collisions.bar|__collisions_bar) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|collisions.bar|__collisions_bar (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "collisions.bar")))
-   )
-  )
-  (return (global.get $f_$string_|collisions.bar|__collisions_bar))
- )
-)
 
 ;;; Code for collisions.Other [methods]
 
@@ -702,6 +665,8 @@
  ;;@ collisions/goog.java:61:6
  (local $$instance (ref null $collisions.Other))
  (block
+  ;;@ collisions/goog.java:61:6
+  (call $$clinit__void_<once>_@collisions.Other )
   ;;@ collisions/goog.java:61:6
   (local.set $$instance (struct.new $collisions.Other (ref.as_non_null (global.get $collisions.Other.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
   ;;@ collisions/goog.java:61:6
@@ -716,8 +681,6 @@
  (param $this (ref null $collisions.Other))
  ;;@ collisions/goog.java:61:6
  (block
-  ;;@ collisions/goog.java:61:6
-  (call $$clinit__void@collisions.Other )
   ;;@ collisions/goog.java:61:6
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
   ;;@ collisions/goog.java:61:6
@@ -734,12 +697,12 @@
  (local $T_1 i32)
  (local $o (ref null $collisions.Other))
  (local $this (ref null $collisions.Other))
- (local.set $this (ref.cast_static $collisions.Other (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $collisions.Other) (local.get $this.untyped)))
  (block
   ;;@ collisions/goog.java:68:4
   (local.set $T_1 (i32.const 5))
   ;;@ collisions/goog.java:69:4
-  (local.set $o (ref.cast_static $collisions.Other (ref.null $java.lang.Object)))
+  (local.set $o (ref.cast (ref null $collisions.Other) (ref.null $java.lang.Object)))
   ;;@ collisions/goog.java:70:4
   (return (ref.null $java.lang.Object))
  )
@@ -756,38 +719,39 @@
   ;;@ collisions/goog.java:63:4
   (local.set $T_1 (i32.const 3))
   ;;@ collisions/goog.java:64:4
-  (local.set $o (ref.cast_static $collisions.Other (ref.null $java.lang.Object)))
+  (local.set $o (ref.cast (ref null $collisions.Other) (ref.null $java.lang.Object)))
  )
 )
 
 ;;; void Other.$clinit()
-(func $$clinit__void@collisions.Other
+(func $$clinit__void_<once>_@collisions.Other
  ;;@ collisions/goog.java:61:6
  (block
   ;;@ collisions/goog.java:61:6
-  (if (global.get $f_$initialized__collisions_Other)
+  (if (global.get $$class-initialized@collisions.Other)
    (then
     ;;@ collisions/goog.java:61:6
     (return )
    )
   )
   ;;@ collisions/goog.java:61:6
-  (global.set $f_$initialized__collisions_Other (i32.const 1))
+  (global.set $$class-initialized@collisions.Other (i32.const 1))
   ;;@ collisions/goog.java:61:6
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> Other.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@collisions.Other
+(func $$getClassMetadata__java_lang_Class_<once>_@collisions.Other
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__collisions_Other) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@collisions.Other)))
    (then
-    (global.set $f_$class__collisions_Other (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|collisions.O...|__java_lang_String (ref.func $$getString_|collisions.O...|__java_lang_String@collisions.Other) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@collisions.Other))
    )
   )
-  (return (global.get $f_$class__collisions_Other))
+  (global.set $$class@collisions.Other (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|collisions.O...|__java_lang_String_<once>_@collisions.Other )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@collisions.Other))
  )
 )
 
@@ -797,30 +761,29 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $collisions.Other))
- (local.set $this (ref.cast_static $collisions.Other (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $collisions.Other) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@collisions.Other) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@collisions.Other ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@collisions.Other)
-
-;;; String Other.$getString_|collisions.O...|()
-(func $$getString_|collisions.O...|__java_lang_String@collisions.Other
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|collisions.O...|__collisions_Other) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|collisions.O...|__collisions_Other (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "collisions.Other")))
-   )
-  )
-  (return (global.get $f_$string_|collisions.O...|__collisions_Other))
- )
-)
 
 ;;; Code for collisions.T [methods]
 
 ;;; T<T> T.$create()
 (func $$create__@collisions.T
+ (result (ref null $collisions.T))
+ ;;@ collisions/goog.java:74:6
+ (block
+  ;;@ collisions/goog.java:74:6
+  (call $$clinit__void_<once>_@collisions.T )
+  ;;@ collisions/goog.java:74:6
+  (return (call $$create_$private__@collisions.T ))
+ )
+)
+
+;;; T<T> T.$create_$private()
+(func $$create_$private__@collisions.T
  (result (ref null $collisions.T))
  ;;@ collisions/goog.java:74:6
  (local $$instance (ref null $collisions.T))
@@ -840,8 +803,6 @@
  ;;@ collisions/goog.java:74:6
  (block
   ;;@ collisions/goog.java:74:6
-  (call $$clinit__void@collisions.T )
-  ;;@ collisions/goog.java:74:6
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -853,7 +814,7 @@
  (result (ref null $java.lang.Number))
  ;;@ collisions/goog.java:75:4
  (local $this (ref null $collisions.T))
- (local.set $this (ref.cast_static $collisions.T (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $collisions.T) (local.get $this.untyped)))
  (block
   ;;@ collisions/goog.java:76:4
   (return (ref.null $java.lang.Number))
@@ -870,11 +831,11 @@
  (local $t (ref null $java.lang.Number))
  (local $$qualifier (ref null $collisions.T))
  (local $this (ref null $collisions.T))
- (local.set $this (ref.cast_static $collisions.T (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $collisions.T) (local.get $this.untyped)))
  (block
   ;;@ collisions/goog.java:80:4
   (local.set $t (block (result (ref null $java.lang.Number))
-   (local.set $$qualifier (call $$create__@collisions.T ))
+   (local.set $$qualifier (call $$create_$private__@collisions.T ))
    (call_ref $function.m_m__java_lang_Number_$pp_collisions (ref.as_non_null (local.get $$qualifier))(struct.get $collisions.T.vtable $m_m__java_lang_Number_$pp_collisions (struct.get $collisions.T $vtable(local.get $$qualifier))))
   ))
   ;;@ collisions/goog.java:81:4
@@ -886,33 +847,34 @@
 (elem declare func $m_n__java_lang_Number_$pp_collisions@collisions.T)
 
 ;;; void T.$clinit()
-(func $$clinit__void@collisions.T
+(func $$clinit__void_<once>_@collisions.T
  ;;@ collisions/goog.java:74:6
  (block
   ;;@ collisions/goog.java:74:6
-  (if (global.get $f_$initialized__collisions_T)
+  (if (global.get $$class-initialized@collisions.T)
    (then
     ;;@ collisions/goog.java:74:6
     (return )
    )
   )
   ;;@ collisions/goog.java:74:6
-  (global.set $f_$initialized__collisions_T (i32.const 1))
+  (global.set $$class-initialized@collisions.T (i32.const 1))
   ;;@ collisions/goog.java:74:6
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> T.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@collisions.T
+(func $$getClassMetadata__java_lang_Class_<once>_@collisions.T
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__collisions_T) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@collisions.T)))
    (then
-    (global.set $f_$class__collisions_T (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|collisions.T|__java_lang_String (ref.func $$getString_|collisions.T|__java_lang_String@collisions.T) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@collisions.T))
    )
   )
-  (return (global.get $f_$class__collisions_T))
+  (global.set $$class@collisions.T (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|collisions.T|__java_lang_String_<once>_@collisions.T )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@collisions.T))
  )
 )
 
@@ -922,22 +884,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $collisions.T))
- (local.set $this (ref.cast_static $collisions.T (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $collisions.T) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@collisions.T) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@collisions.T ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@collisions.T)
-
-;;; String T.$getString_|collisions.T|()
-(func $$getString_|collisions.T|__java_lang_String@collisions.T
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|collisions.T|__collisions_T) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|collisions.T|__collisions_T (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "collisions.T")))
-   )
-  )
-  (return (global.get $f_$string_|collisions.T|__collisions_T))
- )
-)

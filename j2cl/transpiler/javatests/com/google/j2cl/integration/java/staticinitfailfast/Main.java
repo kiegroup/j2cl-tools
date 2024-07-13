@@ -21,7 +21,7 @@ import jsinterop.annotations.JsMethod;
 
 public class Main {
 
-  // Note that this shouldn't be insantiable from Java.
+  // Note that this shouldn't be insantiable from JavaScript.
   static class Foo {}
 
   @JsMethod
@@ -30,7 +30,7 @@ public class Main {
   @JsMethod
   private static native void createFooJsChild();
 
-  public static void main(String[] args) {
+  public static void main(String... args) {
     try {
       createFoo();
       assertTrue("should fail in uncompiled mode", "true".equals(System.getProperty("COMPILED")));

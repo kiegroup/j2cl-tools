@@ -15,6 +15,7 @@
  */
 package nativeinjection;
 
+import static com.google.j2cl.integration.testing.Asserts.assertEquals;
 import static com.google.j2cl.integration.testing.Asserts.assertTrue;
 
 import jsinterop.annotations.JsMethod;
@@ -29,6 +30,10 @@ public class Main {
     assertTrue(instance.nativeInstanceMethod().equals("nativeInstanceMethod"));
 
     assertTrue(NativeClassSuper.nativeStaticMethod().equals("nativeStaticMethodInSuper"));
+    assertTrue(NativeClassSuperJ2CL.nativeStaticMethod().equals("nativeStaticMethodInSuperJ2CL"));
+
+    assertEquals(1, QualifiedNativeMatch.getValue());
+    assertEquals(1, QualifiedNativeMatch.InnerClass.getOtherValue());
   }
 
   /**

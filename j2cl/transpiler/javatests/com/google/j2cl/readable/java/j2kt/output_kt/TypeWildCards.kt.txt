@@ -1,5 +1,5 @@
 // Generated from "j2kt/TypeWildCards.java"
-@file:OptIn(ExperimentalObjCRefinement::class, ExperimentalObjCName::class)
+@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -9,6 +9,7 @@
  "UNNECESSARY_LATEINIT",
  "UNNECESSARY_NOT_NULL_ASSERTION",
  "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
  "UNUSED_PARAMETER",
  "UNUSED_VARIABLE",
  "USELESS_CAST",
@@ -22,17 +23,14 @@ import kotlin.Any
 import kotlin.OptIn
 import kotlin.Suppress
 import kotlin.experimental.ExperimentalObjCName
-import kotlin.experimental.ExperimentalObjCRefinement
 import kotlin.jvm.JvmField
 import kotlin.jvm.JvmStatic
-import kotlin.native.HiddenFromObjC
 import kotlin.native.ObjCName
 
-open class TypeWildCards {
+open class TypeWildCards internal constructor() {
  companion object {
   @JvmStatic
-  @HiddenFromObjC
-  fun testSupplierWithUpperAndLowerBounds_pp_j2kt(supplier: TypeWildCards.SupplierWithUpperBound<in TypeWildCards.Child?>?) {
+  internal fun testSupplierWithUpperAndLowerBounds_pp_j2kt(supplier: TypeWildCards.SupplierWithUpperBound<in TypeWildCards.Child?>?) {
    val parent: TypeWildCards.Parent? = supplier!!.get() as TypeWildCards.Parent?
   }
 
@@ -85,9 +83,9 @@ open class TypeWildCards {
   }
  }
 
- open class Parent {}
+ open class Parent internal constructor() {}
 
- open class Child: TypeWildCards.Parent() {}
+ open class Child internal constructor(): TypeWildCards.Parent() {}
 
  fun interface SupplierWithUpperBound<T: TypeWildCards.Parent?> {
   @ObjCName("get")
@@ -136,9 +134,8 @@ open class TypeWildCards {
   )
  }
 
- open class ObserverHolder<E> {
+ open class ObserverHolder<E> internal constructor() {
   @JvmField
-  @HiddenFromObjC
-  var observer_pp_j2kt: TypeWildCards.Observer<E>? = null
+  internal var observer_pp_j2kt: TypeWildCards.Observer<E>? = null
  }
 }

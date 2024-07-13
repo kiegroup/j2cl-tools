@@ -31,9 +31,9 @@ import com.google.j2cl.transpiler.ast.NewArray;
 import com.google.j2cl.transpiler.ast.Node;
 import com.google.j2cl.transpiler.ast.NumberLiteral;
 import com.google.j2cl.transpiler.ast.RuntimeMethods;
-import com.google.j2cl.transpiler.ast.Statement;
 import com.google.j2cl.transpiler.ast.Variable;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Implements JavaScript varargs calling convention by rewriting varargs calls and adding a preamble
@@ -98,18 +98,11 @@ public class NormalizeJsVarargs extends NormalizationPass {
       // TODO(b/36180242): avoid stamping if not needed.
       // stamp the rest (varargs) parameter.
       //   Arrays.stampType(varargsParameter, new arrayType[]...[]);
-
-      // Use the raw type as the stamped leaf type. So that we use the upper bound of a generic type
-      // parameter type instead of the type parameter itself.
       MethodCall arrayStampTypeMethodCall =
-          RuntimeMethods.createArraysMethodCall(
-              "$stampType",
-              varargsParameter.createReference(),
-              varargsStampTypeDescriptor.getLeafTypeDescriptor().getMetadataConstructorReference(),
-              NumberLiteral.fromInt(varargsStampTypeDescriptor.getDimensions()));
+          RuntimeMethods.createArraysStampTypeMethodCall(
+              varargsParameter.createReference(), varargsStampTypeDescriptor);
 
-      List<Statement> statements = body.getStatements();
-      statements.add(0, arrayStampTypeMethodCall.makeStatement(body.getSourcePosition()));
+      body.getStatements().add(0, arrayStampTypeMethodCall.makeStatement(body.getSourcePosition()));
     }
   }
 
@@ -128,34 +121,55 @@ public class NormalizeJsVarargs extends NormalizationPass {
       }
       Expression lastArgument = Iterables.getLast(invocation.getArguments());
 
-      // If the last argument is an array literal, or an array creation with array literal,
-      // unwrap array literal, and pass the unwrapped arguments directly.
-      if (lastArgument instanceof ArrayLiteral) {
+      List<Expression> extractedVarargsArguments = extractVarargsArguments(lastArgument);
+      if (extractedVarargsArguments != null) {
         return MethodCall.Builder.from(invocation)
-            .replaceVarargsArgument(((ArrayLiteral) lastArgument).getValueExpressions())
+            .replaceVarargsArgument(extractedVarargsArguments)
             .build();
       }
 
-      if (lastArgument instanceof NewArray) {
-        Expression initializer = ((NewArray) lastArgument).getInitializer();
-        if (initializer != null) {
-          return MethodCall.Builder.from(invocation)
-              .replaceVarargsArgument(((ArrayLiteral) initializer).getValueExpressions())
-              .build();
-        }
-      }
-
-      // Here we wrap the vararg type with InternalPreconditions.checkNotNull before applying the
-      // spread operator because the spread of a null causes a runtime exception in Javascript.
-      // The reason for this is that there is a mismatch between Java varargs and Javascript varargs
-      // semantics.  In Java, if you pass a null for the varargs it passes a null array rather than
-      // an array with a single null object.  In Javascript however we pass the values of the
-      // varargs as arguments not as an array so there is no way to express this.
-      // checkNotNull errors out early if null is passed as a jsvararg parameter.
+      // Pass the array expression with a spread. Note that in Java such array expression can be
+      // null and if the method does not dereference it there will be no error. But applying the
+      // spread operator to null results in a JavaScript error.
       return MethodCall.Builder.from(invocation)
-          .replaceVarargsArgument(
-              RuntimeMethods.createCheckNotNullCall(lastArgument).prefixSpread())
+          .replaceVarargsArgument(lastArgument.prefixSpread())
           .build();
     }
   }
+
+  @Nullable
+  private static List<Expression> extractVarargsArguments(Expression expression) {
+    // If the last argument is an array literal, or an array creation with array literal, or a
+    // zero length array literal, extract it.
+    if (expression instanceof NewArray) {
+      expression = extractExplicitInitializer((NewArray) expression);
+    }
+
+    if (expression instanceof ArrayLiteral) {
+      return ((ArrayLiteral) expression).getValueExpressions();
+    }
+
+    return null;
+  }
+
+  /** Extracts an explicit initializer from a NewArray expression. */
+  @Nullable
+  private static Expression extractExplicitInitializer(NewArray newArray) {
+    Expression initializer = newArray.getInitializer();
+    if (initializer != null) {
+      return initializer;
+    }
+
+    if (newArray.getDimensionExpressions().get(0) instanceof NumberLiteral) {
+      NumberLiteral numberLiteral = (NumberLiteral) newArray.getDimensionExpressions().get(0);
+      if (numberLiteral.getValue().intValue() == 0) {
+        // This is newArray of zero length, even if it didn't have an initializer we can provide
+        // and empty array literal of the right type.
+        return new ArrayLiteral(newArray.getTypeDescriptor());
+      }
+    }
+
+    return null;
+  }
 }
+

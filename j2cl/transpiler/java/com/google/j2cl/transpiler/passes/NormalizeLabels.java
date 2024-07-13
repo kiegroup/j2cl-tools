@@ -15,19 +15,16 @@
  */
 package com.google.j2cl.transpiler.passes;
 
-import com.google.j2cl.transpiler.ast.AbstractRewriter;
-import com.google.j2cl.transpiler.ast.BreakStatement;
-import com.google.j2cl.transpiler.ast.CompilationUnit;
-import com.google.j2cl.transpiler.ast.ContinueStatement;
-import com.google.j2cl.transpiler.ast.ForEachStatement;
+import static com.google.common.base.Preconditions.checkState;
+
+import com.google.j2cl.transpiler.ast.BreakOrContinueStatement;
 import com.google.j2cl.transpiler.ast.Label;
 import com.google.j2cl.transpiler.ast.LabeledStatement;
 import com.google.j2cl.transpiler.ast.LoopStatement;
 import com.google.j2cl.transpiler.ast.Node;
 import com.google.j2cl.transpiler.ast.Statement;
 import com.google.j2cl.transpiler.ast.SwitchStatement;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import com.google.j2cl.transpiler.ast.Type;
 
 /**
  * Assigns a label to each loop and switch that does not already have one, and makes all breaks and
@@ -37,87 +34,40 @@ import java.util.Deque;
 public class NormalizeLabels extends NormalizationPass {
 
   @Override
-  public void applyTo(CompilationUnit compilationUnit) {
-    Deque<Label> enclosingContinueLabels = new ArrayDeque<>();
-    Deque<Label> enclosingBreakLabels = new ArrayDeque<>();
-
-    compilationUnit.accept(
-        new AbstractRewriter() {
+  public void applyTo(Type type) {
+    type.accept(
+        new LabelAwareRewriter() {
           @Override
-          public boolean shouldProcessLoopStatement(LoopStatement loopStatement) {
-            Label enclosingLabel = getEnclosingLabel("LOOP");
-            enclosingBreakLabels.push(enclosingLabel);
-            enclosingContinueLabels.push(enclosingLabel);
-            return true;
+          protected Statement rewriteLoopStatement(
+              LoopStatement loopStatement, Label assignedLabel) {
+            return ensureLabeled(loopStatement, assignedLabel);
           }
 
           @Override
-          public boolean shouldProcessForEachStatement(ForEachStatement forEachStatement) {
-            Label enclosingLabel = getEnclosingLabel("FOR_EACH");
-            enclosingBreakLabels.push(enclosingLabel);
-            enclosingContinueLabels.push(enclosingLabel);
-            return true;
+          protected Statement rewriteSwitchStatement(
+              SwitchStatement switchStatement, Label assignedLabel) {
+            return ensureLabeled(switchStatement, assignedLabel);
           }
 
-          @Override
-          public boolean shouldProcessSwitchStatement(SwitchStatement switchStatement) {
-            // Note that Switch statements are never targets of continue statements.
-            enclosingBreakLabels.push(getEnclosingLabel("SWITCH"));
-            return true;
-          }
-
-          private Label getEnclosingLabel(String labelName) {
-            return getParent() instanceof LabeledStatement
-                ? ((LabeledStatement) getParent()).getLabel()
-                : Label.newBuilder().setName(labelName).build();
-          }
-
-          @Override
-          public Statement rewriteLoopStatement(LoopStatement loopStatement) {
-            enclosingContinueLabels.pop();
-            return ensureLabeled(loopStatement);
-          }
-
-          @Override
-          public Node rewriteForEachStatement(ForEachStatement forEachStatement) {
-            enclosingContinueLabels.pop();
-            return ensureLabeled(forEachStatement);
-          }
-
-          @Override
-          public Statement rewriteSwitchStatement(SwitchStatement switchStatement) {
-            return ensureLabeled(switchStatement);
-          }
-
-          private Statement ensureLabeled(Statement statement) {
-            Label breakLabel = enclosingBreakLabels.pop();
+          private Statement ensureLabeled(Statement statement, Label label) {
             if (getParent() instanceof LabeledStatement) {
+              checkState(((LabeledStatement) getParent()).getLabel() == label);
               return statement;
             }
 
             // Make sure statement is enclosed with the label (if not already).
-            return statement.encloseWithLabel(breakLabel);
+            return statement.encloseWithLabel(label);
           }
 
           @Override
-          public Node rewriteContinueStatement(ContinueStatement continueStatement) {
-            if (continueStatement.getLabelReference() != null) {
-              return continueStatement;
+          public Node rewriteBreakOrContinueStatement(
+              BreakOrContinueStatement breakOrContinueStatement) {
+            if (breakOrContinueStatement.getLabelReference() != null) {
+              return breakOrContinueStatement;
             }
 
-            return ContinueStatement.newBuilder()
-                .setLabelReference(enclosingContinueLabels.peek().createReference())
-                .setSourcePosition(continueStatement.getSourcePosition())
-                .build();
-          }
-
-          @Override
-          public Node rewriteBreakStatement(BreakStatement breakStatement) {
-            if (breakStatement.getLabelReference() != null) {
-              return breakStatement;
-            }
-            return BreakStatement.Builder.from(breakStatement)
-                .setLabelReference(enclosingBreakLabels.peek().createReference())
+            return breakOrContinueStatement.toBuilder()
+                .setLabelReference(getTargetLabel(breakOrContinueStatement).createReference())
                 .build();
           }
         });

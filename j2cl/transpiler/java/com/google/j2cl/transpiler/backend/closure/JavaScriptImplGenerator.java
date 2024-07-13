@@ -50,13 +50,10 @@ public class JavaScriptImplGenerator extends JavaScriptGenerator {
   private NativeJavaScriptFile nativeSource;
   private final ClosureTypesGenerator closureTypesGenerator;
 
-  protected final StatementTranspiler statementTranspiler;
-
   public static final String FILE_SUFFIX = ".impl.java.js";
 
   public JavaScriptImplGenerator(Problems problems, Type type, List<Import> imports) {
     super(problems, type, imports);
-    this.statementTranspiler = new StatementTranspiler(sourceBuilder, environment);
     this.closureTypesGenerator = new ClosureTypesGenerator(environment);
   }
 
@@ -332,7 +329,7 @@ public class JavaScriptImplGenerator extends JavaScriptGenerator {
             () -> {
               renderMethodJsDoc(method);
               emitMethodHeader(method);
-              statementTranspiler.renderStatement(method.getBody());
+              StatementTranspiler.render(method.getBody(), environment, sourceBuilder);
             });
       }
       sourceBuilder.newLine();
@@ -378,8 +375,12 @@ public class JavaScriptImplGenerator extends JavaScriptGenerator {
     }
     if (!methodDescriptor.canBeReferencedExternally()
         // TODO(b/193252533): Remove special casing of markImplementor.
-        && !methodDescriptor.getName().equals(MethodDescriptor.MARK_IMPLEMENTOR_METHOD_NAME)) {
+        && !methodDescriptor.equals(
+            methodDescriptor.getEnclosingTypeDescriptor().getMarkImplementorMethodDescriptor())) {
       jsDocBuilder.append(" @nodts");
+    }
+    if (methodDescriptor.isSideEffectFree()) {
+      jsDocBuilder.append(" @nosideeffects");
     }
 
     // TODO(b/280315375): Remove the kotlin special case due to disagreement between how we the
@@ -437,7 +438,12 @@ public class JavaScriptImplGenerator extends JavaScriptGenerator {
   }
 
   private void renderLoadTimeStatements() {
-    statementTranspiler.renderStatements(type.getLoadTimeStatements());
+    type.getLoadTimeStatements()
+        .forEach(
+            s -> {
+              sourceBuilder.newLine();
+              StatementTranspiler.render(s, environment, sourceBuilder);
+            });
     sourceBuilder.newLine();
   }
 

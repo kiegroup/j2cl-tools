@@ -17,6 +17,7 @@ package java.util.stream;
 
 import static javaemul.internal.InternalPreconditions.checkState;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,11 +37,10 @@ import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 import java.util.function.ToLongFunction;
 import java.util.function.UnaryOperator;
-import javaemul.internal.ArrayHelper;
 
 /**
- * See <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html">
- * the official Java API doc</a> for details.
+ * See <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html">the official
+ * Java API doc</a> for details.
  *
  * @param <T> the type of data being streamed
  */
@@ -64,19 +64,19 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
 
   static <T> Stream.Builder<T> builder() {
     return new Builder<T>() {
-      private Object[] items = new Object[0];
+      private ArrayList<T> items = new ArrayList<>();
 
       @Override
       public void accept(T t) {
         checkState(items != null, "Builder already built");
-        ArrayHelper.push(items, t);
+        items.add(t);
       }
 
       @Override
       @SuppressWarnings("unchecked")
       public Stream<T> build() {
         checkState(items != null, "Builder already built");
-        Stream<T> stream = (Stream<T>) Arrays.stream(items);
+        Stream<T> stream = items.stream();
         items = null;
         return stream;
       }
@@ -151,15 +151,32 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
   }
 
   static <T> Stream<T> iterate(T seed, UnaryOperator<T> f) {
+    return iterate(seed, ignore -> true, f);
+  }
+
+  static <T> Stream<T> iterate(T seed, Predicate<? super T> hasNext, UnaryOperator<T> f) {
     AbstractSpliterator<T> spliterator =
         new Spliterators.AbstractSpliterator<T>(
             Long.MAX_VALUE, Spliterator.IMMUTABLE | Spliterator.ORDERED) {
           private T next = seed;
+          private boolean isFirst = true;
+          private boolean isTerminated = false;
 
           @Override
           public boolean tryAdvance(Consumer<? super T> action) {
+            if (isTerminated) {
+              return false;
+            }
+            if (!isFirst) {
+              next = f.apply(next);
+            }
+            isFirst = false;
+
+            if (!hasNext.test(next)) {
+              isTerminated = true;
+              return false;
+            }
             action.accept(next);
-            next = f.apply(next);
             return true;
           }
         };
@@ -174,6 +191,14 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
 
   static <T> Stream<T> of(T... values) {
     return Arrays.stream(values);
+  }
+
+  static <T> Stream<T> ofNullable(T t) {
+    if (t == null) {
+      return empty();
+    } else {
+      return of(t);
+    }
   }
 
   boolean allMatch(Predicate<? super T> predicate);
@@ -236,6 +261,74 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
   Stream<T> sorted();
 
   Stream<T> sorted(Comparator<? super T> comparator);
+
+  default Stream<T> dropWhile(Predicate<? super T> predicate) {
+    Spliterator<T> prev = spliterator();
+    Spliterator<T> spliterator =
+        new Spliterators.AbstractSpliterator<T>(
+            prev.estimateSize(),
+            prev.characteristics() & ~(Spliterator.SIZED | Spliterator.SUBSIZED)) {
+          private boolean dropping = true;
+          private boolean found;
+
+          @Override
+          public boolean tryAdvance(Consumer<? super T> action) {
+            if (!dropping) {
+              // Predicate matched, stop dropping items.
+              return prev.tryAdvance(action);
+            }
+
+            found = false;
+            // Drop items until we find one that matches predicate.
+            while (dropping
+                && prev.tryAdvance(
+                    item -> {
+                      if (!predicate.test(item)) {
+                        dropping = false;
+                        found = true;
+                        action.accept(item);
+                      }
+                    })) {
+              // Do nothing, work is done in tryAdvance
+            }
+            // Only return true if we accepted at least one item
+            return found;
+          }
+        };
+    return StreamSupport.stream(spliterator, false);
+  }
+
+  default Stream<T> takeWhile(Predicate<? super T> predicate) {
+    Spliterator<T> original = spliterator();
+    Spliterator<T> spliterator =
+        new Spliterators.AbstractSpliterator<T>(
+            original.estimateSize(),
+            original.characteristics() & ~(Spliterator.SIZED | Spliterator.SUBSIZED)) {
+          private boolean taking = true;
+          private boolean found;
+
+          @Override
+          public boolean tryAdvance(Consumer<? super T> action) {
+            if (!taking) {
+              // Already failed the predicate.
+              return false;
+            }
+
+            found = false;
+            original.tryAdvance(
+                item -> {
+                  if (predicate.test(item)) {
+                    found = true;
+                    action.accept(item);
+                  } else {
+                    taking = false;
+                  }
+                });
+            return found;
+          }
+        };
+    return StreamSupport.stream(spliterator, false);
+  }
 
   Object[] toArray();
 

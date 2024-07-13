@@ -17,13 +17,15 @@ package com.google.j2cl.jre.java.lang;
 
 import static com.google.j2cl.jre.testing.TestUtils.isWasm;
 
-import com.google.gwt.junit.client.GWTTestCase;
+import com.google.j2cl.jre.testing.J2ktIncompatible;
 import java.util.Arrays;
+import junit.framework.TestCase;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Tests java.lang.System.
  */
-public class SystemTest extends GWTTestCase {
+public class SystemTest extends TestCase {
 
   private static class Bar extends Foo {
     public Bar() {
@@ -72,19 +74,15 @@ public class SystemTest extends GWTTestCase {
     }
   }
 
-  @Override
-  public String getModuleName() {
-    return "com.google.gwt.emultest.EmulSuite";
-  }
-
   public void testArraycopyEnumToInterface() {
     EnumImpl[] src = new EnumImpl[]{ EnumImpl.FOO, null, EnumImpl.BAZ };
     Interfaz[] dest = new Interfaz[5];
     Arrays.fill(dest, null);  // undefined != null, weird.
 
     System.arraycopy(src, 0, dest, 1, 3);
+    // TODO(b/315476228): Ideally, the explicit generic type wouldn't be needed for j2kt
     assertEquals(
-        Arrays.asList(null, EnumImpl.FOO, null, EnumImpl.BAZ, null),
+        Arrays.<@Nullable EnumImpl>asList(null, EnumImpl.FOO, null, EnumImpl.BAZ, null),
         Arrays.asList(dest));
   }
 
@@ -95,7 +93,7 @@ public class SystemTest extends GWTTestCase {
 
     System.arraycopy(src, 0, dest, 1, 3);
     assertEquals(
-        Arrays.asList(null, EnumImpl.FOO, null, EnumImpl.BAZ, null),
+        Arrays.<@Nullable EnumImpl>asList(null, EnumImpl.FOO, null, EnumImpl.BAZ, null),
         Arrays.asList(dest));
   }
 
@@ -163,10 +161,14 @@ public class SystemTest extends GWTTestCase {
     Arrays.fill(dest, null);  // undefined != null, weird.
 
     System.arraycopy(src, 0, dest, 1, 3);
-    assertEquals(Arrays.asList(null, new InterfazImpl("foo"), null,
-        new InterfazImpl("bar"), null), Arrays.asList(dest));
+
+    assertEquals(
+        Arrays.<@Nullable Object>asList(
+            null, new InterfazImpl("foo"), null, new InterfazImpl("bar"), null),
+        Arrays.asList(dest));
   }
 
+  @J2ktIncompatible // We don't have this information at runtime.
   public static void testArraycopyMultidim() {
     Object[][] objArray = new Object[1][1];
     String[][] strArray = new String[1][1];
@@ -212,6 +214,7 @@ public class SystemTest extends GWTTestCase {
     }
   }
 
+  @J2ktIncompatible // We don't have this information at runtime.
   public static void testArraycopyObjects() {
     Foo[] fooArray = new Foo[4];
     Bar[] barArray = new Bar[4];

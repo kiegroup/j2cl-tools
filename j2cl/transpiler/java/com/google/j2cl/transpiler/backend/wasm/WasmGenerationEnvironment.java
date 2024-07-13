@@ -17,22 +17,27 @@ package com.google.j2cl.transpiler.backend.wasm;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static java.lang.String.format;
 import static java.util.Comparator.comparingInt;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.SetMultimap;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.j2cl.transpiler.ast.ArrayLiteral;
 import com.google.j2cl.transpiler.ast.ArrayTypeDescriptor;
+import com.google.j2cl.transpiler.ast.AstUtils;
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
 import com.google.j2cl.transpiler.ast.Field;
 import com.google.j2cl.transpiler.ast.FieldDescriptor;
 import com.google.j2cl.transpiler.ast.HasName;
 import com.google.j2cl.transpiler.ast.Library;
+import com.google.j2cl.transpiler.ast.Method;
 import com.google.j2cl.transpiler.ast.MethodDescriptor;
 import com.google.j2cl.transpiler.ast.NameDeclaration;
 import com.google.j2cl.transpiler.ast.PrimitiveTypeDescriptor;
@@ -42,13 +47,15 @@ import com.google.j2cl.transpiler.ast.TypeDeclaration;
 import com.google.j2cl.transpiler.ast.TypeDescriptor;
 import com.google.j2cl.transpiler.ast.TypeDescriptors;
 import com.google.j2cl.transpiler.backend.common.UniqueNamesResolver;
-import java.util.Collections;
+import com.google.j2cl.transpiler.backend.wasm.JsImportsGenerator.Imports;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
+import javax.annotation.Nullable;
 
 /** Allows mapping of middle end constructors to the backend. */
-class WasmGenerationEnvironment {
+public class WasmGenerationEnvironment {
 
   private static final ImmutableMap<PrimitiveTypeDescriptor, String> WASM_TYPES_BY_PRIMITIVE_TYPES =
       ImmutableMap.<PrimitiveTypeDescriptor, String>builder()
@@ -100,16 +107,27 @@ class WasmGenerationEnvironment {
   /** Maps Java type declarations to the corresponding wasm type layout objects. */
   private final Map<TypeDeclaration, WasmTypeLayout> wasmTypeLayoutByTypeDeclaration;
 
+
   /** Returns the wasm type layout for a Java declared type. */
   WasmTypeLayout getWasmTypeLayout(TypeDeclaration typeDeclaration) {
-    return wasmTypeLayoutByTypeDeclaration.get(typeDeclaration);
+    return checkNotNull(wasmTypeLayoutByTypeDeclaration.get(typeDeclaration));
   }
 
   String getWasmType(TypeDescriptor typeDescriptor) {
+    if (typeDescriptor.isJsEnum()) {
+      return getWasmEnumType(typeDescriptor);
+    }
     if (typeDescriptor.isPrimitive()) {
       return getWasmTypeForPrimitive(typeDescriptor);
     }
     return "(ref null " + getWasmTypeName(typeDescriptor) + ")";
+  }
+
+  String getWasmEnumType(TypeDescriptor typeDescriptor) {
+    TypeDeclaration typeDeclaration =
+        ((DeclaredTypeDescriptor) typeDescriptor).getTypeDeclaration();
+    TypeDescriptor valueFieldType = AstUtils.getJsEnumValueFieldType(typeDeclaration);
+    return getWasmType(valueFieldType);
   }
 
   /**
@@ -142,7 +160,10 @@ class WasmGenerationEnvironment {
     if (typeDescriptor.isArray()) {
       ArrayTypeDescriptor arrayTypeDescriptor = (ArrayTypeDescriptor) typeDescriptor;
       if (arrayTypeDescriptor.isNativeWasmArray()) {
-        return getWasmTypeName(arrayTypeDescriptor.getComponentTypeDescriptor()) + ".array";
+        String wasmTypeName = getWasmTypeName(arrayTypeDescriptor.getComponentTypeDescriptor());
+        // Make sure the resulting type name always has $ prefix.
+        String prefix = wasmTypeName.startsWith("$") ? "" : "$";
+        return format("%s%s.array", prefix, wasmTypeName);
       }
       return getWasmTypeName(TypeDescriptors.getWasmArrayType(arrayTypeDescriptor));
     }
@@ -152,25 +173,26 @@ class WasmGenerationEnvironment {
       return getWasmTypeName(TypeDescriptors.get().javaLangObject);
     }
 
-    return "$" + getTypeSignature(typeDescriptor);
+    return getTypeSignature(typeDescriptor);
   }
 
-  private static String getTypeSignature(TypeDescriptor typeDescriptor) {
+  public String getTypeSignature(TypeDeclaration typeDeclaration) {
+    return getTypeSignature(typeDeclaration.toUnparameterizedTypeDescriptor());
+  }
+
+  public String getTypeSignature(TypeDescriptor typeDescriptor) {
     if (typeDescriptor.isPrimitive()) {
-      return typeDescriptor.getReadableDescription();
+      return "$" + typeDescriptor.getReadableDescription();
     }
     typeDescriptor = typeDescriptor.toRawTypeDescriptor();
     if (typeDescriptor instanceof DeclaredTypeDescriptor) {
-      return ((DeclaredTypeDescriptor) typeDescriptor).getQualifiedSourceName();
+      return "$" + ((DeclaredTypeDescriptor) typeDescriptor).getQualifiedSourceName();
     }
 
     throw new AssertionError("Unexpected type: " + typeDescriptor.getReadableDescription());
   }
 
   public String getWasmEmptyArrayGlobalName(ArrayTypeDescriptor arrayTypeDescriptor) {
-    checkArgument(
-        arrayTypeDescriptor.isPrimitiveArray()
-            || TypeDescriptors.isJavaLangObject(arrayTypeDescriptor.getComponentTypeDescriptor()));
     return "$__emptyArray_" + getWasmTypeName(arrayTypeDescriptor);
   }
   /** Returns the name of the global that stores the itable for a Java type. */
@@ -178,7 +200,7 @@ class WasmGenerationEnvironment {
     if (!typeDescriptor.getTypeDeclaration().implementsInterfaces()) {
       return "$itable.empty";
     }
-    return "$" + getTypeSignature(typeDescriptor) + ".itable";
+    return getTypeSignature(typeDescriptor) + ".itable";
   }
 
   /** Returns the name of the global that stores the itable for a Java type. */
@@ -188,7 +210,7 @@ class WasmGenerationEnvironment {
 
   /** Returns the name of the wasm type of the vtable for a Java type. */
   public String getWasmVtableTypeName(DeclaredTypeDescriptor typeDescriptor) {
-    return "$" + getTypeSignature(typeDescriptor) + ".vtable";
+    return getTypeSignature(typeDescriptor) + ".vtable";
   }
 
   /** Returns the name of the wasm type of the vtable for a Java type. */
@@ -202,7 +224,22 @@ class WasmGenerationEnvironment {
       return "$itable";
     }
 
-    return "$" + getTypeSignature(typeDeclaration.toUnparameterizedTypeDescriptor()) + ".itable";
+    return getTypeSignature(typeDeclaration) + ".itable";
+  }
+
+  /** Returns the name of the itable interface getter. */
+  public String getWasmItableInterfaceGetter(TypeDeclaration typeDeclaration) {
+    return getWasmItableInterfaceGetter(getTypeSignature(typeDeclaration));
+  }
+
+  /** Returns the name of the itable interface getter. */
+  public String getWasmItableInterfaceGetter(String fieldName) {
+    return format("$get.itable.%s", fieldName);
+  }
+
+  /** Returns the name of the global that stores the vtable for a Java type. */
+  public String getWasmInterfaceVtableGlobalName(TypeDeclaration ifce, TypeDeclaration inClass) {
+    return format("%s@%s", getWasmVtableTypeName(ifce), getWasmTypeName(inClass));
   }
 
   /** Returns the name of the global that stores the vtable for a Java type. */
@@ -212,13 +249,13 @@ class WasmGenerationEnvironment {
 
   /** Returns the name of the global that stores the vtable for a Java type. */
   public String getWasmVtableGlobalName(TypeDeclaration typeDeclaration) {
-    // We use the same name for the global that holds the vtable as well as for its type since
-    // the type namespace and global namespace are different naming scopes.
+    // For classes we use the same name for the global that holds the vtable as well as for its type
+    // since the type namespace and global namespace are different naming scopes.
     return getWasmVtableTypeName(typeDeclaration);
   }
 
   /** Returns the name of the field in the vtable that corresponds to {@code methodDescriptor}. */
-  public String getVtableSlot(MethodDescriptor methodDescriptor) {
+  public String getVtableFieldName(MethodDescriptor methodDescriptor) {
     return "$" + methodDescriptor.getMangledName();
   }
 
@@ -228,10 +265,12 @@ class WasmGenerationEnvironment {
    * <p>Note that these names need to be globally unique and are different than the names of the
    * slots in the vtable which maps nicely to our concept of mangled names.
    */
-  String getMethodImplementationName(MethodDescriptor methodDescriptor) {
+  public String getMethodImplementationName(MethodDescriptor methodDescriptor) {
     methodDescriptor = methodDescriptor.getDeclarationDescriptor();
     return "$"
+        // TODO(b/315893220): Improve method names to avoid repetition of the enclosing type.
         + methodDescriptor.getMangledName()
+        + (methodDescriptor.getOrigin().isOnceMethod() ? "_<once>_" : "")
         + "@"
         + methodDescriptor.getEnclosingTypeDescriptor().getQualifiedSourceName();
   }
@@ -241,7 +280,16 @@ class WasmGenerationEnvironment {
   }
 
   String getFieldName(FieldDescriptor fieldDescriptor) {
-    return "$" + fieldDescriptor.getMangledName();
+    return "$"
+        + fieldDescriptor.getName()
+        + "@"
+        + fieldDescriptor.getEnclosingTypeDescriptor().getQualifiedSourceName();
+  }
+
+  /** Returns true if the field is the WasmArray.OfNNN.elements. */
+  boolean isWasmArrayElementsField(FieldDescriptor descriptor) {
+    return TypeDescriptors.isWasmArrayOrSubtype(descriptor.getEnclosingTypeDescriptor())
+        && descriptor.getName().equals("elements");
   }
 
   private final Map<HasName, String> nameByDeclaration = new HashMap<>();
@@ -268,11 +316,26 @@ class WasmGenerationEnvironment {
     return prefix + "." + methodDescriptor.getMangledName();
   }
 
-  private final Map<TypeDeclaration, Integer> slotByInterfaceTypeDeclaration = new HashMap<>();
+  /** Returns the methods that need intrinsic declaration indexed by the name of the import. */
+  ImmutableMap<String, MethodDescriptor> collectMethodsNeedingIntrinsicDeclarations() {
+    return library
+        .streamTypes()
+        .flatMap(t -> t.getMethods().stream())
+        .map(Method::getDescriptor)
+        .filter(MethodDescriptor::isSideEffectFree)
+        .collect(
+            toImmutableMap(
+                this::getNoSideEffectWrapperFunctionName, Function.identity(), (a, b) -> a));
+  }
 
-  int getInterfaceSlot(TypeDeclaration typeDeclaration) {
-    // Interfaces with no implementors will not have a slot assigned. Use -1 to signal that fact.
-    return slotByInterfaceTypeDeclaration.getOrDefault(typeDeclaration, -1);
+  /** Returns methods that need a wasm function type declaration indexed by the name of the type. */
+  ImmutableMap<String, MethodDescriptor> collectMethodsThatNeedTypeDeclarations() {
+    return library
+        .streamTypes()
+        .flatMap(t -> t.getMethods().stream())
+        .map(Method::getDescriptor)
+        .filter(MethodDescriptor::isPolymorphic)
+        .collect(toImmutableMap(this::getFunctionTypeName, Function.identity(), (a, b) -> a));
   }
 
   /** The data index for the array literals that can be emitted as data. */
@@ -305,13 +368,16 @@ class WasmGenerationEnvironment {
     return dataNameByLiteral.get(arrayLiteral);
   }
 
-  private int numberOfInterfaceSlots = -1;
-
-  int getNumberOfInterfaceSlots() {
-    return numberOfInterfaceSlots;
+  int getItableIndexForInterface(TypeDeclaration typeDeclaration) {
+    return itableAllocator.getItableFieldIndex(typeDeclaration);
   }
 
-  private final JsImportsGenerator.Imports jsImports;
+  int getItableSize() {
+    if (isModular) {
+      throw new UnsupportedOperationException();
+    }
+    return itableAllocator.getItableSize();
+  }
 
   public JsImportsGenerator.Imports getJsImports() {
     return jsImports;
@@ -321,7 +387,24 @@ class WasmGenerationEnvironment {
     return jsImports.getMethodImports().get(methodDescriptor);
   }
 
-  WasmGenerationEnvironment(Library library, JsImportsGenerator.Imports jsImports) {
+  public boolean isJsImport(Method method) {
+    MethodDescriptor methodDescriptor = method.getDescriptor();
+    return jsImports.getMethodImports().get(methodDescriptor) != null;
+  }
+
+  private final boolean isModular;
+  private final Library library;
+  private final JsImportsGenerator.Imports jsImports;
+  private final ItableAllocator<TypeDeclaration> itableAllocator;
+
+  WasmGenerationEnvironment(Library library, Imports jsImports) {
+    this(library, jsImports, /* isModular= */ false);
+  }
+
+  WasmGenerationEnvironment(Library library, Imports jsImports, boolean isModular) {
+    this.isModular = isModular;
+    this.library = library;
+
     // Resolve variable names into unique wasm identifiers.
     library
         .streamTypes()
@@ -330,105 +413,70 @@ class WasmGenerationEnvironment {
                 nameByDeclaration.putAll(
                     UniqueNamesResolver.computeUniqueNames(ImmutableSet.of(), t)));
 
-    // Create a representation for Java classes that is useful to lay out the structs and
+    // Create a representation for Java types that is useful to lay out the structs and
     // vtables needed in the wasm output.
     wasmTypeLayoutByTypeDeclaration = new LinkedHashMap<>();
     library
         .streamTypes()
-        .filter(Predicates.not(Type::isInterface))
         // Traverse superclasses before subclasses to ensure that the layout for the superclass
         // is already available to build the layout for the subclass.
-        .sorted(comparingInt(t -> t.getDeclaration().getClassHierarchyDepth()))
+        .sorted(comparingInt(t -> t.getDeclaration().getTypeHierarchyDepth()))
         .forEach(
             t -> {
-              WasmTypeLayout superTypeLayout = null;
-              if (t.getSuperTypeDescriptor() != null) {
-                superTypeLayout =
-                    wasmTypeLayoutByTypeDeclaration.get(
-                        t.getSuperTypeDescriptor().getTypeDeclaration());
-              }
-              wasmTypeLayoutByTypeDeclaration.put(
-                  t.getDeclaration(), WasmTypeLayout.create(t, superTypeLayout));
+              TypeDeclaration typeDeclaration = t.getDeclaration();
+              // Force creation of layouts for all superinterfaces.
+              typeDeclaration.getAllSuperInterfaces().forEach(this::getOrCreateWasmTypeLayout);
+              WasmTypeLayout superWasmLayout =
+                  getOrCreateWasmTypeLayout(typeDeclaration.getSuperTypeDeclaration());
+              var previous =
+                  wasmTypeLayoutByTypeDeclaration.put(
+                      typeDeclaration, WasmTypeLayout.createFromType(t, superWasmLayout));
+              // Since the layout is for a type in the AST, it is expected that the
+              // layout was not already created from the descriptor.
+              checkState(previous == null);
             });
 
-    assignInterfaceSlots(library);
+    this.itableAllocator = createItableAllocator(library);
 
     this.jsImports = jsImports;
   }
 
-  /**
-   * Assigns a slot number (i.e. an index in the itable array) for each interface in the itable.
-   *
-   * <p>Each interfaces implemented in the same class will have a different slots, but across
-   * different parts of the hierarchy slots can be reused. This algorithm heuristically minimizes
-   * the size of the itable by trying to assign slots in order of most implemented interfaces. Each
-   * slot in the itable will have the interface vtable for the class and can be used for both
-   * dynamic interface dispatch and interface "instanceof" checks.
-   *
-   * <p>This is a baseline implementation of "packed encoding" based on the algorithm described in
-   * section 4.3 of "Efficient type inclusion tests" by Vitek et al (OOPSLA 97). Although the ideas
-   * presented in the paper are for performing "instanceof" checks, they generalize to interface
-   * dispatch.
-   */
-  private void assignInterfaceSlots(Library library) {
-    SetMultimap<TypeDeclaration, TypeDeclaration> concreteTypesByInterface =
-        LinkedHashMultimap.create();
-    SetMultimap<Integer, TypeDeclaration> classesBySlot = LinkedHashMultimap.create();
-
-    // Traverse all classes collecting the interfaces they implement. Actual vtable
-    // instances are only required for concrete classes, because they provide the references to the
-    // methods that will be invoked on a specific instance.
-    // Since all dynamic dispatch is performed by obtaining the vtables from an instance, if there
-    // are no instances for a type, there is no need for instances of vtables it.
-    library
-        .streamTypes()
-        .filter(Predicates.not(Type::isInterface))
-        .forEach(
-            t ->
-                t.getDeclaration().getAllSuperTypesIncludingSelf().stream()
-                    .filter(TypeDeclaration::isInterface)
-                    .forEach(i -> concreteTypesByInterface.put(i, t.getDeclaration())));
-
-    // Traverse and assign interfaces by most implemented to least implemented so that widely
-    // implemented interfaces get lower slot numbers.
-    concreteTypesByInterface.keySet().stream()
-        .sorted(
-            comparingInt((TypeDeclaration td) -> concreteTypesByInterface.get(td).size())
-                .reversed())
-        .forEach(i -> assignFirstNonConflictingSlot(i, concreteTypesByInterface, classesBySlot));
-    numberOfInterfaceSlots = classesBySlot.keySet().size();
-  }
-
-  /** Assigns the lowest non conflicting slot to {@code interfaceToAssign}. */
-  private void assignFirstNonConflictingSlot(
-      TypeDeclaration interfaceToAssign,
-      SetMultimap<TypeDeclaration, TypeDeclaration> concreteTypesByInterface,
-      SetMultimap<Integer, TypeDeclaration> concreteTypesBySlot) {
-    int slot =
-        getFirstNonConflictingSlot(
-            interfaceToAssign, concreteTypesBySlot, concreteTypesByInterface);
-    slotByInterfaceTypeDeclaration.put(interfaceToAssign, slot);
-    // Add all the concrete implementors for that interface to the assigned slot, to mark
-    // that slot as already used in all those types.
-    concreteTypesBySlot.putAll(slot, concreteTypesByInterface.get(interfaceToAssign));
-  }
-
-  /** Finds the lowest non-conflicting slot for {@code interface}. */
-  private int getFirstNonConflictingSlot(
-      TypeDeclaration interfaceToAssign,
-      SetMultimap<Integer, TypeDeclaration> concreteTypesBySlot,
-      SetMultimap<TypeDeclaration, TypeDeclaration> concreteTypesByInterface) {
-    // Assign slots by finding the first non conflicting open slot. Interfaces that are
-    // implemented by the same concrete class must have unique slots but interfaces whose
-    // implementers are disjoint can share the same slot.
-    int numberOfSlots = concreteTypesBySlot.keySet().size();
-    for (int slot = 0; slot < numberOfSlots; slot++) {
-      if (Collections.disjoint(
-          concreteTypesBySlot.get(slot), concreteTypesByInterface.get(interfaceToAssign))) {
-        return slot;
-      }
+  private ItableAllocator<TypeDeclaration> createItableAllocator(Library library) {
+    if (isModular) {
+      // Itable allocation happens in the bundler for modular compilation.
+      return null;
     }
-    // Couldn't find an existing slot that is not conflicting, return a new slot.
-    return numberOfSlots;
+    return new ItableAllocator<>(
+        library
+            .streamTypes()
+            .filter(Predicates.not(Type::isInterface))
+            .map(Type::getDeclaration)
+            .collect(toImmutableList()),
+        TypeDeclaration::getAllSuperInterfaces);
+  }
+
+  /** Returns a wasm layout creating it from a type declaration if it wasn't created before. */
+  @Nullable
+  @CanIgnoreReturnValue
+  private WasmTypeLayout getOrCreateWasmTypeLayout(TypeDeclaration typeDeclaration) {
+    if (typeDeclaration == null) {
+      return null;
+    }
+    if (!wasmTypeLayoutByTypeDeclaration.containsKey(typeDeclaration)) {
+      // Get the wasm layout for the supertype. Note that the supertype might be or not in the
+      // current library, so its layout might need to be created from a declaration. This is
+      // accomplished by calling recursively "getOrCreateWasmTypeLayout" rather than assuming it
+      // was already created and would be returned by "getWasmTypeLayout'.
+      WasmTypeLayout superTypeLayout =
+          getOrCreateWasmTypeLayout(typeDeclaration.getSuperTypeDeclaration());
+      WasmTypeLayout typeLayout =
+          WasmTypeLayout.createFromTypeDeclaration(typeDeclaration, superTypeLayout);
+      // If the supertype layout was not created by the type it is requested here,
+      // it means that the type is from a different library and is ok to
+      // create its layout from the type model.
+      wasmTypeLayoutByTypeDeclaration.put(typeDeclaration, typeLayout);
+      return typeLayout;
+    }
+    return wasmTypeLayoutByTypeDeclaration.get(typeDeclaration);
   }
 }

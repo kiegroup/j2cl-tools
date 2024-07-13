@@ -15,6 +15,8 @@
  */
 package com.google.j2cl.transpiler.passes;
 
+import static java.util.stream.Collectors.toMap;
+
 import com.google.j2cl.transpiler.ast.AbstractRewriter;
 import com.google.j2cl.transpiler.ast.AstUtils;
 import com.google.j2cl.transpiler.ast.BinaryExpression;
@@ -22,11 +24,11 @@ import com.google.j2cl.transpiler.ast.Expression;
 import com.google.j2cl.transpiler.ast.Field;
 import com.google.j2cl.transpiler.ast.FieldAccess;
 import com.google.j2cl.transpiler.ast.FieldDescriptor;
+import com.google.j2cl.transpiler.ast.MemberDescriptor;
 import com.google.j2cl.transpiler.ast.Method;
 import com.google.j2cl.transpiler.ast.MethodCall;
 import com.google.j2cl.transpiler.ast.NewInstance;
 import com.google.j2cl.transpiler.ast.Node;
-import com.google.j2cl.transpiler.ast.NumberLiteral;
 import com.google.j2cl.transpiler.ast.PrimitiveTypes;
 import com.google.j2cl.transpiler.ast.RuntimeMethods;
 import com.google.j2cl.transpiler.ast.StringLiteral;
@@ -35,6 +37,7 @@ import com.google.j2cl.transpiler.ast.TypeDescriptors;
 import com.google.j2cl.transpiler.ast.Variable;
 import com.google.j2cl.transpiler.ast.VariableReference;
 import com.google.j2cl.transpiler.ast.Visibility;
+import java.util.Map;
 
 /** Make the implicit parameters and super calls in enum constructors explicit. */
 public class NormalizeEnumClasses extends NormalizationPass {
@@ -58,7 +61,7 @@ public class NormalizeEnumClasses extends NormalizationPass {
     }
     rewriteEnumConstructors(type);
     createEnumOrdinalConstants(type);
-    rewriteEnumValueFieldsInitialization(type);
+    addImplicitParametersToInstantiations(type);
   }
 
   /** Rewrites enum constructors to include parameters for the ordinal and name. */
@@ -146,55 +149,75 @@ public class NormalizeEnumClasses extends NormalizationPass {
 
   /** Creates constant static fields to hold the enum ordinal constants. */
   private static void createEnumOrdinalConstants(Type type) {
-    int currentOrdinal = 0;
-    for (Field enumField : type.getEnumFields()) {
-      enumField.setEnumOrdinal(currentOrdinal);
+    // Traverse in reverse order so that the ordinal constant fields are inserted in ascending
+    // ordinal order.
+    for (Field enumField : type.getEnumFields().reverse()) {
 
-      FieldDescriptor ordinalConstantFieldDescriptor =
-          AstUtils.getEnumOrdinalConstantFieldDescriptor(enumField.getDescriptor());
+      FieldDescriptor enumFieldDescriptor = enumField.getDescriptor();
       // Create a constant field to hold the ordinal for the current enum value.
       type.addMember(
-          // These field need to be defined at the beginning because they can be referenced by enum
+          // These fields need to be defined at the beginning because they can be referenced by enum
           // constant initializers that are already part of the load time statements.
-          currentOrdinal,
-          Field.Builder.from(ordinalConstantFieldDescriptor)
+          0,
+          Field.Builder.from(AstUtils.getEnumOrdinalConstantFieldDescriptor(enumFieldDescriptor))
               .setSourcePosition(enumField.getSourcePosition())
-              .setInitializer(NumberLiteral.fromInt(enumField.getEnumOrdinal()))
+              .setInitializer(enumFieldDescriptor.getEnumOrdinalValue())
               .build());
-
-      currentOrdinal++;
     }
   }
 
-  /** Rewrites the initialization of the enum value fields with the right ordinal and name. */
-  public void rewriteEnumValueFieldsInitialization(Type type) {
-    type.getEnumFields().forEach(this::rewriteEnumValueFieldInitialization);
-  }
+  /** Rewrites the call to the enum constructor with the right ordinal and name. */
+  public void addImplicitParametersToInstantiations(Type type) {
+    // Collect member descriptors that enclose the instantiation of enum constants. These might be
+    // directly in the initializer of the field or in a synthetic method if the initialization was
+    // decomposed by the Kotlin frontend.
+    Map<MemberDescriptor, FieldDescriptor> enclosingInitializingMemberDescriptorByEnumField =
+        type.getEnumFields().stream()
+            .collect(
+                toMap(
+                    (Field e) -> {
+                      if (e.getInitializer() instanceof MethodCall) {
+                        // In Kotlin, we may have decomposed some statements used as expression in
+                        // the enum constructor call. The call to the constructor has been wrapped
+                        // in an init function executing the statement before the call to the
+                        // enum constructor.
+                        return ((MethodCall) e.getInitializer()).getTarget();
+                      }
+                      // Constructor call is done in the field initialization.
+                      return e.getDescriptor();
+                    },
+                    Field::getDescriptor));
 
-  private void rewriteEnumValueFieldInitialization(Field enumField) {
-    enumField.accept(
+    type.accept(
         new AbstractRewriter() {
           @Override
           public Node rewriteNewInstance(NewInstance newInstance) {
-            // There might be other new instances that appear in the enum initialization,
+            FieldDescriptor enumFieldDescriptor =
+                enclosingInitializingMemberDescriptorByEnumField.get(
+                    getCurrentMember().getDescriptor());
+            if (enumFieldDescriptor == null) {
+              // We are not in a member initializing an enum field.
+              return newInstance;
+            }
+
+            // There might be other new instances that appear in the enclosing member,
             // check that this is the right one. The instantiation can be of the enum
             // class or an "anonymous" subclass.
             if (!newInstance
                 .getTypeDescriptor()
-                .isAssignableTo(enumField.getDescriptor().getTypeDescriptor())) {
+                .isAssignableTo(enumFieldDescriptor.getTypeDescriptor())) {
               return newInstance;
             }
 
             FieldDescriptor ordinalConstantFieldDescriptor =
-                AstUtils.getEnumOrdinalConstantFieldDescriptor(enumField.getDescriptor());
+                AstUtils.getEnumOrdinalConstantFieldDescriptor(enumFieldDescriptor);
 
             // Add the name and ordinal as first and second parameters when instantiating
             // the enum value.
             return NewInstance.Builder.from(newInstance)
                 .addArgumentsAndUpdateDescriptor(
                     0,
-                    enumReplaceStringMethodCall(
-                        new StringLiteral(enumField.getDescriptor().getName())),
+                    enumReplaceStringMethodCall(new StringLiteral(enumFieldDescriptor.getName())),
                     FieldAccess.Builder.from(ordinalConstantFieldDescriptor).build())
                 .build();
           }

@@ -1,214 +1,172 @@
- ;;; Code for implementsgenericinterface.GenericInterface [type definition]
- (type $implementsgenericinterface.GenericInterface.vtable (struct_subtype
-  data)
- )
+;;; Code for implementsgenericinterface.GenericInterface [type definition]
+(type $implementsgenericinterface.GenericInterface.vtable (sub (struct
+ ))
+)
 
- ;;; Code for implementsgenericinterface.GenericSubInterface [type definition]
- (type $implementsgenericinterface.GenericSubInterface.vtable (struct_subtype
-  data)
- )
+;;; Code for implementsgenericinterface.GenericSubInterface [type definition]
+(type $implementsgenericinterface.GenericSubInterface.vtable (sub (struct
+ ))
+)
 
- ;;; Code for implementsgenericinterface.GenericInterfaceGenericImpl [type definition]
- (type $implementsgenericinterface.GenericInterfaceGenericImpl (struct_subtype
-  (field $vtable (ref $implementsgenericinterface.GenericInterfaceGenericImpl.vtable))
-  (field $itable (ref $implementsgenericinterface.GenericInterfaceGenericImpl.itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $implementsgenericinterface.GenericInterfaceGenericImpl.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  $java.lang.Object.vtable)
- )
- (type $implementsgenericinterface.GenericInterfaceGenericImpl.itable (struct_subtype
- (field $slot0 (ref $implementsgenericinterface.GenericInterface.vtable))
- (field $slot1 (ref null struct))
- (field $slot2 (ref null struct))
- (field $slot3 (ref null struct))
- (field $slot4 (ref null struct))
- (field $slot5 (ref null struct))
- (field $slot6 (ref null struct))
-  $itable))
+;;; Code for implementsgenericinterface.GenericInterfaceGenericImpl [type definition]
+(type $implementsgenericinterface.GenericInterfaceGenericImpl.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ ))
+)
+(type $implementsgenericinterface.GenericInterfaceGenericImpl (sub $java.lang.Object (struct
+ (field $vtable (ref $implementsgenericinterface.GenericInterfaceGenericImpl.vtable))
+ (field $itable (ref $implementsgenericinterface.GenericInterfaceGenericImpl.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 
- ;;; Code for implementsgenericinterface.GenericInterfaceImpl [type definition]
- (type $implementsgenericinterface.GenericInterfaceImpl (struct_subtype
-  (field $vtable (ref $implementsgenericinterface.GenericInterfaceImpl.vtable))
-  (field $itable (ref $implementsgenericinterface.GenericInterfaceImpl.itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $implementsgenericinterface.GenericInterfaceImpl.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  $java.lang.Object.vtable)
- )
- (type $implementsgenericinterface.GenericInterfaceImpl.itable (struct_subtype
- (field $slot0 (ref $implementsgenericinterface.GenericInterface.vtable))
- (field $slot1 (ref null struct))
- (field $slot2 (ref null struct))
- (field $slot3 (ref null struct))
- (field $slot4 (ref null struct))
- (field $slot5 (ref null struct))
- (field $slot6 (ref null struct))
-  $itable))
+;;; Code for implementsgenericinterface.GenericInterfaceImpl [type definition]
+(type $implementsgenericinterface.GenericInterfaceImpl.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ ))
+)
+(type $implementsgenericinterface.GenericInterfaceImpl (sub $java.lang.Object (struct
+ (field $vtable (ref $implementsgenericinterface.GenericInterfaceImpl.vtable))
+ (field $itable (ref $implementsgenericinterface.GenericInterfaceImpl.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
+;;; Code for implementsgenericinterface.GenericInterface [imports]
+
+;;; Code for implementsgenericinterface.GenericSubInterface [imports]
+
+;;; Code for implementsgenericinterface.GenericInterfaceGenericImpl [imports]
+
+;;; Code for implementsgenericinterface.GenericInterfaceImpl [imports]
+
+;;; Code for implementsgenericinterface.GenericInterface [static fields]
+(global $$class-initialized@implementsgenericinterface.GenericInterface (mut i32)
+ (i32.const 0)
+)
+(global $$class@implementsgenericinterface.GenericInterface (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for implementsgenericinterface.GenericSubInterface [static fields]
+(global $$class-initialized@implementsgenericinterface.GenericSubInterface (mut i32)
+ (i32.const 0)
+)
+(global $$class@implementsgenericinterface.GenericSubInterface (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for implementsgenericinterface.GenericInterfaceGenericImpl [static fields]
+(global $$class-initialized@implementsgenericinterface.GenericInterfaceGenericImpl (mut i32)
+ (i32.const 0)
+)
+(global $$class@implementsgenericinterface.GenericInterfaceGenericImpl (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for implementsgenericinterface.GenericInterfaceImpl [static fields]
+(global $$class-initialized@implementsgenericinterface.GenericInterfaceImpl (mut i32)
+ (i32.const 0)
+)
+(global $$class@implementsgenericinterface.GenericInterfaceImpl (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
 
 ;;; Code for implementsgenericinterface.GenericInterfaceGenericImpl [vtable.init]
 (global $implementsgenericinterface.GenericInterfaceGenericImpl.vtable (ref $implementsgenericinterface.GenericInterfaceGenericImpl.vtable)
  (struct.new $implementsgenericinterface.GenericInterfaceGenericImpl.vtable
+  (ref.func $$getClassImpl__java_lang_Class@implementsgenericinterface.GenericInterfaceGenericImpl)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@implementsgenericinterface.GenericInterfaceGenericImpl)
  )
 )
-
-;;; Code for implementsgenericinterface.GenericInterfaceGenericImpl [itable.init]
-(global $implementsgenericinterface.GenericInterfaceGenericImpl.itable (ref $implementsgenericinterface.GenericInterfaceGenericImpl.itable) (struct.new $implementsgenericinterface.GenericInterfaceGenericImpl.itable
+(global $implementsgenericinterface.GenericInterface.vtable@$implementsgenericinterface.GenericInterfaceGenericImpl (ref $implementsgenericinterface.GenericInterface.vtable)
  (struct.new $implementsgenericinterface.GenericInterface.vtable
  )
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
- ))
+)
 
 ;;; Code for implementsgenericinterface.GenericInterfaceImpl [vtable.init]
 (global $implementsgenericinterface.GenericInterfaceImpl.vtable (ref $implementsgenericinterface.GenericInterfaceImpl.vtable)
  (struct.new $implementsgenericinterface.GenericInterfaceImpl.vtable
+  (ref.func $$getClassImpl__java_lang_Class@implementsgenericinterface.GenericInterfaceImpl)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@implementsgenericinterface.GenericInterfaceImpl)
  )
 )
-
-;;; Code for implementsgenericinterface.GenericInterfaceImpl [itable.init]
-(global $implementsgenericinterface.GenericInterfaceImpl.itable (ref $implementsgenericinterface.GenericInterfaceImpl.itable) (struct.new $implementsgenericinterface.GenericInterfaceImpl.itable
+(global $implementsgenericinterface.GenericInterface.vtable@$implementsgenericinterface.GenericInterfaceImpl (ref $implementsgenericinterface.GenericInterface.vtable)
  (struct.new $implementsgenericinterface.GenericInterface.vtable
  )
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
- ))
-
-;;; Code for implementsgenericinterface.GenericInterface [static fields]
-(global $f_$initialized__implementsgenericinterface_GenericInterface (mut i32) (i32.const 0))
-(global $f_$class__implementsgenericinterface_GenericInterface (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|implementsge...|__implementsgenericinterface_GenericInterface (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for implementsgenericinterface.GenericSubInterface [static fields]
-(global $f_$initialized__implementsgenericinterface_GenericSubInterface (mut i32) (i32.const 0))
-(global $f_$class__implementsgenericinterface_GenericSubInterface (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|implementsge...|__implementsgenericinterface_GenericSubInterface (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for implementsgenericinterface.GenericInterfaceGenericImpl [static fields]
-(global $f_$initialized__implementsgenericinterface_GenericInterfaceGenericImpl (mut i32) (i32.const 0))
-(global $f_$class__implementsgenericinterface_GenericInterfaceGenericImpl (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|implementsge...|__implementsgenericinterface_GenericInterfaceGenericImpl (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for implementsgenericinterface.GenericInterfaceImpl [static fields]
-(global $f_$initialized__implementsgenericinterface_GenericInterfaceImpl (mut i32) (i32.const 0))
-(global $f_$class__implementsgenericinterface_GenericInterfaceImpl (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|implementsge...|__implementsgenericinterface_GenericInterfaceImpl (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+)
 
 ;;; Code for implementsgenericinterface.GenericInterface [methods]
 
 ;;; void GenericInterface.$clinit()
-(func $$clinit__void@implementsgenericinterface.GenericInterface
+(func $$clinit__void_<once>_@implementsgenericinterface.GenericInterface
  ;;@ implementsgenericinterface/GenericInterfaceImpl.java:18:10
  (block
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:18:10
-  (if (global.get $f_$initialized__implementsgenericinterface_GenericInterface)
+  (if (global.get $$class-initialized@implementsgenericinterface.GenericInterface)
    (then
     ;;@ implementsgenericinterface/GenericInterfaceImpl.java:18:10
     (return )
    )
   )
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:18:10
-  (global.set $f_$initialized__implementsgenericinterface_GenericInterface (i32.const 1))
+  (global.set $$class-initialized@implementsgenericinterface.GenericInterface (i32.const 1))
  )
 )
 
 ;;; Class<T> GenericInterface.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@implementsgenericinterface.GenericInterface
+(func $$getClassMetadata__java_lang_Class_<once>_@implementsgenericinterface.GenericInterface
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__implementsgenericinterface_GenericInterface) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@implementsgenericinterface.GenericInterface)))
    (then
-    (global.set $f_$class__implementsgenericinterface_GenericInterface (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|implementsge...|__java_lang_String (ref.func $$getString_|implementsge...|__java_lang_String@implementsgenericinterface.GenericInterface) )))
+    (return (global.get $$class@implementsgenericinterface.GenericInterface))
    )
   )
-  (return (global.get $f_$class__implementsgenericinterface_GenericInterface))
- )
-)
-
-;;; String GenericInterface.$getString_|implementsge...|()
-(func $$getString_|implementsge...|__java_lang_String@implementsgenericinterface.GenericInterface
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|implementsge...|__implementsgenericinterface_GenericInterface) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|implementsge...|__implementsgenericinterface_GenericInterface (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "implementsgenericinterface.GenericInterface")))
-   )
-  )
-  (return (global.get $f_$string_|implementsge...|__implementsgenericinterface_GenericInterface))
+  (global.set $$class@implementsgenericinterface.GenericInterface (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $$getString_|implementsge...|__java_lang_String_<once>_@implementsgenericinterface.GenericInterface )))
+  (return (global.get $$class@implementsgenericinterface.GenericInterface))
  )
 )
 
 ;;; Code for implementsgenericinterface.GenericSubInterface [methods]
 
 ;;; void GenericSubInterface.$clinit()
-(func $$clinit__void@implementsgenericinterface.GenericSubInterface
+(func $$clinit__void_<once>_@implementsgenericinterface.GenericSubInterface
  ;;@ implementsgenericinterface/GenericInterfaceImpl.java:20:10
  (block
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:20:10
-  (if (global.get $f_$initialized__implementsgenericinterface_GenericSubInterface)
+  (if (global.get $$class-initialized@implementsgenericinterface.GenericSubInterface)
    (then
     ;;@ implementsgenericinterface/GenericInterfaceImpl.java:20:10
     (return )
    )
   )
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:20:10
-  (global.set $f_$initialized__implementsgenericinterface_GenericSubInterface (i32.const 1))
+  (global.set $$class-initialized@implementsgenericinterface.GenericSubInterface (i32.const 1))
  )
 )
 
 ;;; Class<T> GenericSubInterface.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@implementsgenericinterface.GenericSubInterface
+(func $$getClassMetadata__java_lang_Class_<once>_@implementsgenericinterface.GenericSubInterface
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__implementsgenericinterface_GenericSubInterface) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@implementsgenericinterface.GenericSubInterface)))
    (then
-    (global.set $f_$class__implementsgenericinterface_GenericSubInterface (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|implementsge...|__java_lang_String (ref.func $$getString_|implementsge...|__java_lang_String@implementsgenericinterface.GenericSubInterface) )))
+    (return (global.get $$class@implementsgenericinterface.GenericSubInterface))
    )
   )
-  (return (global.get $f_$class__implementsgenericinterface_GenericSubInterface))
- )
-)
-
-;;; String GenericSubInterface.$getString_|implementsge...|()
-(func $$getString_|implementsge...|__java_lang_String@implementsgenericinterface.GenericSubInterface
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|implementsge...|__implementsgenericinterface_GenericSubInterface) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|implementsge...|__implementsgenericinterface_GenericSubInterface (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "implementsgenericinterface.GenericSubInterface")))
-   )
-  )
-  (return (global.get $f_$string_|implementsge...|__implementsgenericinterface_GenericSubInterface))
+  (global.set $$class@implementsgenericinterface.GenericSubInterface (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $$getString_|implementsge...|__java_lang_String_<once>_@implementsgenericinterface.GenericSubInterface )))
+  (return (global.get $$class@implementsgenericinterface.GenericSubInterface))
  )
 )
 
@@ -220,6 +178,8 @@
  ;;@ implementsgenericinterface/GenericInterfaceImpl.java:22:6
  (local $$instance (ref null $implementsgenericinterface.GenericInterfaceGenericImpl))
  (block
+  ;;@ implementsgenericinterface/GenericInterfaceImpl.java:22:6
+  (call $$clinit__void_<once>_@implementsgenericinterface.GenericInterfaceGenericImpl )
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:22:6
   (local.set $$instance (struct.new $implementsgenericinterface.GenericInterfaceGenericImpl (ref.as_non_null (global.get $implementsgenericinterface.GenericInterfaceGenericImpl.vtable)) (ref.as_non_null (global.get $implementsgenericinterface.GenericInterfaceGenericImpl.itable)) (i32.const 0)))
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:22:6
@@ -235,40 +195,39 @@
  ;;@ implementsgenericinterface/GenericInterfaceImpl.java:22:6
  (block
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:22:6
-  (call $$clinit__void@implementsgenericinterface.GenericInterfaceGenericImpl )
-  ;;@ implementsgenericinterface/GenericInterfaceImpl.java:22:6
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; void GenericInterfaceGenericImpl.$clinit()
-(func $$clinit__void@implementsgenericinterface.GenericInterfaceGenericImpl
+(func $$clinit__void_<once>_@implementsgenericinterface.GenericInterfaceGenericImpl
  ;;@ implementsgenericinterface/GenericInterfaceImpl.java:22:6
  (block
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:22:6
-  (if (global.get $f_$initialized__implementsgenericinterface_GenericInterfaceGenericImpl)
+  (if (global.get $$class-initialized@implementsgenericinterface.GenericInterfaceGenericImpl)
    (then
     ;;@ implementsgenericinterface/GenericInterfaceImpl.java:22:6
     (return )
    )
   )
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:22:6
-  (global.set $f_$initialized__implementsgenericinterface_GenericInterfaceGenericImpl (i32.const 1))
+  (global.set $$class-initialized@implementsgenericinterface.GenericInterfaceGenericImpl (i32.const 1))
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:22:6
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> GenericInterfaceGenericImpl.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@implementsgenericinterface.GenericInterfaceGenericImpl
+(func $$getClassMetadata__java_lang_Class_<once>_@implementsgenericinterface.GenericInterfaceGenericImpl
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__implementsgenericinterface_GenericInterfaceGenericImpl) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@implementsgenericinterface.GenericInterfaceGenericImpl)))
    (then
-    (global.set $f_$class__implementsgenericinterface_GenericInterfaceGenericImpl (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|implementsge...|__java_lang_String (ref.func $$getString_|implementsge...|__java_lang_String@implementsgenericinterface.GenericInterfaceGenericImpl) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@implementsgenericinterface.GenericInterfaceGenericImpl))
    )
   )
-  (return (global.get $f_$class__implementsgenericinterface_GenericInterfaceGenericImpl))
+  (global.set $$class@implementsgenericinterface.GenericInterfaceGenericImpl (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|implementsge...|__java_lang_String_<once>_@implementsgenericinterface.GenericInterfaceGenericImpl )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@implementsgenericinterface.GenericInterfaceGenericImpl))
  )
 )
 
@@ -278,25 +237,12 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $implementsgenericinterface.GenericInterfaceGenericImpl))
- (local.set $this (ref.cast_static $implementsgenericinterface.GenericInterfaceGenericImpl (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $implementsgenericinterface.GenericInterfaceGenericImpl) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@implementsgenericinterface.GenericInterfaceGenericImpl) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@implementsgenericinterface.GenericInterfaceGenericImpl ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@implementsgenericinterface.GenericInterfaceGenericImpl)
-
-;;; String GenericInterfaceGenericImpl.$getString_|implementsge...|()
-(func $$getString_|implementsge...|__java_lang_String@implementsgenericinterface.GenericInterfaceGenericImpl
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|implementsge...|__implementsgenericinterface_GenericInterfaceGenericImpl) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|implementsge...|__implementsgenericinterface_GenericInterfaceGenericImpl (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "implementsgenericinterface.GenericInterfaceGenericImpl")))
-   )
-  )
-  (return (global.get $f_$string_|implementsge...|__implementsgenericinterface_GenericInterfaceGenericImpl))
- )
-)
 
 ;;; Code for implementsgenericinterface.GenericInterfaceImpl [methods]
 
@@ -306,6 +252,8 @@
  ;;@ implementsgenericinterface/GenericInterfaceImpl.java:24:13
  (local $$instance (ref null $implementsgenericinterface.GenericInterfaceImpl))
  (block
+  ;;@ implementsgenericinterface/GenericInterfaceImpl.java:24:13
+  (call $$clinit__void_<once>_@implementsgenericinterface.GenericInterfaceImpl )
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:24:13
   (local.set $$instance (struct.new $implementsgenericinterface.GenericInterfaceImpl (ref.as_non_null (global.get $implementsgenericinterface.GenericInterfaceImpl.vtable)) (ref.as_non_null (global.get $implementsgenericinterface.GenericInterfaceImpl.itable)) (i32.const 0)))
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:24:13
@@ -321,40 +269,39 @@
  ;;@ implementsgenericinterface/GenericInterfaceImpl.java:24:13
  (block
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:24:13
-  (call $$clinit__void@implementsgenericinterface.GenericInterfaceImpl )
-  ;;@ implementsgenericinterface/GenericInterfaceImpl.java:24:13
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; void GenericInterfaceImpl.$clinit()
-(func $$clinit__void@implementsgenericinterface.GenericInterfaceImpl
+(func $$clinit__void_<once>_@implementsgenericinterface.GenericInterfaceImpl
  ;;@ implementsgenericinterface/GenericInterfaceImpl.java:24:13
  (block
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:24:13
-  (if (global.get $f_$initialized__implementsgenericinterface_GenericInterfaceImpl)
+  (if (global.get $$class-initialized@implementsgenericinterface.GenericInterfaceImpl)
    (then
     ;;@ implementsgenericinterface/GenericInterfaceImpl.java:24:13
     (return )
    )
   )
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:24:13
-  (global.set $f_$initialized__implementsgenericinterface_GenericInterfaceImpl (i32.const 1))
+  (global.set $$class-initialized@implementsgenericinterface.GenericInterfaceImpl (i32.const 1))
   ;;@ implementsgenericinterface/GenericInterfaceImpl.java:24:13
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> GenericInterfaceImpl.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@implementsgenericinterface.GenericInterfaceImpl
+(func $$getClassMetadata__java_lang_Class_<once>_@implementsgenericinterface.GenericInterfaceImpl
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__implementsgenericinterface_GenericInterfaceImpl) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@implementsgenericinterface.GenericInterfaceImpl)))
    (then
-    (global.set $f_$class__implementsgenericinterface_GenericInterfaceImpl (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|implementsge...|__java_lang_String (ref.func $$getString_|implementsge...|__java_lang_String@implementsgenericinterface.GenericInterfaceImpl) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@implementsgenericinterface.GenericInterfaceImpl))
    )
   )
-  (return (global.get $f_$class__implementsgenericinterface_GenericInterfaceImpl))
+  (global.set $$class@implementsgenericinterface.GenericInterfaceImpl (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|implementsge...|__java_lang_String_<once>_@implementsgenericinterface.GenericInterfaceImpl )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@implementsgenericinterface.GenericInterfaceImpl))
  )
 )
 
@@ -364,22 +311,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $implementsgenericinterface.GenericInterfaceImpl))
- (local.set $this (ref.cast_static $implementsgenericinterface.GenericInterfaceImpl (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $implementsgenericinterface.GenericInterfaceImpl) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@implementsgenericinterface.GenericInterfaceImpl) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@implementsgenericinterface.GenericInterfaceImpl ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@implementsgenericinterface.GenericInterfaceImpl)
-
-;;; String GenericInterfaceImpl.$getString_|implementsge...|()
-(func $$getString_|implementsge...|__java_lang_String@implementsgenericinterface.GenericInterfaceImpl
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|implementsge...|__implementsgenericinterface_GenericInterfaceImpl) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|implementsge...|__implementsgenericinterface_GenericInterfaceImpl (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "implementsgenericinterface.GenericInterfaceImpl")))
-   )
-  )
-  (return (global.get $f_$string_|implementsge...|__implementsgenericinterface_GenericInterfaceImpl))
- )
-)

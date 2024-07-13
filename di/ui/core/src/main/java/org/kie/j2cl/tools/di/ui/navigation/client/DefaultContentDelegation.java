@@ -27,10 +27,9 @@ public class DefaultContentDelegation implements ContentDelegation {
 
   @Override
   public void showContent(Object page, HTMLElement container, JsArray<HTMLElement> elements,
-      Object previousPage, DelegationControl control) {
+                          Object previousPage, DelegationControl control) {
     if (container != null && elements != null) {
-
-      elements.forEach((node, p1, p2) -> {
+      elements.forEach((node, index) -> {
         container.append(node);
         return null;
       });

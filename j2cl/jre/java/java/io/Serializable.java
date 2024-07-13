@@ -17,7 +17,6 @@ package java.io;
 
 import javaemul.internal.ArrayHelper;
 import javaemul.internal.JsUtils;
-import jsinterop.annotations.JsMethod;
 
 /**
  * Provided for interoperability; RPC treats this interface synonymously with
@@ -25,8 +24,6 @@ import jsinterop.annotations.JsMethod;
  * The Java serialization protocol is explicitly not supported.
  */
 public interface Serializable {
-  // CHECKSTYLE_OFF: Utility methods.
-  @JsMethod
   static boolean $isInstance(HasSerializableTypeMarker instance) {
     if (instance == null) {
       return false;
@@ -40,5 +37,4 @@ public interface Serializable {
         // Arrays are implicitly instances of Serializable (JLS 10.7).
         || ArrayHelper.isArray(instance);
   }
-  // CHECKSTYLE_ON: end utility methods
 }

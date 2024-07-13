@@ -17,7 +17,8 @@ package com.google.j2cl.jre.java.lang;
 
 import static com.google.j2cl.jre.testing.TestUtils.isWasm;
 
-import com.google.gwt.junit.client.GWTTestCase;
+import com.google.j2cl.jre.testing.J2ktIncompatible;
+import junit.framework.TestCase;
 
 /** Unit tests for the GWT emulation of java.lang.Throwable class. */
 public class ThrowableTest extends GWTTestCase {
@@ -27,6 +28,7 @@ public class ThrowableTest extends GWTTestCase {
     return "com.google.gwt.emultest.EmulSuite";
   }
 
+  @J2ktIncompatible // Currently unsupported
   public static void testStackTrace() {
     if (isWasm()) {
       // TODO(b/233263693): Add Throwable.getStackTrace support.
@@ -48,6 +50,7 @@ public class ThrowableTest extends GWTTestCase {
     assertEquals(0, e.getStackTrace().length);
   }
 
+  @J2ktIncompatible // Currently unsupported
   public void testSetStackTrace() {
     Throwable throwable = new Throwable("stacktrace");
     throwable.fillInStackTrace();
@@ -64,5 +67,14 @@ public class ThrowableTest extends GWTTestCase {
     assertEquals(10, trace[0].getLineNumber());
     assertEquals("TestClass.testMethod(fakefile:10)", trace[0].toString());
     assertEquals("TestClass.testCaller(fakefile2:97)", trace[1].toString());
+  }
+
+  public void testExceptionToString() {
+    Throwable inner = new RuntimeException("inner");
+    assertEquals("outer", new RuntimeException("outer", inner).getMessage());
+
+    // Prefixed with the class name, but is obfuscated for j2wasm, so we just check for the
+    // ":" after the class name before the inner message.
+    assertTrue(new RuntimeException(inner).getMessage().endsWith(": inner"));
   }
 }

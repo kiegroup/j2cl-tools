@@ -57,9 +57,7 @@ public class BigIntegerHashCodeTest extends EmulTestBase {
     }
   }
 
-  /**
-   * Test hash codes for the same object.
-   */
+  /** Test hash codes for the same object. */
   @SuppressWarnings("ReturnValueIgnored")
   public void testSameObject() {
     String value1 = "12378246728727834290276457386374882976782849";

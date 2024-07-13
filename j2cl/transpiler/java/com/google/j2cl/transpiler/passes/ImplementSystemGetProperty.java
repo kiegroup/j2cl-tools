@@ -15,11 +15,13 @@
  */
 package com.google.j2cl.transpiler.passes;
 
-import static com.google.common.base.Preconditions.checkState;
 
+import com.google.j2cl.common.SourcePosition;
 import com.google.j2cl.transpiler.ast.AbstractRewriter;
+import com.google.j2cl.transpiler.ast.AstUtils;
 import com.google.j2cl.transpiler.ast.CompilationUnit;
 import com.google.j2cl.transpiler.ast.Expression;
+import com.google.j2cl.transpiler.ast.HasSourcePosition;
 import com.google.j2cl.transpiler.ast.MethodCall;
 import com.google.j2cl.transpiler.ast.MultiExpression;
 import com.google.j2cl.transpiler.ast.Node;
@@ -41,7 +43,7 @@ public class ImplementSystemGetProperty extends NormalizationPass {
         new AbstractRewriter() {
           @Override
           public Node rewriteMethodCall(MethodCall methodCall) {
-            if (!isSystemGetPropertyCall(methodCall)) {
+            if (!AstUtils.isSystemGetPropertyCall(methodCall)) {
               return methodCall;
             }
 
@@ -52,10 +54,13 @@ public class ImplementSystemGetProperty extends NormalizationPass {
             String value = properties.get(propertyKey);
             Expression defaultValue = arguments.size() == 2 ? arguments.get(1) : null;
 
-            checkState(
-                value != null || defaultValue != null,
-                "No value found for property %s",
-                propertyKey);
+            if (value == null && defaultValue == null) {
+              SourcePosition sourcePosition =
+                  ((HasSourcePosition) getParent(HasSourcePosition.class::isInstance))
+                      .getSourcePosition();
+              getProblems()
+                  .error(sourcePosition, "No value found for required property %s", propertyKey);
+            }
 
             MultiExpression.Builder expressionBuilder = MultiExpression.newBuilder();
             if (value == null || (defaultValue != null && defaultValue.hasSideEffects())) {
@@ -70,9 +75,5 @@ public class ImplementSystemGetProperty extends NormalizationPass {
             return expressionBuilder.build();
           }
         });
-  }
-
-  private static boolean isSystemGetPropertyCall(MethodCall methodCall) {
-    return "java.lang.System.getProperty".equals(methodCall.getTarget().getQualifiedBinaryName());
   }
 }

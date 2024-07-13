@@ -1,124 +1,149 @@
- ;;; Code for cloneable.Cloneables [type definition]
- (type $cloneable.Cloneables (struct_subtype
-  (field $vtable (ref $cloneable.Cloneables.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $cloneable.Cloneables.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  $java.lang.Object.vtable)
- )
+;;; Code for cloneable.Cloneables [type definition]
+(type $cloneable.Cloneables.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ ))
+)
+(type $cloneable.Cloneables (sub $java.lang.Object (struct
+ (field $vtable (ref $cloneable.Cloneables.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 
- ;;; Code for cloneable.Cloneables.WithoutCloneable [type definition]
- (type $cloneable.Cloneables.WithoutCloneable (struct_subtype
-  (field $vtable (ref $cloneable.Cloneables.WithoutCloneable.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $cloneable.Cloneables.WithoutCloneable.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_clone__java_lang_Object (ref $function.m_clone__java_lang_Object))
-  $java.lang.Object.vtable)
- )
+;;; Code for cloneable.Cloneables.WithoutCloneable [type definition]
+(type $cloneable.Cloneables.WithoutCloneable.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_clone__java_lang_Object (ref $function.m_clone__java_lang_Object))
+ ))
+)
+(type $cloneable.Cloneables.WithoutCloneable (sub $java.lang.Object (struct
+ (field $vtable (ref $cloneable.Cloneables.WithoutCloneable.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 
- ;;; Code for cloneable.Cloneables.WithCloneable [type definition]
- (type $cloneable.Cloneables.WithCloneable (struct_subtype
-  (field $vtable (ref $cloneable.Cloneables.WithCloneable.vtable))
-  (field $itable (ref $cloneable.Cloneables.WithCloneable.itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $cloneable.Cloneables.WithCloneable.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_clone__java_lang_Object (ref $function.m_clone__java_lang_Object))
-  $java.lang.Object.vtable)
- )
- (type $cloneable.Cloneables.WithCloneable.itable (struct_subtype
- (field $slot0 (ref null struct))
- (field $slot1 (ref null struct))
- (field $slot2 (ref null struct))
- (field $slot3 (ref $java.lang.Cloneable.vtable))
- (field $slot4 (ref null struct))
- (field $slot5 (ref null struct))
- (field $slot6 (ref null struct))
-  $itable))
+;;; Code for cloneable.Cloneables.WithCloneable [type definition]
+(type $cloneable.Cloneables.WithCloneable.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_clone__java_lang_Object (ref $function.m_clone__java_lang_Object))
+ ))
+)
+(type $cloneable.Cloneables.WithCloneable (sub $java.lang.Object (struct
+ (field $vtable (ref $cloneable.Cloneables.WithCloneable.vtable))
+ (field $itable (ref $cloneable.Cloneables.WithCloneable.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 
- ;;; Code for cloneable.Cloneables.WithoutCloneableChild [type definition]
- (type $cloneable.Cloneables.WithoutCloneableChild (struct_subtype
-  (field $vtable (ref $cloneable.Cloneables.WithoutCloneableChild.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $cloneable.Cloneables.WithoutCloneable)
- )
- (type $cloneable.Cloneables.WithoutCloneableChild.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_clone__java_lang_Object (ref $function.m_clone__java_lang_Object))
-  $cloneable.Cloneables.WithoutCloneable.vtable)
- )
+;;; Code for cloneable.Cloneables.WithoutCloneableChild [type definition]
+(type $cloneable.Cloneables.WithoutCloneableChild.vtable (sub $cloneable.Cloneables.WithoutCloneable.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_clone__java_lang_Object (ref $function.m_clone__java_lang_Object))
+ ))
+)
+(type $cloneable.Cloneables.WithoutCloneableChild (sub $cloneable.Cloneables.WithoutCloneable (struct
+ (field $vtable (ref $cloneable.Cloneables.WithoutCloneableChild.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 
- ;;; Code for cloneable.Cloneables.WithCloneableChild [type definition]
- (type $cloneable.Cloneables.WithCloneableChild (struct_subtype
-  (field $vtable (ref $cloneable.Cloneables.WithCloneableChild.vtable))
-  (field $itable (ref $cloneable.Cloneables.WithCloneableChild.itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $cloneable.Cloneables.WithCloneable)
- )
- (type $cloneable.Cloneables.WithCloneableChild.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_clone__java_lang_Object (ref $function.m_clone__java_lang_Object))
-  $cloneable.Cloneables.WithCloneable.vtable)
- )
- (type $cloneable.Cloneables.WithCloneableChild.itable (struct_subtype
- (field $slot0 (ref null struct))
- (field $slot1 (ref null struct))
- (field $slot2 (ref null struct))
- (field $slot3 (ref $java.lang.Cloneable.vtable))
- (field $slot4 (ref null struct))
- (field $slot5 (ref null struct))
- (field $slot6 (ref null struct))
-  $cloneable.Cloneables.WithCloneable.itable))
+;;; Code for cloneable.Cloneables.WithCloneableChild [type definition]
+(type $cloneable.Cloneables.WithCloneableChild.vtable (sub $cloneable.Cloneables.WithCloneable.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_clone__java_lang_Object (ref $function.m_clone__java_lang_Object))
+ ))
+)
+(type $cloneable.Cloneables.WithCloneableChild (sub $cloneable.Cloneables.WithCloneable (struct
+ (field $vtable (ref $cloneable.Cloneables.WithCloneableChild.vtable))
+ (field $itable (ref $cloneable.Cloneables.WithCloneableChild.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
+;;; Code for cloneable.Cloneables [imports]
+
+;;; Code for cloneable.Cloneables.WithoutCloneable [imports]
+
+;;; Code for cloneable.Cloneables.WithCloneable [imports]
+
+;;; Code for cloneable.Cloneables.WithoutCloneableChild [imports]
+
+;;; Code for cloneable.Cloneables.WithCloneableChild [imports]
+
+;;; Code for cloneable.Cloneables [static fields]
+(global $$class-initialized@cloneable.Cloneables (mut i32)
+ (i32.const 0)
+)
+(global $$class@cloneable.Cloneables (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for cloneable.Cloneables.WithoutCloneable [static fields]
+(global $$class-initialized@cloneable.Cloneables.WithoutCloneable (mut i32)
+ (i32.const 0)
+)
+(global $$class@cloneable.Cloneables.WithoutCloneable (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for cloneable.Cloneables.WithCloneable [static fields]
+(global $$class-initialized@cloneable.Cloneables.WithCloneable (mut i32)
+ (i32.const 0)
+)
+(global $$class@cloneable.Cloneables.WithCloneable (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for cloneable.Cloneables.WithoutCloneableChild [static fields]
+(global $$class-initialized@cloneable.Cloneables.WithoutCloneableChild (mut i32)
+ (i32.const 0)
+)
+(global $$class@cloneable.Cloneables.WithoutCloneableChild (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for cloneable.Cloneables.WithCloneableChild [static fields]
+(global $$class-initialized@cloneable.Cloneables.WithCloneableChild (mut i32)
+ (i32.const 0)
+)
+(global $$class@cloneable.Cloneables.WithCloneableChild (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
 
 ;;; Code for cloneable.Cloneables [vtable.init]
 (global $cloneable.Cloneables.vtable (ref $cloneable.Cloneables.vtable)
  (struct.new $cloneable.Cloneables.vtable
+  (ref.func $$getClassImpl__java_lang_Class@cloneable.Cloneables)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@cloneable.Cloneables)
  )
 )
 
 ;;; Code for cloneable.Cloneables.WithoutCloneable [vtable.init]
 (global $cloneable.Cloneables.WithoutCloneable.vtable (ref $cloneable.Cloneables.WithoutCloneable.vtable)
  (struct.new $cloneable.Cloneables.WithoutCloneable.vtable
+  (ref.func $$getClassImpl__java_lang_Class@cloneable.Cloneables.WithoutCloneable)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@cloneable.Cloneables.WithoutCloneable)
   (ref.func $m_clone__java_lang_Object@cloneable.Cloneables.WithoutCloneable)
  )
 )
@@ -126,35 +151,25 @@
 ;;; Code for cloneable.Cloneables.WithCloneable [vtable.init]
 (global $cloneable.Cloneables.WithCloneable.vtable (ref $cloneable.Cloneables.WithCloneable.vtable)
  (struct.new $cloneable.Cloneables.WithCloneable.vtable
+  (ref.func $$getClassImpl__java_lang_Class@cloneable.Cloneables.WithCloneable)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@cloneable.Cloneables.WithCloneable)
   (ref.func $m_clone__java_lang_Object@cloneable.Cloneables.WithCloneable)
  )
 )
-
-;;; Code for cloneable.Cloneables.WithCloneable [itable.init]
-(global $cloneable.Cloneables.WithCloneable.itable (ref $cloneable.Cloneables.WithCloneable.itable) (struct.new $cloneable.Cloneables.WithCloneable.itable
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
+(global $java.lang.Cloneable.vtable@$cloneable.Cloneables.WithCloneable (ref $java.lang.Cloneable.vtable)
  (struct.new $java.lang.Cloneable.vtable
  )
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
- ))
+)
 
 ;;; Code for cloneable.Cloneables.WithoutCloneableChild [vtable.init]
 (global $cloneable.Cloneables.WithoutCloneableChild.vtable (ref $cloneable.Cloneables.WithoutCloneableChild.vtable)
  (struct.new $cloneable.Cloneables.WithoutCloneableChild.vtable
+  (ref.func $$getClassImpl__java_lang_Class@cloneable.Cloneables.WithoutCloneableChild)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@cloneable.Cloneables.WithoutCloneableChild)
   (ref.func $m_clone__java_lang_Object@cloneable.Cloneables.WithoutCloneableChild)
  )
 )
@@ -162,51 +177,17 @@
 ;;; Code for cloneable.Cloneables.WithCloneableChild [vtable.init]
 (global $cloneable.Cloneables.WithCloneableChild.vtable (ref $cloneable.Cloneables.WithCloneableChild.vtable)
  (struct.new $cloneable.Cloneables.WithCloneableChild.vtable
+  (ref.func $$getClassImpl__java_lang_Class@cloneable.Cloneables.WithCloneableChild)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@cloneable.Cloneables.WithCloneableChild)
   (ref.func $m_clone__java_lang_Object@cloneable.Cloneables.WithCloneableChild)
  )
 )
-
-;;; Code for cloneable.Cloneables.WithCloneableChild [itable.init]
-(global $cloneable.Cloneables.WithCloneableChild.itable (ref $cloneable.Cloneables.WithCloneableChild.itable) (struct.new $cloneable.Cloneables.WithCloneableChild.itable
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
+(global $java.lang.Cloneable.vtable@$cloneable.Cloneables.WithCloneableChild (ref $java.lang.Cloneable.vtable)
  (struct.new $java.lang.Cloneable.vtable
  )
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
- ))
-
-;;; Code for cloneable.Cloneables [static fields]
-(global $f_$initialized__cloneable_Cloneables (mut i32) (i32.const 0))
-(global $f_$class__cloneable_Cloneables (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|cloneable.Cl...|__cloneable_Cloneables (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for cloneable.Cloneables.WithoutCloneable [static fields]
-(global $f_$initialized__cloneable_Cloneables_WithoutCloneable (mut i32) (i32.const 0))
-(global $f_$class__cloneable_Cloneables_WithoutCloneable (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithoutCloneable (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for cloneable.Cloneables.WithCloneable [static fields]
-(global $f_$initialized__cloneable_Cloneables_WithCloneable (mut i32) (i32.const 0))
-(global $f_$class__cloneable_Cloneables_WithCloneable (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithCloneable (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for cloneable.Cloneables.WithoutCloneableChild [static fields]
-(global $f_$initialized__cloneable_Cloneables_WithoutCloneableChild (mut i32) (i32.const 0))
-(global $f_$class__cloneable_Cloneables_WithoutCloneableChild (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithoutCloneableChild (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for cloneable.Cloneables.WithCloneableChild [static fields]
-(global $f_$initialized__cloneable_Cloneables_WithCloneableChild (mut i32) (i32.const 0))
-(global $f_$class__cloneable_Cloneables_WithCloneableChild (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithCloneableChild (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+)
 
 ;;; Code for cloneable.Cloneables [methods]
 
@@ -216,6 +197,8 @@
  ;;@ cloneable/Cloneables.java:18:13
  (local $$instance (ref null $cloneable.Cloneables))
  (block
+  ;;@ cloneable/Cloneables.java:18:13
+  (call $$clinit__void_<once>_@cloneable.Cloneables )
   ;;@ cloneable/Cloneables.java:18:13
   (local.set $$instance (struct.new $cloneable.Cloneables (ref.as_non_null (global.get $cloneable.Cloneables.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
   ;;@ cloneable/Cloneables.java:18:13
@@ -231,40 +214,39 @@
  ;;@ cloneable/Cloneables.java:18:13
  (block
   ;;@ cloneable/Cloneables.java:18:13
-  (call $$clinit__void@cloneable.Cloneables )
-  ;;@ cloneable/Cloneables.java:18:13
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; void Cloneables.$clinit()
-(func $$clinit__void@cloneable.Cloneables
+(func $$clinit__void_<once>_@cloneable.Cloneables
  ;;@ cloneable/Cloneables.java:18:13
  (block
   ;;@ cloneable/Cloneables.java:18:13
-  (if (global.get $f_$initialized__cloneable_Cloneables)
+  (if (global.get $$class-initialized@cloneable.Cloneables)
    (then
     ;;@ cloneable/Cloneables.java:18:13
     (return )
    )
   )
   ;;@ cloneable/Cloneables.java:18:13
-  (global.set $f_$initialized__cloneable_Cloneables (i32.const 1))
+  (global.set $$class-initialized@cloneable.Cloneables (i32.const 1))
   ;;@ cloneable/Cloneables.java:18:13
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> Cloneables.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@cloneable.Cloneables
+(func $$getClassMetadata__java_lang_Class_<once>_@cloneable.Cloneables
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__cloneable_Cloneables) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@cloneable.Cloneables)))
    (then
-    (global.set $f_$class__cloneable_Cloneables (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|cloneable.Cl...|__java_lang_String (ref.func $$getString_|cloneable.Cl...|__java_lang_String@cloneable.Cloneables) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@cloneable.Cloneables))
    )
   )
-  (return (global.get $f_$class__cloneable_Cloneables))
+  (global.set $$class@cloneable.Cloneables (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|cloneable.Cl...|__java_lang_String_<once>_@cloneable.Cloneables )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@cloneable.Cloneables))
  )
 )
 
@@ -274,30 +256,29 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $cloneable.Cloneables))
- (local.set $this (ref.cast_static $cloneable.Cloneables (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $cloneable.Cloneables) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@cloneable.Cloneables) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@cloneable.Cloneables ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@cloneable.Cloneables)
-
-;;; String Cloneables.$getString_|cloneable.Cl...|()
-(func $$getString_|cloneable.Cl...|__java_lang_String@cloneable.Cloneables
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|cloneable.Cl...|__cloneable_Cloneables) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|cloneable.Cl...|__cloneable_Cloneables (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "cloneable.Cloneables")))
-   )
-  )
-  (return (global.get $f_$string_|cloneable.Cl...|__cloneable_Cloneables))
- )
-)
 
 ;;; Code for cloneable.Cloneables.WithoutCloneable [methods]
 
 ;;; WithoutCloneable WithoutCloneable.$create()
 (func $$create__@cloneable.Cloneables.WithoutCloneable
+ (result (ref null $cloneable.Cloneables.WithoutCloneable))
+ ;;@ cloneable/Cloneables.java:19:22
+ (block
+  ;;@ cloneable/Cloneables.java:19:22
+  (call $$clinit__void_<once>_@cloneable.Cloneables.WithoutCloneable )
+  ;;@ cloneable/Cloneables.java:19:22
+  (return (call $$create_$private__@cloneable.Cloneables.WithoutCloneable ))
+ )
+)
+
+;;; WithoutCloneable WithoutCloneable.$create_$private()
+(func $$create_$private__@cloneable.Cloneables.WithoutCloneable
  (result (ref null $cloneable.Cloneables.WithoutCloneable))
  ;;@ cloneable/Cloneables.java:19:22
  (local $$instance (ref null $cloneable.Cloneables.WithoutCloneable))
@@ -317,8 +298,6 @@
  ;;@ cloneable/Cloneables.java:19:22
  (block
   ;;@ cloneable/Cloneables.java:19:22
-  (call $$clinit__void@cloneable.Cloneables.WithoutCloneable )
-  ;;@ cloneable/Cloneables.java:19:22
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -330,42 +309,43 @@
  (result (ref null $java.lang.Object))
  ;;@ cloneable/Cloneables.java:22:18
  (local $this (ref null $cloneable.Cloneables.WithoutCloneable))
- (local.set $this (ref.cast_static $cloneable.Cloneables.WithoutCloneable (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $cloneable.Cloneables.WithoutCloneable) (local.get $this.untyped)))
  (block
   ;;@ cloneable/Cloneables.java:23:6
-  (return (call $$create__@cloneable.Cloneables.WithoutCloneable ))
+  (return (call $$create_$private__@cloneable.Cloneables.WithoutCloneable ))
  )
 )
 (elem declare func $m_clone__java_lang_Object@cloneable.Cloneables.WithoutCloneable)
 
 ;;; void WithoutCloneable.$clinit()
-(func $$clinit__void@cloneable.Cloneables.WithoutCloneable
+(func $$clinit__void_<once>_@cloneable.Cloneables.WithoutCloneable
  ;;@ cloneable/Cloneables.java:19:22
  (block
   ;;@ cloneable/Cloneables.java:19:22
-  (if (global.get $f_$initialized__cloneable_Cloneables_WithoutCloneable)
+  (if (global.get $$class-initialized@cloneable.Cloneables.WithoutCloneable)
    (then
     ;;@ cloneable/Cloneables.java:19:22
     (return )
    )
   )
   ;;@ cloneable/Cloneables.java:19:22
-  (global.set $f_$initialized__cloneable_Cloneables_WithoutCloneable (i32.const 1))
+  (global.set $$class-initialized@cloneable.Cloneables.WithoutCloneable (i32.const 1))
   ;;@ cloneable/Cloneables.java:19:22
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> WithoutCloneable.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@cloneable.Cloneables.WithoutCloneable
+(func $$getClassMetadata__java_lang_Class_<once>_@cloneable.Cloneables.WithoutCloneable
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__cloneable_Cloneables_WithoutCloneable) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@cloneable.Cloneables.WithoutCloneable)))
    (then
-    (global.set $f_$class__cloneable_Cloneables_WithoutCloneable (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|cloneable.Cl...|__java_lang_String (ref.func $$getString_|cloneable.Cl...|__java_lang_String@cloneable.Cloneables.WithoutCloneable) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@cloneable.Cloneables.WithoutCloneable))
    )
   )
-  (return (global.get $f_$class__cloneable_Cloneables_WithoutCloneable))
+  (global.set $$class@cloneable.Cloneables.WithoutCloneable (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|cloneable.Cl...|__java_lang_String_<once>_@cloneable.Cloneables.WithoutCloneable )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@cloneable.Cloneables.WithoutCloneable))
  )
 )
 
@@ -375,30 +355,29 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $cloneable.Cloneables.WithoutCloneable))
- (local.set $this (ref.cast_static $cloneable.Cloneables.WithoutCloneable (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $cloneable.Cloneables.WithoutCloneable) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@cloneable.Cloneables.WithoutCloneable) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@cloneable.Cloneables.WithoutCloneable ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@cloneable.Cloneables.WithoutCloneable)
-
-;;; String WithoutCloneable.$getString_|cloneable.Cl...|()
-(func $$getString_|cloneable.Cl...|__java_lang_String@cloneable.Cloneables.WithoutCloneable
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithoutCloneable) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithoutCloneable (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "cloneable.Cloneables$WithoutCloneable")))
-   )
-  )
-  (return (global.get $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithoutCloneable))
- )
-)
 
 ;;; Code for cloneable.Cloneables.WithCloneable [methods]
 
 ;;; WithCloneable WithCloneable.$create()
 (func $$create__@cloneable.Cloneables.WithCloneable
+ (result (ref null $cloneable.Cloneables.WithCloneable))
+ ;;@ cloneable/Cloneables.java:27:22
+ (block
+  ;;@ cloneable/Cloneables.java:27:22
+  (call $$clinit__void_<once>_@cloneable.Cloneables.WithCloneable )
+  ;;@ cloneable/Cloneables.java:27:22
+  (return (call $$create_$private__@cloneable.Cloneables.WithCloneable ))
+ )
+)
+
+;;; WithCloneable WithCloneable.$create_$private()
+(func $$create_$private__@cloneable.Cloneables.WithCloneable
  (result (ref null $cloneable.Cloneables.WithCloneable))
  ;;@ cloneable/Cloneables.java:27:22
  (local $$instance (ref null $cloneable.Cloneables.WithCloneable))
@@ -418,8 +397,6 @@
  ;;@ cloneable/Cloneables.java:27:22
  (block
   ;;@ cloneable/Cloneables.java:27:22
-  (call $$clinit__void@cloneable.Cloneables.WithCloneable )
-  ;;@ cloneable/Cloneables.java:27:22
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -431,42 +408,43 @@
  (result (ref null $java.lang.Object))
  ;;@ cloneable/Cloneables.java:30:18
  (local $this (ref null $cloneable.Cloneables.WithCloneable))
- (local.set $this (ref.cast_static $cloneable.Cloneables.WithCloneable (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $cloneable.Cloneables.WithCloneable) (local.get $this.untyped)))
  (block
   ;;@ cloneable/Cloneables.java:31:6
-  (return (call $$create__@cloneable.Cloneables.WithCloneable ))
+  (return (call $$create_$private__@cloneable.Cloneables.WithCloneable ))
  )
 )
 (elem declare func $m_clone__java_lang_Object@cloneable.Cloneables.WithCloneable)
 
 ;;; void WithCloneable.$clinit()
-(func $$clinit__void@cloneable.Cloneables.WithCloneable
+(func $$clinit__void_<once>_@cloneable.Cloneables.WithCloneable
  ;;@ cloneable/Cloneables.java:27:22
  (block
   ;;@ cloneable/Cloneables.java:27:22
-  (if (global.get $f_$initialized__cloneable_Cloneables_WithCloneable)
+  (if (global.get $$class-initialized@cloneable.Cloneables.WithCloneable)
    (then
     ;;@ cloneable/Cloneables.java:27:22
     (return )
    )
   )
   ;;@ cloneable/Cloneables.java:27:22
-  (global.set $f_$initialized__cloneable_Cloneables_WithCloneable (i32.const 1))
+  (global.set $$class-initialized@cloneable.Cloneables.WithCloneable (i32.const 1))
   ;;@ cloneable/Cloneables.java:27:22
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> WithCloneable.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@cloneable.Cloneables.WithCloneable
+(func $$getClassMetadata__java_lang_Class_<once>_@cloneable.Cloneables.WithCloneable
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__cloneable_Cloneables_WithCloneable) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@cloneable.Cloneables.WithCloneable)))
    (then
-    (global.set $f_$class__cloneable_Cloneables_WithCloneable (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|cloneable.Cl...|__java_lang_String (ref.func $$getString_|cloneable.Cl...|__java_lang_String@cloneable.Cloneables.WithCloneable) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@cloneable.Cloneables.WithCloneable))
    )
   )
-  (return (global.get $f_$class__cloneable_Cloneables_WithCloneable))
+  (global.set $$class@cloneable.Cloneables.WithCloneable (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|cloneable.Cl...|__java_lang_String_<once>_@cloneable.Cloneables.WithCloneable )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@cloneable.Cloneables.WithCloneable))
  )
 )
 
@@ -476,30 +454,29 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $cloneable.Cloneables.WithCloneable))
- (local.set $this (ref.cast_static $cloneable.Cloneables.WithCloneable (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $cloneable.Cloneables.WithCloneable) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@cloneable.Cloneables.WithCloneable) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@cloneable.Cloneables.WithCloneable ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@cloneable.Cloneables.WithCloneable)
-
-;;; String WithCloneable.$getString_|cloneable.Cl...|()
-(func $$getString_|cloneable.Cl...|__java_lang_String@cloneable.Cloneables.WithCloneable
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithCloneable) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithCloneable (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "cloneable.Cloneables$WithCloneable")))
-   )
-  )
-  (return (global.get $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithCloneable))
- )
-)
 
 ;;; Code for cloneable.Cloneables.WithoutCloneableChild [methods]
 
 ;;; WithoutCloneableChild WithoutCloneableChild.$create()
 (func $$create__@cloneable.Cloneables.WithoutCloneableChild
+ (result (ref null $cloneable.Cloneables.WithoutCloneableChild))
+ ;;@ cloneable/Cloneables.java:35:28
+ (block
+  ;;@ cloneable/Cloneables.java:35:28
+  (call $$clinit__void_<once>_@cloneable.Cloneables.WithoutCloneableChild )
+  ;;@ cloneable/Cloneables.java:35:28
+  (return (call $$create_$private__@cloneable.Cloneables.WithoutCloneableChild ))
+ )
+)
+
+;;; WithoutCloneableChild WithoutCloneableChild.$create_$private()
+(func $$create_$private__@cloneable.Cloneables.WithoutCloneableChild
  (result (ref null $cloneable.Cloneables.WithoutCloneableChild))
  ;;@ cloneable/Cloneables.java:35:28
  (local $$instance (ref null $cloneable.Cloneables.WithoutCloneableChild))
@@ -519,8 +496,6 @@
  ;;@ cloneable/Cloneables.java:35:28
  (block
   ;;@ cloneable/Cloneables.java:35:28
-  (call $$clinit__void@cloneable.Cloneables.WithoutCloneableChild )
-  ;;@ cloneable/Cloneables.java:35:28
   (call $$ctor__void_$p_cloneable_Cloneables_WithoutCloneable@cloneable.Cloneables.WithoutCloneable (ref.as_non_null (local.get $this)))
  )
 )
@@ -532,42 +507,43 @@
  (result (ref null $java.lang.Object))
  ;;@ cloneable/Cloneables.java:37:18
  (local $this (ref null $cloneable.Cloneables.WithoutCloneableChild))
- (local.set $this (ref.cast_static $cloneable.Cloneables.WithoutCloneableChild (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $cloneable.Cloneables.WithoutCloneableChild) (local.get $this.untyped)))
  (block
   ;;@ cloneable/Cloneables.java:38:6
-  (return (call $$create__@cloneable.Cloneables.WithoutCloneableChild ))
+  (return (call $$create_$private__@cloneable.Cloneables.WithoutCloneableChild ))
  )
 )
 (elem declare func $m_clone__java_lang_Object@cloneable.Cloneables.WithoutCloneableChild)
 
 ;;; void WithoutCloneableChild.$clinit()
-(func $$clinit__void@cloneable.Cloneables.WithoutCloneableChild
+(func $$clinit__void_<once>_@cloneable.Cloneables.WithoutCloneableChild
  ;;@ cloneable/Cloneables.java:35:28
  (block
   ;;@ cloneable/Cloneables.java:35:28
-  (if (global.get $f_$initialized__cloneable_Cloneables_WithoutCloneableChild)
+  (if (global.get $$class-initialized@cloneable.Cloneables.WithoutCloneableChild)
    (then
     ;;@ cloneable/Cloneables.java:35:28
     (return )
    )
   )
   ;;@ cloneable/Cloneables.java:35:28
-  (global.set $f_$initialized__cloneable_Cloneables_WithoutCloneableChild (i32.const 1))
+  (global.set $$class-initialized@cloneable.Cloneables.WithoutCloneableChild (i32.const 1))
   ;;@ cloneable/Cloneables.java:35:28
-  (call $$clinit__void@cloneable.Cloneables.WithoutCloneable )
+  (call $$clinit__void_<once>_@cloneable.Cloneables.WithoutCloneable )
  )
 )
 
 ;;; Class<T> WithoutCloneableChild.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@cloneable.Cloneables.WithoutCloneableChild
+(func $$getClassMetadata__java_lang_Class_<once>_@cloneable.Cloneables.WithoutCloneableChild
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__cloneable_Cloneables_WithoutCloneableChild) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@cloneable.Cloneables.WithoutCloneableChild)))
    (then
-    (global.set $f_$class__cloneable_Cloneables_WithoutCloneableChild (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|cloneable.Cl...|__java_lang_String (ref.func $$getString_|cloneable.Cl...|__java_lang_String@cloneable.Cloneables.WithoutCloneableChild) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@cloneable.Cloneables.WithoutCloneable) )))
+    (return (global.get $$class@cloneable.Cloneables.WithoutCloneableChild))
    )
   )
-  (return (global.get $f_$class__cloneable_Cloneables_WithoutCloneableChild))
+  (global.set $$class@cloneable.Cloneables.WithoutCloneableChild (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|cloneable.Cl...|__java_lang_String_<once>_@cloneable.Cloneables.WithoutCloneableChild )(call $$getClassMetadata__java_lang_Class_<once>_@cloneable.Cloneables.WithoutCloneable )))
+  (return (global.get $$class@cloneable.Cloneables.WithoutCloneableChild))
  )
 )
 
@@ -577,30 +553,29 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $cloneable.Cloneables.WithoutCloneableChild))
- (local.set $this (ref.cast_static $cloneable.Cloneables.WithoutCloneableChild (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $cloneable.Cloneables.WithoutCloneableChild) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@cloneable.Cloneables.WithoutCloneableChild) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@cloneable.Cloneables.WithoutCloneableChild ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@cloneable.Cloneables.WithoutCloneableChild)
-
-;;; String WithoutCloneableChild.$getString_|cloneable.Cl...|()
-(func $$getString_|cloneable.Cl...|__java_lang_String@cloneable.Cloneables.WithoutCloneableChild
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithoutCloneableChild) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithoutCloneableChild (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "cloneable.Cloneables$WithoutCloneableChild")))
-   )
-  )
-  (return (global.get $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithoutCloneableChild))
- )
-)
 
 ;;; Code for cloneable.Cloneables.WithCloneableChild [methods]
 
 ;;; WithCloneableChild WithCloneableChild.$create()
 (func $$create__@cloneable.Cloneables.WithCloneableChild
+ (result (ref null $cloneable.Cloneables.WithCloneableChild))
+ ;;@ cloneable/Cloneables.java:42:28
+ (block
+  ;;@ cloneable/Cloneables.java:42:28
+  (call $$clinit__void_<once>_@cloneable.Cloneables.WithCloneableChild )
+  ;;@ cloneable/Cloneables.java:42:28
+  (return (call $$create_$private__@cloneable.Cloneables.WithCloneableChild ))
+ )
+)
+
+;;; WithCloneableChild WithCloneableChild.$create_$private()
+(func $$create_$private__@cloneable.Cloneables.WithCloneableChild
  (result (ref null $cloneable.Cloneables.WithCloneableChild))
  ;;@ cloneable/Cloneables.java:42:28
  (local $$instance (ref null $cloneable.Cloneables.WithCloneableChild))
@@ -620,8 +595,6 @@
  ;;@ cloneable/Cloneables.java:42:28
  (block
   ;;@ cloneable/Cloneables.java:42:28
-  (call $$clinit__void@cloneable.Cloneables.WithCloneableChild )
-  ;;@ cloneable/Cloneables.java:42:28
   (call $$ctor__void_$p_cloneable_Cloneables_WithCloneable@cloneable.Cloneables.WithCloneable (ref.as_non_null (local.get $this)))
  )
 )
@@ -633,42 +606,43 @@
  (result (ref null $java.lang.Object))
  ;;@ cloneable/Cloneables.java:44:18
  (local $this (ref null $cloneable.Cloneables.WithCloneableChild))
- (local.set $this (ref.cast_static $cloneable.Cloneables.WithCloneableChild (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $cloneable.Cloneables.WithCloneableChild) (local.get $this.untyped)))
  (block
   ;;@ cloneable/Cloneables.java:45:6
-  (return (call $$create__@cloneable.Cloneables.WithCloneableChild ))
+  (return (call $$create_$private__@cloneable.Cloneables.WithCloneableChild ))
  )
 )
 (elem declare func $m_clone__java_lang_Object@cloneable.Cloneables.WithCloneableChild)
 
 ;;; void WithCloneableChild.$clinit()
-(func $$clinit__void@cloneable.Cloneables.WithCloneableChild
+(func $$clinit__void_<once>_@cloneable.Cloneables.WithCloneableChild
  ;;@ cloneable/Cloneables.java:42:28
  (block
   ;;@ cloneable/Cloneables.java:42:28
-  (if (global.get $f_$initialized__cloneable_Cloneables_WithCloneableChild)
+  (if (global.get $$class-initialized@cloneable.Cloneables.WithCloneableChild)
    (then
     ;;@ cloneable/Cloneables.java:42:28
     (return )
    )
   )
   ;;@ cloneable/Cloneables.java:42:28
-  (global.set $f_$initialized__cloneable_Cloneables_WithCloneableChild (i32.const 1))
+  (global.set $$class-initialized@cloneable.Cloneables.WithCloneableChild (i32.const 1))
   ;;@ cloneable/Cloneables.java:42:28
-  (call $$clinit__void@cloneable.Cloneables.WithCloneable )
+  (call $$clinit__void_<once>_@cloneable.Cloneables.WithCloneable )
  )
 )
 
 ;;; Class<T> WithCloneableChild.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@cloneable.Cloneables.WithCloneableChild
+(func $$getClassMetadata__java_lang_Class_<once>_@cloneable.Cloneables.WithCloneableChild
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__cloneable_Cloneables_WithCloneableChild) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@cloneable.Cloneables.WithCloneableChild)))
    (then
-    (global.set $f_$class__cloneable_Cloneables_WithCloneableChild (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|cloneable.Cl...|__java_lang_String (ref.func $$getString_|cloneable.Cl...|__java_lang_String@cloneable.Cloneables.WithCloneableChild) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@cloneable.Cloneables.WithCloneable) )))
+    (return (global.get $$class@cloneable.Cloneables.WithCloneableChild))
    )
   )
-  (return (global.get $f_$class__cloneable_Cloneables_WithCloneableChild))
+  (global.set $$class@cloneable.Cloneables.WithCloneableChild (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|cloneable.Cl...|__java_lang_String_<once>_@cloneable.Cloneables.WithCloneableChild )(call $$getClassMetadata__java_lang_Class_<once>_@cloneable.Cloneables.WithCloneable )))
+  (return (global.get $$class@cloneable.Cloneables.WithCloneableChild))
  )
 )
 
@@ -678,22 +652,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $cloneable.Cloneables.WithCloneableChild))
- (local.set $this (ref.cast_static $cloneable.Cloneables.WithCloneableChild (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $cloneable.Cloneables.WithCloneableChild) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@cloneable.Cloneables.WithCloneableChild) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@cloneable.Cloneables.WithCloneableChild ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@cloneable.Cloneables.WithCloneableChild)
-
-;;; String WithCloneableChild.$getString_|cloneable.Cl...|()
-(func $$getString_|cloneable.Cl...|__java_lang_String@cloneable.Cloneables.WithCloneableChild
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithCloneableChild) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithCloneableChild (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "cloneable.Cloneables$WithCloneableChild")))
-   )
-  )
-  (return (global.get $f_$string_|cloneable.Cl...|__cloneable_Cloneables_WithCloneableChild))
- )
-)

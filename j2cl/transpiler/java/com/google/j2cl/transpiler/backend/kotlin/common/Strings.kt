@@ -15,12 +15,25 @@
  */
 package com.google.j2cl.transpiler.backend.kotlin.common
 
+/**
+ * Returns whether this camel-case string starts with the given prefix, followed by a non-empty
+ * substring.
+ */
 fun String.camelCaseStartsWith(prefix: String): Boolean =
-  startsWith(prefix) && getOrNull(prefix.length).run { this == null || !isLowerCase() }
+  startsWith(prefix) && getOrNull(prefix.length).run { this != null && !isLowerCase() }
 
-val String.titleCase
+/** Returns title-cased version of this string. */
+val String.titleCased: String
   get() = replaceFirstChar { it.toUpperCase() }
 
-// TODO(b/204366308): Remove after switch to Kotlin 1.5.
-fun String.replaceFirstChar(fn: (Char) -> Char): String =
-  firstOrNull()?.let { fn(it) + drop(1) } ?: this
+/** Returns this string in single quotes. */
+val String.inSingleQuotes: String
+  get() = "'$this'"
+
+/** Returns this string in back-ticks. */
+val String.inBackTicks: String
+  get() = "`$this`"
+
+/** Returns this string in double quotes. */
+val String.inDoubleQuotes: String
+  get() = "\"$this\""

@@ -23,7 +23,7 @@ j2cl_library(
     generate_j2kt_native_library = False,
     deps = [
         ":native_types-j2cl",
-        "//third_party:gwt-jsinterop-annotations-j2cl",
+        "//third_party:jsinterop-annotations-j2cl",
     ],
 )
 

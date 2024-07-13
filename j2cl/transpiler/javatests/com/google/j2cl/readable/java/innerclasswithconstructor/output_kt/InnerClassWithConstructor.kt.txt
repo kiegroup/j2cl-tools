@@ -9,6 +9,7 @@
  "UNNECESSARY_LATEINIT",
  "UNNECESSARY_NOT_NULL_ASSERTION",
  "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
  "UNUSED_PARAMETER",
  "UNUSED_VARIABLE",
  "USELESS_CAST",
@@ -44,7 +45,7 @@ open class InnerClassWithConstructor {
   constructor(): this(this@InnerClassWithConstructor.a)
  }
 
- open inner class InnerClassWithSingleConstructor(
+ open inner class InnerClassWithSingleConstructor constructor(
   @ObjCName("Int") b: Int
  ) {
   @JvmField

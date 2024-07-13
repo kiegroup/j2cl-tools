@@ -69,9 +69,9 @@ alias(
     actual = "@com_sun_tools_javac//jar",
 )
 
-sh_binary(
+alias(
     name = "binaryen",
-    srcs = ["binaryen.sh"],
+    actual = "@com_google_binaryen//:wasm-opt",
 )
 
 alias(
@@ -179,13 +179,19 @@ alias(
 )
 
 alias(
-    name = "gwt-jsinterop-annotations",
+    name = "jsinterop-annotations",
     actual = "@com_google_jsinterop_annotations-j2cl//:jsinterop-annotations",
 )
 
 j2cl_alias(
-    name = "gwt-jsinterop-annotations-j2cl",
+    name = "jsinterop-annotations-j2cl",
     actual = "@com_google_jsinterop_annotations-j2cl//:jsinterop-annotations-j2cl",
+)
+
+alias(
+    name = "jsinterop-annotations-j2cl_jar",
+    actual = "@com_google_jsinterop_annotations-j2cl//java/jsinterop/annotations:annotations-j2cl_jar",
+    visibility = ["//jre/java:__pkg__"],
 )
 
 # Reimport the jar file without "neverlink=1" so we can use it as a runtime dependency

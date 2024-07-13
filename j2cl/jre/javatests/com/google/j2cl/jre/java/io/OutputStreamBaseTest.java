@@ -15,7 +15,7 @@
  */
 package com.google.j2cl.jre.java.io;
 
-import com.google.gwt.junit.client.GWTTestCase;
+import com.google.j2cl.jre.testing.J2ktIncompatible;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -41,6 +41,9 @@ public abstract class OutputStreamBaseTest extends GWTTestCase {
    */
   protected abstract byte[] getBytesWritten();
 
+<<<<<<< HEAD
+  @J2ktIncompatible // Not nullable according to jspecify.
+=======
   /**
    * Sets module name so that javascript compiler can operate.
    */
@@ -49,6 +52,7 @@ public abstract class OutputStreamBaseTest extends GWTTestCase {
     return "com.google.gwt.emultest.EmulSuite";
   }
 
+>>>>>>> 67956f054c (Revert "Remove GWTTestCase from J2CL unit tests.")
   public void testWriteArrayUsingNullArrayObject() throws IOException {
     final OutputStream outputStream = createDefaultOutputStream();
     try {
@@ -121,6 +125,7 @@ public abstract class OutputStreamBaseTest extends GWTTestCase {
     assertTrue(Arrays.equals(expected, getBytesWritten()));
   }
 
+  @J2ktIncompatible // Not nullable according to Jspecify
   public void testWriteArrayUsingNullArrayObjectAndNoOffset() throws IOException {
     final OutputStream outputStream = createDefaultOutputStream();
     try {

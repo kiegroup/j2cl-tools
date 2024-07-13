@@ -28,6 +28,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.j2cl.common.ThreadLocalInterner;
+import com.google.j2cl.common.visitor.Processor;
+import com.google.j2cl.common.visitor.Visitable;
 import com.google.j2cl.transpiler.ast.FieldDescriptor.FieldOrigin;
 import com.google.j2cl.transpiler.ast.TypeDeclaration.SourceLanguage;
 import java.util.ArrayList;
@@ -45,6 +47,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /** A reference to a method. */
+@Visitable
 @AutoValue
 public abstract class MethodDescriptor extends MemberDescriptor {
   /** A method parameter descriptor */
@@ -121,7 +124,9 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     SYNTHETIC_LAMBDA_ADAPTOR_CONSTRUCTOR("<synthetic: lambda_adaptor_ctor>"),
     SYNTHETIC_CLASS_LITERAL_GETTER,
     SYNTHETIC_STRING_LITERAL_GETTER,
-    INSTANCE_OF_SUPPORT_METHOD,
+    SYNTHETIC_SYSTEM_PROPERTY_GETTER_OPTIONAL,
+    SYNTHETIC_SYSTEM_PROPERTY_GETTER_REQUIRED,
+    SYNTHETIC_INSTANCE_OF_SUPPORT_METHOD,
     GENERALIZING_BRIDGE, // Bridges a more general signature to a more specific one.
     SPECIALIZING_BRIDGE, // Bridges a more specific signature to a more general one.
     DEFAULT_METHOD_BRIDGE, // Bridges to a default method interface.
@@ -159,6 +164,11 @@ public abstract class MethodDescriptor extends MemberDescriptor {
         case ABSTRACT_STUB:
           return "m_";
           // Getters and setters need to be mangled as fields.
+        case SYNTHETIC_SYSTEM_PROPERTY_GETTER_REQUIRED:
+        case SYNTHETIC_SYSTEM_PROPERTY_GETTER_OPTIONAL:
+          // Synthetic property getters use the name of the property as the name of the method hence
+          // they don't start with "$" and the prefix needs to be added here.
+          return "$";
         case SYNTHETIC_PROPERTY_SETTER:
         case SYNTHETIC_PROPERTY_GETTER:
           return FieldOrigin.SOURCE.getPrefix();
@@ -169,21 +179,57 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     }
 
     @Override
-    public boolean isInstanceOfSupportMember() {
-      return this == INSTANCE_OF_SUPPORT_METHOD;
+    public boolean isSyntheticInstanceOfSupportMember() {
+      return this == SYNTHETIC_INSTANCE_OF_SUPPORT_METHOD;
+    }
+
+    public boolean isOnceMethod() {
+      switch (this) {
+        case SYNTHETIC_CLASS_INITIALIZER:
+        case SYNTHETIC_CLASS_LITERAL_GETTER:
+        case SYNTHETIC_STRING_LITERAL_GETTER:
+        case SYNTHETIC_SYSTEM_PROPERTY_GETTER_OPTIONAL:
+        case SYNTHETIC_SYSTEM_PROPERTY_GETTER_REQUIRED:
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    public boolean isSystemGetPropertyGetter() {
+      switch (this) {
+        case SYNTHETIC_SYSTEM_PROPERTY_GETTER_OPTIONAL:
+        case SYNTHETIC_SYSTEM_PROPERTY_GETTER_REQUIRED:
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    public boolean isRequiredSystemGetPropertyGetter() {
+      return this == SYNTHETIC_SYSTEM_PROPERTY_GETTER_REQUIRED;
     }
   }
 
+  // TODO(b/317164851): Remove hack that makes jsinfo ignored for non-native types in Wasm.
+  private static final ThreadLocal<Boolean> ignoreNonNativeJsInfo =
+      ThreadLocal.withInitial(() -> false);
+
+  public static void setIgnoreNonNativeJsInfo() {
+    ignoreNonNativeJsInfo.set(true);
+  }
+
   public static final String CONSTRUCTOR_METHOD_NAME = "<init>";
-  public static final String INIT_METHOD_NAME = "$init";
   public static final String CTOR_METHOD_PREFIX = "$ctor";
-  public static final String CLINIT_METHOD_NAME = "$clinit";
-  public static final String VALUE_OF_METHOD_NAME = "valueOf"; // Boxed type valueOf() method.
-  public static final String IS_INSTANCE_METHOD_NAME = "$isInstance";
-  public static final String MARK_IMPLEMENTOR_METHOD_NAME = "$markImplementor";
   public static final String CREATE_METHOD_NAME = "$create";
-  public static final String LOAD_MODULES_METHOD_NAME = "$loadModules";
-  public static final String COPY_METHOD_NAME = "$copy";
+  public static final String VALUE_OF_METHOD_NAME = "valueOf"; // Boxed type valueOf() method.
+
+  static final String INIT_METHOD_NAME = "$init";
+  static final String CLINIT_METHOD_NAME = "$clinit";
+  static final String IS_INSTANCE_METHOD_NAME = "$isInstance";
+  static final String MARK_IMPLEMENTOR_METHOD_NAME = "$markImplementor";
+  static final String LOAD_MODULES_METHOD_NAME = "$loadModules";
+  static final String COPY_METHOD_NAME = "$copy";
 
   public static String buildMethodSignature(
       String name, TypeDescriptor... parameterTypeDescriptors) {
@@ -394,10 +440,6 @@ public abstract class MethodDescriptor extends MemberDescriptor {
   }
 
   /** Removes the type parameters declared in the method. */
-  // TODO(b/13096948): This is only needed to remove the type parameters from JsFunction
-  // methods. JsCompiler does not have a way to represent type parameterized function types; if
-  // typedefs were allowed templates, J2CL could represent JsFunctions using typedefs allowing
-  // the methods be parameterized.
   @Memoized
   public MethodDescriptor withoutTypeParameters() {
 
@@ -413,6 +455,11 @@ public abstract class MethodDescriptor extends MemberDescriptor {
         .setTypeParameterTypeDescriptors(ImmutableList.of())
         .setTypeArgumentTypeDescriptors(ImmutableList.of())
         .build();
+  }
+
+  @Override
+  public boolean isJsProperty() {
+    return isJsPropertySetter() || isJsPropertyGetter();
   }
 
   /**
@@ -465,10 +512,6 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     return isInstanceMember() && !getVisibility().isPrivate();
   }
 
-  public boolean isClassDynamicDispatch() {
-    return isPolymorphic() && !getEnclosingTypeDescriptor().isInterface();
-  }
-
   @Override
   public boolean isMethod() {
     return true;
@@ -513,6 +556,14 @@ public abstract class MethodDescriptor extends MemberDescriptor {
 
     checkState(isDeclaration());
     JsInfo originalJsInfo = getOriginalJsInfo();
+
+    // Make the implicit constructor of an anonymous class extending a JsType with JsConstructor
+    // automatically a JsConstructor.
+    if (getEnclosingTypeDescriptor().getTypeDeclaration().isAnonymous()
+        && isConstructor()
+        && getEnclosingTypeDescriptor().getSuperTypeDescriptor().hasJsConstructor()) {
+      return JsInfo.Builder.from(originalJsInfo).setJsMemberType(JsMemberType.CONSTRUCTOR).build();
+    }
 
     if (originalJsInfo.isJsOverlay()
         || originalJsInfo.getJsName() != null
@@ -617,6 +668,13 @@ public abstract class MethodDescriptor extends MemberDescriptor {
 
   public abstract boolean isEnumSyntheticMethod();
 
+  @Override
+  public boolean isCustomIsInstanceMethod() {
+    return getOrigin() == MethodOrigin.SOURCE
+        && getParameterDescriptors().size() == 1
+        && getName().equals(IS_INSTANCE_METHOD_NAME);
+  }
+
   @Nullable
   public String getObjectiveCName() {
     KtObjcInfo ktObjcInfo = getKtObjcInfo();
@@ -676,7 +734,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
         return getSimpleJsName();
       }
 
-      if (getOrigin().isInstanceOfSupportMember()) {
+      if (getOrigin().isSyntheticInstanceOfSupportMember() || isCustomIsInstanceMethod()) {
         // Class support methods, like $isInstance and $markImplementor, should not be mangled.
         return getName();
       }
@@ -1056,8 +1114,21 @@ public abstract class MethodDescriptor extends MemberDescriptor {
                     typeDescriptor.specializeTypeVariables(replacingTypeDescriptorByTypeVariable))
             .collect(toImmutableList());
 
+    // Specializing a declaration means specializing the type parameters; whereas specializing a
+    // usage site, means specializing the type variables that might appear in the current
+    // type arguments.
+    ImmutableList<TypeDescriptor> specializedTypeArgumentDescriptors =
+        (isDeclaration() ? getTypeParameterTypeDescriptors() : getTypeArgumentTypeDescriptors())
+            .stream()
+                .map(
+                    typeDescriptor ->
+                        typeDescriptor.specializeTypeVariables(
+                            replacingTypeDescriptorByTypeVariable))
+                .collect(toImmutableList());
+
     return MethodDescriptor.Builder.from(this)
         .setDeclarationDescriptor(getDeclarationDescriptor())
+        .setTypeArgumentTypeDescriptors(specializedTypeArgumentDescriptors)
         .setReturnTypeDescriptor(specializedReturnTypeDescriptor)
         .updateParameterTypeDescriptors(specializedParameterTypeDescriptors)
         .setEnclosingTypeDescriptor(
@@ -1122,6 +1193,11 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     return sb.toString();
   }
 
+  @Override
+  MemberDescriptor acceptInternal(Processor processor) {
+    return Visitor_MethodDescriptor.visit(processor, this);
+  }
+
   /** A Builder for MethodDescriptors. */
   @AutoValue.Builder
   public abstract static class Builder {
@@ -1147,9 +1223,9 @@ public abstract class MethodDescriptor extends MemberDescriptor {
           .setOrigin(MethodOrigin.ABSTRACT_STUB)
           .setBridgeTarget(null)
           .setSynthetic(true)
+          .makeDeclaration()
           // Clear properties that might have been carried over when creating this
           // descriptor from an existing one.
-          .setDeclarationDescriptor(null)
           .setDefaultMethod(false)
           .setAbstract(true)
           .setNative(false)
@@ -1163,14 +1239,18 @@ public abstract class MethodDescriptor extends MemberDescriptor {
       return setBridgeOrigin(originDescriptor)
           .setOrigin(methodOrigin)
           .setBridgeTarget(targetDescriptor)
+          .makeDeclaration()
           .setSynthetic(true)
           // Clear properties that might have been carried over when creating this
           // descriptor from an existing one.
-          .setDeclarationDescriptor(null)
           .setDefaultMethod(false)
           .setAbstract(false)
           .setNative(false)
           .setUncheckedCast(false);
+    }
+
+    public Builder makeDeclaration() {
+      return setDeclarationDescriptor(null).setTypeArgumentTypeDescriptors(ImmutableList.of());
     }
 
     /** Internal use only. Use {@link #makeBridge}. */
@@ -1327,12 +1407,19 @@ public abstract class MethodDescriptor extends MemberDescriptor {
 
     abstract boolean isConstructor();
 
+    abstract boolean isNative();
+
     abstract MethodDescriptor autoBuild();
 
     public MethodDescriptor build() {
       if (isConstructor()) {
         setReturnTypeDescriptor(getEnclosingTypeDescriptor().toNonNullable());
         setName(CONSTRUCTOR_METHOD_NAME);
+      }
+
+      boolean isNative = isNative() || getEnclosingTypeDescriptor().isNative();
+      if (!isNative && ignoreNonNativeJsInfo.get()) {
+        setOriginalJsInfo(JsInfo.NONE);
       }
 
       MethodDescriptor methodDescriptor = autoBuild();
@@ -1389,7 +1476,8 @@ public abstract class MethodDescriptor extends MemberDescriptor {
 
         checkState(
             methodDescriptor.getTypeParameterTypeDescriptors().stream()
-                .noneMatch(TypeVariable::isNullable));
+                .map(TypeVariable::getNullabilityAnnotation)
+                .allMatch(Predicate.isEqual(NullabilityAnnotation.NONE)));
 
         // Check that the properties of the declaration descriptor are consistent with those
         // of the method descriptor itself.

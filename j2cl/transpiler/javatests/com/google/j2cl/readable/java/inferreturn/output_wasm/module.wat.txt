@@ -1,40 +1,54 @@
- ;;; Code for inferreturn.InferReturn [type definition]
- (type $inferreturn.InferReturn (struct_subtype
-  (field $vtable (ref $inferreturn.InferReturn.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $inferreturn.InferReturn.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  $java.lang.Object.vtable)
- )
+;;; Code for inferreturn.InferReturn [type definition]
+(type $inferreturn.InferReturn.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ ))
+)
+(type $inferreturn.InferReturn (sub $java.lang.Object (struct
+ (field $vtable (ref $inferreturn.InferReturn.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
+;;; Code for inferreturn.InferReturn [imports]
+
+;;; Code for inferreturn.InferReturn [static fields]
+(global $$class-initialized@inferreturn.InferReturn (mut i32)
+ (i32.const 0)
+)
+(global $$class@inferreturn.InferReturn (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
 
 ;;; Code for inferreturn.InferReturn [vtable.init]
 (global $inferreturn.InferReturn.vtable (ref $inferreturn.InferReturn.vtable)
  (struct.new $inferreturn.InferReturn.vtable
+  (ref.func $$getClassImpl__java_lang_Class@inferreturn.InferReturn)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@inferreturn.InferReturn)
  )
 )
-
-;;; Code for inferreturn.InferReturn [static fields]
-(global $f_$initialized__inferreturn_InferReturn (mut i32) (i32.const 0))
-(global $f_$class__inferreturn_InferReturn (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|foo|__inferreturn_InferReturn (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-(global $f_$string_|inferreturn....|__inferreturn_InferReturn (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
 
 ;;; Code for inferreturn.InferReturn [methods]
 
 ;;; InferReturn<T> InferReturn.$create()
 (func $$create__@inferreturn.InferReturn
+ (result (ref null $inferreturn.InferReturn))
+ ;;@ inferreturn/InferReturn.java:21:13
+ (block
+  ;;@ inferreturn/InferReturn.java:21:13
+  (call $$clinit__void_<once>_@inferreturn.InferReturn )
+  ;;@ inferreturn/InferReturn.java:21:13
+  (return (call $$create_$private__@inferreturn.InferReturn ))
+ )
+)
+
+;;; InferReturn<T> InferReturn.$create_$private()
+(func $$create_$private__@inferreturn.InferReturn
  (result (ref null $inferreturn.InferReturn))
  ;;@ inferreturn/InferReturn.java:21:13
  (local $$instance (ref null $inferreturn.InferReturn))
@@ -54,22 +68,31 @@
  ;;@ inferreturn/InferReturn.java:21:13
  (block
   ;;@ inferreturn/InferReturn.java:21:13
-  (call $$clinit__void@inferreturn.InferReturn )
-  ;;@ inferreturn/InferReturn.java:21:13
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
 
-;;; InferReturn<T> InferReturn.inferGeneric(T foo)
+;;; InferReturn<T> InferReturn.inferGeneric(T arg0)
 (func $m_inferGeneric__java_lang_Object__inferreturn_InferReturn@inferreturn.InferReturn
+ (param $arg0 (ref null $java.lang.Object))
+ (result (ref null $inferreturn.InferReturn))
+ ;;@ inferreturn/InferReturn.java:23:35
+ (block
+  ;;@ inferreturn/InferReturn.java:23:35
+  (call $$clinit__void_<once>_@inferreturn.InferReturn )
+  ;;@ inferreturn/InferReturn.java:23:35
+  (return (call $m_inferGeneric_$private__java_lang_Object__inferreturn_InferReturn@inferreturn.InferReturn (local.get $arg0)))
+ )
+)
+
+;;; InferReturn<T> InferReturn.inferGeneric_$private(T foo)
+(func $m_inferGeneric_$private__java_lang_Object__inferreturn_InferReturn@inferreturn.InferReturn
  (param $foo (ref null $java.lang.Object))
  (result (ref null $inferreturn.InferReturn))
  ;;@ inferreturn/InferReturn.java:23:35
  (block
-  ;;@ inferreturn/InferReturn.java:23:55
-  (call $$clinit__void@inferreturn.InferReturn )
   ;;@ inferreturn/InferReturn.java:24:4
-  (return (call $$create__@inferreturn.InferReturn ))
+  (return (call $$create_$private__@inferreturn.InferReturn ))
  )
 )
 
@@ -80,13 +103,13 @@
  ;;@ inferreturn/InferReturn.java:27:49
  (block
   ;;@ inferreturn/InferReturn.java:27:86
-  (call $$clinit__void@inferreturn.InferReturn )
+  (call $$clinit__void_<once>_@inferreturn.InferReturn )
   ;;@ inferreturn/InferReturn.java:28:4
   (if (i32.eqz (ref.is_null (local.get $foo)))
    (then
     (block
      ;;@ inferreturn/InferReturn.java:31:6
-     (return (call $m_inferGeneric__java_lang_Object__inferreturn_InferReturn@inferreturn.InferReturn (local.get $foo)))
+     (return (call $m_inferGeneric_$private__java_lang_Object__inferreturn_InferReturn@inferreturn.InferReturn (local.get $foo)))
     )
    )
   )
@@ -102,92 +125,135 @@
  (local $array (ref null $javaemul.internal.WasmArray.OfObject))
  (block
   ;;@ inferreturn/InferReturn.java:36:28
-  (call $$clinit__void@inferreturn.InferReturn )
+  (call $$clinit__void_<once>_@inferreturn.InferReturn )
   ;;@ inferreturn/InferReturn.java:37:4
-  (local.set $list (call $m_newArrayList__java_lang_Object__java_util_ArrayList@inferreturn.InferReturn (call $function.no.side.effects.$getString_|foo|__java_lang_String (ref.func $$getString_|foo|__java_lang_String@inferreturn.InferReturn) )))
+  (local.set $list (call $m_newArrayList_$private__java_lang_Object__java_util_ArrayList@inferreturn.InferReturn (call $$getString_|foo|__java_lang_String_<once>_@inferreturn.InferReturn )))
   ;;@ inferreturn/InferReturn.java:39:4
-  (call $m_acceptsArrayListOfObject__java_util_ArrayList__void@inferreturn.InferReturn (local.get $list))
+  (call $m_acceptsArrayListOfObject_$private__java_util_ArrayList__void@inferreturn.InferReturn (local.get $list))
   ;;@ inferreturn/InferReturn.java:41:4
-  (local.set $array (call $m_newArray__java_lang_Object__arrayOf_java_lang_Object@inferreturn.InferReturn (call $function.no.side.effects.$getString_|foo|__java_lang_String (ref.func $$getString_|foo|__java_lang_String@inferreturn.InferReturn) )))
+  (local.set $array (call $m_newArray_$private__java_lang_Object__arrayOf_java_lang_Object@inferreturn.InferReturn (call $$getString_|foo|__java_lang_String_<once>_@inferreturn.InferReturn )))
   ;;@ inferreturn/InferReturn.java:43:4
-  (call $m_acceptsArrayOfObject__arrayOf_java_lang_Object__void@inferreturn.InferReturn (local.get $array))
+  (call $m_acceptsArrayOfObject_$private__arrayOf_java_lang_Object__void@inferreturn.InferReturn (local.get $array))
  )
 )
 
-;;; ArrayList<V> InferReturn.newArrayList(V foo)
+;;; ArrayList<V> InferReturn.newArrayList(V arg0)
 (func $m_newArrayList__java_lang_Object__java_util_ArrayList@inferreturn.InferReturn
+ (param $arg0 (ref null $java.lang.Object))
+ (result (ref null $java.util.ArrayList))
+ ;;@ inferreturn/InferReturn.java:46:33
+ (block
+  ;;@ inferreturn/InferReturn.java:46:33
+  (call $$clinit__void_<once>_@inferreturn.InferReturn )
+  ;;@ inferreturn/InferReturn.java:46:33
+  (return (call $m_newArrayList_$private__java_lang_Object__java_util_ArrayList@inferreturn.InferReturn (local.get $arg0)))
+ )
+)
+
+;;; ArrayList<V> InferReturn.newArrayList_$private(V foo)
+(func $m_newArrayList_$private__java_lang_Object__java_util_ArrayList@inferreturn.InferReturn
  (param $foo (ref null $java.lang.Object))
  (result (ref null $java.util.ArrayList))
  ;;@ inferreturn/InferReturn.java:46:33
  (block
-  ;;@ inferreturn/InferReturn.java:46:53
-  (call $$clinit__void@inferreturn.InferReturn )
   ;;@ inferreturn/InferReturn.java:47:4
   (return (call $$create__@java.util.ArrayList ))
  )
 )
 
-;;; V[] InferReturn.newArray(V foo)
+;;; V[] InferReturn.newArray(V arg0)
 (func $m_newArray__java_lang_Object__arrayOf_java_lang_Object@inferreturn.InferReturn
+ (param $arg0 (ref null $java.lang.Object))
+ (result (ref null $javaemul.internal.WasmArray.OfObject))
+ ;;@ inferreturn/InferReturn.java:50:24
+ (block
+  ;;@ inferreturn/InferReturn.java:50:24
+  (call $$clinit__void_<once>_@inferreturn.InferReturn )
+  ;;@ inferreturn/InferReturn.java:50:24
+  (return (call $m_newArray_$private__java_lang_Object__arrayOf_java_lang_Object@inferreturn.InferReturn (local.get $arg0)))
+ )
+)
+
+;;; V[] InferReturn.newArray_$private(V foo)
+(func $m_newArray_$private__java_lang_Object__arrayOf_java_lang_Object@inferreturn.InferReturn
  (param $foo (ref null $java.lang.Object))
  (result (ref null $javaemul.internal.WasmArray.OfObject))
  ;;@ inferreturn/InferReturn.java:50:24
  (block
-  ;;@ inferreturn/InferReturn.java:50:40
-  (call $$clinit__void@inferreturn.InferReturn )
   ;;@ inferreturn/InferReturn.java:51:4
-  (return (ref.cast_static $javaemul.internal.WasmArray.OfObject (call $$create__int@javaemul.internal.WasmArray.OfObject (i32.const 0))))
+  (return (ref.cast (ref null $javaemul.internal.WasmArray.OfObject) (call $m_newWithLength__int__javaemul_internal_WasmArray_OfObject@javaemul.internal.WasmArray.OfObject (i32.const 0))))
  )
 )
 
-;;; void InferReturn.acceptsArrayListOfObject(ArrayList<Object> foo)
+;;; void InferReturn.acceptsArrayListOfObject(ArrayList<Object> arg0)
 (func $m_acceptsArrayListOfObject__java_util_ArrayList__void@inferreturn.InferReturn
+ (param $arg0 (ref null $java.util.ArrayList))
+ ;;@ inferreturn/InferReturn.java:54:21
+ (block
+  ;;@ inferreturn/InferReturn.java:54:21
+  (call $$clinit__void_<once>_@inferreturn.InferReturn )
+  ;;@ inferreturn/InferReturn.java:54:21
+  (call $m_acceptsArrayListOfObject_$private__java_util_ArrayList__void@inferreturn.InferReturn (local.get $arg0))
+ )
+)
+
+;;; void InferReturn.acceptsArrayListOfObject_$private(ArrayList<Object> foo)
+(func $m_acceptsArrayListOfObject_$private__java_util_ArrayList__void@inferreturn.InferReturn
  (param $foo (ref null $java.util.ArrayList))
  ;;@ inferreturn/InferReturn.java:54:21
  (block
-  ;;@ inferreturn/InferReturn.java:54:69
-  (call $$clinit__void@inferreturn.InferReturn )
  )
 )
 
-;;; void InferReturn.acceptsArrayOfObject(Object[] foo)
+;;; void InferReturn.acceptsArrayOfObject(Object[] arg0)
 (func $m_acceptsArrayOfObject__arrayOf_java_lang_Object__void@inferreturn.InferReturn
+ (param $arg0 (ref null $javaemul.internal.WasmArray.OfObject))
+ ;;@ inferreturn/InferReturn.java:58:21
+ (block
+  ;;@ inferreturn/InferReturn.java:58:21
+  (call $$clinit__void_<once>_@inferreturn.InferReturn )
+  ;;@ inferreturn/InferReturn.java:58:21
+  (call $m_acceptsArrayOfObject_$private__arrayOf_java_lang_Object__void@inferreturn.InferReturn (local.get $arg0))
+ )
+)
+
+;;; void InferReturn.acceptsArrayOfObject_$private(Object[] foo)
+(func $m_acceptsArrayOfObject_$private__arrayOf_java_lang_Object__void@inferreturn.InferReturn
  (param $foo (ref null $javaemul.internal.WasmArray.OfObject))
  ;;@ inferreturn/InferReturn.java:58:21
  (block
-  ;;@ inferreturn/InferReturn.java:58:56
-  (call $$clinit__void@inferreturn.InferReturn )
  )
 )
 
 ;;; void InferReturn.$clinit()
-(func $$clinit__void@inferreturn.InferReturn
+(func $$clinit__void_<once>_@inferreturn.InferReturn
  ;;@ inferreturn/InferReturn.java:21:13
  (block
   ;;@ inferreturn/InferReturn.java:21:13
-  (if (global.get $f_$initialized__inferreturn_InferReturn)
+  (if (global.get $$class-initialized@inferreturn.InferReturn)
    (then
     ;;@ inferreturn/InferReturn.java:21:13
     (return )
    )
   )
   ;;@ inferreturn/InferReturn.java:21:13
-  (global.set $f_$initialized__inferreturn_InferReturn (i32.const 1))
+  (global.set $$class-initialized@inferreturn.InferReturn (i32.const 1))
   ;;@ inferreturn/InferReturn.java:21:13
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> InferReturn.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@inferreturn.InferReturn
+(func $$getClassMetadata__java_lang_Class_<once>_@inferreturn.InferReturn
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__inferreturn_InferReturn) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@inferreturn.InferReturn)))
    (then
-    (global.set $f_$class__inferreturn_InferReturn (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|inferreturn....|__java_lang_String (ref.func $$getString_|inferreturn....|__java_lang_String@inferreturn.InferReturn) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@inferreturn.InferReturn))
    )
   )
-  (return (global.get $f_$class__inferreturn_InferReturn))
+  (global.set $$class@inferreturn.InferReturn (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|inferreturn....|__java_lang_String_<once>_@inferreturn.InferReturn )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@inferreturn.InferReturn))
  )
 )
 
@@ -197,35 +263,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $inferreturn.InferReturn))
- (local.set $this (ref.cast_static $inferreturn.InferReturn (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $inferreturn.InferReturn) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@inferreturn.InferReturn) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@inferreturn.InferReturn ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@inferreturn.InferReturn)
-
-;;; String InferReturn.$getString_|foo|()
-(func $$getString_|foo|__java_lang_String@inferreturn.InferReturn
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|foo|__inferreturn_InferReturn) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|foo|__inferreturn_InferReturn (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "foo")))
-   )
-  )
-  (return (global.get $f_$string_|foo|__inferreturn_InferReturn))
- )
-)
-
-;;; String InferReturn.$getString_|inferreturn....|()
-(func $$getString_|inferreturn....|__java_lang_String@inferreturn.InferReturn
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|inferreturn....|__inferreturn_InferReturn) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|inferreturn....|__inferreturn_InferReturn (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "inferreturn.InferReturn")))
-   )
-  )
-  (return (global.get $f_$string_|inferreturn....|__inferreturn_InferReturn))
- )
-)

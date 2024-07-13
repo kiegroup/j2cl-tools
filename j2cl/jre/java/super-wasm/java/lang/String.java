@@ -16,6 +16,7 @@
 
 package java.lang;
 
+import static javaemul.internal.InternalPreconditions.checkArgument;
 import static javaemul.internal.InternalPreconditions.checkCriticalStringBounds;
 import static javaemul.internal.InternalPreconditions.checkNotNull;
 import static javaemul.internal.InternalPreconditions.checkPositionIndexes;
@@ -41,9 +42,6 @@ import jsinterop.annotations.JsType;
 
 /** Intrinsic string class. */
 public final class String implements Comparable<String>, CharSequence, Serializable {
-
-  // TODO(b/272381112): Remove after non-stringref experiment.
-  public static final boolean STRINGREF_ENABLED = true;
 
   /* TODO(jat): consider whether we want to support the following methods;
    *
@@ -238,6 +236,18 @@ public final class String implements Comparable<String>, CharSequence, Serializa
     this.value = createImpl(bytes, charset);
   }
 
+  public String(char[] x) {
+    this.value = nativeFromCharCodeArray(x, 0, x.length);
+  }
+
+  public String(char[] x, int offset, int count) {
+    this.value = createImpl(x, offset, count);
+  }
+
+  public String(int[] codePoints, int offset, int count) {
+    this.value = createImpl(codePoints, offset, count);
+  }
+
   private static NativeString createImpl(byte[] bytes, Charset charset) {
     return createImpl(bytes, 0, bytes.length, charset);
   }
@@ -247,30 +257,19 @@ public final class String implements Comparable<String>, CharSequence, Serializa
     return String.valueOf(((EmulatedCharset) charset).decodeString(bytes, ofs, len)).value;
   }
 
-  public String(char[] x) {
-    this.value = nativeFromCharCodeArray(x, 0, x.length);
-  }
-
-  public String(char[] x, int offset, int count) {
+  private static NativeString createImpl(char[] x, int offset, int count) {
     int end = offset + count;
     checkStringBounds(offset, end, x.length);
-    this.value = nativeFromCharCodeArray(x, offset, end);
+    return nativeFromCharCodeArray(x, offset, end);
   }
 
-  // TODO(b/272381112): Remove after non-stringref experiment.
-  String(int offset, int count, char[] x) {
-    int end = offset + count;
-    checkStringBounds(offset, end, x.length);
-    this.value = nativeFromCharCodeArray(x, offset, end);
-  }
-
-  public String(int[] codePoints, int offset, int count) {
+  private static NativeString createImpl(int[] codePoints, int offset, int count) {
     char[] chars = new char[count * 2];
     int charIdx = 0;
     while (count-- > 0) {
       charIdx += Character.toChars(codePoints[offset++], chars, charIdx);
     }
-    this.value = String.valueOf(chars, 0, charIdx).value;
+    return String.valueOf(chars, 0, charIdx).value;
   }
 
   public String(String other) {
@@ -336,7 +335,7 @@ public final class String implements Comparable<String>, CharSequence, Serializa
   }
 
   public String concat(String str) {
-    return this + checkNotNull(str);
+    return new String(nativeConcat(value, str.value));
   }
 
   public boolean contains(CharSequence s) {
@@ -370,14 +369,6 @@ public final class String implements Comparable<String>, CharSequence, Serializa
   private boolean equals(String other) {
     if (other == null) {
       return false;
-    }
-    // Check the cached hashCodes (if any) for quick answer.
-    int hash = hashCode;
-    if (hash != 0) {
-      int otherHash = other.hashCode;
-      if (otherHash != 0 && otherHash != hash) {
-        return false;
-      }
     }
     return nativeEq(value, other.value);
   }
@@ -440,8 +431,7 @@ public final class String implements Comparable<String>, CharSequence, Serializa
     getChars0(srcBegin, srcEnd, dst, dstBegin);
   }
 
-  // Visible to provide fast path for internal uses.
-  void getChars0(int srcBegin, int srcEnd, char[] dst, int dstBegin) {
+  private void getChars0(int srcBegin, int srcEnd, char[] dst, int dstBegin) {
     int unused = nativeGetChars(nativeSubstr(asStringView(value), srcBegin, srcEnd), dst, dstBegin);
   }
 
@@ -539,8 +529,13 @@ public final class String implements Comparable<String>, CharSequence, Serializa
     return ignoreCase ? left.equalsIgnoreCase(right) : left.equals(right);
   }
 
-  public boolean regionMatches(int toffset, String other, int ooffset, int len) {
-    return regionMatches(false, toffset, other, ooffset, len);
+  public boolean regionMatches(int toffset, String other, int offset, int len) {
+    return regionMatches(false, toffset, other, offset, len);
+  }
+
+  public String repeat(int count) {
+    checkArgument(count >= 0);
+    return new String(value.repeat(count));
   }
 
   public String replace(char from, char to) {
@@ -604,8 +599,10 @@ public final class String implements Comparable<String>, CharSequence, Serializa
     NativeRegExp compiled = new NativeRegExp(regex, "g");
     // the Javascipt array to hold the matches prior to conversion
     String[] out = new String[0];
-    // how many matches performed so far
+    // count of split strings.
     int count = 0;
+    // how many matches performed so far
+    int matchCount = 0;
     // The current string that is being matched; trimmed as each piece matches
     String trail = this;
     // used to detect repeated zero length matches
@@ -617,37 +614,36 @@ public final class String implements Comparable<String>, CharSequence, Serializa
       // None of the information in the match returned are useful as we have no
       // subgroup handling
       NativeRegExp.Match matchObj = compiled.exec(trail);
-      if (matchObj == null || trail.isEmpty() || (count == (maxMatch - 1) && maxMatch > 0)) {
-        ArrayHelper.push(out, trail);
+      if (count == out.length) {
+        out = ArrayHelper.grow(out, count + 1);
+      }
+      if (matchObj == null || trail.isEmpty() || (matchCount == (maxMatch - 1) && maxMatch > 0)) {
+        out[count++] = trail;
         break;
       } else {
         int matchIndex = matchObj.getIndex();
-        ArrayHelper.push(out, trail.substring(0, matchIndex));
+        out[count++] = trail.substring(0, matchIndex);
         trail = trail.substring(matchIndex + matchObj.getAt(0).length());
         // Force the compiled pattern to reset internal state
         compiled.setLastIndex(0);
         // Only one zero length match per character to ensure termination
         if (trail.equals(lastTrail)) {
-          out[count] = trail.substring(0, 1);
+          out[matchCount] = trail.substring(0, 1);
           trail = trail.substring(1);
         }
         lastTrail = trail;
-        count++;
+        matchCount++;
       }
     }
     // all blank delimiters at the end are supposed to disappear if maxMatch == 0;
     // however, if the input string is empty, the output should consist of a
     // single empty string
     if (maxMatch == 0 && this.length() > 0) {
-      int lastNonEmpty = out.length;
-      while (lastNonEmpty > 0 && out[lastNonEmpty - 1].isEmpty()) {
-        --lastNonEmpty;
-      }
-      if (lastNonEmpty < out.length) {
-        ArrayHelper.setLength(out, lastNonEmpty);
+      while (count > 0 && out[count - 1].isEmpty()) {
+        count--;
       }
     }
-    return out;
+    return ArrayHelper.setLength(out, count);
   }
 
   public boolean startsWith(String prefix) {
@@ -736,26 +732,27 @@ public final class String implements Comparable<String>, CharSequence, Serializa
     return start > 0 || end < length ? substring(start, end) : this;
   }
 
-  // TODO(b/268386628): Hide this helper once external references are cleaned up.
-  public static String fromJsString(NativeString o) {
+  // TODO(b/335375385): Replace with the concat instance method.
+  static String concat(String str1, String str2) {
+    return new String(nativeConcat(str1.value, str2.value));
+  }
+
+  static String fromJsString(NativeString o) {
     return o == null ? null : new String(o);
   }
 
-  // TODO(b/268386628): Hide this helper once external references are cleaned up.
-  public static NativeString toJsString(String string) {
+  static NativeString toJsString(String string) {
     return string == null ? null : string.value;
   }
 
-  // TODO(b/268386628): Hide this helper once external references are cleaned up.
-  public NativeString toJsString() {
+  NativeString toJsString() {
     return this.value;
   }
 
   /** Native JS compatible representation of a string. */
-  // TODO(b/268386628): Hide NativeString once external references are cleaned up.
   @Wasm("string")
   @JsType(isNative = true, name = "string", namespace = JsPackage.GLOBAL)
-  public interface NativeString {
+  interface NativeString {
 
     int indexOf(NativeString str);
 
@@ -764,6 +761,8 @@ public final class String implements Comparable<String>, CharSequence, Serializa
     int lastIndexOf(NativeString str);
 
     int lastIndexOf(NativeString str, int start);
+
+    NativeString repeat(int count);
 
     NativeString replace(NativeRegExp regex, NativeString replace);
 
@@ -811,4 +810,7 @@ public final class String implements Comparable<String>, CharSequence, Serializa
 
   @Wasm("string.eq")
   private static native boolean nativeEq(NativeString a, NativeString b);
+
+  @Wasm("string.concat")
+  private static native NativeString nativeConcat(NativeString a, NativeString b);
 }

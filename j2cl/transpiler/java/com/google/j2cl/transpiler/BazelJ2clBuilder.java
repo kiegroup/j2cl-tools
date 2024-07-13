@@ -66,6 +66,14 @@ final class BazelJ2clBuilder extends BazelWorker {
   Path output;
 
   @Option(
+      name = "-targetLabel",
+      metaVar = "<target>",
+      usage =
+          "The Bazel target label that is being transpiled. Used for determining context-dependent"
+              + " behavior, like Kotlin friendship semantics.")
+  String targetLabel = null;
+
+  @Option(
       name = "-libraryinfooutput",
       metaVar = "<path>",
       usage = "Specifies the file into which to place the call graph.")
@@ -118,11 +126,15 @@ final class BazelJ2clBuilder extends BazelWorker {
   @Option(name = "-experimentalGenerateWasmExport", hidden = true)
   List<String> wasmEntryPoints = new ArrayList<>();
 
+  @Option(name = "-forbiddenAnnotation", hidden = true)
+  List<String> forbiddenAnnotations = new ArrayList();
+
   @Option(name = "-experimentalDefineForWasm", handler = MapOptionHandler.class, hidden = true)
   Map<String, String> definesForWasm = new HashMap<>();
 
-  @Option(name = "-experimentalWasmRemoveAssertStatement", hidden = true)
-  boolean wasmRemoveAssertStatement = false;
+  // TODO(b/181615162): Remove this flag after optimizing JsEnums and enabling it.
+  @Option(name = "-experimentalWasmEnableNonNativeJsEnum", hidden = true)
+  boolean wasmEnableNonNativeJsEnum = false;
 
   @Override
   protected void run(Problems problems) {
@@ -158,8 +170,9 @@ final class BazelJ2clBuilder extends BazelWorker {
     ImmutableList<FileInfo> allKotlinSources =
         allSources.stream().filter(p -> p.sourcePath().endsWith(".kt")).collect(toImmutableList());
 
-    // TODO(dramaix): add support for transpiling java and kotlin simultaneously.
-    if (!allJavaSources.isEmpty() && !allKotlinSources.isEmpty()) {
+    // For now, only package-info.java files are allowed with Kotlin sources.
+    if (allJavaSources.stream().anyMatch(f -> !f.sourcePath().endsWith("package-info.java"))
+        && !allKotlinSources.isEmpty()) {
       throw new AssertionError(
           "Transpilation of Java and Kotlin files together is not supported yet.");
     }
@@ -175,10 +188,15 @@ final class BazelJ2clBuilder extends BazelWorker {
         .forEach(f -> output.copyFile(f.sourcePath(), f.targetPath()));
 
     return J2clTranspilerOptions.newBuilder()
-        .setSources(allKotlinSources.isEmpty() ? allJavaSources : allKotlinSources)
+        .setSources(
+            ImmutableList.<FileInfo>builder()
+                .addAll(allJavaSources)
+                .addAll(allKotlinSources)
+                .build())
         .setNativeSources(allNativeSources)
         .setClasspaths(getPathEntries(this.classPath))
         .setOutput(output)
+        .setTargetLabel(targetLabel)
         .setLibraryInfoOutput(this.libraryInfoOutput)
         .setEmitReadableLibraryInfo(readableLibraryInfo)
         .setEmitReadableSourceMap(this.readableSourceMaps)
@@ -188,9 +206,11 @@ final class BazelJ2clBuilder extends BazelWorker {
         .setBackend(this.backend)
         .setWasmEntryPointStrings(ImmutableList.copyOf(this.wasmEntryPoints))
         .setDefinesForWasm(ImmutableMap.copyOf(definesForWasm))
-        .setWasmRemoveAssertStatement(wasmRemoveAssertStatement)
+        // TODO(b/325056024): jsenums are not yet supported in the modular pipeline
+        .setWasmEnableNonNativeJsEnum(wasmEnableNonNativeJsEnum && backend != Backend.WASM_MODULAR)
         .setNullMarkedSupported(this.enableJSpecifySupport)
         .setKotlincOptions(ImmutableList.copyOf(kotlincOptions))
+        .setForbiddenAnnotations(ImmutableList.copyOf(forbiddenAnnotations))
         .build(problems);
   }
 

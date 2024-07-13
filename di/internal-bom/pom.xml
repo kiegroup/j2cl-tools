@@ -6,7 +6,7 @@
 
     <groupId>org.kie.j2cl.tools.di</groupId>
     <artifactId>internal-bom</artifactId>
-    <version>0.6</version>
+    <version>0.7</version>
     <packaging>pom</packaging>
 
     <name>J2CL compatible Jakarta CDI-like dependency injection framework Internal BOM</name>
@@ -42,8 +42,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
 
         <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
         <maven.source.plugin.version>3.0.1</maven.source.plugin.version>
@@ -70,11 +70,11 @@
         <google.jsinterop.annotations.version>2.0.0</google.jsinterop.annotations.version>
         <google.guava.version>28.1-jre</google.guava.version>
         <classgraph.classgraph.version>4.8.156</classgraph.classgraph.version>
-        <org.kie.j2cl.tools.processors.version>0.6.4</org.kie.j2cl.tools.processors.version>
-        <org.kie.j2cl.tools.jakarta.version>0.3</org.kie.j2cl.tools.jakarta.version>
+        <org.kie.j2cl.tools.processors.version>0.7.0</org.kie.j2cl.tools.processors.version>
+        <org.kie.j2cl.tools.jakarta.version>0.4</org.kie.j2cl.tools.jakarta.version>
 
         <javaparser.core.version>3.25.5</javaparser.core.version>
-        <elemental2.version>1.1.0</elemental2.version>
+        <elemental2.version>1.2.1</elemental2.version>
         <auto.common.version>1.2.1</auto.common.version>
         <auto.service.version>1.0-rc7</auto.service.version>
         <mockito.core.version>4.6.1</mockito.core.version>

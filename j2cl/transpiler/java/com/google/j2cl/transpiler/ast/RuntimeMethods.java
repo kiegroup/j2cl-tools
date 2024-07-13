@@ -18,13 +18,15 @@ package com.google.j2cl.transpiler.ast;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.j2cl.common.StringUtils.capitalize;
+import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.j2cl.common.SourcePosition;
 import com.google.j2cl.transpiler.ast.MethodDescriptor.ParameterDescriptor;
 import com.google.j2cl.transpiler.ast.TypeDescriptors.BootstrapType;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -55,9 +57,26 @@ public final class RuntimeMethods {
     return MethodCall.Builder.from(methodDescriptor).setArguments(expression).build();
   }
 
+  /** Create a call to the Arrays.$stampType method. */
+  public static MethodCall createArraysStampTypeMethodCall(
+      Expression array, ArrayTypeDescriptor arrayTypeDescriptor) {
+    var argumentsBuilder =
+        ImmutableList.<Expression>builder()
+            .add(
+                array,
+                arrayTypeDescriptor.getLeafTypeDescriptor().getMetadataConstructorReference());
+
+    int dimensionCount = arrayTypeDescriptor.getDimensions();
+    if (dimensionCount > 1) {
+      argumentsBuilder.add(NumberLiteral.fromInt(dimensionCount));
+    }
+
+    return createArraysMethodCall("$stampType", argumentsBuilder.build());
+  }
+
   /** Create a call to an Arrays method. */
   public static MethodCall createArraysMethodCall(String methodName, Expression... arguments) {
-    return createArraysMethodCall(methodName, Arrays.asList(arguments));
+    return createArraysMethodCall(methodName, asList(arguments));
   }
 
   /** Create a call to an Arrays method. */
@@ -133,6 +152,19 @@ public final class RuntimeMethods {
                 .getMethodDescriptor("equals", TypeDescriptors.get().javaLangObject))
         .setQualifier(qualifier)
         .setArguments(argument)
+        .build();
+  }
+
+  /** Create a call to String.concat method. */
+  public static MethodCall createStringConcatMethodCall(Expression left, Expression right) {
+    return MethodCall.Builder.from(
+            TypeDescriptors.get()
+                .javaLangString
+                .getMethodDescriptor(
+                    "concat",
+                    TypeDescriptors.get().javaLangString,
+                    TypeDescriptors.get().javaLangString))
+        .setArguments(left, right)
         .build();
   }
 
@@ -224,30 +256,131 @@ public final class RuntimeMethods {
     MethodDescriptor boxingMethod =
         TypeDescriptors.get().javaemulInternalEnums.getMethodDescriptorByName(boxingMethodName);
 
-    // boxing operations are parameterized by the JsEnum type, so specialize the method to the
-    // right type.
-    TypeVariable type = boxingMethod.getTypeParameterTypeDescriptors().get(0);
-    return MethodCall.Builder.from(
-            boxingMethod.specializeTypeVariables(ImmutableMap.of(type, valueTypeDescriptor)))
-        .setArguments(value, valueTypeDescriptor.getMetadataConstructorReference())
-        .build();
+    if (boxingMethod == null) {
+      // If the method isn't found, use the type-specific "boxInteger", etc, calls.
+      boxingMethod =
+          TypeDescriptors.get()
+              .javaemulInternalEnums
+              .getMethodDescriptorByName(
+                  boxingMethodName + getEnumsMethodSuffix(valueTypeDescriptor));
+    } else {
+      // Boxing operations are parameterized by the JsEnum type, so specialize the method to the
+      // right type.
+      TypeVariable type = boxingMethod.getTypeParameterTypeDescriptors().get(0);
+      boxingMethod =
+          boxingMethod.specializeTypeVariables(ImmutableMap.of(type, valueTypeDescriptor));
+    }
+
+    return createEnumsMethodCall(boxingMethod, value, valueTypeDescriptor);
   }
 
   /** Create a call to Enums.unbox. */
-  public static Expression createEnumsUnboxMethodCall(Expression expression) {
-    return createEnumsMethodCall("unbox", expression);
+  public static Expression createEnumsUnboxMethodCall(
+      Expression expression, TypeDescriptor toTypeDescriptor) {
+    MethodDescriptor unboxingMethod =
+        TypeDescriptors.get().javaemulInternalEnums.getMethodDescriptorByName("unbox");
+
+    if (unboxingMethod == null) {
+      // If the method isn't found, use the type-specific "unboxInteger", etc, calls.
+      unboxingMethod =
+          TypeDescriptors.get()
+              .javaemulInternalEnums
+              .getMethodDescriptorByName("unbox" + getEnumsMethodSuffix(toTypeDescriptor));
+    }
+
+    return createEnumsMethodCall(unboxingMethod, expression, toTypeDescriptor);
   }
 
-  public static Expression createEnumsMethodCall(String unbox, Expression... arguments) {
+  /** Create a call to Enums.isInstanceOf. */
+  public static Expression createEnumsInstanceOfMethodCall(
+      Expression expression, TypeDescriptor testTypeDescriptor) {
     MethodDescriptor methodDescriptor =
-        TypeDescriptors.get().javaemulInternalEnums.getMethodDescriptorByName(unbox);
+        TypeDescriptors.get().javaemulInternalEnums.getMethodDescriptorByName("isInstanceOf");
+    return createEnumsMethodCall(
+        methodDescriptor, expression, testTypeDescriptor.toUnparameterizedTypeDescriptor());
+  }
+
+  public static Expression createEnumsEqualsMethodCall(Expression instance, Expression other) {
+    checkArgument(
+        instance.getTypeDescriptor().isJsEnum()
+            && instance.getTypeDescriptor().hasSameRawType(other.getTypeDescriptor()));
+    return createEnumsMethodCallCastIfNeeded(
+        "equals", instance.getTypeDescriptor(), instance, other);
+  }
+
+  public static Expression createEnumsCompareToMethodCall(Expression instance, Expression other) {
+    checkArgument(
+        AstUtils.isNonNativeJsEnum(instance.getTypeDescriptor())
+            && instance.getTypeDescriptor().hasSameRawType(other.getTypeDescriptor()));
+    return createEnumsMethodCallCastIfNeeded(
+        "compareTo", instance.getTypeDescriptor(), instance, other);
+  }
+
+  public static Expression createEnumsMethodCall(String methodName, Expression... arguments) {
+    MethodDescriptor methodDescriptor =
+        TypeDescriptors.get().javaemulInternalEnums.getMethodDescriptorByName(methodName);
 
     return MethodCall.Builder.from(methodDescriptor).setArguments(arguments).build();
   }
 
+  /**
+   * Creates a call to the specified method with the provided expression as the first argument and a
+   * type literal or constructor reference as the second argument.
+   */
+  private static Expression createEnumsMethodCall(
+      MethodDescriptor methodDescriptor, Expression value, TypeDescriptor valueTypeDescriptor) {
+    // TODO(b/278167922): Probably the best thing to pass here in WASM is a method reference to
+    // class object getter, to avoid the eager creation of the class object upon boxing. The class
+    // object is only needed for cast and instanceof. But method references involve the
+    // instantiation of a lambda object which is even more costly. Fix once plain wasm function
+    // references can be modeled.
+
+    // Decide how to pass the information about the actual enum class by looking at the second
+    // parameter of the function. In JS, the JS constructor is used as a proxy for the class object.
+    Expression typeLiteral =
+        TypeDescriptors.isJavaLangClass(methodDescriptor.getParameterTypeDescriptors().get(1))
+            ? new TypeLiteral(SourcePosition.NONE, valueTypeDescriptor)
+            : valueTypeDescriptor.getMetadataConstructorReference();
+    return MethodCall.Builder.from(methodDescriptor).setArguments(value, typeLiteral).build();
+  }
+
+  private static Expression createEnumsMethodCallCastIfNeeded(
+      String methodName, TypeDescriptor enumTypeDescriptor, Expression... arguments) {
+    MethodDescriptor methodDescriptor =
+        TypeDescriptors.get().javaemulInternalEnums.getMethodDescriptorByName(methodName);
+
+    if (methodDescriptor == null) {
+      // If the method isn't found, try to find the method with type-specific suffix. This method
+      // takes the value types as arguments and will need the enum value to be cast to the enum
+      // value type to preserve correct boxing/unboxing behavior.
+      methodDescriptor =
+          TypeDescriptors.get()
+              .javaemulInternalEnums
+              .getMethodDescriptorByName(methodName + getEnumsMethodSuffix(enumTypeDescriptor));
+      arguments =
+          stream(arguments)
+              .map(
+                  arg ->
+                      AstUtils.castJsEnumToValue(
+                          arg, AstUtils.getJsEnumValueFieldType(arg.getTypeDescriptor())))
+              .toArray(Expression[]::new);
+    }
+
+    return MethodCall.Builder.from(methodDescriptor).setArguments(arguments).build();
+  }
+
+  private static String getEnumsMethodSuffix(TypeDescriptor toTypeDescriptor) {
+    TypeDescriptor valueTypeDescriptor = AstUtils.getJsEnumValueFieldType(toTypeDescriptor);
+    if (valueTypeDescriptor.isPrimitive()) {
+      return ((PrimitiveTypeDescriptor) valueTypeDescriptor).toBoxedType().getSimpleSourceName();
+    }
+    checkArgument(TypeDescriptors.isJavaLangString(valueTypeDescriptor));
+    return "String";
+  }
+
   /** Create a call to an Equality method. */
   public static MethodCall createEqualityMethodCall(String methodName, Expression... arguments) {
-    return createEqualityMethodCall(methodName, Arrays.asList(arguments));
+    return createEqualityMethodCall(methodName, asList(arguments));
   }
 
   /** Create a call to an Equality method. */
@@ -260,7 +393,7 @@ public final class RuntimeMethods {
   public static MethodCall createExceptionsMethodCall(String methodName, Expression... arguments) {
     return MethodCall.Builder.from(
             TypeDescriptors.get().javaemulInternalExceptions.getMethodDescriptorByName(methodName))
-        .setArguments(Arrays.asList(arguments))
+        .setArguments(asList(arguments))
         .build();
   }
 
@@ -269,12 +402,35 @@ public final class RuntimeMethods {
     return MethodCall.Builder.from(
             TypeDescriptors.get().javaLangThrowable.getMethodDescriptorByName("privateInitError"))
         .setQualifier(instance)
-        .setArguments(Arrays.asList(arguments))
+        .setArguments(asList(arguments))
+        .build();
+  }
+
+  /** Create a call to Assert.$assert method. */
+  public static Expression createAssertMethodCall(Expression expression) {
+    return createAssertsMethodCall("$assert", ImmutableList.of(expression));
+  }
+
+  /** Create a call to Assert.$assertWithMessage method. */
+  public static Expression createAssertWithMessageMethodCall(
+      Expression expression, Expression message) {
+    return createAssertsMethodCall("$assertWithMessage", ImmutableList.of(expression, message));
+  }
+
+  /** Create a call to Asserts.areWasmAssertionsEnabled method. */
+  public static Expression createAreWasmAssertionsEnabledMethodCall() {
+    return createAssertsMethodCall("areWasmAssertionsEnabled", ImmutableList.of());
+  }
+
+  private static Expression createAssertsMethodCall(String methodName, List<Expression> arguments) {
+    return MethodCall.Builder.from(
+            TypeDescriptors.get().javaemulInternalAsserts.getMethodDescriptorByName(methodName))
+        .setArguments(arguments)
         .build();
   }
 
   /** Create a call to InternalPreconditions.checkNotNull method. */
-  public static MethodCall createCheckNotNullCall(Expression argument) {
+  public static Expression createCheckNotNullCall(Expression argument) {
     return createCheckNotNullCall(argument, false);
   }
 
@@ -282,8 +438,17 @@ public final class RuntimeMethods {
    * Create a call to InternalPreconditions.checkNotNull method with specialization of the type
    * parameter.
    */
-  public static MethodCall createCheckNotNullCall(
+  public static Expression createCheckNotNullCall(
       Expression argument, boolean specializeTypeParameter) {
+    checkArgument(!argument.getTypeDescriptor().isPrimitive());
+
+    if (argument.getTypeDescriptor().isJsEnum()) {
+      // Expose the null comparison explicitly in the AST so that other normalizations can operate
+      // on them. In particular unboxed enums in Wasm might be represented as primitives and null
+      // comparisons need to be rewritten.
+      return createCheckNotNullBooleanCall(argument);
+    }
+
     // TODO(b/68726480): checkNotNull should return a non-nullable T.
     MethodDescriptor checkNotNull =
         TypeDescriptors.get()
@@ -297,9 +462,42 @@ public final class RuntimeMethods {
     return MethodCall.Builder.from(checkNotNull).setArguments(argument).build();
   }
 
+  /** Create a call to InternalPreconditions.checkNotNull(boolean) method. */
+  private static Expression createCheckNotNullBooleanCall(Expression argument) {
+    MethodDescriptor checkNotNull =
+        TypeDescriptors.get()
+            .javaemulInternalPreconditions
+            .getMethodDescriptor("checkNotNull", PrimitiveTypes.BOOLEAN);
+    if (argument.isIdempotent()) {
+      return MultiExpression.newBuilder()
+          .addExpressions(
+              MethodCall.Builder.from(checkNotNull)
+                  .setArguments(argument.infixNotEqualsNull())
+                  .build(),
+              argument.clone())
+          .build();
+    }
+    Variable tempVariable =
+        Variable.newBuilder()
+            .setName("$arg")
+            .setFinal(true)
+            .setTypeDescriptor(argument.getTypeDescriptor())
+            .build();
+    return MultiExpression.newBuilder()
+        .addExpressions(
+            VariableDeclarationExpression.newBuilder()
+                .addVariableDeclaration(tempVariable, argument)
+                .build(),
+            MethodCall.Builder.from(checkNotNull)
+                .setArguments(tempVariable.createReference().infixNotEqualsNull())
+                .build(),
+            tempVariable.createReference())
+        .build();
+  }
+
   /** Create a call to an LongUtils method. */
   public static MethodCall createLongUtilsMethodCall(String methodName, Expression... arguments) {
-    return createLongUtilsMethodCall(methodName, Arrays.asList(arguments));
+    return createLongUtilsMethodCall(methodName, asList(arguments));
   }
 
   /** Create a call to an LongUtils method. */
@@ -331,7 +529,7 @@ public final class RuntimeMethods {
 
   /** Create a call to a native Long method. */
   public static MethodCall createNativeLongMethodCall(String methodName, Expression... arguments) {
-    return createNativeLongMethodCall(methodName, Arrays.asList(arguments));
+    return createNativeLongMethodCall(methodName, asList(arguments));
   }
 
   /** Create a call to an native Long method. */
@@ -359,6 +557,26 @@ public final class RuntimeMethods {
                 .setReturnTypeDescriptor(PrimitiveTypes.INT)
                 .build())
         .setArguments(leftOperand, rightOperand)
+        .build();
+  }
+
+  public static Expression createNumberCall(Expression stringExpression) {
+    return MethodCall.Builder.from(
+            MethodDescriptor.newBuilder()
+                .setOriginalJsInfo(
+                    JsInfo.newBuilder()
+                        .setJsMemberType(JsMemberType.METHOD)
+                        .setJsName("Number")
+                        .setJsNamespace(JsUtils.JS_PACKAGE_GLOBAL)
+                        .build())
+                .setName("Number")
+                .setStatic(true)
+                .setNative(true)
+                .setEnclosingTypeDescriptor(TypeDescriptors.get().nativeObject)
+                .setParameterTypeDescriptors(TypeDescriptors.get().javaLangString)
+                .setReturnTypeDescriptor(PrimitiveTypes.DOUBLE)
+                .build())
+        .setArguments(stringExpression)
         .build();
   }
 
@@ -413,6 +631,24 @@ public final class RuntimeMethods {
     return createPrimitivesMethodCall(methodName, expression);
   }
 
+  public static Expression createEnumsIsNullCall(Expression reference) {
+    TypeDescriptor valueTypeDescriptor =
+        AstUtils.getJsEnumValueFieldType(reference.getTypeDescriptor());
+    return MethodCall.Builder.from(
+            TypeDescriptors.get()
+                .javaemulInternalEnums
+                .getMethodDescriptor("isNull", valueTypeDescriptor))
+        .setArguments(reference)
+        .build();
+  }
+
+  public static Expression createPlatformIsNullCall(Expression reference) {
+    return MethodCall.Builder.from(
+            TypeDescriptors.get().javaemulInternalPlatform.getMethodDescriptorByName("isNull"))
+        .setArguments(reference)
+        .build();
+  }
+
   /** Creates a method call to BoxedType.xxxValue(). */
   public static MethodCall createUnboxingMethodCall(
       Expression expression, DeclaredTypeDescriptor boxedType) {
@@ -425,7 +661,7 @@ public final class RuntimeMethods {
 
   /** Create a call to a Util method. */
   public static MethodCall createUtilMethodCall(String methodName, Expression... arguments) {
-    return createUtilMethodCall(methodName, Arrays.asList(arguments));
+    return createUtilMethodCall(methodName, asList(arguments));
   }
 
   /** Create a call to an Util method. */
@@ -491,16 +727,6 @@ public final class RuntimeMethods {
                                           PrimitiveTypes.INT, TypeDescriptors.get().nativeFunction)
                                       .build())
                               .put(
-                                  "$init",
-                                  MethodInfo.newBuilder()
-                                      .setReturnType(TypeDescriptors.get().javaLangObjectArray)
-                                      .setParameters(
-                                          TypeDescriptors.get().javaLangObjectArray,
-                                          TypeDescriptors.get().javaLangObject,
-                                          PrimitiveTypes.INT)
-                                      .setRequiredParameters(2)
-                                      .build())
-                              .put(
                                   "$instanceIsOfType",
                                   MethodInfo.newBuilder()
                                       .setReturnType(TypeDescriptors.get().javaLangBoolean)
@@ -523,6 +749,7 @@ public final class RuntimeMethods {
                                           TypeDescriptors.get().javaLangObjectArray,
                                           TypeDescriptors.get().javaLangObject,
                                           PrimitiveTypes.DOUBLE)
+                                      .setRequiredParameters(2)
                                       .build())
                               .build())
                       .put(
@@ -693,7 +920,7 @@ public final class RuntimeMethods {
 
       public Builder setParameters(TypeDescriptor... parameterTypes) {
         return setParameterDescriptors(
-            Arrays.stream(parameterTypes)
+            stream(parameterTypes)
                 .map(p -> ParameterDescriptor.newBuilder().setTypeDescriptor(p).build())
                 .toArray(ParameterDescriptor[]::new));
       }

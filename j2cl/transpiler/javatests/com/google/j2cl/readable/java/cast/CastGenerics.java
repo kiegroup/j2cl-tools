@@ -15,7 +15,8 @@
  */
 package cast;
 
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 public class CastGenerics<T, E extends Number> {
 
@@ -44,6 +45,19 @@ public class CastGenerics<T, E extends Number> {
   private static class Container<T> {
     T get() {
       return null;
+    }
+  }
+
+  @NullMarked
+  private static class NullMarkedContainer<T> {
+    private T value;
+
+    NullMarkedContainer(T value) {
+      this.value = value;
+    }
+
+    T get() {
+      return value;
     }
   }
 
@@ -82,6 +96,32 @@ public class CastGenerics<T, E extends Number> {
     Container<Implementor> containerImplementor = null;
     containerImplementor.get().mA();
     containerImplementor.get().mB();
+
+    Container<A> strictlyA = null;
+    Object oA = strictlyA.get();
+    A a = strictlyA.get();
+
+    Container<? extends A> extendsA = null;
+    oA = extendsA.get();
+    a = extendsA.get();
+
+    Container<? super A> superA = null;
+    oA = superA.get();
+
+    Container<String> strictlyString = null;
+    str = strictlyString.get();
+
+    Container<? extends String> extendsString = null;
+    str = extendsString.get();
+
+    Container<? super String> superString = null;
+    oA = superString.get();
+  }
+
+  @NullMarked
+  public static void testErasureCastInNullMarkedCode() {
+    NullMarkedContainer<? extends String> container = new NullMarkedContainer<>("abc");
+    String s = container.get();
   }
 
   public static void testCastToParamterizedType() {

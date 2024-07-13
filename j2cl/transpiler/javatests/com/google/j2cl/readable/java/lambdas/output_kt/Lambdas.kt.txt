@@ -1,5 +1,5 @@
 // Generated from "lambdas/Lambdas.java"
-@file:OptIn(ExperimentalObjCName::class, ExperimentalObjCRefinement::class)
+@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -9,6 +9,7 @@
  "UNNECESSARY_LATEINIT",
  "UNNECESSARY_NOT_NULL_ASSERTION",
  "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
  "UNUSED_PARAMETER",
  "UNUSED_VARIABLE",
  "USELESS_CAST",
@@ -18,15 +19,20 @@
 package lambdas
 
 import javaemul.lang.*
+import java.lang.Integer
+import java.lang.Long
 import java.lang.RuntimeException
 import java.lang.Void
 import javaemul.lang.JavaIterable
+import jsinterop.annotations.JsFunction
+import jsinterop.annotations.JsMethod
+import jsinterop.annotations.JsPackage
+import jsinterop.annotations.JsType
 import kotlin.Any
 import kotlin.Double
 import kotlin.Enum
 import kotlin.Error
 import kotlin.Int
-import kotlin.Long
 import kotlin.Number
 import kotlin.OptIn
 import kotlin.String
@@ -34,11 +40,9 @@ import kotlin.Suppress
 import kotlin.Throwable
 import kotlin.collections.MutableIterable
 import kotlin.experimental.ExperimentalObjCName
-import kotlin.experimental.ExperimentalObjCRefinement
 import kotlin.jvm.JvmField
 import kotlin.jvm.JvmStatic
 import kotlin.let
-import kotlin.native.HiddenFromObjC
 import kotlin.native.ObjCName
 
 @ObjCName("J2ktLambdasLambdas", exact = true)
@@ -149,8 +153,7 @@ open class Lambdas {
   return intf!!.m(e)
  }
 
- @HiddenFromObjC
- open fun <T> callWithBiFunction_pp_lambdas(fn: Lambdas.BiFunction<T, String?, Double?>?): Lambdas.GenericFunctionalInterface<T>? {
+ internal open fun <T> callWithBiFunction_pp_lambdas(fn: Lambdas.BiFunction<T, String?, Double?>?): Lambdas.GenericFunctionalInterface<T>? {
   return null
  }
 
@@ -169,7 +172,7 @@ open class Lambdas {
    throw RuntimeException()
   })
   this.callWithBiFunction_pp_lambdas<Any?>(Lambdas.BiFunction<Any?, String?, Double?> { x_1: Any?, y_1: String? ->
-   return@BiFunction Double.valueOf(3.0)
+   return@BiFunction java.lang.Double.valueOf(3.0)
   })
   val f: Lambdas.Function<in T, *>? = Lambdas.Function { item: T ->
    return@Function Long.valueOf(1L)
@@ -243,8 +246,7 @@ open class Lambdas {
   }
 
   @JvmField
-  @HiddenFromObjC
-  var identityFunction_private_2: Lambdas.IdentityFunction? = null
+  internal var identityFunction_private_2: Lambdas.IdentityFunction? = null
 
   @JvmStatic
   @ObjCName("identity")
@@ -265,7 +267,7 @@ open class Lambdas {
     f1_1!!.apply(null)
    }
    val stringJsSupplier: Lambdas.JsSupplier<Int?>? = Lambdas.JsSupplier<Int?> {
-    return@JsSupplier Int.valueOf(1)
+    return@JsSupplier Integer.valueOf(1)
    }
    stringJsSupplier!!.get()
    val equals: Lambdas.Equals<Any?>? = stringJsSupplier as Lambdas.Equals<Any?>?
@@ -358,7 +360,7 @@ open class Lambdas {
   fun run()
  }
 
- open class Parent {
+ open class Parent internal constructor() {
   @JvmField
   var fieldInParent: Int = 0
 
@@ -366,7 +368,7 @@ open class Lambdas {
   open fun funInParent() {}
  }
 
- open class LambdaInSubClass: Lambdas.Parent() {
+ open class LambdaInSubClass internal constructor(): Lambdas.Parent() {
   @ObjCName("testLambdaInSubclass")
   open fun testLambdaInSubclass() {
    val l: Lambdas.FunctionalInterface? = Lambdas.FunctionalInterface { i: Int ->
@@ -382,6 +384,7 @@ open class Lambdas {
  }
 
  @ObjCName("J2ktLambdasLambdas_GenericJsFunction", exact = true)
+ @JsFunction
  fun interface GenericJsFunction<R, T> {
   @ObjCName("apply")
   fun apply(
@@ -390,6 +393,7 @@ open class Lambdas {
  }
 
  @ObjCName("J2ktLambdasLambdas_Thenable", exact = true)
+ @JsType(name = "?", namespace = JsPackage.GLOBAL, isNative = true)
  fun interface Thenable<T> {
   @ObjCName("then")
   fun then(
@@ -399,6 +403,7 @@ open class Lambdas {
  }
 
  @ObjCName("J2ktLambdasLambdas_AnotherThenable", exact = true)
+ @JsType(name = "?", namespace = JsPackage.GLOBAL, isNative = true)
  fun interface AnotherThenable<T> {
   @ObjCName("then")
   fun then(
@@ -407,7 +412,7 @@ open class Lambdas {
   )
  }
 
- class IdentityFunction: Lambdas.GenericJsFunction<Any?, Any?> {
+ class IdentityFunction internal constructor(): Lambdas.GenericJsFunction<Any?, Any?> {
   override fun apply(o: Any?): Any? {
    return o
   }
@@ -421,6 +426,7 @@ open class Lambdas {
  }
 
  fun interface JsSupplier<T: Number?>: Lambdas.Equals<T> {
+  @JsMethod
   override fun get(): T
  }
 
@@ -448,26 +454,22 @@ open class Lambdas {
   fun run()
  }
 
- open inner class Outer {
-  @HiddenFromObjC
-  open fun m_pp_lambdas() {}
+ open inner class Outer internal constructor() {
+  internal open fun m_pp_lambdas() {}
 
-  @HiddenFromObjC
-  open fun n_pp_lambdas() {
+  internal open fun n_pp_lambdas() {
    val r: Lambdas.Runnable? = Lambdas.Runnable {
     this.m_pp_lambdas()
    }
   }
  }
 
- open inner class Super {
-  @HiddenFromObjC
-  open fun m_pp_lambdas() {}
+ open inner class Super internal constructor() {
+  internal open fun m_pp_lambdas() {}
  }
 
- open inner class Sub: Lambdas.Super() {
-  @HiddenFromObjC
-  open fun n_pp_lambdas() {
+ open inner class Sub internal constructor(): Lambdas.Super() {
+  internal open fun n_pp_lambdas() {
    val r: Lambdas.Runnable? = object : Lambdas.Runnable {
     override fun run() {
      super<Lambdas.Super>@Sub.m_pp_lambdas()
@@ -476,9 +478,8 @@ open class Lambdas {
   }
  }
 
- open inner class SubWithLambda: Lambdas.Super() {
-  @HiddenFromObjC
-  open fun n_pp_lambdas() {
+ open inner class SubWithLambda internal constructor(): Lambdas.Super() {
+  internal open fun n_pp_lambdas() {
    val r: Lambdas.Runnable? = Lambdas.Runnable {
     super<Lambdas.Super>.m_pp_lambdas()
    }

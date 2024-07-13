@@ -114,16 +114,28 @@ public class SourceUtils {
    *
    * <p>Java source root decision is similar to the algorithm in {@code
    * com.google.devtools.build.lib.rules.java.JavaUtil#getJavaPath} except the full path is returned
-   * if there is no known java source root in the path.
+   * if there is no known java source root in the path. Also common "super" source roots are
+   * considered Java source root.
    */
   public static String getJavaPath(String path) {
-    // Choose the one that matches earlier.
-    int index = Math.min(indexAfterRoot(path, "java"), indexAfterRoot(path, "javatests"));
-    String javaRelativePath = path.substring(index);
-    if (javaRelativePath.isEmpty()) {
-      javaRelativePath = path.substring(indexAfterRoot(path, TEMP_ROOT));
+    String javaRelativePath = getRelativePath(path, "java", "javatests");
+    if (javaRelativePath.equals(path)) {
+      // No regular root found. If the file was part of an archive and unzipped in a
+      // temp directory, consider the temp directory as source root.
+      javaRelativePath = getRelativePath(path, TEMP_ROOT);
     }
-    return javaRelativePath.isEmpty() ? path : javaRelativePath;
+
+    // For super sources consider as the root for super sources.
+    return getRelativePath(javaRelativePath, "super", "super-j2cl");
+  }
+
+  private static String getRelativePath(String path, String... roots) {
+    int index = Integer.MAX_VALUE;
+    for (String root : roots) {
+      // Choose the one that matches earlier.
+      index = Math.min(index, indexAfterRoot(path, root));
+    }
+    return index < path.length() ? path.substring(index) : path;
   }
 
   /** Returns the index after root or the end index if not found. */

@@ -18,6 +18,7 @@ package com.google.j2cl.transpiler.passes;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.j2cl.transpiler.ast.AbstractVisitor;
+import com.google.j2cl.transpiler.ast.ArrayLiteral;
 import com.google.j2cl.transpiler.ast.BinaryExpression;
 import com.google.j2cl.transpiler.ast.BinaryOperator;
 import com.google.j2cl.transpiler.ast.BreakStatement;
@@ -29,6 +30,7 @@ import com.google.j2cl.transpiler.ast.ForEachStatement;
 import com.google.j2cl.transpiler.ast.FunctionExpression;
 import com.google.j2cl.transpiler.ast.InitializerBlock;
 import com.google.j2cl.transpiler.ast.JavaScriptConstructorReference;
+import com.google.j2cl.transpiler.ast.JsForInStatement;
 import com.google.j2cl.transpiler.ast.LabeledStatement;
 import com.google.j2cl.transpiler.ast.LoopStatement;
 import com.google.j2cl.transpiler.ast.Member;
@@ -45,6 +47,7 @@ import com.google.j2cl.transpiler.ast.Type;
 import com.google.j2cl.transpiler.ast.TypeDescriptors;
 import com.google.j2cl.transpiler.ast.TypeLiteral;
 import com.google.j2cl.transpiler.ast.UnaryExpression;
+import com.google.j2cl.transpiler.ast.Variable;
 import com.google.j2cl.transpiler.ast.VariableDeclarationExpression;
 import java.util.HashMap;
 import java.util.Map;
@@ -83,7 +86,7 @@ public class VerifyNormalizedUnits extends NormalizationPass {
 
           @Override
           public void exitMethod(Method method) {
-            verifyMemberUniqueness(method);
+            checkMember(method);
             // All native methods should be empty.
             checkState(!method.isNative() || method.getBody().getStatements().isEmpty());
             // Concrete types shouldn't have abstract methods
@@ -91,11 +94,12 @@ public class VerifyNormalizedUnits extends NormalizationPass {
                 !method.isAbstract()
                     || getCurrentType().isAbstract()
                     || getCurrentType().isInterface());
+            checkState(method.getParameters().stream().allMatch(Variable::isParameter));
           }
 
           @Override
           public void exitField(Field field) {
-            verifyMemberUniqueness(field);
+            checkMember(field);
             if (verifyForWasm) {
               // This is only running for Wasm due to the transformations in Closure that result in
               // primitive long initializers to be method calls to the runtime.
@@ -106,8 +110,20 @@ public class VerifyNormalizedUnits extends NormalizationPass {
               // JsEnum only contains the enum fields.
               checkState(!getCurrentType().isJsEnum() || field.isStatic());
             }
-            // Non-native enum fields have a non negative ordinal.
-            checkState(field.isNative() || !field.isEnumField() || field.getEnumOrdinal() >= 0);
+          }
+
+          public void checkMember(Member member) {
+            verifyMemberUniqueness(member);
+            if (verifyForWasm) {
+              boolean isNative =
+                  member.isNative()
+                      // TODO(b/264676817): Consider refactoring to have MethodDescriptor.isNative
+                      // return true for native constructors, or exposing isNativeConstructor from
+                      // MethodDescriptor.
+                      || (member.isConstructor()
+                          && member.getDescriptor().getEnclosingTypeDescriptor().isNative());
+              checkState(isNative || !member.getDescriptor().isJsMember());
+            }
           }
 
           private final Map<String, MemberDescriptor> instanceMembersByMangledName =
@@ -193,6 +209,15 @@ public class VerifyNormalizedUnits extends NormalizationPass {
           }
 
           @Override
+          public void exitArrayLiteral(ArrayLiteral arrayLiteral) {
+            // There are no direct nesting of array literals.
+            checkState(
+                !(getParent() instanceof ArrayLiteral)
+                    || arrayLiteral.getTypeDescriptor().isUntypedArray());
+            if (verifyForWasm) {}
+          }
+
+          @Override
           public void exitTryStatement(TryStatement tryStatement) {
             // Try statements have been normalized to have at most 1 catch clause.
             checkState(tryStatement.getCatchClauses().size() <= 1);
@@ -224,8 +249,26 @@ public class VerifyNormalizedUnits extends NormalizationPass {
           }
 
           @Override
-          public void exitForEachStatement(ForEachStatement continueStatement) {
+          public void exitForEachStatement(ForEachStatement forEachStatement) {
             throw new IllegalStateException();
+          }
+
+          @Override
+          public void exitJsForInStatement(JsForInStatement jsForInStatement) {
+            if (verifyForWasm) {
+              // These statements should have been entirely desugared for WASM.
+              throw new IllegalStateException();
+            }
+            // In JS all objects can be iterated over in a for-in loop, however, this will simply
+            // return the enumerable properties of the object. We should just make sure that it's a
+            // reasonable type to iterate over, and that the iteration variable is always a String.
+            checkState(!jsForInStatement.getIterableExpression().getTypeDescriptor().isPrimitive());
+            checkState(
+                jsForInStatement
+                    .getLoopVariable()
+                    .getTypeDescriptor()
+                    .isSameBaseType(TypeDescriptors.get().javaLangString),
+                "JsForInStatement must use a String variable for iteration.");
           }
 
           @Override
@@ -260,6 +303,9 @@ public class VerifyNormalizedUnits extends NormalizationPass {
             if (variableDeclarationExpression.getFragments().isEmpty()) {
               throw new IllegalStateException();
             }
+            checkState(
+                variableDeclarationExpression.getFragments().stream()
+                    .allMatch(f -> !f.getVariable().isParameter()));
           }
 
           @Override

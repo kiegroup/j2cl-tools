@@ -15,7 +15,7 @@
  */
 package com.google.j2cl.jre.java.util;
 
-import com.google.gwt.junit.client.GWTTestCase;
+import com.google.j2cl.jre.testing.J2ktIncompatible;
 import com.google.j2cl.jre.testing.TestUtils;
 import java.util.ArrayList;
 import java.util.Date;
@@ -361,21 +361,24 @@ public class DateTest extends GWTTestCase {
     int monthNum = 3; // April
     int numDaysInOldMonth = 30;
     int newDayNum = 31;
-    Date dateWithThirtyDays = new Date(2006, monthNum, 30);
+    Date dateWithThirtyDays = new Date(2006 - 1900, monthNum, 30);
     dateWithThirtyDays.setDate(newDayNum);
     assertEquals(dateWithThirtyDays.getMonth(), monthNum + 1);
     assertEquals(dateWithThirtyDays.getDate(), newDayNum - numDaysInOldMonth);
   }
 
-  /** Testing for public static long java.util.Date.parse(java.lang.String). */
-  public void testParse() {
+  @J2ktIncompatible // Not nullable according to Jspecify
+  public void testParseNull() {
     try {
       Date.parse(null);
       fail("Should have thrown exception");
     } catch (IllegalArgumentException e) {
       // Expected
     }
+  }
 
+  /** Testing for public static long java.util.Date.parse(java.lang.String). */
+  public void testParse() {
     try {
       Date.parse("");
     } catch (IllegalArgumentException e) {
@@ -448,7 +451,7 @@ public class DateTest extends GWTTestCase {
     int dayNum = 31;
     int newMonthNum = 1;
     int numDaysInNewMonth = 28;
-    Date dateWithThirtyOneDays = new Date(2006, 12, dayNum);
+    Date dateWithThirtyOneDays = new Date(2006 - 1900, 11, dayNum); // December
     dateWithThirtyOneDays.setMonth(newMonthNum);
     assertEquals(dateWithThirtyOneDays.getMonth(), newMonthNum + 1);
     assertEquals(dateWithThirtyOneDays.getDate(), dayNum - numDaysInNewMonth);
@@ -464,7 +467,7 @@ public class DateTest extends GWTTestCase {
     int monthNum = 1; // February
     int newYearNum = 2005;
     int numDaysInFebInNewYear = 28;
-    Date leapYearDate = new Date(2004, monthNum, dayNum);
+    Date leapYearDate = new Date(2004 - 1900, monthNum, dayNum);
     leapYearDate.setYear(newYearNum);
     assertEquals(leapYearDate.getYear(), newYearNum);
     assertEquals(leapYearDate.getMonth(), monthNum + 1);
@@ -488,7 +491,7 @@ public class DateTest extends GWTTestCase {
       // when the date is the 29th, 30th, or 31st, and we set the month to one
       // which does
       // not have 29, 30, or 31 days in it, respectively.
-      Date accum0 = new Date(2006, 12, 1);
+      Date accum0 = new Date(2006 - 1900, 11, 1); // December
       accum0.setMonth(i);
       assertEquals(accum0.getMonth(), i);
     }
@@ -535,7 +538,7 @@ public class DateTest extends GWTTestCase {
       // We want to use a fixed date here. If we use the current date, the
       // assertion may fail
       // when the date is February 29th, and we set the year to a non-leap year
-      Date accum0 = new Date(2006, 12, 01);
+      Date accum0 = new Date(2006 - 1900, 11, 01); // December
       accum0.setYear(i);
       assertEquals(accum0.getYear(), i);
     }
@@ -618,7 +621,7 @@ public class DateTest extends GWTTestCase {
     Date accum0 = create();
     int arg10 = 0;
     int arg11 = 0;
-    int arg12 = 0;
+    int arg12 = 1;
     int arg13 = 0;
     int arg14 = 0;
     int arg15 = 0;
@@ -630,7 +633,7 @@ public class DateTest extends GWTTestCase {
     Date accum1 = create(PAST);
     int arg20 = 0;
     int arg21 = 0;
-    int arg22 = 0;
+    int arg22 = 1;
     int arg23 = 0;
     int arg24 = 0;
     int arg25 = 0;
@@ -642,7 +645,7 @@ public class DateTest extends GWTTestCase {
     Date accum2 = create(FUTURE);
     int arg30 = 0;
     int arg31 = 0;
-    int arg32 = 0;
+    int arg32 = 1;
     int arg33 = 0;
     int arg34 = 0;
     int arg35 = 0;

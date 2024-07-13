@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package j2cl.wasm;
+
+option java_multiple_files = true;
+option java_package = "com.google.j2cl.transpiler.backend.wasm";
+
+message Summary {
+  repeated string type_names = 1;
+  repeated TypeInfo types = 2;
+  repeated int32 interfaces = 3;
+  repeated StringLiteralInfo string_literals = 4;
+  repeated SystemPropertyInfo system_properties = 5;
+  repeated SharedSnippet type_snippets = 6;
+  repeated SharedSnippet global_snippets = 7;
+  repeated SharedSnippet wasm_import_snippets = 8;
+  repeated SharedSnippet js_import_snippets = 9;
+  repeated string js_import_requires = 10;
+}
+
+message TypeInfo {
+  int32 type_id = 1;
+  int32 extends_type = 2;
+  repeated int32 implements_types = 3;
+  bool abstract = 4;
+}
+
+message StringLiteralInfo {
+  string content = 1;
+  string enclosing_type_name = 2;
+  string method_name = 3;
+}
+
+message SystemPropertyInfo {
+  string property_key = 1;
+  bool is_required = 2;
+}
+message SharedSnippet {
+  string key = 1;
+  string snippet = 2;
+}

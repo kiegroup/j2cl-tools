@@ -15,6 +15,8 @@
  */
 package anonymousclass;
 
+import jsinterop.annotations.JsConstructor;
+
 abstract class SomeClass {
   public abstract String foo();
 
@@ -31,6 +33,20 @@ abstract class SomeClassWithStaticMembers {
 
 public class AnonymousClass {
   int i;
+  Object o;
+
+  public AnonymousClass(Object a) {
+    o =
+        new SomeClass(0) {
+          Object outer = AnonymousClass.this;
+          Object other = a;
+
+          @Override
+          public String foo() {
+            return "" + i;
+          }
+        };
+  }
 
   public void main() {
     SomeClass instance =
@@ -63,4 +79,23 @@ interface SomeInterface {
           return "a";
         }
       };
+}
+
+// Test case for b/321755877
+class JsConstructorClass {
+  @JsConstructor
+  JsConstructorClass(Object o) {}
+
+  JsConstructorClass() {
+    this(trueVar ? new Object() {} : null);
+  }
+
+  static boolean trueVar = true;
+}
+
+class JsConstructorSubclass extends JsConstructorClass {
+  @JsConstructor
+  JsConstructorSubclass() {
+    super(trueVar ? new Object() {} : null);
+  }
 }

@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import jsinterop.annotations.JsPackage;
-import org.jspecify.nullness.NullMarked;
+import org.jspecify.annotations.NullMarked;
 
 /**
  * A cache for information on package-info files that are needed for transpilation, like JsInterop
@@ -94,7 +94,7 @@ public class PackageInfoCache {
    * When nothing is known about a particular package in a particular class path entry the answers
    * to questions about package properties are taken from this instance.
    */
-  private static final PackageReport DEFAULT_PACKAGE_REPORT = PackageReport.newBuilder().build();
+  public static final PackageReport DEFAULT_PACKAGE_REPORT = PackageReport.newBuilder().build();
 
   /** Allows for the initialization/retrieval of one shared PackageInfoCache instance per thread. */
   private static final ThreadLocal<PackageInfoCache> packageInfoCacheStorage = new ThreadLocal<>();

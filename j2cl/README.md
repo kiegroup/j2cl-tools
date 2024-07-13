@@ -70,6 +70,7 @@ and Calendar.
 Guides
 ------
 - [Getting Started](docs/getting-started.md)
+- [Getting Started for Wasm](docs/getting-started-j2wasm.md)
 - [JsInterop Cookbook](docs/jsinterop-by-example.md)
 - [J2CL Best Practices](docs/best-practices.md)
 - [Emulation Limitations](docs/limitations.md)

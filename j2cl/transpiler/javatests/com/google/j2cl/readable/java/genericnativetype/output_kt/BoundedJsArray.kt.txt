@@ -9,6 +9,7 @@
  "UNNECESSARY_LATEINIT",
  "UNNECESSARY_NOT_NULL_ASSERTION",
  "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
  "UNUSED_PARAMETER",
  "UNUSED_VARIABLE",
  "USELESS_CAST",
@@ -18,6 +19,9 @@
 package genericnativetype
 
 import javaemul.lang.*
+import jsinterop.annotations.JsOverlay
+import jsinterop.annotations.JsPackage
+import jsinterop.annotations.JsType
 import kotlin.Int
 import kotlin.OptIn
 import kotlin.Suppress
@@ -26,13 +30,15 @@ import kotlin.jvm.JvmStatic
 import kotlin.native.ObjCName
 
 @ObjCName("J2ktGenericnativetypeBoundedJsArray", exact = true)
+@JsType(name = "Array", namespace = JsPackage.GLOBAL, isNative = true)
 open class BoundedJsArray<V> {
- constructor(size: Int)
+ internal constructor(size: Int)
 
  @ObjCName("J2ktGenericnativetypeBoundedJsArrayCompanion", exact = true)
  companion object {
   @JvmStatic
   @ObjCName("create")
+  @JsOverlay
   fun <V_1> create(): BoundedJsArray<V_1>? {
    val array: BoundedJsArray<V_1>? = null
    return array
@@ -40,6 +46,7 @@ open class BoundedJsArray<V> {
 
   @JvmStatic
   @ObjCName("create")
+  @JsOverlay
   fun <V_1> create(
    @ObjCName("withInt") size: Int
   ): BoundedJsArray<V_1>? {

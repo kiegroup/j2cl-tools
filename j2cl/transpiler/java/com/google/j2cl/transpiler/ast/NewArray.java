@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
  */
 @Visitable
 public class NewArray extends Expression {
-  private final ArrayTypeDescriptor typeDescriptor;
+  @Visitable ArrayTypeDescriptor typeDescriptor;
   @Visitable List<Expression> dimensionExpressions = new ArrayList<>();
   /**
    * An optional initializer for the array being constructed.
@@ -80,6 +80,11 @@ public class NewArray extends Expression {
   public Precedence getPrecedence() {
     // Treated exactly as new, which is modeled as a member access.
     return Precedence.MEMBER_ACCESS;
+  }
+
+  @Override
+  public boolean canBeNull() {
+    return false;
   }
 
   @Override

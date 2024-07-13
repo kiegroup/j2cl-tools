@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.kie.j2cl.tools</groupId>
+        <artifactId>j2cl-parent</artifactId>
+        <version>v20240622-2</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+    <artifactId>junit-runtime</artifactId>
+    <packaging>pom</packaging>
+
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                  <execution>
+                    <phase>prepare-package</phase>
+                    <goals><goal>single</goal></goals>
+                  </execution>
+                </executions>
+                <configuration>
+                  <descriptors>
+                    <descriptor>assembly.xml</descriptor>
+                  </descriptors>
+                </configuration>
+              </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-artifacts</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/runtime/libjsunit_helpers_internal_assumption_violated_exception-j2cl.jar</file>
+                                    <type>jar</type>
+                                </artifact>
+                                <artifact>
+                                    <file>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/runtime/libjsunit_helpers_internal_assumption_violated_exception-j2cl-src.jar</file>
+                                    <type>jar</type>
+                                    <classifier>sources</classifier>
+                                </artifact>
+                                <artifact>
+                                    <file>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/runtime/jsunit_helpers_internal_assumption_violated_exception-javadoc.jar</file>
+                                    <type>jar</type>
+                                    <classifier>javadoc</classifier>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

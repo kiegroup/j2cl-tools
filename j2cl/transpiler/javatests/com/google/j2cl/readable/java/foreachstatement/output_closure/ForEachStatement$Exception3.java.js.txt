@@ -1,0 +1,12 @@
+goog.module('foreachstatement.ForEachStatement.Exception3');
+
+goog.require('java.lang.Exception');
+goog.require('java.lang.Integer');
+goog.require('java.lang.Iterable');
+goog.require('java.util.Iterator');
+goog.require('java.util.Spliterator');
+goog.require('java.util.function.Consumer');
+goog.require('nativebootstrap.Util');
+
+const Exception3 = goog.require('foreachstatement.ForEachStatement.Exception3$impl');
+exports = Exception3;

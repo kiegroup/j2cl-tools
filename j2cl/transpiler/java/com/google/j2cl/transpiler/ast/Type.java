@@ -29,6 +29,7 @@ import com.google.j2cl.common.visitor.Visitable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -63,7 +64,11 @@ public class Type extends Node implements HasSourcePosition, HasJsNameInfo, HasR
   }
 
   public boolean containsMethod(String mangledName) {
-    return getMethods().stream().anyMatch(method -> method.getMangledName().equals(mangledName));
+    return containsMethod(method -> method.getMangledName().equals(mangledName));
+  }
+
+  public boolean containsMethod(Predicate<MethodDescriptor> methodPredicate) {
+    return getMethods().stream().map(Method::getDescriptor).anyMatch(methodPredicate);
   }
 
   public void setAbstract(boolean isAbstract) {
@@ -336,9 +341,10 @@ public class Type extends Node implements HasSourcePosition, HasJsNameInfo, HasR
 
     // Synthesizes the getter:
     // $get<fieldName>() {
-    //   if (<fieldName> == null) {
-    //      <fieldName> = <initializationExpression>;
+    //   if (<fieldName> != null) {
+    //     return <fieldName>;
     //   }
+    //   <fieldName> = <initializationExpression>;
     //   return <fieldName>;
     // }
     addMember(
@@ -347,14 +353,20 @@ public class Type extends Node implements HasSourcePosition, HasJsNameInfo, HasR
             .addStatements(
                 IfStatement.newBuilder()
                     .setConditionExpression(
-                        FieldAccess.Builder.from(holderFieldDescriptor).build().infixEqualsNull())
-                    .setThenStatement(
-                        BinaryExpression.Builder.asAssignmentTo(holderFieldDescriptor)
-                            .setRightOperand(initializationExpression)
+                        FieldAccess.Builder.from(holderFieldDescriptor)
                             .build()
-                            .makeStatement(SourcePosition.NONE))
+                            .infixNotEqualsNull())
+                    .setThenStatement(
+                        ReturnStatement.newBuilder()
+                            .setExpression(FieldAccess.Builder.from(holderFieldDescriptor).build())
+                            .setSourcePosition(SourcePosition.NONE)
+                            .build())
                     .setSourcePosition(SourcePosition.NONE)
                     .build(),
+                BinaryExpression.Builder.asAssignmentTo(holderFieldDescriptor)
+                    .setRightOperand(initializationExpression)
+                    .build()
+                    .makeStatement(SourcePosition.NONE),
                 ReturnStatement.newBuilder()
                     .setExpression(FieldAccess.Builder.from(holderFieldDescriptor).build())
                     .setSourcePosition(SourcePosition.NONE)

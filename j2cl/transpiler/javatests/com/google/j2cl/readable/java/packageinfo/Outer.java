@@ -16,9 +16,13 @@
 package packageinfo;
 
 import jsinterop.annotations.JsType;
+import packageinfo.thirdpartylib.Bar;
 
 @JsType
 public class Outer {
+  public static void main(String... args) {
+    Bar.bar();
+  }
 
   @JsType
   public class Inner {}

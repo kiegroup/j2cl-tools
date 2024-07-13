@@ -167,6 +167,27 @@ public class CommandLineInvocationTest extends TestCase {
         .assertTranspileSucceeds();
   }
 
+  public void testNativeJsIsFullyQualified() {
+    newTesterWithDefaults()
+        .addCompilationUnit(
+            "nativeclasstest.NativeClass",
+            "import jsinterop.annotations.*;",
+            "@JsType(name = \"SomethingElse\")",
+            "public class NativeClass {",
+            "  @JsMethod public native void nativeInstanceMethod();",
+            "  public static class InnerClass {",
+            "    @JsMethod public native void nativeInstanceMethod();",
+            "  }",
+            "}")
+        .addFile(
+            "this/can/be/anywhere/nativeclasstest.NativeClass.native.js",
+            "NativeClass.prototype.nativeInstanceMethod = function () {}")
+        .addFile(
+            "somewhere/else/nativeclasstest.NativeClass$InnerClass.native.js",
+            "InnerClass.prototype.nativeInstanceMethod = function () {}")
+        .assertTranspileSucceeds();
+  }
+
   public void testNoMatchingSource() {
     newTesterWithDefaults()
         .addCompilationUnit(
@@ -253,6 +274,52 @@ public class CommandLineInvocationTest extends TestCase {
             "Unused native file 'nativeclasstest/ExtraClass.native.js'.");
   }
 
+  public void testMultipleNativeSourceMatches() {
+    newTesterWithDefaults()
+        .addCompilationUnit(
+            "nativeclasstest.NativeClass",
+            "import jsinterop.annotations.*;",
+            "public class NativeClass {",
+            "  @JsMethod public native void nativeInstanceMethod();",
+            "}")
+        .addFileToZipFile(
+            "native.zip",
+            "nativeclasstest/NativeClass.native.js",
+            "NativeClass.prototype.nativeInstanceMethod = function () {}")
+        .addFileToZipFile(
+            "native.zip",
+            "nativeclasstest/nativeclasstest.NativeClass.native.js",
+            "NativeClass.prototype.nativeInstanceMethod = function () {}")
+        .assertTranspileFails()
+        .assertErrorsWithoutSourcePosition(
+            "Unused native file 'nativeclasstest/NativeClass.native.js'.");
+  }
+
+  public void testMultipleNativeSourcesWithSameName() {
+    newTesterWithDefaults()
+        .addCompilationUnit(
+            "nativeclasstest.NativeClass",
+            "import jsinterop.annotations.*;",
+            "public class NativeClass {",
+            "  @JsMethod public native void nativeInstanceMethod();",
+            "}")
+        .addFileToZipFile(
+            "native.zip",
+            "nativeclasstest/NativeClass.native.js",
+            "NativeClass.prototype.nativeInstanceMethod = function () {}")
+        .addCompilationUnit(
+            "nativeclasstest.subpackage.NativeClass",
+            "import jsinterop.annotations.*;",
+            "public class NativeClass {",
+            "  @JsMethod public native void otherNativeInstanceMethod();",
+            "}")
+        .addFileToZipFile(
+            "native.zip",
+            "nativeclasstest/subpackage/NativeClass.native.js",
+            "NativeClass.prototype.otherNativeInstanceMethod = function () {}")
+        .assertTranspileSucceeds();
+  }
+
   public void testOutputsToDirectory() throws IOException {
     newTesterWithDefaults()
         .setOutputPath(Files.createTempDirectory("outputdir"))
@@ -289,5 +356,42 @@ public class CommandLineInvocationTest extends TestCase {
       assertNotNull(zipFile.getEntry("test/Bar.impl.java.js"));
       assertNull(zipFile.getEntry("some/thing/Bogus.js"));
     }
+  }
+
+  public void testForbiddenAnnotations() {
+    newTesterWithDefaults()
+        .addArgs("-forbiddenAnnotation", "GwtIncompatible")
+        .addCompilationUnit(
+            "annotation.GwtIncompatible",
+            "import java.lang.annotation.*;",
+            "@Retention(RetentionPolicy.CLASS)",
+            "@Target({ElementType.METHOD})",
+            "@interface GwtIncompatible {}")
+        .addCompilationUnit(
+            "annotation.ClassWithForbiddenAnnotation",
+            "import jsinterop.annotations.*;",
+            "public class ClassWithForbiddenAnnotation {",
+            "  @GwtIncompatible public  void nativeInstanceMethod() {}",
+            "}")
+        .assertTranspileFails()
+        .assertErrorsWithoutSourcePosition(
+            "Unexpected @GwtIncompatible annotation found. Please run this library through the"
+                + " incompatible annotated code stripper tool.");
+
+    newTesterWithDefaults()
+        .addArgs("-forbiddenAnnotation", "Foo")
+        .addCompilationUnit(
+            "annotation.GwtIncompatible",
+            "import java.lang.annotation.*;",
+            "@Retention(RetentionPolicy.CLASS)",
+            "@Target({ElementType.METHOD})",
+            "@interface GwtIncompatible {}")
+        .addCompilationUnit(
+            "annotation.ClassWithForbiddenAnnotation",
+            "import jsinterop.annotations.*;",
+            "public class ClassWithForbiddenAnnotation {",
+            "  @GwtIncompatible public void nativeInstanceMethod() {}",
+            "}")
+        .assertTranspileSucceeds();
   }
 }

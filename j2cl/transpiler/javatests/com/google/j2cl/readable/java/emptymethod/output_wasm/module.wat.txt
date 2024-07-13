@@ -1,34 +1,37 @@
- ;;; Code for emptymethod.EmptyMethod [type definition]
- (type $emptymethod.EmptyMethod (struct_subtype
-  (field $vtable (ref $emptymethod.EmptyMethod.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $emptymethod.EmptyMethod.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  $java.lang.Object.vtable)
- )
+;;; Code for emptymethod.EmptyMethod [type definition]
+(type $emptymethod.EmptyMethod.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ ))
+)
+(type $emptymethod.EmptyMethod (sub $java.lang.Object (struct
+ (field $vtable (ref $emptymethod.EmptyMethod.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
+;;; Code for emptymethod.EmptyMethod [imports]
+
+;;; Code for emptymethod.EmptyMethod [static fields]
+(global $$class-initialized@emptymethod.EmptyMethod (mut i32)
+ (i32.const 0)
+)
+(global $$class@emptymethod.EmptyMethod (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
 
 ;;; Code for emptymethod.EmptyMethod [vtable.init]
 (global $emptymethod.EmptyMethod.vtable (ref $emptymethod.EmptyMethod.vtable)
  (struct.new $emptymethod.EmptyMethod.vtable
+  (ref.func $$getClassImpl__java_lang_Class@emptymethod.EmptyMethod)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@emptymethod.EmptyMethod)
  )
 )
-
-;;; Code for emptymethod.EmptyMethod [static fields]
-(global $f_$initialized__emptymethod_EmptyMethod (mut i32) (i32.const 0))
-(global $f_$class__emptymethod_EmptyMethod (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|emptymethod....|__emptymethod_EmptyMethod (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
 
 ;;; Code for emptymethod.EmptyMethod [methods]
 
@@ -38,6 +41,8 @@
  ;;@ emptymethod/EmptyMethod.java:18:13
  (local $$instance (ref null $emptymethod.EmptyMethod))
  (block
+  ;;@ emptymethod/EmptyMethod.java:18:13
+  (call $$clinit__void_<once>_@emptymethod.EmptyMethod )
   ;;@ emptymethod/EmptyMethod.java:18:13
   (local.set $$instance (struct.new $emptymethod.EmptyMethod (ref.as_non_null (global.get $emptymethod.EmptyMethod.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
   ;;@ emptymethod/EmptyMethod.java:18:13
@@ -53,8 +58,6 @@
  ;;@ emptymethod/EmptyMethod.java:18:13
  (block
   ;;@ emptymethod/EmptyMethod.java:18:13
-  (call $$clinit__void@emptymethod.EmptyMethod )
-  ;;@ emptymethod/EmptyMethod.java:18:13
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -65,38 +68,39 @@
  ;;@ emptymethod/EmptyMethod.java:19:21
  (block
   ;;@ emptymethod/EmptyMethod.java:19:41
-  (call $$clinit__void@emptymethod.EmptyMethod )
+  (call $$clinit__void_<once>_@emptymethod.EmptyMethod )
  )
 )
 
 ;;; void EmptyMethod.$clinit()
-(func $$clinit__void@emptymethod.EmptyMethod
+(func $$clinit__void_<once>_@emptymethod.EmptyMethod
  ;;@ emptymethod/EmptyMethod.java:18:13
  (block
   ;;@ emptymethod/EmptyMethod.java:18:13
-  (if (global.get $f_$initialized__emptymethod_EmptyMethod)
+  (if (global.get $$class-initialized@emptymethod.EmptyMethod)
    (then
     ;;@ emptymethod/EmptyMethod.java:18:13
     (return )
    )
   )
   ;;@ emptymethod/EmptyMethod.java:18:13
-  (global.set $f_$initialized__emptymethod_EmptyMethod (i32.const 1))
+  (global.set $$class-initialized@emptymethod.EmptyMethod (i32.const 1))
   ;;@ emptymethod/EmptyMethod.java:18:13
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> EmptyMethod.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@emptymethod.EmptyMethod
+(func $$getClassMetadata__java_lang_Class_<once>_@emptymethod.EmptyMethod
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__emptymethod_EmptyMethod) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@emptymethod.EmptyMethod)))
    (then
-    (global.set $f_$class__emptymethod_EmptyMethod (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|emptymethod....|__java_lang_String (ref.func $$getString_|emptymethod....|__java_lang_String@emptymethod.EmptyMethod) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@emptymethod.EmptyMethod))
    )
   )
-  (return (global.get $f_$class__emptymethod_EmptyMethod))
+  (global.set $$class@emptymethod.EmptyMethod (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|emptymethod....|__java_lang_String_<once>_@emptymethod.EmptyMethod )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@emptymethod.EmptyMethod))
  )
 )
 
@@ -106,22 +110,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $emptymethod.EmptyMethod))
- (local.set $this (ref.cast_static $emptymethod.EmptyMethod (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $emptymethod.EmptyMethod) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@emptymethod.EmptyMethod) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@emptymethod.EmptyMethod ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@emptymethod.EmptyMethod)
-
-;;; String EmptyMethod.$getString_|emptymethod....|()
-(func $$getString_|emptymethod....|__java_lang_String@emptymethod.EmptyMethod
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|emptymethod....|__emptymethod_EmptyMethod) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|emptymethod....|__emptymethod_EmptyMethod (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "emptymethod.EmptyMethod")))
-   )
-  )
-  (return (global.get $f_$string_|emptymethod....|__emptymethod_EmptyMethod))
- )
-)

@@ -13,7 +13,7 @@
  */
 package com.google.j2cl.transpiler;
 
-import static com.google.j2cl.transpiler.TranspilerTester.newTesterWithDefaultsWasm;
+import static com.google.j2cl.transpiler.TranspilerTester.newTesterWithWasmDefaults;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.j2cl.transpiler.TranspilerTester.TranspileResult;
@@ -117,18 +117,165 @@ public final class J2wasmJsInteropRestrictionsCheckerTest extends TestCase {
             "Native JsType 'AlsoBuggy' cannot be assigned to 'Object'. (b/262009761)",
             "Native JsType 'Buggy' cannot be cast to 'Object'. (b/262009761)",
             "Native JsType 'Object' cannot be cast to 'Buggy'. (b/262009761)",
-            "Cannot access member of 'Object' with native JsType 'Buggy'. (b/288128177)");
+            "Cannot access member of 'Object' with Native JsType 'Buggy'. (b/262009761)");
+  }
+
+  public void testNonnativeTypeExtendNativeJsTypeFails() {
+    assertTranspileFails(
+            "test.Buggy",
+            "import jsinterop.annotations.*;",
+            "@JsType(isNative = true)",
+            "class Buggy {}",
+            "class Subclass extends Buggy {}")
+        .assertErrorsWithoutSourcePosition(
+            "Non-native type 'Subclass' cannot extend native JsType 'Buggy'.");
+  }
+
+  public void testInstanceOfNativeJsTypeFails() {
+    assertTranspileFails(
+            "test.Buggy",
+            "import jsinterop.annotations.*;",
+            "@JsType(isNative = true)",
+            "class Buggy {}",
+            "@JsType(isNative = true)",
+            "interface BuggyInterface {}",
+            "class Main {",
+            "  void test(Object b) {",
+            "    if (b instanceof Buggy) {}",
+            "    if (b instanceof BuggyInterface) {}",
+            "  }",
+            "}")
+        .assertErrorsWithoutSourcePosition(
+            "Cannot do instanceof against native JsType 'Buggy'.",
+            "Cannot do instanceof against native JsType interface 'BuggyInterface'.");
+  }
+
+  public void testNativeJsTypeArrayFails() {
+    assertTranspileFails(
+            "test.Main",
+            "import java.util.List;",
+            "import java.util.function.Function;",
+            "import jsinterop.annotations.*;",
+            "@JsType(isNative = true)",
+            "class MyNativeType {}",
+            "public class Main<T> {",
+            "  MyNativeType[] myNativeType;",
+            "  private static void acceptsNativeTypeArray(MyNativeType[] p) {}",
+            "  private static void acceptsNativeTypeVarargs(MyNativeType... p) {}",
+            "  private static void acceptsNativeTypeVarargsArray(MyNativeType[]... p) {}",
+            "  private static MyNativeType[] returnsNativeTypeArray() { return null; }",
+            "  private static <T> T[] returnsTArray() { return null; }",
+            "  private static <T> T returnsT() { return null; }",
+            "  T t;",
+            "  private static void arrays() {",
+            "    Object o = new MyNativeType[1];",
+            "    MyNativeType[] arr = null;",
+            "    List<MyNativeType[]> list = null;",
+            "    o = (MyNativeType[]) o;",
+            "    if (o instanceof MyNativeType[]) {}",
+            "    MyNativeType e = Main.<MyNativeType>returnsTArray()[0];",
+            "    e = Main.<MyNativeType[]>returnsT()[0];",
+            "    e = new Main<MyNativeType[]>().t[0];",
+            "  }",
+            "  private static <T extends MyNativeType> void createsTArray() {",
+            "     T[] arrGeneric = null;",
+            "  }",
+            "}")
+        .assertErrorsWithoutSourcePosition(
+            "Field 'Main<T>.myNativeType' cannot be of type 'MyNativeType[]'. (b/261079024)",
+            "Parameter 'p' in 'void Main.acceptsNativeTypeArray(MyNativeType[] p)' cannot be of"
+                + " type 'MyNativeType[]'. (b/261079024)",
+            "Parameter 'p' in 'void Main.acceptsNativeTypeVarargs(MyNativeType... p)' cannot be of"
+                + " type 'MyNativeType[]'. (b/261079024)",
+            "Parameter 'p' in 'void Main.acceptsNativeTypeVarargsArray(MyNativeType[]... p)' cannot"
+                + " be of type 'MyNativeType[][]'. (b/261079024)",
+            "Return type of 'MyNativeType[] Main.returnsNativeTypeArray()' cannot be of type"
+                + " 'MyNativeType[]'. (b/261079024)",
+            "Array creation 'new MyNativeType[1]' cannot be of type 'MyNativeType[]'."
+                + " (b/261079024)",
+            "Variable 'arr' cannot be of type 'MyNativeType[]'. (b/261079024)",
+            "Variable 'list' cannot be of type 'List<MyNativeType[]>'. (b/261079024)",
+            "Cannot cast to Native type array 'MyNativeType[]'. (b/261079024)",
+            "Cannot do instanceof against Native type array 'MyNativeType[]'. (b/261079024)",
+            "Returned type in call to method 'MyNativeType[] Main.returnsTArray()'"
+                + " cannot be of type 'MyNativeType[]'. (b/261079024)",
+            "Returned type in call to method 'MyNativeType[] Main.returnsT()' cannot be of type"
+                + " 'MyNativeType[]'. (b/261079024)",
+            "Object creation 'new Main.<init>()' cannot be of type 'Main<MyNativeType[]>'."
+                + " (b/261079024)",
+            "Reference to field 'Main<MyNativeType[]>.t' cannot be of type 'MyNativeType[]'."
+                + " (b/261079024)",
+            "Variable 'arrGeneric' cannot be of type 'T[]'. (b/261079024)");
+  }
+
+  public void testNativeJsTypeArgumentFails() {
+    assertTranspileFails(
+            "test.Main",
+            "import java.util.ArrayList;",
+            "import java.util.List;",
+            "import java.util.function.Function;",
+            "import jsinterop.annotations.*;",
+            "@JsType(isNative = true)",
+            "class MyNativeType {}",
+            "public class Main<T> {",
+            "  List<MyNativeType> myNativeType;",
+            "  List<T> tList;",
+            "  T t;",
+            "  private static void acceptsNativeTypeList(List<MyNativeType> p) {}",
+            "  private static void acceptsNativeTypeVarargsList(List<MyNativeType>... p) {}",
+            "  private static List<MyNativeType> returnsNativeTypeList() { return null; }",
+            "  private static <T> List<T> returnsTList() { return null; }",
+            "  private static <T> T returnsT() { return null; }",
+            "  private static <T> void acceptsT(T t) {}",
+            "  private static void arrays() {",
+            "    Object o = new ArrayList<MyNativeType>();",
+            "    List<MyNativeType> arr = null;",
+            "    o = (List<MyNativeType>) o;",
+            "    MyNativeType e = Main.<MyNativeType>returnsTList().get(0);",
+            "    e = Main.<MyNativeType>returnsT();",
+            "    acceptsT(new MyNativeType());",
+            "    e = new Main<MyNativeType>().tList.get(0);",
+            "    e = new Main<List<MyNativeType>>().t.get(0);",
+            "  }",
+            "  static class Buggy extends Main<MyNativeType> {}",
+            "}")
+        .assertErrorsWithoutSourcePosition(
+            "Field 'Main<T>.myNativeType' cannot be of type 'List<MyNativeType>'. (b/290992813)",
+            "Parameter 'p' in 'void Main.acceptsNativeTypeList(List<MyNativeType> p)' cannot be of"
+                + " type 'List<MyNativeType>'. (b/290992813)",
+            "Return type of 'List<MyNativeType> Main.returnsNativeTypeList()' cannot be of type"
+                + " 'List<MyNativeType>'. (b/290992813)",
+            "Object creation 'new ArrayList.<init>()' cannot be of type 'ArrayList<MyNativeType>'."
+                + " (b/290992813)",
+            "Variable 'arr' cannot be of type 'List<MyNativeType>'. (b/290992813)",
+            "Cannot cast to type with Native type argument 'List<MyNativeType>'. (b/290992813)",
+            "Returned type in call to method 'List<MyNativeType> Main.returnsTList()'"
+                + " cannot be of type 'List<MyNativeType>'. (b/290992813)",
+            "Returned type in call to method 'MyNativeType Main.returnsT()' cannot be of type"
+                + " 'MyNativeType'. (b/290992813)",
+            "Native JsType 'MyNativeType' cannot be assigned to 'T'. (b/262009761)",
+            "Object creation 'new Main.<init>()' cannot be of type 'Main<MyNativeType>'."
+                + " (b/290992813)",
+            "Object creation 'new Main.<init>()' cannot be of type 'Main<List<MyNativeType>>'."
+                + " (b/290992813)",
+            "Returned type in call to method 'MyNativeType List.get(int)' cannot be of type"
+                + " 'MyNativeType'. (b/290992813)",
+            "Reference to field 'Main<MyNativeType>.tList' cannot be of type 'List<MyNativeType>'."
+                + " (b/290992813)",
+            "Reference to field 'Main<List<MyNativeType>>.t' cannot be of type"
+                + " 'List<MyNativeType>'. (b/290992813)",
+            "Supertype of 'Buggy' cannot be of type 'Main<MyNativeType>'. (b/290992813)");
   }
 
   @CanIgnoreReturnValue
   private TranspileResult assertTranspileSucceeds(String compilationUnitName, String... code) {
-    return newTesterWithDefaultsWasm()
+    return newTesterWithWasmDefaults()
         .addCompilationUnit(compilationUnitName, code)
         .assertTranspileSucceeds();
   }
 
   private TranspileResult assertTranspileFails(String compilationUnitName, String... code) {
-    return newTesterWithDefaultsWasm()
+    return newTesterWithWasmDefaults()
         .addCompilationUnit(compilationUnitName, code)
         .assertTranspileFails();
   }

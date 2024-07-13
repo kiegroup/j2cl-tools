@@ -15,7 +15,9 @@
  */
 package com.google.j2cl.jre.java8.util;
 
-import com.google.gwt.junit.client.GWTTestCase;
+import static com.google.j2cl.jre.testing.TestUtils.isWasm;
+
+import com.google.j2cl.jre.testing.J2ktIncompatible;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -26,6 +28,7 @@ public class OptionalTest extends GWTTestCase {
 
   private static final Object REFERENCE = new Object();
   private static final Object OTHER_REFERENCE = new Object();
+
   private boolean[] mutableFlag;
   private Optional<Object> empty;
   private Optional<Object> present;
@@ -59,8 +62,7 @@ public class OptionalTest extends GWTTestCase {
     assertTrue(present.isPresent());
   }
 
-  // Disabled until Java 11 is enabled in Open source
-/*  public void testIsEmpty() {
+  public void testIsEmpty() {
     // empty case
     assertTrue(empty.isEmpty());
 
@@ -72,7 +74,7 @@ public class OptionalTest extends GWTTestCase {
 
     present = Optional.ofNullable(REFERENCE);
     assertFalse(present.isEmpty());
-  }*/
+  }
 
   public void testGet() {
     // empty case
@@ -87,10 +89,24 @@ public class OptionalTest extends GWTTestCase {
     assertSame(REFERENCE, present.get());
   }
 
-  public void testIfPresent() {
+  @J2ktIncompatible // Parameters are non-nullable according to Jspecify
+  @SuppressWarnings("DangerousLiteralNull") // Intentionally misusing Optional to test bug parity.
+  public void testNull() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when NPE on dereference is supported
+      return;
+    }
+
     // empty case
     empty.ifPresent(null); // should not fail as per JavaDoc
-    empty.ifPresent(wrapped -> fail("Empty Optional should not execute consumer"));
+    empty.ifPresentOrElse(null, () -> {}); // should not fail as per JavaDoc
+
+    try {
+      empty.orElseThrow(null);
+      fail("Empty Optional must throw NullPointerException if supplier is null");
+    } catch (NullPointerException e) {
+      // expected
+    }
 
     // non-empty case
     try {
@@ -100,14 +116,58 @@ public class OptionalTest extends GWTTestCase {
       // expected
     }
 
-    present.ifPresent((wrapped) -> {
-      assertSame(REFERENCE, wrapped);
-      mutableFlag[0] = true;
-    });
+    try {
+      present.ifPresentOrElse(null, () -> {});
+      fail("Non-Empty Optional must throw NullPointerException if consumer is null");
+    } catch (NullPointerException e) {
+      // expected
+    }
+
+    try {
+      Object reference = present.orElseThrow(null);
+      assertEquals(REFERENCE, reference);
+    } catch (NullPointerException e) {
+      fail("Optional must not throw NullPointerException if supplier is null");
+    }
+  }
+
+  public void testIfPresent() {
+    // empty case
+    empty.ifPresent(wrapped -> fail("Empty Optional should not execute consumer"));
+
+    // non-empty case
+    present.ifPresent(
+        (wrapped) -> {
+          assertSame(REFERENCE, wrapped);
+          mutableFlag[0] = true;
+        });
+    assertTrue("Consumer not executed", mutableFlag[0]);
+  }
+
+  public void testIfPresentOrElse() {
+    // empty case
+    empty.ifPresentOrElse(
+        (wrapped) -> fail("Empty Optional should not call non-empty consumer"),
+        () -> mutableFlag[0] = true);
+    assertTrue("Consumer not executed", mutableFlag[0]);
+
+    // non-empty case
+    mutableFlag[0] = false;
+    present.ifPresentOrElse(
+        (wrapped) -> {
+          assertSame(REFERENCE, wrapped);
+          mutableFlag[0] = true;
+        },
+        () -> fail("Non-Empty Optional should not call empty consumer"));
     assertTrue("Consumer not executed", mutableFlag[0]);
   }
 
   public void testFilter() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when NPE on dereference is supported
+      return;
+    }
+
     // empty case
     try {
       empty.filter(null);
@@ -138,6 +198,11 @@ public class OptionalTest extends GWTTestCase {
   }
 
   public void testMap() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when NPE on dereference is supported
+      return;
+    }
+
     // empty case
     try {
       empty.map(null);
@@ -166,6 +231,11 @@ public class OptionalTest extends GWTTestCase {
   }
 
   public void testFlatMap() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when NPE on dereference is supported
+      return;
+    }
+
     // empty case
     try {
       empty.flatMap(null);
@@ -202,6 +272,11 @@ public class OptionalTest extends GWTTestCase {
   }
 
   public void testOr() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when NPE on dereference is supported
+      return;
+    }
+
     try {
       empty.or(null);
       fail("Empty Optional must throw NullPointerException if supplier is null");
@@ -249,6 +324,11 @@ public class OptionalTest extends GWTTestCase {
 
   @SuppressWarnings("DangerousLiteralNull") // Intentionally misusing Optional to test bug parity.
   public void testOrElseGet() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when NPE on dereference is supported
+      return;
+    }
+
     // empty case
     try {
       empty.orElseGet(null);
@@ -268,14 +348,12 @@ public class OptionalTest extends GWTTestCase {
 
   @SuppressWarnings("DangerousLiteralNull") // Intentionally misusing Optional to test bug parity.
   public void testOrElseThrow() {
-    // empty case
-    try {
-      empty.orElseThrow(null);
-      fail("Empty Optional must throw NullPointerException if supplier is null");
-    } catch (NullPointerException e) {
-      // expected
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when NPE on dereference is supported
+      return;
     }
 
+    // empty case
     try {
       empty.<RuntimeException>orElseThrow(() -> null);
       fail("Empty Optional must throw NullPointerException if supplier returns null");
@@ -291,17 +369,21 @@ public class OptionalTest extends GWTTestCase {
     }
 
     // non-empty case
-    try {
-      Object reference = present.orElseThrow(null);
-      assertSame(REFERENCE, reference);
-    } catch (NullPointerException e) {
-      fail("Optional must not throw NullPointerException if supplier is null");
-    }
-
     assertSame(REFERENCE, present.orElseThrow(() -> {
       fail("Optional must not execute supplier");
       return new RuntimeException("should not execute");
     }));
+  }
+
+  public void testOrElseThrowNoArgs() {
+    try {
+      empty.orElseThrow();
+      fail("Expected NoSuchElementException from empty Optional: orElseThrow");
+    } catch (NoSuchElementException ignore) {
+      // expected
+    }
+
+    assertEquals(REFERENCE, present.orElseThrow());
   }
 
   public void testEquals() {

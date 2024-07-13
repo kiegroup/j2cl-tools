@@ -1,25 +1,24 @@
 /*
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ * Copyright © 2021 j2cl-maven-plugin authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package com.vertispan.j2cl.build.provided;
 
 import com.google.auto.service.AutoService;
 import com.google.j2cl.common.SourceUtils;
 import com.vertispan.j2cl.build.task.*;
+import com.vertispan.j2cl.tools.J2CLModuleParser;
 import com.vertispan.j2cl.tools.Javac;
 
 import javax.annotation.Nullable;
@@ -37,6 +36,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -54,6 +55,8 @@ public class BytecodeTask extends TaskFactory {
     public static final PathMatcher JAVA_SOURCES = withSuffix(".java");
     public static final PathMatcher JAVA_BYTECODE = withSuffix(".class");
     public static final PathMatcher NOT_BYTECODE = p -> !JAVA_BYTECODE.matches(p);
+    public static final PathMatcher JAVA_MODULE_INFO = withSuffix("module-info.java");
+    public static final PathMatcher JAVA_SOURCES_EXCEPT_MODULE_INFO = p -> JAVA_SOURCES.matches(p) && !JAVA_MODULE_INFO.matches(p);
 
     public static final PathMatcher APT_PROCESSOR = p ->
                         p.equals(Paths.get("META-INF", "services", "javax.annotation.processing.Processor"));
@@ -90,8 +93,8 @@ public class BytecodeTask extends TaskFactory {
         // TODO just use one input for both of these
         // track the dirs (with all file changes) so that APT can see things it wants
         Input inputDirs = input(project, OutputTypes.INPUT_SOURCES);
-        // track just java files (so we can just compile them)
-        Input inputSources = input(project, OutputTypes.INPUT_SOURCES).filter(JAVA_SOURCES);
+        // track just java files (so we can just compile them), ignoring module-info.java files (as they make javac 8 fail)
+        Input inputSources = input(project, OutputTypes.INPUT_SOURCES).filter(JAVA_SOURCES_EXCEPT_MODULE_INFO);
         // track resources so they are available to downstream processors on the classpath, as they would
         // be if we had built a jar
         Input resources = input(project, OutputTypes.INPUT_SOURCES).filter(NOT_BYTECODE);
@@ -114,6 +117,7 @@ public class BytecodeTask extends TaskFactory {
 
         File bootstrapClasspath = config.getBootstrapClasspath();
         List<File> extraClasspath = new ArrayList<>(config.getExtraClasspath());
+        Map<String, String> annotationProcessorsArgs = Collections.unmodifiableMap(config.getAnnotationProcessorsArgs());
         Set<String> processors = new HashSet<>();
         project.getDependencies()
                 .stream()
@@ -144,12 +148,21 @@ public class BytecodeTask extends TaskFactory {
                 List<File> sourcePaths = inputDirs.getParentPaths().stream().map(Path::toFile).collect(Collectors.toUnmodifiableList());
                 File generatedClassesDir = getGeneratedClassesDir(context);
                 File classOutputDir = context.outputPath().toFile();
-                Javac javac = new Javac(context, generatedClassesDir, sourcePaths, classpathDirs, classOutputDir, bootstrapClasspath, aptProcessors);
+                Javac javac = new Javac(context, generatedClassesDir, sourcePaths, classpathDirs, classOutputDir, bootstrapClasspath, aptProcessors, annotationProcessorsArgs);
+
+                // Find the super-source path, if it exists
+                Optional<Path> superSource = J2CLModuleParser.getSuperSourcePath(sourcePaths);
+                Stream<? extends CachedPath> inputSourcesStream = inputSources.getFilesAndHashes()
+                        .stream();
+
+                // Exclude super-source files from compilation
+                if(project.hasSourcesMapped() && superSource.isPresent()) {
+                    inputSourcesStream = inputSourcesStream.filter(p -> !p.getSourcePath().startsWith(superSource.get()));
+                }
 
                 // TODO convention for mapping to original file paths, provide FileInfo out of Inputs instead of Paths,
                 //      automatically relativized?
-                List<SourceUtils.FileInfo> sources = inputSources.getFilesAndHashes()
-                        .stream()
+                List<SourceUtils.FileInfo> sources = inputSourcesStream
                         .map(p -> SourceUtils.FileInfo.create(p.getAbsolutePath().toString(), p.getSourcePath().toString()))
                         .collect(Collectors.toUnmodifiableList());
 

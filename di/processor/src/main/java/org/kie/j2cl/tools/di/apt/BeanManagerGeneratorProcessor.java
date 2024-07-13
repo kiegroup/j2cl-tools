@@ -34,7 +34,7 @@ import org.kie.j2cl.tools.di.apt.task.TaskGroup;
 import org.kie.j2cl.tools.di.core.internal.step.BeanManagerStep;
 
 @AutoService(Processor.class)
-@SupportedSourceVersion(SourceVersion.RELEASE_8)
+@SupportedSourceVersion(SourceVersion.RELEASE_11)
 public class BeanManagerGeneratorProcessor extends AbstractProcessor {
 
   private IOCContext iocContext;

@@ -111,6 +111,16 @@
         <include>testing/testsuite.js</include>
         <include>url/url.js</include>
         <include>useragent/useragent.js</include>
+
+        <include>labs/useragent/useragent.js</include>
+        <include>labs/useragent/highentropy/highentropyvalue.js</include>
+        <include>labs/useragent/highentropy/highentropydata.js</include>
+        <include>debug/asyncstacktag.js</include>
+        <include>events/eventtypehelpers.js</include>
+        <include>asserts/dom.js</include>
+        <include>flags/flags.js</include>
+        <include>dom/element.js</include>
+        <include>testing/testcase.js</include>
       </includes>
       <outputDirectory>closure/goog</outputDirectory>
     </fileSet>

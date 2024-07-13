@@ -31,7 +31,7 @@ internal fun MethodDescriptor.isProtoExtensionGetter() =
     qualifiedBinaryName == "com.google.protobuf.GeneratedMessage\$ExtendableMessage.getExtension"
 
 internal fun MethodDescriptor.isProtobufGetter(): Boolean {
-  if (!isProtobufMethod() || !getParameterDescriptors().isEmpty()) {
+  if (!isProtobufMethod() || !parameterDescriptors.isEmpty()) {
     return false
   }
   val name = name ?: ""
@@ -39,28 +39,33 @@ internal fun MethodDescriptor.isProtobufGetter(): Boolean {
 }
 
 internal fun MethodDescriptor.isProtobufMethod() =
-  !isStatic() && getEnclosingTypeDescriptor().isProtobufMessageOrBuilder()
+  !isStatic && enclosingTypeDescriptor.isProtobufMessageOrBuilder()
 
 internal fun TypeDescriptor.isProtobufBuilder(): Boolean {
   if (this !is DeclaredTypeDescriptor) {
     return false
   }
-  val superTypeDescriptor: DeclaredTypeDescriptor = getSuperTypeDescriptor() ?: return false
+  val superTypeDescriptor: DeclaredTypeDescriptor = superTypeDescriptor ?: return false
   val name = superTypeDescriptor.qualifiedSourceName
   return name == "com.google.protobuf.GeneratedMessage.Builder" ||
-    name == "com.google.protobuf.GeneratedMessageLite.Builder"
+    name == "com.google.protobuf.GeneratedMessageLite.Builder" ||
+    name == "com.google.protobuf.GeneratedMessageLite.ExtendableBuilder"
 }
 
 internal fun computeProtobufPropertyName(methodName: String) =
-  if (methodName.camelCaseStartsWith("get")) methodName[3].toLowerCase() + methodName.substring(4)
-  else methodName
+  if (methodName.camelCaseStartsWith("get")) {
+    methodName[3].toLowerCase() + methodName.substring(4)
+  } else {
+    methodName
+  }
 
 private fun DeclaredTypeDescriptor.isProtobufMessage(): Boolean {
-  val superTypeDescriptor: DeclaredTypeDescriptor = getSuperTypeDescriptor() ?: return false
+  val superTypeDescriptor: DeclaredTypeDescriptor = superTypeDescriptor ?: return false
   val name = superTypeDescriptor.qualifiedSourceName
   return name == "com.google.protobuf.GeneratedMessage" ||
-    name == "com.google.protobuf.GeneratedMessageLite"
+    name == "com.google.protobuf.GeneratedMessageLite" ||
+    name == "com.google.protobuf.GeneratedMessageLite.ExtendableMessage"
 }
 
-private fun DeclaredTypeDescriptor.isProtobufMessageOrBuilder() =
+internal fun DeclaredTypeDescriptor.isProtobufMessageOrBuilder() =
   isProtobufMessage() || isProtobufBuilder()

@@ -60,8 +60,23 @@ public class TranspilerTester {
         .setClassPathArg("transpiler/javatests/com/google/j2cl/transpiler/jre_bundle_deploy.jar");
   }
 
+  /** Creates a new transpiler tester initialized with Kotlin defaults. */
+  public static TranspilerTester newTesterWithKotlinDefaults() {
+    return newTester()
+        .addArgs("-frontend", "KOTLIN")
+        .addArgs("-kotlincOptions", "-Xmulti-platform")
+        // J2CL Koltin frontend is based on Koltin/JVM compiler that requires that deps and the
+        // current compilation use the same JVM target in order to inline bytecode. Even we don't
+        // use the bytecode inliner, kotlinc fails in the early stage if we do not specify the right
+        // JVM target.
+        // Note: For Bazel compilation, this is provided through toolchain defaults.
+        .addArgs("-kotlincOptions", "-jvm-target=11")
+        .setClassPathArg(
+            "transpiler/javatests/com/google/j2cl/transpiler/ktstdlib_bundle_deploy.jar");
+  }
+
   /** Creates a new transpiler tester initialized with WASM defaults. */
-  public static TranspilerTester newTesterWithDefaultsWasm() {
+  public static TranspilerTester newTesterWithWasmDefaults() {
     return newTester()
         .addArgs("-backend", "WASM")
         .setClassPathArg(
@@ -77,6 +92,7 @@ public class TranspilerTester {
         .addArgs("-defineForWasm", "jre.logging.logLevel=ALL")
         .addArgs("-defineForWasm", "jre.logging.simpleConsoleHandler=ENABLED")
         .addArgs("-defineForWasm", "jre.classMetadata=SIMPLE")
+        .addArgs("-defineForWasm", "jre.assertions=ENABLED")
         .addSourcePathArg(
             "transpiler/javatests/com/google/j2cl/transpiler/jre_bundle-j2wasm_deploy-src.jar");
   }
@@ -332,6 +348,12 @@ public class TranspilerTester {
     public TranspileResult assertWarningsWithoutSourcePosition(String... expectedWarnings) {
       assertThat(getProblems().getWarnings())
           .comparingElementsUsing(ERROR_WITHOUT_SOURCE_POSITION_COMPARATOR)
+          .containsExactlyElementsIn(Arrays.asList(expectedWarnings));
+      return this;
+    }
+
+    public TranspileResult assertWarningsWithSourcePosition(String... expectedWarnings) {
+      assertThat(getProblems().getWarnings())
           .containsExactlyElementsIn(Arrays.asList(expectedWarnings));
       return this;
     }

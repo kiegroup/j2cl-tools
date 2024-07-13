@@ -9,6 +9,7 @@
  "UNNECESSARY_LATEINIT",
  "UNNECESSARY_NOT_NULL_ASSERTION",
  "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
  "UNUSED_PARAMETER",
  "UNUSED_VARIABLE",
  "USELESS_CAST",
@@ -33,7 +34,7 @@ fun interface I<T, S> {
  ): T
 }
 
-open class A<T, S> {
+open class A<T, S> internal constructor() {
  @ObjCName("fun")
  open fun `fun`(
   @ObjCName("withId") s: S
@@ -47,8 +48,8 @@ open class A<T, S> {
  }
 }
 
-open class B: A<Number?, String?>(), I<Int?, String?> {
- open override fun `fun`(s: String?): Int? {
+open class B internal constructor(): A<Number?, String?>(), I<Int?, String?> {
+ override fun `fun`(s: String?): Int? {
   return Int(1)
  }
 }
@@ -63,4 +64,4 @@ interface SpecializedInterface {
  fun get(): String?
 }
 
-open class AccidentalOverride: A<String?, String?>(), SpecializedInterface {}
+open class AccidentalOverride internal constructor(): A<String?, String?>(), SpecializedInterface {}

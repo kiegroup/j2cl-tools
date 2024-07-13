@@ -18,8 +18,13 @@ package nativekttypes;
 import javaemul.internal.annotations.KtNative;
 
 @KtNative(
-    value = "nativekttypes.nativekt.KRequiringBridge",
-    bridgeWith = "nativekttypes.nativekt.KBridge")
+    name = "nativekttypes.nativekt.KRequiringBridge",
+    bridgeName = "nativekttypes.nativekt.KBridge")
 public class NativeRequiringBridge {
   public void method() {}
+
+  @KtNative(
+      name = "nativekttypes.nativekt.KRequiringBridge.Inner",
+      bridgeName = "nativekttypes.nativekt.KBridge.Inner")
+  public static class Inner {}
 }

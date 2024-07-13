@@ -99,20 +99,22 @@ public final class Character implements Comparable<Character>, Serializable {
     }
   }
 
-  /**
-   * Use nested class to avoid clinit on outer.
-   */
+  /** Use nested class to avoid clinit on outer. */
   private static class BoxedValues {
-    // Box values according to JLS - from \u0000 to \u007f
-    private static Character[] boxedValues = new Character[128];
+    private static final Character[] boxedValues;
+
+    static {
+      // Box values according to JLS - from \u0000 to \u007f
+      Character[] values = new Character[128];
+      for (char i = 0; i < 128; i++) {
+        values[i] = new Character(i);
+      }
+      boxedValues = values;
+    }
 
     @HasNoSideEffects
     private static Character get(char c) {
-      Character result = BoxedValues.boxedValues[c];
-      if (result == null) {
-        result = BoxedValues.boxedValues[c] = new Character(c);
-      }
-      return result;
+      return boxedValues[c];
     }
   }
 
@@ -404,8 +406,7 @@ public final class Character implements Comparable<Character>, Serializable {
 
     if (codePoint >= MIN_SUPPLEMENTARY_CODE_POINT) {
       return new char[] {
-          getHighSurrogate(codePoint),
-          getLowSurrogate(codePoint),
+        highSurrogate(codePoint), lowSurrogate(codePoint),
       };
     } else {
       return new char[] {
@@ -418,8 +419,8 @@ public final class Character implements Comparable<Character>, Serializable {
     checkArgument(isValidCodePoint(codePoint));
 
     if (codePoint >= MIN_SUPPLEMENTARY_CODE_POINT) {
-      dst[dstIndex++] = getHighSurrogate(codePoint);
-      dst[dstIndex] = getLowSurrogate(codePoint);
+      dst[dstIndex++] = highSurrogate(codePoint);
+      dst[dstIndex] = lowSurrogate(codePoint);
       return 2;
     } else {
       dst[dstIndex] = (char) codePoint;
@@ -498,27 +499,25 @@ public final class Character implements Comparable<Character>, Serializable {
   }
 
   /**
-   * Computes the high surrogate character of the UTF16 representation of a
-   * non-BMP code point. See {@link getLowSurrogate}.
+   * Computes the high surrogate character of the UTF16 representation of a non-BMP code point. See
+   * {@link lowSurrogate}.
    *
-   * @param codePoint requested codePoint, required to be >=
-   *          MIN_SUPPLEMENTARY_CODE_POINT
+   * @param codePoint requested codePoint, required to be >= MIN_SUPPLEMENTARY_CODE_POINT
    * @return high surrogate character
    */
-  static char getHighSurrogate(int codePoint) {
+  public static char highSurrogate(int codePoint) {
     return (char) (MIN_HIGH_SURROGATE
         + (((codePoint - MIN_SUPPLEMENTARY_CODE_POINT) >> 10) & 1023));
   }
 
   /**
-   * Computes the low surrogate character of the UTF16 representation of a
-   * non-BMP code point. See {@link getHighSurrogate}.
+   * Computes the low surrogate character of the UTF16 representation of a non-BMP code point. See
+   * {@link highSurrogate}.
    *
-   * @param codePoint requested codePoint, required to be >=
-   *          MIN_SUPPLEMENTARY_CODE_POINT
+   * @param codePoint requested codePoint, required to be >= MIN_SUPPLEMENTARY_CODE_POINT
    * @return low surrogate character
    */
-  static char getLowSurrogate(int codePoint) {
+  public static char lowSurrogate(int codePoint) {
     return (char) (MIN_LOW_SURROGATE + ((codePoint - MIN_SUPPLEMENTARY_CODE_POINT) & 1023));
   }
 

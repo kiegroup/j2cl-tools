@@ -42,7 +42,7 @@ public class ImplementClassMetadataViaGetters extends NormalizationPass {
   @Override
   public void applyTo(Type type) {
     synthesizeLazyGetClassGetter(type);
-    synthesizeGetClassImplememntationsMethods(type);
+    synthesizeGetClassImplementationMethods(type);
     replaceTypeLiterals(type);
   }
 
@@ -56,7 +56,7 @@ public class ImplementClassMetadataViaGetters extends NormalizationPass {
   private static final String GET_CLASS_IMPL_METHOD_NAME = "$getClassImpl";
 
   /** Synthesizes the getClass() override for this class. */
-  private static void synthesizeGetClassImplememntationsMethods(Type type) {
+  private static void synthesizeGetClassImplementationMethods(Type type) {
     if (type.isInterface() || type.isAbstract() || type.isNative()) {
       return;
     }
@@ -136,6 +136,10 @@ public class ImplementClassMetadataViaGetters extends NormalizationPass {
           .setQualifier(implementTypeLiteral(arrayTypeDescriptor.getLeafTypeDescriptor()))
           .setArguments(NumberLiteral.fromInt(arrayTypeDescriptor.getDimensions()))
           .build();
+    }
+    if (typeDescriptor instanceof DeclaredTypeDescriptor) {
+      return getClassLiteralMethodCall(
+          typeDescriptor.getMetadataTypeDeclaration().toRawTypeDescriptor());
     }
     return getClassLiteralMethodCall(typeDescriptor);
   }
@@ -230,7 +234,6 @@ public class ImplementClassMetadataViaGetters extends NormalizationPass {
         .setOrigin(MethodOrigin.SYNTHETIC_CLASS_LITERAL_GETTER)
         .setStatic(true)
         .setSynthetic(true)
-        .setSideEffectFree(true)
         .build();
   }
 }

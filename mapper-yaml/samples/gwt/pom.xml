@@ -43,9 +43,9 @@
     <!-- Convenience property to set the GWT version -->
     <gwt.version>2.10.0</gwt.version>
 
-    <!-- GWT 2.8 requires 1.8 -->
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <!-- GWT 2.8 requires 11 -->
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
@@ -77,12 +77,12 @@
     <dependency>
       <groupId>org.kie.j2cl.tools.yaml.mapper</groupId>
       <artifactId>common</artifactId>
-      <version>0.4</version>
+      <version>0.5</version>
     </dependency>
     <dependency>
       <groupId>org.kie.j2cl.tools.yaml.mapper</groupId>
       <artifactId>processor</artifactId>
-      <version>0.4</version>
+      <version>0.5</version>
       <scope>provided</scope>
     </dependency>
 
@@ -155,8 +155,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.8.0</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
+          <source>11</source>
+          <target>11</target>
         </configuration>
       </plugin>
     </plugins>

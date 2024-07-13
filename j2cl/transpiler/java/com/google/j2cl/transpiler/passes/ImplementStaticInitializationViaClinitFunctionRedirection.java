@@ -32,9 +32,10 @@ import com.google.j2cl.transpiler.ast.FunctionExpression;
 import com.google.j2cl.transpiler.ast.JsInfo;
 import com.google.j2cl.transpiler.ast.LambdaAdaptorTypeDescriptors;
 import com.google.j2cl.transpiler.ast.Member;
+import com.google.j2cl.transpiler.ast.MemberDescriptor;
 import com.google.j2cl.transpiler.ast.Method;
 import com.google.j2cl.transpiler.ast.MethodCall;
-import com.google.j2cl.transpiler.ast.MethodDescriptor;
+import com.google.j2cl.transpiler.ast.MethodDescriptor.MethodOrigin;
 import com.google.j2cl.transpiler.ast.MultiExpression;
 import com.google.j2cl.transpiler.ast.Statement;
 import com.google.j2cl.transpiler.ast.Type;
@@ -49,20 +50,17 @@ import java.util.List;
 public class ImplementStaticInitializationViaClinitFunctionRedirection
     extends ImplementStaticInitializationBase {
 
-  public ImplementStaticInitializationViaClinitFunctionRedirection() {
-    super(/* triggerClinitInConstructors = */ false);
-  }
-
   @Override
   public void applyTo(Type type) {
-      checkState(!type.isNative());
-      checkState(!type.isJsFunctionInterface());
-      if (type.isJsEnum()) {
+    checkState(!type.isNative());
+    checkState(!type.isJsFunctionInterface());
+    if (type.isJsEnum()) {
       return;
-      }
-      synthesizeSettersAndGetters(type);
-      synthesizeClinitMethod(type);
-      synthesizeStaticFieldDeclaration(type);
+    }
+    synthesizeClinitCallsInMethods(type);
+    synthesizeSettersAndGetters(type);
+    synthesizeClinitMethod(type);
+    synthesizeStaticFieldDeclaration(type);
   }
 
   private static void synthesizeStaticFieldDeclaration(Type type) {
@@ -181,12 +179,13 @@ public class ImplementStaticInitializationViaClinitFunctionRedirection
             .build());
   }
 
-  /** Returns the field descriptor for a the field backing the static setter/getters. */
+  /** Returns the field descriptor for the field backing the static setter/getters. */
   private static FieldDescriptor getBackingFieldDescriptor(FieldDescriptor fieldDescriptor) {
     checkArgument(
         fieldDescriptor.isStatic()
             && fieldDescriptor.getOrigin() != FieldOrigin.SYNTHETIC_BACKING_FIELD);
     return FieldDescriptor.Builder.from(fieldDescriptor)
+        .setName("$static_" + fieldDescriptor.getName())
         .setEnumConstant(false)
         .setOriginalJsInfo(JsInfo.NONE)
         .setOrigin(FieldOrigin.SYNTHETIC_BACKING_FIELD)
@@ -198,7 +197,7 @@ public class ImplementStaticInitializationViaClinitFunctionRedirection
     SourcePosition sourcePosition = type.getSourcePosition();
 
     FieldDescriptor clinitMethodFieldDescriptor =
-        getClinitFieldDescriptor(type.getTypeDescriptor());
+        type.getTypeDescriptor().getClinitFieldDescriptor();
 
     // Use the underlying JsFunction for the runnable Lambda to get a functional type with
     // no parameters and void return.
@@ -241,14 +240,23 @@ public class ImplementStaticInitializationViaClinitFunctionRedirection
     type.getMembers().removeIf(member -> member.isInitializerBlock() && member.isStatic());
   }
 
-  /** Returns the class initializer property as a field for a particular type */
-  private static FieldDescriptor getClinitFieldDescriptor(DeclaredTypeDescriptor typeDescriptor) {
-    return FieldDescriptor.newBuilder()
-        .setStatic(true)
-        .setEnclosingTypeDescriptor(typeDescriptor)
-        .setTypeDescriptor(TypeDescriptors.get().nativeFunction)
-        .setName(MethodDescriptor.CLINIT_METHOD_NAME)
-        .setOriginalJsInfo(typeDescriptor.isNative() ? JsInfo.RAW_OVERLAY : JsInfo.RAW)
-        .build();
+  @Override
+  boolean triggersClinit(MemberDescriptor memberDescriptor, Type enclosingType) {
+    return super.triggersClinit(memberDescriptor, enclosingType)
+        // non-private instance methods (except the synthetic ctor) of an optimized enum will
+        // trigger clinit, since the constructor will not.
+        || (triggersClinitInInstanceMethods(enclosingType) && isInstanceMethod(memberDescriptor));
+  }
+
+  private static boolean triggersClinitInInstanceMethods(Type type) {
+    return type.isOptimizedEnum()
+        || TypeDescriptors.isJavaLangEnum(type.getTypeDescriptor())
+        || TypeDescriptors.isJavaLangObject(type.getTypeDescriptor());
+  }
+
+  private static boolean isInstanceMethod(MemberDescriptor memberDescriptor) {
+    return memberDescriptor.isMethod()
+        && memberDescriptor.isInstanceMember()
+        && memberDescriptor.getOrigin() != MethodOrigin.SYNTHETIC_CTOR_FOR_CONSTRUCTOR;
   }
 }

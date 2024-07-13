@@ -21,7 +21,8 @@ import com.google.j2cl.common.visitor.Visitable;
 @Visitable
 public abstract class ThisOrSuperReference extends Expression {
 
-  private final DeclaredTypeDescriptor typeDescriptor;
+  @Visitable DeclaredTypeDescriptor typeDescriptor;
+
   /**
    * Whether this or super keyword appears with a qualifier in the source, referencing the enclosing
    * class instance.
@@ -60,5 +61,10 @@ public abstract class ThisOrSuperReference extends Expression {
   @Override
   public Precedence getPrecedence() {
     return Precedence.HIGHEST;
+  }
+
+  @Override
+  public boolean canBeNull() {
+    return false;
   }
 }

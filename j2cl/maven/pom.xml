@@ -6,7 +6,7 @@
 
   <groupId>org.kie.j2cl.tools</groupId>
   <artifactId>j2cl-parent</artifactId>
-  <version>v20230718-1</version>
+  <version>v20240622-2</version>
   <packaging>pom</packaging>
 
   <name>J2CL</name>
@@ -57,8 +57,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
 
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
   </properties>
 
   <modules>
@@ -107,18 +107,19 @@
     <module>junit/async</module>
     <module>junit/processor/unshaded-pom.xml</module>
     <module>junit/processor</module>
+    <module>junit/runtime</module>
   </modules>
 
   <distributionManagement>
     <repository>
-      <id>ossrh</id>
-      <name>Sonatype staging repository for Maven Central</name>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Repository Group</name>
+      <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
     </repository>
     <snapshotRepository>
-      <id>vertispan-snapshots</id>
-      <name>Vertispan hosted artifacts-snapshots</name>
-      <url>https://repo.vertispan.com/j2cl</url>
+      <id>jboss-snapshots-repository</id>
+      <name>JBoss Snapshot Repository</name>
+      <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
 
@@ -242,7 +243,7 @@
         <version>1.1</version>
       </dependency>
       <dependency>
-        <groupId>com.vertispan.j2cl.external</groupId>
+        <groupId>org.kie.j2cl.tools.external</groupId>
         <artifactId>org.eclipse.jdt.core</artifactId>
         <version>${project.version}</version>
       </dependency>

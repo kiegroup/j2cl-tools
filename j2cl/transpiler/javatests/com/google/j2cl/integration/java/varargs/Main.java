@@ -21,6 +21,7 @@ import static com.google.j2cl.integration.testing.TestUtils.isWasm;
 
 import java.util.ArrayList;
 import java.util.List;
+import javaemul.internal.annotations.KtDisabled;
 import varargs.innerpackage.SubclassWithImplicitConstructor;
 import varargs.innerpackage.SuperWithNoPublicConstructors;
 
@@ -28,6 +29,7 @@ import varargs.innerpackage.SuperWithNoPublicConstructors;
 public class Main {
   public static void main(String... args) {
     testVarargs_method();
+    testVarargs_method_null();
     testVarargs_constructor();
     testVarargs_superMethodCall();
     testVarargs_implicitSuperConstructorCall();
@@ -36,6 +38,7 @@ public class Main {
     testVarargs_implicitSuperConstructorCall_genericTypes();
     testVarargs_implicitSuperConstructorCall_visibility();
     testVarargs_genericVarargsParameter();
+    testVarargs_overloaded();
   }
 
   private static void testVarargs_constructor() {
@@ -105,11 +108,11 @@ public class Main {
     String which;
 
     SuperWithVarargsConstructors(Object... args) {
-      which = args.getClass().getComponentType().getSimpleName();
+      which = "Object";
     }
 
     SuperWithVarargsConstructors(String... args) {
-      which = args.getClass().getComponentType().getSimpleName();
+      which = "String";
     }
   }
 
@@ -143,12 +146,12 @@ public class Main {
         int value;
 
         Parent(Object... args) {
-          which = args.getClass().getComponentType().getSimpleName();
+          which = "Object";
           value = captured;
         }
 
         Parent(String... args) {
-          which = args.getClass().getComponentType().getSimpleName();
+          which = "String";
           value = captured;
         }
       }
@@ -205,12 +208,12 @@ public class Main {
       int value;
 
       Parent(T... args) {
-        which = args.getClass().getComponentType().getSimpleName();
+        which = "List";
         value = captured;
       }
 
       Parent(U... args) {
-        which = args.getClass().getComponentType().getSimpleName();
+        which = "ArrayList";
         value = captured;
       }
     }
@@ -233,11 +236,11 @@ public class Main {
     E(new String[0]) {};
 
     MyEnum(Object... args) {
-      which = args.getClass().getComponentType().getSimpleName();
+      which = "Object";
     }
 
     MyEnum(String... args) {
-      which = args.getClass().getComponentType().getSimpleName();
+      which = "String";
     }
 
     String which;
@@ -275,8 +278,13 @@ public class Main {
 
     int e = bar(i1, new Integer[] {}); // empty array for the varargs.
     assertTrue((e == 1));
+  }
 
-    int f = bar(i1, null); // null for the varargs.
+  // TODO(b/319404022): Enable when passing null vararg argument is allowed.
+  @KtDisabled
+  private static void testVarargs_method_null() {
+    Integer i1 = new Integer(1);
+    int f = bar(i1, null);
     assertTrue((f == 1));
   }
 
@@ -288,5 +296,57 @@ public class Main {
       }
     }
     return result;
+  }
+
+  private static String overloaded(Object o) {
+    return "overloaded(Object)";
+  }
+
+  private static String overloaded(String o, Object... rest) {
+    return "overloaded(String, Object...)";
+  }
+
+  private static String overloadedEqualNumParams(Object x, Object y) {
+    return "overloadedEqualNumParams(Object, Object)";
+  }
+
+  private static String overloadedEqualNumParams(String x, Object... y) {
+    return "overloadedEqualNumParams(String, Object...)";
+  }
+
+  private static String overloaded(long l) {
+    return "overloaded(long)";
+  }
+
+  private static String overloaded(long l, long... rest) {
+    return "overloaded(long, long...)";
+  }
+
+  private static void testVarargs_overloaded() {
+    assertEquals("overloaded(Object)", overloaded("foo"));
+    assertEquals("overloaded(Object)", overloaded((Object) "foo"));
+    assertEquals("overloaded(String, Object...)", overloaded("foo", "bar"));
+    assertEquals(
+        "overloadedEqualNumParams(Object, Object)", overloadedEqualNumParams("foo", "bar"));
+    assertEquals(
+        "overloadedEqualNumParams(Object, Object)",
+        overloadedEqualNumParams((Object) "foo", "bar"));
+    assertEquals(
+        "overloadedEqualNumParams(String, Object...)",
+        overloadedEqualNumParams("foo", new String[] {"bar"}));
+    assertEquals(
+        "overloadedEqualNumParams(String, Object...)",
+        overloadedEqualNumParams("foo", new Object[] {"bar", "buzz"}));
+    assertEquals(
+        "overloadedEqualNumParams(Object, Object)",
+        overloadedEqualNumParams((Object) "foo", new String[] {"bar"}));
+    assertEquals(
+        "overloadedEqualNumParams(String, Object...)",
+        overloadedEqualNumParams("foo", "bar", "buzz"));
+    assertEquals("overloaded(long)", overloaded(1));
+    assertEquals("overloaded(Object)", overloaded(Long.valueOf(1L)));
+    assertEquals("overloaded(long)", overloaded(1L));
+    assertEquals("overloaded(long, long...)", overloaded(1L, 2, 3L));
+    assertEquals("overloaded(long, long...)", overloaded(1, 2, 3L));
   }
 }

@@ -13,8 +13,8 @@ gen_j2cl_tests(
 
 """
 
-load(":j2cl_test.bzl", "j2cl_test")
 load(":j2cl_library.bzl", "j2cl_library")
+load(":j2cl_test.bzl", "j2cl_test")
 load(":j2cl_util.bzl", "get_java_package")
 
 def gen_j2cl_tests(
@@ -66,18 +66,22 @@ def gen_j2cl_tests(
             deps = deps + lib_deps,
             srcs = supporting_lib_files,
             plugins = lib_plugins + plugins,
+            tags = tags,
             testonly = 1,
             generate_build_test = generate_build_test,
             # Safe here as this is for tests only and there are no downstream users.
             experimental_enable_jspecify_support_do_not_enable_without_jspecify_static_checking_or_you_might_cause_an_outage = 1,
         )
 
+    test_targets = []
     for test_file in test_files:
         test_name = test_file[:-len(".java")]
         test_type = test_name.replace("/", ".")
         test_class = java_package + "." + test_type
+        test_target_name = test_name + test_suffix
+        test_targets.append(":" + test_target_name)
         j2cl_test(
-            name = test_name + test_suffix,
+            name = test_target_name,
             deps = test_deps,
             srcs = [test_file],
             test_class = test_class,
@@ -87,3 +91,8 @@ def gen_j2cl_tests(
             generate_build_test = generate_build_test,
             **kwargs
         )
+
+    native.test_suite(
+        name = name,
+        tests = test_targets,
+    )

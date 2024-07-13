@@ -3,25 +3,15 @@
 load(
     "@io_bazel_rules_closure//closure:defs.bzl",
     "CLOSURE_JS_TOOLCHAIN_ATTRS",
+    "ClosureJsLibraryInfo",
     "closure_js_binary",
     "closure_js_test",
     "create_closure_js_library",
     "web_library",
 )
 
-def create_js_lib_struct(j2cl_info, extra_providers = []):
-    return struct(
-        providers = [j2cl_info] + extra_providers,
-        closure_js_library = j2cl_info._private_.js_info.closure_js_library,
-        exports = j2cl_info._private_.js_info.exports,
-    )
-
 def j2cl_js_provider(ctx, srcs = [], deps = [], exports = [], artifact_suffix = ""):
     """ Creates a js provider from provided sources, deps and exports. """
-
-    if artifact_suffix == "j2wasm":
-        # TODO(b/282247604): wire the modular wasm pipeline.
-        return struct()
 
     default_j2cl_suppresses = [
         "analyzerChecks",
@@ -31,18 +21,14 @@ def j2cl_js_provider(ctx, srcs = [], deps = [], exports = [], artifact_suffix = 
     ]
     suppresses = default_j2cl_suppresses + getattr(ctx.attr, "js_suppress", [])
 
-    js = create_closure_js_library(
+    return create_closure_js_library(
         ctx,
         srcs,
         deps,
         exports,
         suppresses,
         convention = "GOOGLE",
-    )
-
-    return struct(
-        closure_js_library = js.closure_js_library,
-        exports = js.exports,
+        artifact_suffix = artifact_suffix,
     )
 
 def js_devserver(
@@ -86,7 +72,7 @@ J2CL_JS_ATTRS = {
     "js_suppress": attr.string_list(),
 }
 
-JS_PROVIDER_NAME = "closure_js_library"
+JS_PROVIDER_NAME = ClosureJsLibraryInfo
 
 J2CL_OPTIMIZED_DEFS = [
     "--define=goog.DEBUG=false",
@@ -98,9 +84,13 @@ J2CL_TEST_DEFS = []
 # buildifier: disable=function-docstring-args
 def j2cl_web_test(
         name,
+        src,
         deps,
+        browsers,
+        data,
         test_class,
         tags,
+        default_browser = None,
         **args):  # @unused
     # TODO(b/259118921): support multiple testsuites.
     fail_multiple_testsuites = """
@@ -117,22 +107,21 @@ def j2cl_web_test(
 
     # unzip generated_suite.js.zip and take 1 testsuite js file
     # fail if multiple testsuites or suiteclasses are provided
-    out_zip = ":%s_generated_suite.js.zip" % name
     native.genrule(
         name = "gen" + name + "_test.js",
-        srcs = [out_zip],
+        srcs = [src],
         outs = [
             testsuite_file_name,
         ],
         cmd = "\n".join([
-            "unzip -q -o $(locations %s) *.js -d zip_out/" % out_zip,
+            "unzip -q -o $(locations %s) *.js -d zip_out/" % src,
             "cd zip_out/",
             "mkdir -p ../$(RULEDIR)",
             "if [ $$(find . -name *.js | wc -l) -ne 1 ]; then",
             "  echo \"%s\"" % fail_multiple_testsuites,
             "  exit 1",
             "fi",
-            "testsuite=$$(find . -name %s.js)" % name,
+            "testsuite=$$(find . -name *.js)",
             "if [ -z \"$$testsuite\" ]; then",
             "  echo \"%s\"" % fail_suiteclass,
             "  exit 1",
@@ -142,11 +131,17 @@ def j2cl_web_test(
         testonly = 1,
     )
 
+    if default_browser and not browsers:
+        browsers = [default_browser]
+
     closure_js_test(
         name = name,
         srcs = [":%s" % testsuite_file_name],
         deps = deps,
+        browsers = browsers,
+        data = data,
         testonly = 1,
         entry_points = ["javatests." + test_class + "_AdapterSuite"],
         tags = tags,
+        lenient = True,
     )

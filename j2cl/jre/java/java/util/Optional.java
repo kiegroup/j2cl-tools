@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * See <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html">
@@ -72,6 +73,14 @@ public final class Optional<T> {
     }
   }
 
+  public void ifPresentOrElse(Consumer<? super T> consumer, Runnable emptyConsumer) {
+    if (isPresent()) {
+      consumer.accept(ref);
+    } else {
+      emptyConsumer.run();
+    }
+  }
+
   public Optional<T> filter(Predicate<? super T> predicate) {
     checkNotNull(predicate);
     if (!isPresent() || predicate.test(ref)) {
@@ -115,11 +124,23 @@ public final class Optional<T> {
     return isPresent() ? ref : other.get();
   }
 
+  public T orElseThrow() {
+    return get();
+  }
+
   public <X extends Throwable> T orElseThrow(Supplier<? extends X> exceptionSupplier) throws X {
     if (isPresent()) {
       return ref;
     }
     throw exceptionSupplier.get();
+  }
+
+  public Stream<T> stream() {
+    if (isPresent()) {
+      return Stream.of(ref);
+    } else {
+      return Stream.empty();
+    }
   }
 
   @Override

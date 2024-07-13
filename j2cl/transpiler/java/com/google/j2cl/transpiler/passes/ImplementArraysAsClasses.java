@@ -34,7 +34,6 @@ import com.google.j2cl.transpiler.ast.Method;
 import com.google.j2cl.transpiler.ast.MethodCall;
 import com.google.j2cl.transpiler.ast.MethodDescriptor;
 import com.google.j2cl.transpiler.ast.NewArray;
-import com.google.j2cl.transpiler.ast.NewInstance;
 import com.google.j2cl.transpiler.ast.Node;
 import com.google.j2cl.transpiler.ast.PrimitiveTypes;
 import com.google.j2cl.transpiler.ast.Type;
@@ -184,9 +183,8 @@ public class ImplementArraysAsClasses extends NormalizationPass {
               return arrayLength;
             }
 
-            return FieldAccess.Builder.from(
-                    TypeDescriptors.get().javaemulInternalWasmArray.getFieldDescriptor("length"))
-                .setQualifier(arrayLength.getArrayExpression())
+            return ArrayLength.Builder.from(arrayLength)
+                .setArrayExpression(getInnerNativeArrayExpression(arrayLength.getArrayExpression()))
                 .build();
           }
 
@@ -217,7 +215,7 @@ public class ImplementArraysAsClasses extends NormalizationPass {
                     methodCall.getArguments().stream()
                         .map(
                             arg ->
-                                isNativeArrayArgument(methodCall, arg)
+                                needsNativeArray(methodCall, arg)
                                     ? getInnerNativeArrayExpression(arg)
                                     : arg)
                         .collect(toImmutableList()))
@@ -229,11 +227,11 @@ public class ImplementArraysAsClasses extends NormalizationPass {
                 && !((ArrayTypeDescriptor) descriptor).isNativeWasmArray();
           }
 
-          private boolean isNativeArrayArgument(MethodCall call, Expression expression) {
-            return call.getTarget()
-                .getParameterTypeDescriptors()
-                .get(call.getArguments().indexOf(expression))
-                .isPrimitiveArray();
+          private boolean needsNativeArray(MethodCall call, Expression expression) {
+            return isNonNativeArray(
+                call.getTarget()
+                    .getParameterTypeDescriptors()
+                    .get(call.getArguments().indexOf(expression)));
           }
         });
   }
@@ -258,10 +256,9 @@ public class ImplementArraysAsClasses extends NormalizationPass {
 
             checkState(newArray.getDimensionExpressions().size() == 1);
 
-            return NewInstance.Builder.from(
+            return MethodCall.Builder.from(
                     TypeDescriptors.getWasmArrayType(newArray.getTypeDescriptor())
-                        .getMethodDescriptor(
-                            MethodDescriptor.CONSTRUCTOR_METHOD_NAME, PrimitiveTypes.INT))
+                        .getMethodDescriptor("newWithLength", PrimitiveTypes.INT))
                 .setArguments(newArray.getDimensionExpressions().get(0))
                 .build();
           }
@@ -278,10 +275,9 @@ public class ImplementArraysAsClasses extends NormalizationPass {
                     arrayTypeDescriptor.getComponentTypeDescriptor().isPrimitive()
                         ? arrayTypeDescriptor
                         : TypeDescriptors.get().javaLangObjectArray);
-            return NewInstance.Builder.from(
+            return MethodCall.Builder.from(
                     TypeDescriptors.getWasmArrayType(arrayTypeDescriptor)
-                        .getMethodDescriptor(
-                            MethodDescriptor.CONSTRUCTOR_METHOD_NAME, nativeArrayTypeDescriptor))
+                        .getMethodDescriptor("newWithLiteral", nativeArrayTypeDescriptor))
                 .setArguments(
                     new ArrayLiteral(nativeArrayTypeDescriptor, arrayLiteral.getValueExpressions()))
                 .build();
@@ -304,7 +300,7 @@ public class ImplementArraysAsClasses extends NormalizationPass {
   }
 
   private static ArrayTypeDescriptor markArrayTypeDescriptorAsNative(ArrayTypeDescriptor original) {
-    return ArrayTypeDescriptor.Builder.from(original).setNativeWasmArray(true).build();
+    return ArrayTypeDescriptor.Builder.from(original).setMarkedAsNativeWasmArray(true).build();
   }
 
   private static TypeDescriptor maybeMarkTypeDescriptorAsNative(TypeDescriptor original) {

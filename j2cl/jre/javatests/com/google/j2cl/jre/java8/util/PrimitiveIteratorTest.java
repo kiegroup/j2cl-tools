@@ -15,7 +15,8 @@
  */
 package com.google.j2cl.jre.java8.util;
 
-import com.google.gwt.junit.client.GWTTestCase;
+import static com.google.j2cl.jre.testing.TestUtils.isWasm;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.PrimitiveIterator;
@@ -23,41 +24,44 @@ import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.function.IntConsumer;
 import java.util.function.LongConsumer;
+import junit.framework.TestCase;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Tests for PrimitiveIterator JRE emulation.
  */
-public class PrimitiveIteratorTest extends GWTTestCase {
-
-  @Override
-  public String getModuleName() {
-    return "com.google.gwt.emultest.EmulSuite";
-  }
+public class PrimitiveIteratorTest extends TestCase {
 
   public void testForEachRemainingDoubleConsumer() {
     PrimitiveIterator.OfDouble it = createTestPrimitiveDoubleIterator();
-    it.forEachRemaining((Consumer<Double>) new JanusDoubleConsumer() {
-      @Override
-      public void accept(Double value) {
-        fail();
-      }
+    it.forEachRemaining(
+        (Consumer<@Nullable Double>)
+            new JanusDoubleConsumer() {
+              @Override
+              public void accept(@Nullable Double value) {
+                fail();
+              }
 
-      @Override
-      public void accept(double value) {
-      }
-    });
+              @Override
+              public void accept(double value) {}
+            });
+  }
+
+  public void testForEachRemainingDoubleConsumer_null() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when NPE on dereference is supported
+      return;
+    }
 
     try {
-      it = createTestPrimitiveDoubleIterator();
-      it.forEachRemaining((Consumer<Double>) null);
+      createTestPrimitiveDoubleIterator().forEachRemaining((Consumer<@Nullable Double>) null);
       fail();
     } catch (NullPointerException e) {
       // expected
     }
 
     try {
-      it = createTestPrimitiveDoubleIterator();
-      it.forEachRemaining((DoubleConsumer) null);
+      createTestPrimitiveDoubleIterator().forEachRemaining((DoubleConsumer) null);
       fail();
     } catch (NullPointerException e) {
       // expected
@@ -66,28 +70,34 @@ public class PrimitiveIteratorTest extends GWTTestCase {
 
   public void testForEachRemainingIntConsumer() {
     PrimitiveIterator.OfInt it = createTestPrimitiveIntIterator();
-    it.forEachRemaining((Consumer<Integer>) new JanusIntConsumer() {
-      @Override
-      public void accept(Integer value) {
-        fail();
-      }
+    it.forEachRemaining(
+        (Consumer<@Nullable Integer>)
+            new JanusIntConsumer() {
+              @Override
+              public void accept(@Nullable Integer value) {
+                fail();
+              }
 
-      @Override
-      public void accept(int value) {
-      }
-    });
+              @Override
+              public void accept(int value) {}
+            });
+  }
+
+  public void testForEachRemainingIntConsumer_null() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when NPE on dereference is supported
+      return;
+    }
 
     try {
-      it = createTestPrimitiveIntIterator();
-      it.forEachRemaining((Consumer<Integer>) null);
+      createTestPrimitiveIntIterator().forEachRemaining((Consumer<@Nullable Integer>) null);
       fail();
     } catch (NullPointerException e) {
       // expected
     }
 
     try {
-      it = createTestPrimitiveIntIterator();
-      it.forEachRemaining((IntConsumer) null);
+      createTestPrimitiveIntIterator().forEachRemaining((IntConsumer) null);
       fail();
     } catch (NullPointerException e) {
       // expected
@@ -96,28 +106,34 @@ public class PrimitiveIteratorTest extends GWTTestCase {
 
   public void testForEachRemainingLongConsumer() {
     PrimitiveIterator.OfLong it = createTestPrimitiveLongIterator();
-    it.forEachRemaining((Consumer<Long>) new JanusLongConsumer() {
-      @Override
-      public void accept(Long value) {
-        fail();
-      }
+    it.forEachRemaining(
+        (Consumer<@Nullable Long>)
+            new JanusLongConsumer() {
+              @Override
+              public void accept(@Nullable Long value) {
+                fail();
+              }
 
-      @Override
-      public void accept(long value) {
-      }
-    });
+              @Override
+              public void accept(long value) {}
+            });
+  }
+
+  public void testForEachRemainingLongConsumer_null() {
+    if (isWasm()) {
+      // TODO(b/183769034): Re-enable when NPE on dereference is supported
+      return;
+    }
 
     try {
-      it = createTestPrimitiveLongIterator();
-      it.forEachRemaining((Consumer<Long>) null);
+      createTestPrimitiveLongIterator().forEachRemaining((Consumer<@Nullable Long>) null);
       fail();
     } catch (NullPointerException e) {
       // expected
     }
 
     try {
-      it = createTestPrimitiveLongIterator();
-      it.forEachRemaining((LongConsumer) null);
+      createTestPrimitiveLongIterator().forEachRemaining((LongConsumer) null);
       fail();
     } catch (NullPointerException e) {
       // expected
@@ -169,10 +185,9 @@ public class PrimitiveIteratorTest extends GWTTestCase {
     };
   }
 
-  private interface JanusDoubleConsumer extends Consumer<Double>, DoubleConsumer { }
+  private interface JanusDoubleConsumer extends Consumer<@Nullable Double>, DoubleConsumer {}
 
-  private interface JanusIntConsumer extends Consumer<Integer>, IntConsumer { }
+  private interface JanusIntConsumer extends Consumer<@Nullable Integer>, IntConsumer {}
 
-  private interface JanusLongConsumer extends Consumer<Long>, LongConsumer { }
-
+  private interface JanusLongConsumer extends Consumer<@Nullable Long>, LongConsumer {}
 }

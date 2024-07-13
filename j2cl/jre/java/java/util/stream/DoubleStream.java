@@ -34,11 +34,11 @@ import java.util.function.DoubleToLongFunction;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.ObjDoubleConsumer;
 import java.util.function.Supplier;
-import javaemul.internal.ArrayHelper;
+import javaemul.internal.PrimitiveLists;
 
 /**
- * See <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/DoubleStream.html">
- * the official Java API doc</a> for details.
+ * See <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/DoubleStream.html">the
+ * official Java API doc</a> for details.
  */
 public interface DoubleStream extends BaseStream<Double, DoubleStream> {
 
@@ -61,18 +61,18 @@ public interface DoubleStream extends BaseStream<Double, DoubleStream> {
 
   static Builder builder() {
     return new Builder() {
-      private double[] items = new double[0];
+      private PrimitiveLists.Double items = PrimitiveLists.createForDouble();
 
       @Override
       public void accept(double t) {
         checkState(items != null, "Builder already built");
-        ArrayHelper.push(items, t);
+        items.push(t);
       }
 
       @Override
       public DoubleStream build() {
         checkState(items != null, "Builder already built");
-        DoubleStream stream = Arrays.stream(items);
+        DoubleStream stream = Arrays.stream(items.internalArray(), 0, items.size());
         items = null;
         return stream;
       }
@@ -147,19 +147,35 @@ public interface DoubleStream extends BaseStream<Double, DoubleStream> {
   }
 
   static DoubleStream iterate(double seed, DoubleUnaryOperator f) {
+    return iterate(seed, ignore -> true, f);
+  }
+
+  static DoubleStream iterate(double seed, DoublePredicate hasNext, DoubleUnaryOperator f) {
     Spliterator.OfDouble spliterator =
         new Spliterators.AbstractDoubleSpliterator(
             Long.MAX_VALUE, Spliterator.IMMUTABLE | Spliterator.ORDERED) {
           private double next = seed;
+          private boolean isFirst = true;
+          private boolean isTerminated = false;
 
           @Override
           public boolean tryAdvance(DoubleConsumer action) {
+            if (isTerminated) {
+              return false;
+            }
+            if (!isFirst) {
+              next = f.applyAsDouble(next);
+            }
+            isFirst = false;
+
+            if (!hasNext.test(next)) {
+              isTerminated = true;
+              return false;
+            }
             action.accept(next);
-            next = f.applyAsDouble(next);
             return true;
           }
         };
-
     return StreamSupport.doubleStream(spliterator, false);
   }
 
@@ -239,6 +255,74 @@ public interface DoubleStream extends BaseStream<Double, DoubleStream> {
   double sum();
 
   DoubleSummaryStatistics summaryStatistics();
+
+  default DoubleStream dropWhile(DoublePredicate predicate) {
+    Spliterator.OfDouble prev = spliterator();
+    Spliterator.OfDouble spliterator =
+        new Spliterators.AbstractDoubleSpliterator(
+            prev.estimateSize(),
+            prev.characteristics() & ~(Spliterator.SIZED | Spliterator.SUBSIZED)) {
+          private boolean dropping = true;
+          private boolean found;
+
+          @Override
+          public boolean tryAdvance(DoubleConsumer action) {
+            if (!dropping) {
+              // Predicate matched, stop dropping items.
+              return prev.tryAdvance(action);
+            }
+
+            found = false;
+            // Drop items until we find one that matches predicate.
+            while (dropping
+                && prev.tryAdvance(
+                    (double item) -> {
+                      if (!predicate.test(item)) {
+                        dropping = false;
+                        found = true;
+                        action.accept(item);
+                      }
+                    })) {
+              // Do nothing, work is done in tryAdvance
+            }
+            // Only return true if we accepted at least one item
+            return found;
+          }
+        };
+    return StreamSupport.doubleStream(spliterator, false);
+  }
+
+  default DoubleStream takeWhile(DoublePredicate predicate) {
+    Spliterator.OfDouble original = spliterator();
+    Spliterator.OfDouble spliterator =
+        new Spliterators.AbstractDoubleSpliterator(
+            original.estimateSize(),
+            original.characteristics() & ~(Spliterator.SIZED | Spliterator.SUBSIZED)) {
+          private boolean taking = true;
+          private boolean found;
+
+          @Override
+          public boolean tryAdvance(DoubleConsumer action) {
+            if (!taking) {
+              // Already failed the predicate.
+              return false;
+            }
+
+            found = false;
+            original.tryAdvance(
+                (double item) -> {
+                  if (predicate.test(item)) {
+                    found = true;
+                    action.accept(item);
+                  } else {
+                    taking = false;
+                  }
+                });
+            return found;
+          }
+        };
+    return StreamSupport.doubleStream(spliterator, false);
+  }
 
   double[] toArray();
 }

@@ -20,6 +20,8 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.j2cl.common.visitor.Processor;
+import com.google.j2cl.common.visitor.Visitable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,6 +29,7 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /** A usage-site reference to a type. */
+@Visitable
 public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasReadableDescription {
 
   public boolean isJsType() {
@@ -79,6 +82,11 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
     return false;
   }
 
+  /** Returns whether the described type is an array of native js type. */
+  public boolean isNativeJsArray() {
+    return false;
+  }
+
   /** Returns whether the described type is a class. */
   public boolean isClass() {
     return false;
@@ -114,6 +122,11 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
     return false;
   }
 
+  /** Returns whether the described type is a wasm native array. */
+  public boolean isNativeWasmArray() {
+    return false;
+  }
+
   /**
    * Returns the mangled name of a type.
    *
@@ -136,6 +149,11 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
     return null;
   }
 
+  /** Returns the method descriptor by name and parameter types. */
+  @Nullable
+  public abstract MethodDescriptor getMethodDescriptor(
+      String methodName, TypeDescriptor... parameters);
+
   /** Returns the corresponding primitive type if the {@code setTypeDescriptor} is a boxed type. */
   public PrimitiveTypeDescriptor toUnboxedType() {
     return (PrimitiveTypeDescriptor) this;
@@ -149,12 +167,12 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
   }
 
   /** Returns the value for uninitialized expression of this type. */
-  public Expression getDefaultValue() {
+  public Literal getDefaultValue() {
     return getNullValue();
   }
 
   /** Returns a null literal value with this specific type. */
-  public Expression getNullValue() {
+  public Literal getNullValue() {
     checkState(!isPrimitive());
     return NullLiteral.get(this);
   }
@@ -346,4 +364,8 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
    * Returns true if the definition of this type variable as a reference to {@code typeVariable}.
    */
   abstract boolean hasReferenceTo(TypeVariable typeVariable, ImmutableSet<TypeVariable> seen);
+
+  TypeDescriptor acceptInternal(Processor processor) {
+    return Visitor_TypeDescriptor.visit(processor, this);
+  }
 }

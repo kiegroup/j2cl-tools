@@ -17,18 +17,14 @@ def j2wasm_test(
         optimize: Flag indicating if wasm compilation is optimized or not.
     """
 
-    is_optimized_suffix = "" if optimize else "_dev"
-    extra_data = [":" + name + "_generated_suite_j2wasm_application" + is_optimized_suffix]
-
     j2cl_test_common(
         name = name,
-        data = data + extra_data,
+        data = data,
         compile = 0,
         enable_rta = False,
         platform = "WASM",
         optimize_wasm = optimize,
-        browsers = None,
-        default_browser = "//:chrome-wasmdev-linux",
+        default_browser = Label("//build_defs/internal_do_not_use/browser:chrome-wasm-linux"),
         tags = tags + ["j2wasm"],
         **kwargs
     )

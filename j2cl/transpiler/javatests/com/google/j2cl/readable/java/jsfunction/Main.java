@@ -68,7 +68,9 @@ public class Main {
   }
 
   @JsMethod
-  public static native JsFunctionInterface createNativeFunction();
+  public static JsFunctionInterface createNativeFunction() {
+    return null;
+  }
 
   public static int callFn(JsFunctionInterface fn, int a) {
     return fn.foo(a);
@@ -340,7 +342,10 @@ public class Main {
   }
 
   @JsMethod
-  public static native double callOnFunction(JsBiFunction<Double, Double> f);
+  public static double callOnFunction(JsBiFunction<Double, Double> f) {
+    return 0;
+  }
+  ;
 
   public static void testCast() {
     Object o = new TIntegerJsBiFunction<String>();
@@ -361,14 +366,15 @@ public class Main {
   }
 
   @JsType(isNative = true, name = "Array", namespace = JsPackage.GLOBAL)
-  interface TestJsFunctionInJsOverlayCapturingOuter {
+  static class TestJsFunctionInJsOverlayCapturingOuter {
 
     @JsOverlay
-    default void test() {
+    final void test() {
       sort(a -> TestJsFunctionInJsOverlayCapturingOuter.this == null ? 0 : 1);
     }
 
-    void sort(JsFunctionInterface func);
+    @JsOverlay
+    final void sort(JsFunctionInterface func) {}
   }
 
   private static final class RecursiveParametricJsFunctionImplementation<
@@ -380,26 +386,5 @@ public class Main {
   private static final class RecursiveJsFunctionImplementation
       implements ParametricJsFunction<RecursiveJsFunctionImplementation> {
     public void call(RecursiveJsFunctionImplementation t) {}
-  }
-
-  @JsFunction
-  interface ParameterizedMethod {
-    <T> T f(T t);
-  }
-
-  // Repro for b/153176433.
-  private static void acceptsParameterizedMethod(ParameterizedMethod m) {}
-
-  static <T> T nullFn(T t) {
-    return null;
-  }
-
-  private static void testParameterizedJsFunctionMethod() {
-    ParameterizedMethod parameterizedMethod;
-    parameterizedMethod = Main::nullFn;
-    // The equivalent lambda to Main::nullFn cannot be written by hand (both jdt and java reject
-    // the code). A functional interface with type parameters declared in the functional method can
-    // only be instantiated by a method reference or a class.
-    // parameterizedMethod = x -> nullFn(x);
   }
 }

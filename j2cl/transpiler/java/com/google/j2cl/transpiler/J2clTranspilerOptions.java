@@ -46,7 +46,7 @@ public abstract class J2clTranspilerOptions implements FrontendOptions, BackendO
   public static Builder newBuilder() {
     return new AutoValue_J2clTranspilerOptions.Builder()
         .setOptimizeAutoValue(false)
-        .setWasmRemoveAssertStatement(false)
+        .setWasmEnableNonNativeJsEnum(false)
         .setNullMarkedSupported(false);
   }
 
@@ -55,10 +55,7 @@ public abstract class J2clTranspilerOptions implements FrontendOptions, BackendO
   public abstract ImmutableList<EntryPointPattern> getWasmEntryPointPatterns();
 
   @Override
-  public ImmutableList<String> getForbiddenAnnotations() {
-    return ImmutableList.of(
-        getBackend() == Backend.KOTLIN ? "J2ktIncompatible" : "GwtIncompatible");
-  }
+  public abstract ImmutableList<String> getForbiddenAnnotations();
 
   /** A Builder for J2clTranspilerOptions. */
   @AutoValue.Builder
@@ -71,6 +68,8 @@ public abstract class J2clTranspilerOptions implements FrontendOptions, BackendO
     public abstract Builder setClasspaths(List<String> entries);
 
     public abstract Builder setOutput(Output output);
+
+    public abstract Builder setTargetLabel(String targetLabel);
 
     public abstract Builder setLibraryInfoOutput(@Nullable Path path);
 
@@ -95,11 +94,13 @@ public abstract class J2clTranspilerOptions implements FrontendOptions, BackendO
 
     public abstract Builder setDefinesForWasm(ImmutableMap<String, String> definesForWasm);
 
-    public abstract Builder setWasmRemoveAssertStatement(boolean wasmRemoveAssertStatement);
+    public abstract Builder setWasmEnableNonNativeJsEnum(boolean wasmEnableNonNativeJsEnum);
 
     public abstract Builder setNullMarkedSupported(boolean isNullMarkedSupported);
 
     public abstract Builder setKotlincOptions(ImmutableList<String> kotlincOptions);
+
+    public abstract Builder setForbiddenAnnotations(ImmutableList<String> forbiddenAnnotations);
 
     abstract J2clTranspilerOptions autoBuild();
 

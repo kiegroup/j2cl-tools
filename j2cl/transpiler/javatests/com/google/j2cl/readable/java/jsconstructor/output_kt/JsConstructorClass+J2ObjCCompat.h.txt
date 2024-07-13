@@ -15,6 +15,8 @@
 @class J2ktJsconstructorJsConstructorClass_H;
 @class J2ktJsconstructorJsConstructorClass_InstanceVarargs;
 @class J2ktJsconstructorJsConstructorClass_JsConstructorSubtypeOfRegularType;
+@class J2ktJsconstructorJsConstructorClass_Outer;
+@class J2ktJsconstructorJsConstructorClass_Outer_I;
 @class J2ktJsconstructorJsConstructorClass_RegularType;
 @class J2ktJsconstructorJsConstructorClass_SubVarargs;
 @class J2ktJsconstructorJsConstructorClass_SubVarargsCompanion;
@@ -30,7 +32,15 @@ NS_INLINE J2ktJsconstructorJsConstructorClass_A* create_JsconstructorJsConstruct
  return [[J2ktJsconstructorJsConstructorClass_A alloc] initWithInt:x];
 }
 
+NS_INLINE J2ktJsconstructorJsConstructorClass_A* new_JsconstructorJsConstructorClass_A_initWithInt_(jint x) {
+ return [[J2ktJsconstructorJsConstructorClass_A alloc] initWithInt:x];
+}
+
 NS_INLINE J2ktJsconstructorJsConstructorClass_A* create_JsconstructorJsConstructorClass_A_init(void) {
+ return [[J2ktJsconstructorJsConstructorClass_A alloc] init];
+}
+
+NS_INLINE J2ktJsconstructorJsConstructorClass_A* new_JsconstructorJsConstructorClass_A_init(void) {
  return [[J2ktJsconstructorJsConstructorClass_A alloc] init];
 }
 
@@ -40,11 +50,23 @@ NS_INLINE J2ktJsconstructorJsConstructorClass_B* create_JsconstructorJsConstruct
  return [[J2ktJsconstructorJsConstructorClass_B alloc] initWithInt:x];
 }
 
+NS_INLINE J2ktJsconstructorJsConstructorClass_B* new_JsconstructorJsConstructorClass_B_initWithInt_(jint x) {
+ return [[J2ktJsconstructorJsConstructorClass_B alloc] initWithInt:x];
+}
+
 NS_INLINE J2ktJsconstructorJsConstructorClass_B* create_JsconstructorJsConstructorClass_B_init(void) {
  return [[J2ktJsconstructorJsConstructorClass_B alloc] init];
 }
 
+NS_INLINE J2ktJsconstructorJsConstructorClass_B* new_JsconstructorJsConstructorClass_B_init(void) {
+ return [[J2ktJsconstructorJsConstructorClass_B alloc] init];
+}
+
 NS_INLINE J2ktJsconstructorJsConstructorClass_B* create_JsconstructorJsConstructorClass_B_initWithInt_withInt_(jint x, jint y) {
+ return [[J2ktJsconstructorJsConstructorClass_B alloc] initWithInt:x withInt:y];
+}
+
+NS_INLINE J2ktJsconstructorJsConstructorClass_B* new_JsconstructorJsConstructorClass_B_initWithInt_withInt_(jint x, jint y) {
  return [[J2ktJsconstructorJsConstructorClass_B alloc] initWithInt:x withInt:y];
 }
 
@@ -54,7 +76,15 @@ NS_INLINE J2ktJsconstructorJsConstructorClass_C* create_JsconstructorJsConstruct
  return [[J2ktJsconstructorJsConstructorClass_C alloc] initWithInt:x];
 }
 
+NS_INLINE J2ktJsconstructorJsConstructorClass_C* new_JsconstructorJsConstructorClass_C_initWithInt_(jint x) {
+ return [[J2ktJsconstructorJsConstructorClass_C alloc] initWithInt:x];
+}
+
 NS_INLINE J2ktJsconstructorJsConstructorClass_C* create_JsconstructorJsConstructorClass_C_initWithInt_withInt_(jint x, jint y) {
+ return [[J2ktJsconstructorJsConstructorClass_C alloc] initWithInt:x withInt:y];
+}
+
+NS_INLINE J2ktJsconstructorJsConstructorClass_C* new_JsconstructorJsConstructorClass_C_initWithInt_withInt_(jint x, jint y) {
  return [[J2ktJsconstructorJsConstructorClass_C alloc] initWithInt:x withInt:y];
 }
 
@@ -64,7 +94,15 @@ NS_INLINE J2ktJsconstructorJsConstructorClass_D* create_JsconstructorJsConstruct
  return [[J2ktJsconstructorJsConstructorClass_D alloc] init];
 }
 
+NS_INLINE J2ktJsconstructorJsConstructorClass_D* new_JsconstructorJsConstructorClass_D_init(void) {
+ return [[J2ktJsconstructorJsConstructorClass_D alloc] init];
+}
+
 NS_INLINE J2ktJsconstructorJsConstructorClass_D* create_JsconstructorJsConstructorClass_D_initWithInt_(jint x) {
+ return [[J2ktJsconstructorJsConstructorClass_D alloc] initWithInt:x];
+}
+
+NS_INLINE J2ktJsconstructorJsConstructorClass_D* new_JsconstructorJsConstructorClass_D_initWithInt_(jint x) {
  return [[J2ktJsconstructorJsConstructorClass_D alloc] initWithInt:x];
 }
 
@@ -74,9 +112,17 @@ NS_INLINE J2ktJsconstructorJsConstructorClass_E* create_JsconstructorJsConstruct
  return [[J2ktJsconstructorJsConstructorClass_E alloc] init];
 }
 
+NS_INLINE J2ktJsconstructorJsConstructorClass_E* new_JsconstructorJsConstructorClass_E_init(void) {
+ return [[J2ktJsconstructorJsConstructorClass_E alloc] init];
+}
+
 @compatibility_alias JsconstructorJsConstructorClass_F J2ktJsconstructorJsConstructorClass_F;
 
 NS_INLINE J2ktJsconstructorJsConstructorClass_F* create_JsconstructorJsConstructorClass_F_initWithInt_(jint x) {
+ return [[J2ktJsconstructorJsConstructorClass_F alloc] initWithInt:x];
+}
+
+NS_INLINE J2ktJsconstructorJsConstructorClass_F* new_JsconstructorJsConstructorClass_F_initWithInt_(jint x) {
  return [[J2ktJsconstructorJsConstructorClass_F alloc] initWithInt:x];
 }
 
@@ -88,6 +134,14 @@ NS_INLINE J2ktJsconstructorJsConstructorClass_H* create_JsconstructorJsConstruct
  return [[J2ktJsconstructorJsConstructorClass_H alloc] init];
 }
 
+NS_INLINE J2ktJsconstructorJsConstructorClass_H* new_JsconstructorJsConstructorClass_H_init(void) {
+ return [[J2ktJsconstructorJsConstructorClass_H alloc] init];
+}
+
+@compatibility_alias JsconstructorJsConstructorClass_Outer J2ktJsconstructorJsConstructorClass_Outer;
+
+@compatibility_alias JsconstructorJsConstructorClass_Outer_I J2ktJsconstructorJsConstructorClass_Outer_I;
+
 @compatibility_alias JsconstructorJsConstructorClass_Varargs J2ktJsconstructorJsConstructorClass_Varargs;
 
 @compatibility_alias JsconstructorJsConstructorClass_SubVarargs J2ktJsconstructorJsConstructorClass_SubVarargs;
@@ -95,6 +149,10 @@ NS_INLINE J2ktJsconstructorJsConstructorClass_H* create_JsconstructorJsConstruct
 @compatibility_alias JsconstructorJsConstructorClass_SubVarargsCompanion J2ktJsconstructorJsConstructorClass_SubVarargsCompanion;
 
 NS_INLINE J2ktJsconstructorJsConstructorClass_SubVarargs* create_JsconstructorJsConstructorClass_SubVarargs_initWithInt_(jint j) {
+ return [[J2ktJsconstructorJsConstructorClass_SubVarargs alloc] initWithInt:j];
+}
+
+NS_INLINE J2ktJsconstructorJsConstructorClass_SubVarargs* new_JsconstructorJsConstructorClass_SubVarargs_initWithInt_(jint j) {
  return [[J2ktJsconstructorJsConstructorClass_SubVarargs alloc] initWithInt:j];
 }
 
@@ -106,13 +164,25 @@ NS_INLINE J2ktJsconstructorJsConstructorClass_RegularType* create_JsconstructorJ
  return [[J2ktJsconstructorJsConstructorClass_RegularType alloc] initWithId:b];
 }
 
+NS_INLINE J2ktJsconstructorJsConstructorClass_RegularType* new_JsconstructorJsConstructorClass_RegularType_initWithId_(id _Nullable b) {
+ return [[J2ktJsconstructorJsConstructorClass_RegularType alloc] initWithId:b];
+}
+
 @compatibility_alias JsconstructorJsConstructorClass_JsConstructorSubtypeOfRegularType J2ktJsconstructorJsConstructorClass_JsConstructorSubtypeOfRegularType;
 
 NS_INLINE J2ktJsconstructorJsConstructorClass_JsConstructorSubtypeOfRegularType* create_JsconstructorJsConstructorClass_JsConstructorSubtypeOfRegularType_initWithId_(id _Nullable object) {
  return [[J2ktJsconstructorJsConstructorClass_JsConstructorSubtypeOfRegularType alloc] initWithId:object];
 }
 
+NS_INLINE J2ktJsconstructorJsConstructorClass_JsConstructorSubtypeOfRegularType* new_JsconstructorJsConstructorClass_JsConstructorSubtypeOfRegularType_initWithId_(id _Nullable object) {
+ return [[J2ktJsconstructorJsConstructorClass_JsConstructorSubtypeOfRegularType alloc] initWithId:object];
+}
+
 NS_INLINE J2ktJsconstructorJsConstructorClass_JsConstructorSubtypeOfRegularType* create_JsconstructorJsConstructorClass_JsConstructorSubtypeOfRegularType_init(void) {
+ return [[J2ktJsconstructorJsConstructorClass_JsConstructorSubtypeOfRegularType alloc] init];
+}
+
+NS_INLINE J2ktJsconstructorJsConstructorClass_JsConstructorSubtypeOfRegularType* new_JsconstructorJsConstructorClass_JsConstructorSubtypeOfRegularType_init(void) {
  return [[J2ktJsconstructorJsConstructorClass_JsConstructorSubtypeOfRegularType alloc] init];
 }
 

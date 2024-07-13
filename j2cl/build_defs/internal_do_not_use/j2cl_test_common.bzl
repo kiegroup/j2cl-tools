@@ -17,7 +17,7 @@ j2cl_test(
     ],
 )
 
-# Similiar usage to java_test without sources:
+# Similar usage to java_test without sources:
 j2cl_library(
     name = "MyTestLib",
     srcs = ["MyTest.java"],
@@ -61,18 +61,20 @@ rather than on jsunit runner with browsers. For j2kt_jvm_test j2cl_library/j2cl_
 will be replaced with j2kt_jvm_library/j2kt_jvm_test counterparts.
 """
 
-load(":j2cl_library.bzl", "j2cl_library")
-load(":j2cl_js_common.bzl", "J2CL_TEST_DEFS", "j2cl_web_test")
+load("@rules_java//java:defs.bzl", "java_test")
 load(":j2cl_generate_jsunit_suite.bzl", "j2cl_generate_jsunit_suite")
+load(":j2cl_js_common.bzl", "J2CL_TEST_DEFS", "j2cl_web_test")
+load(":j2cl_library.bzl", "j2cl_library")
 load(":j2cl_rta.bzl", "j2cl_rta")
 load(":j2cl_util.bzl", "get_java_package")
 load(":j2kt_library.bzl", "j2kt_jvm_library", "j2kt_native_library")
-load(":j2wasm_library.bzl", "j2wasm_library")
 load(":j2wasm_generate_jsunit_suite.bzl", "j2wasm_generate_jsunit_suite")
+load(":j2wasm_library.bzl", "j2wasm_library")
 
 _JS_UNIT_TEST_PARAMETERS = [
     "args",
     "compiler",
+    "default_browser",
     "deprecation",
     "deps_mgmt",
     "distribs",
@@ -94,6 +96,7 @@ _JS_UNIT_TEST_PARAMETERS = [
 _STRIP_JSUNIT_PARAMETERS = [
     "args",
     "compiler",
+    "default_browser",
     "deps_mgmt",
     "distribs",
     "externs_list",
@@ -170,7 +173,6 @@ def j2cl_test_common(
         optimize_wasm = False,
         wasm_defs = {},
         browsers = None,
-        default_browser = "//testing/web/browsers:chrome-linux",
         extra_defs = [],
         jvm_flags = [],
         tags = [],
@@ -210,6 +212,8 @@ def j2cl_test_common(
             name = "%s_testlib" % name,
             exports = exports,
             testonly = 1,
+            # Safe here as this is for tests only and there are no downstream users.
+            experimental_enable_jspecify_support_do_not_enable_without_jspecify_static_checking_or_you_might_cause_an_outage = 1,
             tags = tags,
             **j2cl_parameters
         )
@@ -228,7 +232,7 @@ def j2cl_test_common(
             # j2cl_test for the compiled mode to pick it up (otherwise dropped
             # in jsunit_test if user provided only in bootstrap_files).
             ":%s_testlib" % name,
-            ":%s_generated_suite_lib" % name,
+            ":%s_lib" % generated_suite_name,
             Label("//build_defs/internal_do_not_use:closure_testsuite"),
             Label("//build_defs/internal_do_not_use:closure_testcase"),
             Label("//build_defs/internal_do_not_use:internal_parametrized_test_suite"),
@@ -244,7 +248,6 @@ def j2cl_test_common(
         )
 
         # Trigger our code generation
-        exec_properties = (kwargs.get("exec_properties") or {})
         j2wasm_generate_jsunit_suite(
             name = generated_suite_name,
             test_class = test_class,
@@ -252,13 +255,20 @@ def j2cl_test_common(
             tags = tags,
             optimize = optimize_wasm,
             defines = wasm_defs,
-            exec_properties = exec_properties,
+            exec_properties = kwargs.get("exec_properties") or {},
         )
 
         deps = [
+            ":%s_dep" % generated_suite_name,
             Label("//build_defs/internal_do_not_use:closure_testsuite"),
-            ":%s_j2wasm_application" % generated_suite_name,
+            Label("//build_defs/internal_do_not_use:closure_testcase"),
         ]
+
+        # Open-source currently needs the explicit data dependency to wasm target.
+        data = data + [
+            ":%s_dep" % generated_suite_name,
+        ]
+
     else:
         fail("Unknown platform: " + platform)
 
@@ -287,9 +297,9 @@ def j2cl_test_common(
 
     j2cl_web_test(
         name = name,
+        src = ":" + generated_suite_name,
         deps = deps,
         browsers = browsers,
-        default_browser = default_browser,
         data = data,
         tags = tags,
         flaky = flaky,

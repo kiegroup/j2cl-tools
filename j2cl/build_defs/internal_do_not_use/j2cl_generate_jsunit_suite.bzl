@@ -25,8 +25,8 @@ jsunit_test(
 
 """
 
-load(":j2cl_library.bzl", "j2cl_library")
 load(":generate_test_input.bzl", "generate_test_input")
+load(":j2cl_library.bzl", "j2cl_library")
 
 # buildifier: disable=function-docstring-args
 def j2cl_generate_jsunit_suite(name, test_class, deps, tags = []):
@@ -53,12 +53,16 @@ def j2cl_generate_jsunit_suite(name, test_class, deps, tags = []):
         name = name + "_lib",
         srcs = [test_input],
         deps = deps + [
-            Label("//:jsinterop-annotations-j2cl"),
+            Label("//build_defs/internal_do_not_use:internal_junit_annotations"),
             Label("//build_defs/internal_do_not_use:internal_junit_runtime"),
             Label("//build_defs/internal_do_not_use:closure_testcase"),
         ],
         testonly = 1,
-        javacopts = ["-AtestPlatform=CLOSURE"],
+        javacopts = [
+            "-AtestPlatform=CLOSURE",
+            # Disable error prone checks since this is a generated code.
+            "-Xep:PackageLocation:OFF",
+        ],
         tags = tags,
         generate_build_test = False,
     )
@@ -74,7 +78,7 @@ def j2cl_generate_jsunit_suite(name, test_class, deps, tags = []):
     # files.)
     out_jar = ":lib" + name + "_lib.jar"
     native.genrule(
-        name = name + "_transpile_gen",
+        name = name,
         outs = [name + ".js.zip"],
         cmd = "\n".join([
             "unzip -q $(location %s) *.testsuite *.json -d zip_out/" % out_jar,

@@ -18,17 +18,14 @@ package com.google.j2cl.transpiler.backend.kotlin.ast
 import com.google.j2cl.transpiler.ast.Member as JavaMember
 import com.google.j2cl.transpiler.ast.Type
 
+/** Kotlin member. */
 sealed class Member {
+  /** Kotlin member mapping to a Java member. */
   data class WithJavaMember(val javaMember: JavaMember) : Member()
-  data class WithCompanionObject(val companionObject: CompanionObject) : Member()
-  data class WithType(val type: Type) : Member()
-}
 
-val Type.kotlinMembers: List<Member>
-  get() =
-    members
-      .filter { !it.isStatic && (!declaration.isAnonymous || !it.isConstructor) }
-      .map { Member.WithJavaMember(it) }
-      .plus(companionObjectOrNull?.let { Member.WithCompanionObject(it) })
-      .plus(types.map { Member.WithType(it) })
-      .filterNotNull()
+  /** Kotlin member mapping to a Java Type. */
+  data class WithType(val type: Type) : Member()
+
+  /** Kotlin companion object member. */
+  data class WithCompanionObject(val companionObject: CompanionObject) : Member()
+}

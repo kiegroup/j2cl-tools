@@ -1,103 +1,112 @@
- ;;; Code for innerclasswithconstructor.InnerClassWithConstructor [type definition]
- (type $innerclasswithconstructor.InnerClassWithConstructor (struct_subtype
-  (field $vtable (ref $innerclasswithconstructor.InnerClassWithConstructor.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  (field $f_a__innerclasswithconstructor_InnerClassWithConstructor (mut i32))
-  $java.lang.Object)
- )
- (type $innerclasswithconstructor.InnerClassWithConstructor.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  $java.lang.Object.vtable)
- )
+;;; Code for innerclasswithconstructor.InnerClassWithConstructor [type definition]
+(type $innerclasswithconstructor.InnerClassWithConstructor.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ ))
+)
+(type $innerclasswithconstructor.InnerClassWithConstructor (sub $java.lang.Object (struct
+ (field $vtable (ref $innerclasswithconstructor.InnerClassWithConstructor.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $a@innerclasswithconstructor.InnerClassWithConstructor (mut i32))
+ ))
+)
 
- ;;; Code for innerclasswithconstructor.InnerClassWithConstructor.InnerClass [type definition]
- (type $innerclasswithconstructor.InnerClassWithConstructor.InnerClass (struct_subtype
-  (field $vtable (ref $innerclasswithconstructor.InnerClassWithConstructor.InnerClass.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  (field $$outer_this__innerclasswithconstructor_InnerClassWithConstructor_InnerClass (ref null $innerclasswithconstructor.InnerClassWithConstructor))
-  (field $f_b__innerclasswithconstructor_InnerClassWithConstructor_InnerClass (mut i32))
-  $java.lang.Object)
- )
- (type $innerclasswithconstructor.InnerClassWithConstructor.InnerClass.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  $java.lang.Object.vtable)
- )
+;;; Code for innerclasswithconstructor.InnerClassWithConstructor.InnerClass [type definition]
+(type $innerclasswithconstructor.InnerClassWithConstructor.InnerClass.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ ))
+)
+(type $innerclasswithconstructor.InnerClassWithConstructor.InnerClass (sub $java.lang.Object (struct
+ (field $vtable (ref $innerclasswithconstructor.InnerClassWithConstructor.InnerClass.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $$outer_this@innerclasswithconstructor.InnerClassWithConstructor.InnerClass (mut (ref null $innerclasswithconstructor.InnerClassWithConstructor)))
+ (field $b@innerclasswithconstructor.InnerClassWithConstructor.InnerClass (mut i32))
+ ))
+)
 
- ;;; Code for innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor [type definition]
- (type $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor (struct_subtype
-  (field $vtable (ref $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  (field $$outer_this__innerclasswithconstructor_InnerClassWithConstructor_InnerClassWithSingleConstructor (ref null $innerclasswithconstructor.InnerClassWithConstructor))
-  (field $f_b__innerclasswithconstructor_InnerClassWithConstructor_InnerClassWithSingleConstructor (mut i32))
-  $java.lang.Object)
- )
- (type $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  $java.lang.Object.vtable)
- )
+;;; Code for innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor [type definition]
+(type $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ ))
+)
+(type $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor (sub $java.lang.Object (struct
+ (field $vtable (ref $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $$outer_this@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor (mut (ref null $innerclasswithconstructor.InnerClassWithConstructor)))
+ (field $b@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor (mut i32))
+ ))
+)
+
+;;; Code for innerclasswithconstructor.InnerClassWithConstructor [imports]
+
+;;; Code for innerclasswithconstructor.InnerClassWithConstructor.InnerClass [imports]
+
+;;; Code for innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor [imports]
+
+;;; Code for innerclasswithconstructor.InnerClassWithConstructor [static fields]
+(global $$class-initialized@innerclasswithconstructor.InnerClassWithConstructor (mut i32)
+ (i32.const 0)
+)
+(global $$class@innerclasswithconstructor.InnerClassWithConstructor (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for innerclasswithconstructor.InnerClassWithConstructor.InnerClass [static fields]
+(global $$class-initialized@innerclasswithconstructor.InnerClassWithConstructor.InnerClass (mut i32)
+ (i32.const 0)
+)
+(global $$class@innerclasswithconstructor.InnerClassWithConstructor.InnerClass (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor [static fields]
+(global $$class-initialized@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor (mut i32)
+ (i32.const 0)
+)
+(global $$class@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
 
 ;;; Code for innerclasswithconstructor.InnerClassWithConstructor [vtable.init]
 (global $innerclasswithconstructor.InnerClassWithConstructor.vtable (ref $innerclasswithconstructor.InnerClassWithConstructor.vtable)
  (struct.new $innerclasswithconstructor.InnerClassWithConstructor.vtable
+  (ref.func $$getClassImpl__java_lang_Class@innerclasswithconstructor.InnerClassWithConstructor)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@innerclasswithconstructor.InnerClassWithConstructor)
  )
 )
 
 ;;; Code for innerclasswithconstructor.InnerClassWithConstructor.InnerClass [vtable.init]
 (global $innerclasswithconstructor.InnerClassWithConstructor.InnerClass.vtable (ref $innerclasswithconstructor.InnerClassWithConstructor.InnerClass.vtable)
  (struct.new $innerclasswithconstructor.InnerClassWithConstructor.InnerClass.vtable
+  (ref.func $$getClassImpl__java_lang_Class@innerclasswithconstructor.InnerClassWithConstructor.InnerClass)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@innerclasswithconstructor.InnerClassWithConstructor.InnerClass)
  )
 )
 
 ;;; Code for innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor [vtable.init]
 (global $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor.vtable (ref $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor.vtable)
  (struct.new $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor.vtable
+  (ref.func $$getClassImpl__java_lang_Class@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor)
  )
 )
-
-;;; Code for innerclasswithconstructor.InnerClassWithConstructor [static fields]
-(global $f_$initialized__innerclasswithconstructor_InnerClassWithConstructor (mut i32) (i32.const 0))
-(global $f_$class__innerclasswithconstructor_InnerClassWithConstructor (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|innerclasswi...|__innerclasswithconstructor_InnerClassWithConstructor (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for innerclasswithconstructor.InnerClassWithConstructor.InnerClass [static fields]
-(global $f_$initialized__innerclasswithconstructor_InnerClassWithConstructor_InnerClass (mut i32) (i32.const 0))
-(global $f_$class__innerclasswithconstructor_InnerClassWithConstructor_InnerClass (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|innerclasswi...|__innerclasswithconstructor_InnerClassWithConstructor_InnerClass (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor [static fields]
-(global $f_$initialized__innerclasswithconstructor_InnerClassWithConstructor_InnerClassWithSingleConstructor (mut i32) (i32.const 0))
-(global $f_$class__innerclasswithconstructor_InnerClassWithConstructor_InnerClassWithSingleConstructor (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|innerclasswi...|__innerclasswithconstructor_InnerClassWithConstructor_InnerClassWithSingleConstructor (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
 
 ;;; Code for innerclasswithconstructor.InnerClassWithConstructor [methods]
 
@@ -107,6 +116,8 @@
  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:18:13
  (local $$instance (ref null $innerclasswithconstructor.InnerClassWithConstructor))
  (block
+  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:18:13
+  (call $$clinit__void_<once>_@innerclasswithconstructor.InnerClassWithConstructor )
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:18:13
   (local.set $$instance (struct.new $innerclasswithconstructor.InnerClassWithConstructor (ref.as_non_null (global.get $innerclasswithconstructor.InnerClassWithConstructor.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (i32.const 0)))
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:18:13
@@ -122,40 +133,39 @@
  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:18:13
  (block
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:18:13
-  (call $$clinit__void@innerclasswithconstructor.InnerClassWithConstructor )
-  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:18:13
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; void InnerClassWithConstructor.$clinit()
-(func $$clinit__void@innerclasswithconstructor.InnerClassWithConstructor
+(func $$clinit__void_<once>_@innerclasswithconstructor.InnerClassWithConstructor
  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:18:13
  (block
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:18:13
-  (if (global.get $f_$initialized__innerclasswithconstructor_InnerClassWithConstructor)
+  (if (global.get $$class-initialized@innerclasswithconstructor.InnerClassWithConstructor)
    (then
     ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:18:13
     (return )
    )
   )
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:18:13
-  (global.set $f_$initialized__innerclasswithconstructor_InnerClassWithConstructor (i32.const 1))
+  (global.set $$class-initialized@innerclasswithconstructor.InnerClassWithConstructor (i32.const 1))
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:18:13
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> InnerClassWithConstructor.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@innerclasswithconstructor.InnerClassWithConstructor
+(func $$getClassMetadata__java_lang_Class_<once>_@innerclasswithconstructor.InnerClassWithConstructor
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__innerclasswithconstructor_InnerClassWithConstructor) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@innerclasswithconstructor.InnerClassWithConstructor)))
    (then
-    (global.set $f_$class__innerclasswithconstructor_InnerClassWithConstructor (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|innerclasswi...|__java_lang_String (ref.func $$getString_|innerclasswi...|__java_lang_String@innerclasswithconstructor.InnerClassWithConstructor) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@innerclasswithconstructor.InnerClassWithConstructor))
    )
   )
-  (return (global.get $f_$class__innerclasswithconstructor_InnerClassWithConstructor))
+  (global.set $$class@innerclasswithconstructor.InnerClassWithConstructor (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|innerclasswi...|__java_lang_String_<once>_@innerclasswithconstructor.InnerClassWithConstructor )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@innerclasswithconstructor.InnerClassWithConstructor))
  )
 )
 
@@ -165,25 +175,12 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $innerclasswithconstructor.InnerClassWithConstructor))
- (local.set $this (ref.cast_static $innerclasswithconstructor.InnerClassWithConstructor (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $innerclasswithconstructor.InnerClassWithConstructor) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@innerclasswithconstructor.InnerClassWithConstructor) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@innerclasswithconstructor.InnerClassWithConstructor ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@innerclasswithconstructor.InnerClassWithConstructor)
-
-;;; String InnerClassWithConstructor.$getString_|innerclasswi...|()
-(func $$getString_|innerclasswi...|__java_lang_String@innerclasswithconstructor.InnerClassWithConstructor
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|innerclasswi...|__innerclasswithconstructor_InnerClassWithConstructor) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|innerclasswi...|__innerclasswithconstructor_InnerClassWithConstructor (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "innerclasswithconstructor.InnerClassWithConstructor")))
-   )
-  )
-  (return (global.get $f_$string_|innerclasswi...|__innerclasswithconstructor_InnerClassWithConstructor))
- )
-)
 
 ;;; Code for innerclasswithconstructor.InnerClassWithConstructor.InnerClass [methods]
 
@@ -196,7 +193,9 @@
  (local $$instance (ref null $innerclasswithconstructor.InnerClassWithConstructor.InnerClass))
  (block
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:24:11
-  (local.set $$instance (struct.new $innerclasswithconstructor.InnerClassWithConstructor.InnerClass (ref.as_non_null (global.get $innerclasswithconstructor.InnerClassWithConstructor.InnerClass.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (local.get $$outer_this) (i32.const 0)))
+  (call $$clinit__void_<once>_@innerclasswithconstructor.InnerClassWithConstructor.InnerClass )
+  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:24:11
+  (local.set $$instance (struct.new $innerclasswithconstructor.InnerClassWithConstructor.InnerClass (ref.as_non_null (global.get $innerclasswithconstructor.InnerClassWithConstructor.InnerClass.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (ref.null $innerclasswithconstructor.InnerClassWithConstructor) (i32.const 0)))
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:24:11
   (call $$ctor__innerclasswithconstructor_InnerClassWithConstructor__int__void_$p_innerclasswithconstructor_InnerClassWithConstructor_InnerClass@innerclasswithconstructor.InnerClassWithConstructor.InnerClass (ref.as_non_null (local.get $$instance))(local.get $$outer_this)(local.get $b))
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:24:11
@@ -211,12 +210,12 @@
  (param $b i32)
  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:24:11
  (block
-  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:24:29
-  (call $$clinit__void@innerclasswithconstructor.InnerClassWithConstructor.InnerClass )
+  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:21:8
+  (struct.set $innerclasswithconstructor.InnerClassWithConstructor.InnerClass $$outer_this@innerclasswithconstructor.InnerClassWithConstructor.InnerClass (local.get $this) (local.get $$outer_this))
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:24:29
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:25:6
-  (struct.set $innerclasswithconstructor.InnerClassWithConstructor.InnerClass $f_b__innerclasswithconstructor_InnerClassWithConstructor_InnerClass (local.get $this) (i32.add (struct.get $innerclasswithconstructor.InnerClassWithConstructor $f_a__innerclasswithconstructor_InnerClassWithConstructor (local.get $$outer_this)) (local.get $b)))
+  (struct.set $innerclasswithconstructor.InnerClassWithConstructor.InnerClass $b@innerclasswithconstructor.InnerClassWithConstructor.InnerClass (local.get $this) (i32.add (struct.get $innerclasswithconstructor.InnerClassWithConstructor $a@innerclasswithconstructor.InnerClassWithConstructor (local.get $$outer_this)) (local.get $b)))
  )
 )
 
@@ -228,7 +227,9 @@
  (local $$instance (ref null $innerclasswithconstructor.InnerClassWithConstructor.InnerClass))
  (block
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:28:11
-  (local.set $$instance (struct.new $innerclasswithconstructor.InnerClassWithConstructor.InnerClass (ref.as_non_null (global.get $innerclasswithconstructor.InnerClassWithConstructor.InnerClass.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (local.get $$outer_this) (i32.const 0)))
+  (call $$clinit__void_<once>_@innerclasswithconstructor.InnerClassWithConstructor.InnerClass )
+  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:28:11
+  (local.set $$instance (struct.new $innerclasswithconstructor.InnerClassWithConstructor.InnerClass (ref.as_non_null (global.get $innerclasswithconstructor.InnerClassWithConstructor.InnerClass.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (ref.null $innerclasswithconstructor.InnerClassWithConstructor) (i32.const 0)))
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:28:11
   (call $$ctor__innerclasswithconstructor_InnerClassWithConstructor__void_$p_innerclasswithconstructor_InnerClassWithConstructor_InnerClass@innerclasswithconstructor.InnerClassWithConstructor.InnerClass (ref.as_non_null (local.get $$instance))(local.get $$outer_this))
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:28:11
@@ -242,41 +243,40 @@
  (param $$outer_this (ref null $innerclasswithconstructor.InnerClassWithConstructor))
  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:28:11
  (block
-  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:28:24
-  (call $$clinit__void@innerclasswithconstructor.InnerClassWithConstructor.InnerClass )
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:29:6
-  (call $$ctor__innerclasswithconstructor_InnerClassWithConstructor__int__void_$p_innerclasswithconstructor_InnerClassWithConstructor_InnerClass@innerclasswithconstructor.InnerClassWithConstructor.InnerClass (ref.as_non_null (local.get $this))(local.get $$outer_this)(struct.get $innerclasswithconstructor.InnerClassWithConstructor $f_a__innerclasswithconstructor_InnerClassWithConstructor (local.get $$outer_this)))
+  (call $$ctor__innerclasswithconstructor_InnerClassWithConstructor__int__void_$p_innerclasswithconstructor_InnerClassWithConstructor_InnerClass@innerclasswithconstructor.InnerClassWithConstructor.InnerClass (ref.as_non_null (local.get $this))(local.get $$outer_this)(struct.get $innerclasswithconstructor.InnerClassWithConstructor $a@innerclasswithconstructor.InnerClassWithConstructor (local.get $$outer_this)))
  )
 )
 
 ;;; void InnerClass.$clinit()
-(func $$clinit__void@innerclasswithconstructor.InnerClassWithConstructor.InnerClass
+(func $$clinit__void_<once>_@innerclasswithconstructor.InnerClassWithConstructor.InnerClass
  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:21:8
  (block
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:21:8
-  (if (global.get $f_$initialized__innerclasswithconstructor_InnerClassWithConstructor_InnerClass)
+  (if (global.get $$class-initialized@innerclasswithconstructor.InnerClassWithConstructor.InnerClass)
    (then
     ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:21:8
     (return )
    )
   )
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:21:8
-  (global.set $f_$initialized__innerclasswithconstructor_InnerClassWithConstructor_InnerClass (i32.const 1))
+  (global.set $$class-initialized@innerclasswithconstructor.InnerClassWithConstructor.InnerClass (i32.const 1))
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:21:8
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> InnerClass.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@innerclasswithconstructor.InnerClassWithConstructor.InnerClass
+(func $$getClassMetadata__java_lang_Class_<once>_@innerclasswithconstructor.InnerClassWithConstructor.InnerClass
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__innerclasswithconstructor_InnerClassWithConstructor_InnerClass) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@innerclasswithconstructor.InnerClassWithConstructor.InnerClass)))
    (then
-    (global.set $f_$class__innerclasswithconstructor_InnerClassWithConstructor_InnerClass (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|innerclasswi...|__java_lang_String (ref.func $$getString_|innerclasswi...|__java_lang_String@innerclasswithconstructor.InnerClassWithConstructor.InnerClass) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@innerclasswithconstructor.InnerClassWithConstructor.InnerClass))
    )
   )
-  (return (global.get $f_$class__innerclasswithconstructor_InnerClassWithConstructor_InnerClass))
+  (global.set $$class@innerclasswithconstructor.InnerClassWithConstructor.InnerClass (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|innerclasswi...|__java_lang_String_<once>_@innerclasswithconstructor.InnerClassWithConstructor.InnerClass )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@innerclasswithconstructor.InnerClassWithConstructor.InnerClass))
  )
 )
 
@@ -286,25 +286,12 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $innerclasswithconstructor.InnerClassWithConstructor.InnerClass))
- (local.set $this (ref.cast_static $innerclasswithconstructor.InnerClassWithConstructor.InnerClass (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $innerclasswithconstructor.InnerClassWithConstructor.InnerClass) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@innerclasswithconstructor.InnerClassWithConstructor.InnerClass) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@innerclasswithconstructor.InnerClassWithConstructor.InnerClass ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@innerclasswithconstructor.InnerClassWithConstructor.InnerClass)
-
-;;; String InnerClass.$getString_|innerclasswi...|()
-(func $$getString_|innerclasswi...|__java_lang_String@innerclasswithconstructor.InnerClassWithConstructor.InnerClass
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|innerclasswi...|__innerclasswithconstructor_InnerClassWithConstructor_InnerClass) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|innerclasswi...|__innerclasswithconstructor_InnerClassWithConstructor_InnerClass (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "innerclasswithconstructor.InnerClassWithConstructor$InnerClass")))
-   )
-  )
-  (return (global.get $f_$string_|innerclasswi...|__innerclasswithconstructor_InnerClassWithConstructor_InnerClass))
- )
-)
 
 ;;; Code for innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor [methods]
 
@@ -317,7 +304,9 @@
  (local $$instance (ref null $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor))
  (block
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:36:11
-  (local.set $$instance (struct.new $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor (ref.as_non_null (global.get $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (local.get $$outer_this) (i32.const 0)))
+  (call $$clinit__void_<once>_@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor )
+  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:36:11
+  (local.set $$instance (struct.new $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor (ref.as_non_null (global.get $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (ref.null $innerclasswithconstructor.InnerClassWithConstructor) (i32.const 0)))
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:36:11
   (call $$ctor__innerclasswithconstructor_InnerClassWithConstructor__int__void_$p_innerclasswithconstructor_InnerClassWithConstructor_InnerClassWithSingleConstructor@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor (ref.as_non_null (local.get $$instance))(local.get $$outer_this)(local.get $b))
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:36:11
@@ -332,43 +321,44 @@
  (param $b i32)
  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:36:11
  (block
-  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:36:50
-  (call $$clinit__void@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor )
+  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:33:8
+  (struct.set $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor $$outer_this@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor (local.get $this) (local.get $$outer_this))
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:36:50
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:37:6
-  (struct.set $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor $f_b__innerclasswithconstructor_InnerClassWithConstructor_InnerClassWithSingleConstructor (local.get $this) (i32.add (struct.get $innerclasswithconstructor.InnerClassWithConstructor $f_a__innerclasswithconstructor_InnerClassWithConstructor (local.get $$outer_this)) (local.get $b)))
+  (struct.set $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor $b@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor (local.get $this) (i32.add (struct.get $innerclasswithconstructor.InnerClassWithConstructor $a@innerclasswithconstructor.InnerClassWithConstructor (local.get $$outer_this)) (local.get $b)))
  )
 )
 
 ;;; void InnerClassWithSingleConstructor.$clinit()
-(func $$clinit__void@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor
+(func $$clinit__void_<once>_@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor
  ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:33:8
  (block
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:33:8
-  (if (global.get $f_$initialized__innerclasswithconstructor_InnerClassWithConstructor_InnerClassWithSingleConstructor)
+  (if (global.get $$class-initialized@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor)
    (then
     ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:33:8
     (return )
    )
   )
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:33:8
-  (global.set $f_$initialized__innerclasswithconstructor_InnerClassWithConstructor_InnerClassWithSingleConstructor (i32.const 1))
+  (global.set $$class-initialized@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor (i32.const 1))
   ;;@ innerclasswithconstructor/InnerClassWithConstructor.java:33:8
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> InnerClassWithSingleConstructor.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor
+(func $$getClassMetadata__java_lang_Class_<once>_@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__innerclasswithconstructor_InnerClassWithConstructor_InnerClassWithSingleConstructor) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor)))
    (then
-    (global.set $f_$class__innerclasswithconstructor_InnerClassWithConstructor_InnerClassWithSingleConstructor (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|innerclasswi...|__java_lang_String (ref.func $$getString_|innerclasswi...|__java_lang_String@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor))
    )
   )
-  (return (global.get $f_$class__innerclasswithconstructor_InnerClassWithConstructor_InnerClassWithSingleConstructor))
+  (global.set $$class@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|innerclasswi...|__java_lang_String_<once>_@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor))
  )
 )
 
@@ -378,22 +368,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor))
- (local.set $this (ref.cast_static $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor)
-
-;;; String InnerClassWithSingleConstructor.$getString_|innerclasswi...|()
-(func $$getString_|innerclasswi...|__java_lang_String@innerclasswithconstructor.InnerClassWithConstructor.InnerClassWithSingleConstructor
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|innerclasswi...|__innerclasswithconstructor_InnerClassWithConstructor_InnerClassWithSingleConstructor) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|innerclasswi...|__innerclasswithconstructor_InnerClassWithConstructor_InnerClassWithSingleConstructor (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "innerclasswithconstructor.InnerClassWithConstructor$InnerClassWithSingleConstructor")))
-   )
-  )
-  (return (global.get $f_$string_|innerclasswi...|__innerclasswithconstructor_InnerClassWithConstructor_InnerClassWithSingleConstructor))
- )
-)

@@ -1,12 +1,12 @@
 # Description:
 #   j2cl/jre: JRE subset for transpilation.
 
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@io_bazel_rules_closure//closure:defs.bzl", "closure_js_binary")
-load(":j2cl_multi_test.bzl", "j2cl_multi_test")
+load("//build_defs:rules.bzl", "j2cl_library", "j2cl_test", "j2kt_native_library")
 load("//javascript/tools/jscompiler/builddefs:flags.bzl", "VERBOSE_WARNING_FLAGS_STRICT", "WHITESPACE_ONLY_FLAGS")
 load("//third_party/bazel_rules/rules_closure/closure:defs.bzl", "closure_js_binary")
-load("//build_defs:rules.bzl", "j2cl_library", "j2cl_test")
-load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load(":j2cl_multi_test.bzl", "j2cl_multi_test")
 
 package(
     default_applicable_licenses = ["//:j2cl_license"],
@@ -27,7 +27,8 @@ j2cl_library(
     name = "emul_tests_lib",
     testonly = 1,
     srcs = SRCS,
-    generate_build_test = False,
+    # Safe here as this is for tests only and there are no downstream users.
+    experimental_enable_jspecify_support_do_not_enable_without_jspecify_static_checking_or_you_might_cause_an_outage = True,
     javacopts = [
         "-Xep:DoNotCall:OFF",
         "-Xep:CheckReturnValue:OFF",
@@ -37,12 +38,28 @@ j2cl_library(
         "-Xep:SelfComparison:OFF",
         "-Xep:SelfEquality:OFF",
         "-Xep:SelfEquals:OFF",
-        "-XepOpt:CheckReturnValue:CheckAllConstructors=false",  # b/226969262
     ],
     deps = [
         "//jre/java:javaemul_internal_annotations-j2cl",
-        "//third_party:gwt-jsinterop-annotations-j2cl",
+        "//third_party:jsinterop-annotations-j2cl",
         "//third_party:junit-j2cl",
+    ],
+)
+
+j2kt_native_library(
+    name = "emul_tests_lib-j2kt-native",
+    testonly = 1,
+    srcs = glob(
+        ["**/*.java"],
+        exclude = JS_ONLY_SRCS + [
+            "com/google/j2cl/jre/AllTests.java",
+            "com/google/j2cl/jre/EmulJava9Suite.java",
+            "com/google/j2cl/jre/java9/**/*.java",
+        ],
+    ),
+    deps = [
+        "//jre/java:javaemul_internal_annotations-j2kt-native",
+        "//third_party:junit-j2kt-native",
     ],
 )
 
@@ -60,63 +77,68 @@ java_test(
         "-Xep:SelfEquality:OFF",
         "-Xep:SelfEquals:OFF",
         "-Xep:ReturnValueIgnored:OFF",
-        "-XepOpt:CheckReturnValue:CheckAllConstructors=false",  # b/226969262
     ],
     test_class = "com.google.j2cl.jre.AllTests",
     deps = [
         "//jre/java:javaemul_internal_annotations",
-        "//third_party:gwt-jsinterop-annotations",
+        "//third_party:jsinterop-annotations",
         "//third_party:junit",
     ],
 )
 
 j2cl_multi_test(
     name = "BigDecimal",
-    shard_count = 5,
+    shard_count = 2,
     test_class = "com.google.j2cl.jre.BigDecimalSuite",
     deps = [":emul_tests_lib"],
 )
 
 j2cl_multi_test(
     name = "BigInteger",
-    shard_count = 8,
+    shard_count = 2,
     test_class = "com.google.j2cl.jre.BigIntegerSuite",
     deps = [":emul_tests_lib"],
 )
 
 j2cl_multi_test(
     name = "Collections",
-    enable_wasm = False,  # b/229006894
-    shard_count = 16,
+    shard_count = 4,
     test_class = "com.google.j2cl.jre.CollectionsSuite",
     deps = [":emul_tests_lib"],
 )
 
 j2cl_multi_test(
     name = "Concurrent",
-    shard_count = 5,
+    shard_count = 4,
     test_class = "com.google.j2cl.jre.ConcurrentSuite",
     deps = [":emul_tests_lib"],
 )
 
 j2cl_multi_test(
     name = "Emul",
-    shard_count = 8,
+    shard_count = 4,
     test_class = "com.google.j2cl.jre.EmulSuite",
     deps = [":emul_tests_lib"],
 )
 
 j2cl_multi_test(
     name = "EmulJava8",
-    enable_wasm = False,  # b/229006894
-    shard_count = 8,
+    shard_count = 4,
     test_class = "com.google.j2cl.jre.EmulJava8Suite",
     deps = [":emul_tests_lib"],
 )
 
 j2cl_multi_test(
+    name = "EmulJava9",
+    enable_kt_native = False,
+    shard_count = 2,
+    test_class = "com.google.j2cl.jre.EmulJava9Suite",
+    deps = [":emul_tests_lib"],
+)
+
+j2cl_multi_test(
     name = "Lang",
-    shard_count = 8,
+    shard_count = 4,
     test_class = "com.google.j2cl.jre.LangSuite",
     deps = [":emul_tests_lib"],
 )
@@ -131,16 +153,15 @@ j2cl_library(
     name = "js_tests_lib",
     testonly = 1,
     srcs = JS_ONLY_SRCS,
-    generate_build_test = False,
     deps = [
-        ":gwt_test_case-j2cl",
-        "//third_party:gwt-jsinterop-annotations-j2cl",
+        "//third_party:jsinterop-annotations-j2cl",
         "//third_party:junit-j2cl",
     ],
 )
 
 j2cl_multi_test(
     name = "JsSuite",
+    enable_kt_native = False,
     enable_wasm = False,
     test_class = "com.google.j2cl.jre.JsSuite",
     deps = [":js_tests_lib"],
@@ -152,7 +173,7 @@ j2cl_test(
     browsers = ["//testing/web/browsers:chrome-linux"],
     generate_build_test = False,
     jvm_flags = ["-Djsrunner.net.transpileMode=always"],
-    shard_count = 5,
+    shard_count = 4,
     test_class = "com.google.j2cl.jre.ConcurrentSuite",
     runtime_deps = [
         ":emul_tests_lib",

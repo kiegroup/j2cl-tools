@@ -1,35 +1,37 @@
- ;;; Code for assertsimple.AssertSimple [type definition]
- (type $assertsimple.AssertSimple (struct_subtype
-  (field $vtable (ref $assertsimple.AssertSimple.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $assertsimple.AssertSimple.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  $java.lang.Object.vtable)
- )
+;;; Code for assertsimple.AssertSimple [type definition]
+(type $assertsimple.AssertSimple.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ ))
+)
+(type $assertsimple.AssertSimple (sub $java.lang.Object (struct
+ (field $vtable (ref $assertsimple.AssertSimple.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
+;;; Code for assertsimple.AssertSimple [imports]
+
+;;; Code for assertsimple.AssertSimple [static fields]
+(global $$class-initialized@assertsimple.AssertSimple (mut i32)
+ (i32.const 0)
+)
+(global $$class@assertsimple.AssertSimple (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
 
 ;;; Code for assertsimple.AssertSimple [vtable.init]
 (global $assertsimple.AssertSimple.vtable (ref $assertsimple.AssertSimple.vtable)
  (struct.new $assertsimple.AssertSimple.vtable
+  (ref.func $$getClassImpl__java_lang_Class@assertsimple.AssertSimple)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@assertsimple.AssertSimple)
  )
 )
-
-;;; Code for assertsimple.AssertSimple [static fields]
-(global $f_$initialized__assertsimple_AssertSimple (mut i32) (i32.const 0))
-(global $f_$class__assertsimple_AssertSimple (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|Error_|__assertsimple_AssertSimple (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-(global $f_$string_|assertsimple...|__assertsimple_AssertSimple (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
 
 ;;; Code for assertsimple.AssertSimple [methods]
 
@@ -39,6 +41,8 @@
  ;;@ assertsimple/AssertSimple.java:18:13
  (local $$instance (ref null $assertsimple.AssertSimple))
  (block
+  ;;@ assertsimple/AssertSimple.java:18:13
+  (call $$clinit__void_<once>_@assertsimple.AssertSimple )
   ;;@ assertsimple/AssertSimple.java:18:13
   (local.set $$instance (struct.new $assertsimple.AssertSimple (ref.as_non_null (global.get $assertsimple.AssertSimple.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
   ;;@ assertsimple/AssertSimple.java:18:13
@@ -54,8 +58,6 @@
  ;;@ assertsimple/AssertSimple.java:18:13
  (block
   ;;@ assertsimple/AssertSimple.java:18:13
-  (call $$clinit__void@assertsimple.AssertSimple )
-  ;;@ assertsimple/AssertSimple.java:18:13
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -66,38 +68,81 @@
  ;;@ assertsimple/AssertSimple.java:19:21
  (block
   ;;@ assertsimple/AssertSimple.java:19:41
-  (call $$clinit__void@assertsimple.AssertSimple )
+  (call $$clinit__void_<once>_@assertsimple.AssertSimple )
+  ;;@ assertsimple/AssertSimple.java:20:4
+  (if (call $m_areWasmAssertionsEnabled__boolean@javaemul.internal.Asserts )
+   (then
+    ;;@ assertsimple/AssertSimple.java:20:4
+    (call $$assert__boolean__void@javaemul.internal.Asserts (i32.eq (i32.add (i32.const 1) (i32.const 2)) (i32.const 3)))
+   )
+  )
+  ;;@ assertsimple/AssertSimple.java:21:4
+  (if (call $m_areWasmAssertionsEnabled__boolean@javaemul.internal.Asserts )
+   (then
+    ;;@ assertsimple/AssertSimple.java:21:4
+    (call $$assertWithMessage__boolean__java_lang_Object__void@javaemul.internal.Asserts (i32.eq (i32.add (i32.const 1) (i32.const 2)) (i32.const 3))(call $$getString_|Error_|__java_lang_String_<once>_@assertsimple.AssertSimple ))
+   )
+  )
+  ;;@ assertsimple/AssertSimple.java:22:4
+  (if (call $m_areWasmAssertionsEnabled__boolean@javaemul.internal.Asserts )
+   (then
+    ;;@ assertsimple/AssertSimple.java:22:4
+    (call $$assertWithMessage__boolean__java_lang_Object__void@javaemul.internal.Asserts (i32.eq (i32.add (i32.const 1) (i32.const 2)) (i32.const 3))(ref.null $java.lang.Object))
+   )
+  )
+  ;;@ assertsimple/AssertSimple.java:23:4
+  (if (call $m_areWasmAssertionsEnabled__boolean@javaemul.internal.Asserts )
+   (then
+    ;;@ assertsimple/AssertSimple.java:23:4
+    (call $$assertWithMessage__boolean__java_lang_Object__void@javaemul.internal.Asserts (i32.eq (i32.add (i32.const 1) (i32.const 2)) (i32.const 3))(local.get $args))
+   )
+  )
+  ;;@ assertsimple/AssertSimple.java:24:4
+  (if (call $m_areWasmAssertionsEnabled__boolean@javaemul.internal.Asserts )
+   (then
+    ;;@ assertsimple/AssertSimple.java:24:4
+    (call $$assertWithMessage__boolean__java_lang_Object__void@javaemul.internal.Asserts (i32.eq (i32.add (i32.const 1) (i32.const 2)) (i32.const 3))(ref.cast (ref null $java.lang.String) (array.get $java.lang.Object.array (struct.get $javaemul.internal.WasmArray.OfObject $elements@javaemul.internal.WasmArray.OfObject (local.get $args)) (i32.const 0))))
+   )
+  )
+  ;;@ assertsimple/AssertSimple.java:25:4
+  (if (call $m_areWasmAssertionsEnabled__boolean@javaemul.internal.Asserts )
+   (then
+    ;;@ assertsimple/AssertSimple.java:25:4
+    (call $$assertWithMessage__boolean__java_lang_Object__void@javaemul.internal.Asserts (i32.eq (i32.add (i32.const 1) (i32.const 2)) (i32.const 3))(call $$create__@java.lang.Object ))
+   )
+  )
  )
 )
 
 ;;; void AssertSimple.$clinit()
-(func $$clinit__void@assertsimple.AssertSimple
+(func $$clinit__void_<once>_@assertsimple.AssertSimple
  ;;@ assertsimple/AssertSimple.java:18:13
  (block
   ;;@ assertsimple/AssertSimple.java:18:13
-  (if (global.get $f_$initialized__assertsimple_AssertSimple)
+  (if (global.get $$class-initialized@assertsimple.AssertSimple)
    (then
     ;;@ assertsimple/AssertSimple.java:18:13
     (return )
    )
   )
   ;;@ assertsimple/AssertSimple.java:18:13
-  (global.set $f_$initialized__assertsimple_AssertSimple (i32.const 1))
+  (global.set $$class-initialized@assertsimple.AssertSimple (i32.const 1))
   ;;@ assertsimple/AssertSimple.java:18:13
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> AssertSimple.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@assertsimple.AssertSimple
+(func $$getClassMetadata__java_lang_Class_<once>_@assertsimple.AssertSimple
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__assertsimple_AssertSimple) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@assertsimple.AssertSimple)))
    (then
-    (global.set $f_$class__assertsimple_AssertSimple (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|assertsimple...|__java_lang_String (ref.func $$getString_|assertsimple...|__java_lang_String@assertsimple.AssertSimple) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@assertsimple.AssertSimple))
    )
   )
-  (return (global.get $f_$class__assertsimple_AssertSimple))
+  (global.set $$class@assertsimple.AssertSimple (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|assertsimple...|__java_lang_String_<once>_@assertsimple.AssertSimple )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@assertsimple.AssertSimple))
  )
 )
 
@@ -107,35 +152,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $assertsimple.AssertSimple))
- (local.set $this (ref.cast_static $assertsimple.AssertSimple (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $assertsimple.AssertSimple) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@assertsimple.AssertSimple) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@assertsimple.AssertSimple ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@assertsimple.AssertSimple)
-
-;;; String AssertSimple.$getString_|Error_|()
-(func $$getString_|Error_|__java_lang_String@assertsimple.AssertSimple
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|Error_|__assertsimple_AssertSimple) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|Error_|__assertsimple_AssertSimple (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "Error!")))
-   )
-  )
-  (return (global.get $f_$string_|Error_|__assertsimple_AssertSimple))
- )
-)
-
-;;; String AssertSimple.$getString_|assertsimple...|()
-(func $$getString_|assertsimple...|__java_lang_String@assertsimple.AssertSimple
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|assertsimple...|__assertsimple_AssertSimple) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|assertsimple...|__assertsimple_AssertSimple (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "assertsimple.AssertSimple")))
-   )
-  )
-  (return (global.get $f_$string_|assertsimple...|__assertsimple_AssertSimple))
- )
-)

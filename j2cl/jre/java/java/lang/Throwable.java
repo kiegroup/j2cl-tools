@@ -23,8 +23,9 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import javaemul.internal.ThrowableUtils;
+import javaemul.internal.ThrowableUtils.JsObject;
 import javaemul.internal.ThrowableUtils.NativeError;
-import javaemul.internal.ThrowableUtils.NativeTypeError;
+import javaemul.internal.annotations.Wasm;
 import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsNonNull;
 import jsinterop.annotations.JsProperty;
@@ -43,8 +44,7 @@ public class Throwable implements Serializable {
   private boolean disableSuppression;
   private boolean disableStackTrace;
 
-  @JsProperty
-  private Object backingJsObject;
+  @JsProperty private JsObject backingJsObject;
 
   public Throwable() {
     fillInStackTrace();
@@ -84,22 +84,14 @@ public class Throwable implements Serializable {
     }
   }
 
-  Throwable(Object backingJsObject) {
-    this(String.valueOf(backingJsObject));
-  }
-
   // Called by transpiler. Do not remove!
-  void privateInitError(Object error) {
-    setBackingJsObject(error);
+  void privateInitError(JsObject error) {
+    this.backingJsObject = error;
+    ThrowableUtils.setJavaThrowable(error, this);
   }
 
-  public Object getBackingJsObject() {
+  public JsObject getBackingJsObject() {
     return backingJsObject;
-  }
-
-  private void setBackingJsObject(Object backingJsObject) {
-    this.backingJsObject = backingJsObject;
-    ThrowableUtils.setJavaThrowable(backingJsObject, this);
   }
 
   /** Call to add an exception that was suppressed. Used by try-with-resources. */
@@ -125,7 +117,7 @@ public class Throwable implements Serializable {
   public Throwable fillInStackTrace() {
     if (!disableStackTrace) {
       // Note that when this called from ctor, transpiler hasn't initialized backingJsObject yet.
-      if (backingJsObject instanceof NativeError) {
+      if (ThrowableUtils.isError(backingJsObject)) {
         // The stack property on Error is lazily evaluated in Chrome, so it is better use
         // captureStackTrace if available.
         if (NativeError.hasCaptureStackTraceProperty) {
@@ -163,18 +155,19 @@ public class Throwable implements Serializable {
   }
 
   private StackTraceElement[] constructJavaStackTrace() {
-    StackTraceElement[] stackTraceElements = new StackTraceElement[0]; // Will auto-grow...
-    Object e = this.backingJsObject;
-    if (e instanceof NativeError) {
+    JsObject e = this.backingJsObject;
+    if (ThrowableUtils.isError(e)) {
       NativeError error = ((NativeError) e);
       if (error.stack != null) {
         String[] splitStack = error.stack.split("\n");
+        StackTraceElement[] stackTraceElements = new StackTraceElement[splitStack.length];
         for (int i = 0; i < splitStack.length; i++) {
           stackTraceElements[i] = new StackTraceElement("", splitStack[i], null, -1);
         }
+        return stackTraceElements;
       }
     }
-    return stackTraceElements;
+    return new StackTraceElement[0];
   }
 
   /** Returns the array of Exception that this one suppressedExceptions. */
@@ -236,8 +229,12 @@ public class Throwable implements Serializable {
     return message == null ? className : className + ": " + message;
   }
 
+  @Wasm("Throwable.of-is-not-supported")
   @JsMethod
-  public static @JsNonNull Throwable of(Object e) {
+  public static native @JsNonNull Throwable of(Object e);
+
+  @JsMethod
+  public static @JsNonNull Throwable of(JsObject e) {
     // TODO(b/260631095): Clean up this part. Consider a ThrowableUtils.throwableOf method?
     // If the JS error is already mapped to a Java Exception, use it.
     if (e != null) {
@@ -248,6 +245,10 @@ public class Throwable implements Serializable {
     }
 
     // If the JS error is being seen for the first time, map it best corresponding Java exception.
-    return e instanceof NativeTypeError ? new NullPointerException(e) : new JsException(e);
+    Throwable t = ThrowableUtils.isTypeError(e) ? new NullPointerException() : new JsException();
+    // Adjust the backing JS object to point to the wrapper JS error.
+    t.detailMessage = e == null ? "null" : e.toString();
+    t.privateInitError(e);
+    return t;
   }
 }

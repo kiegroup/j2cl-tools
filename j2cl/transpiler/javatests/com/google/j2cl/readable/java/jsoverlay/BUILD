@@ -1,12 +1,19 @@
+load("//build_defs:rules.bzl", "j2kt_jvm_library", "j2wasm_library")
 load(
     "//transpiler/javatests/com/google/j2cl/readable:readable_example.bzl",
     "readable_example",
 )
-load("//build_defs:rules.bzl", "j2wasm_library")
 
 package(
     default_applicable_licenses = ["//:j2cl_license"],
     licenses = ["notice"],
+)
+
+# Exclude native sources from j2kt_jvm_library ad j2kt_native_library.
+j2kt_jvm_library(
+    name = "readable-j2kt-jvm",
+    srcs = glob(["*.java"]),
+    deps = ["//third_party:jsinterop-annotations-j2kt-jvm"],
 )
 
 j2wasm_library(
@@ -16,7 +23,7 @@ j2wasm_library(
         "native_sources/*.js",
     ]),
     deps = [
-        "//third_party:gwt-jsinterop-annotations-j2wasm",
+        "//third_party:jsinterop-annotations-j2wasm",
     ],
 )
 
@@ -25,9 +32,9 @@ readable_example(
         "*.java",
         "native_sources/*.js",
     ]),
-    # TODO(b/202515129): Allow dependencies on native code (like js & iOS) in J2KT
-    generate_kt_readables = False,
+    # Native JsType does not make sense for j2kt-native.
+    build_kt_native_readables = False,
     deps = [
-        "//third_party:gwt-jsinterop-annotations-j2cl",
+        "//third_party:jsinterop-annotations-j2cl",
     ],
 )

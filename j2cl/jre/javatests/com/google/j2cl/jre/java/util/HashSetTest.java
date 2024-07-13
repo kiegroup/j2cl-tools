@@ -19,8 +19,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.jspecify.annotations.NullMarked;
 
 /** Tests <code>HashSet</code>. */
+@NullMarked
 public class HashSetTest extends TestSet {
 
   public HashSetTest() {

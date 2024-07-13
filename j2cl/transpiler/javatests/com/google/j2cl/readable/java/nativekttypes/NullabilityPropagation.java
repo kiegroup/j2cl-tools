@@ -16,8 +16,9 @@
 package nativekttypes;
 
 import jsinterop.annotations.JsNonNull;
-import org.jspecify.nullness.NullMarked;
-import org.jspecify.nullness.Nullable;
+import jsinterop.annotations.JsOptional;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 public final class NullabilityPropagation {
   @NullMarked
@@ -49,6 +50,8 @@ public final class NullabilityPropagation {
     String nonNullStringTransitive(String s);
 
     String nonNullStringDoubleOverride(String s);
+
+    String jsOptionalParameter(@Nullable @JsOptional String s);
   }
 
   @NullMarked
@@ -124,6 +127,11 @@ public final class NullabilityPropagation {
 
     @Override
     public String nonNullStringDoubleOverride(String s) {
+      return s;
+    }
+
+    @Override
+    public String jsOptionalParameter(@JsOptional String s) {
       return s;
     }
   }

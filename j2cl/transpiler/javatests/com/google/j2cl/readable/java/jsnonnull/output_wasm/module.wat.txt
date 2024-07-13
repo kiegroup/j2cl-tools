@@ -1,163 +1,201 @@
- ;;; Code for jsnonnull.Main.MyFunction [type definition]
- (type $jsnonnull.Main.MyFunction.vtable (struct_subtype
-  (field $m_x__java_lang_String__java_lang_String (ref $function.m_x__java_lang_String__java_lang_String))
-  data)
- )
+;;; Code for jsnonnull.Main.MyFunction [type definition]
+(type $jsnonnull.Main.MyFunction.vtable (sub (struct
+ (field $m_x__java_lang_String__java_lang_String (ref $function.m_x__java_lang_String__java_lang_String))
+ ))
+)
 
- ;;; Code for jsnonnull.Main.NonNullableTemplatedReturn [type definition]
- (type $jsnonnull.Main.NonNullableTemplatedReturn.vtable (struct_subtype
-  (field $m_get__java_lang_Object (ref $function.m_get__java_lang_Object))
-  (field $m_getArray__arrayOf_java_lang_Object (ref $function.m_getArray__arrayOf_java_lang_Object))
-  data)
- )
+;;; Code for jsnonnull.Main.NonNullableTemplatedReturn [type definition]
+(type $jsnonnull.Main.NonNullableTemplatedReturn.vtable (sub (struct
+ (field $m_getArray__arrayOf_java_lang_Object (ref $function.m_getArray__arrayOf_java_lang_Object))
+ (field $m_get__java_lang_Object (ref $function.m_get__java_lang_Object))
+ ))
+)
 
- ;;; Code for jsnonnull.Main.NonNullableTemplate [type definition]
- (type $jsnonnull.Main.NonNullableTemplate.vtable (struct_subtype
-  (field $m_get__java_lang_Object (ref $function.m_get__java_lang_Object))
-  (field $m_getArray__arrayOf_java_lang_Object (ref $function.m_getArray__arrayOf_java_lang_Object))
-  data)
- )
+;;; Code for jsnonnull.Main.NonNullableTemplate [type definition]
+(type $jsnonnull.Main.NonNullableTemplate.vtable (sub (struct
+ (field $m_getArray__arrayOf_java_lang_Object (ref $function.m_getArray__arrayOf_java_lang_Object))
+ (field $m_get__java_lang_Object (ref $function.m_get__java_lang_Object))
+ ))
+)
 
- ;;; Code for jsnonnull.Main [type definition]
- (type $jsnonnull.Main (struct_subtype
-  (field $vtable (ref $jsnonnull.Main.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  (field $f_f1__jsnonnull_Main_ (ref null $java.lang.String))
-  (field $f_f2__jsnonnull_Main_ (ref null $java.lang.String))
-  (field $f_f4__jsnonnull_Main_ (mut (ref null $java.lang.Object)))
-  (field $f_f5__jsnonnull_Main_ (mut (ref null $java.lang.Object)))
-  (field $f_f6__jsnonnull_Main_ (mut (ref null $java.lang.Object)))
-  (field $f_f7__jsnonnull_Main_ (ref null $java.lang.Object))
-  (field $f_f8__jsnonnull_Main_ (ref null $javaemul.internal.WasmArray.OfObject))
-  (field $f_f9__jsnonnull_Main_ (ref null $javaemul.internal.WasmArray.OfObject))
-  (field $f_f10__jsnonnull_Main_ (ref null $javaemul.internal.WasmArray.OfObject))
-  (field $f_f12__jsnonnull_Main_ (mut (ref null $java.lang.Object)))
-  $java.lang.Object)
- )
- (type $jsnonnull.Main.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_m1__java_lang_String__java_util_List__java_lang_String__java_lang_String (ref $function.m_m1__java_lang_String__java_util_List__java_lang_String__java_lang_String))
-  (field $m_m2__java_lang_String__java_util_List__java_lang_String (ref $function.m_m2__java_lang_String__java_util_List__java_lang_String))
-  (field $m_m3__java_lang_String__arrayOf_java_lang_String__java_lang_String (ref $function.m_m3__java_lang_String__arrayOf_java_lang_String__java_lang_String))
-  (field $m_m4__jsnonnull_Main_MyFunction__void (ref $function.m_m4__jsnonnull_Main_MyFunction__void))
-  $java.lang.Object.vtable)
- )
+;;; Code for jsnonnull.Main [type definition]
+(type $jsnonnull.Main.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_m1__java_lang_String__java_util_List__java_lang_String__java_lang_String (ref $function.m_m1__java_lang_String__java_util_List__java_lang_String__java_lang_String))
+ (field $m_m2__java_lang_String__java_util_List__java_lang_String (ref $function.m_m2__java_lang_String__java_util_List__java_lang_String))
+ (field $m_m3__java_lang_String__arrayOf_java_lang_String__java_lang_String (ref $function.m_m3__java_lang_String__arrayOf_java_lang_String__java_lang_String))
+ (field $m_m4__jsnonnull_Main_MyFunction__void (ref $function.m_m4__jsnonnull_Main_MyFunction__void))
+ ))
+)
+(type $jsnonnull.Main (sub $java.lang.Object (struct
+ (field $vtable (ref $jsnonnull.Main.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $f10@jsnonnull.Main (mut (ref null $javaemul.internal.WasmArray.OfObject)))
+ (field $f12@jsnonnull.Main (mut (ref null $java.lang.Object)))
+ (field $f1@jsnonnull.Main (mut (ref null $java.lang.String)))
+ (field $f2@jsnonnull.Main (mut (ref null $java.lang.String)))
+ (field $f4@jsnonnull.Main (mut (ref null $java.lang.Object)))
+ (field $f5@jsnonnull.Main (mut (ref null $java.lang.Object)))
+ (field $f6@jsnonnull.Main (mut (ref null $java.lang.Object)))
+ (field $f7@jsnonnull.Main (mut (ref null $java.lang.Object)))
+ (field $f8@jsnonnull.Main (mut (ref null $javaemul.internal.WasmArray.OfObject)))
+ (field $f9@jsnonnull.Main (mut (ref null $javaemul.internal.WasmArray.OfObject)))
+ ))
+)
 
- ;;; Code for jsnonnull.Main.StringComparator [type definition]
- (type $jsnonnull.Main.StringComparator (struct_subtype
-  (field $vtable (ref $jsnonnull.Main.StringComparator.vtable))
-  (field $itable (ref $jsnonnull.Main.StringComparator.itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $jsnonnull.Main.StringComparator.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_compare__java_lang_String__java_lang_String__int (ref $function.m_compare__java_lang_String__java_lang_String__int))
-  (field $m_compare__java_lang_Object__java_lang_Object__int (ref $function.m_compare__java_lang_Object__java_lang_Object__int))
-  (field $m_reversed__java_util_Comparator (ref $function.m_reversed__java_util_Comparator))
-  (field $m_thenComparing__java_util_Comparator__java_util_Comparator (ref $function.m_thenComparing__java_util_Comparator__java_util_Comparator))
-  (field $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator (ref $function.m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator))
-  (field $m_thenComparing__java_util_function_Function__java_util_Comparator (ref $function.m_thenComparing__java_util_function_Function__java_util_Comparator))
-  (field $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator (ref $function.m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator))
-  (field $m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator (ref $function.m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator))
-  (field $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator (ref $function.m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator))
-  $java.lang.Object.vtable)
- )
- (type $jsnonnull.Main.StringComparator.itable (struct_subtype
- (field $slot0 (ref null struct))
- (field $slot1 (ref $java.util.Comparator.vtable))
- (field $slot2 (ref null struct))
- (field $slot3 (ref null struct))
- (field $slot4 (ref null struct))
- (field $slot5 (ref null struct))
- (field $slot6 (ref null struct))
-  $itable))
+;;; Code for jsnonnull.Main.StringComparator [type definition]
+(type $jsnonnull.Main.StringComparator.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_compare__java_lang_Object__java_lang_Object__int (ref $function.m_compare__java_lang_Object__java_lang_Object__int))
+ (field $m_compare__java_lang_String__java_lang_String__int (ref $function.m_compare__java_lang_String__java_lang_String__int))
+ (field $m_reversed__java_util_Comparator (ref $function.m_reversed__java_util_Comparator))
+ (field $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator (ref $function.m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator))
+ (field $m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator (ref $function.m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator))
+ (field $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator (ref $function.m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator))
+ (field $m_thenComparing__java_util_Comparator__java_util_Comparator (ref $function.m_thenComparing__java_util_Comparator__java_util_Comparator))
+ (field $m_thenComparing__java_util_function_Function__java_util_Comparator (ref $function.m_thenComparing__java_util_function_Function__java_util_Comparator))
+ (field $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator (ref $function.m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator))
+ ))
+)
+(type $jsnonnull.Main.StringComparator (sub $java.lang.Object (struct
+ (field $vtable (ref $jsnonnull.Main.StringComparator.vtable))
+ (field $itable (ref $jsnonnull.Main.StringComparator.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 
- ;;; Code for jsnonnull.Main.NullableStringComparator [type definition]
- (type $jsnonnull.Main.NullableStringComparator (struct_subtype
-  (field $vtable (ref $jsnonnull.Main.NullableStringComparator.vtable))
-  (field $itable (ref $jsnonnull.Main.NullableStringComparator.itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $java.lang.Object)
- )
- (type $jsnonnull.Main.NullableStringComparator.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_compare__java_lang_String__java_lang_String__int (ref $function.m_compare__java_lang_String__java_lang_String__int))
-  (field $m_compare__java_lang_Object__java_lang_Object__int (ref $function.m_compare__java_lang_Object__java_lang_Object__int))
-  (field $m_reversed__java_util_Comparator (ref $function.m_reversed__java_util_Comparator))
-  (field $m_thenComparing__java_util_Comparator__java_util_Comparator (ref $function.m_thenComparing__java_util_Comparator__java_util_Comparator))
-  (field $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator (ref $function.m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator))
-  (field $m_thenComparing__java_util_function_Function__java_util_Comparator (ref $function.m_thenComparing__java_util_function_Function__java_util_Comparator))
-  (field $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator (ref $function.m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator))
-  (field $m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator (ref $function.m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator))
-  (field $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator (ref $function.m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator))
-  $java.lang.Object.vtable)
- )
- (type $jsnonnull.Main.NullableStringComparator.itable (struct_subtype
- (field $slot0 (ref null struct))
- (field $slot1 (ref $java.util.Comparator.vtable))
- (field $slot2 (ref null struct))
- (field $slot3 (ref null struct))
- (field $slot4 (ref null struct))
- (field $slot5 (ref null struct))
- (field $slot6 (ref null struct))
-  $itable))
+;;; Code for jsnonnull.Main.NullableStringComparator [type definition]
+(type $jsnonnull.Main.NullableStringComparator.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_compare__java_lang_Object__java_lang_Object__int (ref $function.m_compare__java_lang_Object__java_lang_Object__int))
+ (field $m_compare__java_lang_String__java_lang_String__int (ref $function.m_compare__java_lang_String__java_lang_String__int))
+ (field $m_reversed__java_util_Comparator (ref $function.m_reversed__java_util_Comparator))
+ (field $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator (ref $function.m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator))
+ (field $m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator (ref $function.m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator))
+ (field $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator (ref $function.m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator))
+ (field $m_thenComparing__java_util_Comparator__java_util_Comparator (ref $function.m_thenComparing__java_util_Comparator__java_util_Comparator))
+ (field $m_thenComparing__java_util_function_Function__java_util_Comparator (ref $function.m_thenComparing__java_util_function_Function__java_util_Comparator))
+ (field $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator (ref $function.m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator))
+ ))
+)
+(type $jsnonnull.Main.NullableStringComparator (sub $java.lang.Object (struct
+ (field $vtable (ref $jsnonnull.Main.NullableStringComparator.vtable))
+ (field $itable (ref $jsnonnull.Main.NullableStringComparator.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 
- ;;; Code for jsnonnull.Main.NonNullableStringSubNullableComparator [type definition]
- (type $jsnonnull.Main.NonNullableStringSubNullableComparator (struct_subtype
-  (field $vtable (ref $jsnonnull.Main.NonNullableStringSubNullableComparator.vtable))
-  (field $itable (ref $jsnonnull.Main.NonNullableStringSubNullableComparator.itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  $jsnonnull.Main.NullableStringComparator)
- )
- (type $jsnonnull.Main.NonNullableStringSubNullableComparator.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_compare__java_lang_String__java_lang_String__int (ref $function.m_compare__java_lang_String__java_lang_String__int))
-  (field $m_compare__java_lang_Object__java_lang_Object__int (ref $function.m_compare__java_lang_Object__java_lang_Object__int))
-  (field $m_reversed__java_util_Comparator (ref $function.m_reversed__java_util_Comparator))
-  (field $m_thenComparing__java_util_Comparator__java_util_Comparator (ref $function.m_thenComparing__java_util_Comparator__java_util_Comparator))
-  (field $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator (ref $function.m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator))
-  (field $m_thenComparing__java_util_function_Function__java_util_Comparator (ref $function.m_thenComparing__java_util_function_Function__java_util_Comparator))
-  (field $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator (ref $function.m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator))
-  (field $m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator (ref $function.m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator))
-  (field $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator (ref $function.m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator))
-  $jsnonnull.Main.NullableStringComparator.vtable)
- )
- (type $jsnonnull.Main.NonNullableStringSubNullableComparator.itable (struct_subtype
- (field $slot0 (ref null struct))
- (field $slot1 (ref $java.util.Comparator.vtable))
- (field $slot2 (ref null struct))
- (field $slot3 (ref null struct))
- (field $slot4 (ref null struct))
- (field $slot5 (ref null struct))
- (field $slot6 (ref null struct))
-  $jsnonnull.Main.NullableStringComparator.itable))
+;;; Code for jsnonnull.Main.NonNullableStringSubNullableComparator [type definition]
+(type $jsnonnull.Main.NonNullableStringSubNullableComparator.vtable (sub $jsnonnull.Main.NullableStringComparator.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_compare__java_lang_Object__java_lang_Object__int (ref $function.m_compare__java_lang_Object__java_lang_Object__int))
+ (field $m_compare__java_lang_String__java_lang_String__int (ref $function.m_compare__java_lang_String__java_lang_String__int))
+ (field $m_reversed__java_util_Comparator (ref $function.m_reversed__java_util_Comparator))
+ (field $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator (ref $function.m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator))
+ (field $m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator (ref $function.m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator))
+ (field $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator (ref $function.m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator))
+ (field $m_thenComparing__java_util_Comparator__java_util_Comparator (ref $function.m_thenComparing__java_util_Comparator__java_util_Comparator))
+ (field $m_thenComparing__java_util_function_Function__java_util_Comparator (ref $function.m_thenComparing__java_util_function_Function__java_util_Comparator))
+ (field $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator (ref $function.m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator))
+ ))
+)
+(type $jsnonnull.Main.NonNullableStringSubNullableComparator (sub $jsnonnull.Main.NullableStringComparator (struct
+ (field $vtable (ref $jsnonnull.Main.NonNullableStringSubNullableComparator.vtable))
+ (field $itable (ref $jsnonnull.Main.NonNullableStringSubNullableComparator.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
+;;; Code for jsnonnull.Main.MyFunction [imports]
+
+;;; Code for jsnonnull.Main.NonNullableTemplatedReturn [imports]
+
+;;; Code for jsnonnull.Main.NonNullableTemplate [imports]
+
+;;; Code for jsnonnull.Main [imports]
+
+;;; Code for jsnonnull.Main.StringComparator [imports]
+
+;;; Code for jsnonnull.Main.NullableStringComparator [imports]
+
+;;; Code for jsnonnull.Main.NonNullableStringSubNullableComparator [imports]
+
+;;; Code for jsnonnull.Main [static fields]
+(global $$class-initialized@jsnonnull.Main (mut i32)
+ (i32.const 0)
+)
+(global $$class@jsnonnull.Main (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for jsnonnull.Main.MyFunction [static fields]
+(global $$class-initialized@jsnonnull.Main.MyFunction (mut i32)
+ (i32.const 0)
+)
+(global $$class@jsnonnull.Main.MyFunction (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for jsnonnull.Main.StringComparator [static fields]
+(global $$class-initialized@jsnonnull.Main.StringComparator (mut i32)
+ (i32.const 0)
+)
+(global $$class@jsnonnull.Main.StringComparator (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for jsnonnull.Main.NullableStringComparator [static fields]
+(global $$class-initialized@jsnonnull.Main.NullableStringComparator (mut i32)
+ (i32.const 0)
+)
+(global $$class@jsnonnull.Main.NullableStringComparator (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for jsnonnull.Main.NonNullableStringSubNullableComparator [static fields]
+(global $$class-initialized@jsnonnull.Main.NonNullableStringSubNullableComparator (mut i32)
+ (i32.const 0)
+)
+(global $$class@jsnonnull.Main.NonNullableStringSubNullableComparator (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for jsnonnull.Main.NonNullableTemplatedReturn [static fields]
+(global $$class-initialized@jsnonnull.Main.NonNullableTemplatedReturn (mut i32)
+ (i32.const 0)
+)
+(global $$class@jsnonnull.Main.NonNullableTemplatedReturn (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for jsnonnull.Main.NonNullableTemplate [static fields]
+(global $$class-initialized@jsnonnull.Main.NonNullableTemplate (mut i32)
+ (i32.const 0)
+)
+(global $$class@jsnonnull.Main.NonNullableTemplate (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
 
 ;;; Code for jsnonnull.Main [vtable.init]
 (global $jsnonnull.Main.vtable (ref $jsnonnull.Main.vtable)
  (struct.new $jsnonnull.Main.vtable
+  (ref.func $$getClassImpl__java_lang_Class@jsnonnull.Main)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@jsnonnull.Main)
   (ref.func $m_m1__java_lang_String__java_util_List__java_lang_String__java_lang_String@jsnonnull.Main)
   (ref.func $m_m2__java_lang_String__java_util_List__java_lang_String@jsnonnull.Main)
   (ref.func $m_m3__java_lang_String__arrayOf_java_lang_String__java_lang_String@jsnonnull.Main)
@@ -168,291 +206,189 @@
 ;;; Code for jsnonnull.Main.StringComparator [vtable.init]
 (global $jsnonnull.Main.StringComparator.vtable (ref $jsnonnull.Main.StringComparator.vtable)
  (struct.new $jsnonnull.Main.StringComparator.vtable
+  (ref.func $$getClassImpl__java_lang_Class@jsnonnull.Main.StringComparator)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@jsnonnull.Main.StringComparator)
-  (ref.func $m_compare__java_lang_String__java_lang_String__int@jsnonnull.Main.StringComparator)
   (ref.func $m_compare__java_lang_Object__java_lang_Object__int@jsnonnull.Main.StringComparator)
+  (ref.func $m_compare__java_lang_String__java_lang_String__int@jsnonnull.Main.StringComparator)
   (ref.func $m_reversed__java_util_Comparator@jsnonnull.Main.StringComparator)
-  (ref.func $m_thenComparing__java_util_Comparator__java_util_Comparator@jsnonnull.Main.StringComparator)
-  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.StringComparator)
-  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.StringComparator)
   (ref.func $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator@jsnonnull.Main.StringComparator)
   (ref.func $m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator@jsnonnull.Main.StringComparator)
   (ref.func $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator@jsnonnull.Main.StringComparator)
+  (ref.func $m_thenComparing__java_util_Comparator__java_util_Comparator@jsnonnull.Main.StringComparator)
+  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.StringComparator)
+  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.StringComparator)
  )
 )
-
-;;; Code for jsnonnull.Main.StringComparator [itable.init]
-(global $jsnonnull.Main.StringComparator.itable (ref $jsnonnull.Main.StringComparator.itable) (struct.new $jsnonnull.Main.StringComparator.itable
-  (ref.null struct)
+(global $java.util.Comparator.vtable@$jsnonnull.Main.StringComparator (ref $java.util.Comparator.vtable)
  (struct.new $java.util.Comparator.vtable
   (ref.func $m_compare__java_lang_Object__java_lang_Object__int@jsnonnull.Main.StringComparator)
-  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_reversed__java_util_Comparator@jsnonnull.Main.StringComparator)
-  (ref.func $m_thenComparing__java_util_Comparator__java_util_Comparator@jsnonnull.Main.StringComparator)
-  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.StringComparator)
-  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.StringComparator)
   (ref.func $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator@jsnonnull.Main.StringComparator)
   (ref.func $m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator@jsnonnull.Main.StringComparator)
   (ref.func $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator@jsnonnull.Main.StringComparator)
+  (ref.func $m_thenComparing__java_util_Comparator__java_util_Comparator@jsnonnull.Main.StringComparator)
+  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.StringComparator)
+  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.StringComparator)
  )
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
- ))
+)
 
 ;;; Code for jsnonnull.Main.NullableStringComparator [vtable.init]
 (global $jsnonnull.Main.NullableStringComparator.vtable (ref $jsnonnull.Main.NullableStringComparator.vtable)
  (struct.new $jsnonnull.Main.NullableStringComparator.vtable
+  (ref.func $$getClassImpl__java_lang_Class@jsnonnull.Main.NullableStringComparator)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@jsnonnull.Main.NullableStringComparator)
-  (ref.func $m_compare__java_lang_String__java_lang_String__int@jsnonnull.Main.NullableStringComparator)
   (ref.func $m_compare__java_lang_Object__java_lang_Object__int@jsnonnull.Main.NullableStringComparator)
+  (ref.func $m_compare__java_lang_String__java_lang_String__int@jsnonnull.Main.NullableStringComparator)
   (ref.func $m_reversed__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
-  (ref.func $m_thenComparing__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
-  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
-  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
   (ref.func $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
   (ref.func $m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
   (ref.func $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
+  (ref.func $m_thenComparing__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
+  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
+  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
  )
 )
-
-;;; Code for jsnonnull.Main.NullableStringComparator [itable.init]
-(global $jsnonnull.Main.NullableStringComparator.itable (ref $jsnonnull.Main.NullableStringComparator.itable) (struct.new $jsnonnull.Main.NullableStringComparator.itable
-  (ref.null struct)
+(global $java.util.Comparator.vtable@$jsnonnull.Main.NullableStringComparator (ref $java.util.Comparator.vtable)
  (struct.new $java.util.Comparator.vtable
   (ref.func $m_compare__java_lang_Object__java_lang_Object__int@jsnonnull.Main.NullableStringComparator)
-  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_reversed__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
-  (ref.func $m_thenComparing__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
-  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
-  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
   (ref.func $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
   (ref.func $m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
   (ref.func $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
+  (ref.func $m_thenComparing__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
+  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
+  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
  )
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
- ))
+)
 
 ;;; Code for jsnonnull.Main.NonNullableStringSubNullableComparator [vtable.init]
 (global $jsnonnull.Main.NonNullableStringSubNullableComparator.vtable (ref $jsnonnull.Main.NonNullableStringSubNullableComparator.vtable)
  (struct.new $jsnonnull.Main.NonNullableStringSubNullableComparator.vtable
+  (ref.func $$getClassImpl__java_lang_Class@jsnonnull.Main.NonNullableStringSubNullableComparator)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@jsnonnull.Main.NonNullableStringSubNullableComparator)
-  (ref.func $m_compare__java_lang_String__java_lang_String__int@jsnonnull.Main.NonNullableStringSubNullableComparator)
   (ref.func $m_compare__java_lang_Object__java_lang_Object__int@jsnonnull.Main.NullableStringComparator)
+  (ref.func $m_compare__java_lang_String__java_lang_String__int@jsnonnull.Main.NonNullableStringSubNullableComparator)
   (ref.func $m_reversed__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
-  (ref.func $m_thenComparing__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
-  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
-  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
   (ref.func $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
   (ref.func $m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
   (ref.func $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
+  (ref.func $m_thenComparing__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
+  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
+  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
  )
 )
-
-;;; Code for jsnonnull.Main.NonNullableStringSubNullableComparator [itable.init]
-(global $jsnonnull.Main.NonNullableStringSubNullableComparator.itable (ref $jsnonnull.Main.NonNullableStringSubNullableComparator.itable) (struct.new $jsnonnull.Main.NonNullableStringSubNullableComparator.itable
-  (ref.null struct)
+(global $java.util.Comparator.vtable@$jsnonnull.Main.NonNullableStringSubNullableComparator (ref $java.util.Comparator.vtable)
  (struct.new $java.util.Comparator.vtable
   (ref.func $m_compare__java_lang_Object__java_lang_Object__int@jsnonnull.Main.NullableStringComparator)
-  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_reversed__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
-  (ref.func $m_thenComparing__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
-  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
-  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
   (ref.func $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
   (ref.func $m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
   (ref.func $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
+  (ref.func $m_thenComparing__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
+  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
+  (ref.func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
  )
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
- ))
-
-;;; Code for jsnonnull.Main [static fields]
-(global $f_$initialized__jsnonnull_Main (mut i32) (i32.const 0))
-(global $f_$class__jsnonnull_Main (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|Hello|__jsnonnull_Main (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-(global $f_$string_|jsnonnull.Main|__jsnonnull_Main (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for jsnonnull.Main.MyFunction [static fields]
-(global $f_$initialized__jsnonnull_Main_MyFunction (mut i32) (i32.const 0))
-(global $f_$class__jsnonnull_Main_MyFunction (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_MyFunction (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for jsnonnull.Main.StringComparator [static fields]
-(global $f_$initialized__jsnonnull_Main_StringComparator (mut i32) (i32.const 0))
-(global $f_$class__jsnonnull_Main_StringComparator (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_StringComparator (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for jsnonnull.Main.NullableStringComparator [static fields]
-(global $f_$initialized__jsnonnull_Main_NullableStringComparator (mut i32) (i32.const 0))
-(global $f_$class__jsnonnull_Main_NullableStringComparator (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NullableStringComparator (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for jsnonnull.Main.NonNullableStringSubNullableComparator [static fields]
-(global $f_$initialized__jsnonnull_Main_NonNullableStringSubNullableComparator (mut i32) (i32.const 0))
-(global $f_$class__jsnonnull_Main_NonNullableStringSubNullableComparator (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NonNullableStringSubNullableComparator (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for jsnonnull.Main.NonNullableTemplatedReturn [static fields]
-(global $f_$initialized__jsnonnull_Main_NonNullableTemplatedReturn (mut i32) (i32.const 0))
-(global $f_$class__jsnonnull_Main_NonNullableTemplatedReturn (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NonNullableTemplatedReturn (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for jsnonnull.Main.NonNullableTemplate [static fields]
-(global $f_$initialized__jsnonnull_Main_NonNullableTemplate (mut i32) (i32.const 0))
-(global $f_$class__jsnonnull_Main_NonNullableTemplate (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NonNullableTemplate (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
+)
 
 ;;; Code for jsnonnull.Main.MyFunction [methods]
 
 ;;; void MyFunction.$clinit()
-(func $$clinit__void@jsnonnull.Main.MyFunction
+(func $$clinit__void_<once>_@jsnonnull.Main.MyFunction
  ;;@ jsnonnull/Main.java:61:12
  (block
   ;;@ jsnonnull/Main.java:61:12
-  (if (global.get $f_$initialized__jsnonnull_Main_MyFunction)
+  (if (global.get $$class-initialized@jsnonnull.Main.MyFunction)
    (then
     ;;@ jsnonnull/Main.java:61:12
     (return )
    )
   )
   ;;@ jsnonnull/Main.java:61:12
-  (global.set $f_$initialized__jsnonnull_Main_MyFunction (i32.const 1))
+  (global.set $$class-initialized@jsnonnull.Main.MyFunction (i32.const 1))
  )
 )
 
 ;;; Class<T> MyFunction.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@jsnonnull.Main.MyFunction
+(func $$getClassMetadata__java_lang_Class_<once>_@jsnonnull.Main.MyFunction
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__jsnonnull_Main_MyFunction) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@jsnonnull.Main.MyFunction)))
    (then
-    (global.set $f_$class__jsnonnull_Main_MyFunction (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jsnonnull.Ma...|__java_lang_String (ref.func $$getString_|jsnonnull.Ma...|__java_lang_String@jsnonnull.Main.MyFunction) )))
+    (return (global.get $$class@jsnonnull.Main.MyFunction))
    )
   )
-  (return (global.get $f_$class__jsnonnull_Main_MyFunction))
- )
-)
-
-;;; String MyFunction.$getString_|jsnonnull.Ma...|()
-(func $$getString_|jsnonnull.Ma...|__java_lang_String@jsnonnull.Main.MyFunction
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_MyFunction) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_MyFunction (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jsnonnull.Main$MyFunction")))
-   )
-  )
-  (return (global.get $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_MyFunction))
+  (global.set $$class@jsnonnull.Main.MyFunction (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $$getString_|jsnonnull.Ma...|__java_lang_String_<once>_@jsnonnull.Main.MyFunction )))
+  (return (global.get $$class@jsnonnull.Main.MyFunction))
  )
 )
 
 ;;; Code for jsnonnull.Main.NonNullableTemplatedReturn [methods]
 
 ;;; void NonNullableTemplatedReturn.$clinit()
-(func $$clinit__void@jsnonnull.Main.NonNullableTemplatedReturn
+(func $$clinit__void_<once>_@jsnonnull.Main.NonNullableTemplatedReturn
  ;;@ jsnonnull/Main.java:90:12
  (block
   ;;@ jsnonnull/Main.java:90:12
-  (if (global.get $f_$initialized__jsnonnull_Main_NonNullableTemplatedReturn)
+  (if (global.get $$class-initialized@jsnonnull.Main.NonNullableTemplatedReturn)
    (then
     ;;@ jsnonnull/Main.java:90:12
     (return )
    )
   )
   ;;@ jsnonnull/Main.java:90:12
-  (global.set $f_$initialized__jsnonnull_Main_NonNullableTemplatedReturn (i32.const 1))
+  (global.set $$class-initialized@jsnonnull.Main.NonNullableTemplatedReturn (i32.const 1))
  )
 )
 
 ;;; Class<T> NonNullableTemplatedReturn.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@jsnonnull.Main.NonNullableTemplatedReturn
+(func $$getClassMetadata__java_lang_Class_<once>_@jsnonnull.Main.NonNullableTemplatedReturn
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__jsnonnull_Main_NonNullableTemplatedReturn) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@jsnonnull.Main.NonNullableTemplatedReturn)))
    (then
-    (global.set $f_$class__jsnonnull_Main_NonNullableTemplatedReturn (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jsnonnull.Ma...|__java_lang_String (ref.func $$getString_|jsnonnull.Ma...|__java_lang_String@jsnonnull.Main.NonNullableTemplatedReturn) )))
+    (return (global.get $$class@jsnonnull.Main.NonNullableTemplatedReturn))
    )
   )
-  (return (global.get $f_$class__jsnonnull_Main_NonNullableTemplatedReturn))
- )
-)
-
-;;; String NonNullableTemplatedReturn.$getString_|jsnonnull.Ma...|()
-(func $$getString_|jsnonnull.Ma...|__java_lang_String@jsnonnull.Main.NonNullableTemplatedReturn
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NonNullableTemplatedReturn) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NonNullableTemplatedReturn (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jsnonnull.Main$NonNullableTemplatedReturn")))
-   )
-  )
-  (return (global.get $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NonNullableTemplatedReturn))
+  (global.set $$class@jsnonnull.Main.NonNullableTemplatedReturn (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $$getString_|jsnonnull.Ma...|__java_lang_String_<once>_@jsnonnull.Main.NonNullableTemplatedReturn )))
+  (return (global.get $$class@jsnonnull.Main.NonNullableTemplatedReturn))
  )
 )
 
 ;;; Code for jsnonnull.Main.NonNullableTemplate [methods]
 
 ;;; void NonNullableTemplate.$clinit()
-(func $$clinit__void@jsnonnull.Main.NonNullableTemplate
+(func $$clinit__void_<once>_@jsnonnull.Main.NonNullableTemplate
  ;;@ jsnonnull/Main.java:98:12
  (block
   ;;@ jsnonnull/Main.java:98:12
-  (if (global.get $f_$initialized__jsnonnull_Main_NonNullableTemplate)
+  (if (global.get $$class-initialized@jsnonnull.Main.NonNullableTemplate)
    (then
     ;;@ jsnonnull/Main.java:98:12
     (return )
    )
   )
   ;;@ jsnonnull/Main.java:98:12
-  (global.set $f_$initialized__jsnonnull_Main_NonNullableTemplate (i32.const 1))
+  (global.set $$class-initialized@jsnonnull.Main.NonNullableTemplate (i32.const 1))
  )
 )
 
 ;;; Class<T> NonNullableTemplate.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@jsnonnull.Main.NonNullableTemplate
+(func $$getClassMetadata__java_lang_Class_<once>_@jsnonnull.Main.NonNullableTemplate
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__jsnonnull_Main_NonNullableTemplate) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@jsnonnull.Main.NonNullableTemplate)))
    (then
-    (global.set $f_$class__jsnonnull_Main_NonNullableTemplate (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jsnonnull.Ma...|__java_lang_String (ref.func $$getString_|jsnonnull.Ma...|__java_lang_String@jsnonnull.Main.NonNullableTemplate) )))
+    (return (global.get $$class@jsnonnull.Main.NonNullableTemplate))
    )
   )
-  (return (global.get $f_$class__jsnonnull_Main_NonNullableTemplate))
- )
-)
-
-;;; String NonNullableTemplate.$getString_|jsnonnull.Ma...|()
-(func $$getString_|jsnonnull.Ma...|__java_lang_String@jsnonnull.Main.NonNullableTemplate
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NonNullableTemplate) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NonNullableTemplate (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jsnonnull.Main$NonNullableTemplate")))
-   )
-  )
-  (return (global.get $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NonNullableTemplate))
+  (global.set $$class@jsnonnull.Main.NonNullableTemplate (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $$getString_|jsnonnull.Ma...|__java_lang_String_<once>_@jsnonnull.Main.NonNullableTemplate )))
+  (return (global.get $$class@jsnonnull.Main.NonNullableTemplate))
  )
 )
 
@@ -466,7 +402,9 @@
  (local $$instance (ref null $jsnonnull.Main))
  (block
   ;;@ jsnonnull/Main.java:42:9
-  (local.set $$instance (struct.new $jsnonnull.Main (ref.as_non_null (global.get $jsnonnull.Main.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (call $function.no.side.effects.$getString_|Hello|__java_lang_String (ref.func $$getString_|Hello|__java_lang_String@jsnonnull.Main) ) (ref.null $java.lang.String) (ref.null $java.lang.Object) (ref.null $java.lang.Object) (ref.null $java.lang.Object) (ref.null $java.lang.Object) (call $$create__arrayOf_java_lang_Object@javaemul.internal.WasmArray.OfObject (array.init_static $java.lang.Object.array )) (call $$create__arrayOf_java_lang_Object@javaemul.internal.WasmArray.OfObject (array.init_static $java.lang.Object.array )) (call $$create__arrayOf_java_lang_Object@javaemul.internal.WasmArray.OfObject (array.init_static $java.lang.Object.array )) (ref.null $java.lang.Object)))
+  (call $$clinit__void_<once>_@jsnonnull.Main )
+  ;;@ jsnonnull/Main.java:42:9
+  (local.set $$instance (struct.new $jsnonnull.Main (ref.as_non_null (global.get $jsnonnull.Main.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (ref.null $javaemul.internal.WasmArray.OfObject) (ref.null $java.lang.Object) (ref.null $java.lang.String) (ref.null $java.lang.String) (ref.null $java.lang.Object) (ref.null $java.lang.Object) (ref.null $java.lang.Object) (ref.null $java.lang.Object) (ref.null $javaemul.internal.WasmArray.OfObject) (ref.null $javaemul.internal.WasmArray.OfObject)))
   ;;@ jsnonnull/Main.java:42:9
   (call $$ctor__java_lang_String__void_$p_jsnonnull_Main@jsnonnull.Main (ref.as_non_null (local.get $$instance))(local.get $a))
   ;;@ jsnonnull/Main.java:42:9
@@ -480,8 +418,6 @@
  (param $a (ref null $java.lang.String))
  ;;@ jsnonnull/Main.java:42:9
  (block
-  ;;@ jsnonnull/Main.java:42:35
-  (call $$clinit__void@jsnonnull.Main )
   ;;@ jsnonnull/Main.java:42:35
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
   ;;@ jsnonnull/Main.java:42:35
@@ -499,10 +435,10 @@
  (result (ref null $java.lang.String))
  ;;@ jsnonnull/Main.java:45:16
  (local $this (ref null $jsnonnull.Main))
- (local.set $this (ref.cast_static $jsnonnull.Main (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:46:4
-  (return (call $function.no.side.effects.$getString_||__java_lang_String (ref.func $$getString_||__java_lang_String@java.lang.StackTraceElement) ))
+  (return (call $$getString_||__java_lang_String_<once>_@jsnonnull.Main ))
  )
 )
 (elem declare func $m_m1__java_lang_String__java_util_List__java_lang_String__java_lang_String@jsnonnull.Main)
@@ -516,10 +452,10 @@
  (result (ref null $java.lang.String))
  ;;@ jsnonnull/Main.java:49:16
  (local $this (ref null $jsnonnull.Main))
- (local.set $this (ref.cast_static $jsnonnull.Main (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:50:4
-  (return (call $function.no.side.effects.$getString_||__java_lang_String (ref.func $$getString_||__java_lang_String@java.lang.StackTraceElement) ))
+  (return (call $$getString_||__java_lang_String_<once>_@jsnonnull.Main ))
  )
 )
 (elem declare func $m_m2__java_lang_String__java_util_List__java_lang_String@jsnonnull.Main)
@@ -533,7 +469,7 @@
  (result (ref null $java.lang.String))
  ;;@ jsnonnull/Main.java:54:16
  (local $this (ref null $jsnonnull.Main))
- (local.set $this (ref.cast_static $jsnonnull.Main (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:55:4
   (return (ref.null $java.lang.String))
@@ -548,7 +484,7 @@
  (param $f (ref null $java.lang.Object))
  ;;@ jsnonnull/Main.java:58:14
  (local $this (ref null $jsnonnull.Main))
- (local.set $this (ref.cast_static $jsnonnull.Main (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main) (local.get $this.untyped)))
  (block
  )
 )
@@ -559,45 +495,58 @@
  (param $this (ref null $jsnonnull.Main))
  ;;@ jsnonnull/Main.java:26:13
  (block
+  ;;@ jsnonnull/Main.java:27:2
+  (struct.set $jsnonnull.Main $f1@jsnonnull.Main (local.get $this) (call $$getString_|Hello|__java_lang_String_<once>_@jsnonnull.Main ))
+  ;;@ jsnonnull/Main.java:28:2
+  (struct.set $jsnonnull.Main $f2@jsnonnull.Main (local.get $this) (ref.null $java.lang.String))
   ;;@ jsnonnull/Main.java:29:2
-  (struct.set $jsnonnull.Main $f_f4__jsnonnull_Main_ (local.get $this) (call $$create__@java.util.ArrayList ))
+  (struct.set $jsnonnull.Main $f4@jsnonnull.Main (local.get $this) (call $$create__@java.util.ArrayList ))
   ;;@ jsnonnull/Main.java:30:2
-  (struct.set $jsnonnull.Main $f_f5__jsnonnull_Main_ (local.get $this) (call $$create__@java.util.ArrayList ))
+  (struct.set $jsnonnull.Main $f5@jsnonnull.Main (local.get $this) (call $$create__@java.util.ArrayList ))
   ;;@ jsnonnull/Main.java:31:2
-  (struct.set $jsnonnull.Main $f_f6__jsnonnull_Main_ (local.get $this) (call $$create__@java.util.ArrayList ))
+  (struct.set $jsnonnull.Main $f6@jsnonnull.Main (local.get $this) (call $$create__@java.util.ArrayList ))
+  ;;@ jsnonnull/Main.java:32:2
+  (struct.set $jsnonnull.Main $f7@jsnonnull.Main (local.get $this) (ref.null $java.lang.Object))
+  ;;@ jsnonnull/Main.java:33:2
+  (struct.set $jsnonnull.Main $f8@jsnonnull.Main (local.get $this) (call $m_newWithLiteral__arrayOf_java_lang_Object__javaemul_internal_WasmArray_OfObject@javaemul.internal.WasmArray.OfObject (array.new_fixed $java.lang.Object.array 0 )))
+  ;;@ jsnonnull/Main.java:35:2
+  (struct.set $jsnonnull.Main $f9@jsnonnull.Main (local.get $this) (call $m_newWithLiteral__arrayOf_java_lang_Object__javaemul_internal_WasmArray_OfObject@javaemul.internal.WasmArray.OfObject (array.new_fixed $java.lang.Object.array 0 )))
+  ;;@ jsnonnull/Main.java:37:2
+  (struct.set $jsnonnull.Main $f10@jsnonnull.Main (local.get $this) (call $m_newWithLiteral__arrayOf_java_lang_Object__javaemul_internal_WasmArray_OfObject@javaemul.internal.WasmArray.OfObject (array.new_fixed $java.lang.Object.array 0 )))
   ;;@ jsnonnull/Main.java:39:2
-  (struct.set $jsnonnull.Main $f_f12__jsnonnull_Main_ (local.get $this) (call $$create__@java.util.ArrayList ))
+  (struct.set $jsnonnull.Main $f12@jsnonnull.Main (local.get $this) (call $$create__@java.util.ArrayList ))
  )
 )
 
 ;;; void Main.$clinit()
-(func $$clinit__void@jsnonnull.Main
+(func $$clinit__void_<once>_@jsnonnull.Main
  ;;@ jsnonnull/Main.java:26:13
  (block
   ;;@ jsnonnull/Main.java:26:13
-  (if (global.get $f_$initialized__jsnonnull_Main)
+  (if (global.get $$class-initialized@jsnonnull.Main)
    (then
     ;;@ jsnonnull/Main.java:26:13
     (return )
    )
   )
   ;;@ jsnonnull/Main.java:26:13
-  (global.set $f_$initialized__jsnonnull_Main (i32.const 1))
+  (global.set $$class-initialized@jsnonnull.Main (i32.const 1))
   ;;@ jsnonnull/Main.java:26:13
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> Main.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@jsnonnull.Main
+(func $$getClassMetadata__java_lang_Class_<once>_@jsnonnull.Main
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__jsnonnull_Main) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@jsnonnull.Main)))
    (then
-    (global.set $f_$class__jsnonnull_Main (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jsnonnull.Main|__java_lang_String (ref.func $$getString_|jsnonnull.Main|__java_lang_String@jsnonnull.Main) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@jsnonnull.Main))
    )
   )
-  (return (global.get $f_$class__jsnonnull_Main))
+  (global.set $$class@jsnonnull.Main (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|jsnonnull.Main|__java_lang_String_<once>_@jsnonnull.Main )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@jsnonnull.Main))
  )
 )
 
@@ -607,38 +556,12 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $jsnonnull.Main))
- (local.set $this (ref.cast_static $jsnonnull.Main (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@jsnonnull.Main) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@jsnonnull.Main ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@jsnonnull.Main)
-
-;;; String Main.$getString_|Hello|()
-(func $$getString_|Hello|__java_lang_String@jsnonnull.Main
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|Hello|__jsnonnull_Main) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|Hello|__jsnonnull_Main (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "Hello")))
-   )
-  )
-  (return (global.get $f_$string_|Hello|__jsnonnull_Main))
- )
-)
-
-;;; String Main.$getString_|jsnonnull.Main|()
-(func $$getString_|jsnonnull.Main|__java_lang_String@jsnonnull.Main
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|jsnonnull.Main|__jsnonnull_Main) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|jsnonnull.Main|__jsnonnull_Main (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jsnonnull.Main")))
-   )
-  )
-  (return (global.get $f_$string_|jsnonnull.Main|__jsnonnull_Main))
- )
-)
 
 ;;; Code for jsnonnull.Main.StringComparator [methods]
 
@@ -648,6 +571,8 @@
  ;;@ jsnonnull/Main.java:66:22
  (local $$instance (ref null $jsnonnull.Main.StringComparator))
  (block
+  ;;@ jsnonnull/Main.java:66:22
+  (call $$clinit__void_<once>_@jsnonnull.Main.StringComparator )
   ;;@ jsnonnull/Main.java:66:22
   (local.set $$instance (struct.new $jsnonnull.Main.StringComparator (ref.as_non_null (global.get $jsnonnull.Main.StringComparator.vtable)) (ref.as_non_null (global.get $jsnonnull.Main.StringComparator.itable)) (i32.const 0)))
   ;;@ jsnonnull/Main.java:66:22
@@ -663,8 +588,6 @@
  ;;@ jsnonnull/Main.java:66:22
  (block
   ;;@ jsnonnull/Main.java:66:22
-  (call $$clinit__void@jsnonnull.Main.StringComparator )
-  ;;@ jsnonnull/Main.java:66:22
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -678,7 +601,7 @@
  (result i32)
  ;;@ jsnonnull/Main.java:68:15
  (local $this (ref null $jsnonnull.Main.StringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.StringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.StringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:69:6
   (return (i32.const 0))
@@ -695,10 +618,10 @@
  (result i32)
  ;;@ jsnonnull/Main.java:66:22
  (local $this (ref null $jsnonnull.Main.StringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.StringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.StringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:66:22
-  (return (call_ref $function.m_compare__java_lang_String__java_lang_String__int (ref.as_non_null (local.get $this))(ref.cast_static $java.lang.String (local.get $arg0))(ref.cast_static $java.lang.String (local.get $arg1))(struct.get $jsnonnull.Main.StringComparator.vtable $m_compare__java_lang_String__java_lang_String__int (struct.get $jsnonnull.Main.StringComparator $vtable(local.get $this)))))
+  (return (call_ref $function.m_compare__java_lang_String__java_lang_String__int (ref.as_non_null (local.get $this))(ref.cast (ref null $java.lang.String) (local.get $arg0))(ref.cast (ref null $java.lang.String) (local.get $arg1))(struct.get $jsnonnull.Main.StringComparator.vtable $m_compare__java_lang_String__java_lang_String__int (struct.get $jsnonnull.Main.StringComparator $vtable(local.get $this)))))
  )
 )
 (elem declare func $m_compare__java_lang_Object__java_lang_Object__int@jsnonnull.Main.StringComparator)
@@ -710,7 +633,7 @@
  (result (ref null $java.lang.Object))
  ;;@ jsnonnull/Main.java:66:22
  (local $this (ref null $jsnonnull.Main.StringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.StringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.StringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:66:22
   (return (call $m_reversed__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))))
@@ -726,13 +649,29 @@
  (result (ref null $java.lang.Object))
  ;;@ jsnonnull/Main.java:66:22
  (local $this (ref null $jsnonnull.Main.StringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.StringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.StringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:66:22
   (return (call $m_thenComparing__java_util_Comparator__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))(local.get $arg0)))
  )
 )
 (elem declare func $m_thenComparing__java_util_Comparator__java_util_Comparator@jsnonnull.Main.StringComparator)
+
+;;; Comparator<String> StringComparator.thenComparing(Function<? super String, ? extends U> arg0)
+(func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.StringComparator
+ (type $function.m_thenComparing__java_util_function_Function__java_util_Comparator)
+ (param $this.untyped (ref $java.lang.Object))
+ (param $arg0 (ref null $java.lang.Object))
+ (result (ref null $java.lang.Object))
+ ;;@ jsnonnull/Main.java:66:22
+ (local $this (ref null $jsnonnull.Main.StringComparator))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.StringComparator) (local.get $this.untyped)))
+ (block
+  ;;@ jsnonnull/Main.java:66:22
+  (return (call $m_thenComparing__java_util_function_Function__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))(local.get $arg0)))
+ )
+)
+(elem declare func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.StringComparator)
 
 ;;; Comparator<String> StringComparator.thenComparing(Function<? super String, ? extends U> arg0, Comparator<? super U> arg1)
 (func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.StringComparator
@@ -743,29 +682,13 @@
  (result (ref null $java.lang.Object))
  ;;@ jsnonnull/Main.java:66:22
  (local $this (ref null $jsnonnull.Main.StringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.StringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.StringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:66:22
   (return (call $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))(local.get $arg0)(local.get $arg1)))
  )
 )
 (elem declare func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.StringComparator)
-
-;;; Comparator<String> StringComparator.thenComparing(Function<? super String, ? extends U> arg0)
-(func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.StringComparator
- (type $function.m_thenComparing__java_util_function_Function__java_util_Comparator)
- (param $this.untyped (ref $java.lang.Object))
- (param $arg0 (ref null $java.lang.Object))
- (result (ref null $java.lang.Object))
- ;;@ jsnonnull/Main.java:66:22
- (local $this (ref null $jsnonnull.Main.StringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.StringComparator (local.get $this.untyped)))
- (block
-  ;;@ jsnonnull/Main.java:66:22
-  (return (call $m_thenComparing__java_util_function_Function__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))(local.get $arg0)))
- )
-)
-(elem declare func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.StringComparator)
 
 ;;; Comparator<String> StringComparator.thenComparingDouble(ToDoubleFunction<? super String> arg0)
 (func $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator@jsnonnull.Main.StringComparator
@@ -775,7 +698,7 @@
  (result (ref null $java.lang.Object))
  ;;@ jsnonnull/Main.java:66:22
  (local $this (ref null $jsnonnull.Main.StringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.StringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.StringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:66:22
   (return (call $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))(local.get $arg0)))
@@ -791,7 +714,7 @@
  (result (ref null $java.lang.Object))
  ;;@ jsnonnull/Main.java:66:22
  (local $this (ref null $jsnonnull.Main.StringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.StringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.StringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:66:22
   (return (call $m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))(local.get $arg0)))
@@ -807,7 +730,7 @@
  (result (ref null $java.lang.Object))
  ;;@ jsnonnull/Main.java:66:22
  (local $this (ref null $jsnonnull.Main.StringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.StringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.StringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:66:22
   (return (call $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))(local.get $arg0)))
@@ -816,35 +739,36 @@
 (elem declare func $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator@jsnonnull.Main.StringComparator)
 
 ;;; void StringComparator.$clinit()
-(func $$clinit__void@jsnonnull.Main.StringComparator
+(func $$clinit__void_<once>_@jsnonnull.Main.StringComparator
  ;;@ jsnonnull/Main.java:66:22
  (block
   ;;@ jsnonnull/Main.java:66:22
-  (if (global.get $f_$initialized__jsnonnull_Main_StringComparator)
+  (if (global.get $$class-initialized@jsnonnull.Main.StringComparator)
    (then
     ;;@ jsnonnull/Main.java:66:22
     (return )
    )
   )
   ;;@ jsnonnull/Main.java:66:22
-  (global.set $f_$initialized__jsnonnull_Main_StringComparator (i32.const 1))
+  (global.set $$class-initialized@jsnonnull.Main.StringComparator (i32.const 1))
   ;;@ jsnonnull/Main.java:66:22
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
   ;;@ jsnonnull/Main.java:66:22
-  (call $$clinit__void@java.util.Comparator )
+  (call $$clinit__void_<once>_@java.util.Comparator )
  )
 )
 
 ;;; Class<T> StringComparator.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@jsnonnull.Main.StringComparator
+(func $$getClassMetadata__java_lang_Class_<once>_@jsnonnull.Main.StringComparator
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__jsnonnull_Main_StringComparator) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@jsnonnull.Main.StringComparator)))
    (then
-    (global.set $f_$class__jsnonnull_Main_StringComparator (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jsnonnull.Ma...|__java_lang_String (ref.func $$getString_|jsnonnull.Ma...|__java_lang_String@jsnonnull.Main.StringComparator) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@jsnonnull.Main.StringComparator))
    )
   )
-  (return (global.get $f_$class__jsnonnull_Main_StringComparator))
+  (global.set $$class@jsnonnull.Main.StringComparator (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|jsnonnull.Ma...|__java_lang_String_<once>_@jsnonnull.Main.StringComparator )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@jsnonnull.Main.StringComparator))
  )
 )
 
@@ -854,25 +778,12 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $jsnonnull.Main.StringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.StringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.StringComparator) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@jsnonnull.Main.StringComparator) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@jsnonnull.Main.StringComparator ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@jsnonnull.Main.StringComparator)
-
-;;; String StringComparator.$getString_|jsnonnull.Ma...|()
-(func $$getString_|jsnonnull.Ma...|__java_lang_String@jsnonnull.Main.StringComparator
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_StringComparator) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_StringComparator (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jsnonnull.Main$StringComparator")))
-   )
-  )
-  (return (global.get $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_StringComparator))
- )
-)
 
 ;;; Code for jsnonnull.Main.NullableStringComparator [methods]
 
@@ -882,6 +793,8 @@
  ;;@ jsnonnull/Main.java:74:22
  (local $$instance (ref null $jsnonnull.Main.NullableStringComparator))
  (block
+  ;;@ jsnonnull/Main.java:74:22
+  (call $$clinit__void_<once>_@jsnonnull.Main.NullableStringComparator )
   ;;@ jsnonnull/Main.java:74:22
   (local.set $$instance (struct.new $jsnonnull.Main.NullableStringComparator (ref.as_non_null (global.get $jsnonnull.Main.NullableStringComparator.vtable)) (ref.as_non_null (global.get $jsnonnull.Main.NullableStringComparator.itable)) (i32.const 0)))
   ;;@ jsnonnull/Main.java:74:22
@@ -897,8 +810,6 @@
  ;;@ jsnonnull/Main.java:74:22
  (block
   ;;@ jsnonnull/Main.java:74:22
-  (call $$clinit__void@jsnonnull.Main.NullableStringComparator )
-  ;;@ jsnonnull/Main.java:74:22
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -912,7 +823,7 @@
  (result i32)
  ;;@ jsnonnull/Main.java:76:15
  (local $this (ref null $jsnonnull.Main.NullableStringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.NullableStringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.NullableStringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:77:6
   (return (i32.const 0))
@@ -929,10 +840,10 @@
  (result i32)
  ;;@ jsnonnull/Main.java:74:22
  (local $this (ref null $jsnonnull.Main.NullableStringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.NullableStringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.NullableStringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:74:22
-  (return (call_ref $function.m_compare__java_lang_String__java_lang_String__int (ref.as_non_null (local.get $this))(ref.cast_static $java.lang.String (local.get $arg0))(ref.cast_static $java.lang.String (local.get $arg1))(struct.get $jsnonnull.Main.NullableStringComparator.vtable $m_compare__java_lang_String__java_lang_String__int (struct.get $jsnonnull.Main.NullableStringComparator $vtable(local.get $this)))))
+  (return (call_ref $function.m_compare__java_lang_String__java_lang_String__int (ref.as_non_null (local.get $this))(ref.cast (ref null $java.lang.String) (local.get $arg0))(ref.cast (ref null $java.lang.String) (local.get $arg1))(struct.get $jsnonnull.Main.NullableStringComparator.vtable $m_compare__java_lang_String__java_lang_String__int (struct.get $jsnonnull.Main.NullableStringComparator $vtable(local.get $this)))))
  )
 )
 (elem declare func $m_compare__java_lang_Object__java_lang_Object__int@jsnonnull.Main.NullableStringComparator)
@@ -944,7 +855,7 @@
  (result (ref null $java.lang.Object))
  ;;@ jsnonnull/Main.java:74:22
  (local $this (ref null $jsnonnull.Main.NullableStringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.NullableStringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.NullableStringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:74:22
   (return (call $m_reversed__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))))
@@ -960,13 +871,29 @@
  (result (ref null $java.lang.Object))
  ;;@ jsnonnull/Main.java:74:22
  (local $this (ref null $jsnonnull.Main.NullableStringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.NullableStringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.NullableStringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:74:22
   (return (call $m_thenComparing__java_util_Comparator__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))(local.get $arg0)))
  )
 )
 (elem declare func $m_thenComparing__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
+
+;;; Comparator<String> NullableStringComparator.thenComparing(Function<? super String, ? extends U> arg0)
+(func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.NullableStringComparator
+ (type $function.m_thenComparing__java_util_function_Function__java_util_Comparator)
+ (param $this.untyped (ref $java.lang.Object))
+ (param $arg0 (ref null $java.lang.Object))
+ (result (ref null $java.lang.Object))
+ ;;@ jsnonnull/Main.java:74:22
+ (local $this (ref null $jsnonnull.Main.NullableStringComparator))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.NullableStringComparator) (local.get $this.untyped)))
+ (block
+  ;;@ jsnonnull/Main.java:74:22
+  (return (call $m_thenComparing__java_util_function_Function__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))(local.get $arg0)))
+ )
+)
+(elem declare func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
 
 ;;; Comparator<String> NullableStringComparator.thenComparing(Function<? super String, ? extends U> arg0, Comparator<? super U> arg1)
 (func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator
@@ -977,29 +904,13 @@
  (result (ref null $java.lang.Object))
  ;;@ jsnonnull/Main.java:74:22
  (local $this (ref null $jsnonnull.Main.NullableStringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.NullableStringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.NullableStringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:74:22
   (return (call $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))(local.get $arg0)(local.get $arg1)))
  )
 )
 (elem declare func $m_thenComparing__java_util_function_Function__java_util_Comparator__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
-
-;;; Comparator<String> NullableStringComparator.thenComparing(Function<? super String, ? extends U> arg0)
-(func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.NullableStringComparator
- (type $function.m_thenComparing__java_util_function_Function__java_util_Comparator)
- (param $this.untyped (ref $java.lang.Object))
- (param $arg0 (ref null $java.lang.Object))
- (result (ref null $java.lang.Object))
- ;;@ jsnonnull/Main.java:74:22
- (local $this (ref null $jsnonnull.Main.NullableStringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.NullableStringComparator (local.get $this.untyped)))
- (block
-  ;;@ jsnonnull/Main.java:74:22
-  (return (call $m_thenComparing__java_util_function_Function__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))(local.get $arg0)))
- )
-)
-(elem declare func $m_thenComparing__java_util_function_Function__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
 
 ;;; Comparator<String> NullableStringComparator.thenComparingDouble(ToDoubleFunction<? super String> arg0)
 (func $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator@jsnonnull.Main.NullableStringComparator
@@ -1009,7 +920,7 @@
  (result (ref null $java.lang.Object))
  ;;@ jsnonnull/Main.java:74:22
  (local $this (ref null $jsnonnull.Main.NullableStringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.NullableStringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.NullableStringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:74:22
   (return (call $m_thenComparingDouble__java_util_function_ToDoubleFunction__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))(local.get $arg0)))
@@ -1025,7 +936,7 @@
  (result (ref null $java.lang.Object))
  ;;@ jsnonnull/Main.java:74:22
  (local $this (ref null $jsnonnull.Main.NullableStringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.NullableStringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.NullableStringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:74:22
   (return (call $m_thenComparingInt__java_util_function_ToIntFunction__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))(local.get $arg0)))
@@ -1041,7 +952,7 @@
  (result (ref null $java.lang.Object))
  ;;@ jsnonnull/Main.java:74:22
  (local $this (ref null $jsnonnull.Main.NullableStringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.NullableStringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.NullableStringComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:74:22
   (return (call $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator@java.util.Comparator (ref.as_non_null (local.get $this))(local.get $arg0)))
@@ -1050,35 +961,36 @@
 (elem declare func $m_thenComparingLong__java_util_function_ToLongFunction__java_util_Comparator@jsnonnull.Main.NullableStringComparator)
 
 ;;; void NullableStringComparator.$clinit()
-(func $$clinit__void@jsnonnull.Main.NullableStringComparator
+(func $$clinit__void_<once>_@jsnonnull.Main.NullableStringComparator
  ;;@ jsnonnull/Main.java:74:22
  (block
   ;;@ jsnonnull/Main.java:74:22
-  (if (global.get $f_$initialized__jsnonnull_Main_NullableStringComparator)
+  (if (global.get $$class-initialized@jsnonnull.Main.NullableStringComparator)
    (then
     ;;@ jsnonnull/Main.java:74:22
     (return )
    )
   )
   ;;@ jsnonnull/Main.java:74:22
-  (global.set $f_$initialized__jsnonnull_Main_NullableStringComparator (i32.const 1))
+  (global.set $$class-initialized@jsnonnull.Main.NullableStringComparator (i32.const 1))
   ;;@ jsnonnull/Main.java:74:22
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
   ;;@ jsnonnull/Main.java:74:22
-  (call $$clinit__void@java.util.Comparator )
+  (call $$clinit__void_<once>_@java.util.Comparator )
  )
 )
 
 ;;; Class<T> NullableStringComparator.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@jsnonnull.Main.NullableStringComparator
+(func $$getClassMetadata__java_lang_Class_<once>_@jsnonnull.Main.NullableStringComparator
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__jsnonnull_Main_NullableStringComparator) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@jsnonnull.Main.NullableStringComparator)))
    (then
-    (global.set $f_$class__jsnonnull_Main_NullableStringComparator (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jsnonnull.Ma...|__java_lang_String (ref.func $$getString_|jsnonnull.Ma...|__java_lang_String@jsnonnull.Main.NullableStringComparator) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@jsnonnull.Main.NullableStringComparator))
    )
   )
-  (return (global.get $f_$class__jsnonnull_Main_NullableStringComparator))
+  (global.set $$class@jsnonnull.Main.NullableStringComparator (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|jsnonnull.Ma...|__java_lang_String_<once>_@jsnonnull.Main.NullableStringComparator )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@jsnonnull.Main.NullableStringComparator))
  )
 )
 
@@ -1088,25 +1000,12 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $jsnonnull.Main.NullableStringComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.NullableStringComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.NullableStringComparator) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@jsnonnull.Main.NullableStringComparator) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@jsnonnull.Main.NullableStringComparator ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@jsnonnull.Main.NullableStringComparator)
-
-;;; String NullableStringComparator.$getString_|jsnonnull.Ma...|()
-(func $$getString_|jsnonnull.Ma...|__java_lang_String@jsnonnull.Main.NullableStringComparator
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NullableStringComparator) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NullableStringComparator (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jsnonnull.Main$NullableStringComparator")))
-   )
-  )
-  (return (global.get $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NullableStringComparator))
- )
-)
 
 ;;; Code for jsnonnull.Main.NonNullableStringSubNullableComparator [methods]
 
@@ -1116,6 +1015,8 @@
  ;;@ jsnonnull/Main.java:81:22
  (local $$instance (ref null $jsnonnull.Main.NonNullableStringSubNullableComparator))
  (block
+  ;;@ jsnonnull/Main.java:81:22
+  (call $$clinit__void_<once>_@jsnonnull.Main.NonNullableStringSubNullableComparator )
   ;;@ jsnonnull/Main.java:81:22
   (local.set $$instance (struct.new $jsnonnull.Main.NonNullableStringSubNullableComparator (ref.as_non_null (global.get $jsnonnull.Main.NonNullableStringSubNullableComparator.vtable)) (ref.as_non_null (global.get $jsnonnull.Main.NonNullableStringSubNullableComparator.itable)) (i32.const 0)))
   ;;@ jsnonnull/Main.java:81:22
@@ -1131,8 +1032,6 @@
  ;;@ jsnonnull/Main.java:81:22
  (block
   ;;@ jsnonnull/Main.java:81:22
-  (call $$clinit__void@jsnonnull.Main.NonNullableStringSubNullableComparator )
-  ;;@ jsnonnull/Main.java:81:22
   (call $$ctor__void_$p_jsnonnull_Main_NullableStringComparator@jsnonnull.Main.NullableStringComparator (ref.as_non_null (local.get $this)))
  )
 )
@@ -1146,7 +1045,7 @@
  (result i32)
  ;;@ jsnonnull/Main.java:85:15
  (local $this (ref null $jsnonnull.Main.NonNullableStringSubNullableComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.NonNullableStringSubNullableComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.NonNullableStringSubNullableComparator) (local.get $this.untyped)))
  (block
   ;;@ jsnonnull/Main.java:86:6
   (return (i32.const 0))
@@ -1155,33 +1054,34 @@
 (elem declare func $m_compare__java_lang_String__java_lang_String__int@jsnonnull.Main.NonNullableStringSubNullableComparator)
 
 ;;; void NonNullableStringSubNullableComparator.$clinit()
-(func $$clinit__void@jsnonnull.Main.NonNullableStringSubNullableComparator
+(func $$clinit__void_<once>_@jsnonnull.Main.NonNullableStringSubNullableComparator
  ;;@ jsnonnull/Main.java:81:22
  (block
   ;;@ jsnonnull/Main.java:81:22
-  (if (global.get $f_$initialized__jsnonnull_Main_NonNullableStringSubNullableComparator)
+  (if (global.get $$class-initialized@jsnonnull.Main.NonNullableStringSubNullableComparator)
    (then
     ;;@ jsnonnull/Main.java:81:22
     (return )
    )
   )
   ;;@ jsnonnull/Main.java:81:22
-  (global.set $f_$initialized__jsnonnull_Main_NonNullableStringSubNullableComparator (i32.const 1))
+  (global.set $$class-initialized@jsnonnull.Main.NonNullableStringSubNullableComparator (i32.const 1))
   ;;@ jsnonnull/Main.java:81:22
-  (call $$clinit__void@jsnonnull.Main.NullableStringComparator )
+  (call $$clinit__void_<once>_@jsnonnull.Main.NullableStringComparator )
  )
 )
 
 ;;; Class<T> NonNullableStringSubNullableComparator.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@jsnonnull.Main.NonNullableStringSubNullableComparator
+(func $$getClassMetadata__java_lang_Class_<once>_@jsnonnull.Main.NonNullableStringSubNullableComparator
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__jsnonnull_Main_NonNullableStringSubNullableComparator) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@jsnonnull.Main.NonNullableStringSubNullableComparator)))
    (then
-    (global.set $f_$class__jsnonnull_Main_NonNullableStringSubNullableComparator (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|jsnonnull.Ma...|__java_lang_String (ref.func $$getString_|jsnonnull.Ma...|__java_lang_String@jsnonnull.Main.NonNullableStringSubNullableComparator) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@jsnonnull.Main.NullableStringComparator) )))
+    (return (global.get $$class@jsnonnull.Main.NonNullableStringSubNullableComparator))
    )
   )
-  (return (global.get $f_$class__jsnonnull_Main_NonNullableStringSubNullableComparator))
+  (global.set $$class@jsnonnull.Main.NonNullableStringSubNullableComparator (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|jsnonnull.Ma...|__java_lang_String_<once>_@jsnonnull.Main.NonNullableStringSubNullableComparator )(call $$getClassMetadata__java_lang_Class_<once>_@jsnonnull.Main.NullableStringComparator )))
+  (return (global.get $$class@jsnonnull.Main.NonNullableStringSubNullableComparator))
  )
 )
 
@@ -1191,22 +1091,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $jsnonnull.Main.NonNullableStringSubNullableComparator))
- (local.set $this (ref.cast_static $jsnonnull.Main.NonNullableStringSubNullableComparator (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $jsnonnull.Main.NonNullableStringSubNullableComparator) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@jsnonnull.Main.NonNullableStringSubNullableComparator) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@jsnonnull.Main.NonNullableStringSubNullableComparator ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@jsnonnull.Main.NonNullableStringSubNullableComparator)
-
-;;; String NonNullableStringSubNullableComparator.$getString_|jsnonnull.Ma...|()
-(func $$getString_|jsnonnull.Ma...|__java_lang_String@jsnonnull.Main.NonNullableStringSubNullableComparator
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NonNullableStringSubNullableComparator) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NonNullableStringSubNullableComparator (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "jsnonnull.Main$NonNullableStringSubNullableComparator")))
-   )
-  )
-  (return (global.get $f_$string_|jsnonnull.Ma...|__jsnonnull_Main_NonNullableStringSubNullableComparator))
- )
-)

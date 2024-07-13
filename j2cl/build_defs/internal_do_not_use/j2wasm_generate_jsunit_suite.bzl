@@ -25,9 +25,9 @@ jsunit_test(
 
 """
 
-load(":j2wasm_library.bzl", "j2wasm_library")
-load(":j2wasm_application.bzl", "j2wasm_application")
 load(":generate_test_input.bzl", "generate_test_input")
+load(":j2wasm_application.bzl", "j2wasm_application")
+load(":j2wasm_library.bzl", "j2wasm_library")
 
 # buildifier: disable=function-docstring-args
 def j2wasm_generate_jsunit_suite(
@@ -65,7 +65,8 @@ def j2wasm_generate_jsunit_suite(
         name = name + "_lib",
         srcs = [test_input],
         deps = deps + [
-            "//build_defs/internal_do_not_use:internal_junit_runtime-j2wasm",
+            Label("//build_defs/internal_do_not_use:internal_junit_annotations-j2wasm"),
+            Label("//build_defs/internal_do_not_use:internal_junit_runtime-j2wasm"),
         ],
         javacopts = ["-AtestPlatform=WASM"],
         testonly = 1,
@@ -90,14 +91,20 @@ def j2wasm_generate_jsunit_suite(
         name = j2wasm_application_name,
         deps = [":" + name + "_lib"],
         defines = test_defines,
+        enable_debug_info = True,
         entry_points = [
             ".*_Adapter#test.*",
             ".*_Adapter#setUp.*",
             ".*_Adapter#tearDown.*",
         ],
         testonly = 1,
+        tags = tags + ["manual", "notap"],
         exec_properties = exec_properties,
     )
+
+    # Re-expose the target as "_dep" for test infra to depend on.
+    wasm_target = j2wasm_application_name + ("" if optimize else "_dev")
+    native.alias(name = name + "_dep", actual = wasm_target)
 
     # This genrule takes the jar file as input and creates
     # a new zip file that only contains the generated javascript (.testsuite
@@ -106,13 +113,13 @@ def j2wasm_generate_jsunit_suite(
     # extracting files from jar (output js zip can include all the required
     # files.)
 
-    wasm_optimized_suffix = "" if optimize else "_dev"
-    wasm_path = "/google3/" + native.package_name() + "/" + j2wasm_application_name + wasm_optimized_suffix + ".wasm"
-    wasm_module_name = j2wasm_application_name.replace("-", "_") + ".j2wasm"
+    wasm_path = "/" + native.package_name() + "/" + wasm_target + ".wasm"
+
+    wasm_module_name = wasm_target.replace("-", "_") + ".j2wasm"
     processed_wasm_path = wasm_path.replace("/", "\\/")
 
     native.genrule(
-        name = name + "_transpile_gen",
+        name = name,
         srcs = [out_jar],
         outs = [name + ".js.zip"],
         cmd = "\n".join([
@@ -125,5 +132,5 @@ def j2wasm_generate_jsunit_suite(
             "zip -q -r ../$@ .",
         ]),
         testonly = 1,
-        tags = ["manual", "notap"],
+        tags = tags + ["manual", "notap"],
     )

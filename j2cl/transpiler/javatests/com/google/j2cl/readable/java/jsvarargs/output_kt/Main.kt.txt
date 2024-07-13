@@ -1,5 +1,5 @@
 // Generated from "jsvarargs/Main.java"
-@file:OptIn(ExperimentalObjCName::class, ExperimentalObjCRefinement::class)
+@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -9,6 +9,7 @@
  "UNNECESSARY_LATEINIT",
  "UNNECESSARY_NOT_NULL_ASSERTION",
  "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
  "UNUSED_PARAMETER",
  "UNUSED_VARIABLE",
  "USELESS_CAST",
@@ -18,6 +19,12 @@
 package jsvarargs
 
 import javaemul.lang.*
+import java.lang.Integer
+import jsinterop.annotations.JsConstructor
+import jsinterop.annotations.JsFunction
+import jsinterop.annotations.JsMethod
+import jsinterop.annotations.JsPackage
+import jsinterop.annotations.JsType
 import kotlin.Any
 import kotlin.Array
 import kotlin.Int
@@ -27,18 +34,15 @@ import kotlin.Suppress
 import kotlin.arrayOf
 import kotlin.collections.MutableList
 import kotlin.experimental.ExperimentalObjCName
-import kotlin.experimental.ExperimentalObjCRefinement
 import kotlin.intArrayOf
 import kotlin.jvm.JvmField
 import kotlin.jvm.JvmStatic
-import kotlin.native.HiddenFromObjC
 import kotlin.native.ObjCName
 
 @ObjCName("J2ktJsvarargsMain", exact = true)
 open class Main {
  @JvmField
- @HiddenFromObjC
- var field_pp_jsvarargs: Int = 0
+ internal var field_pp_jsvarargs: Int = 0
 
  constructor(
   @ObjCName("Int") f: Int
@@ -47,6 +51,7 @@ open class Main {
  }
 
  @ObjCName("f3")
+ @JsMethod
  open fun f3(
   @ObjCName("withInt") m: Int,
   vararg @ObjCName("withIntArray") numbers: Int
@@ -55,6 +60,7 @@ open class Main {
  }
 
  @ObjCName("f4")
+ @JsMethod
  open fun f4(
   vararg @ObjCName("withIntArray") numbers: Int
  ): Int {
@@ -67,10 +73,10 @@ open class Main {
   Main.f1(1, 1, 2)
   Main.f1(1)
   Main.f1(1)
-  Main.f1(1, 1, 2)
-  Main.f1(1, 1, 2)
-  Main.f1(1)
-  Main.f1(1)
+  Main.f1(1, *intArrayOf(1, 2)!!)
+  Main.f1(1, *intArrayOf(1, 2)!!)
+  Main.f1(1, *intArrayOf()!!)
+  Main.f1(1, *intArrayOf()!!)
   val ints: IntArray? = intArrayOf(1, 2)
   Main.f1(1, *ints!!)
   Main.f1(1, *ints!!)
@@ -80,23 +86,23 @@ open class Main {
  @ObjCName("testStaticMethodFirst")
  open fun testStaticMethodFirst() {
   Main.f2(1, 2)
-  Main.generics<Int?>(Int.valueOf(1), Int.valueOf(2))
+  Main.generics<Int?>(Integer.valueOf(1), Integer.valueOf(2))
   Main.f2(1, 2)
-  Main.generics<Int?>(Int.valueOf(1), Int.valueOf(2))
+  Main.generics<Int?>(Integer.valueOf(1), Integer.valueOf(2))
   Main.f2()
   Main.generics<Any?>()
   Main.f2()
   Main.generics<Any?>()
   Main.generics<Int?>()
-  Main.f2(1, 2)
-  Main.f2(1, 2)
+  Main.f2(*intArrayOf(1, 2)!!)
+  Main.f2(*intArrayOf(1, 2)!!)
   Main.generics<IntArray?>(intArrayOf(1, 2))
-  Main.generics<Int?>(Int.valueOf(1), Int.valueOf(2))
-  Main.f2()
-  Main.f2()
+  Main.generics<Int?>(*arrayOf<Int?>(Integer.valueOf(1), Integer.valueOf(2))!!)
+  Main.f2(*intArrayOf()!!)
+  Main.f2(*intArrayOf()!!)
   Main.generics<IntArray?>(intArrayOf())
   val ints: IntArray? = intArrayOf(1, 2)
-  val integers: Array<Int?>? = arrayOf<Int?>(Int.valueOf(1), Int.valueOf(2))
+  val integers: Array<Int?>? = arrayOf<Int?>(Integer.valueOf(1), Integer.valueOf(2))
   Main.f2(*ints!!)
   Main.f2(*ints!!)
   Main.generics<Int?>(*integers!!)
@@ -107,8 +113,8 @@ open class Main {
   val m: Main? = Main(1)
   m!!.f3(1, 1, 2)
   m!!.f3(1)
-  m!!.f3(1, 1, 2)
-  m!!.f3(1)
+  m!!.f3(1, *intArrayOf(1, 2)!!)
+  m!!.f3(1, *intArrayOf()!!)
   val ints: IntArray? = intArrayOf(1, 2)
   m!!.f3(1, *ints!!)
  }
@@ -118,8 +124,8 @@ open class Main {
   val m: Main? = Main(1)
   m!!.f4(1, 2)
   m!!.f4()
-  m!!.f4(1, 2)
-  m!!.f4()
+  m!!.f4(*intArrayOf(1, 2)!!)
+  m!!.f4(*intArrayOf()!!)
   val ints: IntArray? = intArrayOf(1, 2)
   m!!.f4(*ints!!)
  }
@@ -131,8 +137,8 @@ open class Main {
   val o2: Any? = Any()
   a!!.f1(0, o1, o2)
   a!!.f1(0)
-  a!!.f1(0, o1, o2)
-  a!!.f1(0)
+  a!!.f1(0, *arrayOf<Any?>(o1, o2)!!)
+  a!!.f1(0, *arrayOf<Any?>()!!)
   val os: Array<Any?>? = arrayOf<Any?>(o1, o2)
   a!!.f1(0, *os!!)
  }
@@ -161,6 +167,7 @@ open class Main {
  companion object {
   @JvmStatic
   @ObjCName("f1")
+  @JsMethod
   fun f1(
    @ObjCName("withInt") multiplier: Int,
    vararg @ObjCName("withIntArray") numbers: Int
@@ -170,6 +177,7 @@ open class Main {
 
   @JvmStatic
   @ObjCName("f2")
+  @JsMethod
   fun f2(
    vararg @ObjCName("withIntArray") numbers: Int
   ): Int {
@@ -178,6 +186,7 @@ open class Main {
 
   @JvmStatic
   @ObjCName("generics")
+  @JsMethod
   fun <T> generics(
    vararg @ObjCName("withNSObjectArray") elements: T
   ): T {
@@ -187,6 +196,7 @@ open class Main {
 
   @JvmStatic
   @ObjCName("parameterizedType")
+  @JsMethod
   fun parameterizedType(
    vararg @ObjCName("withJavaUtilListArray") elements: MutableList<Main?>?
   ): Main? {
@@ -196,6 +206,7 @@ open class Main {
 
   @JvmStatic
   @ObjCName("parameterizedByT")
+  @JsMethod
   fun <T> parameterizedByT(
    vararg @ObjCName("withJavaUtilListArray") elements: MutableList<T>?
   ): T {
@@ -204,15 +215,15 @@ open class Main {
   }
  }
 
+ @JsType(name = "Object", namespace = JsPackage.GLOBAL, isNative = true)
  open class NativeObject {
   constructor(
    vararg @ObjCName("NSObjectArray") pars: Any?
-  ) {
-   val pars_1: Array<Any?>? = pars as Array<Any?>?
-  }
+  )
  }
 
  open class SubVarargsConstructorClass: Main.NativeObject {
+  @JsConstructor
   constructor(
    @ObjCName("Int") i: Int,
    vararg @ObjCName("withNSObjectArray") args: Any?
@@ -221,6 +232,7 @@ open class Main {
   }
  }
 
+ @JsFunction
  fun interface Function {
   @ObjCName("f1")
   fun f1(
@@ -230,6 +242,7 @@ open class Main {
  }
 
  @ObjCName("J2ktJsvarargsMain_AbstractMethodWithVarargs", exact = true)
+ @JsType
  abstract class AbstractMethodWithVarargs {
   @ObjCName("abstractMethod")
   abstract fun abstractMethod(
@@ -238,6 +251,7 @@ open class Main {
  }
 
  @ObjCName("J2ktJsvarargsMain_StaticInterfaceMethodWithVarargs", exact = true)
+ @JsType
  interface StaticInterfaceMethodWithVarargs {
   @ObjCName("J2ktJsvarargsMain_StaticInterfaceMethodWithVarargsCompanion", exact = true)
   companion object {
@@ -249,7 +263,7 @@ open class Main {
   }
  }
 
- class AFunction: Main.Function {
+ class AFunction internal constructor(): Main.Function {
   override fun f1(i: Int, vararg args: Any?): Any? {
    val args_1: Array<Any?>? = args as Array<Any?>?
    return args_1!![i]
@@ -259,17 +273,18 @@ open class Main {
  open class SubMain: Main {
   constructor(): super(10)
 
-  open override fun f3(m: Int, vararg numbers: Int): Int {
+  override fun f3(m: Int, vararg numbers: Int): Int {
    var a: Int = super<Main>.f3(1, 1, 2)
    a = a + super<Main>.f3(1)
-   a = a + super<Main>.f3(1, 1, 2)
-   a = a + super<Main>.f3(1)
+   a = a + super<Main>.f3(1, *intArrayOf(1, 2)!!)
+   a = a + super<Main>.f3(1, *intArrayOf()!!)
    val ints: IntArray? = intArrayOf(1, 2)
    a = a + super<Main>.f3(1, *ints!!)
    return a
   }
  }
 
+ @JsFunction
  fun interface GenericFunction<T> {
   @ObjCName("m")
   fun m(

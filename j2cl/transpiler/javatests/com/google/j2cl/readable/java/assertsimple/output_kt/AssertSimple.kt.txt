@@ -9,6 +9,7 @@
  "UNNECESSARY_LATEINIT",
  "UNNECESSARY_NOT_NULL_ASSERTION",
  "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
  "UNUSED_PARAMETER",
  "UNUSED_VARIABLE",
  "USELESS_CAST",
@@ -46,15 +47,12 @@ open class AssertSimple {
     "null"
    }
    assert(1 + 2 == 3) {
-    run {
-     val tmp: Array<String?>? = args
-     if (tmp == null) "null" else tmp!!
-    }
+    if (args == null) "null" else args as Any
    }
    assert(1 + 2 == 3) {
     run {
-     val tmp_1: String? = args!![0]
-     if (tmp_1 == null) "null" else tmp_1!!
+     val tmp: String? = args!![0]
+     if (tmp == null) "null" else tmp as Any
     }
    }
    assert(1 + 2 == 3) {

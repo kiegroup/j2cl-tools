@@ -21,14 +21,30 @@ public class LabeledStatement {
     for (; ; ) {
       break LABEL;
     }
+
+    WHILE:
+    while (true) {
+      SWITCH:
+      switch (0) {
+        case 0:
+          continue WHILE;
+      }
+    }
   }
 
   public void simpleStatement() {
     LABEL:
     foo();
 
-    // TODO(b/202500423): Enable when the jscompiler bug is fixed.
-    // LABEL: break LABEL
+    // Test that none of these trip jscompiler (b/330169941).
+    LABEL:
+    break LABEL;
+    LABEL:
+    LABEL2:
+    break LABEL;
+    LABEL2:
+    LABEL:
+    break LABEL;
 
     do {
       LABEL:
@@ -61,6 +77,20 @@ public class LabeledStatement {
           break;
         }
     }
+  }
+
+  public void nestedScopes() {
+    // Test a lexically nested labeled statement that are do not conflict since they are in
+    // different scopes.
+    LABEL:
+    do {
+      new Object() {
+        void m() {
+          LABEL:
+          do {} while (false);
+        }
+      };
+    } while (false);
   }
 
   private void foo() {}

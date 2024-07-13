@@ -9,6 +9,7 @@
  "UNNECESSARY_LATEINIT",
  "UNNECESSARY_NOT_NULL_ASSERTION",
  "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
  "UNUSED_PARAMETER",
  "UNUSED_VARIABLE",
  "USELESS_CAST",
@@ -79,6 +80,15 @@ open class CompileTimeConstant<T> {
   val m: String? = CompileTimeConstant.M
   val n: String? = CompileTimeConstant.N
   val c: Class<*>? = CompileTimeConstant.classLiteral
+  val minByte: Byte = (- 128).toByte()
+  val minShort: Short = (- 32768).toShort()
+  val minInt: Int = -2147483647 - 1
+  val minLong: Long = -9223372036854775807L - 1L
+  val intUnaryMinusOverflow: Int = - (-2147483647 - 1)
+  val intPlusOverflow: Int = 2147483647 + 1
+  val intMinusOverflow: Int = -2147483647 - 1 - 1
+  val intTimesOverflow: Int = 2147483647 * 2
+  val intShlOverflow: Int = 2147483647.shl(2)
  }
 
  @ObjCName("J2ktCompiletimeconstantCompileTimeConstantCompanion", exact = true)
@@ -86,6 +96,9 @@ open class CompileTimeConstant<T> {
   @JvmField
   @ObjCName("OBJ_")
   val OBJ: Any? = null
+
+  @ObjCName("DEFAULT_")
+  const val DEFAULT: Int = 0
 
   @ObjCName("A_")
   const val A: Int = 10
@@ -135,6 +148,12 @@ open class CompileTimeConstant<T> {
 
   @ObjCName("MIN_SHORT_")
   const val MIN_SHORT: Short = (-32768).toShort()
+
+  @ObjCName("MIN_INT_")
+  const val MIN_INT: Int = -2147483647 - 1
+
+  @ObjCName("MIN_LONG_")
+  const val MIN_LONG: Long = -9223372036854775807L - 1L
 
   @ObjCName("MIN_BYTE_WITH_CAST_")
   const val MIN_BYTE_WITH_CAST: Byte = (-128).toByte()

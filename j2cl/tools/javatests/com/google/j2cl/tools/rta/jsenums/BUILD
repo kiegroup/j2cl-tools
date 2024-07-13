@@ -12,9 +12,8 @@ j2cl_library(
         "Main.java",
     ],
     javacopts = [
-        "-XepOpt:CheckReturnValue:CheckAllConstructors=false",  # b/226969262
     ],
-    deps = ["//third_party:gwt-jsinterop-annotations-j2cl"],
+    deps = ["//third_party:jsinterop-annotations-j2cl"],
 )
 
 rta_test(

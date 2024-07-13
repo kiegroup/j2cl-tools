@@ -16,8 +16,8 @@ def load_j2cl_repo_deps():
     _github_repo(
         name = "io_bazel_rules_closure",
         repo = "bazelbuild/rules_closure",
-        tag = "5abddd3891ad9433267b25f40d938b8f66f08a48",
-        sha256 = "cc784777922476a21ddef6d654e9b8e29a5ff9a9d8081bfc9b157e3d059d0927",
+        tag = "26321bf918b16858f045d40e204482910e1dc649",
+        sha256 = "cfe04863c68bd807124bafb8eccfeac8c8ce48087270077bfd0684456df63f4d",
     )
 
     # TODO(goktug): Consider moving to setup_j2cl_workspace after licences migration
@@ -43,7 +43,30 @@ def load_j2cl_repo_deps():
         sha256 = "54678552125753d9fc0a37736d140f1d2e69778d3e52cf454df41a913b964ede",
     )
 
-def _github_repo(name, repo, tag, sha256 = None):
+    _load_binaryen()
+
+def _load_binaryen():
+
+    PY_VERSION = "0.23.1"
+
+    http_archive(
+        name = "rules_python",
+        strip_prefix = "rules_python-{}".format(PY_VERSION),
+        url = "https://github.com/bazelbuild/rules_python/releases/download/{}/rules_python-{}.tar.gz".format(PY_VERSION, PY_VERSION),
+        sha256 = "84aec9e21cc56fbc7f1335035a71c850d1b9b5cc6ff497306f84cced9a769841",
+    )
+
+    _github_repo(
+        name="com_google_binaryen",
+        repo = "WebAssembly/binaryen",
+        tag = "669bc06d0566041bfdbae97f87e60130945b557f",
+        sha256 = "d0ae6b5ab9e60534cda8eb372e4d6eb94a5c128fd829ad170556090f28fd7b60",
+        patch_args = ["-p1"],
+        build_file = "@com_google_j2cl//build_defs/internal_do_not_use/binaryen:BUILD.binaryen",
+        patches = ["@com_google_j2cl//build_defs/internal_do_not_use/binaryen:generate_intrinsics.patch"],
+    )
+
+def _github_repo(name, repo, tag, **kwargs):
     if native.existing_rule(name):
         return
 
@@ -52,5 +75,5 @@ def _github_repo(name, repo, tag, sha256 = None):
         name = name,
         strip_prefix = "%s-%s" % (project_name, tag),
         url = "https://github.com/%s/archive/%s.zip" % (repo, tag),
-        sha256 = sha256,
+        **kwargs
     )

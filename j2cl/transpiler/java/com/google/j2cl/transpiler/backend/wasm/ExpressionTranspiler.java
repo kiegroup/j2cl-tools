@@ -17,6 +17,7 @@ package com.google.j2cl.transpiler.backend.wasm;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.j2cl.common.StringUtils.escapeAsUtf8;
 import static com.google.j2cl.transpiler.ast.TypeDescriptors.isPrimitiveVoid;
 import static com.google.j2cl.transpiler.backend.wasm.WasmGenerationEnvironment.getGetterInstruction;
@@ -28,6 +29,7 @@ import com.google.j2cl.transpiler.ast.AbstractVisitor;
 import com.google.j2cl.transpiler.ast.ArrayAccess;
 import com.google.j2cl.transpiler.ast.ArrayLength;
 import com.google.j2cl.transpiler.ast.ArrayLiteral;
+import com.google.j2cl.transpiler.ast.AstUtils;
 import com.google.j2cl.transpiler.ast.BinaryExpression;
 import com.google.j2cl.transpiler.ast.BooleanLiteral;
 import com.google.j2cl.transpiler.ast.CastExpression;
@@ -67,7 +69,9 @@ import java.util.List;
 final class ExpressionTranspiler {
 
   public static void renderWithUnusedResult(
-      Expression expression, SourceBuilder sourceBuilder, WasmGenerationEnvironment environment) {
+      Expression expression,
+      final SourceBuilder sourceBuilder,
+      final WasmGenerationEnvironment environment) {
     if (returnsVoid(expression)) {
       render(expression, sourceBuilder, environment);
     } else {
@@ -182,7 +186,7 @@ final class ExpressionTranspiler {
             castExpression.getCastTypeDescriptor().toRawTypeDescriptor();
 
         if (TypeDescriptors.isJavaLangObject(castTypeDescriptor)) {
-          // Avoid unncessary casts to j.l.Object. This also helps avoiding a Wasm cast whem going
+          // Avoid unnecessary casts to j.l.Object. This also helps avoiding a Wasm cast whem going
           // from native arrays to WasmOpaque objects (and vice versa) which would otherwise fail.
           render(castExpression.getExpression());
           return false;
@@ -199,7 +203,7 @@ final class ExpressionTranspiler {
         // TODO(b/184675805): implement array cast expressions beyond this nominal
         // implementation.
         sourceBuilder.append(
-            format("(ref.cast_static %s ", environment.getWasmTypeName(castTypeDescriptor)));
+            format("(ref.cast (ref null %s) ", environment.getWasmTypeName(castTypeDescriptor)));
         render(castExpression.getExpression());
         sourceBuilder.append(")");
         return false;
@@ -251,18 +255,11 @@ final class ExpressionTranspiler {
         // implementation.
         if (!testTypeDescriptor.isInterface()) {
           sourceBuilder.append(
-              format("(ref.test_static %s ", environment.getWasmTypeName(testTypeDescriptor)));
+              format("(ref.test (ref %s) ", environment.getWasmTypeName(testTypeDescriptor)));
           render(instanceOfExpression.getExpression());
           sourceBuilder.append(")");
         } else {
           DeclaredTypeDescriptor targetTypeDescriptor = (DeclaredTypeDescriptor) testTypeDescriptor;
-          int interfaceSlot =
-              environment.getInterfaceSlot(targetTypeDescriptor.getTypeDeclaration());
-          if (interfaceSlot == -1) {
-            // The interface does not have implementors, hence instanceof is false.
-            sourceBuilder.append("(i32.const 0)");
-            return false;
-          }
           sourceBuilder.append("(if (result i32) (ref.is_null ");
           render(instanceOfExpression.getExpression());
           sourceBuilder.append(")");
@@ -274,15 +271,16 @@ final class ExpressionTranspiler {
           sourceBuilder.append("(else ");
           sourceBuilder.indent();
           sourceBuilder.newLine();
-          // Check whether the itable slot assigned to the interface actually contains the
-          // interface vtable, since the slots are reused.
+          // Retrieve the interface vtable and use non-nullable `ref.test` so that it returns false
+          // if the vtable is null or is not of the expected interface.
           sourceBuilder.append(
               format(
-                  "(ref.test_static %s (struct.get $itable $slot%d (struct.get $java.lang.Object"
-                      + " $itable ",
-                  environment.getWasmVtableTypeName(targetTypeDescriptor), interfaceSlot));
+                  "(ref.test (ref %s) (call %s ",
+                  environment.getWasmVtableTypeName(targetTypeDescriptor),
+                  environment.getWasmItableInterfaceGetter(
+                      targetTypeDescriptor.getTypeDeclaration())));
           render(instanceOfExpression.getExpression());
-          sourceBuilder.append(" )))");
+          sourceBuilder.append(" ))");
           sourceBuilder.unindent();
           sourceBuilder.newLine();
           sourceBuilder.append(")");
@@ -339,7 +337,9 @@ final class ExpressionTranspiler {
           return false;
         }
 
-        sourceBuilder.append(format("(array.init_static %s ", arrayType));
+        sourceBuilder.append(
+            format(
+                "(array.new_fixed %s %d ", arrayType, arrayLiteral.getValueExpressions().size()));
         arrayLiteral.getValueExpressions().forEach(this::render);
         sourceBuilder.append(")");
         return false;
@@ -394,20 +394,35 @@ final class ExpressionTranspiler {
                 environment.getWasmVtableGlobalName(newInstance.getTypeDescriptor()),
                 environment.getWasmItableGlobalName(newInstance.getTypeDescriptor())));
 
-        // TODO(b/178728155): Go back to using struct.new_default_with_rtt once it supports
-        // assigning immutable fields at construction. See b/178738025 for an alternative design
+        // TODO(b/178728155): Go back to using struct.new_default once it supports assigning
+        //  immutable fields at construction. See b/178738025 for an alternative design
         // that might have better runtime tradeoffs.
 
-        // Initialize instance fields to their default values, whose initial values are represented
-        // as arguments.
-        // Note that struct.new_default_with_rtt cannot be used here since the vtable needs to an
-        // immutable field to enable sub-typing hence will need to be initialized at construction.
-        newInstance
-            .getArguments()
+        // Initialize instance fields to their default values. Note that struct.new_default
+        // cannot be used here since the vtable needs an immutable field to enable sub-typing
+        // hence will need to be initialized at construction.
+        environment
+            .getWasmTypeLayout(newInstance.getTypeDescriptor().getTypeDeclaration())
+            .getAllInstanceFields()
             .forEach(
-                e -> {
+                fieldDescriptor -> {
                   sourceBuilder.append(" ");
-                  render(e);
+                  Expression initialValue =
+                      AstUtils.getInitialValue(fieldDescriptor.getTypeDescriptor());
+                  // TODO(b/296475021): Cleanup the handling of the elements field.
+                  if (environment.isWasmArrayElementsField(fieldDescriptor)) {
+                    // The initialization of the elements field in a wasm array is synthesized from
+                    // the parameter in the constructor. This is done  because the field needs to be
+                    // declared immutable to be able to override the field in the superclass.
+                    Expression argument = Iterables.getOnlyElement(newInstance.getArguments());
+                    checkState(
+                        argument
+                            .getTypeDescriptor()
+                            .isSameBaseType(fieldDescriptor.getTypeDescriptor()));
+
+                    initialValue = argument;
+                  }
+                  render(initialValue);
                 });
 
         sourceBuilder.append(")");
@@ -416,7 +431,6 @@ final class ExpressionTranspiler {
 
       private void renderPolymorphicMethodCall(MethodCall methodCall) {
         MethodDescriptor target = methodCall.getTarget();
-        DeclaredTypeDescriptor enclosingTypeDescriptor = target.getEnclosingTypeDescriptor();
         if (target.isSideEffectFree()) {
           sourceBuilder.append(
               format("(call %s ", environment.getNoSideEffectWrapperFunctionName(target)));
@@ -430,50 +444,60 @@ final class ExpressionTranspiler {
         // Pass the rest of the parameters.
         methodCall.getArguments().forEach(this::render);
 
-        // Retrieve the method reference from the appropriate vtable to provide it to call_ref.
-        sourceBuilder.append(
-            format(
-                "(struct.get %s %s ",
-                environment.getWasmVtableTypeName(enclosingTypeDescriptor),
-                environment.getVtableSlot(target)));
+        Expression qualifier = methodCall.getQualifier();
+        TypeDescriptor qualifierTypeDescriptor =
+            methodCall.getQualifier().getTypeDescriptor().toRawTypeDescriptor();
 
-        // Retrieve the corresponding vtable.
-        if (target.isClassDynamicDispatch()) {
+        boolean isClassDispatch =
+            !qualifierTypeDescriptor.isInterface() || target.isOrOverridesJavaLangObjectMethod();
+
+        if (isClassDispatch) {
           // For a class dynamic dispatch the vtable resides in the $vtable field of object passed
-          // as the qualifier.
+          // as the qualifier. Use type of the qualifier to determine the vtable type.
+          DeclaredTypeDescriptor vtableTypeDescriptor =
+              qualifierTypeDescriptor.isClass() || qualifierTypeDescriptor.isEnum()
+                  ? (DeclaredTypeDescriptor) qualifierTypeDescriptor
+                  // Use java.lang.Object as the vtable type for interfaces and arrays. Note that
+                  // this is only the case when dispatching java.lang.Object methods.
+                  : TypeDescriptors.get().javaLangObject;
+
+          // Retrieve the corresponding class vtable.
           sourceBuilder.append(
               format(
-                  "(struct.get %s $vtable", environment.getWasmTypeName(enclosingTypeDescriptor)));
-          render(methodCall.getQualifier());
-          sourceBuilder.append(")");
+                  "(struct.get %s %s (struct.get %s $vtable",
+                  environment.getWasmVtableTypeName(vtableTypeDescriptor),
+                  environment.getVtableFieldName(target),
+                  environment.getWasmTypeName(vtableTypeDescriptor)));
+          render(qualifier);
+          sourceBuilder.append("))");
         } else {
-          // For an interface dynamic dispatch the vtable resides in a field of the $itable struct
+          checkState(qualifierTypeDescriptor.isInterface());
+          DeclaredTypeDescriptor vtableTypeDescriptor =
+              (DeclaredTypeDescriptor) qualifierTypeDescriptor;
+
+          // For an interface dynamic dispatch the vtable is accessed through the $itable field in
           // object passed as the qualifier.
+          // The method call qualifier type is used to retrieve the vtable. If the method call
+          // target is in a superinterface, it is still included in the subinterface vtable.
+          String vtableTypeName = environment.getWasmVtableTypeName(vtableTypeDescriptor);
 
-          int itableSlot =
-              environment.getInterfaceSlot(enclosingTypeDescriptor.getTypeDeclaration());
-          if (itableSlot == -1) {
-            // The interface is not implemented by any class, skip the itable lookup and emit
-            // null instead.
-            sourceBuilder.append(
-                String.format(
-                    "(ref.null %s)", environment.getWasmVtableTypeName(enclosingTypeDescriptor)));
-          } else {
-
-            // Retrieve the interface vtable from the corresponding slot field in the $itable
-            // and cast it to the appropriate type.
-            sourceBuilder.append(
-                String.format(
-                    "(ref.cast_static %s (struct.get $itable $slot%d (struct.get %s $itable ",
-                    environment.getWasmVtableTypeName(enclosingTypeDescriptor),
-                    itableSlot,
-                    environment.getWasmTypeName(enclosingTypeDescriptor)));
-            render(methodCall.getQualifier());
-            sourceBuilder.append(")))");
-          }
+          // Retrieve the interface vtable from the $itable field and cast it to the expected type.
+          // Use a non-nullable `ref.cast` to access the interface vtable, because if the interface
+          // is not implemented by the object the result might either be `null` or a vtable
+          // for a different interface that was coalesced to save storage.
+          sourceBuilder.append(
+              String.format(
+                  "(struct.get %s %s (ref.cast (ref %s) (call %s ",
+                  vtableTypeName,
+                  environment.getVtableFieldName(target),
+                  vtableTypeName,
+                  environment.getWasmItableInterfaceGetter(
+                      vtableTypeDescriptor.getTypeDeclaration())));
+          render(qualifier);
+          sourceBuilder.append(")))");
         }
 
-        sourceBuilder.append("))");
+        sourceBuilder.append(")");
       }
 
       /**

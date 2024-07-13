@@ -135,14 +135,41 @@ public class Main {
 
     NativeStringEnum.ONE.compareTo(NativeStringEnum.THREE);
     NativeStringEnum.ONE.equals(NativeStringEnum.THREE);
-    ComparableJsEnum.ONE.compareTo(ComparableJsEnum.ZERO);
-    ComparableJsEnum.ONE.equals(ComparableJsEnum.ZERO);
 
     Supplier<ComparableJsEnum> supplier = () -> ComparableJsEnum.ONE;
     Consumer<ComparableJsEnum> consummer = e -> e.ordinal();
 
     acceptsJsFunctionSupplier(() -> ComparableJsEnum.ONE);
     acceptsSupplierOfSupplier(() -> (() -> ComparableJsEnum.ONE));
+  }
+
+  private static void testJsEnumAutoboxingSpecialMethods() {
+    StringJsEnum stringJsEnum = StringJsEnum.ONE;
+    StringJsEnum nullStringJsEnum = null;
+    ComparableJsEnum jsEnum = ComparableJsEnum.ONE;
+    ComparableJsEnum nullJsEnum = null;
+    Object o = ComparableJsEnum.ONE;
+
+    StringJsEnum.ONE.equals(StringJsEnum.THREE);
+    StringJsEnum.ONE.equals(stringJsEnum);
+    StringJsEnum.ONE.equals(nullStringJsEnum);
+    StringJsEnum.ONE.equals(null);
+    StringJsEnum.ONE.equals(o);
+    o.equals(StringJsEnum.THREE);
+
+    ComparableJsEnum.ONE.compareTo(ComparableJsEnum.ZERO);
+    ComparableJsEnum.ONE.compareTo(null);
+    ComparableJsEnum.ONE.equals(ComparableJsEnum.ZERO);
+    ComparableJsEnum.ONE.equals(jsEnum);
+    ComparableJsEnum.ONE.equals(nullJsEnum);
+    ComparableJsEnum.ONE.equals(null);
+    ComparableJsEnum.ONE.equals(o);
+    o.equals(ComparableJsEnum.ZERO);
+
+    StringJsEnum.ONE.equals(jsEnum);
+
+    boxingPassthrough(ComparableJsEnum.ONE).equals(boxingPassthrough(ComparableJsEnum.ONE));
+    boxingPassthrough(ComparableJsEnum.ONE).equals(boxingPassthrough(StringJsEnum.ONE));
   }
 
   @JsFunction
@@ -153,6 +180,22 @@ public class Main {
   private static void acceptsJsFunctionSupplier(JsFunctionSuppiler<ComparableJsEnum> supplier) {}
 
   private static void acceptsSupplierOfSupplier(Supplier<Supplier<ComparableJsEnum>> supplier) {}
+
+  private static void testReturnsAndParameters() {
+    ComparableJsEnum returnedValue = returnsJsEnum();
+    ComparableJsEnum returnedNullValue = returnsNullJsEnum();
+    takesJsEnum(ComparableJsEnum.ONE);
+  }
+
+  private static ComparableJsEnum returnsJsEnum() {
+    return ComparableJsEnum.ONE;
+  }
+
+  private static ComparableJsEnum returnsNullJsEnum() {
+    return null;
+  }
+
+  private static void takesJsEnum(ComparableJsEnum value) {}
 
   private static void testBoxUnboxWithTypeInference() {
     // Make sure the enum is boxed even when assigned to a field that is inferred to be JsEnum.
@@ -233,5 +276,31 @@ public class Main {
     public ComparableJsEnum get() {
       return null;
     }
+  }
+
+  @JsEnum
+  public enum SomeJsEnum {
+    A;
+  }
+
+  private static <T> T varargsConsumer(T... args) {
+    return args[0];
+  }
+
+  private static class BaseVarargs<T> {
+    BaseVarargs(T... args) {}
+  }
+
+  private static class SubtypeVarargs extends BaseVarargs<SomeJsEnum> {
+    SubtypeVarargs() {
+      super(SomeJsEnum.A, SomeJsEnum.A);
+    }
+  }
+
+  private static class SubtypeImplicitVarargs extends BaseVarargs<SomeJsEnum> {}
+
+  private static void testVarargs() {
+    varargsConsumer(SomeJsEnum.A, SomeJsEnum.A);
+    Consumer<SomeJsEnum> consumer = Main::varargsConsumer;
   }
 }

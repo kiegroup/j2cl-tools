@@ -119,9 +119,8 @@ class ImportGatherer extends AbstractVisitor {
     // one can access devirtualized overlay methods and static methods, and those need a direct
     // reference to the declaring class at the usage site. In order of AJD to preserve those,
     // wherever they are exposed they need to be required.
-    nativeType
-        .toUnparameterizedTypeDescriptor()
-        .getDeclaredMemberDescriptors()
+    nativeType.toUnparameterizedTypeDescriptor().getDeclaredMemberDescriptors().stream()
+        .filter(m -> !m.isJsOverlay())
         .forEach(
             m -> {
               maybeAddNativeReference(m);
@@ -373,8 +372,8 @@ class ImportGatherer extends AbstractVisitor {
       return ImportCategory.LOADTIME;
     }
 
-    if (getCurrentMember().getDescriptor().getOrigin().isInstanceOfSupportMember()) {
-      // InstanceOf support members, e.g. $isInstance, might not call $clinit hence all the
+    if (getCurrentMember().getDescriptor().getOrigin().isSyntheticInstanceOfSupportMember()) {
+      // Synthetic instanceOf support members, do not call $clinit hence all the
       // types used in their implementation need to be imported as LOADTIME.
       return ImportCategory.LOADTIME;
     }

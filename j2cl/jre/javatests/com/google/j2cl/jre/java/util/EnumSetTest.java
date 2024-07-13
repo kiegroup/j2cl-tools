@@ -15,14 +15,21 @@
  */
 package com.google.j2cl.jre.java.util;
 
+import com.google.j2cl.jre.testing.J2ktIncompatible;
+import com.google.j2cl.jre.testing.TestUtils;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /** J2CL specific EmumSet test as it doesn't support getEnumConstants (b/30745420). */
+@NullMarked
 public class EnumSetTest extends TestSet {
   public EnumSetTest() {
     super("EnumSetTest");
@@ -97,7 +104,7 @@ public class EnumSetTest extends TestSet {
 
   @Override
   // Note that this method is badly named. It doesn't mean *all* elements.
-  protected Object[] getFullElements() {
+  protected @Nullable Object[] getFullElements() {
     return new Numbers[] {Numbers.One, Numbers.Two, Numbers.Three, Numbers.Four};
   }
 
@@ -156,23 +163,46 @@ public class EnumSetTest extends TestSet {
     assertNotSame(nums, nums.clone());
   }
 
+  public void testCopyOf_emptyCollection() {
+    try {
+      EnumSet<Numbers> enumSet = EnumSet.copyOf((List<Numbers>) Collections.EMPTY_LIST);
+      fail("Expected IllegalArgumentException");
+    } catch (IllegalArgumentException e) {
+      // Expected
+    }
+  }
+
+  public void testCopyOf_emptyEnumSet() {
+    EnumSet<Numbers> original = EnumSet.noneOf(Numbers.class);
+    EnumSet<Numbers> copy = EnumSet.copyOf(original);
+    assertTrue(copy.isEmpty());
+  }
+
   // According to EnumSet Javadoc:
   // The returned iterator is weakly consistent: it will never throw ConcurrentModificationException
   // and it may or may not show the effects of any modifications to the set that occur while the
   // iteration is in progress.
-  // In the J2CL implementation, we do not reflect modification to the iteration.
+  // J2CL doesn't conform to that and fail-fast during iteration.
+  @J2ktIncompatible
   public void testIterator_concurrentModification() {
     EnumSet<Numbers> partial = EnumSet.of(Numbers.One, Numbers.Two, Numbers.Three, Numbers.Five);
     Iterator<Numbers> expecteds = EnumSet.copyOf(partial).iterator();
-    for (Numbers n : partial) {
-      if (n == Numbers.One) {
-        partial.add(Numbers.Four);
+    try {
+      for (Numbers n : partial) {
+        if (n == Numbers.One) {
+          partial.add(Numbers.Four);
+        }
+        // Expect same items as we do not reflect modifications to iterator.
+        assertEquals(expecteds.next(), n);
       }
-      // Expect same items as we do not reflect modifications to iterator.
-      assertEquals(expecteds.next(), n);
+      assertFalse(expecteds.hasNext());
+      assertTrue(partial.contains(Numbers.Four));
+      if (!TestUtils.isJvm()) {
+        fail("ConcurrentModificationException expected");
+      }
+    } catch (ConcurrentModificationException expected) {
+      assertFalse(TestUtils.isJvm());
     }
-    assertFalse(expecteds.hasNext());
-    assertTrue(partial.contains(Numbers.Four));
   }
 
   // ***********************************************************************************************

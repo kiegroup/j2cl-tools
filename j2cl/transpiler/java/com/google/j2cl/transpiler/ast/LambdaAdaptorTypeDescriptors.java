@@ -166,7 +166,7 @@ public final class LambdaAdaptorTypeDescriptors {
 
     MethodDescriptor functionalInterfaceMethodDescriptor =
         functionalInterfaceTypeDescriptor.getSingleAbstractMethodDescriptor();
-    // TODO(rluble): Migrate to MethodDescriptor.tranform.
+    // TODO(rluble): Migrate to MethodDescriptor.transform.
     return MethodDescriptor.Builder.from(functionalInterfaceMethodDescriptor)
         .setNative(false)
         // This is the declaration.
@@ -281,6 +281,8 @@ public final class LambdaAdaptorTypeDescriptors {
                 .build())
         .setNative(false)
         .build()
+        // Remove the type parameters in the functional method since they are not allowed in
+        // @JsFunction interfaces.
         .withoutTypeParameters();
   }
 

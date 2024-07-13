@@ -22,11 +22,15 @@ import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.KT_NA
 import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.KT_OBJECTIVE_C_NAME;
 import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.KT_OUT_ANNOTATION_NAME;
 import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.KT_PROPERTY_ANNOTATION_NAME;
+import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.KT_THROWS_ANNOTATION_NAME;
 import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.SUPPRESS_WARNINGS_ANNOTATION_NAME;
 import static com.google.j2cl.transpiler.frontend.jdt.JdtAnnotationUtils.findAnnotationBindingByName;
+import static com.google.j2cl.transpiler.frontend.jdt.JdtAnnotationUtils.getAnnotationBinding;
 import static com.google.j2cl.transpiler.frontend.jdt.JdtAnnotationUtils.getStringAttribute;
 
 import org.eclipse.jdt.core.dom.IAnnotationBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
 
 /** Utility methods to get information about Kotlin Interop annotations. */
 public class KtInteropAnnotationUtils {
@@ -50,8 +54,18 @@ public class KtInteropAnnotationUtils {
     return findAnnotationBindingByName(annotationBindings, KT_DISABLED_ANNOTATION_NAME);
   }
 
+  /** The namespace specified on a package, type, method or field. */
+  public static String getKtObjectiveCName(ITypeBinding typeBinding) {
+    return getKtObjectiveCName(getKtObjectiveCNameAnnotation(typeBinding.getAnnotations()));
+  }
+
   public static String getKtObjectiveCName(IAnnotationBinding annotationBinding) {
     return getStringAttribute(annotationBinding, "value");
+  }
+
+  public static String getKtObjectiveCName(PackageDeclaration packageDeclaration) {
+    return getKtObjectiveCName(
+        getAnnotationBinding(packageDeclaration, KtInteropAnnotationUtils::isKtObjectiveCName));
   }
 
   public static boolean isKtObjectiveCName(IAnnotationBinding annotationBinding) {
@@ -69,6 +83,10 @@ public class KtInteropAnnotationUtils {
 
   public static IAnnotationBinding getKtOutAnnotation(IAnnotationBinding[] annotationBindings) {
     return findAnnotationBindingByName(annotationBindings, KT_OUT_ANNOTATION_NAME);
+  }
+
+  public static IAnnotationBinding getKtThrowsAnnotation(IAnnotationBinding[] annotationBindings) {
+    return findAnnotationBindingByName(annotationBindings, KT_THROWS_ANNOTATION_NAME);
   }
 
   public static IAnnotationBinding getSuppressWarningsAnnotation(

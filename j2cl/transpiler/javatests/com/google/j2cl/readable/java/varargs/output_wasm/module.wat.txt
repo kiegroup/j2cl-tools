@@ -1,202 +1,203 @@
- ;;; Code for varargs.Varargs.FunctionalInterface [type definition]
- (type $varargs.Varargs.FunctionalInterface.vtable (struct_subtype
-  (field $m_apply__arrayOf_java_lang_String__void (ref $function.m_apply__arrayOf_java_lang_String__void))
-  data)
- )
+;;; Code for varargs.Varargs.FunctionalInterface [type definition]
+(type $varargs.Varargs.FunctionalInterface.vtable (sub (struct
+ (field $m_apply__arrayOf_java_lang_String__void (ref $function.m_apply__arrayOf_java_lang_String__void))
+ ))
+)
 
- ;;; Code for varargs.Varargs [type definition]
- (type $varargs.Varargs (struct_subtype
-  (field $vtable (ref $varargs.Varargs.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  (field $f_args__varargs_Varargs_ (mut (ref null $javaemul.internal.WasmArray.OfObject)))
-  $java.lang.Object)
- )
- (type $varargs.Varargs.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_test__int__arrayOf_java_lang_Object__void (ref $function.m_test__int__arrayOf_java_lang_Object__void))
-  (field $m_testCloneable__arrayOf_java_lang_Cloneable__void (ref $function.m_testCloneable__arrayOf_java_lang_Cloneable__void))
-  (field $m_testSerializable__arrayOf_java_io_Serializable__void (ref $function.m_testSerializable__arrayOf_java_io_Serializable__void))
-  (field $m_testAssignment__arrayOf_java_lang_Object__void (ref $function.m_testAssignment__arrayOf_java_lang_Object__void))
-  (field $m_testLambda__varargs_Varargs_FunctionalInterface__void (ref $function.m_testLambda__varargs_Varargs_FunctionalInterface__void))
-  (field $m_main__void (ref $function.m_main__void))
-  $java.lang.Object.vtable)
- )
+;;; Code for varargs.Varargs [type definition]
+(type $varargs.Varargs.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_main__void (ref $function.m_main__void))
+ (field $m_testAssignment__arrayOf_java_lang_Object__void (ref $function.m_testAssignment__arrayOf_java_lang_Object__void))
+ (field $m_testCloneable__arrayOf_java_lang_Cloneable__void (ref $function.m_testCloneable__arrayOf_java_lang_Cloneable__void))
+ (field $m_testLambda__varargs_Varargs_FunctionalInterface__void (ref $function.m_testLambda__varargs_Varargs_FunctionalInterface__void))
+ (field $m_testOverloaded__java_lang_Object__void (ref $function.m_testOverloaded__java_lang_Object__void))
+ (field $m_testOverloaded__java_lang_String__arrayOf_java_lang_Object__void (ref $function.m_testOverloaded__java_lang_String__arrayOf_java_lang_Object__void))
+ (field $m_testOverloaded__long__arrayOf_long__void (ref $function.m_testOverloaded__long__arrayOf_long__void))
+ (field $m_testOverloaded__long__void (ref $function.m_testOverloaded__long__void))
+ (field $m_testSerializable__arrayOf_java_io_Serializable__void (ref $function.m_testSerializable__arrayOf_java_io_Serializable__void))
+ (field $m_test__int__arrayOf_java_lang_Object__void (ref $function.m_test__int__arrayOf_java_lang_Object__void))
+ ))
+)
+(type $varargs.Varargs (sub $java.lang.Object (struct
+ (field $vtable (ref $varargs.Varargs.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $args@varargs.Varargs (mut (ref null $javaemul.internal.WasmArray.OfObject)))
+ ))
+)
 
- ;;; Code for varargs.Varargs.$LambdaImplementor$1 [type definition]
- (type $varargs.Varargs.$LambdaImplementor$1 (struct_subtype
-  (field $vtable (ref $varargs.Varargs.$LambdaImplementor$1.vtable))
-  (field $itable (ref $varargs.Varargs.$LambdaImplementor$1.itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  (field $$outer_this__varargs_Varargs_$LambdaImplementor$1 (ref null $varargs.Varargs))
-  $java.lang.Object)
- )
- (type $varargs.Varargs.$LambdaImplementor$1.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_apply__arrayOf_java_lang_String__void (ref $function.m_apply__arrayOf_java_lang_String__void))
-  $java.lang.Object.vtable)
- )
- (type $varargs.Varargs.$LambdaImplementor$1.itable (struct_subtype
- (field $slot0 (ref $varargs.Varargs.FunctionalInterface.vtable))
- (field $slot1 (ref null struct))
- (field $slot2 (ref null struct))
- (field $slot3 (ref null struct))
- (field $slot4 (ref null struct))
- (field $slot5 (ref null struct))
- (field $slot6 (ref null struct))
-  $itable))
+;;; Code for varargs.Varargs.$LambdaImplementor$1 [type definition]
+(type $varargs.Varargs.$LambdaImplementor$1.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_apply__arrayOf_java_lang_String__void (ref $function.m_apply__arrayOf_java_lang_String__void))
+ ))
+)
+(type $varargs.Varargs.$LambdaImplementor$1 (sub $java.lang.Object (struct
+ (field $vtable (ref $varargs.Varargs.$LambdaImplementor$1.vtable))
+ (field $itable (ref $varargs.Varargs.$LambdaImplementor$1.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $$outer_this@varargs.Varargs.$LambdaImplementor$1 (mut (ref null $varargs.Varargs)))
+ ))
+)
 
- ;;; Code for varargs.Child [type definition]
- (type $varargs.Child (struct_subtype
-  (field $vtable (ref $varargs.Child.vtable))
-  (field $itable (ref $itable))
-  (field $f_$systemIdentityHashCode__java_lang_Object (mut i32))
-  (field $f_args__varargs_Varargs_ (mut (ref null $javaemul.internal.WasmArray.OfObject)))
-  $varargs.Varargs)
- )
- (type $varargs.Child.vtable (struct_subtype
-  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
-  (field $m_hashCode__int (ref $function.m_hashCode__int))
-  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
-  (field $m_getClass__java_lang_Class (ref $function.m_getClass__java_lang_Class))
-  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
-  (field $m_test__int__arrayOf_java_lang_Object__void (ref $function.m_test__int__arrayOf_java_lang_Object__void))
-  (field $m_testCloneable__arrayOf_java_lang_Cloneable__void (ref $function.m_testCloneable__arrayOf_java_lang_Cloneable__void))
-  (field $m_testSerializable__arrayOf_java_io_Serializable__void (ref $function.m_testSerializable__arrayOf_java_io_Serializable__void))
-  (field $m_testAssignment__arrayOf_java_lang_Object__void (ref $function.m_testAssignment__arrayOf_java_lang_Object__void))
-  (field $m_testLambda__varargs_Varargs_FunctionalInterface__void (ref $function.m_testLambda__varargs_Varargs_FunctionalInterface__void))
-  (field $m_main__void (ref $function.m_main__void))
-  $varargs.Varargs.vtable)
- )
+;;; Code for varargs.Child [type definition]
+(type $varargs.Child.vtable (sub $varargs.Varargs.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_main__void (ref $function.m_main__void))
+ (field $m_testAssignment__arrayOf_java_lang_Object__void (ref $function.m_testAssignment__arrayOf_java_lang_Object__void))
+ (field $m_testCloneable__arrayOf_java_lang_Cloneable__void (ref $function.m_testCloneable__arrayOf_java_lang_Cloneable__void))
+ (field $m_testLambda__varargs_Varargs_FunctionalInterface__void (ref $function.m_testLambda__varargs_Varargs_FunctionalInterface__void))
+ (field $m_testOverloaded__java_lang_Object__void (ref $function.m_testOverloaded__java_lang_Object__void))
+ (field $m_testOverloaded__java_lang_String__arrayOf_java_lang_Object__void (ref $function.m_testOverloaded__java_lang_String__arrayOf_java_lang_Object__void))
+ (field $m_testOverloaded__long__arrayOf_long__void (ref $function.m_testOverloaded__long__arrayOf_long__void))
+ (field $m_testOverloaded__long__void (ref $function.m_testOverloaded__long__void))
+ (field $m_testSerializable__arrayOf_java_io_Serializable__void (ref $function.m_testSerializable__arrayOf_java_io_Serializable__void))
+ (field $m_test__int__arrayOf_java_lang_Object__void (ref $function.m_test__int__arrayOf_java_lang_Object__void))
+ ))
+)
+(type $varargs.Child (sub $varargs.Varargs (struct
+ (field $vtable (ref $varargs.Child.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $args@varargs.Varargs (mut (ref null $javaemul.internal.WasmArray.OfObject)))
+ ))
+)
+
+;;; Code for varargs.Varargs.FunctionalInterface [imports]
+
+;;; Code for varargs.Varargs [imports]
+
+;;; Code for varargs.Varargs.$LambdaImplementor$1 [imports]
+
+;;; Code for varargs.Child [imports]
+
+;;; Code for varargs.Varargs [static fields]
+(global $$class-initialized@varargs.Varargs (mut i32)
+ (i32.const 0)
+)
+(global $$class@varargs.Varargs (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for varargs.Child [static fields]
+(global $$class-initialized@varargs.Child (mut i32)
+ (i32.const 0)
+)
+(global $$class@varargs.Child (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for varargs.Varargs.$LambdaImplementor$1 [static fields]
+(global $$class-initialized@varargs.Varargs.$LambdaImplementor$1 (mut i32)
+ (i32.const 0)
+)
+(global $$class@varargs.Varargs.$LambdaImplementor$1 (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for varargs.Varargs.FunctionalInterface [static fields]
+(global $$class-initialized@varargs.Varargs.FunctionalInterface (mut i32)
+ (i32.const 0)
+)
+(global $$class@varargs.Varargs.FunctionalInterface (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
 
 ;;; Code for varargs.Varargs [vtable.init]
 (global $varargs.Varargs.vtable (ref $varargs.Varargs.vtable)
  (struct.new $varargs.Varargs.vtable
+  (ref.func $$getClassImpl__java_lang_Class@varargs.Varargs)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@varargs.Varargs)
-  (ref.func $m_test__int__arrayOf_java_lang_Object__void@varargs.Varargs)
-  (ref.func $m_testCloneable__arrayOf_java_lang_Cloneable__void@varargs.Varargs)
-  (ref.func $m_testSerializable__arrayOf_java_io_Serializable__void@varargs.Varargs)
-  (ref.func $m_testAssignment__arrayOf_java_lang_Object__void@varargs.Varargs)
-  (ref.func $m_testLambda__varargs_Varargs_FunctionalInterface__void@varargs.Varargs)
   (ref.func $m_main__void@varargs.Varargs)
+  (ref.func $m_testAssignment__arrayOf_java_lang_Object__void@varargs.Varargs)
+  (ref.func $m_testCloneable__arrayOf_java_lang_Cloneable__void@varargs.Varargs)
+  (ref.func $m_testLambda__varargs_Varargs_FunctionalInterface__void@varargs.Varargs)
+  (ref.func $m_testOverloaded__java_lang_Object__void@varargs.Varargs)
+  (ref.func $m_testOverloaded__java_lang_String__arrayOf_java_lang_Object__void@varargs.Varargs)
+  (ref.func $m_testOverloaded__long__arrayOf_long__void@varargs.Varargs)
+  (ref.func $m_testOverloaded__long__void@varargs.Varargs)
+  (ref.func $m_testSerializable__arrayOf_java_io_Serializable__void@varargs.Varargs)
+  (ref.func $m_test__int__arrayOf_java_lang_Object__void@varargs.Varargs)
  )
 )
 
 ;;; Code for varargs.Child [vtable.init]
 (global $varargs.Child.vtable (ref $varargs.Child.vtable)
  (struct.new $varargs.Child.vtable
+  (ref.func $$getClassImpl__java_lang_Class@varargs.Child)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@varargs.Child)
-  (ref.func $m_test__int__arrayOf_java_lang_Object__void@varargs.Varargs)
-  (ref.func $m_testCloneable__arrayOf_java_lang_Cloneable__void@varargs.Varargs)
-  (ref.func $m_testSerializable__arrayOf_java_io_Serializable__void@varargs.Varargs)
-  (ref.func $m_testAssignment__arrayOf_java_lang_Object__void@varargs.Varargs)
-  (ref.func $m_testLambda__varargs_Varargs_FunctionalInterface__void@varargs.Varargs)
   (ref.func $m_main__void@varargs.Varargs)
+  (ref.func $m_testAssignment__arrayOf_java_lang_Object__void@varargs.Varargs)
+  (ref.func $m_testCloneable__arrayOf_java_lang_Cloneable__void@varargs.Varargs)
+  (ref.func $m_testLambda__varargs_Varargs_FunctionalInterface__void@varargs.Varargs)
+  (ref.func $m_testOverloaded__java_lang_Object__void@varargs.Varargs)
+  (ref.func $m_testOverloaded__java_lang_String__arrayOf_java_lang_Object__void@varargs.Varargs)
+  (ref.func $m_testOverloaded__long__arrayOf_long__void@varargs.Varargs)
+  (ref.func $m_testOverloaded__long__void@varargs.Varargs)
+  (ref.func $m_testSerializable__arrayOf_java_io_Serializable__void@varargs.Varargs)
+  (ref.func $m_test__int__arrayOf_java_lang_Object__void@varargs.Varargs)
  )
 )
 
 ;;; Code for varargs.Varargs.$LambdaImplementor$1 [vtable.init]
 (global $varargs.Varargs.$LambdaImplementor$1.vtable (ref $varargs.Varargs.$LambdaImplementor$1.vtable)
  (struct.new $varargs.Varargs.$LambdaImplementor$1.vtable
+  (ref.func $$getClassImpl__java_lang_Class@varargs.Varargs.$LambdaImplementor$1)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
-  (ref.func $m_getClass__java_lang_Class@java.lang.Object)
-  (ref.func $$getClassImpl__java_lang_Class@varargs.Varargs.$LambdaImplementor$1)
+  (ref.func $m_apply__arrayOf_java_lang_String__void@varargs.Varargs.$LambdaImplementor$1)
+ )
+)
+(global $varargs.Varargs.FunctionalInterface.vtable@$varargs.Varargs.$LambdaImplementor$1 (ref $varargs.Varargs.FunctionalInterface.vtable)
+ (struct.new $varargs.Varargs.FunctionalInterface.vtable
   (ref.func $m_apply__arrayOf_java_lang_String__void@varargs.Varargs.$LambdaImplementor$1)
  )
 )
 
-;;; Code for varargs.Varargs.$LambdaImplementor$1 [itable.init]
-(global $varargs.Varargs.$LambdaImplementor$1.itable (ref $varargs.Varargs.$LambdaImplementor$1.itable) (struct.new $varargs.Varargs.$LambdaImplementor$1.itable
- (struct.new $varargs.Varargs.FunctionalInterface.vtable
-  (ref.func $m_apply__arrayOf_java_lang_String__void@varargs.Varargs.$LambdaImplementor$1)
- )
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
-  (ref.null struct)
- ))
-
-;;; Code for varargs.Varargs [static fields]
-(global $f_$initialized__varargs_Varargs (mut i32) (i32.const 0))
-(global $f_$class__varargs_Varargs (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|varargs.Varargs|__varargs_Varargs (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for varargs.Child [static fields]
-(global $f_$initialized__varargs_Child (mut i32) (i32.const 0))
-(global $f_$class__varargs_Child (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|varargs.Child|__varargs_Child (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for varargs.Varargs.$LambdaImplementor$1 [static fields]
-(global $f_$initialized__varargs_Varargs_$LambdaImplementor$1 (mut i32) (i32.const 0))
-(global $f_$class__varargs_Varargs_$LambdaImplementor$1 (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|varargs.Vara...|__varargs_Varargs_$LambdaImplementor$1 (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
-;;; Code for varargs.Varargs.FunctionalInterface [static fields]
-(global $f_$initialized__varargs_Varargs_FunctionalInterface (mut i32) (i32.const 0))
-(global $f_$class__varargs_Varargs_FunctionalInterface (mut (ref null $java.lang.Class)) (ref.null $java.lang.Class))
-(global $f_$string_|varargs.Vara...|__varargs_Varargs_FunctionalInterface (mut (ref null $java.lang.String)) (ref.null $java.lang.String))
-
 ;;; Code for varargs.Varargs.FunctionalInterface [methods]
 
 ;;; void FunctionalInterface.$clinit()
-(func $$clinit__void@varargs.Varargs.FunctionalInterface
+(func $$clinit__void_<once>_@varargs.Varargs.FunctionalInterface
  ;;@ varargs/Varargs.java:21:12
  (block
   ;;@ varargs/Varargs.java:21:12
-  (if (global.get $f_$initialized__varargs_Varargs_FunctionalInterface)
+  (if (global.get $$class-initialized@varargs.Varargs.FunctionalInterface)
    (then
     ;;@ varargs/Varargs.java:21:12
     (return )
    )
   )
   ;;@ varargs/Varargs.java:21:12
-  (global.set $f_$initialized__varargs_Varargs_FunctionalInterface (i32.const 1))
+  (global.set $$class-initialized@varargs.Varargs.FunctionalInterface (i32.const 1))
  )
 )
 
 ;;; Class<T> FunctionalInterface.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@varargs.Varargs.FunctionalInterface
+(func $$getClassMetadata__java_lang_Class_<once>_@varargs.Varargs.FunctionalInterface
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__varargs_Varargs_FunctionalInterface) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@varargs.Varargs.FunctionalInterface)))
    (then
-    (global.set $f_$class__varargs_Varargs_FunctionalInterface (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|varargs.Vara...|__java_lang_String (ref.func $$getString_|varargs.Vara...|__java_lang_String@varargs.Varargs.FunctionalInterface) )))
+    (return (global.get $$class@varargs.Varargs.FunctionalInterface))
    )
   )
-  (return (global.get $f_$class__varargs_Varargs_FunctionalInterface))
- )
-)
-
-;;; String FunctionalInterface.$getString_|varargs.Vara...|()
-(func $$getString_|varargs.Vara...|__java_lang_String@varargs.Varargs.FunctionalInterface
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|varargs.Vara...|__varargs_Varargs_FunctionalInterface) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|varargs.Vara...|__varargs_Varargs_FunctionalInterface (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "varargs.Varargs$FunctionalInterface")))
-   )
-  )
-  (return (global.get $f_$string_|varargs.Vara...|__varargs_Varargs_FunctionalInterface))
+  (global.set $$class@varargs.Varargs.FunctionalInterface (call $m_createForInterface__java_lang_String__java_lang_Class@java.lang.Class (call $$getString_|varargs.Vara...|__java_lang_String_<once>_@varargs.Varargs.FunctionalInterface )))
+  (return (global.get $$class@varargs.Varargs.FunctionalInterface))
  )
 )
 
@@ -209,6 +210,8 @@
  ;;@ varargs/Varargs.java:27:9
  (local $$instance (ref null $varargs.Varargs))
  (block
+  ;;@ varargs/Varargs.java:27:9
+  (call $$clinit__void_<once>_@varargs.Varargs )
   ;;@ varargs/Varargs.java:27:9
   (local.set $$instance (struct.new $varargs.Varargs (ref.as_non_null (global.get $varargs.Varargs.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (ref.null $javaemul.internal.WasmArray.OfObject)))
   ;;@ varargs/Varargs.java:27:9
@@ -225,14 +228,24 @@
  ;;@ varargs/Varargs.java:27:9
  (block
   ;;@ varargs/Varargs.java:27:30
-  (call $$clinit__void@varargs.Varargs )
-  ;;@ varargs/Varargs.java:27:30
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; Varargs Varargs.$create()
 (func $$create__@varargs.Varargs
+ (result (ref null $varargs.Varargs))
+ ;;@ varargs/Varargs.java:29:9
+ (block
+  ;;@ varargs/Varargs.java:29:9
+  (call $$clinit__void_<once>_@varargs.Varargs )
+  ;;@ varargs/Varargs.java:29:9
+  (return (call $$create_$private__@varargs.Varargs ))
+ )
+)
+
+;;; Varargs Varargs.$create_$private()
+(func $$create_$private__@varargs.Varargs
  (result (ref null $varargs.Varargs))
  ;;@ varargs/Varargs.java:29:9
  (local $$instance (ref null $varargs.Varargs))
@@ -251,10 +264,8 @@
  (param $this (ref null $varargs.Varargs))
  ;;@ varargs/Varargs.java:29:9
  (block
-  ;;@ varargs/Varargs.java:29:19
-  (call $$clinit__void@varargs.Varargs )
   ;;@ varargs/Varargs.java:30:4
-  (call $$ctor__arrayOf_int__void_$p_varargs_Varargs@varargs.Varargs (ref.as_non_null (local.get $this))(call $$create__arrayOf_int@javaemul.internal.WasmArray.OfInt (array.new_data $int.array $arrayliteral@varargs.Varargs-1 (i32.const 0) (i32.const 1))))
+  (call $$ctor__arrayOf_int__void_$p_varargs_Varargs@varargs.Varargs (ref.as_non_null (local.get $this))(call $m_newWithLiteral__arrayOf_int__javaemul_internal_WasmArray_OfInt@javaemul.internal.WasmArray.OfInt (array.new_data $int.array $arrayliteral@varargs.Varargs-1 (i32.const 0) (i32.const 1))))
  )
 )
 
@@ -266,7 +277,7 @@
  (param $args (ref null $javaemul.internal.WasmArray.OfObject))
  ;;@ varargs/Varargs.java:33:14
  (local $this (ref null $varargs.Varargs))
- (local.set $this (ref.cast_static $varargs.Varargs (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $varargs.Varargs) (local.get $this.untyped)))
  (block
  )
 )
@@ -279,7 +290,7 @@
  (param $args (ref null $javaemul.internal.WasmArray.OfObject))
  ;;@ varargs/Varargs.java:35:14
  (local $this (ref null $varargs.Varargs))
- (local.set $this (ref.cast_static $varargs.Varargs (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $varargs.Varargs) (local.get $this.untyped)))
  (block
  )
 )
@@ -292,7 +303,7 @@
  (param $args (ref null $javaemul.internal.WasmArray.OfObject))
  ;;@ varargs/Varargs.java:37:14
  (local $this (ref null $varargs.Varargs))
- (local.set $this (ref.cast_static $varargs.Varargs (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $varargs.Varargs) (local.get $this.untyped)))
  (block
  )
 )
@@ -305,10 +316,10 @@
  (param $args (ref null $javaemul.internal.WasmArray.OfObject))
  ;;@ varargs/Varargs.java:39:14
  (local $this (ref null $varargs.Varargs))
- (local.set $this (ref.cast_static $varargs.Varargs (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $varargs.Varargs) (local.get $this.untyped)))
  (block
   ;;@ varargs/Varargs.java:40:4
-  (struct.set $varargs.Varargs $f_args__varargs_Varargs_ (local.get $this) (local.get $args))
+  (struct.set $varargs.Varargs $args@varargs.Varargs (local.get $this) (local.get $args))
  )
 )
 (elem declare func $m_testAssignment__arrayOf_java_lang_Object__void@varargs.Varargs)
@@ -320,94 +331,203 @@
  (param $functionalInterface (ref null $java.lang.Object))
  ;;@ varargs/Varargs.java:43:14
  (local $this (ref null $varargs.Varargs))
- (local.set $this (ref.cast_static $varargs.Varargs (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $varargs.Varargs) (local.get $this.untyped)))
  (block
  )
 )
 (elem declare func $m_testLambda__varargs_Varargs_FunctionalInterface__void@varargs.Varargs)
 
-;;; void Varargs.fun(T... elements)
-(func $m_fun__arrayOf_java_lang_Object__void@varargs.Varargs
- (param $elements (ref null $javaemul.internal.WasmArray.OfObject))
- ;;@ varargs/Varargs.java:45:25
+;;; void Varargs.fun(T... arg0)
+(func $m_fun__arrayOf_java_lang_Number__void@varargs.Varargs
+ (param $arg0 (ref null $javaemul.internal.WasmArray.OfObject))
+ ;;@ varargs/Varargs.java:45:40
  (block
-  ;;@ varargs/Varargs.java:45:44
-  (call $$clinit__void@varargs.Varargs )
+  ;;@ varargs/Varargs.java:45:40
+  (call $$clinit__void_<once>_@varargs.Varargs )
+  ;;@ varargs/Varargs.java:45:40
+  (call $m_fun_$private__arrayOf_java_lang_Number__void@varargs.Varargs (local.get $arg0))
+ )
+)
+
+;;; void Varargs.fun_$private(T... elements)
+(func $m_fun_$private__arrayOf_java_lang_Number__void@varargs.Varargs
+ (param $elements (ref null $javaemul.internal.WasmArray.OfObject))
+ ;;@ varargs/Varargs.java:45:40
+ (block
  )
 )
 
 ;;; void Varargs.bar(E a, E b)
-(func $m_bar__java_lang_Object__java_lang_Object__void@varargs.Varargs
- (param $a (ref null $java.lang.Object))
- (param $b (ref null $java.lang.Object))
- ;;@ varargs/Varargs.java:47:25
+(func $m_bar__java_lang_Number__java_lang_Number__void@varargs.Varargs
+ (param $a (ref null $java.lang.Number))
+ (param $b (ref null $java.lang.Number))
+ ;;@ varargs/Varargs.java:47:40
  (block
-  ;;@ varargs/Varargs.java:47:39
-  (call $$clinit__void@varargs.Varargs )
+  ;;@ varargs/Varargs.java:47:54
+  (call $$clinit__void_<once>_@varargs.Varargs )
   ;;@ varargs/Varargs.java:48:4
-  (call $m_fun__arrayOf_java_lang_Object__void@varargs.Varargs (call $$create__arrayOf_java_lang_Object@javaemul.internal.WasmArray.OfObject (array.init_static $java.lang.Object.array (local.get $a)(local.get $b))))
+  (call $m_fun_$private__arrayOf_java_lang_Number__void@varargs.Varargs (call $m_newWithLiteral__arrayOf_java_lang_Object__javaemul_internal_WasmArray_OfObject@javaemul.internal.WasmArray.OfObject (array.new_fixed $java.lang.Object.array 2 (local.get $a)(local.get $b))))
  )
 )
+
+;;; T Varargs.passthrough(T arg0)
+(func $m_passthrough__java_lang_Object__java_lang_Object@varargs.Varargs
+ (param $arg0 (ref null $java.lang.Object))
+ (result (ref null $java.lang.Object))
+ ;;@ varargs/Varargs.java:51:22
+ (block
+  ;;@ varargs/Varargs.java:51:22
+  (call $$clinit__void_<once>_@varargs.Varargs )
+  ;;@ varargs/Varargs.java:51:22
+  (return (call $m_passthrough_$private__java_lang_Object__java_lang_Object@varargs.Varargs (local.get $arg0)))
+ )
+)
+
+;;; T Varargs.passthrough_$private(T o)
+(func $m_passthrough_$private__java_lang_Object__java_lang_Object@varargs.Varargs
+ (param $o (ref null $java.lang.Object))
+ (result (ref null $java.lang.Object))
+ ;;@ varargs/Varargs.java:51:22
+ (block
+  ;;@ varargs/Varargs.java:52:4
+  (return (local.get $o))
+ )
+)
+
+;;; void Varargs.testOverloaded(Object o)
+(func $m_testOverloaded__java_lang_Object__void@varargs.Varargs
+ (type $function.m_testOverloaded__java_lang_Object__void)
+ (param $this.untyped (ref $java.lang.Object))
+ (param $o (ref null $java.lang.Object))
+ ;;@ varargs/Varargs.java:55:14
+ (local $this (ref null $varargs.Varargs))
+ (local.set $this (ref.cast (ref $varargs.Varargs) (local.get $this.untyped)))
+ (block
+ )
+)
+(elem declare func $m_testOverloaded__java_lang_Object__void@varargs.Varargs)
+
+;;; void Varargs.testOverloaded(String o, Object... rest)
+(func $m_testOverloaded__java_lang_String__arrayOf_java_lang_Object__void@varargs.Varargs
+ (type $function.m_testOverloaded__java_lang_String__arrayOf_java_lang_Object__void)
+ (param $this.untyped (ref $java.lang.Object))
+ (param $o (ref null $java.lang.String))
+ (param $rest (ref null $javaemul.internal.WasmArray.OfObject))
+ ;;@ varargs/Varargs.java:57:14
+ (local $this (ref null $varargs.Varargs))
+ (local.set $this (ref.cast (ref $varargs.Varargs) (local.get $this.untyped)))
+ (block
+ )
+)
+(elem declare func $m_testOverloaded__java_lang_String__arrayOf_java_lang_Object__void@varargs.Varargs)
+
+;;; void Varargs.testOverloaded(long l)
+(func $m_testOverloaded__long__void@varargs.Varargs
+ (type $function.m_testOverloaded__long__void)
+ (param $this.untyped (ref $java.lang.Object))
+ (param $l i64)
+ ;;@ varargs/Varargs.java:59:14
+ (local $this (ref null $varargs.Varargs))
+ (local.set $this (ref.cast (ref $varargs.Varargs) (local.get $this.untyped)))
+ (block
+ )
+)
+(elem declare func $m_testOverloaded__long__void@varargs.Varargs)
+
+;;; void Varargs.testOverloaded(long l, long... rest)
+(func $m_testOverloaded__long__arrayOf_long__void@varargs.Varargs
+ (type $function.m_testOverloaded__long__arrayOf_long__void)
+ (param $this.untyped (ref $java.lang.Object))
+ (param $l i64)
+ (param $rest (ref null $javaemul.internal.WasmArray.OfLong))
+ ;;@ varargs/Varargs.java:61:14
+ (local $this (ref null $varargs.Varargs))
+ (local.set $this (ref.cast (ref $varargs.Varargs) (local.get $this.untyped)))
+ (block
+ )
+)
+(elem declare func $m_testOverloaded__long__arrayOf_long__void@varargs.Varargs)
 
 ;;; void Varargs.main()
 (func $m_main__void@varargs.Varargs
  (type $function.m_main__void)
  (param $this.untyped (ref $java.lang.Object))
- ;;@ varargs/Varargs.java:51:14
+ ;;@ varargs/Varargs.java:63:14
  (local $v (ref null $varargs.Varargs))
  (local $this (ref null $varargs.Varargs))
- (local.set $this (ref.cast_static $varargs.Varargs (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $varargs.Varargs) (local.get $this.untyped)))
  (block
-  ;;@ varargs/Varargs.java:52:4
-  (local.set $v (call $$create__@varargs.Varargs ))
-  ;;@ varargs/Varargs.java:53:4
-  (call_ref $function.m_test__int__arrayOf_java_lang_Object__void (ref.as_non_null (local.get $v))(i32.const 1)(call $$create__arrayOf_java_lang_Object@javaemul.internal.WasmArray.OfObject (array.init_static $java.lang.Object.array ))(struct.get $varargs.Varargs.vtable $m_test__int__arrayOf_java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
-  ;;@ varargs/Varargs.java:54:4
-  (call_ref $function.m_test__int__arrayOf_java_lang_Object__void (ref.as_non_null (local.get $v))(i32.const 1)(call $$create__arrayOf_java_lang_Object@javaemul.internal.WasmArray.OfObject (array.init_static $java.lang.Object.array (call $$create__@java.lang.Object )))(struct.get $varargs.Varargs.vtable $m_test__int__arrayOf_java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
-  ;;@ varargs/Varargs.java:55:4
-  (call_ref $function.m_test__int__arrayOf_java_lang_Object__void (ref.as_non_null (local.get $v))(i32.const 1)(call $$create__arrayOf_java_lang_Object@javaemul.internal.WasmArray.OfObject (array.init_static $java.lang.Object.array (call $$create__@java.lang.Object )))(struct.get $varargs.Varargs.vtable $m_test__int__arrayOf_java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
-  ;;@ varargs/Varargs.java:56:4
-  (call_ref $function.m_test__int__arrayOf_java_lang_Object__void (ref.as_non_null (local.get $v))(i32.const 1)(call $$create__arrayOf_java_lang_Object@javaemul.internal.WasmArray.OfObject (array.init_static $java.lang.Object.array ))(struct.get $varargs.Varargs.vtable $m_test__int__arrayOf_java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
-  ;;@ varargs/Varargs.java:57:4
-  (call_ref $function.m_test__int__arrayOf_java_lang_Object__void (ref.as_non_null (local.get $v))(i32.const 1)(call $$create__arrayOf_java_lang_Object@javaemul.internal.WasmArray.OfObject (array.init_static $java.lang.Object.array ))(struct.get $varargs.Varargs.vtable $m_test__int__arrayOf_java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
-  ;;@ varargs/Varargs.java:58:4
-  (call_ref $function.m_testCloneable__arrayOf_java_lang_Cloneable__void (ref.as_non_null (local.get $v))(call $$create__arrayOf_java_lang_Object@javaemul.internal.WasmArray.OfObject (array.init_static $java.lang.Object.array ))(struct.get $varargs.Varargs.vtable $m_testCloneable__arrayOf_java_lang_Cloneable__void (struct.get $varargs.Varargs $vtable(local.get $v))))
-  ;;@ varargs/Varargs.java:59:4
-  (call_ref $function.m_testSerializable__arrayOf_java_io_Serializable__void (ref.as_non_null (local.get $v))(call $$create__arrayOf_java_lang_Object@javaemul.internal.WasmArray.OfObject (array.init_static $java.lang.Object.array ))(struct.get $varargs.Varargs.vtable $m_testSerializable__arrayOf_java_io_Serializable__void (struct.get $varargs.Varargs $vtable(local.get $v))))
-  ;;@ varargs/Varargs.java:60:4
+  ;;@ varargs/Varargs.java:64:4
+  (local.set $v (call $$create_$private__@varargs.Varargs ))
+  ;;@ varargs/Varargs.java:65:4
+  (call_ref $function.m_test__int__arrayOf_java_lang_Object__void (ref.as_non_null (local.get $v))(i32.const 1)(call $m_newWithLiteral__arrayOf_java_lang_Object__javaemul_internal_WasmArray_OfObject@javaemul.internal.WasmArray.OfObject (array.new_fixed $java.lang.Object.array 0 ))(struct.get $varargs.Varargs.vtable $m_test__int__arrayOf_java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:66:4
+  (call_ref $function.m_test__int__arrayOf_java_lang_Object__void (ref.as_non_null (local.get $v))(i32.const 1)(call $m_newWithLiteral__arrayOf_java_lang_Object__javaemul_internal_WasmArray_OfObject@javaemul.internal.WasmArray.OfObject (array.new_fixed $java.lang.Object.array 1 (call $$create__@java.lang.Object )))(struct.get $varargs.Varargs.vtable $m_test__int__arrayOf_java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:67:4
+  (call_ref $function.m_test__int__arrayOf_java_lang_Object__void (ref.as_non_null (local.get $v))(i32.const 1)(call $m_newWithLiteral__arrayOf_java_lang_Object__javaemul_internal_WasmArray_OfObject@javaemul.internal.WasmArray.OfObject (array.new_fixed $java.lang.Object.array 1 (call $$create__@java.lang.Object )))(struct.get $varargs.Varargs.vtable $m_test__int__arrayOf_java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:68:4
+  (call_ref $function.m_test__int__arrayOf_java_lang_Object__void (ref.as_non_null (local.get $v))(i32.const 1)(call $m_newWithLiteral__arrayOf_java_lang_Object__javaemul_internal_WasmArray_OfObject@javaemul.internal.WasmArray.OfObject (array.new_fixed $java.lang.Object.array 0 ))(struct.get $varargs.Varargs.vtable $m_test__int__arrayOf_java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:69:4
+  (call_ref $function.m_test__int__arrayOf_java_lang_Object__void (ref.as_non_null (local.get $v))(i32.const 1)(call $m_newWithLiteral__arrayOf_java_lang_Object__javaemul_internal_WasmArray_OfObject@javaemul.internal.WasmArray.OfObject (array.new_fixed $java.lang.Object.array 0 ))(struct.get $varargs.Varargs.vtable $m_test__int__arrayOf_java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:70:4
+  (call_ref $function.m_test__int__arrayOf_java_lang_Object__void (ref.as_non_null (local.get $v))(i32.const 1)(ref.cast (ref null $javaemul.internal.WasmArray.OfObject) (call $m_passthrough_$private__java_lang_Object__java_lang_Object@varargs.Varargs (call $m_newWithLiteral__arrayOf_java_lang_Object__javaemul_internal_WasmArray_OfObject@javaemul.internal.WasmArray.OfObject (array.new_fixed $java.lang.Object.array 1 (call $$getString_|a|__java_lang_String_<once>_@varargs.Varargs )))))(struct.get $varargs.Varargs.vtable $m_test__int__arrayOf_java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:71:4
+  (call_ref $function.m_test__int__arrayOf_java_lang_Object__void (ref.as_non_null (local.get $v))(i32.const 1)(ref.null $javaemul.internal.WasmArray.OfObject)(struct.get $varargs.Varargs.vtable $m_test__int__arrayOf_java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:72:4
+  (call_ref $function.m_testCloneable__arrayOf_java_lang_Cloneable__void (ref.as_non_null (local.get $v))(call $m_newWithLiteral__arrayOf_java_lang_Object__javaemul_internal_WasmArray_OfObject@javaemul.internal.WasmArray.OfObject (array.new_fixed $java.lang.Object.array 0 ))(struct.get $varargs.Varargs.vtable $m_testCloneable__arrayOf_java_lang_Cloneable__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:73:4
+  (call_ref $function.m_testSerializable__arrayOf_java_io_Serializable__void (ref.as_non_null (local.get $v))(call $m_newWithLiteral__arrayOf_java_lang_Object__javaemul_internal_WasmArray_OfObject@javaemul.internal.WasmArray.OfObject (array.new_fixed $java.lang.Object.array 0 ))(struct.get $varargs.Varargs.vtable $m_testSerializable__arrayOf_java_io_Serializable__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:74:4
   (call_ref $function.m_testLambda__varargs_Varargs_FunctionalInterface__void (ref.as_non_null (local.get $v))(call $$create__varargs_Varargs@varargs.Varargs.$LambdaImplementor$1 (local.get $this))(struct.get $varargs.Varargs.vtable $m_testLambda__varargs_Varargs_FunctionalInterface__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:77:4
+  (call_ref $function.m_testOverloaded__java_lang_Object__void (ref.as_non_null (local.get $v))(call $$getString_|foo|__java_lang_String_<once>_@varargs.Varargs )(struct.get $varargs.Varargs.vtable $m_testOverloaded__java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:79:4
+  (call_ref $function.m_testOverloaded__java_lang_String__arrayOf_java_lang_Object__void (ref.as_non_null (local.get $v))(call $$getString_|foo|__java_lang_String_<once>_@varargs.Varargs )(call $m_newWithLiteral__arrayOf_java_lang_Object__javaemul_internal_WasmArray_OfObject@javaemul.internal.WasmArray.OfObject (array.new_fixed $java.lang.Object.array 1 (call $$getString_|bar|__java_lang_String_<once>_@varargs.Varargs )))(struct.get $varargs.Varargs.vtable $m_testOverloaded__java_lang_String__arrayOf_java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:81:4
+  (call_ref $function.m_testOverloaded__java_lang_Object__void (ref.as_non_null (local.get $v))(call $$getString_|foo|__java_lang_String_<once>_@varargs.Varargs )(struct.get $varargs.Varargs.vtable $m_testOverloaded__java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:83:4
+  (call_ref $function.m_testOverloaded__long__void (ref.as_non_null (local.get $v))(i64.const 1)(struct.get $varargs.Varargs.vtable $m_testOverloaded__long__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:85:4
+  (call_ref $function.m_testOverloaded__java_lang_Object__void (ref.as_non_null (local.get $v))(call $m_valueOf__long__java_lang_Long@java.lang.Long (i64.const 1))(struct.get $varargs.Varargs.vtable $m_testOverloaded__java_lang_Object__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:87:4
+  (call_ref $function.m_testOverloaded__long__void (ref.as_non_null (local.get $v))(i64.const 1)(struct.get $varargs.Varargs.vtable $m_testOverloaded__long__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:89:4
+  (call_ref $function.m_testOverloaded__long__arrayOf_long__void (ref.as_non_null (local.get $v))(i64.const 1)(call $m_newWithLiteral__arrayOf_long__javaemul_internal_WasmArray_OfLong@javaemul.internal.WasmArray.OfLong (array.new_data $long.array $arrayliteral@varargs.Varargs-2 (i32.const 0) (i32.const 2)))(struct.get $varargs.Varargs.vtable $m_testOverloaded__long__arrayOf_long__void (struct.get $varargs.Varargs $vtable(local.get $v))))
+  ;;@ varargs/Varargs.java:91:4
+  (call_ref $function.m_testOverloaded__long__arrayOf_long__void (ref.as_non_null (local.get $v))(i64.const 1)(call $m_newWithLiteral__arrayOf_long__javaemul_internal_WasmArray_OfLong@javaemul.internal.WasmArray.OfLong (array.new_data $long.array $arrayliteral@varargs.Varargs-3 (i32.const 0) (i32.const 2)))(struct.get $varargs.Varargs.vtable $m_testOverloaded__long__arrayOf_long__void (struct.get $varargs.Varargs $vtable(local.get $v))))
  )
 )
 (elem declare func $m_main__void@varargs.Varargs)
 
 ;;; void Varargs.$clinit()
-(func $$clinit__void@varargs.Varargs
+(func $$clinit__void_<once>_@varargs.Varargs
  ;;@ varargs/Varargs.java:20:13
  (block
   ;;@ varargs/Varargs.java:20:13
-  (if (global.get $f_$initialized__varargs_Varargs)
+  (if (global.get $$class-initialized@varargs.Varargs)
    (then
     ;;@ varargs/Varargs.java:20:13
     (return )
    )
   )
   ;;@ varargs/Varargs.java:20:13
-  (global.set $f_$initialized__varargs_Varargs (i32.const 1))
+  (global.set $$class-initialized@varargs.Varargs (i32.const 1))
   ;;@ varargs/Varargs.java:20:13
-  (call $$clinit__void@java.lang.Object )
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> Varargs.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@varargs.Varargs
+(func $$getClassMetadata__java_lang_Class_<once>_@varargs.Varargs
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__varargs_Varargs) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@varargs.Varargs)))
    (then
-    (global.set $f_$class__varargs_Varargs (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|varargs.Varargs|__java_lang_String (ref.func $$getString_|varargs.Varargs|__java_lang_String@varargs.Varargs) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@varargs.Varargs))
    )
   )
-  (return (global.get $f_$class__varargs_Varargs))
+  (global.set $$class@varargs.Varargs (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|varargs.Varargs|__java_lang_String_<once>_@varargs.Varargs )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@varargs.Varargs))
  )
 )
 
@@ -417,25 +537,12 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $varargs.Varargs))
- (local.set $this (ref.cast_static $varargs.Varargs (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $varargs.Varargs) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@varargs.Varargs) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@varargs.Varargs ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@varargs.Varargs)
-
-;;; String Varargs.$getString_|varargs.Varargs|()
-(func $$getString_|varargs.Varargs|__java_lang_String@varargs.Varargs
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|varargs.Varargs|__varargs_Varargs) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|varargs.Varargs|__varargs_Varargs (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "varargs.Varargs")))
-   )
-  )
-  (return (global.get $f_$string_|varargs.Varargs|__varargs_Varargs))
- )
-)
 
 ;;; Code for varargs.Varargs.$LambdaImplementor$1 [methods]
 
@@ -443,14 +550,16 @@
 (func $$create__varargs_Varargs@varargs.Varargs.$LambdaImplementor$1
  (param $$outer_this (ref null $varargs.Varargs))
  (result (ref null $varargs.Varargs.$LambdaImplementor$1))
- ;;@ varargs/Varargs.java:60:17
+ ;;@ varargs/Varargs.java:74:17
  (local $$instance (ref null $varargs.Varargs.$LambdaImplementor$1))
  (block
-  ;;@ varargs/Varargs.java:60:17
-  (local.set $$instance (struct.new $varargs.Varargs.$LambdaImplementor$1 (ref.as_non_null (global.get $varargs.Varargs.$LambdaImplementor$1.vtable)) (ref.as_non_null (global.get $varargs.Varargs.$LambdaImplementor$1.itable)) (i32.const 0) (local.get $$outer_this)))
-  ;;@ varargs/Varargs.java:60:17
+  ;;@ varargs/Varargs.java:74:17
+  (call $$clinit__void_<once>_@varargs.Varargs.$LambdaImplementor$1 )
+  ;;@ varargs/Varargs.java:74:17
+  (local.set $$instance (struct.new $varargs.Varargs.$LambdaImplementor$1 (ref.as_non_null (global.get $varargs.Varargs.$LambdaImplementor$1.vtable)) (ref.as_non_null (global.get $varargs.Varargs.$LambdaImplementor$1.itable)) (i32.const 0) (ref.null $varargs.Varargs)))
+  ;;@ varargs/Varargs.java:74:17
   (call $$ctor__varargs_Varargs__void_$p_varargs_Varargs_$LambdaImplementor$1@varargs.Varargs.$LambdaImplementor$1 (ref.as_non_null (local.get $$instance))(local.get $$outer_this))
-  ;;@ varargs/Varargs.java:60:17
+  ;;@ varargs/Varargs.java:74:17
   (return (local.get $$instance))
  )
 )
@@ -459,11 +568,11 @@
 (func $$ctor__varargs_Varargs__void_$p_varargs_Varargs_$LambdaImplementor$1@varargs.Varargs.$LambdaImplementor$1
  (param $this (ref null $varargs.Varargs.$LambdaImplementor$1))
  (param $$outer_this (ref null $varargs.Varargs))
- ;;@ varargs/Varargs.java:60:17
+ ;;@ varargs/Varargs.java:74:17
  (block
-  ;;@ varargs/Varargs.java:60:17
-  (call $$clinit__void@varargs.Varargs.$LambdaImplementor$1 )
-  ;;@ varargs/Varargs.java:60:17
+  ;;@ varargs/Varargs.java:74:17
+  (struct.set $varargs.Varargs.$LambdaImplementor$1 $$outer_this@varargs.Varargs.$LambdaImplementor$1 (local.get $this) (local.get $$outer_this))
+  ;;@ varargs/Varargs.java:74:17
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -473,44 +582,45 @@
  (type $function.m_apply__arrayOf_java_lang_String__void)
  (param $this.untyped (ref $java.lang.Object))
  (param $it (ref null $javaemul.internal.WasmArray.OfObject))
- ;;@ varargs/Varargs.java:60:17
+ ;;@ varargs/Varargs.java:74:17
  (local $this (ref null $varargs.Varargs.$LambdaImplementor$1))
- (local.set $this (ref.cast_static $varargs.Varargs.$LambdaImplementor$1 (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $varargs.Varargs.$LambdaImplementor$1) (local.get $this.untyped)))
  (block
-  ;;@ varargs/Varargs.java:60:23
-  (struct.set $varargs.Varargs $f_args__varargs_Varargs_ (struct.get $varargs.Varargs.$LambdaImplementor$1 $$outer_this__varargs_Varargs_$LambdaImplementor$1 (local.get $this)) (local.get $it))
+  ;;@ varargs/Varargs.java:74:23
+  (struct.set $varargs.Varargs $args@varargs.Varargs (struct.get $varargs.Varargs.$LambdaImplementor$1 $$outer_this@varargs.Varargs.$LambdaImplementor$1 (local.get $this)) (local.get $it))
  )
 )
 (elem declare func $m_apply__arrayOf_java_lang_String__void@varargs.Varargs.$LambdaImplementor$1)
 
 ;;; void <anonymous> implements FunctionalInterface.$clinit()
-(func $$clinit__void@varargs.Varargs.$LambdaImplementor$1
- ;;@ varargs/Varargs.java:60:17
+(func $$clinit__void_<once>_@varargs.Varargs.$LambdaImplementor$1
+ ;;@ varargs/Varargs.java:74:17
  (block
-  ;;@ varargs/Varargs.java:60:17
-  (if (global.get $f_$initialized__varargs_Varargs_$LambdaImplementor$1)
+  ;;@ varargs/Varargs.java:74:17
+  (if (global.get $$class-initialized@varargs.Varargs.$LambdaImplementor$1)
    (then
-    ;;@ varargs/Varargs.java:60:17
+    ;;@ varargs/Varargs.java:74:17
     (return )
    )
   )
-  ;;@ varargs/Varargs.java:60:17
-  (global.set $f_$initialized__varargs_Varargs_$LambdaImplementor$1 (i32.const 1))
-  ;;@ varargs/Varargs.java:60:17
-  (call $$clinit__void@java.lang.Object )
+  ;;@ varargs/Varargs.java:74:17
+  (global.set $$class-initialized@varargs.Varargs.$LambdaImplementor$1 (i32.const 1))
+  ;;@ varargs/Varargs.java:74:17
+  (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
 ;;; Class<T> <anonymous> implements FunctionalInterface.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@varargs.Varargs.$LambdaImplementor$1
+(func $$getClassMetadata__java_lang_Class_<once>_@varargs.Varargs.$LambdaImplementor$1
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__varargs_Varargs_$LambdaImplementor$1) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@varargs.Varargs.$LambdaImplementor$1)))
    (then
-    (global.set $f_$class__varargs_Varargs_$LambdaImplementor$1 (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|varargs.Vara...|__java_lang_String (ref.func $$getString_|varargs.Vara...|__java_lang_String@varargs.Varargs.$LambdaImplementor$1) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@java.lang.Object) )))
+    (return (global.get $$class@varargs.Varargs.$LambdaImplementor$1))
    )
   )
-  (return (global.get $f_$class__varargs_Varargs_$LambdaImplementor$1))
+  (global.set $$class@varargs.Varargs.$LambdaImplementor$1 (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|varargs.Vara...|__java_lang_String_<once>_@varargs.Varargs.$LambdaImplementor$1 )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@varargs.Varargs.$LambdaImplementor$1))
  )
 )
 
@@ -520,39 +630,28 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $varargs.Varargs.$LambdaImplementor$1))
- (local.set $this (ref.cast_static $varargs.Varargs.$LambdaImplementor$1 (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $varargs.Varargs.$LambdaImplementor$1) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@varargs.Varargs.$LambdaImplementor$1) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@varargs.Varargs.$LambdaImplementor$1 ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@varargs.Varargs.$LambdaImplementor$1)
-
-;;; String <anonymous> implements FunctionalInterface.$getString_|varargs.Vara...|()
-(func $$getString_|varargs.Vara...|__java_lang_String@varargs.Varargs.$LambdaImplementor$1
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|varargs.Vara...|__varargs_Varargs_$LambdaImplementor$1) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|varargs.Vara...|__varargs_Varargs_$LambdaImplementor$1 (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "varargs.Varargs$$LambdaImplementor$1")))
-   )
-  )
-  (return (global.get $f_$string_|varargs.Vara...|__varargs_Varargs_$LambdaImplementor$1))
- )
-)
 
 ;;; Code for varargs.Child [methods]
 
 ;;; Child Child.$create()
 (func $$create__@varargs.Child
  (result (ref null $varargs.Child))
- ;;@ varargs/Varargs.java:65:9
+ ;;@ varargs/Varargs.java:96:9
  (local $$instance (ref null $varargs.Child))
  (block
-  ;;@ varargs/Varargs.java:65:9
+  ;;@ varargs/Varargs.java:96:9
+  (call $$clinit__void_<once>_@varargs.Child )
+  ;;@ varargs/Varargs.java:96:9
   (local.set $$instance (struct.new $varargs.Child (ref.as_non_null (global.get $varargs.Child.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (ref.null $javaemul.internal.WasmArray.OfObject)))
-  ;;@ varargs/Varargs.java:65:9
+  ;;@ varargs/Varargs.java:96:9
   (call $$ctor__void_$p_varargs_Child@varargs.Child (ref.as_non_null (local.get $$instance)))
-  ;;@ varargs/Varargs.java:65:9
+  ;;@ varargs/Varargs.java:96:9
   (return (local.get $$instance))
  )
 )
@@ -560,43 +659,42 @@
 ;;; void Child.$ctor()
 (func $$ctor__void_$p_varargs_Child@varargs.Child
  (param $this (ref null $varargs.Child))
- ;;@ varargs/Varargs.java:65:9
+ ;;@ varargs/Varargs.java:96:9
  (block
-  ;;@ varargs/Varargs.java:65:17
-  (call $$clinit__void@varargs.Child )
-  ;;@ varargs/Varargs.java:66:4
-  (call $$ctor__arrayOf_int__void_$p_varargs_Varargs@varargs.Varargs (ref.as_non_null (local.get $this))(call $$create__arrayOf_int@javaemul.internal.WasmArray.OfInt (array.new_data $int.array $arrayliteral@varargs.Child-1 (i32.const 0) (i32.const 1))))
+  ;;@ varargs/Varargs.java:97:4
+  (call $$ctor__arrayOf_int__void_$p_varargs_Varargs@varargs.Varargs (ref.as_non_null (local.get $this))(call $m_newWithLiteral__arrayOf_int__javaemul_internal_WasmArray_OfInt@javaemul.internal.WasmArray.OfInt (array.new_data $int.array $arrayliteral@varargs.Child-1 (i32.const 0) (i32.const 1))))
  )
 )
 
 ;;; void Child.$clinit()
-(func $$clinit__void@varargs.Child
- ;;@ varargs/Varargs.java:64:6
+(func $$clinit__void_<once>_@varargs.Child
+ ;;@ varargs/Varargs.java:95:6
  (block
-  ;;@ varargs/Varargs.java:64:6
-  (if (global.get $f_$initialized__varargs_Child)
+  ;;@ varargs/Varargs.java:95:6
+  (if (global.get $$class-initialized@varargs.Child)
    (then
-    ;;@ varargs/Varargs.java:64:6
+    ;;@ varargs/Varargs.java:95:6
     (return )
    )
   )
-  ;;@ varargs/Varargs.java:64:6
-  (global.set $f_$initialized__varargs_Child (i32.const 1))
-  ;;@ varargs/Varargs.java:64:6
-  (call $$clinit__void@varargs.Varargs )
+  ;;@ varargs/Varargs.java:95:6
+  (global.set $$class-initialized@varargs.Child (i32.const 1))
+  ;;@ varargs/Varargs.java:95:6
+  (call $$clinit__void_<once>_@varargs.Varargs )
  )
 )
 
 ;;; Class<T> Child.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class@varargs.Child
+(func $$getClassMetadata__java_lang_Class_<once>_@varargs.Child
  (result (ref null $java.lang.Class))
  (block
-  (if (ref.eq (global.get $f_$class__varargs_Child) (ref.null $java.lang.Class))
+  (if (i32.eqz (ref.is_null (global.get $$class@varargs.Child)))
    (then
-    (global.set $f_$class__varargs_Child (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $function.no.side.effects.$getString_|varargs.Child|__java_lang_String (ref.func $$getString_|varargs.Child|__java_lang_String@varargs.Child) )(call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@varargs.Varargs) )))
+    (return (global.get $$class@varargs.Child))
    )
   )
-  (return (global.get $f_$class__varargs_Child))
+  (global.set $$class@varargs.Child (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|varargs.Child|__java_lang_String_<once>_@varargs.Child )(call $$getClassMetadata__java_lang_Class_<once>_@varargs.Varargs )))
+  (return (global.get $$class@varargs.Child))
  )
 )
 
@@ -606,22 +704,9 @@
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
  (local $this (ref null $varargs.Child))
- (local.set $this (ref.cast_static $varargs.Child (local.get $this.untyped)))
+ (local.set $this (ref.cast (ref $varargs.Child) (local.get $this.untyped)))
  (block
-  (return (call $function.no.side.effects.$getClassMetadata__java_lang_Class (ref.func $$getClassMetadata__java_lang_Class@varargs.Child) ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@varargs.Child ))
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@varargs.Child)
-
-;;; String Child.$getString_|varargs.Child|()
-(func $$getString_|varargs.Child|__java_lang_String@varargs.Child
- (result (ref null $java.lang.String))
- (block
-  (if (ref.eq (global.get $f_$string_|varargs.Child|__varargs_Child) (ref.null $java.lang.String))
-   (then
-    (global.set $f_$string_|varargs.Child|__varargs_Child (call $m_fromJsString__java_lang_String_NativeString__java_lang_String@java.lang.String (string.const "varargs.Child")))
-   )
-  )
-  (return (global.get $f_$string_|varargs.Child|__varargs_Child))
- )
-)

@@ -42,11 +42,23 @@ public class Varargs {
 
   public void testLambda(FunctionalInterface functionalInterface) {}
 
-  public static <T> void fun(T... elements) {}
+  public static <T extends Number> void fun(T... elements) {}
 
-  public static <E> void bar(E a, E b) {
+  public static <E extends Number> void bar(E a, E b) {
     fun(a, b);
   }
+
+  public static <T> T passthrough(T o) {
+    return o;
+  }
+
+  public void testOverloaded(Object o) {}
+
+  public void testOverloaded(String o, Object... rest) {}
+
+  public void testOverloaded(long l) {}
+
+  public void testOverloaded(long l, long... rest) {}
 
   public void main() {
     Varargs v = new Varargs();
@@ -55,9 +67,28 @@ public class Varargs {
     v.test(1, new Object[] {new Object()});
     v.test(1, new Object[] {});
     v.test(1, new Object[][] {});
+    v.test(1, passthrough(new String[] {"a"}));
+    v.test(1, null);
     v.testCloneable(new Object[][] {});
     v.testSerializable(new Object[][] {});
     v.testLambda(it -> args = it);
+
+    // According to JLS §15.12.2 this should be calling testOverloaded(Object).
+    v.testOverloaded("foo");
+    // This will be calling testOverloaded(String, Object...)
+    v.testOverloaded("foo", "bar");
+    // The cast here doesn't change behavior:
+    v.testOverloaded((Object) "foo");
+    // This will be calling testOverloaded(long)
+    v.testOverloaded(1);
+    // This will be calling testOverloaded(Object)
+    v.testOverloaded(Long.valueOf(1L));
+    // This will be calling testOverloaded(long)
+    v.testOverloaded(1L);
+    // This will be calling testOverloaded(long, long...)
+    v.testOverloaded(1L, 2, 3L);
+    // This will be calling testOverloaded(long, long...)
+    v.testOverloaded(1, 2, 3L);
   }
 }
 

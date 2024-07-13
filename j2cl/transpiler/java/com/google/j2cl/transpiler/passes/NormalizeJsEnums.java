@@ -18,23 +18,21 @@ package com.google.j2cl.transpiler.passes;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.Iterables;
 import com.google.j2cl.common.InternalCompilerError;
 import com.google.j2cl.transpiler.ast.AbstractRewriter;
 import com.google.j2cl.transpiler.ast.AstUtils;
-import com.google.j2cl.transpiler.ast.CastExpression;
 import com.google.j2cl.transpiler.ast.Expression;
 import com.google.j2cl.transpiler.ast.Field;
 import com.google.j2cl.transpiler.ast.FieldAccess;
 import com.google.j2cl.transpiler.ast.FieldDescriptor;
 import com.google.j2cl.transpiler.ast.FieldDescriptor.FieldOrigin;
-import com.google.j2cl.transpiler.ast.JsDocCastExpression;
-import com.google.j2cl.transpiler.ast.MemberReference;
 import com.google.j2cl.transpiler.ast.Method;
 import com.google.j2cl.transpiler.ast.MethodCall;
 import com.google.j2cl.transpiler.ast.MethodDescriptor;
 import com.google.j2cl.transpiler.ast.NewInstance;
 import com.google.j2cl.transpiler.ast.Node;
-import com.google.j2cl.transpiler.ast.NumberLiteral;
+import com.google.j2cl.transpiler.ast.RuntimeMethods;
 import com.google.j2cl.transpiler.ast.Type;
 import com.google.j2cl.transpiler.ast.TypeDescriptor;
 import com.google.j2cl.transpiler.ast.TypeDescriptors;
@@ -106,18 +104,8 @@ public class NormalizeJsEnums extends NormalizationPass {
    * invocation.
    */
   private static Field createJsEnumConstant(Field field) {
-    TypeDescriptor enumValueType =
-        AstUtils.getJsEnumValueFieldType(
-            field.getDescriptor().getEnclosingTypeDescriptor().getTypeDeclaration());
-    FieldDescriptor closureEnumConstantFieldDescriptor =
-        FieldDescriptor.Builder.from(field.getDescriptor())
-            .setTypeDescriptor(enumValueType)
-            .setFinal(true)
-            .setCompileTimeConstant(true)
-            .setEnumConstant(true)
-            .build();
     return Field.Builder.from(field)
-        .setDescriptor(closureEnumConstantFieldDescriptor)
+        .setDescriptor(AstUtils.createJsEnumConstantFieldDescriptor(field.getDescriptor()))
         .setInitializer(getJsEnumConstantValue(field))
         .build();
   }
@@ -127,14 +115,15 @@ public class NormalizeJsEnums extends NormalizationPass {
     checkState(field.isEnumField());
 
     List<Expression> arguments = ((NewInstance) field.getInitializer()).getArguments();
-    if (field.getDescriptor().getEnclosingTypeDescriptor().getJsEnumInfo().hasCustomValue()) {
+    FieldDescriptor fieldDescriptor = field.getDescriptor();
+    if (fieldDescriptor.getEnclosingTypeDescriptor().getJsEnumInfo().hasCustomValue()) {
       checkState(arguments.size() == 3);
       Expression constantValue = arguments.get(2);
       checkState(constantValue.isCompileTimeConstant());
       return constantValue;
     } else {
       checkState(arguments.size() == 2);
-      return NumberLiteral.fromInt(field.getEnumOrdinal());
+      return fieldDescriptor.getEnumOrdinalValue();
     }
   }
 
@@ -160,14 +149,40 @@ public class NormalizeJsEnums extends NormalizationPass {
               // Not a java.lang.Enum method, nothing to do.
               return methodCall;
             }
-            TypeDescriptor qualifierTypeDescriptor = methodCall.getQualifier().getTypeDescriptor();
+            Expression qualifier = methodCall.getQualifier();
+            TypeDescriptor qualifierTypeDescriptor = qualifier.getTypeDescriptor();
             if (!qualifierTypeDescriptor.isJsEnum()) {
               // Not a JsEnum receiver, nothing to do.
               return methodCall;
             }
 
-            if (methodCall.getTarget().getSignature().equals("ordinal()")) {
-              return castJsEnumToValue(methodCall);
+            String targetSignature = methodDescriptor.getDeclarationDescriptor().getSignature();
+            if (targetSignature.equals("equals(java.lang.Object)")) {
+              Expression argument = Iterables.getOnlyElement(methodCall.getArguments());
+              if (canAvoidBoxing(qualifierTypeDescriptor, argument.getTypeDescriptor())) {
+                return RuntimeMethods.createEnumsEqualsMethodCall(qualifier, argument);
+              }
+            }
+
+            if (targetSignature.equals("compareTo(java.lang.Enum)")) {
+              Expression argument = Iterables.getOnlyElement(methodCall.getArguments());
+              if (canAvoidBoxing(qualifierTypeDescriptor, argument.getTypeDescriptor())) {
+                return RuntimeMethods.createEnumsCompareToMethodCall(qualifier, argument);
+              }
+
+              // Redirect the call to Comparable.compareTo(Object) since JsEnums don't actually
+              // extend Enum.
+              return MethodCall.Builder.from(methodCall)
+                  .setTarget(
+                      TypeDescriptors.get()
+                          .javaLangComparable
+                          .getMethodDescriptor("compareTo", TypeDescriptors.get().javaLangObject))
+                  .build();
+            }
+
+            if (targetSignature.equals("ordinal()")) {
+              return AstUtils.castJsEnumToValue(
+                  methodCall.getQualifier(), methodCall.getTypeDescriptor());
             }
 
             return MethodCall.Builder.from(methodCall)
@@ -178,7 +193,8 @@ public class NormalizeJsEnums extends NormalizationPass {
           @Override
           public Expression rewriteFieldAccess(FieldAccess fieldAccess) {
             if (AstUtils.isJsEnumCustomValueField(fieldAccess.getTarget())) {
-              return castJsEnumToValue(fieldAccess);
+              return AstUtils.castJsEnumToValue(
+                  fieldAccess.getQualifier(), fieldAccess.getTypeDescriptor());
             }
 
             return fieldAccess;
@@ -186,16 +202,20 @@ public class NormalizeJsEnums extends NormalizationPass {
         });
   }
 
+  private static boolean canAvoidBoxing(
+      TypeDescriptor qualifierTypeDescriptor, TypeDescriptor argumentTypeDescriptor) {
+    // Use a non boxing version of equals, compareTo when comparing two non-native JsEnums of the
+    // same type.
+    // We don't do this for native JsEnums because they are generally not boxed here and this allows
+    // us to specialize the code for non-native JsEnums to avoid a trampoline.
+    return AstUtils.isNonNativeJsEnum(qualifierTypeDescriptor)
+        && argumentTypeDescriptor.hasSameRawType(qualifierTypeDescriptor);
+  }
+
   private static MethodDescriptor fixEnumMethodDescriptor(MethodDescriptor methodDescriptor) {
     MethodDescriptor declarationMethodDescriptor = methodDescriptor.getDeclarationDescriptor();
-    String declarationMethodSignature = declarationMethodDescriptor.getSignature();
 
     // Reroute overridden methods to the super method they override.
-    if (declarationMethodSignature.equals("compareTo(java.lang.Enum)")) {
-      return TypeDescriptors.get()
-          .javaLangComparable
-          .getMethodDescriptor("compareTo", TypeDescriptors.get().javaLangObject);
-    }
     if (declarationMethodDescriptor.isOrOverridesJavaLangObjectMethod()) {
       return MethodDescriptor.Builder.from(declarationMethodDescriptor)
           .setEnclosingTypeDescriptor(TypeDescriptors.get().javaLangObject)
@@ -203,31 +223,5 @@ public class NormalizeJsEnums extends NormalizationPass {
     }
 
     throw new InternalCompilerError("Unexpected Enum method: %s.", methodDescriptor);
-  }
-
-  /** Rewrite references like {@code q.value} and {@code q.ordinal()} to {@code q}. */
-  private static Expression castJsEnumToValue(MemberReference memberReference) {
-    // In order to preserve type consistency, expressions like
-    //
-    //     getEnum().ordinal()  // where getEnum() returns MyJsEnum.
-    //
-    // will be rewritten as
-    //
-    //     /** @type {int} */ ((MyJsEnum) getEnum())
-    //
-    // The inner Java cast to MyJsEnum guarantees that any conversion due to getEnum() being the
-    // qualifier of ordinal() is preserved (e.g. erasure casts if getEnum() returned T and was
-    // specialized to MyJsEnum in the calling context).
-    // The outer JsDoc cast guarantees that the expression is treated as of being the type of value
-    // and conversions such as boxing are correctly preserved (e.g. if the expression was assigned
-    // to an Integer variable).
-    return JsDocCastExpression.newBuilder()
-        .setCastType(memberReference.getTypeDescriptor())
-        .setExpression(
-            CastExpression.newBuilder()
-                .setCastTypeDescriptor(memberReference.getQualifier().getTypeDescriptor())
-                .setExpression(memberReference.getQualifier())
-                .build())
-        .build();
   }
 }

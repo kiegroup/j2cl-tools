@@ -1,5 +1,5 @@
 // Generated from "collisions/goog.java"
-@file:OptIn(ExperimentalObjCName::class, ExperimentalObjCRefinement::class)
+@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -9,6 +9,7 @@
  "UNNECESSARY_LATEINIT",
  "UNNECESSARY_NOT_NULL_ASSERTION",
  "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
  "UNUSED_PARAMETER",
  "UNUSED_VARIABLE",
  "USELESS_CAST",
@@ -24,9 +25,7 @@ import kotlin.Number
 import kotlin.OptIn
 import kotlin.Suppress
 import kotlin.experimental.ExperimentalObjCName
-import kotlin.experimental.ExperimentalObjCRefinement
 import kotlin.jvm.JvmStatic
-import kotlin.native.HiddenFromObjC
 import kotlin.native.ObjCName
 
 @ObjCName("J2ktCollisionsgoog", exact = true)
@@ -34,23 +33,21 @@ open class goog {}
 
 // native class KtBlah
 
-open class KtBlah {
+open class KtBlah internal constructor() {
  companion object {
   @JvmStatic
-  @HiddenFromObjC
-  fun m_pp_collisions() {}
+  internal fun m_pp_collisions() {}
 
   @JvmStatic
-  @HiddenFromObjC
-  fun getN_pp_collisions(): Double {
+  internal fun getN_pp_collisions(): Double {
    return 1.0
   }
  }
 }
 
-open class foo {}
+open class foo internal constructor() {}
 
-open class bar {
+open class bar internal constructor() {
  init {
   val foo: Int = 0
   val bar: Int = 0
@@ -67,28 +64,25 @@ open class bar {
  }
 }
 
-open class Other<T> {
+open class Other<T> internal constructor() {
  init {
   val T_1: Int = 3
   val o: Other<T>? = null as Other<T>?
  }
 
- @HiddenFromObjC
- open fun <T_2> m_pp_collisions(): T_2 {
+ internal open fun <T_2> m_pp_collisions(): T_2 {
   val T_1: Int = 5
   val o: Other<T_2>? = null as Other<T_2>?
   return null as T_2
  }
 }
 
-open class T<T: Number?> {
- @HiddenFromObjC
- open fun m_pp_collisions(): T {
+open class T<T: Number?> internal constructor() {
+ internal open fun m_pp_collisions(): T {
   return null as T
  }
 
- @HiddenFromObjC
- open fun n_pp_collisions(): T {
+ internal open fun n_pp_collisions(): T {
   val t: T? = collisions.T<T>().m_pp_collisions()
   t!!.toByte()
   return t as T

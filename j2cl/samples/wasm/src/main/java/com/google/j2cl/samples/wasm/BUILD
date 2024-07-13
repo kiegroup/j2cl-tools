@@ -17,6 +17,7 @@ load(
 
 package(
     default_applicable_licenses = ["@com_google_j2cl//:j2cl_license"],
+    default_visibility = ["//visibility:public"],
     licenses = ["notice"],
 )
 
@@ -62,7 +63,7 @@ j2cl_application(
     name = "jsapp",
     entry_points = ["entry"],
     extra_dev_resources = [
-        ":app.wasm",
+        ":app_dev.wasm",  # Development output that is not optimized.
     ],
     deps = [":hellojs"],
 )

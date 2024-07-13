@@ -1,5 +1,5 @@
 // Generated from "innerclassinheritance/ChildClass.java"
-@file:OptIn(ExperimentalObjCName::class, ExperimentalObjCRefinement::class)
+@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -9,6 +9,7 @@
  "UNNECESSARY_LATEINIT",
  "UNNECESSARY_NOT_NULL_ASSERTION",
  "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
  "UNUSED_PARAMETER",
  "UNUSED_VARIABLE",
  "USELESS_CAST",
@@ -23,12 +24,10 @@ import kotlin.Int
 import kotlin.OptIn
 import kotlin.Suppress
 import kotlin.experimental.ExperimentalObjCName
-import kotlin.experimental.ExperimentalObjCRefinement
 import kotlin.jvm.JvmField
-import kotlin.native.HiddenFromObjC
 import kotlin.native.ObjCName
 
-open class ParentOuter {
+open class ParentOuter internal constructor() {
  @JvmField
  var fieldInParentOuter: Int = 0
 
@@ -36,7 +35,7 @@ open class ParentOuter {
  open fun funInParentOuter() {}
 }
 
-open class ParentInner {
+open class ParentInner internal constructor() {
  @JvmField
  var fieldInParentInner: Int = 0
 
@@ -55,12 +54,11 @@ open class ChildClass: ParentOuter() {
 
  @ObjCName("testLocalClass")
  open fun testLocalClass() {
-  open class ___1LocalClass: ChildClass() {
+  open class LocalClass internal constructor(): ChildClass() {
    @JvmField
-   @HiddenFromObjC
-   var object_pp_innerclassinheritance: Any? = this
+   internal var object_pp_innerclassinheritance: Any? = this
 
-   open override fun funInParentOuter() {}
+   override fun funInParentOuter() {}
 
    open fun test() {
     this.funInOuter()
@@ -70,10 +68,10 @@ open class ChildClass: ParentOuter() {
     this@ChildClass.funInParentOuter()
    }
   }
-  ___1LocalClass().test()
+  LocalClass().test()
  }
 
- open inner class InnerClass: ParentInner() {
+ open inner class InnerClass internal constructor(): ParentInner() {
   @JvmField
   var fieldInInner: Int = 0
 

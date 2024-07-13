@@ -1,10 +1,10 @@
-# Description:
-#  Public targets available externally. Also see build_defs/rules.bzl for the provided rules.
-
-load("//build_defs:rules.bzl", "j2cl_alias")
 load("@io_bazel_rules_closure//closure:defs.bzl", "closure_js_library")
 load("@rules_license//rules:license.bzl", "license")
-load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("//build_defs:rules.bzl", "j2cl_alias")
+
+# Description:
+#  Public targets available externally. Also see build_defs/rules.bzl for the provided rules.
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 
 package(
     default_applicable_licenses = [":j2cl_license"],
@@ -30,12 +30,12 @@ closure_js_library(
 
 alias(
     name = "jsinterop-annotations",
-    actual = "//third_party:gwt-jsinterop-annotations",
+    actual = "//third_party:jsinterop-annotations",
 )
 
 j2cl_alias(
     name = "jsinterop-annotations-j2cl",
-    actual = "//third_party:gwt-jsinterop-annotations-j2cl",
+    actual = "//third_party:jsinterop-annotations-j2cl",
 )
 
 # JUnit library emulation
@@ -71,4 +71,10 @@ string_flag(
         "jdt",
         "javac",
     ],
+)
+
+# Flag to enable j2kt-web experiment. Please talk to j2cl-team@ before using it.
+bool_flag(
+    name = "experimental_enable_j2kt_web",
+    build_setting_default = False,
 )

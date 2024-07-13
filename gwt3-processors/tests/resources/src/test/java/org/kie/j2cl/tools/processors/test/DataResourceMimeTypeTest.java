@@ -14,13 +14,13 @@
  */
 package org.kie.j2cl.tools.processors.test;
 
+import static org.junit.Assert.assertEquals;
+import static org.kie.j2cl.tools.processors.common.resources.DataResource.MimeType;
+
 import org.junit.Test;
 import org.kie.j2cl.tools.processors.annotations.GWT3Resource;
 import org.kie.j2cl.tools.processors.common.resources.ClientBundle;
 import org.kie.j2cl.tools.processors.common.resources.DataResource;
-
-import static org.junit.Assert.assertEquals;
-import static org.kie.j2cl.tools.processors.common.resources.DataResource.MimeType;
 
 /** Tests for {@link MimeType @MimeType} resource annotations. */
 public class DataResourceMimeTypeTest {

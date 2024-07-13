@@ -31,7 +31,7 @@ import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsType;
 
 public class Main {
-  public static void main(String[] args) {
+  public static void main(String... args) {
     testClass();
     testInterface();
     testPrimitive();
@@ -148,6 +148,10 @@ public class Main {
   }
 
   private static void testJsEnum() {
+    // TODO(b/295235576): enable for Wasm when class metadata is implemented for JsEnum.
+    if (isWasm()) {
+      return;
+    }
     Object o = MyJsEnum.VALUE;
     assertSame(MyJsEnum.class, o.getClass());
     assertSame(MyJsEnum.class, MyJsEnum.VALUE.getClass());
@@ -204,9 +208,10 @@ public class Main {
   @JsType(isNative = true, namespace = JsPackage.GLOBAL, name = "Object")
   private interface NativeInterface {}
 
+  @Wasm(
+      "nop") // TODO(b/301385322): remove when class literals on native JS objects are implemented.
   private static void testNative() {
-    // getClass() and friends on Native JavaScript objects is not supported in Wasm; native types
-    // don't apply in the context of the JVM.
+    // Native types don't apply in the context of the JVM.
     if (!isJavaScript()) {
       return;
     }
@@ -250,13 +255,12 @@ public class Main {
     SomeFunctionalInterface lambdaWithSameInterfaceAsOriginalLambda = () -> {};
 
     // TODO(b/67589892): lambda instances are all instances of the same adaptor class, sharing
-    // the class literal. Uncomment the test when this is fixed.
-
-    // Different lambda instances should have different class objects, even if they implement the
-    // same functional interface.
-    // assertNotSame(
-    //     originalLambda.getClass(),
-    //     lambdaWithSameInterfaceAsOriginalLambda.getClass());
+    // the class literal. This is by design.
+    if (isJvm()) {
+      // J2CL doesn't conform to differentiating the class instance for lambdas that implement
+      // the same functional interface.
+      assertNotSame(originalLambda.getClass(), lambdaWithSameInterfaceAsOriginalLambda.getClass());
+    }
 
     assertSame(originalLambda.getClass(), originalLambda.getClass());
 
@@ -282,9 +286,13 @@ public class Main {
     SomeFunctionalInterfaceWithParameter lambdaWithSameInterfaceAsOriginalLambda = (a) -> {};
 
     assertSame(intersectionLambda.getClass(), intersectionLambda.getClass());
-    assertNotSame(intersectionLambda.getClass(), anotherIntersectionLambda.getClass());
-    assertNotSame(
-        intersectionLambda.getClass(), lambdaWithSameInterfaceAsOriginalLambda.getClass());
+    if (isJvm()) {
+      // J2CL doesn't conform to differentiating the class instance for anonymous types and
+      // lambdas that implement functional interfaces.
+      assertNotSame(intersectionLambda.getClass(), anotherIntersectionLambda.getClass());
+      assertNotSame(
+          intersectionLambda.getClass(), lambdaWithSameInterfaceAsOriginalLambda.getClass());
+    }
 
     assertLiteralType("lambda.getClass()", LiteralType.CLASS, intersectionLambda.getClass());
   }

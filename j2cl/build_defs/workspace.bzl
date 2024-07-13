@@ -11,7 +11,7 @@ _MAVEN_CENTRAL_URLS = ["https://repo1.maven.org/maven2/"]
 def setup_j2cl_workspace(**kwargs):
     """Load all dependencies needed for J2CL."""
 
-    versions.check("5.1.0")  # The version J2CL currently have a CI setup for.
+    versions.check("5.4.0")  # The version J2CL currently have a CI setup for.
 
     rules_closure_dependencies(
         omit_com_google_auto_common = True,
@@ -45,9 +45,9 @@ def setup_j2cl_workspace(**kwargs):
     # We cannot replace com_google_jsinterop_annotations so choose a different name
     http_archive(
         name = "com_google_jsinterop_annotations-j2cl",
-        urls = ["https://github.com/google/jsinterop-annotations/archive/2.0.2.zip"],
-        strip_prefix = "jsinterop-annotations-2.0.2",
-        sha256 = "a0cae8077b8c479ac77e9c7ca9a104bc5eb482b619e2542c3f0d629c417bd8e5",
+        urls = ["https://github.com/google/jsinterop-annotations/archive/d2b3aee14b617a81570b788f981926a829ac892c.zip"],
+        strip_prefix = "jsinterop-annotations-d2b3aee14b617a81570b788f981926a829ac892c",
+        sha256 = "4164229681bcaf3d130b6c4f463bc345af69de5ad548120e9818f31c70142717",
     )
 
     http_archive(
@@ -66,7 +66,7 @@ def setup_j2cl_workspace(**kwargs):
 
     jvm_maven_import_external(
         name = "org_jspecify",
-        artifact = "org.jspecify:jspecify:0.2.0",
+        artifact = "org.jspecify:jspecify:0.3.0",
         server_urls = _MAVEN_CENTRAL_URLS,
         licenses = ["notice"],
     )

@@ -10,7 +10,6 @@ class StaticNestedClass extends j_l_Object {
  }
  /** @nodts @return {!StaticNestedClass} */
  static $create__() {
-  StaticNestedClass.$clinit();
   let $instance = new StaticNestedClass();
   $instance.$ctor__staticnestedclass_StaticNestedClassParent_StaticNestedClass__void();
   return $instance;
@@ -19,6 +18,8 @@ class StaticNestedClass extends j_l_Object {
  $ctor__staticnestedclass_StaticNestedClassParent_StaticNestedClass__void() {
   this.$ctor__java_lang_Object__void();
  }
+ /** @nodts */
+ static m_foo__void() {}
  /** @nodts */
  static $clinit() {
   StaticNestedClass.$clinit = () =>{};
