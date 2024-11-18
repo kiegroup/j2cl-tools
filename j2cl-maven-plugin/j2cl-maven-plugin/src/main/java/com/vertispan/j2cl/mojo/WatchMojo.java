@@ -46,8 +46,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
@@ -188,7 +186,8 @@ public class WatchMojo extends AbstractBuildMojo {
                 getFileWithMavenCoords(jreJar),
                 getFileWithMavenCoords(internalAnnotationsJar),
                 getFileWithMavenCoords(jsinteropAnnotationsJar),
-                getFileWithMavenCoords("com.vertispan.jsinterop:base:" + Versions.VERTISPAN_JSINTEROP_BASE_VERSION),//TODO stop hardcoding this when goog releases a "base" which actually works on both platforms
+                getFileWithMavenCoords(jspecify),
+                getFileWithMavenCoords("org.kie.j2cl.tools.jsinterop:base:" + Versions.VERTISPAN_JSINTEROP_BASE_VERSION),//TODO stop hardcoding this when goog releases a "base" which actually works on both platforms
                 getFileWithMavenCoords("org.kie.j2cl.tools:junit-processor:" + Versions.J2CL_VERSION),
                 getFileWithMavenCoords(junitAnnotations)
         );

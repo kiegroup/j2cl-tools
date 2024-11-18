@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.kie.j2cl.tools</groupId>
         <artifactId>j2cl-tools</artifactId>
-        <version>0.23.1</version>
+        <version>0.23.2</version>
     </parent>
     <artifactId>j2cl-tasks</artifactId>
 
@@ -51,7 +51,7 @@
 
         <!-- closure compiler dependencies -->
         <dependency>
-            <groupId>com.vertispan.javascript</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>closure-compiler-unshaded</artifactId>
         </dependency>
         <dependency>

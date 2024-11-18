@@ -28,6 +28,8 @@ import com.vertispan.j2cl.build.task.BuildLog;
 
 import javax.annotation.Nonnull;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,7 +49,12 @@ public class J2cl {
                 .setFrontend(Frontend.JDT)
                 .setBackend(Backend.CLOSURE)
                 .setClasspaths(Stream.concat(Stream.of(bootstrap), strippedClasspath.stream())
-                        .map(File::getAbsolutePath)
+                        .map(file -> {
+                            if(Files.exists(file.toPath().resolve("output.jar"))){
+                                return file.toPath().resolve("output.jar").toString();
+                            }
+                            return file.getAbsolutePath();
+                        })
                         .collect(Collectors.toUnmodifiableList())
                 )
                 .setEmitReadableLibraryInfo(false)
