@@ -7,7 +7,7 @@
     <groupId>org.kie.j2cl.tools.json.mapper</groupId>
     <artifactId>mapper-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.5.0</version>
+    <version>0.6.0</version>
     <modules>
         <module>json-impl</module>
         <module>common</module>
@@ -76,16 +76,16 @@
         <!-- generation related deps -->
         <javaparser.core.version>3.13.1</javaparser.core.version>
 
-        <auto.common.version>0.11</auto.common.version>
-        <auto.service.version>1.0-rc6</auto.service.version>
+        <auto.common.version>1.2.2</auto.common.version>
+        <auto.service.version>1.1.1</auto.service.version>
 
         <!-- J2CL deps -->
-        <gwt.jakarta.version>0.3</gwt.jakarta.version>
+        <gwt.jakarta.version>0.4</gwt.jakarta.version>
 
         <!-- J2CL deps -->
         <com.google.jsinterop.base.version>1.0.0</com.google.jsinterop.base.version>
-        <elemental2.version>1.2.1</elemental2.version>
-        <j2cl.version>v20240622-2</j2cl.version>
+        <elemental2.version>1.2.3</elemental2.version>
+        <j2cl.version>v20241110-1</j2cl.version>
 
         <!-- Testing -->
         <junit.version>4.13.1</junit.version>

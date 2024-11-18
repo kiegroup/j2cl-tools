@@ -5,7 +5,7 @@
     <parent>
         <artifactId>mapper-parent</artifactId>
         <groupId>org.kie.j2cl.tools.json.mapper</groupId>
-        <version>0.5.0</version>
+        <version>0.6.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -40,7 +40,7 @@
     </scm>
 
     <properties>
-        <j2cl.version>v20240622-2</j2cl.version>
+        <j2cl.version>v20241110-1</j2cl.version>
     </properties>
 
     <dependencies>
@@ -63,13 +63,13 @@
         <dependency>
             <groupId>org.kie.j2cl.tools.json.mapper</groupId>
             <artifactId>common</artifactId>
-            <version>0.5.0</version>
+            <version>0.6.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.kie.j2cl.tools.json.mapper</groupId>
             <artifactId>processor</artifactId>
-            <version>0.5.0</version>
+            <version>0.6.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
