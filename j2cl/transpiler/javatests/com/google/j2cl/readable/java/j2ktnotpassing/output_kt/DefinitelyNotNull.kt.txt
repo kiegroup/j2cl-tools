@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package j2ktnotpassing
 
@@ -31,6 +31,7 @@ import kotlin.native.ObjCName
 
 @ObjCName("J2ktJ2ktnotpassingDefinitelyNotNull", exact = true)
 open class DefinitelyNotNull {
+ @ObjCName("J2ktJ2ktnotpassingDefinitelyNotNull_Ordering", exact = true)
  open class Ordering<T> internal constructor() {
   internal open fun <S: T> reverse_pp_j2ktnotpassing(): DefinitelyNotNull.Ordering<S> {
    throw RuntimeException()
@@ -41,6 +42,7 @@ open class DefinitelyNotNull {
   }
  }
 
+ @ObjCName("J2ktJ2ktnotpassingDefinitelyNotNull_NullsFirstOrdering", exact = true)
  inner class NullsFirstOrdering<T> constructor(ordering: DefinitelyNotNull.Ordering<in T>): DefinitelyNotNull.Ordering<T?>() {
   @JvmField
   internal val ordering_pp_j2ktnotpassing: DefinitelyNotNull.Ordering<in T>

@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package jsnonnull
 
@@ -34,40 +34,29 @@ import kotlin.Suppress
 import kotlin.arrayOf
 import kotlin.collections.MutableList
 import kotlin.experimental.ExperimentalObjCName
-import kotlin.jvm.JvmField
 import kotlin.native.ObjCName
 
 @ObjCName("J2ktJsnonnullMain", exact = true)
 open class Main {
- @JvmField
- internal var f1_private_2: String = "Hello"
+ private var f1: String = "Hello"
 
- @JvmField
- internal var f2_private_2: String? = null
+ private var f2: String? = null
 
- @JvmField
- internal var f4_private_2: MutableList<String> = ArrayList<String>()
+ private var f4: MutableList<String> = ArrayList<String>()
 
- @JvmField
- internal var f5_private_2: MutableList<String>? = ArrayList<String>()
+ private var f5: MutableList<String>? = ArrayList<String>()
 
- @JvmField
- internal var f6_private_2: MutableList<String?> = ArrayList<String>() as MutableList<String?>
+ private var f6: MutableList<String?> = ArrayList<String>() as MutableList<String?>
 
- @JvmField
- internal var f7_private_2: MutableList<String?>? = null
+ private var f7: MutableList<String?>? = null
 
- @JvmField
- internal var f8_private_2: Array<String> = arrayOf<String>()
+ private var f8: Array<String> = arrayOf<String>()
 
- @JvmField
- internal var f9_private_2: Array<String?> = arrayOf<String?>()
+ private var f9: Array<String?> = arrayOf<String?>()
 
- @JvmField
- internal var f10_private_2: Array<String>? = arrayOf<String>()
+ private var f10: Array<String>? = arrayOf<String>()
 
- @JvmField
- internal var f12_private_2: MutableList<String?>? = ArrayList<String>() as MutableList<String?>?
+ private var f12: MutableList<String?>? = ArrayList<String>() as MutableList<String?>?
 
  @JsConstructor
  constructor(
@@ -106,6 +95,7 @@ open class Main {
   @ObjCName("withJsnonnullMain_MyFunction") f: Main.MyFunction
  ) {}
 
+ @ObjCName("J2ktJsnonnullMain_MyFunction", exact = true)
  @JsFunction
  fun interface MyFunction {
   @ObjCName("x")
@@ -135,6 +125,7 @@ open class Main {
   }
  }
 
+ @ObjCName("J2ktJsnonnullMain_NonNullableTemplatedReturn", exact = true)
  interface NonNullableTemplatedReturn<T> {
   @ObjCName("get")
   fun get(): T & Any
@@ -143,6 +134,7 @@ open class Main {
   fun getArray(): Array<T & Any>?
  }
 
+ @ObjCName("J2ktJsnonnullMain_NonNullableTemplate", exact = true)
  interface NonNullableTemplate<T: Any> {
   @ObjCName("get")
   fun get(): T

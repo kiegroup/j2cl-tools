@@ -19,15 +19,19 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.common.collect.MoreCollectors.toOptional;
+import static com.google.j2cl.transpiler.ast.AstUtils.isBoxableJsEnumType;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toCollection;
 
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.extension.memoized.Memoized;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import com.google.j2cl.common.ThreadLocalInterner;
 import com.google.j2cl.common.visitor.Processor;
@@ -39,38 +43,26 @@ import com.google.j2cl.transpiler.ast.TypeDeclaration.SourceLanguage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
-/**
- * A usage-site reference to a declared type, i.e. a class, an interface or an enum.
- *
- * <p>Some properties are lazily calculated since type relationships are a graph (not a tree) and
- * this class is a value type. Those properties are set through {@code DescriptorFactory}.
- */
+/** A usage-site reference to a declared type, i.e. a class, an interface or an enum. */
 @Visitable
 @AutoValue
 public abstract class DeclaredTypeDescriptor extends TypeDescriptor
     implements HasUnusableByJsSuppression {
 
-  /**
-   * References to some descriptors need to be deferred in some cases since it will cause infinite
-   * loops.
-   */
-  public interface DescriptorFactory<T> {
-    T get(DeclaredTypeDescriptor typeDescriptor);
-  }
+  /** The actual type declaration this descriptor is referencing. */
+  public abstract TypeDeclaration getTypeDeclaration();
 
-  @Nullable
-  public abstract DeclaredTypeDescriptor getEnclosingTypeDescriptor();
-
+  /** The parameterization for the type. */
   public abstract ImmutableList<TypeDescriptor> getTypeArgumentDescriptors();
 
   @Override
@@ -143,6 +135,40 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
     return getTypeDeclaration().isNoopCast();
   }
 
+  /**
+   * Returns true if the given type descriptor is a Kotlin companion object class that can be
+   * optimized. In order to be optimizable, the companion object should not extend any class nor
+   * implement any interface.
+   */
+  @Override
+  public boolean isOptimizableKotlinCompanion() {
+    // TODO(b/337362819): Uncomment this when the Java frontend is correctly settings SourceLanguage
+    // for Kotlin deps.
+    // if (getTypeDeclaration().getSourceLanguage() != KOTLIN) {
+    //   return false;
+    // }
+
+    // We use the following heuristic to find if a type represent a Kotlin companion object class:
+    // - The type should be a static nested final class named `Companion`
+    // - The enclosing class should have a static field named `Companion` of the same type.
+    // TODO(b/335000000): Add the ability to mark class as Kotlin companion.
+    if (!isClass()
+        || !isFinal()
+        || !getSimpleSourceName().equals("Companion")
+        || getEnclosingTypeDescriptor() == null
+        || getEnclosingTypeDescriptor().getDeclaredFieldDescriptors().stream()
+            .noneMatch(
+                f ->
+                    f.getName().equals("Companion")
+                        && f.getTypeDescriptor().isSameBaseType(this))) {
+      return false;
+    }
+    // In order to be able to optimize the companion object, it should not extend any class nor
+    // implement any interface.
+    return TypeDescriptors.isJavaLangObject(getSuperTypeDescriptor())
+        && getInterfaceTypeDescriptors().isEmpty();
+  }
+
   @Override
   public boolean isUnusableByJsSuppressed() {
     return getTypeDeclaration().isUnusableByJsSuppressed();
@@ -165,22 +191,13 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
     return !getTypeArgumentDescriptors().isEmpty();
   }
 
-  /* PRIVATE AUTO_VALUE PROPERTIES */
+  /** Returns the enclosing type descriptor for this type. */
+  @Memoized
   @Nullable
-  abstract DescriptorFactory<ImmutableList<MethodDescriptor>> getDeclaredMethodDescriptorsFactory();
-
-  @Nullable
-  abstract DescriptorFactory<MethodDescriptor> getSingleAbstractMethodDescriptorFactory();
-
-  @Nullable
-  abstract DescriptorFactory<ImmutableList<FieldDescriptor>> getDeclaredFieldDescriptorsFactory();
-
-  @Nullable
-  abstract DescriptorFactory<ImmutableList<DeclaredTypeDescriptor>>
-      getInterfaceTypeDescriptorsFactory();
-
-  @Nullable
-  abstract DescriptorFactory<DeclaredTypeDescriptor> getSuperTypeDescriptorFactory();
+  public DeclaredTypeDescriptor getEnclosingTypeDescriptor() {
+    TypeDeclaration enclosingType = getTypeDeclaration().getEnclosingTypeDeclaration();
+    return enclosingType == null ? null : applyParameterization(enclosingType.toDescriptor());
+  }
 
   /**
    * Returns a list of the type descriptors of interfaces that are explicitly implemented directly
@@ -188,13 +205,19 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
    */
   @Memoized
   public ImmutableList<DeclaredTypeDescriptor> getInterfaceTypeDescriptors() {
-    return getInterfaceTypeDescriptorsFactory().get(this);
+    return getTypeDeclaration().getInterfaceTypeDescriptors().stream()
+        .map(this::applyParameterization)
+        .collect(toImmutableList());
   }
 
   @Nullable
   @Memoized
   public MethodDescriptor getSingleAbstractMethodDescriptor() {
-    return getSingleAbstractMethodDescriptorFactory().get(this);
+    MethodDescriptor methodDescriptor = getTypeDeclaration().getSingleAbstractMethodDescriptor();
+    if (methodDescriptor == null) {
+      return null;
+    }
+    return methodDescriptor.specializeTypeVariables(getParameterization());
   }
 
   /** Returns the single declared constructor fo this class. */
@@ -224,8 +247,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
   public DeclaredTypeDescriptor getFunctionalInterface() {
     return isFunctionalInterface()
         ? this
-        : getInterfaceTypeDescriptors()
-            .stream()
+        : getInterfaceTypeDescriptors().stream()
             .filter(DeclaredTypeDescriptor::isFunctionalInterface)
             .findFirst()
             .orElse(null);
@@ -237,9 +259,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
   }
 
   public DeclaredTypeDescriptor getOverlayImplementationTypeDescriptor() {
-    return getTypeDeclaration()
-        .getOverlayImplementationTypeDeclaration()
-        .toUnparameterizedTypeDescriptor();
+    return getTypeDeclaration().getOverlayImplementationTypeDeclaration().toDescriptor();
   }
 
   public boolean hasOverlayImplementationType() {
@@ -263,13 +283,18 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
         && getTypeArgumentDescriptors().isEmpty();
   }
 
-  @Override
-  public DeclaredTypeDescriptor toUnparameterizedTypeDescriptor() {
-    return getTypeDeclaration().toUnparameterizedTypeDescriptor();
+  /** Returns type descriptor for the same type use the type parameters from the declaration. */
+  public DeclaredTypeDescriptor getDeclarationDescriptor() {
+    return getTypeDeclaration().toDescriptor();
   }
 
   @Override
   public boolean isAssignableTo(TypeDescriptor that) {
+    if (isJsEnum()) {
+      return TypeDescriptors.isJavaLangObject(that)
+          || isSameBaseType(that)
+          || (getJsEnumInfo().supportsComparable() && TypeDescriptors.isJavaLangComparable(that));
+    }
     TypeDescriptor thatRawTypeDescriptor = that.toRawTypeDescriptor();
     return thatRawTypeDescriptor instanceof DeclaredTypeDescriptor
         && isSubtypeOf((DeclaredTypeDescriptor) thatRawTypeDescriptor);
@@ -329,7 +354,6 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
     }
   }
 
-
   /**
    * Returns the qualified JavaScript name of the type. Same as {@link #getQualifiedSourceName}
    * unless it is modified by JsType/JsPackage.
@@ -372,10 +396,14 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
   @Memoized
   @Nullable
   public DeclaredTypeDescriptor getSuperTypeDescriptor() {
-    return getSuperTypeDescriptorFactory().get(this);
+    DeclaredTypeDescriptor superTypeDescriptor = getTypeDeclaration().getSuperTypeDescriptor();
+    return superTypeDescriptor == null ? null : applyParameterization(superTypeDescriptor);
   }
 
-  public abstract TypeDeclaration getTypeDeclaration();
+  private DeclaredTypeDescriptor applyParameterization(DeclaredTypeDescriptor typeDescriptor) {
+    return typeDescriptor.specializeTypeVariables(
+        TypeDescriptors.mappingFunctionFromMap(getTypeArgumentsByTypeTypeParameter()));
+  }
 
   /** Returns the class initializer method descriptor for a particular type. */
   @Memoized
@@ -417,7 +445,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
   public MethodDescriptor getIsInstanceMethodDescriptor() {
     return MethodDescriptor.newBuilder()
         .setName(MethodDescriptor.IS_INSTANCE_METHOD_NAME)
-        .setEnclosingTypeDescriptor(getMetadataTypeDeclaration().toUnparameterizedTypeDescriptor())
+        .setEnclosingTypeDescriptor(getMetadataTypeDeclaration().toDescriptor())
         .setParameterTypeDescriptors(TypeDescriptors.getUnknownType())
         .setReturnTypeDescriptor(PrimitiveTypes.BOOLEAN)
         .setOrigin(MethodOrigin.SYNTHETIC_INSTANCE_OF_SUPPORT_METHOD)
@@ -430,7 +458,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
   public MethodDescriptor getMarkImplementorMethodDescriptor() {
     return MethodDescriptor.newBuilder()
         .setName(MethodDescriptor.MARK_IMPLEMENTOR_METHOD_NAME)
-        .setEnclosingTypeDescriptor(getMetadataTypeDeclaration().toUnparameterizedTypeDescriptor())
+        .setEnclosingTypeDescriptor(getMetadataTypeDeclaration().toDescriptor())
         .setParameterTypeDescriptors(TypeDescriptors.get().nativeFunction)
         .setReturnTypeDescriptor(PrimitiveTypes.VOID)
         .setOrigin(MethodOrigin.SYNTHETIC_INSTANCE_OF_SUPPORT_METHOD)
@@ -455,9 +483,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
     return MethodDescriptor.newBuilder()
         .setName(MethodDescriptor.COPY_METHOD_NAME)
         .setEnclosingTypeDescriptor(
-            getMetadataConstructorReference()
-                .getReferencedTypeDeclaration()
-                .toUnparameterizedTypeDescriptor())
+            getMetadataConstructorReference().getReferencedTypeDeclaration().toDescriptor())
         .setParameterTypeDescriptors(
             TypeDescriptors.getUnknownType(), TypeDescriptors.getUnknownType())
         .setReturnTypeDescriptor(PrimitiveTypes.VOID)
@@ -469,7 +495,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
   /** Returns the FieldDescriptor corresponding to the enclosing class instance. */
   public FieldDescriptor getFieldDescriptorForEnclosingInstance() {
     return FieldDescriptor.newBuilder()
-        .setEnclosingTypeDescriptor(toUnparameterizedTypeDescriptor())
+        .setEnclosingTypeDescriptor(getDeclarationDescriptor())
         .setName("$outer_this")
         .setTypeDescriptor(
             getEnclosingTypeDescriptor()
@@ -485,17 +511,17 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
   @Memoized
   @Override
   public String getUniqueId() {
-    String uniqueKey = getQualifiedBinaryName();
     String prefix = isNullable() ? "?" : "!";
-    return prefix + uniqueKey + createTypeArgumentsUniqueId(getTypeArgumentDescriptors());
+    return prefix
+        + getTypeDeclaration().getUniqueId()
+        + createBracketedIdsString(getTypeArgumentDescriptors());
   }
 
-  private static String createTypeArgumentsUniqueId(List<TypeDescriptor> typeArgumentDescriptors) {
-    if (typeArgumentDescriptors.isEmpty()) {
+  private static String createBracketedIdsString(List<TypeDescriptor> typeDescriptors) {
+    if (typeDescriptors.isEmpty()) {
       return "";
     }
-    return typeArgumentDescriptors
-        .stream()
+    return typeDescriptors.stream()
         .map(TypeDescriptor::getUniqueId)
         .collect(joining(", ", "<", ">"));
   }
@@ -506,7 +532,13 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
    */
   @Memoized
   public Collection<MethodDescriptor> getDeclaredMethodDescriptors() {
-    return getDeclaredMethodDescriptorsFactory().get(this);
+    if (isRaw()) {
+      return getTypeDeclaration().getDeclaredMethodDescriptors().stream()
+          .map(MethodDescriptor::toRawMemberDescriptor)
+          .collect(toImmutableList());
+    }
+    return specializeMethods(
+        getTypeDeclaration().getDeclaredMethodDescriptors(), getTypeArgumentsByTypeTypeParameter());
   }
 
   /**
@@ -515,7 +547,14 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
    */
   @Memoized
   public Collection<FieldDescriptor> getDeclaredFieldDescriptors() {
-    return getDeclaredFieldDescriptorsFactory().get(this);
+    if (isRaw()) {
+      return getTypeDeclaration().getDeclaredFieldDescriptors().stream()
+          .map(FieldDescriptor::toRawMemberDescriptor)
+          .collect(toImmutableList());
+    }
+    return getTypeDeclaration().getDeclaredFieldDescriptors().stream()
+        .map(f -> f.specializeTypeVariables(getTypeArgumentsByTypeTypeParameter()))
+        .collect(toImmutableList());
   }
 
   @Memoized
@@ -543,11 +582,24 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
   @Override
   public MethodDescriptor getMethodDescriptor(String methodName, TypeDescriptor... parameters) {
     String targetSignature = MethodDescriptor.buildMethodSignature(methodName, parameters);
-    return getMethodDescriptors().stream()
-        .filter(Predicates.not(MethodDescriptor::isGeneralizingdBridge))
-        .filter(m -> m.getSignature().equals(targetSignature))
-        .collect(toOptional())
-        .orElse(null);
+    Set<MethodDescriptor> potentialMatches =
+        getMethodDescriptors().stream()
+            .filter(Predicates.not(MethodDescriptor::isSynthetic))
+            .filter(m -> m.getSignature().equals(targetSignature))
+            .collect(toCollection(HashSet::new));
+
+    if (potentialMatches.size() < 2) {
+      return Iterables.getOnlyElement(potentialMatches, null);
+    }
+
+    // There are more than two methods that match; filter out overridden methods.
+    potentialMatches.stream()
+        .flatMap(m -> m.getJavaOverriddenMethodDescriptors().stream())
+        // Collect to a set so that we can remove from potential matches, and not get
+        // ConcurrentModificationException.
+        .collect(toImmutableSet())
+        .forEach(m -> potentialMatches.removeIf(m::isSameMethod));
+    return Iterables.getOnlyElement(potentialMatches);
   }
 
   /**
@@ -605,15 +657,14 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
    */
   @Memoized
   public Collection<MethodDescriptor> getPolymorphicMethods() {
-    DeclaredTypeDescriptor declaration = toUnparameterizedTypeDescriptor();
+    DeclaredTypeDescriptor declaration = getDeclarationDescriptor();
     if (!declaration.equals(this)) {
-      return specializeMethods(
-          declaration.getPolymorphicMethods(), getTransitiveParameterization());
+      return specializeMethods(declaration.getPolymorphicMethods(), getParameterization());
     }
 
     // The bridges need to be computed at the type declaration in order to create them as
-    // declarations. That is why the computation is performed at the unparameterized type descriptor
-    // (as it is equivalent to the type declaration).
+    // declarations. That is why the computation is performed at the declaration version of
+    // the type descriptor.
 
     Map<String, MethodDescriptor> methodsByMangledName = new LinkedHashMap<>();
 
@@ -801,6 +852,25 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
   /**
    * Determines the actual implementation target that will handle all the mangled names associated
    * with an override key.
+   *
+   * <p>The target for an override key will be either a concrete implementation in the class
+   * hierarchy, a default method inherited from one of its interface or an abstract method. The main
+   * idea is to collect the set of all methods that are at the bottom of the override chains for the
+   * specific override key and select the method with the most specific return type, preferring
+   * concrete implementations to abstract or default methods; this results in the following
+   * scenarios:
+   *
+   * <ul>
+   *   <li>If there is a concrete implementation, select that one (this is achieved by adding class
+   *       methods before looking at accidental overrides and relying that accidental overrides
+   *       cannot specialize the return type in this case).
+   *   <li>If a default method is the actual implementation, Java enforces the "diamond" property,
+   *       i.e. that method is at the bottom of the only override chain for the override key.
+   *   <li>There are one or several abstract methods coming from either the class hierarchy or the
+   *       interfaces. In this case the method with the more specialized return type is the one
+   *       selected. This situation can only occur in an abstract class, since any concrete subclass
+   *       will be required to provide an implementation and would fall into the first case.
+   * </ul>
    */
   // TODO(b/70853239): This computation should be done in the traversal in getPolymorphicMethods(),
   // but due to inaccuracies in specializeTypeVariables it cannot be move there yet. Move
@@ -831,22 +901,16 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
               }
             });
 
-    // 3. Now add the override keys and the corresponding targets introduced by interfaces. These
-    // might be a new abstract method, a new default method or a default method that overrode an
-    // existing target. Methods in an interface that are already implements in the class are not
-    // targets but an interface might introduce a new methods (default or abstract) or might
-    // override a default method that is not implemented in the class.
+    // 3. Now add the override keys and the corresponding targets introduced by interfaces.
     for (DeclaredTypeDescriptor superInterface : getInterfaceTypeDescriptors()) {
-      for (MethodDescriptor methodDescriptor :
+      for (MethodDescriptor candidateMethod :
           superInterface.getOverrideKeyToTargetMap(sourceLanguage).values()) {
-        String overrideKey = methodDescriptor.getOverrideKey(sourceLanguage);
-        MethodDescriptor overriddenMethod = targetByOverrideKey.get(overrideKey);
-        // Looking at the superinterfaces to see if we find new targets for new override chains
-        // introduced by this interface, or default methods that will need to replace an overridden
-        // (default) method.
-        if (overriddenMethod == null
-            || isOverridingDefaultMethod(methodDescriptor, overriddenMethod)) {
-          targetByOverrideKey.put(overrideKey, methodDescriptor);
+        String overrideKey = candidateMethod.getOverrideKey(sourceLanguage);
+        MethodDescriptor currentTarget = targetByOverrideKey.get(overrideKey);
+
+        // See if the interface method becomes the target.
+        if (isSupersedingTarget(candidateMethod, currentTarget)) {
+          targetByOverrideKey.put(overrideKey, candidateMethod);
         }
       }
     }
@@ -854,29 +918,54 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
     return targetByOverrideKey;
   }
 
+  /** Returns true if the candidate method supersedes the current target method. */
+  private static boolean isSupersedingTarget(
+      MethodDescriptor candidateMethod, MethodDescriptor currentTarget) {
+    if (currentTarget == null) {
+      return true;
+    }
+
+    if (candidateMethod
+        .getEnclosingTypeDescriptor()
+        .isSubtypeOf(currentTarget.getEnclosingTypeDescriptor())) {
+      // Candidate method overrides the current target so it definitely replaces it.
+      return true;
+    }
+
+    if (currentTarget
+        .getEnclosingTypeDescriptor()
+        .isSubtypeOf(candidateMethod.getEnclosingTypeDescriptor())) {
+      // Candidate method is overridden by the current target; so it does not replace it.
+      return false;
+    }
+
+    // The candidate method and the current target are not in the same override chain.
+    // If the candidate method specializes the return type it will become the target.
+    // Note that this can only occur when the class is abstract. Otherwise the method with the most
+    // specialized signature is already provided in the concrete class.
+    return isSpecializingReturnType(candidateMethod, currentTarget);
+  }
+
   /**
-   * Returns true if {@code candidateMethod} is a default method that overrides {@code method}.
+   * Returns true if {@code candidateMethod} specializes the return of abstract method {@code
+   * currentTarget}.
    *
-   * <p>Note that in the case that a new method overrides the current method, the current method
-   * might be a default method or an abstract interface method.
+   * <p>When many abstract methods are involved, there is an ambiguity on which is the right method
+   * to be the target of an override signature. This happens because the return type can be
+   * specialized by any of them, and the right target is that one with the more specific return
+   * type.
    */
-  private static boolean isOverridingDefaultMethod(
-      MethodDescriptor candidateMethod, MethodDescriptor method) {
-    if (!candidateMethod.isDefaultMethod()) {
+  private static boolean isSpecializingReturnType(
+      MethodDescriptor candidateMethod, MethodDescriptor currentTarget) {
+    TypeDescriptor returnTypeDescriptor =
+        candidateMethod.getReturnTypeDescriptor().toRawTypeDescriptor();
+    TypeDescriptor overriddenReturnTypeDescriptor =
+        currentTarget.getReturnTypeDescriptor().toRawTypeDescriptor();
+
+    if (returnTypeDescriptor.isSameBaseType(overriddenReturnTypeDescriptor)) {
       return false;
     }
-
-    if (!method.getEnclosingTypeDescriptor().isInterface()) {
-      return false;
-    }
-
-    // Keep the method at the bottom of the hierarchy since if that one is a default method the one
-    // further down has to be the target.
-    TypeDeclaration candidateDeclaration =
-        candidateMethod.getEnclosingTypeDescriptor().getTypeDeclaration();
-    TypeDeclaration currentDeclaration = method.getEnclosingTypeDescriptor().getTypeDeclaration();
-    return candidateDeclaration.getTypeHierarchyDepth()
-        >= currentDeclaration.getTypeHierarchyDepth();
+    return returnTypeDescriptor.isAssignableTo(overriddenReturnTypeDescriptor);
   }
 
   /** Returns true if the method needs a specializing bridge. */
@@ -951,7 +1040,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
         // which would be the right one that is consistent with the overridden method.
         parameterDescriptors.add(fromBridge);
       } else if (fromTarget.getTypeDescriptor() != fromBridgeDeclaration.getTypeDescriptor()
-          && AstUtils.needsJsEnumBoxingBridges(fromTarget.getTypeDescriptor())) {
+          && isBoxableJsEnumType(fromTarget.getTypeDescriptor())) {
         // Type was specialized to a non-native JsEnum, use the boxed type in the bridge
         // parameter.
         parameterDescriptors.add(
@@ -993,7 +1082,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
       // Kotlin bridges to method that specializes the return to primitive.
       return bridgeReturnTypeDescriptor;
     }
-    if (AstUtils.needsJsEnumBoxingBridges(targetReturnTypeDescriptor)
+    if (isBoxableJsEnumType(targetReturnTypeDescriptor)
         && bridgeMethodDescriptor.getDeclarationDescriptor().getReturnTypeDescriptor()
             != targetReturnTypeDescriptor) {
       // Return type descriptor specialized to non native enum, expose it with the proper boxed
@@ -1031,7 +1120,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
       return this;
     }
 
-    return DeclaredTypeDescriptor.Builder.from(this).setNullable(true).build();
+    return toBuilder().setNullable(true).build();
   }
 
   @Memoized
@@ -1041,7 +1130,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
       return this;
     }
 
-    return DeclaredTypeDescriptor.Builder.from(this).setNullable(false).build();
+    return toBuilder().setNullable(false).build();
   }
 
   @Override
@@ -1063,8 +1152,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
 
     // TODO(b/79210574): reconsider whether types with only static JsMembers are actually
     // referenceable externally.
-    return getDeclaredMemberDescriptors()
-        .stream()
+    return getDeclaredMemberDescriptors().stream()
         .filter(Predicates.not(MemberDescriptor::isOrOverridesJavaLangObjectMethod))
         .anyMatch(MemberDescriptor::isJsMember);
   }
@@ -1105,17 +1193,17 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
    * }</pre>
    */
   @Memoized
-  public Map<TypeVariable, TypeDescriptor> getTransitiveParameterization() {
+  public Map<TypeVariable, TypeDescriptor> getParameterization() {
     Map<TypeVariable, TypeDescriptor> specializedTypeArgumentByTypeParameters =
-        new LinkedHashMap<>(getLocalParameterization());
+        new LinkedHashMap<>(getTypeArgumentsByTypeTypeParameter());
 
     getSuperTypesStream()
-        .forEach(
-            t -> specializedTypeArgumentByTypeParameters.putAll(t.getTransitiveParameterization()));
+        .forEach(t -> specializedTypeArgumentByTypeParameters.putAll(t.getParameterization()));
 
     return specializedTypeArgumentByTypeParameters;
   }
 
+  /** Returns a stream with all the direct supertypes of this type. */
   public Stream<DeclaredTypeDescriptor> getSuperTypesStream() {
     DeclaredTypeDescriptor superTypeDescriptor = getSuperTypeDescriptor();
     if (isInterface()) {
@@ -1127,20 +1215,38 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
         .filter(Predicates.notNull());
   }
 
-  private Map<TypeVariable, TypeDescriptor> getLocalParameterization() {
+  /** Returns all the supertypes of this type. */
+  @Memoized
+  ImmutableSet<DeclaredTypeDescriptor> getTransitiveSuperTypes() {
+    var superTypes = ImmutableSet.<DeclaredTypeDescriptor>builder();
+    getSuperTypesStream().forEach(superTypes::add);
+    getSuperTypesStream()
+        .flatMap(t -> t.getTransitiveSuperTypes().stream())
+        .forEach(superTypes::add);
+    return superTypes.build();
+  }
+
+  /**
+   * Returns a map of the type variables declared in this type context (including its enclosing ones
+   * if the type is an inner class) to the corresponding type argument.
+   */
+  // TODO(b/372291869): If the type is raw, there will still be a mapping for the type variables to
+  // their corresponding raw type, but there will be no way to know if the parameterization comes
+  // from a raw type or from a type that is not raw but has the same type arguments.
+  @Memoized
+  Map<TypeVariable, TypeDescriptor> getTypeArgumentsByTypeTypeParameter() {
     ImmutableList<TypeVariable> typeVariables = getTypeDeclaration().getTypeParameterDescriptors();
     ImmutableList<TypeDescriptor> typeArguments = getTypeArgumentDescriptors();
 
-    Map<TypeVariable, TypeDescriptor> typeArgumentsByTypeVariable = new LinkedHashMap<>();
+    Map<TypeVariable, TypeDescriptor> typeArgumentsByTypeParameter = new LinkedHashMap<>();
 
-    boolean isRaw = typeArguments.isEmpty();
-    if (isRaw) {
+    if (isRaw()) {
       typeArguments =
           typeVariables.stream().map(TypeVariable::toRawTypeDescriptor).collect(toImmutableList());
     }
     Streams.forEachPair(
-        typeVariables.stream(), typeArguments.stream(), typeArgumentsByTypeVariable::put);
-    return typeArgumentsByTypeVariable;
+        typeVariables.stream(), typeArguments.stream(), typeArgumentsByTypeParameter::put);
+    return typeArgumentsByTypeParameter;
   }
 
   @Override
@@ -1149,7 +1255,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
     ImmutableList<TypeDescriptor> newtypeArguments =
         replaceTypeDescriptors(typeArguments, fn, seen);
     if (!typeArguments.equals(newtypeArguments)) {
-      return Builder.from(this).setTypeArgumentDescriptors(newtypeArguments).build();
+      return withTypeArguments(newtypeArguments);
     }
 
     // We should also re-write TypeVariable for the TypeDescriptor however the type model  currently
@@ -1172,47 +1278,20 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
       return this;
     }
 
-    return Builder.from(this)
-        .setTypeArgumentDescriptors(
-            getTypeArgumentDescriptors().stream()
-                .map(t -> t.specializeTypeVariables(parameterization, seen))
-                .collect(toImmutableList()))
-        .setSuperTypeDescriptorFactory(
-            () ->
-                getSuperTypeDescriptor() != null
-                    ? getSuperTypeDescriptor().specializeTypeVariables(parameterization)
-                    : null)
-        .setInterfaceTypeDescriptorsFactory(
-            () ->
-                getInterfaceTypeDescriptors().stream()
-                    .map(t -> t.specializeTypeVariables(parameterization))
-                    .collect(toImmutableList()))
-        .setSingleAbstractMethodDescriptorFactory(
-            () ->
-                getSingleAbstractMethodDescriptor() != null
-                    ? getSingleAbstractMethodDescriptor().specializeTypeVariables(parameterization)
-                    : null)
-        .setDeclaredFieldDescriptorsFactory(
-            () ->
-                getDeclaredFieldDescriptors().stream()
-                    .map(f -> f.specializeTypeVariables(parameterization))
-                    .collect(toImmutableList()))
-        .setDeclaredMethodDescriptorsFactory(
-            () ->
-                getDeclaredMethodDescriptors().stream()
-                    .map(m -> m.specializeTypeVariables(parameterization))
-                    .collect(toImmutableList()))
-        .setEnclosingTypeDescriptor(
-            getEnclosingTypeDescriptor() != null
-                ? getEnclosingTypeDescriptor().specializeTypeVariables(parameterization)
-                : null)
-        .build();
+    return withTypeArguments(
+        getTypeArgumentDescriptors().stream()
+            .map(t -> t.specializeTypeVariables(parameterization, seen))
+            .collect(toImmutableList()));
   }
 
   @Override
   public DeclaredTypeDescriptor specializeTypeVariables(
       Function<TypeVariable, ? extends TypeDescriptor> replacementTypeArgumentByTypeVariable) {
     return specializeTypeVariables(replacementTypeArgumentByTypeVariable, ImmutableSet.of());
+  }
+
+  public DeclaredTypeDescriptor withTypeArguments(Iterable<TypeDescriptor> typeArguments) {
+    return toBuilder().setTypeArgumentDescriptors(typeArguments).build();
   }
 
   @Override
@@ -1256,91 +1335,27 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
   abstract Builder toBuilder();
 
   public static Builder newBuilder() {
-    return new AutoValue_DeclaredTypeDescriptor.Builder()
-        // Default values.
-        .setNullable(true)
-        .setTypeArgumentDescriptors(ImmutableList.of())
-        .setDeclaredMethodDescriptorsFactory(() -> ImmutableList.of())
-        .setDeclaredFieldDescriptorsFactory(() -> ImmutableList.of())
-        .setInterfaceTypeDescriptorsFactory(() -> ImmutableList.of())
-        .setSuperTypeDescriptorFactory(() -> null);
+    return new AutoValue_DeclaredTypeDescriptor.Builder();
   }
 
   /** Builder for a TypeDescriptor. */
   @AutoValue.Builder
   public abstract static class Builder {
 
-    public abstract Builder setEnclosingTypeDescriptor(
-        DeclaredTypeDescriptor enclosingTypeDescriptor);
-
     public abstract Builder setNullable(boolean isNullable);
 
     public abstract Builder setTypeArgumentDescriptors(
         Iterable<? extends TypeDescriptor> typeArgumentDescriptors);
-
-    public abstract Builder setInterfaceTypeDescriptorsFactory(
-        DescriptorFactory<ImmutableList<DeclaredTypeDescriptor>> interfaceTypeDescriptorsFactory);
-
-    public Builder setInterfaceTypeDescriptorsFactory(
-        Supplier<ImmutableList<DeclaredTypeDescriptor>> interfaceTypeDescriptorsFactory) {
-      return setInterfaceTypeDescriptorsFactory(
-          typeDescriptor -> interfaceTypeDescriptorsFactory.get());
-    }
-
-    public abstract Builder setSingleAbstractMethodDescriptorFactory(
-        DescriptorFactory<MethodDescriptor> singleAbstractMethodDescriptorFactory);
-
-    public Builder setSingleAbstractMethodDescriptorFactory(
-        Supplier<MethodDescriptor> singleAbstractMethodDescriptorFactory) {
-      return setSingleAbstractMethodDescriptorFactory(
-          typeDescriptor -> singleAbstractMethodDescriptorFactory.get());
-    }
-
-    public abstract Builder setSuperTypeDescriptorFactory(
-        DescriptorFactory<DeclaredTypeDescriptor> superTypeDescriptorFactory);
-
-    public Builder setSuperTypeDescriptorFactory(
-        Supplier<DeclaredTypeDescriptor> superTypeDescriptorFactory) {
-      return setSuperTypeDescriptorFactory(typeDescriptor -> superTypeDescriptorFactory.get());
-    }
-
-    public abstract Builder setDeclaredMethodDescriptorsFactory(
-        DescriptorFactory<ImmutableList<MethodDescriptor>> declaredMethodDescriptorsFactory);
-
-    public Builder setDeclaredMethodDescriptorsFactory(
-        Supplier<ImmutableList<MethodDescriptor>> declaredMethodDescriptorsFactory) {
-      return setDeclaredMethodDescriptorsFactory(
-          typeDescriptor -> declaredMethodDescriptorsFactory.get());
-    }
-
-    public abstract Builder setDeclaredFieldDescriptorsFactory(
-        DescriptorFactory<ImmutableList<FieldDescriptor>> declaredFieldDescriptorsFactory);
-
-    public Builder setDeclaredFieldDescriptorsFactory(
-        Supplier<ImmutableList<FieldDescriptor>> declaredFieldDescriptorsFactory) {
-      return setDeclaredFieldDescriptorsFactory(
-          typeDescriptor -> declaredFieldDescriptorsFactory.get());
-    }
 
     public abstract Builder setTypeDeclaration(TypeDeclaration typeDeclaration);
 
     private static final ThreadLocalInterner<DeclaredTypeDescriptor> interner =
         new ThreadLocalInterner<>();
 
-    abstract TypeDeclaration getTypeDeclaration();
-
     abstract DeclaredTypeDescriptor autoBuild();
 
     @SuppressWarnings("ReferenceEquality")
     public DeclaredTypeDescriptor build() {
-      if (getTypeDeclaration().isEnum() && getTypeDeclaration().getJsEnumInfo() != null) {
-        // JsEnums don't extend Enum but Object. Fix it up on construction.
-        // Cannot use isJsEnum() directly here since the construction happens before validation and
-        // there might be invalid code, e.g. an interface marked as JsEnum, where the fix up should
-        // not happen. Otherwise other invariants will be broken.
-        setSuperTypeDescriptorFactory(() -> TypeDescriptors.get().javaLangObject);
-      }
-
       DeclaredTypeDescriptor typeDescriptor = autoBuild();
 
       checkState(
@@ -1361,10 +1376,6 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
             TypeDescriptors.get().globalNamespace);
       }
       return internedTypeDescriptor;
-    }
-
-    public static Builder from(final DeclaredTypeDescriptor typeDescriptor) {
-      return typeDescriptor.toBuilder();
     }
   }
 }

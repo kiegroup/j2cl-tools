@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package switchstatement
 
@@ -31,9 +31,13 @@ import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.JvmStatic
 import kotlin.native.ObjCName
 
+@ObjCName("J2ktSwitchstatementNumbers", exact = true)
 enum class Numbers {
+ @ObjCName("ONE")
  ONE,
+ @ObjCName("TWO")
  TWO,
+ @ObjCName("THREE")
  THREE;
 }
 
@@ -41,145 +45,84 @@ enum class Numbers {
 open class SwitchStatement {
  @ObjCName("main")
  open fun main() {
-  SWITCH@ do {
-   when ("one") {
-    "one", "two" -> {
-     break@SWITCH
-    }
-    else -> {
-     return
-    }
+  when ("one") {
+   "one", "two" -> {}
+   else -> {
+    return
    }
-  } while (false)
-  SWITCH_1@ do {
-   when ('1') {
-    '1', '2' -> {
-     break@SWITCH_1
-    }
-    else -> {
-     return
-    }
+  }
+  when ('1') {
+   '1', '2' -> {}
+   else -> {
+    return
    }
-  } while (false)
-  SWITCH_2@ do {
-   when (1) {
-    -2, 1, 2 -> {
-     break@SWITCH_2
-    }
-    else -> {
-     return
-    }
+  }
+  when (1) {
+   -2, 1, 2 -> {}
+   else -> {
+    return
    }
-  } while (false)
-  SWITCH_3@ do {
-   when (Numbers.ONE) {
-    Numbers.ONE, Numbers.TWO -> {
-     break@SWITCH_3
-    }
-    Numbers.THREE -> {
-     break@SWITCH_3
-    }
-    else -> {
-     return
-    }
+  }
+  when (Numbers.ONE) {
+   Numbers.ONE, Numbers.TWO -> {}
+   Numbers.THREE -> {}
+   else -> {
+    return
    }
-  } while (false)
+  }
  }
 
- internal fun testCaseExpressionTypes_private_2(ch: Char, i: Int, b: Byte, s: Short) {
-  SWITCH@ do {
-   when (ch) {
-    'a' -> {
-     break@SWITCH
-    }
-    '\u0001' -> {
-     break@SWITCH
-    }
-    '\u0002' -> {
-     break@SWITCH
-    }
-    '\u0003' -> {
-     break@SWITCH
-    }
-    else -> {}
-   }
-  } while (false)
-  SWITCH_1@ do {
-   when (i) {
-    97 -> {
-     break@SWITCH_1
-    }
-    1 -> {
-     break@SWITCH_1
-    }
-    2 -> {
-     break@SWITCH_1
-    }
-    3 -> {
-     break@SWITCH_1
-    }
-    else -> {}
-   }
-  } while (false)
-  SWITCH_2@ do {
-   when (b) {
-    97.toByte() -> {
-     break@SWITCH_2
-    }
-    1.toByte() -> {
-     break@SWITCH_2
-    }
-    2.toByte() -> {
-     break@SWITCH_2
-    }
-    3.toByte() -> {
-     break@SWITCH_2
-    }
-    else -> {}
-   }
-  } while (false)
-  SWITCH_3@ do {
-   when (s) {
-    97.toShort() -> {
-     break@SWITCH_3
-    }
-    1.toShort() -> {
-     break@SWITCH_3
-    }
-    2.toShort() -> {
-     break@SWITCH_3
-    }
-    3.toShort() -> {
-     break@SWITCH_3
-    }
-    else -> {}
-   }
-  } while (false)
+ private fun testCaseExpressionTypes(ch: Char, i: Int, b: Byte, s: Short) {
+  when (ch) {
+   'a' -> {}
+   '\u0001' -> {}
+   '\u0002' -> {}
+   '\u0003' -> {}
+   else -> {}
+  }
+  when (i) {
+   97 -> {}
+   1 -> {}
+   2 -> {}
+   3 -> {}
+   else -> {}
+  }
+  when (b) {
+   97.toByte() -> {}
+   1.toByte() -> {}
+   2.toByte() -> {}
+   3.toByte() -> {}
+   else -> {}
+  }
+  when (s) {
+   97.toShort() -> {}
+   1.toShort() -> {}
+   2.toShort() -> {}
+   3.toShort() -> {}
+   else -> {}
+  }
  }
 
- internal fun testBlocksInSwitchCase_private_2(i: Int) {
-  SWITCH@ do {
-   when (i) {
-    1 -> {
-     this.foo_private_2(1)
-     this.foo_private_2(2)
-     this.foo_private_2(3)
-     this.foo_private_2(4)
-     this.foo_private_2(5)
-     break@SWITCH
-    }
-    else -> {}
+ private fun testBlocksInSwitchCase(i: Int) {
+  when (i) {
+   1 -> {
+    this.foo(1)
+    this.foo(2)
+    this.foo(3)
+    this.foo(4)
+    this.foo(5)
    }
-  } while (false)
+   else -> {}
+  }
  }
 
- internal fun testLabelInSwitchCase_private_2(i: Int) {
+ private fun testLabelInSwitchCase(i: Int) {
   SWITCH@ do {
    CASE@ do {
-    CASE_1@ do {
+    do {
      when (i) {
       1 -> {
-       break@CASE_1
+       break
       }
       else -> {
        break@CASE
@@ -187,135 +130,108 @@ open class SwitchStatement {
      }
      break@SWITCH
     } while (false)
-    LABEL@ do {
-     break@LABEL
+    do {
+     break
     } while (true)
    } while (false)
   } while (false)
  }
 
- internal fun testNonFallThroughBreakCase_private_2(i: Int) {
-  SWITCH@ do {
+ private fun testNonFallThroughBreakCase(i: Int) {
+  when (i) {
+   1 -> {
+    this.foo(1)
+   }
+   else -> {
+    this.foo(2)
+   }
+  }
+ }
+
+ private fun testNonFallThroughBreakOuterCase(i: Int) {
+  do {
    when (i) {
     1 -> {
-     this.foo_private_2(1)
-     break@SWITCH
+     this.foo(1)
+     break
     }
     else -> {
-     this.foo_private_2(2)
-     break@SWITCH
+     this.foo(2)
     }
    }
   } while (false)
  }
 
- internal fun testNonFallThroughBreakOuterCase_private_2(i: Int) {
-  OUTER_LABEL@ do {
-   SWITCH@ do {
-    when (i) {
-     1 -> {
-      this.foo_private_2(1)
-      break@OUTER_LABEL
-     }
-     else -> {
-      this.foo_private_2(2)
-      break@SWITCH
-     }
-    }
-   } while (false)
-  } while (false)
- }
-
- internal fun testNonFallThroughContinueCase_private_2(i: Int) {
-  LOOP@ do {
-   SWITCH@ do {
-    when (i) {
-     3 -> {
-      this.foo_private_2(1)
-      continue@LOOP
-     }
-     else -> {
-      this.foo_private_2(2)
-      break@SWITCH
-     }
-    }
-   } while (false)
-  } while (false)
- }
-
- internal fun testNonFallThroughReturnCase_private_2(i: Int) {
-  SWITCH@ do {
+ private fun testNonFallThroughContinueCase(i: Int) {
+  do {
    when (i) {
-    4 -> {
-     this.foo_private_2(1)
-     return
+    3 -> {
+     this.foo(1)
+     break
     }
     else -> {
-     this.foo_private_2(2)
-     break@SWITCH
+     this.foo(2)
     }
    }
   } while (false)
  }
 
- internal fun testNonFallThroughThrowCase_private_2(i: Int) {
-  SWITCH@ do {
-   when (i) {
-    5 -> {
-     this.foo_private_2(1)
-     throw RuntimeException()
-    }
-    else -> {
-     this.foo_private_2(2)
-     break@SWITCH
-    }
+ private fun testNonFallThroughReturnCase(i: Int) {
+  when (i) {
+   4 -> {
+    this.foo(1)
+    return
    }
-  } while (false)
+   else -> {
+    this.foo(2)
+   }
+  }
  }
 
- internal fun testNonFallThroughIfCase_private_2(i: Int) {
-  SWITCH@ do {
-   when (i) {
-    1 -> {
-     this.foo_private_2(1)
-     if (false) {
-      break@SWITCH
-     } else {
-      break@SWITCH
-     }
-    }
-    else -> {
-     this.foo_private_2(2)
-     break@SWITCH
-    }
+ private fun testNonFallThroughThrowCase(i: Int) {
+  when (i) {
+   5 -> {
+    this.foo(1)
+    throw RuntimeException()
    }
-  } while (false)
+   else -> {
+    this.foo(2)
+   }
+  }
  }
 
- internal fun testNonFallThroughBlockCase_private_2(i: Int) {
-  SWITCH@ do {
-   when (i) {
-    1 -> {
-     this.foo_private_2(1)
-     break@SWITCH
-    }
-    else -> {
-     this.foo_private_2(2)
-     break@SWITCH
-    }
+ private fun testNonFallThroughIfCase(i: Int) {
+  when (i) {
+   1 -> {
+    this.foo(1)
+    if (false) {} else {}
    }
-  } while (false)
+   else -> {
+    this.foo(2)
+   }
+  }
  }
 
- internal fun testNonFallThrough_defaultIsNotLast_private_2(i: Int) {
+ private fun testNonFallThroughBlockCase(i: Int) {
+  when (i) {
+   1 -> {
+    this.foo(1)
+   }
+   else -> {
+    this.foo(2)
+   }
+  }
+ }
+
+ private fun testNonFallThrough_defaultIsNotLast(i: Int) {
   SWITCH@ do {
    CASE@ do {
     CASE_1@ do {
      CASE_2@ do {
-      CASE_3@ do {
+      do {
        when (i) {
         1 -> {
-         break@CASE_3
+         break
         }
         2 -> {
          break@CASE_2
@@ -329,27 +245,26 @@ open class SwitchStatement {
        }
        break@SWITCH
       } while (false)
-      this.foo_private_2(1)
+      this.foo(1)
       break@SWITCH
      } while (false)
-     this.foo_private_2(2)
+     this.foo(2)
      break@SWITCH
     } while (false)
-    this.foo_private_2(3)
+    this.foo(3)
     break@SWITCH
    } while (false)
-   this.foo_private_2(4)
-   break@SWITCH
+   this.foo(4)
   } while (false)
  }
 
- internal fun testFallThroughCase_private_2(i: Int) {
+ private fun testFallThroughCase(i: Int) {
   SWITCH@ do {
    CASE@ do {
-    CASE_1@ do {
+    do {
      when (i) {
       1 -> {
-       break@CASE_1
+       break
       }
       else -> {
        break@CASE
@@ -357,20 +272,19 @@ open class SwitchStatement {
      }
      break@SWITCH
     } while (false)
-    this.foo_private_2(1)
+    this.foo(1)
    } while (false)
-   this.foo_private_2(2)
-   break@SWITCH
+   this.foo(2)
   } while (false)
  }
 
- internal fun testFallThroughBreakInnerCase_private_2(i: Int) {
+ private fun testFallThroughBreakInnerCase(i: Int) {
   SWITCH@ do {
    CASE@ do {
-    CASE_1@ do {
+    do {
      when (i) {
       1 -> {
-       break@CASE_1
+       break
       }
       else -> {
        break@CASE
@@ -378,23 +292,19 @@ open class SwitchStatement {
      }
      break@SWITCH
     } while (false)
-    this.foo_private_2(1)
-    INNER_LABEL@ do {
-     break@INNER_LABEL
-    } while (false)
+    this.foo(1)
    } while (false)
-   this.foo_private_2(2)
-   break@SWITCH
+   this.foo(2)
   } while (false)
  }
 
- internal fun testFallThroughContinueInnerCase_private_2(i: Int) {
+ private fun testFallThroughContinueInnerCase(i: Int) {
   SWITCH@ do {
    CASE@ do {
-    CASE_1@ do {
+    do {
      when (i) {
       1 -> {
-       break@CASE_1
+       break
       }
       else -> {
        break@CASE
@@ -402,23 +312,19 @@ open class SwitchStatement {
      }
      break@SWITCH
     } while (false)
-    this.foo_private_2(1)
-    INNER_LABEL@ do {
-     continue@INNER_LABEL
-    } while (false)
+    this.foo(1)
    } while (false)
-   this.foo_private_2(2)
-   break@SWITCH
+   this.foo(2)
   } while (false)
  }
 
- internal fun testFallThroughLabeledStatement_private_2(i: Int) {
+ private fun testFallThroughLabeledStatement(i: Int) {
   SWITCH@ do {
    CASE@ do {
-    CASE_1@ do {
+    do {
      when (i) {
       1 -> {
-       break@CASE_1
+       break
       }
       else -> {
        break@CASE
@@ -426,25 +332,24 @@ open class SwitchStatement {
      }
      break@SWITCH
     } while (false)
-    INNER_LABEL@ do {
+    do {
      if (false) {
-      break@INNER_LABEL
+      break
      }
      return
     } while (false)
    } while (false)
-   this.foo_private_2(2)
-   break@SWITCH
+   this.foo(2)
   } while (false)
  }
 
- internal fun testFallThroughIfCase_private_2(i: Int) {
+ private fun testFallThroughIfCase(i: Int) {
   SWITCH@ do {
    CASE@ do {
-    CASE_1@ do {
+    do {
      when (i) {
       1 -> {
-       break@CASE_1
+       break
       }
       else -> {
        break@CASE
@@ -452,23 +357,22 @@ open class SwitchStatement {
      }
      break@SWITCH
     } while (false)
-    this.foo_private_2(1)
+    this.foo(1)
     if (false) {
      break@SWITCH
     }
    } while (false)
-   this.foo_private_2(2)
-   break@SWITCH
+   this.foo(2)
   } while (false)
  }
 
- internal fun testFallThroughIfElseCase_private_2(i: Int) {
+ private fun testFallThroughIfElseCase(i: Int) {
   SWITCH@ do {
    CASE@ do {
-    CASE_1@ do {
+    do {
      when (i) {
       1 -> {
-       break@CASE_1
+       break
       }
       else -> {
        break@CASE
@@ -477,40 +381,36 @@ open class SwitchStatement {
      break@SWITCH
     } while (false)
     if (true) {
-     this.foo_private_2(1)
+     this.foo(1)
      break@SWITCH
     } else {
-     this.foo_private_2(2)
+     this.foo(2)
     }
    } while (false)
-   this.foo_private_2(2)
-   break@SWITCH
+   this.foo(2)
   } while (false)
  }
 
- internal fun testFallThoughLastCase_private_2(i: Int) {
-  SWITCH@ do {
-   when (i) {
-    1 -> {
-     this.foo_private_2(1)
-     break@SWITCH
-    }
-    else -> {
-     this.foo_private_2(2)
-    }
+ private fun testFallThoughLastCase(i: Int) {
+  when (i) {
+   1 -> {
+    this.foo(1)
    }
-  } while (false)
+   else -> {
+    this.foo(2)
+   }
+  }
  }
 
- internal fun testDefaultIsNotLast_fallThrough_private_2(i: Int) {
+ private fun testDefaultIsNotLast_fallThrough(i: Int) {
   SWITCH@ do {
    CASE@ do {
     CASE_1@ do {
      CASE_2@ do {
-      CASE_3@ do {
+      do {
        when (i) {
         1 -> {
-         break@CASE_3
+         break
         }
         2 -> {
          break@CASE_2
@@ -524,75 +424,53 @@ open class SwitchStatement {
        }
        break@SWITCH
       } while (false)
-      this.foo_private_2(1)
+      this.foo(1)
      } while (false)
-     this.foo_private_2(2)
+     this.foo(2)
     } while (false)
-    this.foo_private_2(3)
+    this.foo(3)
    } while (false)
-   this.foo_private_2(4)
+   this.foo(4)
   } while (false)
  }
 
- internal fun testDefaultNotLast_fallThroughCase_private_2(i: Int): Int {
+ private fun testDefaultNotLast_fallThroughCase(i: Int): Int {
   var result: Int = 0
   SWITCH@ do {
    CASE@ do {
-    CASE_1@ do {
-     CASE_2@ do {
-      when (i) {
-       1 -> {
-        break@CASE_2
-       }
-       3 -> {
-        break@CASE
-       }
-       else -> {
-        break@CASE_1
-       }
+    do {
+     when (i) {
+      3 -> {
+       break@CASE
       }
-      break@SWITCH
-     } while (false)
+      else -> {
+       break
+      }
+     }
+     break@SWITCH
     } while (false)
     result = result + 10
     break@SWITCH
    } while (false)
    result = result + 100
-   break@SWITCH
   } while (false)
   return result
  }
 
- internal fun testDefaultNotLast_fallThroughDefault_private_2(i: Int): Int {
+ private fun testDefaultNotLast_fallThroughDefault(i: Int): Int {
   var result: Int = 0
-  SWITCH@ do {
-   CASE@ do {
-    CASE_1@ do {
-     CASE_2@ do {
-      when (i) {
-       1 -> {
-        break@CASE_2
-       }
-       3 -> {
-        break@CASE
-       }
-       else -> {
-        break@CASE_1
-       }
-      }
-      break@SWITCH
-     } while (false)
-     result = result + 10
-     break@SWITCH
-    } while (false)
-   } while (false)
-   result = result + 100
-   break@SWITCH
-  } while (false)
+  when (i) {
+   1 -> {
+    result = result + 10
+   }
+   else -> {
+    result = result + 100
+   }
+  }
   return result
  }
 
- internal fun testNonExhaustive_private_2(numbers: Numbers?): Int {
+ private fun testNonExhaustive(numbers: Numbers?): Int {
   when (numbers!!) {
    Numbers.ONE -> {
     return 1
@@ -605,14 +483,14 @@ open class SwitchStatement {
   return 3
  }
 
- internal fun testNonExhaustive_fallThrough_private_2(numbers: Numbers?) {
+ private fun testNonExhaustive_fallThrough(numbers: Numbers?) {
   SWITCH@ do {
    CASE@ do {
     CASE_1@ do {
-     CASE_2@ do {
+     do {
       when (numbers!!) {
        Numbers.ONE -> {
-        break@CASE_2
+        break
        }
        Numbers.TWO -> {
         break@CASE_1
@@ -623,51 +501,42 @@ open class SwitchStatement {
       }
       break@SWITCH
      } while (false)
-     this.foo_private_2(1)
+     this.foo(1)
     } while (false)
-    this.foo_private_2(2)
+    this.foo(2)
     break@SWITCH
    } while (false)
   } while (false)
  }
 
- internal fun foo_private_2(i: Int) {}
+ private fun foo(i: Int) {}
 
  @ObjCName("J2ktSwitchstatementSwitchStatementCompanion", exact = true)
  companion object {
   @JvmStatic
-  internal fun testSwitchVariableDeclarations_private_2() {
-   val unassigned: Int = 0
-   val unassigned2: Int = 0
+  private fun testSwitchVariableDeclarations() {
    var i: Int = 0
-   var j: Int = 0
-   var b: Int = 0
-   var i_1: Int = 0
-   SWITCH@ do {
-    when (3) {
-     1 -> {
-      i = 0
-      j = 2
-      b = j + 1
-      break@SWITCH
-     }
-     3 -> {
-      i = 3
-      assert(i == 3)
-      return
-     }
-     else -> {}
+   when (3) {
+    1 -> {
+     val unassigned: Int = 0
+     val unassigned2: Int = 0
+     i = 0
+     val j: Int = 2
+     val b: Int = j + 1
     }
-   } while (false)
-   SWITCH_1@ do {
-    when (5) {
-     5 -> {
-      i_1 = 1
-      break@SWITCH_1
-     }
-     else -> {}
+    3 -> {
+     i = 3
+     assert(i == 3)
+     return
     }
-   } while (false)
+    else -> {}
+   }
+   when (5) {
+    5 -> {
+     val i_1: Int = 1
+    }
+    else -> {}
+   }
    assert(false)
   }
  }

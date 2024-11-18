@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.j2cl.transpiler.ast.AbstractVisitor;
 import com.google.j2cl.transpiler.ast.ArrayLiteral;
+import com.google.j2cl.transpiler.ast.AstUtils;
 import com.google.j2cl.transpiler.ast.BinaryExpression;
 import com.google.j2cl.transpiler.ast.BinaryOperator;
 import com.google.j2cl.transpiler.ast.BreakStatement;
@@ -38,10 +39,13 @@ import com.google.j2cl.transpiler.ast.MemberDescriptor;
 import com.google.j2cl.transpiler.ast.MemberReference;
 import com.google.j2cl.transpiler.ast.Method;
 import com.google.j2cl.transpiler.ast.MethodCall;
+import com.google.j2cl.transpiler.ast.MethodReference;
 import com.google.j2cl.transpiler.ast.MultiExpression;
 import com.google.j2cl.transpiler.ast.NewArray;
 import com.google.j2cl.transpiler.ast.NumberLiteral;
+import com.google.j2cl.transpiler.ast.Statement;
 import com.google.j2cl.transpiler.ast.SwitchCase;
+import com.google.j2cl.transpiler.ast.SwitchExpression;
 import com.google.j2cl.transpiler.ast.TryStatement;
 import com.google.j2cl.transpiler.ast.Type;
 import com.google.j2cl.transpiler.ast.TypeDescriptors;
@@ -49,6 +53,7 @@ import com.google.j2cl.transpiler.ast.TypeLiteral;
 import com.google.j2cl.transpiler.ast.UnaryExpression;
 import com.google.j2cl.transpiler.ast.Variable;
 import com.google.j2cl.transpiler.ast.VariableDeclarationExpression;
+import com.google.j2cl.transpiler.ast.YieldStatement;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -163,6 +168,12 @@ public class VerifyNormalizedUnits extends NormalizationPass {
           }
 
           @Override
+          public void exitMethodReference(MethodReference methodReference) {
+            // Method references are desugared to lambda expressions.
+            throw new IllegalStateException();
+          }
+
+          @Override
           public void exitBinaryExpression(BinaryExpression binaryExpression) {
             if (verifyForWasm) {
               BinaryOperator operator = binaryExpression.getOperator();
@@ -213,7 +224,7 @@ public class VerifyNormalizedUnits extends NormalizationPass {
             // There are no direct nesting of array literals.
             checkState(
                 !(getParent() instanceof ArrayLiteral)
-                    || arrayLiteral.getTypeDescriptor().isUntypedArray());
+                    || AstUtils.shouldUseUntypedArray(arrayLiteral.getTypeDescriptor()));
             if (verifyForWasm) {}
           }
 
@@ -274,13 +285,26 @@ public class VerifyNormalizedUnits extends NormalizationPass {
           @Override
           public void exitSwitchCase(SwitchCase switchCase) {
             if (verifyForWasm) {
-              // The only expressions allowed in a switch case are strings and number literals.
-              Expression caseExpression = switchCase.getCaseExpression();
-              checkState(
-                  switchCase.isDefault()
-                      || TypeDescriptors.isJavaLangString(caseExpression.getTypeDescriptor())
-                      || caseExpression instanceof NumberLiteral);
+              for (Expression caseExpression : switchCase.getCaseExpressions()) {
+                // The only expressions allowed in a switch case are strings and number literals.
+                checkState(
+                    switchCase.isDefault()
+                        || TypeDescriptors.isJavaLangString(caseExpression.getTypeDescriptor())
+                        || caseExpression instanceof NumberLiteral);
+              }
             }
+          }
+
+          @Override
+          public void exitSwitchExpression(SwitchExpression switchExpression) {
+            // Switch expressions are expected to be normalized away.
+            throw new IllegalStateException();
+          }
+
+          @Override
+          public void exitYieldStatement(YieldStatement yieldStatement) {
+            // Yield statements are expected to be normalized away.
+            throw new IllegalStateException();
           }
 
           @Override
@@ -300,9 +324,10 @@ public class VerifyNormalizedUnits extends NormalizationPass {
           @Override
           public void exitVariableDeclarationExpression(
               VariableDeclarationExpression variableDeclarationExpression) {
-            if (variableDeclarationExpression.getFragments().isEmpty()) {
-              throw new IllegalStateException();
+            if (!verifyForWasm) {
+              checkState(getParent() instanceof Statement);
             }
+            checkState(!variableDeclarationExpression.getFragments().isEmpty());
             checkState(
                 variableDeclarationExpression.getFragments().stream()
                     .allMatch(f -> !f.getVariable().isParameter()));

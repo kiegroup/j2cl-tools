@@ -18,6 +18,7 @@ package com.google.j2cl.transpiler.frontend.javac;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.stream.Collectors.toCollection;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ComparisonChain;
@@ -56,6 +57,7 @@ import com.google.j2cl.transpiler.ast.Label;
 import com.google.j2cl.transpiler.ast.LabelReference;
 import com.google.j2cl.transpiler.ast.LabeledStatement;
 import com.google.j2cl.transpiler.ast.Literal;
+import com.google.j2cl.transpiler.ast.LocalClassDeclarationStatement;
 import com.google.j2cl.transpiler.ast.Method;
 import com.google.j2cl.transpiler.ast.MethodCall;
 import com.google.j2cl.transpiler.ast.MethodDescriptor;
@@ -142,12 +144,13 @@ import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.JCTree.JCWhileLoop;
 import com.sun.tools.javac.tree.JCTree.Tag;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import javax.annotation.Nullable;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -160,11 +163,31 @@ import javax.lang.model.type.ExecutableType;
 public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
   private final JavaEnvironment environment;
   private final Map<VariableElement, Variable> variableByVariableElement = new HashMap<>();
-  private final Map<String, Label> labelsInScope = new HashMap<>();
+  // Keeps track of labels that are currently in scope. Even though labels cannot have the
+  // same name if they are nested in the same method body, labels with the same name could
+  // be lexically nested by being in different methods bodies, e.g. from local or anonymous
+  // classes or lambdas.
+  private final Map<String, Deque<Label>> labelsInScope = new HashMap<>();
   private JCCompilationUnit javacUnit;
 
   private CompilationUnitBuilder(JavaEnvironment environment) {
     this.environment = environment;
+  }
+
+  /**
+   * Constructs a type and maintains the type stack.
+   *
+   * @return The created {@link Type}.
+   */
+  private Type convertType(
+      ClassSymbol typeElement, List<JCTree> bodyDeclarations, JCTree sourcePositionNode) {
+    Type type = createType(typeElement, sourcePositionNode);
+    return processEnclosedBy(
+        type,
+        () -> {
+          convertTypeBody(type, bodyDeclarations);
+          return type;
+        });
   }
 
   @Nullable
@@ -181,35 +204,12 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
         typeDeclaration);
   }
 
-  /**
-   * Constructs a type, maintains the type stack and let's the caller to do additional work by
-   * supplying a {@code typeProcessor}.
-   *
-   * @return {T} the value returned by {@code typeProcessor}
-   */
-  private <T> T convertAndAddType(
-      ClassSymbol typeElement,
-      List<JCTree> bodyDeclarations,
-      JCTree sourcePositionNode,
-      Function<Type, T> typeProcessor) {
-    Type type = createType(typeElement, sourcePositionNode);
-    getCurrentCompilationUnit().addType(type);
-    return processEnclosedBy(
-        type,
-        () -> {
-          ;
-          convertTypeBody(type, bodyDeclarations);
-          return typeProcessor.apply(type);
-        });
-  }
-
   private Type convertClassDeclaration(JCClassDecl classDecl) {
     return convertClassDeclaration(classDecl, classDecl);
   }
 
   private Type convertClassDeclaration(JCClassDecl classDecl, JCTree sourcePositionNode) {
-    return convertAndAddType(
-        classDecl.sym, classDecl.getMembers(), sourcePositionNode, type -> null);
+    return convertType(classDecl.sym, classDecl.getMembers(), sourcePositionNode);
   }
 
   private void convertTypeBody(Type type, List<JCTree> bodyDeclarations) {
@@ -244,7 +244,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
       } else if (bodyDeclaration instanceof JCClassDecl) {
         // Nested class
         JCClassDecl nestedTypeDeclaration = (JCClassDecl) bodyDeclaration;
-        convertClassDeclaration(nestedTypeDeclaration);
+        type.addType(convertClassDeclaration(nestedTypeDeclaration));
       } else {
         throw internalCompilerError(
             "Unimplemented translation for BodyDeclaration type: %s.",
@@ -339,14 +339,14 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
 
   private LabeledStatement convertLabeledStatement(JCLabeledStatement statement) {
     Label label = Label.newBuilder().setName(statement.getLabel().toString()).build();
-    checkState(labelsInScope.put(label.getName(), label) == null);
+    labelsInScope.computeIfAbsent(label.getName(), n -> new ArrayDeque<>()).push(label);
     LabeledStatement labeledStatment =
         LabeledStatement.newBuilder()
             .setSourcePosition(getSourcePosition(statement))
             .setLabel(label)
             .setStatement(convertStatement(statement.getStatement()))
             .build();
-    labelsInScope.remove(label.getName());
+    labelsInScope.get(label.getName()).pop();
     return labeledStatment;
   }
 
@@ -366,7 +366,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
 
   @Nullable
   private LabelReference getLabelReferenceOrNull(Name label) {
-    return label == null ? null : labelsInScope.get(label.toString()).createReference();
+    return label == null ? null : labelsInScope.get(label.toString()).peek().createReference();
   }
 
   private DoWhileStatement convertDoWhileLoop(JCDoWhileLoop statement) {
@@ -460,17 +460,24 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
 
     return SwitchStatement.newBuilder()
         .setSourcePosition(getSourcePosition(switchStatement))
-        .setSwitchExpression(convertExpressionOrNull(switchStatement.getExpression()))
+        .setExpression(convertExpressionOrNull(switchStatement.getExpression()))
         .setCases(
             switchStatement.getCases().stream()
                 .map(
                     caseClause ->
                         SwitchCase.newBuilder()
-                            .setCaseExpression(convertExpressionOrNull(caseClause.getExpression()))
+                            .setCaseExpressions(convertExpressionToList(caseClause.getExpression()))
                             .setStatements(convertStatements(caseClause.getStatements()))
                             .build())
                 .collect(toImmutableList()))
         .build();
+  }
+
+  private List<Expression> convertExpressionToList(JCExpression expression) {
+    if (expression == null) {
+      return ImmutableList.of();
+    }
+    return ImmutableList.of(convertExpression(expression));
   }
 
   private ThrowStatement convertThrow(JCThrow statement) {
@@ -571,8 +578,8 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
       case BREAK:
         return convertBreak((JCBreak) jcStatement);
       case CLASS:
-        convertClassDeclaration((JCClassDecl) jcStatement);
-        return null;
+        return new LocalClassDeclarationStatement(
+            convertClassDeclaration((JCClassDecl) jcStatement), getSourcePosition(jcStatement));
       case CONTINUE:
         return convertContinue((JCContinue) jcStatement);
       case DO_WHILE_LOOP:
@@ -857,6 +864,10 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
         environment.createMethodDescriptor(
             (ExecutableType) memberReference.referentType, returnType, methodSymbol);
     Expression qualifier = convertExpressionOrNull(memberReference.getQualifierExpression());
+    if (qualifier instanceof JavaScriptConstructorReference) {
+      // The qualifier was just the class name, remove it.
+      qualifier = null;
+    }
 
     return MethodReference.newBuilder()
         .setTypeDescriptor(expressionTypeDescriptor)
@@ -917,15 +928,25 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
       return new ThisReference(
           environment
               .createDeclarationForType((ClassSymbol) ((JCIdent) expression).sym)
-              .toUnparameterizedTypeDescriptor(),
+              .toDescriptor(),
           /* isQualified= */ true);
     }
     if (fieldAccess.name.contentEquals("super")) {
-      return new SuperReference(
+      DeclaredTypeDescriptor typeDescriptor =
           environment
               .createDeclarationForType((ClassSymbol) ((JCIdent) expression).sym)
-              .toUnparameterizedTypeDescriptor());
+              .toDescriptor();
+
+      boolean isQualified = !typeDescriptor.isInterface();
+      if (isQualified) {
+        // This is a qualified super call, targeting an outer class method.
+        return new SuperReference(typeDescriptor, isQualified);
+      }
+
+      // Call targeting a method in the super types, including superinterfaces.
+      return new SuperReference(getCurrentType().getTypeDescriptor());
     }
+
     Expression qualifier;
     if (fieldAccess.sym instanceof VariableElement) {
       qualifier = convertExpression(expression);
@@ -1264,7 +1285,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
   }
 
   private List<Expression> convertExpressions(List<JCExpression> expressions) {
-    return expressions.stream().map(this::convertExpression).collect(toImmutableList());
+    return expressions.stream().map(this::convertExpression).collect(toCollection(ArrayList::new));
   }
 
   private CompilationUnit build(JCCompilationUnit javacUnit) {
@@ -1276,7 +1297,6 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
       boolean isNullMarked = isNullMarked(javacUnit);
       PackageInfoCache.get()
           .setPackageProperties(
-              PackageInfoCache.SOURCE_CLASS_PATH_ENTRY,
               packageName,
               packageJsNamespace,
               // TODO(b/135123615): need to support ObjectiveCName extraction.
@@ -1289,7 +1309,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
             javacUnit.getPackageName() == null ? "" : javacUnit.getPackageName().toString()));
     for (JCTree tree : javacUnit.getTypeDecls()) {
       if (tree instanceof JCClassDecl) {
-        convertClassDeclaration((JCClassDecl) tree);
+        getCurrentCompilationUnit().addType(convertClassDeclaration((JCClassDecl) tree));
       }
     }
     return getCurrentCompilationUnit();

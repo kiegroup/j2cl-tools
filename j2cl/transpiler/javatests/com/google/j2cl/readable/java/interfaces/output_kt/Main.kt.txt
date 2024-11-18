@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package interfaces
 
@@ -49,6 +49,7 @@ open class Main {
   si!!.defaultMethod(null)
  }
 
+ @ObjCName("J2ktInterfacesMain_Interface", exact = true)
  fun interface Interface<T> {
   @ObjCName("interfaceMethod")
   fun interfaceMethod()
@@ -60,11 +61,17 @@ open class Main {
    this.privateMethod_private_interfaces_Main_Interface(t)
   }
 
-  fun privateMethod_private_interfaces_Main_Interface(t: T) {}
+  @ObjCName("privateMethod")
+  fun privateMethod_private_interfaces_Main_Interface(
+   @ObjCName("withId") t: T
+  ) {}
 
+  @ObjCName("J2ktInterfacesMain_InterfaceCompanion", exact = true)
   companion object {
+   @ObjCName("a_")
    const val a: Int = 1
 
+   @ObjCName("b_")
    const val b: Int = 2
 
    @JvmStatic
@@ -73,19 +80,24 @@ open class Main {
   }
  }
 
+ @ObjCName("J2ktInterfacesMain_SubInterface", exact = true)
  fun interface SubInterface: Main.Interface<String?> {
   override fun defaultMethod(s: String?) {
    super<Main.Interface>.defaultMethod(s)
   }
  }
 
+ @ObjCName("J2ktInterfacesMain_Implementor", exact = true)
  open inner class Implementor internal constructor(): Main.SubInterface, Main.Interface<String?> {
   override fun interfaceMethod() {}
  }
 
+ @ObjCName("J2ktInterfacesMain_AbstractImplementor", exact = true)
  abstract inner class AbstractImplementor internal constructor(): Main.SubInterface {}
 
+ @ObjCName("J2ktInterfacesMain_EnumImplementor", exact = true)
  enum class EnumImplementor: Main.SubInterface {
+  @ObjCName("ONE")
   ONE;
 
   override fun interfaceMethod() {}

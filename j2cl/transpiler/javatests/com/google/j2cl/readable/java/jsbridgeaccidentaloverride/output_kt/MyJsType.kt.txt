@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package jsbridgeaccidentaloverride
 
@@ -26,9 +26,10 @@ import kotlin.Suppress
 import kotlin.experimental.ExperimentalObjCName
 import kotlin.native.ObjCName
 
+@ObjCName("J2ktJsbridgeaccidentaloverrideOtherInterface", exact = true)
 fun interface OtherInterface {
- @ObjCName("fun")
- fun `fun`(
+ @ObjCName("f")
+ fun f(
   @ObjCName("withInt") a: Int
  ): Int
 }
@@ -52,11 +53,12 @@ open class MyJsType: OtherInterface {
   return a + 1
  }
 
- override fun `fun`(a: Int): Int {
+ override fun f(a: Int): Int {
   return a - 1
  }
 }
 
+@ObjCName("J2ktJsbridgeaccidentaloverrideMyInterface", exact = true)
 interface MyInterface {
  @ObjCName("foo")
  fun foo(
@@ -69,6 +71,7 @@ interface MyInterface {
  ): Int
 }
 
+@ObjCName("J2ktJsbridgeaccidentaloverrideSubJsType", exact = true)
 open class SubJsType internal constructor(): MyJsType(), MyInterface {
  override fun bar(a: Int): Int {
   return a + 2

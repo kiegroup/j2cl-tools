@@ -21,6 +21,7 @@ load(
     "j2wasm_application",
 )
 load("//build_defs/internal_do_not_use:j2cl_common.bzl", "j2cl_common")
+load("//build_defs/internal_do_not_use:j2kt_web_transition.bzl", "j2kt_web_transition")
 load("//build_defs/internal_do_not_use:provider.bzl", "J2clInfo")
 load("@bazel_tools//tools/build_defs/apple:ios.bzl", "ios_build_test")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
@@ -103,7 +104,6 @@ def readable_example(
             name = "readable_wasm",
             deps = [":readable-j2wasm"],
             entry_points = wasm_entry_points,
-            internal_transpiler_args = ["-experimentalWasmEnableNonNativeJsEnum"] if not use_modular_pipeline else [],
             use_modular_pipeline = use_modular_pipeline,
         )
 
@@ -215,6 +215,7 @@ def _js_readable_targets(readable_target, dir_out, defs):
         ] + defs,
         compiler = "//javascript/tools/jscompiler:head",
         extra_inputs = ["//transpiler/javatests/com/google/j2cl/readable:conformance_proto"],
+        use_precompiled_libraries = False,
         deps = [":%s" % readable_target],
     )
 
@@ -303,12 +304,6 @@ _golden_output = rule(
     attrs = {"target": attr.label(allow_single_file = True)},
 )
 
-_j2kt_web_transition = transition(
-    implementation = lambda s, a: {"//:experimental_enable_j2kt_web": True},
-    inputs = [],
-    outputs = ["//:experimental_enable_j2kt_web"],
-)
-
 def _j2kt_web_enabled_j2cl_library_impl(ctx):
     j2cl_library = ctx.attr.j2cl_library[0]
     j2cl_provider = j2cl_library[J2clInfo]
@@ -324,6 +319,6 @@ def _j2kt_web_enabled_j2cl_library_impl(ctx):
 _j2kt_web_enabled_j2cl_library = rule(
     implementation = _j2kt_web_enabled_j2cl_library_impl,
     attrs = {
-        "j2cl_library": attr.label(providers = [J2clInfo], cfg = _j2kt_web_transition),
+        "j2cl_library": attr.label(providers = [J2clInfo], cfg = j2kt_web_transition),
     },
 )

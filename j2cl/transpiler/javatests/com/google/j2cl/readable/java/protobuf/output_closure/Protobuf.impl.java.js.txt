@@ -3,6 +3,8 @@ goog.module('protobuf.Protobuf$impl');
 const j_l_Object = goog.require('java.lang.Object$impl');
 const $Util = goog.require('nativebootstrap.Util$impl');
 
+let GeneratedMessage = goog.forwardDeclare('com.google.protobuf.GeneratedMessage$impl');
+let MyEnum = goog.forwardDeclare('protobuf.MyEnum$impl');
 let MyMessage = goog.forwardDeclare('protobuf.MyMessage$impl');
 
 class Protobuf extends j_l_Object {
@@ -28,8 +30,13 @@ class Protobuf extends j_l_Object {
   builder.m_getTestField__int();
   let message = builder.m_build__protobuf_MyMessage();
   message.m_getTestField__int();
+  let chainedMessage = MyMessage.m_newBuilder__protobuf_MyMessage_Builder().m_setTestField__int__protobuf_MyMessage_Builder(1).m_setTestField__int__protobuf_MyMessage_Builder(2).m_build__protobuf_MyMessage();
   let defaultMessage = MyMessage.m_getDefaultInstance__protobuf_MyMessage();
   defaultMessage.m_getTestField__int();
+  let parser = message.m_getParserForType__com_google_protobuf_Parser();
+  let generatedMessageParser = /**@type {GeneratedMessage}*/ (message).m_getParserForType__com_google_protobuf_Parser();
+  let enumOne = MyEnum.f_ONE__protobuf_MyEnum;
+  let enumOneNumber = MyEnum.f_ONE__protobuf_MyEnum.m_getNumber__int();
  }
  /** @nodts */
  static $clinit() {
@@ -44,6 +51,7 @@ class Protobuf extends j_l_Object {
  
  /** @nodts */
  static $loadModules() {
+  MyEnum = goog.module.get('protobuf.MyEnum$impl');
   MyMessage = goog.module.get('protobuf.MyMessage$impl');
  }
 }

@@ -55,9 +55,12 @@ class BlockDecomposerLowering(val context: JvmBackendContext) :
     // We just need a call to a method that return nothing. This method call will be removed by the
     // cleanup lowering pass.
     return JsIrBuilder.buildCall(
-      context.irBuiltIns.illegalArgumentExceptionSymbol,
-      context.irBuiltIns.nothingType,
-    )
+        context.ir.symbols.throwUnsupportedOperationException,
+        context.irBuiltIns.nothingType,
+      )
+      .apply {
+        putValueArgument(0, JsIrBuilder.buildString(context.irBuiltIns.stringType, "unreachable"))
+      }
     // END OF MODIFICATIONS
   }
 }
@@ -886,6 +889,14 @@ class BlockDecomposerTransformer(
     //   tmp
     // ]
     override fun visitTry(aTry: IrTry): IrExpression {
+      // MODIFIED BY GOOGLE.
+      // Do not create a temporary variable if the try has a Unit result type. We can instead just
+      // create a composite that executes the try and then returns Unit. This avoids type mismatches
+      // where the try and catch results don't have compatible types.
+      if (aTry.type == unitType) {
+        return aTry.asExpression(unitValue)
+      }
+      // END OF MODIFICATIONS
       val irVar = makeTempVar(aTry.type)
 
       val newTryResult = wrap(aTry.tryResult, irVar)

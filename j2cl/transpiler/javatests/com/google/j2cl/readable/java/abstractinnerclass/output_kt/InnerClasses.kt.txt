@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package abstractinnerclass
 
@@ -26,17 +26,20 @@ import kotlin.native.ObjCName
 
 @ObjCName("J2ktAbstractinnerclassInnerClasses", exact = true)
 open class InnerClasses {
+ @ObjCName("J2ktAbstractinnerclassInnerClasses_A", exact = true)
  fun interface A {
   @ObjCName("foo")
   fun foo()
  }
 
+ @ObjCName("J2ktAbstractinnerclassInnerClasses_B", exact = true)
  abstract class B internal constructor(): InnerClasses.A {
   internal open fun bar_pp_abstractinnerclass() {
    this.foo()
   }
  }
 
+ @ObjCName("J2ktAbstractinnerclassInnerClasses_C", exact = true)
  abstract inner class C internal constructor(): InnerClasses.A {
   internal open fun bar_pp_abstractinnerclass() {
    this.foo()

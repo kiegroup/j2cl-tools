@@ -18,6 +18,7 @@ package com.google.j2cl.transpiler.passes;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.common.collect.ImmutableList;
 import com.google.j2cl.transpiler.ast.AbstractRewriter;
 import com.google.j2cl.transpiler.ast.AstUtils;
 import com.google.j2cl.transpiler.ast.CompilationUnit;
@@ -38,14 +39,15 @@ public class NormalizeSwitchStatements extends NormalizationPass {
         new AbstractRewriter() {
           @Override
           public SwitchStatement rewriteSwitchStatement(SwitchStatement switchStatement) {
-            Expression expression = switchStatement.getSwitchExpression();
+            Expression expression = switchStatement.getExpression();
             TypeDescriptor expressionTypeDescriptor = expression.getTypeDescriptor();
 
             if (TypeDescriptors.isJavaLangString(expressionTypeDescriptor)
-                || expressionTypeDescriptor.isJsEnum()) {
-              // Switch on strings and JsEnums should throw on null.
+                || (AstUtils.isJsEnumBoxingSupported() && expressionTypeDescriptor.isJsEnum())) {
+              // Switch on strings and unboxed JsEnums should throw on null.
               return SwitchStatement.Builder.from(switchStatement)
-                  .setSwitchExpression(RuntimeMethods.createCheckNotNullCall(expression))
+                  .setExpression(
+                      RuntimeMethods.createCheckNotNullCall(switchStatement.getExpression()))
                   .build();
             }
 
@@ -70,10 +72,10 @@ public class NormalizeSwitchStatements extends NormalizationPass {
    */
   private static SwitchStatement convertEnumSwitchStatement(SwitchStatement switchStatement) {
     return SwitchStatement.Builder.from(switchStatement)
-        .setSwitchExpression(
+        .setExpression(
             MethodCall.Builder.from(
                     TypeDescriptors.get().javaLangEnum.getMethodDescriptor("ordinal"))
-                .setQualifier(switchStatement.getSwitchExpression())
+                .setQualifier(switchStatement.getExpression())
                 .build())
         .setCases(
             switchStatement.getCases().stream()
@@ -89,11 +91,12 @@ public class NormalizeSwitchStatements extends NormalizationPass {
 
     FieldAccess enumFieldAccess = (FieldAccess) switchCase.getCaseExpression();
     return SwitchCase.Builder.from(switchCase)
-        .setCaseExpression(
-            FieldAccess.Builder.from(enumFieldAccess)
-                .setTarget(
-                    AstUtils.getEnumOrdinalConstantFieldDescriptor(enumFieldAccess.getTarget()))
-                .build())
+        .setCaseExpressions(
+            ImmutableList.of(
+                FieldAccess.Builder.from(enumFieldAccess)
+                    .setTarget(
+                        AstUtils.getEnumOrdinalConstantFieldDescriptor(enumFieldAccess.getTarget()))
+                    .build()))
         .build();
   }
 }

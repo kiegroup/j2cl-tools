@@ -14,9 +14,9 @@
 # limitations under the License.
 
 # Script that can be used by CI server for testing j2cl builds.
-set -e
+set -ex
 
-bazel build :all {jre,transpiler,tools,junit/generator,junit/emul}/java/...
+bazel build :all {jre,transpiler,tools,benchmarking,junit/generator,junit/emul}/java/...
 
 # Do a quick smoke check of integration test
 bazel test transpiler/javatests/com/google/j2cl/integration/java/emptyclass/...

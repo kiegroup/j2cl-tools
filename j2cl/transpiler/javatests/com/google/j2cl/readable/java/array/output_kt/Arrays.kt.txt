@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package array
 
@@ -152,7 +152,7 @@ open class Arrays {
   strings2d!![0]!![1] = null
  }
 
- internal fun testNativeArray_private_2() {
+ private fun testNativeArray() {
   var nativeObjects: Array<Arrays.NativeType?>? = arrayOfNulls<Arrays.NativeType>(100)
   nativeObjects = arrayOfNulls<Arrays.NativeType>(0)
   nativeObjects = arrayOf<Arrays.NativeType?>(null, null)
@@ -193,11 +193,14 @@ open class Arrays {
   @ObjCName("withJavaIoSerializable") serializable: Serializable?
  ) {}
 
+ @ObjCName("J2ktArrayArrays_SomeObject", exact = true)
  open inner class SomeObject internal constructor() {}
 
+ @ObjCName("J2ktArrayArrays_NativeType", exact = true)
  @JsType(name = "String", namespace = JsPackage.GLOBAL, isNative = true)
  open class NativeType internal constructor() {}
 
+ @ObjCName("J2ktArrayArrays_ArrayContainer", exact = true)
  open class ArrayContainer<T> internal constructor() {
   @JvmField
   internal var data_pp_array: Array<T>? = null

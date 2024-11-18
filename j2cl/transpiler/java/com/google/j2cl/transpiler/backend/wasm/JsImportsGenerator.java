@@ -29,7 +29,6 @@ import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
 import com.google.j2cl.transpiler.ast.Library;
 import com.google.j2cl.transpiler.ast.Method;
 import com.google.j2cl.transpiler.ast.MethodDescriptor;
-import com.google.j2cl.transpiler.ast.Type;
 import com.google.j2cl.transpiler.ast.TypeDeclaration;
 import com.google.j2cl.transpiler.ast.TypeDescriptor;
 import com.google.j2cl.transpiler.ast.Variable;
@@ -244,11 +243,6 @@ public final class JsImportsGenerator {
     }
 
     @Override
-    public void exitType(Type type) {
-      collectModuleImports(type.getTypeDescriptor());
-    }
-
-    @Override
     public void exitMethod(Method method) {
       MethodDescriptor methodDescriptor = method.getDescriptor();
       if (!shouldGenerateImport(methodDescriptor)) {
@@ -283,7 +277,11 @@ public final class JsImportsGenerator {
 
     private void addModuleImports(MethodDescriptor methodDescriptor) {
       if (!methodDescriptor.isExtern()) {
-        moduleImports.add(methodDescriptor.getJsNamespace());
+        if (methodDescriptor.hasJsNamespace()) {
+          moduleImports.add(methodDescriptor.getJsNamespace());
+        } else {
+          collectModuleImports(methodDescriptor.getEnclosingTypeDescriptor());
+        }
       }
 
       methodDescriptor.getParameterTypeDescriptors().forEach(this::collectModuleImports);
@@ -326,7 +324,7 @@ public final class JsImportsGenerator {
           newImport.getMethod().getSourcePosition(),
           "Native methods '%s' and '%s', importing JavaScript method '%s', have"
               + " different parameter types ('%s' vs '%s'), currently disallowed"
-              + " due to performance concerns (b/279081023).",
+              + " due to performance concerns (b/371225463).",
           existingImport.getMethod().getReadableDescription(),
           newImport.getMethod().getReadableDescription(),
           existingImport.getImportKey(),
@@ -341,13 +339,6 @@ public final class JsImportsGenerator {
     }
     // If the method maps to a WASM instruction, that takes precedence.
     if (methodDescriptor.getWasmInfo() != null) {
-      return false;
-    }
-    // Exclude private, parameterless constructors.
-    // TODO(b/279187295) Make this more robust by checking for callers first.
-    if (methodDescriptor.isConstructor()
-        && methodDescriptor.getVisibility().isPrivate()
-        && methodDescriptor.getParameterDescriptors().isEmpty()) {
       return false;
     }
     return true;

@@ -17,12 +17,14 @@ package com.google.j2cl.transpiler.ast;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.j2cl.transpiler.ast.TypeDescriptors.isJavaLangObject;
 import static java.util.stream.Collectors.joining;
 
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.extension.memoized.Memoized;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
@@ -36,13 +38,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -156,14 +158,14 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     @Override
     public String getPrefix() {
       switch (this) {
-          // User written methods and bridges need to be mangled the same way.
+        // User written methods and bridges need to be mangled the same way.
         case SOURCE:
         case GENERALIZING_BRIDGE:
         case SPECIALIZING_BRIDGE:
         case DEFAULT_METHOD_BRIDGE:
         case ABSTRACT_STUB:
           return "m_";
-          // Getters and setters need to be mangled as fields.
+        // Getters and setters need to be mangled as fields.
         case SYNTHETIC_SYSTEM_PROPERTY_GETTER_REQUIRED:
         case SYNTHETIC_SYSTEM_PROPERTY_GETTER_OPTIONAL:
           // Synthetic property getters use the name of the property as the name of the method hence
@@ -172,7 +174,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
         case SYNTHETIC_PROPERTY_SETTER:
         case SYNTHETIC_PROPERTY_GETTER:
           return FieldOrigin.SOURCE.getPrefix();
-          // Don't prefix the rest, they all start with "$"
+        // Don't prefix the rest, they all start with "$"
         default:
           return "";
       }
@@ -424,7 +426,6 @@ public abstract class MethodDescriptor extends MemberDescriptor {
   // the details.
   abstract MethodDescriptor getDeclarationDescriptorOrNullIfSelf();
 
-  @Override
   @Memoized
   public MethodDescriptor toRawMemberDescriptor() {
     return toBuilder()
@@ -436,6 +437,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
             getParameterDescriptors().stream()
                 .map(ParameterDescriptor::toRawParameterDescriptor)
                 .collect(toImmutableList()))
+        .setDeclarationDescriptor(getDeclarationDescriptor())
         .build();
   }
 
@@ -477,7 +479,9 @@ public abstract class MethodDescriptor extends MemberDescriptor {
 
     DeclaredTypeDescriptor enclosingType = getEnclosingTypeDescriptor();
     if (enclosingType.isJsFunctionInterface()) {
-      return this == enclosingType.getSingleAbstractMethodDescriptor();
+      MethodDescriptor singleAbstractMethod = enclosingType.getSingleAbstractMethodDescriptor();
+      return singleAbstractMethod != null
+          && this == singleAbstractMethod.getDeclarationDescriptor();
     }
 
     return enclosingType.isJsFunctionImplementation()
@@ -681,6 +685,16 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     return ktObjcInfo != null ? ktObjcInfo.getObjectiveCName() : null;
   }
 
+  /** Returns true if this descriptor and {@code other} refer to the same method declaration. */
+  // TODO(b/372055363): This should be equivalent to
+  //  `getDeclarationDescriptor().equals(other.getDeclarationDescriptor())`
+  public boolean isSameMethod(MethodDescriptor other) {
+    return getEnclosingTypeDescriptor().isSameBaseType(other.getEnclosingTypeDescriptor())
+        && getDeclarationDescriptor()
+            .getSignature()
+            .equals(other.getDeclarationDescriptor().getSignature());
+  }
+
   @Override
   @Memoized
   public boolean isOrOverridesJavaLangObjectMethod() {
@@ -688,7 +702,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
       return false;
     }
 
-    if (TypeDescriptors.isJavaLangObject(getEnclosingTypeDescriptor())) {
+    if (isJavaLangObject(getEnclosingTypeDescriptor())) {
       return true;
     }
 
@@ -717,7 +731,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     }
 
     // Do not use JsInfo when producing mangled names for wasm.
-    if (!useWasmManglingPatterns()) {
+    if (useClosureManglingPatterns()) {
       if (isJsConstructor() || getOrigin() == MethodOrigin.SYNTHETIC_NOOP_JAVASCRIPT_CONSTRUCTOR) {
         return "constructor";
       }
@@ -779,7 +793,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
         signatureDescriptors
             .map(TypeDescriptor::toRawTypeDescriptor)
             .map(TypeDescriptor::getMangledName)
-            .collect(Collectors.joining("__"));
+            .collect(joining("__"));
 
     return buildMangledName(signature + suffix);
   }
@@ -886,7 +900,31 @@ public abstract class MethodDescriptor extends MemberDescriptor {
             // for all non-nullable "primitive" types).
             ? convertNonNullableBoxedTypesToPrimitives(getParameterTypeDescriptors())
             : getParameterTypeDescriptors();
-    return buildMethodSignature(getName(), parameterTypeDescriptors);
+    return buildMethodSignature(getNameApplyingKotlinRenames(), parameterTypeDescriptors);
+  }
+
+  /** Returns the method name but accounts for kotlin's rename of {@code T List.remove(int)}. */
+  // TODO(b/372484266): Do this in a more principled manner.
+  private String getNameApplyingKotlinRenames() {
+    if (getName().equals("remove")
+        && TypeDescriptors.isPrimitiveBoolean(getReturnTypeDescriptor())
+        && getParameterDescriptors().size() == 1
+        && TypeDescriptors.isPrimitiveInt(
+            Iterables.getOnlyElement(getParameterTypeDescriptors()))) {
+      // Kotlin renames the method `T List<T>.remove(int)` to `removeAt` so that it does not
+      // clash with `boolean List<T>.remove(T)` when specializing to `List<Int>`. Internally we need
+      // to preserve the original names to interoperate with Java code, so the new name only applies
+      // when reasoning about overrides. For the Java frontend it is safe to always use an arbitrary
+      // and unique override key for `boolean remove(int)`, since methods that only involve
+      // primitives in their parameter and return types can never specialize them. In Kotlin this
+      // change resolves the source renaming by making the signatures of `int remove(int)` and
+      // `boolean remove(int)` different.
+      // Note that in Java the remove API is `boolean List<Int>.remove(Object)` but kotlin creates a
+      // special override `boolean List<Int>.remove(Int)` which is the one we need to have a
+      // special case for here.
+      return "remove#specialized";
+    }
+    return getName();
   }
 
   private ImmutableList<TypeDescriptor> convertNonNullableBoxedTypesToPrimitives(
@@ -898,7 +936,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
                         && !typeDescriptor.isNullable()
                     ? typeDescriptor.toRawTypeDescriptor().toUnboxedType()
                     : typeDescriptor)
-        .collect(ImmutableList.toImmutableList());
+        .collect(toImmutableList());
   }
 
   /**
@@ -1007,8 +1045,19 @@ public abstract class MethodDescriptor extends MemberDescriptor {
    */
   @Memoized
   public ImmutableSet<MethodDescriptor> getJavaOverriddenMethodDescriptors() {
-    return getOverriddenMethodDescriptors(
-        this::isOverride, MethodDescriptor::getJavaOverriddenMethodDescriptors);
+    if (!isPolymorphic()) {
+      return ImmutableSet.of();
+    }
+
+    var overriddenMethodsBuilder = ImmutableSet.<MethodDescriptor>builder();
+
+    getEnclosingTypeDescriptor().getTransitiveSuperTypes().stream()
+        .flatMap(t -> t.getDeclaredMethodDescriptors().stream())
+        .filter(MethodDescriptor::isPolymorphic)
+        .filter(this::isOverride)
+        .forEach(overriddenMethodsBuilder::add);
+
+    return overriddenMethodsBuilder.build();
   }
 
   /**
@@ -1025,49 +1074,20 @@ public abstract class MethodDescriptor extends MemberDescriptor {
    */
   @Memoized
   public ImmutableSet<MethodDescriptor> getJsOverriddenMethodDescriptors() {
-    return getOverriddenMethodDescriptors(
-        m ->
-            m.getMangledName().equals(getMangledName())
-                // Interface methods never override class methods in JavaScript, but in our model
-                // we see the methods on all supertypes including those of java.lang.Object.
-                && (!getEnclosingTypeDescriptor().isInterface()
-                    || m.getEnclosingTypeDescriptor().isInterface()),
-        MethodDescriptor::getJsOverriddenMethodDescriptors);
-  }
-
-  /**
-   * Generic recursive computation of overridden.
-   *
-   * <p>Note that the getOverriddenMethodsFn is passed as a parameter to take advantage of the
-   * memoization and limit the computation cost.
-   */
-  private ImmutableSet<MethodDescriptor> getOverriddenMethodDescriptors(
-      Predicate<MethodDescriptor> isOverrideFn,
-      Function<MethodDescriptor, Set<MethodDescriptor>> getOverriddenMethodsFn) {
     if (!isPolymorphic()) {
       return ImmutableSet.of();
     }
 
-    ImmutableSet.Builder<MethodDescriptor> overriddenMethodsBuilder = new ImmutableSet.Builder<>();
+    var overriddenMethodsBuilder = ImmutableSet.<MethodDescriptor>builder();
 
     getEnclosingTypeDescriptor()
         .getSuperTypesStream()
-        .flatMap(
-            t ->
-                Stream.concat(
-                    // TODO(b/225175417): The work around to the problem of computing the
-                    // specialized bounds for a type variable is to look at both the declared
-                    // methods from the super types (which include the right type variable
-                    // specialization, and the computed polymorphic method that contain bridges.
-                    t.getDeclaredMethodDescriptors().stream()
-                        .filter(MethodDescriptor::isPolymorphic),
-                    t.getPolymorphicMethods().stream()))
-        .filter(isOverrideFn)
-        .forEach(
-            m -> {
-              overriddenMethodsBuilder.add(m);
-              overriddenMethodsBuilder.addAll(getOverriddenMethodsFn.apply(m));
-            });
+        // Remove java.lang.Object as a supertype if the type is an interface since in JavaScript
+        // interface methods never override class methods.
+        .filter(t -> !(getEnclosingTypeDescriptor().isInterface() && isJavaLangObject(t)))
+        .flatMap(t -> t.getPolymorphicMethods().stream())
+        .filter(m -> m.getMangledName().equals(getMangledName()))
+        .forEach(m -> overriddenMethodsBuilder.add(m).addAll(m.getJsOverriddenMethodDescriptors()));
 
     return overriddenMethodsBuilder.build();
   }
@@ -1099,42 +1119,181 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     if (AstUtils.isIdentityFunction(replacingTypeDescriptorByTypeVariable)) {
       return this;
     }
-
-    // Original type variables.
-    TypeDescriptor returnTypeDescriptor = getReturnTypeDescriptor();
-    ImmutableList<TypeDescriptor> parameterTypeDescriptors = getParameterTypeDescriptors();
-
-    // Specialized type variables (possibly recursively).
-    TypeDescriptor specializedReturnTypeDescriptor =
-        returnTypeDescriptor.specializeTypeVariables(replacingTypeDescriptorByTypeVariable);
-    ImmutableList<TypeDescriptor> specializedParameterTypeDescriptors =
-        parameterTypeDescriptors.stream()
-            .map(
-                typeDescriptor ->
-                    typeDescriptor.specializeTypeVariables(replacingTypeDescriptorByTypeVariable))
-            .collect(toImmutableList());
+    // First specialize the type parameters/type arguments since that might introduce new captures
+    // that need to be propagated. e.g.
+    // class A<T> {
+    //   <S extends List<T>, U extends S> void m(X<U>) {...}
+    // }
+    //
+    // class B extends A<String> {
+    //    // <S1 extends List<String>, U1 extends S1> void m(X<U1>)  should be the bridge here.
+    // }
+    //
 
     // Specializing a declaration means specializing the type parameters; whereas specializing a
     // usage site, means specializing the type variables that might appear in the current
     // type arguments.
+    ImmutableList<? extends TypeDescriptor> typeArgumentTypeDescriptors =
+        isDeclaration() ? getTypeParameterTypeDescriptors() : getTypeArgumentTypeDescriptors();
+
+    // Compute the new specialization mapping by creating replacement type variables whenever
+    // bounds need to be specialized.
+    var updatedReplacingTypeDescriptorByTypeVariable =
+        propagateChangesInBounds(
+            typeArgumentTypeDescriptors, replacingTypeDescriptorByTypeVariable);
+
+    // Specialize the type arguments using the updated mapping.
     ImmutableList<TypeDescriptor> specializedTypeArgumentDescriptors =
-        (isDeclaration() ? getTypeParameterTypeDescriptors() : getTypeArgumentTypeDescriptors())
-            .stream()
-                .map(
-                    typeDescriptor ->
-                        typeDescriptor.specializeTypeVariables(
-                            replacingTypeDescriptorByTypeVariable))
-                .collect(toImmutableList());
+        typeArgumentTypeDescriptors.stream()
+            .map(
+                typeDescriptor ->
+                    typeDescriptor.specializeTypeVariables(
+                        updatedReplacingTypeDescriptorByTypeVariable))
+            .collect(toImmutableList());
+
+    // Specialize the return type using the updated mapping.
+    TypeDescriptor returnTypeDescriptor = getReturnTypeDescriptor();
+    TypeDescriptor specializedReturnTypeDescriptor =
+        returnTypeDescriptor.specializeTypeVariables(updatedReplacingTypeDescriptorByTypeVariable);
+
+    // Specialize the parameters type using the updated mapping.
+    ImmutableList<TypeDescriptor> parameterTypeDescriptors = getParameterTypeDescriptors();
+    ImmutableList<TypeDescriptor> specializedParameterTypeDescriptors =
+        parameterTypeDescriptors.stream()
+            .map(
+                typeDescriptor ->
+                    typeDescriptor.specializeTypeVariables(
+                        updatedReplacingTypeDescriptorByTypeVariable))
+            .collect(toImmutableList());
+
+    DeclaredTypeDescriptor enclosingTypeDescriptor = getEnclosingTypeDescriptor();
+    DeclaredTypeDescriptor specializedEnclosingTypeDescriptor =
+        isStatic()
+            ? enclosingTypeDescriptor
+            : enclosingTypeDescriptor.specializeTypeVariables(
+                updatedReplacingTypeDescriptorByTypeVariable);
+
+    if (specializedEnclosingTypeDescriptor.equals(getEnclosingTypeDescriptor())
+        && specializedTypeArgumentDescriptors.equals(typeArgumentTypeDescriptors)
+        && specializedReturnTypeDescriptor.equals(returnTypeDescriptor)
+        && specializedParameterTypeDescriptors.equals(parameterTypeDescriptors)) {
+      // Nothing has changed, return the original descriptor.
+      return this;
+    }
 
     return MethodDescriptor.Builder.from(this)
         .setDeclarationDescriptor(getDeclarationDescriptor())
         .setTypeArgumentTypeDescriptors(specializedTypeArgumentDescriptors)
         .setReturnTypeDescriptor(specializedReturnTypeDescriptor)
         .updateParameterTypeDescriptors(specializedParameterTypeDescriptors)
-        .setEnclosingTypeDescriptor(
-            getEnclosingTypeDescriptor()
-                .specializeTypeVariables(replacingTypeDescriptorByTypeVariable))
+        .setEnclosingTypeDescriptor(specializedEnclosingTypeDescriptor)
         .build();
+  }
+
+  private Function<TypeVariable, ? extends TypeDescriptor> propagateChangesInBounds(
+      ImmutableList<? extends TypeDescriptor> argumentTypeDescriptors,
+      Function<TypeVariable, ? extends TypeDescriptor> replacingTypeDescriptorByTypeVariable) {
+    if (argumentTypeDescriptors.isEmpty()) {
+      return replacingTypeDescriptorByTypeVariable;
+    }
+
+    TypeDescriptor nextArgument = Iterables.getFirst(argumentTypeDescriptors, null);
+    return propagateChangesInBounds(
+        argumentTypeDescriptors.subList(1, argumentTypeDescriptors.size()),
+        maybeIntroduceNewTypeVariable(nextArgument, replacingTypeDescriptorByTypeVariable));
+  }
+
+  private static Function<TypeVariable, ? extends TypeDescriptor> maybeIntroduceNewTypeVariable(
+      TypeDescriptor typeDescriptor,
+      Function<TypeVariable, ? extends TypeDescriptor> replacingTypeDescriptorByTypeVariable) {
+    if (!typeDescriptor.isTypeVariable()) {
+      // Not a type variable, nothing to do.
+      return replacingTypeDescriptorByTypeVariable;
+    }
+
+    var typeVariable = ((TypeVariable) typeDescriptor).toDeclaration();
+    if (typeVariable.isWildcardOrCapture()) {
+      // Wildcards bounds are specialized directly by `specializeTypeVariables` since the
+      // declaration is implicit in the usage.
+      // TODO(b/246332093): Captures in the current state are in most places handled like wildcards
+      // until we improve the modeling; the scenarios where we rely heavily in substitution (e.g.
+      // bridge construction) do not involve captures.
+      return replacingTypeDescriptorByTypeVariable;
+    }
+
+    if (!typeVariable
+        .specializeTypeVariables(replacingTypeDescriptorByTypeVariable)
+        .equals(typeVariable)) {
+      // If the type variable will be replaced, there is no need to change their bounds, e.g.
+      //
+      //   <S, T extends X<S>>
+      //
+      // with a mapping
+      //
+      //     S -> A
+      //     T -> B
+      //
+      // will result in
+      //
+      //    <A, B>
+      //
+      return replacingTypeDescriptorByTypeVariable;
+    }
+
+    // Check if the bound is affected.
+    var boundTypeDescriptor = typeVariable.getUpperBoundTypeDescriptor();
+    var specializedBoundTypeDescriptor =
+        boundTypeDescriptor.specializeTypeVariables(replacingTypeDescriptorByTypeVariable);
+    if (boundTypeDescriptor.equals(specializedBoundTypeDescriptor)) {
+      return replacingTypeDescriptorByTypeVariable;
+    }
+
+    // The bound was specialized, introduce a new type variable and add it to the replacement
+    // function.
+    TypeVariable replacementTypeVariable =
+        TypeVariable.newBuilder()
+            .setName(typeVariable.getName())
+            .setUniqueKey(
+                typeVariable.getUniqueKey()
+                    + "#SpecializedBound#"
+                    + specializedBoundTypeDescriptor.getUniqueId())
+            .setUpperBoundTypeDescriptorFactory(
+                self ->
+                    // The bound might also refer to the variable that is being replaced, e.g. in
+                    //
+                    //   T extends X<T, U>
+                    //
+                    // if there is a replacement U -> V, the declaration needs to be
+                    //
+                    //  T1 extends X<T1, V>.
+                    specializedBoundTypeDescriptor.specializeTypeVariables(
+                        ImmutableMap.of(typeVariable, self)))
+            .build();
+
+    return tv ->
+        tv.equals(typeVariable)
+            ? replacementTypeVariable
+            : replacingTypeDescriptorByTypeVariable.apply(tv);
+  }
+
+  /**
+   * Returns the mapping between all the type variables in the enclosing context and the type
+   * arguments.
+   *
+   * <p>Note: It does not include the mapping for wildcards; hence this parameterization is not
+   * enough to recreate a method descriptor from its declaration.
+   */
+  @Memoized
+  public Map<TypeVariable, TypeDescriptor> getParameterization() {
+    Map<TypeVariable, TypeDescriptor> parameterization = new LinkedHashMap<>();
+    Streams.forEachPair(
+        getDeclarationDescriptor().getTypeParameterTypeDescriptors().stream(),
+        getTypeArgumentTypeDescriptors().stream(),
+        parameterization::put);
+    if (!isStatic()) {
+      parameterization.putAll(getEnclosingTypeDescriptor().getParameterization());
+    }
+    return parameterization;
   }
 
   @Override
@@ -1250,7 +1409,26 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     }
 
     public Builder makeDeclaration() {
-      return setDeclarationDescriptor(null).setTypeArgumentTypeDescriptors(ImmutableList.of());
+      // Replace type variables as some might haven been replaced due to changes in bounds.
+      var typeParameters = new ArrayList<>(getTypeParameterTypeDescriptors());
+
+      int i = 0;
+      // Argument list might be shorter than parameter list due to raw types.
+      for (var argument : getTypeArgumentTypeDescriptors()) {
+        if (isFreeTypeVariable(argument)) {
+          typeParameters.set(i, (TypeVariable) argument);
+        }
+        i++;
+      }
+
+      return setDeclarationDescriptor(null)
+          .setTypeParameterTypeDescriptors(typeParameters)
+          .setTypeArgumentTypeDescriptors(ImmutableList.of());
+    }
+
+    private static boolean isFreeTypeVariable(TypeDescriptor typeDescriptor) {
+      return typeDescriptor.isTypeVariable()
+          && !((TypeVariable) typeDescriptor).isWildcardOrCapture();
     }
 
     /** Internal use only. Use {@link #makeBridge}. */
@@ -1356,6 +1534,8 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     public abstract Builder setExceptionTypeDescriptors(
         ImmutableList<TypeDescriptor> exceptionTypeDescriptors);
 
+    public abstract ImmutableList<TypeDescriptor> getTypeArgumentTypeDescriptors();
+
     public abstract Builder setTypeArgumentTypeDescriptors(List<TypeDescriptor> typeArguments);
 
     abstract ImmutableList<ParameterDescriptor> getParameterDescriptors();
@@ -1405,6 +1585,8 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     abstract Builder setDeclarationDescriptorOrNullIfSelf(
         MethodDescriptor declarationMethodDescriptor);
 
+    abstract MethodDescriptor getDeclarationDescriptorOrNullIfSelf();
+
     abstract boolean isConstructor();
 
     abstract boolean isNative();
@@ -1420,6 +1602,11 @@ public abstract class MethodDescriptor extends MemberDescriptor {
       boolean isNative = isNative() || getEnclosingTypeDescriptor().isNative();
       if (!isNative && ignoreNonNativeJsInfo.get()) {
         setOriginalJsInfo(JsInfo.NONE);
+      }
+
+      if (getDeclarationDescriptorOrNullIfSelf() == null) {
+        // Use a canonical version of the enclosing type descriptor in method declarations.
+        setEnclosingTypeDescriptor(getEnclosingTypeDescriptor().getDeclarationDescriptor());
       }
 
       MethodDescriptor methodDescriptor = autoBuild();
@@ -1467,7 +1654,6 @@ public abstract class MethodDescriptor extends MemberDescriptor {
                     .filter(ParameterDescriptor::isVarargs)
                     .count()
                 <= 1);
-
 
         // varargs parameter is the last one.
         checkState(

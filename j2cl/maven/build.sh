@@ -20,6 +20,8 @@ ${BAZEL} build //junit/generator/java/com/google/j2cl/junit/apt:*
 ${BAZEL} build //junit/generator/java/com/google/j2cl/junit/runtime:jsunit_helpers-j2cl
 ${BAZEL} build //junit/generator/java/com/google/j2cl/junit/runtime:jsunit_helpers
 
+${BAZEL} build //junit/generator/java/com/google/j2cl/junit/runtime:jsunit_helpers_internal_assumption_violated_exception-j2cl
+
 #${BAZEL} build @org_gwtproject_gwt//user:libgwt-javaemul-internal-annotations.jar
 #${BAZEL} build @org_gwtproject_gwt//user:libgwt-javaemul-internal-annotations-src.jar
 

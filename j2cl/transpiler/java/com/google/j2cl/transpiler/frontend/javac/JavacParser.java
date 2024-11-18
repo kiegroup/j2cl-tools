@@ -23,7 +23,10 @@ import com.google.j2cl.common.Problems;
 import com.google.j2cl.common.Problems.FatalError;
 import com.google.j2cl.common.SourceUtils.FileInfo;
 import com.google.j2cl.transpiler.ast.CompilationUnit;
+import com.google.j2cl.transpiler.ast.Library;
 import com.google.j2cl.transpiler.ast.TypeDescriptors;
+import com.google.j2cl.transpiler.frontend.common.FrontendOptions;
+import com.google.j2cl.transpiler.frontend.common.PackageInfoCache;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.file.JavacFileManager;
@@ -50,22 +53,20 @@ import javax.tools.ToolProvider;
  */
 public class JavacParser {
   private final Problems problems;
-  private final ImmutableList<String> classpathEntries;
 
-  /** Create and initialize a JavacParser based on passed parameters. */
-  public JavacParser(List<String> classpathEntries, Problems problems) {
-
-    this.classpathEntries = ImmutableList.copyOf(classpathEntries);
+  public JavacParser(Problems problems) {
     this.problems = problems;
   }
 
   /** Returns a map from file paths to compilation units after Javac parsing. */
   @Nullable
-  public List<CompilationUnit> parseFiles(
-      List<FileInfo> filePaths, boolean useTargetPath, ImmutableList<String> forbiddenAnnotations) {
+  public Library parseFiles(FrontendOptions options) {
+    // Records information about package-info files supplied as byte code.
+    PackageInfoCache.init(options.getClasspaths(), problems);
 
+    ImmutableList<FileInfo> filePaths = options.getSources();
     if (filePaths.isEmpty()) {
-      return ImmutableList.of();
+      return Library.newEmpty();
     }
 
     // The map must be ordered because it will be iterated over later and if it was not ordered then
@@ -79,7 +80,7 @@ public class JavacParser {
       JavacFileManager fileManager =
           (JavacFileManager)
               compiler.getStandardFileManager(diagnostics, null, StandardCharsets.UTF_8);
-      List<File> searchpath = classpathEntries.stream().map(File::new).collect(toList());
+      List<File> searchpath = options.getClasspaths().stream().map(File::new).collect(toList());
       fileManager.setLocation(StandardLocation.PLATFORM_CLASS_PATH, searchpath);
       fileManager.setLocation(StandardLocation.CLASS_PATH, searchpath);
       JavacTaskImpl task =
@@ -101,25 +102,25 @@ public class JavacParser {
                       targetPathBySourcePath.keySet().stream().map(File::new).collect(toList())));
       List<CompilationUnitTree> javacCompilationUnits = Lists.newArrayList(task.parse());
       task.analyze();
-      if (hasErrors(diagnostics, javacCompilationUnits, forbiddenAnnotations)) {
-        return ImmutableList.of();
-      }
+      reportErrors(diagnostics, javacCompilationUnits, options.getForbiddenAnnotations());
+      problems.abortIfHasErrors();
 
       JavaEnvironment javaEnvironment =
           new JavaEnvironment(task.getContext(), TypeDescriptors.getWellKnownTypeNames());
 
-      return CompilationUnitBuilder.build(javacCompilationUnits, javaEnvironment);
+      ImmutableList<CompilationUnit> compilationUnits =
+          CompilationUnitBuilder.build(javacCompilationUnits, javaEnvironment);
+      return Library.newBuilder().setCompilationUnits(compilationUnits).build();
     } catch (IOException e) {
       problems.fatal(FatalError.valueOf(e.getMessage()));
       return null;
     }
   }
 
-  private boolean hasErrors(
+  private void reportErrors(
       DiagnosticCollector<JavaFileObject> diagnosticCollector,
       List<CompilationUnitTree> javacCompilationUnits,
       ImmutableList<String> forbiddenAnnotations) {
-    boolean hasErrors = false;
     // Here we check for instances of @GwtIncompatible in the ast. If that is the case, we throw an
     // error since these should have been stripped by the build system already.
     for (String forbiddenAnnotation : forbiddenAnnotations) {
@@ -141,9 +142,7 @@ public class JavacParser {
             diagnostic.getSource().getName(),
             "%s",
             diagnostic.getMessage(Locale.US));
-        hasErrors = true;
       }
     }
-    return hasErrors;
   }
 }

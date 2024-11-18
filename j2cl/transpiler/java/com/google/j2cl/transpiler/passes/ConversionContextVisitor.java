@@ -16,6 +16,7 @@
 package com.google.j2cl.transpiler.passes;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.j2cl.transpiler.ast.AstUtils.isBoxableJsEnumType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.j2cl.common.SourcePosition;
@@ -66,6 +67,7 @@ import com.google.j2cl.transpiler.ast.PostfixOperator;
 import com.google.j2cl.transpiler.ast.PrefixExpression;
 import com.google.j2cl.transpiler.ast.ReturnStatement;
 import com.google.j2cl.transpiler.ast.Statement;
+import com.google.j2cl.transpiler.ast.SwitchExpression;
 import com.google.j2cl.transpiler.ast.SwitchStatement;
 import com.google.j2cl.transpiler.ast.SynchronizedStatement;
 import com.google.j2cl.transpiler.ast.ThisOrSuperReference;
@@ -77,6 +79,7 @@ import com.google.j2cl.transpiler.ast.UnaryExpression;
 import com.google.j2cl.transpiler.ast.VariableDeclarationExpression;
 import com.google.j2cl.transpiler.ast.VariableDeclarationFragment;
 import com.google.j2cl.transpiler.ast.VariableReference;
+import com.google.j2cl.transpiler.ast.YieldStatement;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -129,7 +132,7 @@ public final class ConversionContextVisitor extends AbstractRewriter {
     @SuppressWarnings("unused")
     protected Expression rewriteTypeConversionContext(
         TypeDescriptor inferredTypeDescriptor,
-        TypeDescriptor actualTypeDescriptor,
+        TypeDescriptor declaredTypeDescriptor,
         Expression expression) {
       return expression;
     }
@@ -140,19 +143,22 @@ public final class ConversionContextVisitor extends AbstractRewriter {
      */
     protected Expression rewriteNonNullTypeConversionContext(
         TypeDescriptor inferredTypeDescriptor,
-        TypeDescriptor actualTypeDescriptor,
+        TypeDescriptor declaredTypeDescriptor,
         Expression expression) {
       return rewriteTypeConversionContext(
-          inferredTypeDescriptor.toNonNullable(), actualTypeDescriptor.toNonNullable(), expression);
+          inferredTypeDescriptor.toNonNullable(),
+          declaredTypeDescriptor.toNonNullable(),
+          expression);
     }
 
     /** An {@code expression} that has been assigned to a field or variable of a particular type. */
     protected Expression rewriteAssignmentContext(
         TypeDescriptor inferredTypeDescriptor,
-        TypeDescriptor actualTypeDescriptor,
+        TypeDescriptor declaredTypeDescriptor,
         Expression expression) {
       // Handle generically as a type conversion context.
-      return rewriteTypeConversionContext(inferredTypeDescriptor, actualTypeDescriptor, expression);
+      return rewriteTypeConversionContext(
+          inferredTypeDescriptor, declaredTypeDescriptor, expression);
     }
 
     /**
@@ -176,7 +182,7 @@ public final class ConversionContextVisitor extends AbstractRewriter {
     }
 
     /** An {@code expression} that is subject of a switch statement. */
-    protected Expression rewriteSwitchExpressionContext(Expression expression) {
+    protected Expression rewriteSwitchSubjectContext(Expression expression) {
       TypeDescriptor typeDescriptor = expression.getTypeDescriptor();
       if (!TypeDescriptors.isBoxedOrPrimitiveType(typeDescriptor)) {
         return rewriteNonNullTypeConversionContext(
@@ -191,22 +197,22 @@ public final class ConversionContextVisitor extends AbstractRewriter {
     /** An {@code expression} that is used as a qualifier of a member of a particular type. */
     protected Expression rewriteMemberQualifierContext(
         TypeDescriptor inferredTypeDescriptor,
-        TypeDescriptor actualTypeDescriptor,
+        TypeDescriptor declaredTypeDescriptor,
         Expression expression) {
       // Handle generically as a type conversion context.
       return rewriteNonNullTypeConversionContext(
-          inferredTypeDescriptor, actualTypeDescriptor, expression);
+          inferredTypeDescriptor, declaredTypeDescriptor, expression);
     }
 
     /** An {@code argument} that is passed to a method as a parameter. */
     protected Expression rewriteMethodInvocationContext(
         ParameterDescriptor inferredParameterDescriptor,
-        ParameterDescriptor actualParameterDescriptor,
+        ParameterDescriptor declaredParameterDescriptor,
         Expression argument) {
       // By default handle method invocation parameter passing like assignments.
       return rewriteTypeConversionContext(
           inferredParameterDescriptor.getTypeDescriptor(),
-          actualParameterDescriptor.getTypeDescriptor(),
+          declaredParameterDescriptor.getTypeDescriptor(),
           argument);
     }
 
@@ -374,10 +380,10 @@ public final class ConversionContextVisitor extends AbstractRewriter {
 
     // JsEnum boxing conversion context.
     if (AstUtils.matchesJsEnumBoxingConversionContext(binaryExpression)) {
-      if (AstUtils.isNonNativeJsEnum(leftOperand.getDeclaredTypeDescriptor())) {
+      if (isBoxableJsEnumType(leftOperand.getDeclaredTypeDescriptor())) {
         leftOperand = contextRewriter.rewriteJsEnumBoxingConversionContext(leftOperand);
       }
-      if (AstUtils.isNonNativeJsEnum(rightOperand.getDeclaredTypeDescriptor())) {
+      if (isBoxableJsEnumType(rightOperand.getDeclaredTypeDescriptor())) {
         rightOperand = contextRewriter.rewriteJsEnumBoxingConversionContext(rightOperand);
       }
     }
@@ -687,6 +693,20 @@ public final class ConversionContextVisitor extends AbstractRewriter {
   }
 
   @Override
+  public YieldStatement rewriteYieldStatement(YieldStatement yieldStatement) {
+    // assignment context
+    Expression expression =
+        rewriteTypeConversionContextWithoutDeclaration(
+            getEnclosingSwitchExpression().getTypeDescriptor(), yieldStatement.getExpression());
+
+    if (expression == yieldStatement.getExpression()) {
+      return yieldStatement;
+    }
+
+    return YieldStatement.Builder.from(yieldStatement).setExpression(expression).build();
+  }
+
+  @Override
   public Statement rewriteStatement(Statement statement) {
     // Every statement needs to be handled explicitly or excluded here.
     if (statement instanceof ExpressionStatement
@@ -704,18 +724,29 @@ public final class ConversionContextVisitor extends AbstractRewriter {
   }
 
   @Override
+  public SwitchExpression rewriteSwitchExpression(SwitchExpression switchExpression) {
+
+    Expression expression =
+        contextRewriter.rewriteSwitchSubjectContext(switchExpression.getExpression());
+
+    if (expression == switchExpression.getExpression()) {
+      return switchExpression;
+    }
+
+    return SwitchExpression.Builder.from(switchExpression).setExpression(expression).build();
+  }
+
+  @Override
   public SwitchStatement rewriteSwitchStatement(SwitchStatement switchStatement) {
 
-    Expression switchExpression =
-        contextRewriter.rewriteSwitchExpressionContext(switchStatement.getSwitchExpression());
+    Expression expression =
+        contextRewriter.rewriteSwitchSubjectContext(switchStatement.getExpression());
 
-    if (switchExpression == switchStatement.getSwitchExpression()) {
+    if (expression == switchStatement.getExpression()) {
       return switchStatement;
     }
 
-    return SwitchStatement.Builder.from(switchStatement)
-        .setSwitchExpression(switchExpression)
-        .build();
+    return SwitchStatement.Builder.from(switchStatement).setExpression(expression).build();
   }
 
   @Override
@@ -768,6 +799,10 @@ public final class ConversionContextVisitor extends AbstractRewriter {
 
   private MethodLike getEnclosingMethodLike() {
     return (MethodLike) getParent(MethodLike.class::isInstance);
+  }
+
+  private SwitchExpression getEnclosingSwitchExpression() {
+    return (SwitchExpression) getParent(SwitchExpression.class::isInstance);
   }
 
   private Expression rewriteTypeConversionContextWithoutDeclaration(

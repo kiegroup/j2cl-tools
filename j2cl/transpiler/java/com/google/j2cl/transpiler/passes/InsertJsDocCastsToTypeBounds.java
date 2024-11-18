@@ -92,7 +92,7 @@ public class InsertJsDocCastsToTypeBounds extends NormalizationPass {
               @Override
               public Expression rewriteTypeConversionContext(
                   TypeDescriptor inferredTypeDescriptor,
-                  TypeDescriptor actualTypeDescriptor,
+                  TypeDescriptor declaredTypeDescriptor,
                   Expression expression) {
                 return maybeAddJsDocAnnotation(inferredTypeDescriptor, expression);
               }
@@ -108,7 +108,7 @@ public class InsertJsDocCastsToTypeBounds extends NormalizationPass {
         && !inferredType.isIntersection()
         && !TypeDescriptors.isJavaLangObject(inferredType)) {
       return JsDocCastExpression.newBuilder()
-          .setCastType(inferredType)
+          .setCastTypeDescriptor(inferredType)
           .setExpression(expression)
           .build();
     }

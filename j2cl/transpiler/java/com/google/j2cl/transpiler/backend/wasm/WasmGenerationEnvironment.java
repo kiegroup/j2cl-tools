@@ -31,7 +31,6 @@ import com.google.common.collect.Multiset;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.j2cl.transpiler.ast.ArrayLiteral;
 import com.google.j2cl.transpiler.ast.ArrayTypeDescriptor;
-import com.google.j2cl.transpiler.ast.AstUtils;
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
 import com.google.j2cl.transpiler.ast.Field;
 import com.google.j2cl.transpiler.ast.FieldDescriptor;
@@ -48,6 +47,7 @@ import com.google.j2cl.transpiler.ast.TypeDescriptor;
 import com.google.j2cl.transpiler.ast.TypeDescriptors;
 import com.google.j2cl.transpiler.backend.common.UniqueNamesResolver;
 import com.google.j2cl.transpiler.backend.wasm.JsImportsGenerator.Imports;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -114,20 +114,10 @@ public class WasmGenerationEnvironment {
   }
 
   String getWasmType(TypeDescriptor typeDescriptor) {
-    if (typeDescriptor.isJsEnum()) {
-      return getWasmEnumType(typeDescriptor);
-    }
     if (typeDescriptor.isPrimitive()) {
       return getWasmTypeForPrimitive(typeDescriptor);
     }
     return "(ref null " + getWasmTypeName(typeDescriptor) + ")";
-  }
-
-  String getWasmEnumType(TypeDescriptor typeDescriptor) {
-    TypeDeclaration typeDeclaration =
-        ((DeclaredTypeDescriptor) typeDescriptor).getTypeDeclaration();
-    TypeDescriptor valueFieldType = AstUtils.getJsEnumValueFieldType(typeDeclaration);
-    return getWasmType(valueFieldType);
   }
 
   /**
@@ -142,7 +132,7 @@ public class WasmGenerationEnvironment {
   }
 
   String getWasmTypeName(TypeDeclaration typeDeclaration) {
-    return getWasmTypeName(typeDeclaration.toUnparameterizedTypeDescriptor());
+    return getWasmTypeName(typeDeclaration.toDescriptor());
   }
 
   String getWasmTypeName(TypeDescriptor typeDescriptor) {
@@ -177,7 +167,7 @@ public class WasmGenerationEnvironment {
   }
 
   public String getTypeSignature(TypeDeclaration typeDeclaration) {
-    return getTypeSignature(typeDeclaration.toUnparameterizedTypeDescriptor());
+    return getTypeSignature(typeDeclaration.toDescriptor());
   }
 
   public String getTypeSignature(TypeDescriptor typeDescriptor) {
@@ -205,7 +195,7 @@ public class WasmGenerationEnvironment {
 
   /** Returns the name of the global that stores the itable for a Java type. */
   public String getWasmItableGlobalName(TypeDeclaration typeDeclaration) {
-    return getWasmItableGlobalName(typeDeclaration.toUnparameterizedTypeDescriptor());
+    return getWasmItableGlobalName(typeDeclaration.toDescriptor());
   }
 
   /** Returns the name of the wasm type of the vtable for a Java type. */
@@ -215,7 +205,7 @@ public class WasmGenerationEnvironment {
 
   /** Returns the name of the wasm type of the vtable for a Java type. */
   public String getWasmVtableTypeName(TypeDeclaration typeDeclaration) {
-    return getWasmVtableTypeName(typeDeclaration.toUnparameterizedTypeDescriptor());
+    return getWasmVtableTypeName(typeDeclaration.toDescriptor());
   }
 
   /** Returns the name of the wasm type of the itable for a Java type. */
@@ -392,18 +382,25 @@ public class WasmGenerationEnvironment {
     return jsImports.getMethodImports().get(methodDescriptor) != null;
   }
 
+  String getSourceMappingPathPrefix() {
+    return sourceMappingPathPrefix;
+  }
+
   private final boolean isModular;
   private final Library library;
   private final JsImportsGenerator.Imports jsImports;
   private final ItableAllocator<TypeDeclaration> itableAllocator;
+  private final String sourceMappingPathPrefix;
 
   WasmGenerationEnvironment(Library library, Imports jsImports) {
-    this(library, jsImports, /* isModular= */ false);
+    this(library, jsImports, /* sourceMappingPathPrefix= */ null, /* isModular= */ false);
   }
 
-  WasmGenerationEnvironment(Library library, Imports jsImports, boolean isModular) {
+  WasmGenerationEnvironment(
+      Library library, Imports jsImports, String sourceMappingPathPrefix, boolean isModular) {
     this.isModular = isModular;
     this.library = library;
+    this.sourceMappingPathPrefix = sourceMappingPathPrefix;
 
     // Resolve variable names into unique wasm identifiers.
     library
@@ -427,7 +424,7 @@ public class WasmGenerationEnvironment {
               // Force creation of layouts for all superinterfaces.
               typeDeclaration.getAllSuperInterfaces().forEach(this::getOrCreateWasmTypeLayout);
               WasmTypeLayout superWasmLayout =
-                  getOrCreateWasmTypeLayout(typeDeclaration.getSuperTypeDeclaration());
+                  getOrCreateWasmTypeLayout(getTypeLayoutSuperTypeDeclaration(typeDeclaration));
               var previous =
                   wasmTypeLayoutByTypeDeclaration.put(
                       typeDeclaration, WasmTypeLayout.createFromType(t, superWasmLayout));
@@ -452,7 +449,8 @@ public class WasmGenerationEnvironment {
             .filter(Predicates.not(Type::isInterface))
             .map(Type::getDeclaration)
             .collect(toImmutableList()),
-        TypeDeclaration::getAllSuperInterfaces);
+        TypeDeclaration::getAllSuperInterfaces,
+        WasmGenerationEnvironment::getTypeLayoutSuperTypeDeclaration);
   }
 
   /** Returns a wasm layout creating it from a type declaration if it wasn't created before. */
@@ -468,7 +466,7 @@ public class WasmGenerationEnvironment {
       // accomplished by calling recursively "getOrCreateWasmTypeLayout" rather than assuming it
       // was already created and would be returned by "getWasmTypeLayout'.
       WasmTypeLayout superTypeLayout =
-          getOrCreateWasmTypeLayout(typeDeclaration.getSuperTypeDeclaration());
+          getOrCreateWasmTypeLayout(getTypeLayoutSuperTypeDeclaration(typeDeclaration));
       WasmTypeLayout typeLayout =
           WasmTypeLayout.createFromTypeDeclaration(typeDeclaration, superTypeLayout);
       // If the supertype layout was not created by the type it is requested here,
@@ -478,5 +476,22 @@ public class WasmGenerationEnvironment {
       return typeLayout;
     }
     return wasmTypeLayoutByTypeDeclaration.get(typeDeclaration);
+  }
+
+  /** Gets a supertype declaration for the specified type to be used in generating the Wasm type. */
+  @Nullable
+  static TypeDeclaration getTypeLayoutSuperTypeDeclaration(TypeDeclaration typeDeclaration) {
+    if (typeDeclaration.isInterface()) {
+      // For interfaces, choose a suitable "superinterface". Java interfaces can inherit multiple
+      // parent interfaces, which cannot be fully expressed in Wasm.
+      // Here, we choose the immediate superinterface with the most methods as a heuristic to
+      // minimize the number of conversions needed when calling superinterface methods.
+      return typeDeclaration.getInterfaceTypeDescriptors().stream()
+          .max(Comparator.comparingInt(i -> i.getPolymorphicMethods().size()))
+          .map(DeclaredTypeDescriptor::getTypeDeclaration)
+          .orElse(null);
+    }
+
+    return typeDeclaration.getSuperTypeDeclaration();
   }
 }

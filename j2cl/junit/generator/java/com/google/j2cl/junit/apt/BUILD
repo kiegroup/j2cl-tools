@@ -1,4 +1,5 @@
 load("//build_defs:rules.bzl", "j2cl_library")
+load("@rules_java//java:defs.bzl", "java_library", "java_plugin")
 load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 package(

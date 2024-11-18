@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package annotation
 
@@ -28,17 +28,22 @@ import kotlin.native.ObjCName
 
 @ObjCName("J2ktAnnotationMain", exact = true)
 open class Main {
+ @ObjCName("J2ktAnnotationMain_Foo", exact = true)
  interface Foo: Annotation {
   @ObjCName("bar")
   fun bar(): Int
 
+  @ObjCName("J2ktAnnotationMain_FooCompanion", exact = true)
   companion object {
+   @ObjCName("CONSTANT_")
    const val CONSTANT: Int = 123
   }
  }
 
+ @ObjCName("J2ktAnnotationMain_Zoo", exact = true)
  interface Zoo: Annotation {}
 
+ @ObjCName("J2ktAnnotationMain_Bar", exact = true)
  open inner class Bar internal constructor() {
   internal open fun baz_pp_annotation(): Int {
    val foo: Main.Foo? = null

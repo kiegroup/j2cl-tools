@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package collisions
 
@@ -33,7 +33,9 @@ open class goog {}
 
 // native class KtBlah
 
+@ObjCName("J2ktCollisionsKtBlah", exact = true)
 open class KtBlah internal constructor() {
+ @ObjCName("J2ktCollisionsKtBlahCompanion", exact = true)
  companion object {
   @JvmStatic
   internal fun m_pp_collisions() {}
@@ -45,8 +47,10 @@ open class KtBlah internal constructor() {
  }
 }
 
+@ObjCName("J2ktCollisionsfoo", exact = true)
 open class foo internal constructor() {}
 
+@ObjCName("J2ktCollisionsbar", exact = true)
 open class bar internal constructor() {
  init {
   val foo: Int = 0
@@ -64,6 +68,7 @@ open class bar internal constructor() {
  }
 }
 
+@ObjCName("J2ktCollisionsOther", exact = true)
 open class Other<T> internal constructor() {
  init {
   val T_1: Int = 3
@@ -77,6 +82,7 @@ open class Other<T> internal constructor() {
  }
 }
 
+@ObjCName("J2ktCollisionsT", exact = true)
 open class T<T: Number?> internal constructor() {
  internal open fun m_pp_collisions(): T {
   return null as T

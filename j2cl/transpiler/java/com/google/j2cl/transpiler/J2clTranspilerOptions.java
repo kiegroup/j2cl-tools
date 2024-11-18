@@ -28,7 +28,7 @@ import com.google.j2cl.common.SourceUtils.FileInfo;
 import com.google.j2cl.transpiler.backend.Backend;
 import com.google.j2cl.transpiler.backend.BackendOptions;
 import com.google.j2cl.transpiler.frontend.Frontend;
-import com.google.j2cl.transpiler.frontend.FrontendOptions;
+import com.google.j2cl.transpiler.frontend.common.FrontendOptions;
 import java.nio.file.Path;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -46,7 +46,6 @@ public abstract class J2clTranspilerOptions implements FrontendOptions, BackendO
   public static Builder newBuilder() {
     return new AutoValue_J2clTranspilerOptions.Builder()
         .setOptimizeAutoValue(false)
-        .setWasmEnableNonNativeJsEnum(false)
         .setNullMarkedSupported(false);
   }
 
@@ -77,6 +76,8 @@ public abstract class J2clTranspilerOptions implements FrontendOptions, BackendO
 
     public abstract Builder setEmitReadableSourceMap(boolean b);
 
+    public abstract Builder setSourceMappingPathPrefix(String value);
+
     public abstract Builder setGenerateKytheIndexingMetadata(boolean b);
 
     public abstract Builder setOptimizeAutoValue(boolean b);
@@ -93,8 +94,6 @@ public abstract class J2clTranspilerOptions implements FrontendOptions, BackendO
     abstract Builder setWasmEntryPointPatterns(ImmutableList<EntryPointPattern> entryPointSpecs);
 
     public abstract Builder setDefinesForWasm(ImmutableMap<String, String> definesForWasm);
-
-    public abstract Builder setWasmEnableNonNativeJsEnum(boolean wasmEnableNonNativeJsEnum);
 
     public abstract Builder setNullMarkedSupported(boolean isNullMarkedSupported);
 

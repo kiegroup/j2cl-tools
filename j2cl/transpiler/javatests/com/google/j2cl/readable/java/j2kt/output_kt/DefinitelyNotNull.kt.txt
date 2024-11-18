@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package j2kt
 
@@ -23,6 +23,7 @@ import java.lang.RuntimeException
 import kotlin.Any
 import kotlin.Boolean
 import kotlin.OptIn
+import kotlin.String
 import kotlin.Suppress
 import kotlin.collections.MutableIterable
 import kotlin.experimental.ExperimentalObjCName
@@ -34,6 +35,11 @@ open class DefinitelyNotNull {
  @ObjCName("J2ktJ2ktDefinitelyNotNullCompanion", exact = true)
  companion object {
   @JvmStatic
+  internal fun testNotNullSupplier_pp_j2kt(supplier: DefinitelyNotNull.NotNullSupplier<out String?>): String {
+   return supplier.getNotNull()!!
+  }
+
+  @JvmStatic
   @ObjCName("testEquivalence")
   fun <T> testEquivalence(
    @ObjCName("withJ2ktDefinitelyNotNull_Equivalence") equivalence: DefinitelyNotNull.Equivalence<in T & Any>,
@@ -44,11 +50,19 @@ open class DefinitelyNotNull {
   }
  }
 
+ @ObjCName("J2ktJ2ktDefinitelyNotNull_NotNullSupplier", exact = true)
+ fun interface NotNullSupplier<T> {
+  @ObjCName("getNotNull")
+  fun getNotNull(): T & Any
+ }
+
+ @ObjCName("J2ktJ2ktDefinitelyNotNull_Ordering", exact = true)
  open class Ordering<T> internal constructor() {
   internal open fun <S: T> reverse_pp_j2kt(): DefinitelyNotNull.Ordering<S> {
    throw RuntimeException()
   }
 
+  @ObjCName("J2ktJ2ktDefinitelyNotNull_OrderingCompanion", exact = true)
   companion object {
    @JvmStatic
    internal fun <E> reversed_pp_j2kt(ordering: DefinitelyNotNull.Ordering<in E>): DefinitelyNotNull.Ordering<in E> {
@@ -79,6 +93,7 @@ open class DefinitelyNotNull {
   }
  }
 
+ @ObjCName("J2ktJ2ktDefinitelyNotNull_Equivalence", exact = true)
  fun interface Equivalence<T: Any> {
   @ObjCName("equivalent")
   fun equivalent(

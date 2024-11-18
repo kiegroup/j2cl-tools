@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.j2cl.transpiler.ast.AbstractRewriter;
 import com.google.j2cl.transpiler.ast.BinaryExpression;
@@ -398,7 +399,7 @@ public class ImplementFinallyViaControlFlow extends NormalizationPass {
       }
       SwitchStatement.Builder dispatchStatementBuilder =
           SwitchStatement.newBuilder()
-              .setSwitchExpression(exitSelectorVariable.createReference())
+              .setExpression(exitSelectorVariable.createReference())
               .setSourcePosition(originalTryStatement.getSourcePosition());
       // The normal control flow path has an exit selector of 0; returns, breaks, continues and
       // throws will have their own value starting from 1 and will have a branch in the switch.
@@ -406,7 +407,7 @@ public class ImplementFinallyViaControlFlow extends NormalizationPass {
       for (Statement exitStatement : exitStatements) {
         dispatchStatementBuilder.addCases(
             SwitchCase.newBuilder()
-                .setCaseExpression(NumberLiteral.fromInt(exitSelectorValue))
+                .setCaseExpressions(ImmutableList.of(NumberLiteral.fromInt(exitSelectorValue)))
                 .setStatements(exitStatement)
                 .build());
         exitSelectorValue++;

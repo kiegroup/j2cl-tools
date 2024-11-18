@@ -51,19 +51,28 @@ public class WasmGeneratorStage {
   private final Problems problems;
   private final Output output;
   private final Path libraryInfoOutputPath;
+  private final String sourceMappingPathPrefix;
   private WasmGenerationEnvironment environment;
 
   /** Returns a generator stage that can emit code as strings. */
   public WasmGeneratorStage(Library library, Problems problems) {
-    this(null, null, problems);
+    this(null, null, null, problems);
     this.environment =
         new WasmGenerationEnvironment(
-            library, JsImportsGenerator.collectImports(library, problems), /* isModular= */ true);
+            library,
+            JsImportsGenerator.collectImports(library, problems),
+            sourceMappingPathPrefix,
+            /* isModular= */ true);
   }
 
-  private WasmGeneratorStage(Output output, Path libraryInfoOutputPath, Problems problems) {
+  private WasmGeneratorStage(
+      Output output,
+      Path libraryInfoOutputPath,
+      String sourceMappingPathPrefix,
+      Problems problems) {
     this.output = output;
     this.libraryInfoOutputPath = libraryInfoOutputPath;
+    this.sourceMappingPathPrefix = sourceMappingPathPrefix;
     this.problems = problems;
   }
 
@@ -72,8 +81,13 @@ public class WasmGeneratorStage {
   }
 
   public static void generateModularOutput(
-      Library library, Output output, Path libraryInfoOutputPath, Problems problems) {
-    new WasmGeneratorStage(output, libraryInfoOutputPath, problems).generateModularOutput(library);
+      Library library,
+      Output output,
+      Path libraryInfoOutputPath,
+      String sourceMappingPathPrefix,
+      Problems problems) {
+    new WasmGeneratorStage(output, libraryInfoOutputPath, sourceMappingPathPrefix, problems)
+        .generateModularOutput(library);
   }
 
   private void generateModularOutput(Library library) {
@@ -82,7 +96,9 @@ public class WasmGeneratorStage {
     }
 
     Imports jsImports = JsImportsGenerator.collectImports(library, problems);
-    environment = new WasmGenerationEnvironment(library, jsImports, /* isModular= */ true);
+    environment =
+        new WasmGenerationEnvironment(
+            library, jsImports, sourceMappingPathPrefix, /* isModular= */ true);
     SummaryBuilder summaryBuilder = new SummaryBuilder(library, environment, problems);
 
     JsImportsGenerator.collectImportSnippets(jsImports)
@@ -146,7 +162,8 @@ public class WasmGeneratorStage {
 
   public String emitToString(Consumer<WasmConstructsGenerator> emitter) {
     SourceBuilder builder = new SourceBuilder();
-    WasmConstructsGenerator generator = new WasmConstructsGenerator(environment, builder);
+    WasmConstructsGenerator generator =
+        new WasmConstructsGenerator(environment, builder, sourceMappingPathPrefix);
 
     emitter.accept(generator);
 
@@ -162,8 +179,12 @@ public class WasmGeneratorStage {
   }
 
   public static void generateMonolithicOutput(
-      Library library, Output output, Path libraryInfoOutputPath, Problems problems) {
-    new WasmGeneratorStage(output, libraryInfoOutputPath, problems)
+      Library library,
+      Output output,
+      Path libraryInfoOutputPath,
+      String sourceMappingPathPrefix,
+      Problems problems) {
+    new WasmGeneratorStage(output, libraryInfoOutputPath, sourceMappingPathPrefix, problems)
         .generateMonolithicOutput(library);
   }
 
@@ -187,7 +208,8 @@ public class WasmGeneratorStage {
         new WasmGenerationEnvironment(
             library, JsImportsGenerator.collectImports(library, problems));
     SourceBuilder builder = new SourceBuilder();
-    WasmConstructsGenerator generator = new WasmConstructsGenerator(environment, builder);
+    WasmConstructsGenerator generator =
+        new WasmConstructsGenerator(environment, builder, sourceMappingPathPrefix);
 
     List<ArrayTypeDescriptor> usedNativeArrayTypes = collectUsedNativeArrayTypes(library);
 
@@ -222,7 +244,11 @@ public class WasmGeneratorStage {
   public static void generateWasmExportMethods(
       List<Method> methods, Output output, Problems problems) {
     WasmGeneratorStage wasmGeneratorStage =
-        new WasmGeneratorStage(output, /* libraryInfoOutputPath= */ null, problems);
+        new WasmGeneratorStage(
+            output,
+            /* libraryInfoOutputPath= */ null,
+            /* sourceMappingPathPrefix= */ null,
+            problems);
     wasmGeneratorStage.generateWasmExportMethods(methods);
 
     // Emit the name map for the generated methods.
@@ -254,7 +280,8 @@ public class WasmGeneratorStage {
             library, JsImportsGenerator.collectImports(library, problems));
 
     SourceBuilder builder = new SourceBuilder();
-    WasmConstructsGenerator generator = new WasmConstructsGenerator(environment, builder);
+    WasmConstructsGenerator generator =
+        new WasmConstructsGenerator(environment, builder, sourceMappingPathPrefix);
 
     methods.forEach(generator::renderMethod);
     output.write("contents.wat", builder.buildToList());

@@ -23,7 +23,6 @@ import com.google.j2cl.transpiler.ast.Field
 import com.google.j2cl.transpiler.ast.InitializerBlock
 import com.google.j2cl.transpiler.ast.Member as JavaMember
 import com.google.j2cl.transpiler.ast.Method
-import com.google.j2cl.transpiler.ast.MethodDescriptor
 import com.google.j2cl.transpiler.ast.MethodDescriptor.ParameterDescriptor
 import com.google.j2cl.transpiler.ast.MethodLike
 import com.google.j2cl.transpiler.ast.NewInstance
@@ -46,17 +45,17 @@ import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.VAR_KEYWORD
 import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.annotation
 import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.initializer
 import com.google.j2cl.transpiler.backend.kotlin.MemberDescriptorRenderer.Companion.enumValueDeclarationNameSource
-import com.google.j2cl.transpiler.backend.kotlin.MemberDescriptorRenderer.Companion.methodModifiersSource
-import com.google.j2cl.transpiler.backend.kotlin.MemberDescriptorRenderer.Companion.visibilityModifierSource
 import com.google.j2cl.transpiler.backend.kotlin.ast.CompanionObject
 import com.google.j2cl.transpiler.backend.kotlin.ast.Member
-import com.google.j2cl.transpiler.backend.kotlin.ast.Visibility as KtVisibility
+import com.google.j2cl.transpiler.backend.kotlin.common.runIf
 import com.google.j2cl.transpiler.backend.kotlin.source.Source
+import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.NEW_LINE
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.block
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.colonSeparated
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.commaSeparated
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.emptyLineSeparated
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.inParentheses
+import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.indented
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.indentedIf
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.join
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.newLineSeparated
@@ -70,6 +69,9 @@ import com.google.j2cl.transpiler.backend.kotlin.source.orEmpty
  * @property enclosingType enclosing type
  */
 internal data class MemberRenderer(val nameRenderer: NameRenderer, val enclosingType: Type) {
+  private val environment: Environment
+    get() = nameRenderer.environment
+
   /** Returns renderer for enclosed types. */
   private val typeRenderer: TypeRenderer
     get() = TypeRenderer(nameRenderer)
@@ -117,18 +119,19 @@ internal data class MemberRenderer(val nameRenderer: NameRenderer, val enclosing
   private fun methodSource(method: Method): Source =
     method.renderedStatements.let { statements ->
       // Don't render primary constructor if it's empty.
-      Source.emptyUnless(!isKtPrimaryConstructor(method) || !statements.isEmpty()) {
+      Source.emptyUnless(!isKtPrimaryConstructor(method) || statements.isNotEmpty()) {
         spaceSeparated(
           methodHeaderSource(method),
           Source.emptyUnless(!method.isAbstract && !method.isNative) {
             // Constructors with no statements can be rendered without curly braces.
             Source.emptyUnless(!method.isConstructor || statements.isNotEmpty()) {
               spaceSeparated(
-                Source.emptyUnless(method.descriptor.isKtProperty) {
-                  join(GET_KEYWORD, inParentheses(Source.EMPTY))
-                },
-                block(statementRenderer.statementsSource(statements)),
-              )
+                  Source.emptyUnless(method.descriptor.isKtProperty) {
+                    join(GET_KEYWORD, inParentheses(Source.EMPTY))
+                  },
+                  block(statementRenderer.statementsSource(statements)),
+                )
+                .runIf(method.descriptor.isKtProperty) { indented(NEW_LINE + this) }
             }
           },
         )
@@ -147,20 +150,20 @@ internal data class MemberRenderer(val nameRenderer: NameRenderer, val enclosing
       !jvmFieldsAreIllegal &&
         !isConst &&
         !field.isKtLateInit &&
-        fieldDescriptor.ktVisibility != KtVisibility.PRIVATE
+        !environment.ktVisibility(fieldDescriptor).isPrivate
     val initializer = field.initializer
 
     return newLineSeparated(
       Source.emptyUnless(isJvmField) { jvmFieldAnnotationSource() },
       objCNameRenderer.objCAnnotationSource(fieldDescriptor),
-      jsInteropAnnotationRenderer.jsInteropAnnotationsSource(fieldDescriptor),
+      jsInteropAnnotationRenderer.jsInteropAnnotationsSource(field),
       spaceSeparated(
-        field.descriptor.visibilityModifierSource,
+        memberDescriptorRenderer.visibilityModifierSource(field.descriptor),
         Source.emptyUnless(isConst) { CONST_KEYWORD },
         Source.emptyUnless(field.isKtLateInit) { LATEINIT_KEYWORD },
         if (isFinal) VAL_KEYWORD else VAR_KEYWORD,
         colonSeparated(
-          identifierSource(fieldDescriptor.ktMangledName),
+          identifierSource(environment.ktMangledName(fieldDescriptor)),
           nameRenderer.typeDescriptorSource(typeDescriptor),
         ),
         initializer(
@@ -184,19 +187,19 @@ internal data class MemberRenderer(val nameRenderer: NameRenderer, val enclosing
     annotation(nameRenderer.topLevelQualifiedNameSource("kotlin.jvm.JvmStatic"))
 
   private fun initializerBlockSource(initializerBlock: InitializerBlock): Source =
-    spaceSeparated(INIT_KEYWORD, statementRenderer.statementSource(initializerBlock.block))
+    spaceSeparated(INIT_KEYWORD, statementRenderer.statementSource(initializerBlock.body))
 
   private fun methodHeaderSource(method: Method): Source =
     if (isKtPrimaryConstructor(method)) {
       INIT_KEYWORD
     } else {
       val methodDescriptor = method.descriptor
-      val methodObjCNames = method.toObjCNames()
+      val methodObjCNames = objCNameRenderer.renderedObjCNames(method)
       newLineSeparated(
         Source.emptyUnless(methodDescriptor.isStatic) { jvmStaticAnnotationSource() },
-        annotationsSource(methodDescriptor, methodObjCNames),
+        annotationsSource(method, methodObjCNames),
         spaceSeparated(
-          methodDescriptor.methodModifiersSource,
+          methodModifiersSource(method),
           colonSeparated(
             join(
               memberDescriptorRenderer.methodKindAndNameSource(methodDescriptor),
@@ -213,12 +216,24 @@ internal data class MemberRenderer(val nameRenderer: NameRenderer, val enclosing
       )
     }
 
-  fun annotationsSource(methodDescriptor: MethodDescriptor, methodObjCNames: MethodObjCNames?) =
+  private fun methodModifiersSource(method: Method): Source =
+    spaceSeparated(
+      memberDescriptorRenderer.visibilityModifierSource(method.descriptor),
+      Source.emptyUnless(!method.descriptor.enclosingTypeDescriptor.typeDeclaration.isInterface) {
+        spaceSeparated(
+          Source.emptyUnless(method.descriptor.isNative) { KotlinSource.EXTERNAL_KEYWORD },
+          method.inheritanceModifierSource,
+        )
+      },
+      Source.emptyUnless(method.isJavaOverride) { KotlinSource.OVERRIDE_KEYWORD },
+    )
+
+  fun annotationsSource(method: Method, methodObjCNames: MethodObjCNames?) =
     newLineSeparated(
-      objCNameRenderer.objCAnnotationSource(methodDescriptor, methodObjCNames),
-      jsInteropAnnotationRenderer.jsInteropAnnotationsSource(methodDescriptor),
-      memberDescriptorRenderer.jvmThrowsAnnotationSource(methodDescriptor),
-      memberDescriptorRenderer.nativeThrowsAnnotationSource(methodDescriptor),
+      objCNameRenderer.objCAnnotationSource(method.descriptor, methodObjCNames),
+      jsInteropAnnotationRenderer.jsInteropAnnotationsSource(method),
+      memberDescriptorRenderer.jvmThrowsAnnotationSource(method.descriptor),
+      memberDescriptorRenderer.nativeThrowsAnnotationSource(method.descriptor),
     )
 
   fun methodParametersSource(method: MethodLike, objCParameterNames: List<String>? = null): Source {
@@ -297,7 +312,7 @@ internal data class MemberRenderer(val nameRenderer: NameRenderer, val enclosing
       .let { newInstance ->
         newLineSeparated(
           objCNameRenderer.objCAnnotationSource(field.descriptor),
-          jsInteropAnnotationRenderer.jsInteropAnnotationsSource(field.descriptor),
+          jsInteropAnnotationRenderer.jsInteropAnnotationsSource(field),
           spaceSeparated(
             join(
               field.descriptor.enumValueDeclarationNameSource,

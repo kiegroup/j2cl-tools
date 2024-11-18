@@ -14,4 +14,5 @@
  * limitations under the License.
  */
 @jsinterop.annotations.JsPackage(namespace = "readable.thirdpartylib")
+@ComplexAnnotation
 package packageinfo.thirdpartylib;

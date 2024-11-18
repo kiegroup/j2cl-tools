@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.stream.Collectors.joining;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.j2cl.common.SourcePosition;
@@ -41,6 +40,7 @@ public class Method extends Member implements MethodLike {
   @Visitable Block body;
   private final String jsDocDescription;
   private final String wasmExportName;
+  @Nullable private Boolean isForcedJavaOverride;
 
   private Method(
       SourcePosition sourcePosition,
@@ -48,13 +48,15 @@ public class Method extends Member implements MethodLike {
       List<Variable> parameters,
       Block body,
       String jsDocDescription,
-      String wasmExportName) {
+      String wasmExportName,
+      @Nullable Boolean isForcedJavaOverride) {
     super(sourcePosition);
     this.methodDescriptor = checkNotNull(methodDescriptor);
     this.parameters.addAll(checkNotNull(parameters));
     this.jsDocDescription = jsDocDescription;
     this.wasmExportName = wasmExportName;
     this.body = checkNotNull(body);
+    this.isForcedJavaOverride = isForcedJavaOverride;
   }
 
   @Override
@@ -67,23 +69,7 @@ public class Method extends Member implements MethodLike {
     return parameters;
   }
 
-  @Nullable
   @Override
-  public Variable getJsVarargsParameter() {
-    if (methodDescriptor.isJsMethodVarargs()) {
-      return getVarargsParameter();
-    }
-    return null;
-  }
-
-  @Nullable
-  public Variable getVarargsParameter() {
-    if (methodDescriptor.isVarargs()) {
-      return Iterables.getLast(getParameters());
-    }
-    return null;
-  }
-
   public Block getBody() {
     return body;
   }
@@ -127,6 +113,19 @@ public class Method extends Member implements MethodLike {
   @Nullable
   public String getWasmExportName() {
     return wasmExportName;
+  }
+
+  @Nullable
+  public Boolean isForcedJavaOverride() {
+    return isForcedJavaOverride;
+  }
+
+  public void setForcedJavaOverride(@Nullable Boolean isForcedJavaOverride) {
+    this.isForcedJavaOverride = isForcedJavaOverride;
+  }
+
+  public final boolean isJavaOverride() {
+    return isForcedJavaOverride != null ? isForcedJavaOverride : methodDescriptor.isJavaOverride();
   }
 
   public static Builder newBuilder() {
@@ -196,6 +195,7 @@ public class Method extends Member implements MethodLike {
     private String wasmExportName;
     private SourcePosition bodySourcePosition;
     private SourcePosition sourcePosition;
+    @Nullable private Boolean isForcedJavaOverride;
 
     public static Builder from(Method method) {
       Builder builder = new Builder();
@@ -206,6 +206,7 @@ public class Method extends Member implements MethodLike {
       builder.wasmExportName = method.getWasmExportName();
       builder.bodySourcePosition = method.getBody().getSourcePosition();
       builder.sourcePosition = method.getSourcePosition();
+      builder.isForcedJavaOverride = method.isForcedJavaOverride();
       return builder;
     }
 
@@ -300,19 +301,22 @@ public class Method extends Member implements MethodLike {
     }
 
     public Method build() {
-      if (bodySourcePosition == null) {
-        bodySourcePosition = sourcePosition;
-      }
       Block body =
           Block.newBuilder()
-              .setSourcePosition(bodySourcePosition)
+              .setSourcePosition(bodySourcePosition != null ? bodySourcePosition : sourcePosition)
               .setStatements(statements)
               .build();
       checkState(parameters.size() == methodDescriptor.getParameterDescriptors().size());
       checkState(methodDescriptor.isDeclaration());
 
       return new Method(
-          sourcePosition, methodDescriptor, parameters, body, jsDocDescription, wasmExportName);
+          sourcePosition,
+          methodDescriptor,
+          parameters,
+          body,
+          jsDocDescription,
+          wasmExportName,
+          isForcedJavaOverride);
     }
   }
 }

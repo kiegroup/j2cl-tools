@@ -27,7 +27,6 @@ import com.google.j2cl.transpiler.ast.CastExpression
 import com.google.j2cl.transpiler.ast.ConditionalExpression
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor
 import com.google.j2cl.transpiler.ast.Expression
-import com.google.j2cl.transpiler.ast.Expression.Associativity
 import com.google.j2cl.transpiler.ast.Expression.Precedence
 import com.google.j2cl.transpiler.ast.ExpressionWithComment
 import com.google.j2cl.transpiler.ast.FieldAccess
@@ -53,6 +52,7 @@ import com.google.j2cl.transpiler.ast.PrimitiveTypeDescriptor
 import com.google.j2cl.transpiler.ast.PrimitiveTypes
 import com.google.j2cl.transpiler.ast.StringLiteral
 import com.google.j2cl.transpiler.ast.SuperReference
+import com.google.j2cl.transpiler.ast.SwitchExpression
 import com.google.j2cl.transpiler.ast.ThisReference
 import com.google.j2cl.transpiler.ast.Type
 import com.google.j2cl.transpiler.ast.TypeDeclaration
@@ -96,6 +96,7 @@ import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.VAL_KEYWORD
 import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.VAR_KEYWORD
 import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.asExpression
 import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.at
+import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.blockComment
 import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.classLiteral
 import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.initializer
 import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.isExpression
@@ -104,8 +105,8 @@ import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.nonNull
 import com.google.j2cl.transpiler.backend.kotlin.common.letIf
 import com.google.j2cl.transpiler.backend.kotlin.source.Source
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.COLON
+import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.SPACE
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.block
-import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.colonSeparated
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.commaSeparated
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.dotSeparated
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.inAngleBrackets
@@ -130,6 +131,7 @@ import com.google.j2cl.transpiler.backend.kotlin.source.orEmpty
 internal data class ExpressionRenderer(
   val nameRenderer: NameRenderer,
   val enclosingType: Type,
+  val currentReturnLabelIdentifier: String? = null,
   // TODO(b/252138814): Remove when KT-54349 is fixed
   val renderThisReferenceWithLabel: Boolean = false,
 ) {
@@ -141,11 +143,15 @@ internal data class ExpressionRenderer(
       StatementRenderer(
         nameRenderer,
         enclosingType,
+        currentReturnLabelIdentifier = currentReturnLabelIdentifier,
         renderThisReferenceWithLabel = renderThisReferenceWithLabel,
       )
 
   private val memberRenderer: MemberRenderer
     get() = MemberRenderer(nameRenderer, enclosingType)
+
+  private val environment: Environment
+    get() = nameRenderer.environment
 
   fun expressionSource(expression: Expression): Source =
     when (expression) {
@@ -168,7 +174,8 @@ internal data class ExpressionRenderer(
       is NewInstance -> newInstanceSource(expression)
       is PostfixExpression -> postfixExpressionSource(expression)
       is PrefixExpression -> prefixExpressionSource(expression)
-      is SuperReference -> superReferenceSource(expression)
+      is SuperReference -> superReferenceSource()
+      is SwitchExpression -> switchExpressionSource(expression)
       is ThisReference -> thisReferenceSource(expression)
       is VariableDeclarationExpression -> variableDeclarationExpressionSource(expression)
       is VariableReference -> variableReferenceSource(expression)
@@ -176,27 +183,21 @@ internal data class ExpressionRenderer(
     }
 
   private fun arrayAccessSource(arrayAccess: ArrayAccess): Source =
-    getOperatorSource(arrayAccess.arrayExpression, arrayAccess.indexExpression)
-
-  private fun getOperatorSource(qualifier: Expression, argument: Expression): Source =
     join(
-      expressionInParensSource(
-        qualifier,
-        Precedence.MEMBER_ACCESS.requiresParensOnLeft(qualifier.precedence),
-      ),
-      inSquareBrackets(expressionSource(argument)),
+      leftSubExpressionSource(arrayAccess.ktPrecedence, arrayAccess.arrayExpression),
+      inSquareBrackets(expressionSource(arrayAccess.indexExpression)),
     )
 
   private fun arrayLengthSource(arrayLength: ArrayLength): Source =
     dotSeparated(
-      leftSubExpressionSource(arrayLength.precedence, arrayLength.arrayExpression),
+      leftSubExpressionSource(arrayLength.ktPrecedence, arrayLength.arrayExpression),
       SIZE_IDENTIFIER,
     )
 
   private fun arrayLiteralSource(arrayLiteral: ArrayLiteral): Source =
-    arrayLiteral.typeDescriptor.typeArgument.let { typeArgument ->
+    arrayLiteral.typeDescriptor.componentTypeBinding.let { typeBinding ->
       join(
-        when (typeArgument.typeDescriptor) {
+        when (typeBinding.typeArgumentDescriptor) {
           PrimitiveTypes.BOOLEAN ->
             nameRenderer.topLevelQualifiedNameSource("kotlin.booleanArrayOf")
           PrimitiveTypes.CHAR -> nameRenderer.topLevelQualifiedNameSource("kotlin.charArrayOf")
@@ -209,7 +210,7 @@ internal data class ExpressionRenderer(
           else ->
             join(
               nameRenderer.topLevelQualifiedNameSource("kotlin.arrayOf"),
-              nameRenderer.typeArgumentsSource(listOf(typeArgument)),
+              nameRenderer.typeBindingsSource(listOf(typeBinding)),
             )
         },
         inParentheses(commaSeparated(arrayLiteral.valueExpressions.map(this::expressionSource))),
@@ -233,14 +234,14 @@ internal data class ExpressionRenderer(
           leftOperand.target.isStatic &&
           leftOperand.target.isFinal
       ) {
-        identifierSource(leftOperand.target.ktMangledName)
+        identifierSource(environment.ktMangledName(leftOperand.target))
       } else {
-        leftSubExpressionSource(expression.precedence, leftOperand)
+        leftSubExpressionSource(expression.ktPrecedence, leftOperand)
       }
     }
 
   private fun rightOperandSource(expression: BinaryExpression): Source =
-    rightSubExpressionSource(expression.precedence, expression.rightOperand)
+    rightSubExpressionSource(expression.ktPrecedence, expression.rightOperand)
 
   private fun castExpressionSource(castExpression: CastExpression): Source =
     castExpression.castTypeDescriptor.let { castTypeDescriptor ->
@@ -248,7 +249,7 @@ internal data class ExpressionRenderer(
         // Render cast to intersection type descriptor: (A & B & C) x
         // using smart casts: (x).let { it as A; it as B; it as C; it }
         dotSeparated(
-          inParentheses(expressionSource(castExpression.expression)),
+          leftSubExpressionSource(castExpression.ktPrecedence, castExpression.expression),
           spaceSeparated(
             nameRenderer.extensionMemberQualifiedNameSource("kotlin.let"),
             inInlineCurlyBrackets(
@@ -262,7 +263,7 @@ internal data class ExpressionRenderer(
         )
       } else {
         asExpression(
-          leftSubExpressionSource(castExpression.precedence, castExpression.expression),
+          leftSubExpressionSource(castExpression.ktPrecedence, castExpression.expression),
           castTypeDescriptorSource(castExpression.castTypeDescriptor),
         )
       }
@@ -288,7 +289,10 @@ internal data class ExpressionRenderer(
     expressionSource(expressionWithComment.expression)
 
   private fun fieldAccessSource(fieldAccess: FieldAccess): Source =
-    dotSeparated(qualifierSource(fieldAccess), identifierSource(fieldAccess.target.ktMangledName))
+    dotSeparated(
+      qualifierSource(fieldAccess),
+      identifierSource(environment.ktMangledName(fieldAccess.target)),
+    )
 
   private fun functionExpressionSource(functionExpression: FunctionExpression): Source =
     functionExpressionLambdaSource(functionExpression)
@@ -316,7 +320,7 @@ internal data class ExpressionRenderer(
 
   private fun instanceOfExpressionSource(instanceOfExpression: InstanceOfExpression): Source =
     isExpression(
-      leftSubExpressionSource(instanceOfExpression.precedence, instanceOfExpression.expression),
+      leftSubExpressionSource(instanceOfExpression.ktPrecedence, instanceOfExpression.expression),
       instanceOfTestTypeDescriptorSource(instanceOfExpression.testTypeDescriptor),
     )
 
@@ -378,16 +382,16 @@ internal data class ExpressionRenderer(
   private fun methodInvocationSource(expression: MethodCall): Source =
     expression.target.let { methodDescriptor ->
       when {
-        methodDescriptor.isProtobufGetter() ->
-          identifierSource(computeProtobufPropertyName(expression.target.name!!))
+        methodDescriptor.isProtobufGetter ->
+          identifierSource(expression.target.name!!.toProtobufPropertyName())
         else ->
           join(
-            identifierSource(expression.target.ktMangledName),
+            identifierSource(environment.ktMangledName(expression.target)),
             expression
               .takeIf { !it.target.isKtProperty }
               ?.let {
                 join(
-                  invocationTypeArgumentsSource(methodDescriptor.typeArguments),
+                  invocationTypeArgumentsSource(methodDescriptor.typeArgumentTypeBindings),
                   invocationSource(expression),
                 )
               }
@@ -397,12 +401,12 @@ internal data class ExpressionRenderer(
     }
 
   private fun invocationTypeArgumentsSource(
-    typeArguments: List<TypeArgument>,
+    typeBindings: List<TypeBinding>,
     omitNonDenotable: Boolean = true,
   ): Source =
-    typeArguments
-      .takeIf { it.isNotEmpty() && (it.all(TypeArgument::isDenotable) || !omitNonDenotable) }
-      ?.let { nameRenderer.typeArgumentsSource(it) }
+    typeBindings
+      .takeIf { it.isNotEmpty() && (it.all(TypeBinding::isDenotable) || !omitNonDenotable) }
+      ?.let { nameRenderer.typeBindingsSource(it) }
       .orEmpty()
 
   internal fun invocationSource(invocation: Invocation) =
@@ -426,22 +430,23 @@ internal data class ExpressionRenderer(
     firstDimension: Expression,
     remainingDimensions: List<Expression>,
   ): Source =
-    arrayTypeDescriptor.typeArgument.let { typeArgument ->
-      typeArgument.typeDescriptor.let { componentTypeDescriptor ->
+    arrayTypeDescriptor.componentTypeBinding.let { componentTypeBinding ->
+      componentTypeBinding.typeArgumentDescriptor.let { componentTypeDescriptor ->
         if (remainingDimensions.isEmpty()) {
           if (componentTypeDescriptor is PrimitiveTypeDescriptor) {
             primitiveArrayOfSource(componentTypeDescriptor, firstDimension)
           } else {
-            arrayOfNullsSource(typeArgument, firstDimension)
+            arrayOfNullsSource(componentTypeBinding, firstDimension)
           }
         } else {
           remainingDimensions.first().let { nextDimension ->
-            if (nextDimension is NullLiteral) arrayOfNullsSource(typeArgument, firstDimension)
+            if (nextDimension is NullLiteral)
+              arrayOfNullsSource(componentTypeBinding, firstDimension)
             else
               spaceSeparated(
                 join(
                   nameRenderer.topLevelQualifiedNameSource("kotlin.Array"),
-                  nameRenderer.typeArgumentsSource(listOf(typeArgument)),
+                  nameRenderer.typeBindingsSource(listOf(componentTypeBinding)),
                   inParentheses(expressionSource(firstDimension)),
                 ),
                 block(
@@ -478,17 +483,17 @@ internal data class ExpressionRenderer(
       inParentheses(expressionSource(dimension)),
     )
 
-  private fun arrayOfNullsSource(typeArgument: TypeArgument, dimension: Expression): Source =
+  private fun arrayOfNullsSource(typeArgument: TypeBinding, dimension: Expression): Source =
     join(
-      if (typeArgument.typeDescriptor.isNullable) {
+      if (typeArgument.typeArgumentDescriptor.isNullable) {
         join(
           nameRenderer.extensionMemberQualifiedNameSource("kotlin.arrayOfNulls"),
-          nameRenderer.typeArgumentsSource(listOf(typeArgument.toNonNullable())),
+          nameRenderer.typeBindingsSource(listOf(typeArgument.toNonNullable())),
         )
       } else {
         join(
           nameRenderer.extensionMemberQualifiedNameSource("javaemul.lang.uninitializedArrayOf"),
-          nameRenderer.typeArgumentsSource(listOf(typeArgument)),
+          nameRenderer.typeBindingsSource(listOf(typeArgument)),
         )
       },
       inParentheses(expressionSource(dimension)),
@@ -531,20 +536,20 @@ internal data class ExpressionRenderer(
         } else {
           nameRenderer.qualifiedNameSource(typeDescriptor, asSuperType = true)
         },
-        invocationTypeArgumentsSource(typeDescriptor.typeArguments(), omitNonDenotable),
+        invocationTypeArgumentsSource(typeDescriptor.typeArgumentTypeBindings(), omitNonDenotable),
       )
     }
 
   private fun postfixExpressionSource(expression: PostfixExpression): Source =
     join(
-      leftSubExpressionSource(expression.precedence, expression.operand),
+      leftSubExpressionSource(expression.ktPrecedence, expression.operand),
       expression.operator.ktSource,
     )
 
   private fun prefixExpressionSource(expression: PrefixExpression): Source =
     expression.operator.let { operator ->
       operator.ktSource.let { symbolSource ->
-        rightSubExpressionSource(expression.precedence, expression.operand).let { operandSource ->
+        rightSubExpressionSource(expression.ktPrecedence, expression.operand).let { operandSource ->
           if (operator.needsSpace) {
             spaceSeparated(symbolSource, operandSource)
           } else {
@@ -554,12 +559,9 @@ internal data class ExpressionRenderer(
       }
     }
 
-  private fun superReferenceSource(superReference: SuperReference): Source =
-    superReferenceSource(superTypeDescriptor = null, qualifierTypeDescriptor = null)
-
   private fun superReferenceSource(
-    superTypeDescriptor: DeclaredTypeDescriptor?,
-    qualifierTypeDescriptor: DeclaredTypeDescriptor?,
+    superTypeDescriptor: DeclaredTypeDescriptor? = null,
+    qualifierTypeDescriptor: DeclaredTypeDescriptor? = null,
   ): Source =
     join(
       SUPER_KEYWORD,
@@ -567,6 +569,31 @@ internal data class ExpressionRenderer(
         ?.let { inAngleBrackets(nameRenderer.qualifiedNameSource(it, asSuperType = true)) }
         .orEmpty(),
       qualifierTypeDescriptor?.let { labelReferenceSource(it) }.orEmpty(),
+    )
+
+  private fun switchExpressionSource(switchExpression: SwitchExpression): Source =
+    spaceSeparated(
+      KotlinSource.WHEN_KEYWORD,
+      inParentheses(expressionSource(switchExpression.expression)),
+      block(
+        newLineSeparated(
+          switchExpression.cases.map { case ->
+            if (case.isDefault) {
+              infix(
+                ELSE_KEYWORD,
+                ARROW_OPERATOR,
+                block(statementRenderer.statementsSource(case.statements)),
+              )
+            } else {
+              infix(
+                commaSeparated(case.caseExpressions.map(::expressionSource)),
+                ARROW_OPERATOR,
+                block(statementRenderer.statementsSource(case.statements)),
+              )
+            }
+          }
+        )
+      ),
     )
 
   private fun thisReferenceSource(thisReference: ThisReference): Source =
@@ -608,19 +635,23 @@ internal data class ExpressionRenderer(
     )
 
   private fun variableSource(variable: Variable): Source =
-    colonSeparated(
-      nameRenderer.nameSource(variable),
-      variable.typeDescriptor
-        .takeIf { it.isKtDenotableNonWildcard }
-        ?.let { nameRenderer.typeDescriptorSource(it) }
-        .orEmpty(),
-    )
+    join(nameRenderer.nameSource(variable), variableDeclaratorSource(variable.typeDescriptor))
+
+  private fun variableDeclaratorSource(typeDescriptor: TypeDescriptor): Source =
+    if (typeDescriptor.isDenotableNonWildcard) {
+      spaceSeparated(COLON, nameRenderer.typeDescriptorSource(typeDescriptor))
+    } else {
+      join(
+        SPACE,
+        blockComment(nameRenderer.typeDescriptorSource(typeDescriptor, rendersCaptures = true)),
+      )
+    }
 
   private fun leftSubExpressionSource(precedence: Precedence, operand: Expression) =
-    expressionInParensSource(operand, precedence.requiresParensOnLeft(operand.precedence))
+    expressionInParensSource(operand, precedence.requiresParensOnLeft(operand.ktPrecedence))
 
   private fun rightSubExpressionSource(precedence: Precedence, operand: Expression) =
-    expressionInParensSource(operand, precedence.requiresParensOnRight(operand.precedence))
+    expressionInParensSource(operand, precedence.requiresParensOnRight(operand.ktPrecedence))
 
   private fun expressionInParensSource(expression: Expression, needsParentheses: Boolean) =
     expressionSource(expression).letIf(needsParentheses) { inParentheses(it) }
@@ -664,7 +695,7 @@ internal data class ExpressionRenderer(
         } else if (
           memberReference.target.isInstanceMember || !qualifier.isNonQualifiedThisReference
         ) {
-          leftSubExpressionSource(memberReference.precedence, qualifier)
+          leftSubExpressionSource(memberReference.ktPrecedence, qualifier)
         } else {
           Source.EMPTY
         }
@@ -751,13 +782,19 @@ internal data class ExpressionRenderer(
     private val MemberReference.isLocalNewInstance: Boolean
       get() = this is NewInstance && typeDescriptor.typeDeclaration.isLocal
 
-    private fun Precedence.requiresParensOnLeft(operand: Precedence): Boolean =
-      operand == Precedence.CONDITIONAL ||
-        value > operand.value ||
-        (associativity != Associativity.LEFT && this == operand)
-
-    private fun Precedence.requiresParensOnRight(operand: Precedence): Boolean =
-      value > operand.value || (associativity != Associativity.RIGHT && this == operand)
+    private val Expression.ktPrecedence: Precedence
+      get() =
+        when (this) {
+          is CastExpression ->
+            when (castTypeDescriptor) {
+              // cast to intersection types is rendered as "x.let { it as T1; it as T2; it }"
+              is IntersectionTypeDescriptor -> Precedence.MEMBER_ACCESS
+              // cast to simple types is rendered as "x as T"
+              // TODO(b/368404944): Decouple the precedence value and associativity from the AST
+              else -> Precedence.AS_OPERATOR
+            }
+          else -> precedence
+        }
 
     private val BinaryExpression.useEquality: Boolean
       get() =

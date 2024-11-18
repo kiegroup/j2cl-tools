@@ -22,16 +22,22 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.common.collect.ImmutableList;
 import com.google.j2cl.transpiler.ast.MethodDescriptor.ParameterDescriptor;
 import com.google.j2cl.transpiler.ast.TypeDeclaration.Kind;
+import com.google.j2cl.transpiler.ast.TypeDeclaration.Origin;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
-import javax.annotation.Nullable;
 
 /** Utility TypeDescriptors methods related to lambda synthesis. */
 // TODO(b/63118697): Simplify this code once TD refactoring makes it easier to implement.
 public final class LambdaAdaptorTypeDescriptors {
   private static final String FUNCTIONAL_INTERFACE_JSFUNCTION_CLASS_NAME = "JsFunction";
   private static final String FUNCTIONAL_INTERFACE_ADAPTOR_CLASS_NAME = "LambdaAdaptor";
+
+  /** Returns the TypeDescriptor for an abstract lambda implementor super class. */
+  public static DeclaredTypeDescriptor createAbstractLambdaAdaptorTypeDescriptor(
+      TypeDescriptor typeDescriptor) {
+    return createLambdaAdaptorTypeDescriptor(
+        typeDescriptor, (DeclaredTypeDescriptor) typeDescriptor, true, Optional.empty());
+  }
 
   /** Returns the TypeDescriptor for a LambdaAdaptor class. */
   public static DeclaredTypeDescriptor createLambdaAdaptorTypeDescriptor(
@@ -44,6 +50,16 @@ public final class LambdaAdaptorTypeDescriptors {
   public static DeclaredTypeDescriptor createLambdaAdaptorTypeDescriptor(
       TypeDescriptor typeDescriptor,
       DeclaredTypeDescriptor enclosingTypeDescriptor,
+      Optional<Integer> uniqueId) {
+    return createLambdaAdaptorTypeDescriptor(
+        typeDescriptor, enclosingTypeDescriptor, false, uniqueId);
+  }
+
+  /** Returns the TypeDescriptor for lambda instances of the functional interface. */
+  private static DeclaredTypeDescriptor createLambdaAdaptorTypeDescriptor(
+      TypeDescriptor typeDescriptor,
+      DeclaredTypeDescriptor enclosingTypeDescriptor,
+      boolean isAbstract,
       Optional<Integer> uniqueId) {
 
     DeclaredTypeDescriptor functionalInterfaceTypeDescriptor =
@@ -71,23 +87,13 @@ public final class LambdaAdaptorTypeDescriptors {
 
     TypeDeclaration adaptorDeclaration =
         createLambdaAdaptorTypeDeclaration(
-            typeDescriptor.toUnparameterizedTypeDescriptor(),
-            enclosingTypeDescriptor.toUnparameterizedTypeDescriptor(),
-            TypeDescriptors.toUnparameterizedTypeDescriptors(interfaceTypeDescriptors),
-            jsFunctionInterface.toUnparameterizedTypeDescriptor(),
+            enclosingTypeDescriptor.getDeclarationDescriptor(),
+            TypeDescriptors.getDeclarationDescriptors(interfaceTypeDescriptors),
+            jsFunctionInterface.getDeclarationDescriptor(),
+            isAbstract,
             uniqueId);
 
-    return DeclaredTypeDescriptor.newBuilder()
-        .setEnclosingTypeDescriptor(enclosingTypeDescriptor)
-        .setTypeDeclaration(adaptorDeclaration)
-        .setTypeArgumentDescriptors(functionalInterfaceTypeDescriptor.getTypeArgumentDescriptors())
-        .setSuperTypeDescriptorFactory(() -> TypeDescriptors.get().javaLangObject)
-        .setInterfaceTypeDescriptorsFactory(() -> ImmutableList.copyOf(interfaceTypeDescriptors))
-        .setTypeArgumentDescriptors(typeArgumentDescriptors)
-        .setDeclaredMethodDescriptorsFactory(
-            adaptorTypeDescriptor ->
-                getLambdaAdaptorMethodDescriptors(jsFunctionInterface, adaptorTypeDescriptor))
-        .build();
+    return adaptorDeclaration.toDescriptor(typeArgumentDescriptors);
   }
 
   /**
@@ -106,10 +112,10 @@ public final class LambdaAdaptorTypeDescriptors {
 
   /** Returns the TypeDeclaration for the LambdaAdaptor class. */
   private static TypeDeclaration createLambdaAdaptorTypeDeclaration(
-      TypeDescriptor lambdaTypeDescriptor,
       DeclaredTypeDescriptor enclosingTypeDescriptor,
       List<DeclaredTypeDescriptor> interfaceTypeDescriptors,
       DeclaredTypeDescriptor jsFunctionInterface,
+      boolean isAbstract,
       Optional<Integer> uniqueId) {
 
     TypeDeclaration enclosingTypeDeclaration = enclosingTypeDescriptor.getTypeDeclaration();
@@ -129,16 +135,16 @@ public final class LambdaAdaptorTypeDescriptors {
         .setClassComponents(classComponents)
         .setDeclaredMethodDescriptorsFactory(
             adaptorTypeDeclaration ->
-                getLambdaAdaptorMethodDescriptors(
-                    jsFunctionInterface, adaptorTypeDeclaration.toUnparameterizedTypeDescriptor()))
+                isAbstract
+                    ? ImmutableList.of()
+                    : getLambdaAdaptorMethodDescriptors(
+                        jsFunctionInterface, adaptorTypeDeclaration.toDescriptor()))
         .setInterfaceTypeDescriptorsFactory(() -> ImmutableList.copyOf(interfaceTypeDescriptors))
         .setTypeParameterDescriptors(typeParameterDescriptors)
-        .setUnparameterizedTypeDescriptorFactory(
-            () ->
-                createLambdaAdaptorTypeDescriptor(
-                    lambdaTypeDescriptor, enclosingTypeDescriptor, uniqueId))
+        .setHasAbstractModifier(isAbstract)
         .setVisibility(Visibility.PUBLIC)
         .setKind(Kind.CLASS)
+        .setOrigin(Origin.LAMBDA_ABSTRACT_ADAPTOR)
         .build();
   }
 
@@ -166,71 +172,25 @@ public final class LambdaAdaptorTypeDescriptors {
 
     MethodDescriptor functionalInterfaceMethodDescriptor =
         functionalInterfaceTypeDescriptor.getSingleAbstractMethodDescriptor();
-    // TODO(rluble): Migrate to MethodDescriptor.transform.
     return MethodDescriptor.Builder.from(functionalInterfaceMethodDescriptor)
-        .setNative(false)
-        // This is the declaration.
-        .setDeclarationDescriptor(
-            createRelatedMethodDeclaration(
-                LambdaAdaptorTypeDescriptors::getAdaptorForwardingMethod, adaptorTypeDescriptor))
+        .setDeclarationDescriptor(null)
         .setEnclosingTypeDescriptor(adaptorTypeDescriptor)
         // Remove the method type parameters as they when moved to the adaptor type.
         .setTypeParameterTypeDescriptors(ImmutableList.of())
+        .setTypeArgumentTypeDescriptors(ImmutableList.of())
         .setSynthetic(false)
         .setAbstract(false)
+        .setNative(false)
         .build();
   }
 
   /** Returns the TypeDescriptor for lambda instances of the functional interface. */
   public static DeclaredTypeDescriptor createJsFunctionTypeDescriptor(
-      TypeDescriptor typeDescriptor) {
-    DeclaredTypeDescriptor functionalTypeDescriptor = typeDescriptor.getFunctionalInterface();
+      DeclaredTypeDescriptor functionalTypeDescriptor) {
     checkArgument(!functionalTypeDescriptor.isJsFunctionInterface());
 
-    MethodDescriptor functionalMethodDescriptor =
-        functionalTypeDescriptor.getSingleAbstractMethodDescriptor();
-
-    // Remove varargs if the functional method is not a JsMethod, otherwise it will become
-    // JsVarargs due to being varargs in a JsFunction, that will cause it to loose
-    // runtime type checking on the varargs parameter.
-    MethodDescriptor jsFunctionMethodDescriptor =
-        !functionalMethodDescriptor.isJsMethod()
-            ? removeJsMethodVarargs(functionalMethodDescriptor)
-            : functionalMethodDescriptor;
-
-    TypeDeclaration jsFunctionDeclaration =
-        createJsFunctionTypeDeclaration(functionalTypeDescriptor);
-
-    return DeclaredTypeDescriptor.newBuilder()
-        .setEnclosingTypeDescriptor(functionalTypeDescriptor)
-        .setTypeDeclaration(jsFunctionDeclaration)
-        .setTypeArgumentDescriptors(functionalTypeDescriptor.getTypeArgumentDescriptors())
-        .setSingleAbstractMethodDescriptorFactory(
-            jsfunctionTypeDescriptor ->
-                createJsFunctionMethodDescriptor(
-                    jsfunctionTypeDescriptor, jsFunctionMethodDescriptor))
-        .setDeclaredMethodDescriptorsFactory(
-            jsfunctionTypeDescriptor ->
-                ImmutableList.of(jsfunctionTypeDescriptor.getSingleAbstractMethodDescriptor()))
-        .build();
-  }
-
-  /**
-   * Removes the varargs attribute from the varargs parameter if {@code functionalMethodDescriptor}
-   * is a varargs method.
-   */
-  private static MethodDescriptor removeJsMethodVarargs(
-      MethodDescriptor functionalMethodDescriptor) {
-    return functionalMethodDescriptor.transform(
-        builder ->
-            builder.setParameterDescriptors(
-                builder.getParameterDescriptors().stream()
-                    .map(
-                        parameterDescriptor ->
-                            ParameterDescriptor.newBuilder()
-                                .setTypeDescriptor(parameterDescriptor.getTypeDescriptor())
-                                .build())
-                    .collect(toImmutableList())));
+    return createJsFunctionTypeDeclaration(functionalTypeDescriptor)
+        .toDescriptor(functionalTypeDescriptor.getTypeArgumentDescriptors());
   }
 
   /** Returns the TypeDeclaration for the JsFunction class. */
@@ -251,12 +211,9 @@ public final class LambdaAdaptorTypeDescriptors {
             jsfunctionTypeDeclaration ->
                 ImmutableList.of(
                     createJsFunctionMethodDescriptor(
-                        jsfunctionTypeDeclaration.toUnparameterizedTypeDescriptor(),
-                        functionalTypeDescriptor.getSingleAbstractMethodDescriptor())))
-        .setUnparameterizedTypeDescriptorFactory(
-            () ->
-                createJsFunctionTypeDescriptor(
-                    functionalTypeDescriptor.toUnparameterizedTypeDescriptor()))
+                        jsfunctionTypeDeclaration.toDescriptor(),
+                        typeDeclaration.getSingleAbstractMethodDescriptor())))
+        .setSingleAbstractMethodDescriptorFactory(t -> t.getDeclaredMethodDescriptors().get(0))
         .setVisibility(Visibility.PUBLIC)
         .setKind(Kind.INTERFACE)
         .build();
@@ -265,37 +222,35 @@ public final class LambdaAdaptorTypeDescriptors {
   /** Returns the MethodDescriptor for the single method in the synthetic @JsFunction interface. */
   private static MethodDescriptor createJsFunctionMethodDescriptor(
       DeclaredTypeDescriptor jsfunctionTypeDescriptor, MethodDescriptor singleAbstractMethod) {
-    // TODO(rluble): Migrate to MethodDescriptor.transform.
+    // Remove the type parameters in the functional method since they are not allowed in
+    // @JsFunction interfaces.
+    singleAbstractMethod = singleAbstractMethod.withoutTypeParameters();
+
+    // Remove varargs if the functional method is not a JsMethod, otherwise it will become
+    // JsVarargs due to being varargs in a JsFunction, that will cause it to loose
+    // runtime type checking on the varargs parameter.
+    var parameterDescriptors =
+        singleAbstractMethod.isJsMethod()
+            ? singleAbstractMethod.getParameterDescriptors()
+            : singleAbstractMethod.getParameterDescriptors().stream()
+                .map(
+                    parameterDescriptor ->
+                        ParameterDescriptor.newBuilder()
+                            .setTypeDescriptor(parameterDescriptor.getTypeDescriptor())
+                            .build())
+                .collect(toImmutableList());
+
     return MethodDescriptor.Builder.from(singleAbstractMethod)
+        .setDeclarationDescriptor(null)
         .setEnclosingTypeDescriptor(jsfunctionTypeDescriptor)
-        .setDeclarationDescriptor(
-            createRelatedMethodDeclaration(
-                t ->
-                    createJsFunctionMethodDescriptor(
-                        t, singleAbstractMethod.getDeclarationDescriptor()),
-                jsfunctionTypeDescriptor))
+        .setParameterDescriptors(parameterDescriptors)
         .setOriginalJsInfo(
             JsInfo.newBuilder()
                 .setJsMemberType(JsMemberType.NONE)
                 .setJsAsync(singleAbstractMethod.getJsInfo().isJsAsync())
                 .build())
         .setNative(false)
-        .build()
-        // Remove the type parameters in the functional method since they are not allowed in
-        // @JsFunction interfaces.
-        .withoutTypeParameters();
-  }
-
-  @Nullable
-  private static MethodDescriptor createRelatedMethodDeclaration(
-      Function<DeclaredTypeDescriptor, MethodDescriptor> creator,
-      DeclaredTypeDescriptor typeDescriptor) {
-    DeclaredTypeDescriptor unparameterizedTypeDescriptor =
-        typeDescriptor.toUnparameterizedTypeDescriptor();
-    if (unparameterizedTypeDescriptor.equals(typeDescriptor)) {
-      return null;
-    }
-    return creator.apply(unparameterizedTypeDescriptor);
+        .build();
   }
 
   private LambdaAdaptorTypeDescriptors() {}

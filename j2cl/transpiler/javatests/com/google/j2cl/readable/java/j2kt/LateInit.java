@@ -41,6 +41,15 @@ public class LateInit<T> {
   @SuppressWarnings("nullness:initialization.field.uninitialized")
   private T genericField;
 
+  @SuppressWarnings("nullness:initialization.field.uninitialized")
+  private class Inner {
+    private String unmarkedInnerField;
+
+    private class InnerInner {
+      private String unmarkedInnerInnerField;
+    }
+  }
+
   public LateInit(T genericValue) {
     init(genericValue);
   }

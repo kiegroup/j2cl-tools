@@ -1,3 +1,4 @@
+load("@rules_java//java:defs.bzl", "java_library")
 load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 package(

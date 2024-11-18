@@ -68,14 +68,7 @@ public class J2clTranspiler {
   private void transpileImpl() {
     if (options.getBackend().isWasm()) {
       // TODO(b/178738483): Remove hack that makes mangling backend dependent.
-      MemberDescriptor.setWasmManglingPatterns();
-      if (options.getWasmEnableNonNativeJsEnum()) {
-        // TODO(b/181615162): Remove hack that makes it possible to ignore JsEnum in Wasm.
-        TypeDeclaration.setIgnoreNativeJsEnumAnnotations();
-      } else {
-        // TODO(b/181615162): Remove hack that makes it possible to ignore JsEnum in Wasm.
-        TypeDeclaration.setIgnoreJsEnumAnnotations();
-      }
+      TypeDeclaration.setImplementWasmJsEnumSemantics();
       // TODO(b/317164851): Remove hack that makes jsinfo ignored for non-native types in Wasm.
       FieldDescriptor.setIgnoreNonNativeJsInfo();
       MethodDescriptor.setIgnoreNonNativeJsInfo();
@@ -83,14 +76,21 @@ public class J2clTranspiler {
       TypeDeclaration.setIgnoreJsFunctionAnnotations();
       // TODO(b/178738483): Remove hack that makes it possible to ignore DoNotAutobox in Wasm.
       MethodDescriptor.ParameterDescriptor.setIgnoreDoNotAutoboxAnnotations();
+    } else if (options.getBackend().isClosure()) {
+      MemberDescriptor.setClosureManglingPatterns();
     }
-    Library library = options.getFrontend().getLibrary(options, problems);
+
+    Library library = options.getFrontend().parse(options, problems);
+    problems.abortIfHasErrors();
     if (!library.isEmpty()) {
       desugarLibrary(library);
       checkLibrary(library);
       normalizeLibrary(library);
     }
     options.getBackend().generateOutputs(options, library, problems);
+
+    // Now we are done, release resources from the frontend if needed.
+    library.dispose();
   }
 
   private void desugarLibrary(Library library) {

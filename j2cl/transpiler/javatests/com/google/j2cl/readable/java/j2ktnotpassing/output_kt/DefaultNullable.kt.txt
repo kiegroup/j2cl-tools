@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package j2ktnotpassing
 
@@ -42,7 +42,9 @@ open class DefaultNullable {
  }
 }
 
+@ObjCName("J2ktJ2ktnotpassingNotNullable", exact = true)
 open class NotNullable internal constructor() {
+ @ObjCName("J2ktJ2ktnotpassingNotNullable_Consumer", exact = true)
  fun interface Consumer<T> {
   @ObjCName("accept")
   fun accept(
@@ -51,11 +53,13 @@ open class NotNullable internal constructor() {
  }
 }
 
+@ObjCName("J2ktJ2ktnotpassingOrdering", exact = true)
 abstract class Ordering<T> internal constructor() {
  internal open fun <S: T> reverse_pp_j2ktnotpassing(): Ordering<S> {
   return null!!
  }
 
+ @ObjCName("J2ktJ2ktnotpassingOrderingCompanion", exact = true)
  companion object {
   @JvmStatic
   internal fun <E> reversed_pp_j2ktnotpassing(ordering: Ordering<in E>): Ordering<in E> {

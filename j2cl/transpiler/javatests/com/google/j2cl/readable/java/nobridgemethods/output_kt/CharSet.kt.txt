@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package nobridgemethods
 
@@ -27,8 +27,10 @@ import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.JvmStatic
 import kotlin.native.ObjCName
 
+@ObjCName("J2ktNobridgemethodsEntry", exact = true)
 interface Entry<K> {}
 
+@ObjCName("J2ktNobridgemethodsMap", exact = true)
 abstract class Map<K> internal constructor() {
  @ObjCName("getCeilingEntry")
  abstract fun getCeilingEntry(
@@ -36,11 +38,13 @@ abstract class Map<K> internal constructor() {
  ): Entry<K>?
 }
 
+@ObjCName("J2ktNobridgemethodsTreeMap", exact = true)
 open class TreeMap<K> internal constructor(): Map<K>() {
  override fun getCeilingEntry(key: K): TreeMap.InnerEntry<K>? {
   return TreeMap.InnerEntry<K>()
  }
 
+ @ObjCName("J2ktNobridgemethodsTreeMap_InnerEntry", exact = true)
  open class InnerEntry<K> internal constructor(): Entry<K> {}
 }
 

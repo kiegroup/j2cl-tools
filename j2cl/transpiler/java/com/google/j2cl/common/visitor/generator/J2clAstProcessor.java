@@ -64,7 +64,7 @@ import javax.tools.JavaFileObject;
  * The J2clAstProcessor emits a single AbstractVisitor class and a Visitor helper class for each
  * {@code @Visitable} type.
  */
-@SupportedSourceVersion(SourceVersion.RELEASE_11)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @AutoService(Processor.class)
 public class J2clAstProcessor extends AbstractProcessor {
 

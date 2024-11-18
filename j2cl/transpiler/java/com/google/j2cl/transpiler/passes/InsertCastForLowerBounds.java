@@ -51,12 +51,12 @@ public class InsertCastForLowerBounds extends NormalizationPass {
               @Override
               public Expression rewriteTypeConversionContext(
                   TypeDescriptor inferredTypeDescriptor,
-                  TypeDescriptor actualTypeDescriptor,
+                  TypeDescriptor declaredTypeDescriptor,
                   Expression expression) {
                 TypeDescriptor typeDescriptor = expression.getTypeDescriptor();
                 boolean needsCast =
-                    typeDescriptor instanceof TypeVariable
-                        && ((TypeVariable) typeDescriptor).getLowerBoundTypeDescriptor() != null
+                    isWildcardOrCaptureWithLowerBound(typeDescriptor)
+                        && !isWildcardOrCaptureWithLowerBound(inferredTypeDescriptor)
                         && !isJavaLangObject(inferredTypeDescriptor);
                 return needsCast
                     ? CastExpression.newBuilder()
@@ -66,5 +66,15 @@ public class InsertCastForLowerBounds extends NormalizationPass {
                     : expression;
               }
             }));
+  }
+
+  private static boolean isWildcardOrCaptureWithLowerBound(TypeDescriptor typeDescriptor) {
+    if (typeDescriptor instanceof TypeVariable) {
+      TypeVariable typeVariable = (TypeVariable) typeDescriptor;
+      return typeVariable.isWildcardOrCapture()
+          && typeVariable.getLowerBoundTypeDescriptor() != null;
+    }
+
+    return false;
   }
 }

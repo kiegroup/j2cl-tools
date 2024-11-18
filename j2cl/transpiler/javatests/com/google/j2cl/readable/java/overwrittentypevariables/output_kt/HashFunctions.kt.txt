@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package overwrittentypevariables
 
@@ -27,6 +27,7 @@ import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.JvmStatic
 import kotlin.native.ObjCName
 
+@ObjCName("J2ktOverwrittentypevariablesMyFunction", exact = true)
 fun interface MyFunction<F, T> {
  @ObjCName("apply")
  fun apply(
@@ -34,6 +35,7 @@ fun interface MyFunction<F, T> {
  ): T
 }
 
+@ObjCName("J2ktOverwrittentypevariablesHashFunction", exact = true)
 fun interface HashFunction<T>: MyFunction<T, String?> {}
 
 @ObjCName("J2ktOverwrittentypevariablesHashFunctions", exact = true)

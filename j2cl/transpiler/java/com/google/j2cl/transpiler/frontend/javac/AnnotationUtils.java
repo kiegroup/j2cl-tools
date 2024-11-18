@@ -28,7 +28,7 @@ import javax.lang.model.element.TypeElement;
 public final class AnnotationUtils {
 
   @Nullable
-  static AnnotationMirror findAnnotationBindingByName(
+  public static AnnotationMirror findAnnotationBindingByName(
       List<? extends AnnotationMirror> annotations, String name) {
     if (annotations == null) {
       return null;
@@ -41,14 +41,14 @@ public final class AnnotationUtils {
     return null;
   }
 
-  static String getAnnotationName(AnnotationMirror annotationMirror) {
+  public static String getAnnotationName(AnnotationMirror annotationMirror) {
     return ((TypeElement) annotationMirror.getAnnotationType().asElement())
         .getQualifiedName()
         .toString();
   }
 
   @Nullable
-  static String getAnnotationParameterString(AnnotationMirror annotationMirror, String paramName) {
+  public static String getAnnotationParameterString(AnnotationMirror annotationMirror, String paramName) {
     if (annotationMirror == null) {
       return null;
     }
@@ -62,7 +62,7 @@ public final class AnnotationUtils {
   }
 
   @Nullable
-  static List<?> getAnnotationParameterArray(AnnotationMirror annotationMirror, String paramName) {
+  public static List<?> getAnnotationParameterArray(AnnotationMirror annotationMirror, String paramName) {
     if (annotationMirror == null) {
       return null;
     }
@@ -77,7 +77,7 @@ public final class AnnotationUtils {
     return null;
   }
 
-  static boolean getAnnotationParameterBoolean(
+  public static boolean getAnnotationParameterBoolean(
       AnnotationMirror annotationMirror, String paramName, boolean defaultValue) {
     if (annotationMirror == null) {
       return defaultValue;
@@ -92,7 +92,7 @@ public final class AnnotationUtils {
   }
 
   /** Returns true if the construct is annotated with {@code annotationSourceName}. */
-  static boolean hasAnnotation(AnnotatedConstruct construct, String annotationSourceName) {
+  public static boolean hasAnnotation(AnnotatedConstruct construct, String annotationSourceName) {
     return findAnnotationBindingByName(construct.getAnnotationMirrors(), annotationSourceName)
         != null;
   }

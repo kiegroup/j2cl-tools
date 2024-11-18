@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package nullability
 
@@ -36,56 +36,42 @@ import kotlin.Suppress
 import kotlin.arrayOf
 import kotlin.collections.MutableList
 import kotlin.experimental.ExperimentalObjCName
-import kotlin.jvm.JvmField
 import kotlin.jvm.JvmStatic
 import kotlin.native.ObjCName
 
 @ObjCName("J2ktNullabilityNullability", exact = true)
 open class Nullability {
- @JvmField
- internal var f1_private_2: String = "Hello"
+ private var f1: String = "Hello"
 
- @JvmField
- internal var f2_private_2: String? = null
+ private var f2: String? = null
 
- @JvmField
- internal var f3_private_2: String? = null
+ private var f3: String? = null
 
- @JvmField
- internal var f4_private_2: MutableList<String> = ArrayList<String>()
+ private var f4: MutableList<String> = ArrayList<String>()
 
- @JvmField
- internal var f5_private_2: MutableList<String>? = ArrayList<String>()
+ private var f5: MutableList<String>? = ArrayList<String>()
 
- @JvmField
- internal var f6_private_2: MutableList<String?> = ArrayList<String>() as MutableList<String?>
+ private var f6: MutableList<String?> = ArrayList<String>() as MutableList<String?>
 
- @JvmField
- internal var f7_private_2: MutableList<String?>? = null
+ private var f7: MutableList<String?>? = null
 
- @JvmField
- internal var f8_private_2: Array<String> = arrayOf<String>()
+ private var f8: Array<String> = arrayOf<String>()
 
- @JvmField
- internal var f9_private_2: Array<String?> = arrayOf<String?>()
+ private var f9: Array<String?> = arrayOf<String?>()
 
- @JvmField
- internal var f10_private_2: Array<String>? = arrayOf<String>()
+ private var f10: Array<String>? = arrayOf<String>()
 
- @JvmField
- internal var f12_private_2: MutableList<String?>? = ArrayList<String>() as MutableList<String?>?
+ private var f12: MutableList<String?>? = ArrayList<String>() as MutableList<String?>?
 
- @JvmField
- internal var f13_private_2: Any
+ private var f13: Any
 
- @JvmField
- internal var f14_private_2: Any? = null
+ private var f14: Any? = null
 
  @JsConstructor
  constructor(
   @ObjCName("NSString") a: String
  ) {
-  this.f13_private_2 = Any()
+  this.f13 = Any()
  }
 
  @ObjCName("m1")
@@ -173,23 +159,23 @@ open class Nullability {
 
   @JvmStatic
   internal fun testDefaultNullabilityWildcards_pp_nullability(nonNullable: Nullability.ParameterizedDefaultNullability<out String?>?) {
-   (nonNullable as Nullability.ParameterizedDefaultNullability<String?>?)!!.getNonNullable_pp_nullability().length
-   (nonNullable as Nullability.ParameterizedDefaultNullability<String?>?)!!.getNullable_pp_nullability()!!.length
-   (nonNullable as Nullability.ParameterizedDefaultNullability<String?>?)!!.getDefaultNullability_pp_nullability()!!.length
+   nonNullable!!.getNonNullable_pp_nullability()!!.length
+   nonNullable!!.getNullable_pp_nullability()!!.length
+   nonNullable!!.getDefaultNullability_pp_nullability()!!.length
   }
 
   @JvmStatic
   internal fun testDefaultNullabilityWildcards_pp_nullability(nonNullable: Nullability.ParameterizedNullable<out String?>?) {
-   (nonNullable as Nullability.ParameterizedNullable<String?>?)!!.getNonNullable_pp_nullability().length
-   (nonNullable as Nullability.ParameterizedNullable<String?>?)!!.getNullable_pp_nullability()!!.length
-   (nonNullable as Nullability.ParameterizedNullable<String?>?)!!.getDefaultNullability_pp_nullability()!!.length
+   nonNullable!!.getNonNullable_pp_nullability()!!.length
+   nonNullable!!.getNullable_pp_nullability()!!.length
+   nonNullable!!.getDefaultNullability_pp_nullability()!!.length
   }
 
   @JvmStatic
   internal fun testDefaultNullabilityWildcards_pp_nullability(nonNullable: Nullability.ParameterizedNonNullable<out String>?) {
-   (nonNullable as Nullability.ParameterizedNonNullable<String>?)!!.getNonNullable_pp_nullability().length
-   (nonNullable as Nullability.ParameterizedNonNullable<String>?)!!.getNullable_pp_nullability()!!.length
-   (nonNullable as Nullability.ParameterizedNonNullable<String>?)!!.getDefaultNullability_pp_nullability()!!.length
+   nonNullable!!.getNonNullable_pp_nullability()!!.length
+   nonNullable!!.getNullable_pp_nullability()!!.length
+   nonNullable!!.getDefaultNullability_pp_nullability()!!.length
   }
 
   @JvmStatic
@@ -205,6 +191,7 @@ open class Nullability {
   }
  }
 
+ @ObjCName("J2ktNullabilityNullability_Foo", exact = true)
  open class Foo<T> internal constructor() {
   internal open fun bar_pp_nullability(t: T) {}
 
@@ -217,6 +204,7 @@ open class Nullability {
   }
  }
 
+ @ObjCName("J2ktNullabilityNullability_MyFunction", exact = true)
  @JsFunction
  fun interface MyFunction {
   @ObjCName("x")
@@ -242,6 +230,7 @@ open class Nullability {
   }
  }
 
+ @ObjCName("J2ktNullabilityNullability_NullableTemplatedReturn", exact = true)
  fun interface NullableTemplatedReturn<T> {
   @ObjCName("foo")
   fun foo(): T?
@@ -254,6 +243,7 @@ open class Nullability {
   }
  }
 
+ @ObjCName("J2ktNullabilityNullability_ParameterizedDefaultNullability", exact = true)
  open class ParameterizedDefaultNullability<N> internal constructor() {
   internal open fun getNullable_pp_nullability(): N? {
    return null
@@ -268,6 +258,7 @@ open class Nullability {
   }
  }
 
+ @ObjCName("J2ktNullabilityNullability_ParameterizedNullable", exact = true)
  open class ParameterizedNullable<N> internal constructor() {
   internal open fun getNullable_pp_nullability(): N? {
    return null
@@ -282,6 +273,7 @@ open class Nullability {
   }
  }
 
+ @ObjCName("J2ktNullabilityNullability_ParameterizedNonNullable", exact = true)
  open class ParameterizedNonNullable<N: Any> internal constructor() {
   internal open fun getNullable_pp_nullability(): N? {
    return null
@@ -296,21 +288,29 @@ open class Nullability {
   }
  }
 
+ @ObjCName("J2ktNullabilityNullability_NonNullableInsideNullable", exact = true)
  open class NonNullableInsideNullable<T> internal constructor() {
   internal open fun nonNullableTest_pp_nullability(nonNullable: Nullability.ParameterizedNonNullable<T & Any>?) {}
  }
 
+ @ObjCName("J2ktNullabilityNullability_Recursive", exact = true)
  open class Recursive<T> internal constructor() where T: Nullability.Recursive<T>, T: Marker? {}
 
+ @ObjCName("J2ktNullabilityNullability_RecursiveNullable", exact = true)
  open class RecursiveNullable<T> internal constructor() where T: Nullability.RecursiveNullable<T>?, T: Marker? {}
 
+ @ObjCName("J2ktNullabilityNullability_RecursiveChild", exact = true)
  open class RecursiveChild internal constructor(): Nullability.Recursive<Nullability.RecursiveChild>(), Marker {}
 
+ @ObjCName("J2ktNullabilityNullability_RecursiveNullableChild", exact = true)
  open class RecursiveNullableChild internal constructor(): Nullability.RecursiveNullable<Nullability.RecursiveNullableChild?>(), Marker {}
 
+ @ObjCName("J2ktNullabilityNullability_RecursiveParam", exact = true)
  open class RecursiveParam<T> internal constructor() where T: Nullability.Recursive<T>, T: Marker? {}
 
+ @ObjCName("J2ktNullabilityNullability_RecursiveNullableParam", exact = true)
  open class RecursiveNullableParam<T> internal constructor() where T: Nullability.RecursiveNullable<T>?, T: Marker? {}
 }
 
+@ObjCName("J2ktNullabilityMarker", exact = true)
 interface Marker {}

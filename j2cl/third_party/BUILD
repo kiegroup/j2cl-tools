@@ -9,6 +9,11 @@ package(
 )
 
 alias(
+    name = "asm",
+    actual = "@org_ow2_asm_asm",
+)
+
+alias(
     name = "guava",
     actual = "@com_google_guava",
 )
@@ -18,14 +23,19 @@ alias(
     actual = "@com_google_code_findbugs_jsr305",
 )
 
+j2cl_import(
+    name = "jsr305_annotations-j2cl",
+    jar = "@com_google_code_findbugs_jsr305//jar",
+)
+
 alias(
     name = "j2objc_annotations",
-    actual = "@j2objc_annotations",
+    actual = "@com_google_j2objc_annotations",
 )
 
 j2cl_import(
     name = "j2objc_annotations-j2cl",
-    jar = "@j2objc_annotations//jar",
+    jar = "@com_google_j2objc_annotations//jar",
 )
 
 alias(
@@ -146,6 +156,11 @@ java_library(
     name = "compile_testing",
     testonly = 1,
     exports = ["@com_google_testing_compile//jar"],
+)
+
+alias(
+    name = "runfiles",
+    actual = "@bazel_tools//tools/java/runfiles",
 )
 
 alias(

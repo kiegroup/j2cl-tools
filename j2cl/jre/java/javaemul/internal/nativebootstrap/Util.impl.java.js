@@ -17,10 +17,8 @@
  */
 goog.module('nativebootstrap.Util$impl');
 
-
-const Reflect = goog.require('goog.reflect');
-const jre = goog.require('jre');
 const Constructor = goog.require('javaemul.internal.Constructor');
+const jre = goog.require('jre');
 
 
 /**
@@ -32,17 +30,14 @@ class Util {
    * if it is not defined.
    *
    * @param {string} name
-   * @param {?string=} opt_defaultValue
+   * @param {?string=} defaultValue
    * @return {?string}
    * @public
+   * @noinline
    */
-  static $getDefine(name, opt_defaultValue) {
-    // Default the optional param. Note that we are not using the common
-    // 'opt_value || default_value' pattern otherwise that would replace
-    // empty string with null value.
-    var defaultValue = opt_defaultValue == null ? null : opt_defaultValue;
-    var rv = goog.getObjectByName(name);
-    return rv == null ? defaultValue : String(rv);
+  // TODO(b/374872678): Remove the indirection through $getDefine.
+  static $getDefine(name, defaultValue = null) {
+    return jre.getSystemProperty(name, defaultValue);
   }
 
   /**
@@ -161,16 +156,13 @@ class Util {
    * @param {Constructor} ctor
    * @return {string}
    * @private
+   * @nosideeffects
    */
   static $getGeneratedClassName_(ctor) {
-    return Reflect.cache(ctor.prototype, '$$generatedClassName', function() {
-      // valueOf hack makes JsCompiler think that this is side effect free.
-      return 'Class$obf_' + {
-        valueOf() {
-          return ++Util.$nextUniqId_;
-        }
-      };
-    });
+    const propName = '$$generatedClassName';
+    return ctor.prototype.hasOwnProperty(propName) ?
+        ctor.prototype[propName] :
+        ctor.prototype[propName] = 'Class$obf_' + ++Util.$nextUniqId_;
   }
 
   /**

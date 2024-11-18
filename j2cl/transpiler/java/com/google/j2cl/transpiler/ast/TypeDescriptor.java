@@ -112,6 +112,11 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
     return false;
   }
 
+  /** Return true if it is an unnamed type variable, i.e. a wildcard or capture. */
+  public boolean isWildcardOrCapture() {
+    return false;
+  }
+
   /** Returns whether the described type is a functional interface (JLS 9.8). */
   public boolean isFunctionalInterface() {
     return false;
@@ -196,8 +201,19 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
     return isNullable();
   }
 
-  /** Returns type descriptor for the same type use the type parameters from the declaration. */
-  public abstract TypeDescriptor toUnparameterizedTypeDescriptor();
+  /** Returns this type descriptor with nullability set from the given annotation. */
+  public final TypeDescriptor withNullabilityAnnotation(
+      NullabilityAnnotation nullabilityAnnotation) {
+    switch (nullabilityAnnotation) {
+      case NOT_NULLABLE:
+        return toNonNullable();
+      case NONE:
+        return this;
+      case NULLABLE:
+        return toNullable();
+    }
+    throw new AssertionError();
+  }
 
   /**
    * Returns the erasure type (see definition of erasure type at
@@ -284,8 +300,8 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
   /**
    * Returns true if the two types have the same raw type.
    *
-   * <p>The raw type is always an unparameterized (nullable) declared type or a primitive type. And
-   * is defined as follows:
+   * <p>The raw type is always a declared type, an array of raw type or a primitive type. And is
+   * defined as follows:
    * <li>If the type is a primitive type "{@code p}"-> then its raw type is itself, "{@code p}".
    * <li>If the type is a class, interface or enum "{@code !C<String>}" -> then its raw type is the
    *     (nullable) declared type with no parameterization, "{@code C}"
@@ -317,6 +333,14 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
 
   /** Whether casts to this type are checked at runtime. */
   public boolean isNoopCast() {
+    return false;
+  }
+
+  /**
+   * Returns true if the given type descriptor is a Kotlin companion object class that can be
+   * optimized.
+   */
+  public boolean isOptimizableKotlinCompanion() {
     return false;
   }
 

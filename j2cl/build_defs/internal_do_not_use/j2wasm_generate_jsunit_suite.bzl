@@ -36,8 +36,8 @@ def j2wasm_generate_jsunit_suite(
         deps,
         tags = [],
         optimize = False,
-        defines = {},
-        exec_properties = {}):
+        use_magic_string_imports = False,
+        defines = {}):
     """Macro for cross compiling a JUnit Suite to .wasm file.
 
     Args:
@@ -99,7 +99,7 @@ def j2wasm_generate_jsunit_suite(
         ],
         testonly = 1,
         tags = tags + ["manual", "notap"],
-        exec_properties = exec_properties,
+        use_magic_string_imports = use_magic_string_imports,
     )
 
     # Re-expose the target as "_dep" for test infra to depend on.

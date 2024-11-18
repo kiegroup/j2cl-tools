@@ -117,19 +117,17 @@ public class NormalizeJsDocCastExpressions extends NormalizationPass {
               // avoid "unknown type" errors.
               if (castDeclaredTypeDescriptor.hasTypeArguments()) {
                 castTypeDescriptor =
-                    DeclaredTypeDescriptor.Builder.from(castDeclaredTypeDescriptor)
-                        .setTypeArgumentDescriptors(
-                            castDeclaredTypeDescriptor.getTypeArgumentDescriptors().stream()
-                                .map(NormalizeJsDocCastExpressions::replaceWildcardWithBound)
-                                .collect(toImmutableList()))
-                        .build();
+                    castDeclaredTypeDescriptor.withTypeArguments(
+                        castDeclaredTypeDescriptor.getTypeArgumentDescriptors().stream()
+                            .map(NormalizeJsDocCastExpressions::replaceWildcardWithBound)
+                            .collect(toImmutableList()));
               }
             }
 
             // Replace out of bounds type variables that might have been left by the frontend
             // if the inferrence was not needed for Java compilation.
             return JsDocCastExpression.Builder.from(jsDocCastExpression)
-                .setCastType(
+                .setCastTypeDescriptor(
                     castTypeDescriptor.specializeTypeVariables(
                         typeVariable ->
                             replaceOutofScopeTypeVariable(getCurrentMember(), typeVariable)))

@@ -14,36 +14,46 @@ goog.module("%MODULE_NAME%.j2wasm");
 
 %IMPORTS%
 
+const options = { "builtins": ["js-string"] , "importedStringConstants": "'"'"'" }
+
 /**
  * Instantiates the web assembly module. This is the recommended way to load & instantate
  * Wasm module.
  *
  * @param {string|!Response|!Promise<!Response>} urlOrResponse
  * @return {!Promise<!WebAssembly.Instance>}
+ * @suppress {checkTypes} Externs are missing options parameter (phase 2)
  */
 async function instantiateStreaming(urlOrResponse) {
-    const module = await compileStreaming(urlOrResponse);
-    return instantiate(module);
+  const useMagicStringImports = %USE_MAGIC_STRING_IMPORTS%;
+  if (useMagicStringImports) {
+    // Shortcut for magic import case.
+    const response = typeof urlOrResponse == "string" ? fetch(urlOrResponse) : urlOrResponse;
+    const {instance} = await WebAssembly.instantiateStreaming(response, getImports(), options);
+    return instance;
+  }
+  const module = await compileStreaming(urlOrResponse);
+  return instantiate(module);
 }
 
 /**
  * @param {string|!Response|!Promise<!Response>} urlOrResponse
  * @return {!Promise<!WebAssembly.Module>}
- * @suppress {checkTypes} Externs is missing options parameter (phase 2)
+ * @suppress {checkTypes} Externs are missing options parameter (phase 2)
  */
 async function compileStreaming(urlOrResponse) {
-    const response =
-        typeof urlOrResponse == "string" ? fetch(urlOrResponse) : urlOrResponse;
-    return WebAssembly.compileStreaming(response, { "builtins": ["js-string"] });
+  const response =
+      typeof urlOrResponse == "string" ? fetch(urlOrResponse) : urlOrResponse;
+  return WebAssembly.compileStreaming(response, options);
 }
 
 /**
  * @param {!WebAssembly.Module} module
  * @return {!Promise<!WebAssembly.Instance>}
- * @suppress {checkTypes} Externs is missing overloads for WebAssembly.instantiate.
+ * @suppress {checkTypes} Externs are missing overloads for WebAssembly.instantiate.
  */
 async function instantiate(module) {
-    return WebAssembly.instantiate(module, prepareImports(module));
+  return WebAssembly.instantiate(module, prepareImports(module));
 }
 
 /**
@@ -57,11 +67,11 @@ async function instantiate(module) {
  *
  * @param {!BufferSource} moduleObject
  * @return {!WebAssembly.Instance}
- * @suppress {checkTypes} Externs is missing options parameter (phase 2)
+ * @suppress {checkTypes} Externs are missing options parameter (phase 2)
  */
 function instantiateBlocking(moduleObject) {
-    const module = new WebAssembly.Module(moduleObject, { "builtins": ["js-string"] });
-    return new WebAssembly.Instance(module, prepareImports(module));
+  const module = new WebAssembly.Module(moduleObject, options);
+  return new WebAssembly.Instance(module, prepareImports(module));
 }
 
 /**
@@ -69,13 +79,13 @@ function instantiateBlocking(moduleObject) {
  * @return {!Object<string, *>}
  */
 function prepareImports(module) {
-    const imports = getImports();
-    const stringConsts = WebAssembly.Module.customSections(module, "string.consts")[0];
-    if (stringConsts) {
-      const decodedConsts = new TextDecoder().decode(stringConsts);
-      imports["string.const"] = JSON.parse(decodedConsts);
-    }
-    return imports;
+  const imports = getImports();
+  const stringConsts = WebAssembly.Module.customSections(module, "string.consts")[0];
+  if (stringConsts) {
+    const decodedConsts = new TextDecoder().decode(stringConsts);
+    imports["string.const"] = JSON.parse(decodedConsts);
+  }
+  return imports;
 }
 
 exports = {compileStreaming, instantiate, instantiateStreaming, instantiateBlocking};
@@ -193,13 +203,16 @@ def _impl_j2wasm_application(ctx):
             mnemonic = "J2wasm",
         )
 
-    debug_dir_name = ctx.label.name + "_debug"
-    source_map_base_url = ctx.attr.source_map_base_url or debug_dir_name
+    source_map_base_url = ctx.attr.source_map_base_url or "."
 
     input = ctx.outputs.wat
     input_source_map = None
     binaryen_symbolmap = ctx.actions.declare_file(ctx.label.name + ".binaryen.symbolmap")
-    stages = _extract_stages(ctx.attr.binaryen_args)
+    binaryen_args = ctx.attr.binaryen_args
+    if ctx.attr.use_magic_string_imports:
+        magic_imports_flag = "--string-lowering-magic-imports-assert"
+        binaryen_args = [magic_imports_flag if x == "--string-lowering" else x for x in binaryen_args]
+    stages = _extract_stages(binaryen_args)
     current_stage = 0
     for stage_args in stages:
         current_stage += 1
@@ -270,30 +283,32 @@ def _impl_j2wasm_application(ctx):
     _remap_symbol_map(ctx, transpile_out, binaryen_symbolmap)
 
     runfiles.append(ctx.outputs.wasm)
+    runfiles.append(ctx.outputs.srcmap)
+    runfiles.append(ctx.outputs.symbolmap)
+    symlinks = {}
 
-    # Make the debugging data available in runfiles.
-    # Note that we are making sure that the sourcemap file is in the root next to
-    # others so the relative paths are correct.
-    debug_dir = ctx.actions.declare_directory(debug_dir_name)
-    runfiles.append(debug_dir)
-    ctx.actions.run_shell(
-        inputs = [transpile_out, ctx.outputs.srcmap, ctx.outputs.symbolmap],
-        outputs = [debug_dir],
-        # TODO(b/176105504): Link instead copy when native tree support lands.
-        command = (
-            "cp -rL %s/* %s;" % (transpile_out.path, debug_dir.path) +
-            "cp %s %s %s" % (ctx.outputs.srcmap.path, ctx.outputs.symbolmap.path, debug_dir.path)
-        ),
-        mnemonic = "J2wasm",
-    )
+    # Provide the Java sources via symlinks in the runfiles.
+    if ctx.attr.use_modular_pipeline:
+        # Compute the directory where the source map file will reside (relative to `runtime_root`).
+        source_map_short_path_dir = ctx.outputs.srcmap.short_path.removesuffix(ctx.outputs.srcmap.basename)
+        for module_output in module_outputs.to_list():
+            # Add the module output to the runfiles.
+            runfiles.append(module_output)
+
+            # Rebase all source files relative to sourcemap
+            module_sourcemap_relative_path = source_map_short_path_dir + module_output.short_path
+            symlinks[module_sourcemap_relative_path] = module_output
 
     # Make the actual JS imports mapping file using the template.
     js_module = ctx.actions.declare_file(ctx.label.name + ".js")
+    module_name = ctx.label.name.replace("-", "_")
+    use_magic_string_imports = str(ctx.attr.use_magic_string_imports).lower()
     ctx.actions.run_shell(
         inputs = [ctx.outputs.jsimports],
         outputs = [js_module],
         command = "echo '%s' " % _JS_IMPORTS_TEMPLATE +
-                  "| sed -e 's/%%MODULE_NAME%%/%s/g' " % ctx.label.name.replace("-", "_") +
+                  "| sed -e 's/%%MODULE_NAME%%/%s/g' " % module_name +
+                  "| sed -e 's/%%USE_MAGIC_STRING_IMPORTS%%/%s/g' " % use_magic_string_imports +
                   "| sed -e '/%%IMPORTS%%/r %s' -e '//d ' " % ctx.outputs.jsimports.path +
                   ">> %s" % js_module.path,
         mnemonic = "J2wasm",
@@ -316,7 +331,7 @@ def _impl_j2wasm_application(ctx):
                 ctx.outputs.jsimports,
                 ctx.outputs.symbolmap,
             ]),
-            data_runfiles = ctx.runfiles(files = runfiles),
+            data_runfiles = ctx.runfiles(files = runfiles, symlinks = symlinks),
         ),
         OutputGroupInfo(_validation = _trigger_javac_build(ctx.attr.deps)),
     ]
@@ -379,6 +394,7 @@ _J2WASM_APP_ATTRS = {
     # TODO(b/296477606): Remove when symbol map file can be linked from the binary for debugging.
     "enable_debug_info": attr.bool(default = False),
     "use_modular_pipeline": attr.bool(default = True),
+    "use_magic_string_imports": attr.bool(),
     "_jre": attr.label(default = Label("//build_defs/internal_do_not_use:j2wasm_jre")),
     "_j2cl_transpiler": attr.label(
         cfg = "exec",
@@ -466,12 +482,15 @@ def j2wasm_application(name, defines = dict(), **kwargs):
             # matter. First -O3 will be the slowest, so we isolate it in a
             # stage1 invocation (due to go/forge-limits for time).
             "-O3",
+            "--cfp-reftest",
             "--optimize-j2cl",
             "--gufa",
             "--unsubtyping",
             "-O3",
+            "--cfp-reftest",
             "--optimize-j2cl",
             "-O3",
+            "--cfp-reftest",
             "--optimize-j2cl",
 
             # Stage 2
@@ -485,16 +504,21 @@ def j2wasm_application(name, defines = dict(), **kwargs):
             "--gufa",
             "--unsubtyping",
             "-O3",
+            "--cfp-reftest",
             "--optimize-j2cl",
             "-O3",
+            "--cfp-reftest",
             "--optimize-j2cl",
             "-O3",
+            "--cfp-reftest",
             "--optimize-j2cl",
             "--gufa",
             "--unsubtyping",
             "-O3",
+            "--cfp-reftest",
             "--optimize-j2cl",
             "-O3",
+            "--cfp-reftest",
             "--optimize-j2cl",
 
             # Stage 3
@@ -508,11 +532,14 @@ def j2wasm_application(name, defines = dict(), **kwargs):
             "--unsubtyping",
             # Get several rounds of -O3 after intrinsic lowering.
             "-O3",
+            "--cfp-reftest",
             "--optimize-j2cl",
             "-O3",
             "--optimize-j2cl",
+            "--cfp-reftest",
             "--type-merging",
             "-O3",
+            "--cfp-reftest",
             "--optimize-j2cl",
 
             # Final clean-ups.

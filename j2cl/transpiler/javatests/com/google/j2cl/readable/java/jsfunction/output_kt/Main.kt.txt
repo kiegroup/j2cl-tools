@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package jsfunction
 
@@ -69,7 +69,7 @@ open class Main {
   }, n)
   object : Main.JsFunctionInterface {
    override fun foo(a: Int): Int {
-    this@Main.instanceMethod_private_2()
+    this@Main.instanceMethod()
     return 0
    }
   }.foo(3)
@@ -79,13 +79,13 @@ open class Main {
  open fun testJsFunctionThis() {
   object : Main.JsFunctionInterface {
    override fun foo(a: Int): Int {
-    this@Main.instanceMethod_private_2()
+    this@Main.instanceMethod()
     return 0
    }
   }.foo(3)
  }
 
- internal fun instanceMethod_private_2() {}
+ private fun instanceMethod() {}
 
  @ObjCName("testJsFunctionErasureCasts")
  open fun testJsFunctionErasureCasts() {
@@ -204,12 +204,12 @@ open class Main {
   ) {}
 
   @JvmStatic
-  @JsProperty(name = "parametricJsFunction")
-  internal fun setParametricJsFunction_private_2(fn: Main.ParametricJsFunction<Any?>?) {}
+  @JsProperty
+  private fun setParametricJsFunction(fn: Main.ParametricJsFunction<Any?>?) {}
 
   @JvmStatic
-  @JsProperty(name = "parametricJsFunction")
-  internal fun getParametricJsFunction_private_2(): Main.ParametricJsFunction<Any?>? {
+  @JsProperty
+  private fun getParametricJsFunction(): Main.ParametricJsFunction<Any?>? {
    return null
   }
 
@@ -307,6 +307,7 @@ open class Main {
   }
  }
 
+ @ObjCName("J2ktJsfunctionMain_Function", exact = true)
  @JsFunction
  fun interface Function<T, U> {
   @ObjCName("apply")
@@ -315,6 +316,7 @@ open class Main {
   ): T
  }
 
+ @ObjCName("J2ktJsfunctionMain_JsFunctionInterface", exact = true)
  @JsFunction
  fun interface JsFunctionInterface {
   @ObjCName("foo")
@@ -329,14 +331,18 @@ open class Main {
   }
  }
 
+ @ObjCName("J2ktJsfunctionMain_JsFunctionImplementation", exact = true)
  class JsFunctionImplementation: Main.JsFunctionInterface {
   @JvmField
+  @ObjCName("field_")
   var field: Int = 0
 
   @JvmField
+  @ObjCName("storedThis_")
   var storedThis: Main.JsFunctionImplementation? = null
 
   @JvmField
+  @ObjCName("anotherStoredThis_")
   var anotherStoredThis: Main.JsFunctionImplementation? = null
 
   internal constructor() {
@@ -360,6 +366,7 @@ open class Main {
   }
  }
 
+ @ObjCName("J2ktJsfunctionMain_TestCaptureOuterParametricClass", exact = true)
  open class TestCaptureOuterParametricClass<T> internal constructor() {
   @ObjCName("test")
   open fun test() {
@@ -369,6 +376,7 @@ open class Main {
   }
  }
 
+ @ObjCName("J2ktJsfunctionMain_JsFunctionVarargs", exact = true)
  @JsFunction
  fun interface JsFunctionVarargs {
   @ObjCName("m")
@@ -378,6 +386,7 @@ open class Main {
   ): Int
  }
 
+ @ObjCName("J2ktJsfunctionMain_ForEachCallBack", exact = true)
  @JsFunction
  fun interface ForEachCallBack<T> {
   @ObjCName("onInvoke")
@@ -388,6 +397,7 @@ open class Main {
   ): Any?
  }
 
+ @ObjCName("J2ktJsfunctionMain_ElementalJsFunction", exact = true)
  @JsFunction
  fun interface ElementalJsFunction {
   @ObjCName("call")
@@ -396,6 +406,7 @@ open class Main {
   ): Any?
  }
 
+ @ObjCName("J2ktJsfunctionMain_JsFunctionVarargsGenerics", exact = true)
  @JsFunction
  fun interface JsFunctionVarargsGenerics<T> {
   @ObjCName("m")
@@ -405,12 +416,14 @@ open class Main {
   ): Int
  }
 
+ @ObjCName("J2ktJsfunctionMain_SimpleJsFunction", exact = true)
  @JsFunction
  fun interface SimpleJsFunction {
   @ObjCName("m")
   fun m()
  }
 
+ @ObjCName("J2ktJsfunctionMain_JsFunctionOptional", exact = true)
  @JsFunction
  fun interface JsFunctionOptional {
   @ObjCName("m")
@@ -420,12 +433,14 @@ open class Main {
   ): Int
  }
 
+ @ObjCName("J2ktJsfunctionMain_JsFunctionOptionalImpl", exact = true)
  class JsFunctionOptionalImpl internal constructor(): Main.JsFunctionOptional {
   override fun m(i: Int, @JsOptional number: Double?): Int {
    return (i.toDouble() + number!!.toDouble()).toInt()
   }
  }
 
+ @ObjCName("J2ktJsfunctionMain_ParametricJsFunction", exact = true)
  @JsFunction
  fun interface ParametricJsFunction<E> {
   @ObjCName("call")
@@ -434,11 +449,13 @@ open class Main {
   )
  }
 
+ @ObjCName("J2ktJsfunctionMain_ApiWithMethodReturningParametricJsFunction", exact = true)
  interface ApiWithMethodReturningParametricJsFunction {
   @ObjCName("anApi")
   fun <T> anApi(): Main.ParametricJsFunction<T>?
  }
 
+ @ObjCName("J2ktJsfunctionMain_Implementor", exact = true)
  open class Implementor internal constructor(): Main.ApiWithMethodReturningParametricJsFunction {
   @JsMethod
   override fun <T> anApi(): Main.ParametricJsFunction<T>? {
@@ -446,12 +463,14 @@ open class Main {
   }
  }
 
+ @ObjCName("J2ktJsfunctionMain_ParamtericImplementation", exact = true)
  class ParamtericImplementation<T> internal constructor(): Main.ParametricJsFunction<T> {
   override fun call(t: T) {
    val o: Any? = t as T
   }
  }
 
+ @ObjCName("J2ktJsfunctionMain_ClassWithJsFunctionProperty", exact = true)
  open class ClassWithJsFunctionProperty internal constructor() {
   @JvmField
   internal var function_pp_jsfunction: Main.ParametricJsFunction<String?>? = null
@@ -462,6 +481,7 @@ open class Main {
   }
  }
 
+ @ObjCName("J2ktJsfunctionMain_JsBiFunction", exact = true)
  @JsFunction
  fun interface JsBiFunction<T, S: Number?> {
   @ObjCName("apply")
@@ -485,6 +505,7 @@ open class Main {
   }
  }
 
+ @ObjCName("J2ktJsfunctionMain_TestJsFunctionInJsOverlayCapturingOuter", exact = true)
  @JsType(name = "Array", namespace = JsPackage.GLOBAL, isNative = true)
  open class TestJsFunctionInJsOverlayCapturingOuter internal constructor() {
   @JsOverlay
@@ -498,10 +519,12 @@ open class Main {
   internal fun sort_pp_jsfunction(func: Main.JsFunctionInterface?) {}
  }
 
+ @ObjCName("J2ktJsfunctionMain_RecursiveParametricJsFunctionImplementation", exact = true)
  class RecursiveParametricJsFunctionImplementation<T: Main.ParametricJsFunction<T>?> internal constructor(): Main.ParametricJsFunction<T> {
   override fun call(t: T) {}
  }
 
+ @ObjCName("J2ktJsfunctionMain_RecursiveJsFunctionImplementation", exact = true)
  class RecursiveJsFunctionImplementation internal constructor(): Main.ParametricJsFunction<Main.RecursiveJsFunctionImplementation?> {
   override fun call(t: Main.RecursiveJsFunctionImplementation?) {}
  }

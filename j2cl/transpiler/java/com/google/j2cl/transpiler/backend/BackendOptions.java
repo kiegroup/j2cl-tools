@@ -38,13 +38,14 @@ public interface BackendOptions {
 
   ImmutableList<EntryPointPattern> getWasmEntryPointPatterns();
 
-  boolean getWasmEnableNonNativeJsEnum();
-
   boolean getOptimizeAutoValue();
 
   boolean getEmitReadableLibraryInfo();
 
   boolean getEmitReadableSourceMap();
+
+  @Nullable
+  String getSourceMappingPathPrefix();
 
   boolean getGenerateKytheIndexingMetadata();
 

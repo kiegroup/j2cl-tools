@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package intersectiontype
 
@@ -30,11 +30,13 @@ import kotlin.jvm.JvmStatic
 import kotlin.let
 import kotlin.native.ObjCName
 
+@ObjCName("J2ktIntersectiontypeGetable", exact = true)
 fun interface Getable<T> {
  @ObjCName("get")
  fun get(): T
 }
 
+@ObjCName("J2ktIntersectiontypeSetable", exact = true)
 fun interface Setable {
  @ObjCName("set")
  fun set(
@@ -42,8 +44,10 @@ fun interface Setable {
  )
 }
 
+@ObjCName("J2ktIntersectiontypeSerial", exact = true)
 interface Serial {}
 
+@ObjCName("J2ktIntersectiontypeCmp", exact = true)
 fun interface Cmp {
  @ObjCName("cmp")
  fun cmp(): Int
@@ -54,6 +58,7 @@ fun interface Cmp {
  }
 }
 
+@ObjCName("J2ktIntersectiontypeCmp2", exact = true)
 fun interface Cmp2<T> {
  @ObjCName("cmp")
  fun cmp(
@@ -61,6 +66,7 @@ fun interface Cmp2<T> {
  ): Int
 }
 
+@ObjCName("J2ktIntersectiontypeCmpImpl", exact = true)
 open class CmpImpl internal constructor(): Cmp {
  override fun cmp(): Int {
   return 1
@@ -78,18 +84,18 @@ open class IntersectionTypeTest<U> {
 
  @ObjCName("testMethodCall")
  open fun testMethodCall() {
-  val o: Any? = IntersectionTypeTest.m_private_2()
-  IntersectionTypeTest.set_private_2((o).let { it as IntersectionTypeTest.A?; it as IntersectionTypeTest.EmptyA?; it })
-  IntersectionTypeTest.set_private_2(IntersectionTypeTest.m_private_2())
-  val g: Getable<*>? = IntersectionTypeTest.n_private_2() as Getable<*>?
+  val o: Any? = IntersectionTypeTest.m()
+  IntersectionTypeTest.set(o.let { it as IntersectionTypeTest.A?; it as IntersectionTypeTest.EmptyA?; it })
+  IntersectionTypeTest.set(IntersectionTypeTest.m())
+  val g: Getable<*>? = IntersectionTypeTest.n() as Getable<Any?>?
  }
 
  @ObjCName("testDefaultMethodCall")
  open fun testDefaultMethodCall(
   @ObjCName("withId") o: Any?
  ) {
-  ((o).let { it as Cmp?; it as IntersectionTypeTest.EmptyA?; it })!!.defaultM()
-  ((o).let { it as CmpImpl?; it as IntersectionTypeTest.EmptyA?; it })!!.defaultM()
+  o.let { it as Cmp?; it as IntersectionTypeTest.EmptyA?; it }!!.defaultM()
+  o.let { it as CmpImpl?; it as IntersectionTypeTest.EmptyA?; it }!!.defaultM()
  }
 
  @ObjCName("J2ktIntersectiontypeIntersectionTypeTestCompanion", exact = true)
@@ -109,9 +115,9 @@ open class IntersectionTypeTest<U> {
    @ObjCName("withId") o: Any?
   ): Getable<T>? {
    if (o == null) {
-    return (o).let { it as Getable<T>?; it as Setable?; it }
+    return o.let { it as Getable<T>?; it as Setable?; it }
    }
-   return (o).let { it as Getable<T>?; it as Setable?; it }
+   return o.let { it as Getable<T>?; it as Setable?; it }
   }
 
   @JvmStatic
@@ -119,7 +125,7 @@ open class IntersectionTypeTest<U> {
   fun <T> cast1(
    @ObjCName("withId") s: Any?
   ): Getable<Comparable<String>?>? {
-   return (s).let { it as Getable<Comparable<String>?>?; it as Setable?; it }
+   return s.let { it as Getable<Comparable<String>?>?; it as Setable?; it }
   }
 
   @JvmStatic
@@ -127,7 +133,7 @@ open class IntersectionTypeTest<U> {
   fun <T> cast2(
    @ObjCName("withId") s: Any?
   ): Getable<Comparable<T & Any>?>? {
-   return (s).let { it as Getable<Comparable<T & Any>?>?; it as Setable?; it }
+   return s.let { it as Getable<Comparable<T & Any>?>?; it as Setable?; it }
   }
 
   @JvmStatic
@@ -135,7 +141,7 @@ open class IntersectionTypeTest<U> {
   fun method(): Cmp? {
    return (Cmp {
     return@Cmp 1
-   }).let { it as Cmp?; it as Serial?; it }
+   }).let { it as Cmp; it as Serial; it }
   }
 
   @JvmStatic
@@ -151,50 +157,55 @@ open class IntersectionTypeTest<U> {
   fun testClosureAssignment(
    @ObjCName("withId") o: Any?
   ) {
-   val e: IntersectionTypeTest.A? = (o).let { it as IntersectionTypeTest.A?; it as IntersectionTypeTest.EmptyA?; it as IntersectionTypeTest.EmptyB?; it }
-   val g: IntersectionTypeTest.EmptyA? = (o).let { it as IntersectionTypeTest.A?; it as IntersectionTypeTest.EmptyA?; it as IntersectionTypeTest.EmptyB?; it }
-   val s: IntersectionTypeTest.EmptyB? = (o).let { it as IntersectionTypeTest.A?; it as IntersectionTypeTest.EmptyA?; it as IntersectionTypeTest.EmptyB?; it }
+   val e: IntersectionTypeTest.A? = o.let { it as IntersectionTypeTest.A?; it as IntersectionTypeTest.EmptyA?; it as IntersectionTypeTest.EmptyB?; it }
+   val g: IntersectionTypeTest.EmptyA? = o.let { it as IntersectionTypeTest.A?; it as IntersectionTypeTest.EmptyA?; it as IntersectionTypeTest.EmptyB?; it }
+   val s: IntersectionTypeTest.EmptyB? = o.let { it as IntersectionTypeTest.A?; it as IntersectionTypeTest.EmptyA?; it as IntersectionTypeTest.EmptyB?; it }
   }
 
   @JvmStatic
-  internal fun <T> get_private_2(t: T): T {
+  private fun <T> get(t: T): T {
    return t
   }
 
   @JvmStatic
-  internal fun <T> m_private_2(): T where T: IntersectionTypeTest.A?, T: IntersectionTypeTest.EmptyA? {
-   return (IntersectionTypeTest.get_private_2<Any?>(Any()) as T?) as T
+  private fun <T> m(): T where T: IntersectionTypeTest.A?, T: IntersectionTypeTest.EmptyA? {
+   return IntersectionTypeTest.get<Any?>(Any()) as T? as T
   }
 
   @JvmStatic
-  internal fun <T> n_private_2(): Getable<T>? where T: IntersectionTypeTest.A?, T: IntersectionTypeTest.EmptyA? {
+  private fun <T> n(): Getable<T>? where T: IntersectionTypeTest.A?, T: IntersectionTypeTest.EmptyA? {
    return null
   }
 
   @JvmStatic
-  internal fun <T> set_private_2(t: T) where T: IntersectionTypeTest.A?, T: IntersectionTypeTest.EmptyA? {}
+  private fun <T> set(t: T) where T: IntersectionTypeTest.A?, T: IntersectionTypeTest.EmptyA? {}
 
   @JvmStatic
-  internal fun <T> callOnIntersetionTypes_private_2(t: T) where T: IntersectionTypeTest.SomeConcreteType?, T: Cmp? {
+  private fun <T> callOnIntersetionTypes(t: T) where T: IntersectionTypeTest.SomeConcreteType?, T: Cmp? {
    t!!.cmp()
-   ((null).let { it as IntersectionTypeTest.SomeConcreteType?; it as Cmp?; it })!!.cmp()
+   null.let { it as IntersectionTypeTest.SomeConcreteType?; it as Cmp?; it }!!.cmp()
   }
  }
 
+ @ObjCName("J2ktIntersectiontypeIntersectionTypeTest_MapEntry", exact = true)
  open inner class MapEntry internal constructor() {
   @ObjCName("method")
   open fun <T> method(
    @ObjCName("withId") o: Any?
   ): Getable<T>? {
-   return (o).let { it as Getable<T>?; it as Setable?; it }
+   return o.let { it as Getable<T>?; it as Setable?; it }
   }
  }
 
+ @ObjCName("J2ktIntersectiontypeIntersectionTypeTest_A", exact = true)
  open class A internal constructor() {}
 
+ @ObjCName("J2ktIntersectiontypeIntersectionTypeTest_EmptyA", exact = true)
  interface EmptyA {}
 
+ @ObjCName("J2ktIntersectiontypeIntersectionTypeTest_EmptyB", exact = true)
  interface EmptyB {}
 
+ @ObjCName("J2ktIntersectiontypeIntersectionTypeTest_SomeConcreteType", exact = true)
  open class SomeConcreteType internal constructor() {}
 }

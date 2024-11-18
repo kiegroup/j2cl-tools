@@ -25,6 +25,7 @@ import com.google.j2cl.transpiler.ast.IntersectionTypeDescriptor
 import com.google.j2cl.transpiler.ast.Literal
 import com.google.j2cl.transpiler.ast.MethodDescriptor
 import com.google.j2cl.transpiler.ast.NullabilityAnnotation
+import com.google.j2cl.transpiler.ast.PackageDeclaration
 import com.google.j2cl.transpiler.ast.PrimitiveTypes
 import com.google.j2cl.transpiler.ast.TypeDeclaration
 import com.google.j2cl.transpiler.ast.TypeDeclaration.SourceLanguage.JAVA
@@ -36,6 +37,8 @@ import com.google.j2cl.transpiler.ast.TypeVariable
 import com.google.j2cl.transpiler.ast.Visibility
 import com.google.j2cl.transpiler.frontend.jdt.PackageAnnotationsResolver
 import com.google.j2cl.transpiler.frontend.kotlin.ir.enumEntries
+import com.google.j2cl.transpiler.frontend.kotlin.ir.fqnOrFail
+import com.google.j2cl.transpiler.frontend.kotlin.ir.fromQualifiedBinaryName
 import com.google.j2cl.transpiler.frontend.kotlin.ir.getAllTypeParameters
 import com.google.j2cl.transpiler.frontend.kotlin.ir.getJsEnumInfo
 import com.google.j2cl.transpiler.frontend.kotlin.ir.getJsInfo
@@ -67,7 +70,6 @@ import com.google.j2cl.transpiler.frontend.kotlin.ir.methods
 import com.google.j2cl.transpiler.frontend.kotlin.ir.simpleSourceName
 import com.google.j2cl.transpiler.frontend.kotlin.ir.singleAbstractMethod
 import com.google.j2cl.transpiler.frontend.kotlin.ir.typeSubstitutionMap
-import org.jetbrains.kotlin.backend.common.extensions.FirIncompatiblePluginAPI
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.jvm.JvmBackendContext
 import org.jetbrains.kotlin.backend.jvm.ir.constantValue
@@ -108,7 +110,6 @@ import org.jetbrains.kotlin.ir.util.dump
 import org.jetbrains.kotlin.ir.util.file
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.ir.util.isAnonymousObject
-import org.jetbrains.kotlin.ir.util.isFacadeClass
 import org.jetbrains.kotlin.ir.util.isFakeOverride
 import org.jetbrains.kotlin.ir.util.isFromJava
 import org.jetbrains.kotlin.ir.util.isInterface
@@ -116,7 +117,6 @@ import org.jetbrains.kotlin.ir.util.isKFunction
 import org.jetbrains.kotlin.ir.util.isLocal
 import org.jetbrains.kotlin.ir.util.isReal
 import org.jetbrains.kotlin.ir.util.isStatic
-import org.jetbrains.kotlin.ir.util.isTopLevel
 import org.jetbrains.kotlin.ir.util.isTypeParameter
 import org.jetbrains.kotlin.ir.util.isVararg
 import org.jetbrains.kotlin.ir.util.kotlinFqName
@@ -124,6 +124,7 @@ import org.jetbrains.kotlin.ir.util.packageFqName
 import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import org.jetbrains.kotlin.ir.util.resolveFakeOverrideMaybeAbstractOrFail
 import org.jetbrains.kotlin.ir.util.superTypes
+import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.types.Variance
@@ -136,60 +137,50 @@ class KotlinEnvironment(
 ) {
   private val builtinsResolver = BuiltinsResolver(pluginContext, jvmBackendContext)
   private val typeDescriptorByIrType: MutableMap<IrType, TypeDescriptor> = HashMap()
-  private val primitiveTypeDescriptorsByIrType: Map<IrType, TypeDescriptor> =
-    mapOf(
-      pluginContext.irBuiltIns.booleanType to PrimitiveTypes.BOOLEAN,
-      pluginContext.irBuiltIns.byteType to PrimitiveTypes.BYTE,
-      pluginContext.irBuiltIns.charType to PrimitiveTypes.CHAR,
-      pluginContext.irBuiltIns.doubleType to PrimitiveTypes.DOUBLE,
-      pluginContext.irBuiltIns.floatType to PrimitiveTypes.FLOAT,
-      pluginContext.irBuiltIns.intType to PrimitiveTypes.INT,
-      pluginContext.irBuiltIns.longType to PrimitiveTypes.LONG,
-      pluginContext.irBuiltIns.shortType to PrimitiveTypes.SHORT,
-    )
+  private val typeDeclarationByIrClass: MutableMap<IrClass, TypeDeclaration> = HashMap()
+  private val methodDescriptorByIrFunction: MutableMap<IrFunction, MethodDescriptor> = HashMap()
+  private val fieldDescriptorByIrField: MutableMap<IrField, FieldDescriptor> = HashMap()
 
   init {
     initWellKnownTypes()
 
-    // Add mappings for basic types to their corresponding boxed types.
-    primitiveTypeDescriptorsByIrType.forEach {
-      typeDescriptorByIrType +=
-        mapOf(
-          it.key to it.value.toBoxedType(),
-          it.key.makeNullable() to it.value.toBoxedType().toNullable(),
-        )
-    }
+    mapOf(
+        pluginContext.irBuiltIns.booleanType to PrimitiveTypes.BOOLEAN,
+        pluginContext.irBuiltIns.byteType to PrimitiveTypes.BYTE,
+        pluginContext.irBuiltIns.charType to PrimitiveTypes.CHAR,
+        pluginContext.irBuiltIns.doubleType to PrimitiveTypes.DOUBLE,
+        pluginContext.irBuiltIns.floatType to PrimitiveTypes.FLOAT,
+        pluginContext.irBuiltIns.intType to PrimitiveTypes.INT,
+        pluginContext.irBuiltIns.longType to PrimitiveTypes.LONG,
+        pluginContext.irBuiltIns.shortType to PrimitiveTypes.SHORT,
+      )
+      .forEach {
+        // Add default mappings for basic types to their corresponding Java types.
+        typeDescriptorByIrType[it.key] = it.value
+        typeDescriptorByIrType[it.key.makeNullable()] = it.value.toBoxedType().toNullable()
 
-    // Add mappings for primitive arrays types.
-    primitiveTypeDescriptorsByIrType.forEach {
-      val arrayType = pluginContext.irBuiltIns.primitiveArrayForType[it.key]
-      if (arrayType != null) {
-        typeDescriptorByIrType +=
-          mapOf(
-            arrayType.defaultType to
-              ArrayTypeDescriptor.newBuilder()
-                .setComponentTypeDescriptor(it.value)
-                .setNullable(false)
-                .build(),
-            arrayType.defaultType.makeNullable() to
-              ArrayTypeDescriptor.newBuilder()
-                .setComponentTypeDescriptor(it.value)
-                .setNullable(true)
-                .build(),
-          )
+        // Add mappings for primitive arrays types.
+        val arrayType = pluginContext.irBuiltIns.primitiveArrayForType[it.key]!!.defaultType
+        typeDescriptorByIrType[arrayType] =
+          ArrayTypeDescriptor.newBuilder()
+            .setComponentTypeDescriptor(it.value)
+            .setNullable(false)
+            .build()
+        typeDescriptorByIrType[arrayType.makeNullable()] =
+          ArrayTypeDescriptor.newBuilder()
+            .setComponentTypeDescriptor(it.value)
+            .setNullable(true)
+            .build()
       }
-    }
   }
 
   private fun initWellKnownTypes() {
-    if (TypeDescriptors.isInitialized()) {
-      return
-    }
+    check(!TypeDescriptors.isInitialized())
 
     val builder = SingletonBuilder()
 
     for (name in TypeDescriptors.getWellKnownTypeNames()) {
-      val typeDescriptor = getWellKnownTypeDescriptor(name.replace('$', '.'))
+      val typeDescriptor = getWellKnownTypeDescriptor(name)
       if (typeDescriptor != null) {
         builder.addReferenceType(typeDescriptor)
       }
@@ -198,135 +189,94 @@ class KotlinEnvironment(
     builder.buildSingleton()
   }
 
-  private fun getWellKnownTypeDescriptor(typeFqn: String): DeclaredTypeDescriptor? =
-    @OptIn(FirIncompatiblePluginAPI::class)
-    pluginContext.referenceClass(FqName(typeFqn))?.let {
+  private fun getWellKnownTypeDescriptor(qualifiedBinaryName: String): DeclaredTypeDescriptor? {
+    return pluginContext.referenceClass(ClassId.fromQualifiedBinaryName(qualifiedBinaryName))?.let {
       getDeclaredTypeDescriptor(it.defaultType.makeNullable())
     }
-
-  internal fun getWellKnowMethodDescriptor(
-    fnFqn: String,
-    vararg parameters: TypeDescriptor,
-  ): MethodDescriptor {
-    val fqName = FqName(fnFqn)
-    @OptIn(FirIncompatiblePluginAPI::class)
-    return pluginContext
-      .referenceFunctions(fqName)
-      .map { it.owner.parent }
-      .distinct()
-      .mapNotNull {
-        when {
-          it is IrFile ->
-            getWellKnownTypeDescriptor(it.getFileClassInfo().fileClassFqName.asString())
-          it.isFacadeClass ->
-            getDeclaredType((it as IrClass).defaultType, useDeclarationVariance = false)
-          else -> null
-        }?.getMethodDescriptor(fqName.shortName().asString(), *parameters)
-      }
-      .single()
   }
 
   fun getDeclarationForType(irClass: IrClass?): TypeDeclaration? {
     irClass ?: return null
 
-    var enclosingTypeDeclaration = irClass.parentClassOrNull?.let { getDeclarationForType(it) }
+    return typeDeclarationByIrClass.getOrPut(irClass) {
 
-    // TODO(b/259156400): Remove when the original stdlib file compiles with `-Xserialize-ir` flag.
-    val packageName =
-      when {
-        irClass.isStubbedPrimitiveIteratorClass() -> FqName("kotlin.collections")
-        irClass.isStubbedPrimitiveRangeClass() -> FqName("kotlin.ranges")
-        else -> irClass.packageFqName!!
-      }
+      // TODO(b/259156400): Remove when the original stdlib file compiles with `-Xserialize-ir`
+      // flag.
+      val packageName =
+        when {
+          irClass.isStubbedPrimitiveIteratorClass() -> FqName("kotlin.collections")
+          irClass.isStubbedPrimitiveRangeClass() -> FqName("kotlin.ranges")
+          else -> irClass.packageFqName!!
+        }
 
-    return TypeDeclaration.newBuilder()
-      .setClassComponents(irClass.getClassComponents())
-      .setKind(irClass.j2clKind)
-      .setAnnotation(irClass.j2clIsAnnotation)
-      .setSourceLanguage(if (irClass.isFromJava()) JAVA else KOTLIN)
-      .setOriginalSimpleSourceName(irClass.simpleSourceName)
-      .setPackageName(packageName.asString())
-      .setVisibility(irClass.j2clVisibility)
-      .setEnclosingTypeDeclaration(enclosingTypeDeclaration)
-      .setUnparameterizedTypeDescriptorFactory { _ ->
-        getDeclaredTypeDescriptor(irClass.defaultType)
-      }
-      .setDeclaredMethodDescriptorsFactory { _ ->
-        ImmutableList.copyOf(irClass.methods.map(::getDeclaredMethodDescriptor))
-      }
-      .setDeclaredFieldDescriptorsFactory { _ ->
-        ImmutableList.copyOf(
-          irClass.enumEntries.map(::getDeclaredFieldDescriptor) +
-            irClass.getDeclaredFields().map(::getDeclaredFieldDescriptor).toList()
-        )
-      }
-      .setSuperTypeDescriptorFactory { _ ->
-        irClass.superClass?.let { getSuperTypeDescriptor(it.makeNullable()) }
-      }
-      .setInterfaceTypeDescriptorsFactory { _ ->
-        ImmutableList.copyOf(
-          irClass.superTypes
-            .filter(IrType::isInterface)
-            .map(IrType::makeNullable)
-            .map(::getSuperTypeDescriptor)
-            // We can have duplicate types after JVM intrinsics have been resolved. See b/308776304
-            .distinctBy { it.typeDeclaration }
-        )
-      }
-      .setMemberTypeDeclarationsFactory {
-        ImmutableList.copyOf(
-          irClass.declarations.filterIsInstance<IrClass>().map { c -> getDeclarationForType(c)!! }
-        )
-      }
-      .setTypeParameterDescriptors(irClass.getAllTypeParameters().map(::getTypeVariable).toList())
-      .setCapturingEnclosingInstance(irClass.isCapturingEnclosingInstance)
-      .setFunctionalInterface(irClass.isFunctionalInterface)
-      .setHasAbstractModifier(irClass.isAbstract)
-      .setFinal(irClass.isFinal)
-      .setLocal(irClass.isLocal && !irClass.isAnonymousObject)
-      .setAnonymous(irClass.isAnonymousObject)
-      .setDeprecated(irClass.isDeprecated)
-      .setJsType(irClass.isJsType)
-      .setJsFunctionInterface(irClass.isJsFunction)
-      .setJsEnumInfo(irClass.getJsEnumInfo())
-      .setWasmInfo(irClass.getWasmInfo())
-      .apply {
-        val jsMemberAnnotation = irClass.getJsMemberAnnotationInfo()
-        setCustomizedJsNamespace(jsMemberAnnotation?.namespace ?: irClass.packageInfoNamespace)
-        setSimpleJsName(jsMemberAnnotation?.name)
-        setNative(jsMemberAnnotation?.isNative ?: false)
-      }
-      .build()
+      TypeDeclaration.newBuilder()
+        .setClassComponents(irClass.getClassComponents())
+        .setKind(irClass.j2clKind)
+        .setAnnotation(irClass.j2clIsAnnotation)
+        .setSourceLanguage(if (irClass.isFromJava()) JAVA else KOTLIN)
+        .setOriginalSimpleSourceName(irClass.simpleSourceName)
+        .setPackage(createPackageDeclaration(packageName.asString()))
+        .setVisibility(irClass.j2clVisibility)
+        .setEnclosingTypeDeclaration(getDeclarationForType(irClass.parentClassOrNull))
+        .setDeclaredMethodDescriptorsFactory { _ ->
+          ImmutableList.copyOf(irClass.methods.map(::getDeclaredMethodDescriptor))
+        }
+        .setSingleAbstractMethodDescriptorFactory { _ ->
+          irClass.singleAbstractMethod?.let(::getDeclaredMethodDescriptor)
+        }
+        .setDeclaredFieldDescriptorsFactory { _ ->
+          ImmutableList.copyOf(
+            irClass.enumEntries.map(::getDeclaredFieldDescriptor) +
+              irClass.getDeclaredFields().map(::getDeclaredFieldDescriptor).toList()
+          )
+        }
+        .setSuperTypeDescriptorFactory { _ ->
+          irClass.superClass?.let { getSuperTypeDescriptor(it.makeNullable()) }
+        }
+        .setInterfaceTypeDescriptorsFactory { _ ->
+          ImmutableList.copyOf(
+            irClass.superTypes
+              .filter(IrType::isInterface)
+              .map(IrType::makeNullable)
+              .map(::getSuperTypeDescriptor)
+              // We can have duplicate types after JVM intrinsics have been resolved. See
+              // b/308776304
+              .distinctBy { it.typeDeclaration }
+          )
+        }
+        .setMemberTypeDeclarationsFactory {
+          ImmutableList.copyOf(
+            irClass.declarations.filterIsInstance<IrClass>().map { c -> getDeclarationForType(c)!! }
+          )
+        }
+        .setTypeParameterDescriptors(irClass.getAllTypeParameters().map(::getTypeVariable).toList())
+        .setCapturingEnclosingInstance(irClass.isCapturingEnclosingInstance)
+        .setFunctionalInterface(irClass.isFunctionalInterface)
+        .setHasAbstractModifier(irClass.isAbstract)
+        .setFinal(irClass.isFinal)
+        .setLocal(irClass.isLocal && !irClass.isAnonymousObject)
+        .setAnonymous(irClass.isAnonymousObject)
+        .setDeprecated(irClass.isDeprecated)
+        .setJsType(irClass.isJsType)
+        .setJsFunctionInterface(irClass.isJsFunction)
+        .setJsEnumInfo(irClass.getJsEnumInfo())
+        .setWasmInfo(irClass.getWasmInfo())
+        .apply {
+          val jsMemberAnnotation = irClass.getJsMemberAnnotationInfo()
+          setCustomizedJsNamespace(jsMemberAnnotation?.namespace)
+          setSimpleJsName(jsMemberAnnotation?.name)
+          setNative(jsMemberAnnotation?.isNative ?: false)
+        }
+        .build()
+    }
   }
 
-  private val IrClass.packageInfoNamespace: String?
-    get() {
-      if (!isTopLevel) {
-        return null
-      }
-      return packageAnnotationsResolver.getJsNameSpace(
-        checkNotNull(classId).packageFqName.asString()
-      )
-    }
-
-  fun getTypeDescriptor(irType: IrType): TypeDescriptor =
-    primitiveTypeDescriptorsByIrType[irType] ?: getReferenceTypeDescriptor(irType)
-
-  internal fun getReferenceTypeDescriptorForTypeArgument(
-    irTypeArgument: IrTypeArgument
-  ): TypeDescriptor =
-    when (irTypeArgument) {
-      is IrStarProjection -> TypeVariable.createWildcard()
-      is IrTypeProjection -> {
-        var type = getReferenceTypeDescriptor(irTypeArgument.typeOrNull!!)
-        when (irTypeArgument.variance) {
-          Variance.INVARIANT -> type
-          Variance.IN_VARIANCE -> TypeVariable.createWildcardWithLowerBound(type)
-          Variance.OUT_VARIANCE -> TypeVariable.createWildcardWithUpperBound(type)
-        }
-      }
-      else -> TODO("Not supported type argument $irTypeArgument")
-    }
+  private fun createPackageDeclaration(packageName: String) =
+    // Caching is left to PackageDeclaration.Builder since construction is trivial.
+    PackageDeclaration.newBuilder()
+      .setName(packageName)
+      .setCustomizedJsNamespace(packageAnnotationsResolver.getJsNameSpace(packageName))
+      .build()
 
   /**
    * Returns a type descriptor to be used as a super type in a type declaration.
@@ -338,38 +288,40 @@ class KotlinEnvironment(
     getDeclaredType(irType as IrSimpleType, useDeclarationVariance = false)
 
   fun getDeclaredTypeDescriptor(irType: IrType): DeclaredTypeDescriptor =
-    getReferenceTypeDescriptor(irType) as DeclaredTypeDescriptor
+    getTypeDescriptor(irType) as DeclaredTypeDescriptor
 
-  /**
-   * Returns a type descriptor that is a reference type.
-   *
-   * <p> In Kotlin there is some ambiguity related to mapping of basic types to primitive or boxed
-   * types (for basic types that have primitive mappings). Nullable basic types are always mapped to
-   * nullable reference types however non-nullable basic types might be mapped to non-nullable
-   * reference types or primitive types depending on the usage.
-   */
-  fun getReferenceTypeDescriptor(irType: IrType): TypeDescriptor {
-    return typeDescriptorByIrType.getOrPut(irType) {
-      var typeDescriptor =
+  fun getTypeDescriptor(irType: IrType): TypeDescriptor {
+    var typeDescriptor =
+      typeDescriptorByIrType.getOrPut(irType) {
         when {
           irType.isTypeParameter() -> {
             val typeParameter = irType.classifierOrNull!!.owner as IrTypeParameter
             getTypeVariable(typeParameter, !typeParameter.isFromJava() && irType.isMarkedNullable())
           }
-          irType.isArrayType() -> getArrayTypeDescriptor(irType)
+          irType.isArrayType() -> createArrayTypeDescriptor(irType)
           irType is IrSimpleType -> getDeclaredType(irType, useDeclarationVariance = true)
           else -> TODO("Not supported type $irType")
         }
-      // TODO(b/266964795): Properly handle type declarations with unsafe variance. Only when
-      // @UnsafeVariance annotates types that are directly the parameter should be replaced by the
-      // erasure; for @UnsafeVariance usages in other parameterized types a wildcard should be used.
-      //   contains(e: @UnsafeVariance E) -->  contains(e : Object)
-      //   containsAll(c: Collection<@UnsafeVariance E> c) --> containsAll(e : Collection<out E> c)
-      if (irType.annotations.hasAnnotation(FqName("kotlin.UnsafeVariance"))) {
-        typeDescriptor = typeDescriptor.toRawTypeDescriptor()
       }
-      return typeDescriptor
+
+    // TODO(b/266964795): Properly handle type declarations with unsafe variance. Only when
+    // @UnsafeVariance annotates types that are directly the parameter should be replaced by the
+    // erasure; for @UnsafeVariance usages in other parameterized types a wildcard should be used.
+    //   contains(e: @UnsafeVariance E) -->  contains(e : Object)
+    //   containsAll(c: Collection<@UnsafeVariance E> c) --> containsAll(e : Collection<out E> c)
+    // TODO(b/365133427): Annotations are not accounted for hashcode and equals so the logic is
+    // moved outside of cache. We should move it back once the bug is fixed.
+    val annotations = irType.annotations
+    if (!annotations.isEmpty() && annotations.hasAnnotation(FqName("kotlin.UnsafeVariance"))) {
+      typeDescriptor = typeDescriptor.toRawTypeDescriptor()
     }
+    return typeDescriptor
+  }
+
+  fun getReferenceTypeDescriptor(irType: IrType): TypeDescriptor {
+    val typeDescriptor = getTypeDescriptor(irType)
+    // In reference context, primitive types are mapped to their boxed variants.
+    return if (typeDescriptor.isPrimitive) typeDescriptor.toBoxedType() else typeDescriptor
   }
 
   // TODO(b/287681086): Review which cases need the propagation of the declaration variance, in the
@@ -377,6 +329,20 @@ class KotlinEnvironment(
   //  how to match varargs methods.
   fun getReferenceTypeDescriptorForFunctionReference(irType: IrSimpleType) =
     getDeclaredType(irType, useDeclarationVariance = false)
+
+  fun getReferenceTypeDescriptorForTypeArgument(irTypeArgument: IrTypeArgument): TypeDescriptor =
+    when (irTypeArgument) {
+      is IrStarProjection -> TypeVariable.createWildcard()
+      is IrTypeProjection -> {
+        val type = getReferenceTypeDescriptor(irTypeArgument.typeOrNull!!)
+        when (irTypeArgument.variance) {
+          Variance.INVARIANT -> type
+          Variance.IN_VARIANCE -> TypeVariable.createWildcardWithLowerBound(type)
+          Variance.OUT_VARIANCE -> TypeVariable.createWildcardWithUpperBound(type)
+        }
+      }
+      else -> TODO("Not supported type argument $irTypeArgument")
+    }
 
   private fun getTypeVariable(
     irTypeParameter: IrTypeParameter,
@@ -386,25 +352,25 @@ class KotlinEnvironment(
       if (irTypeParameter.superTypes.size == 1) {
         { getReferenceTypeDescriptor(irTypeParameter.superTypes.single()) }
       } else {
-        { createIntersectionType(irTypeParameter.superTypes) }
+        { createIntersectionTypeDescriptor(irTypeParameter.superTypes) }
       }
 
     return TypeVariable.newBuilder()
       .setName(irTypeParameter.name.asString())
       .setUniqueKey(irTypeParameter.uniqueKey)
-      .setUpperBoundTypeDescriptorSupplier(upperBoundFactory)
+      .setUpperBoundTypeDescriptorFactory(upperBoundFactory)
       .setNullabilityAnnotation(
         if (isNullable) NullabilityAnnotation.NULLABLE else NullabilityAnnotation.NONE
       )
       .build()
   }
 
-  private fun createIntersectionType(types: List<IrType>): IntersectionTypeDescriptor =
+  private fun createIntersectionTypeDescriptor(types: List<IrType>): IntersectionTypeDescriptor =
     IntersectionTypeDescriptor.newBuilder()
       .setIntersectionTypeDescriptors(types.map(::getReferenceTypeDescriptor))
       .build()
 
-  private fun getArrayTypeDescriptor(arrayType: IrType) =
+  private fun createArrayTypeDescriptor(arrayType: IrType) =
     ArrayTypeDescriptor.newBuilder()
       .setComponentTypeDescriptor(
         getReferenceTypeDescriptor(arrayType.getArrayElementType(pluginContext.irBuiltIns))
@@ -417,60 +383,24 @@ class KotlinEnvironment(
     useDeclarationVariance: Boolean,
   ): DeclaredTypeDescriptor {
     val irType = originalType.resolveBuiltinClass(useDeclarationVariance)
-    val classDeclaration = checkNotNull(irType.getClass()) { "No valid type" }
-    val nullableDefaultType = classDeclaration.defaultType.makeNullable()
+    return getDeclarationForType(irType.getClass())!!
+      .toDescriptor()
+      .specializeTypeDescriptor(irType, useDeclarationVariance)
+  }
 
-    if (
-      irType.getTypeSubstitutionMap(useDeclarationVariance).isNotEmpty() &&
-        nullableDefaultType != irType
-    ) {
-      // When type is parametrized returns a specialized version of the declaration type descriptor.
-      // Note: we need to test if the current processed type is not the default type of the class in
-      // order to avoid infinite recursion. typeSubstitutionMap is never empty for parametrized
-      // types because it contains at least the mapping between the type parameters and itself.
-      // Ex: for List<T>, typeSubstitutionMap = { T -> T }
-      return (getTypeDescriptor(nullableDefaultType)
-          .specializeTypeVariables(
-            irType
-              .getTypeSubstitutionMap(useDeclarationVariance)
-              .toTypeDescriptorByTypeVariableMap()
-          ) as DeclaredTypeDescriptor)
-        .withNullability(irType.isNullable())
+  private fun DeclaredTypeDescriptor.specializeTypeDescriptor(
+    irType: IrSimpleType,
+    useDeclarationVariance: Boolean,
+  ): DeclaredTypeDescriptor {
+    // Adjust nullability.
+    var td = if (irType.isNullable()) toNullable() else toNonNullable()
+    if (!irType.arguments.isEmpty()) {
+      // Adjust type arguments.
+      val subsitutionMap =
+        irType.getTypeSubstitutionMap(useDeclarationVariance).toTypeDescriptorByTypeVariableMap()
+      td = td.specializeTypeVariables(subsitutionMap) as DeclaredTypeDescriptor
     }
-
-    // Build the unparameterized type descriptor.
-    return DeclaredTypeDescriptor.newBuilder()
-      .setTypeDeclaration(getDeclarationForType(classDeclaration))
-      .setEnclosingTypeDescriptor(getEnclosingTypeDescriptor(classDeclaration))
-      .setDeclaredMethodDescriptorsFactory { _ ->
-        ImmutableList.copyOf(classDeclaration.methods.map { getMethodDescriptor(it, emptyMap()) })
-      }
-      .setDeclaredFieldDescriptorsFactory { _ ->
-        ImmutableList.copyOf(
-          classDeclaration.enumEntries.map(::getDeclaredFieldDescriptor) +
-            classDeclaration.getDeclaredFields().map { getFieldDescriptor(it, emptyMap()) }
-        )
-      }
-      .setSuperTypeDescriptorFactory { _ ->
-        irType.superClass?.let { getSuperTypeDescriptor(it.makeNullable()) }
-      }
-      .setInterfaceTypeDescriptorsFactory { _ ->
-        ImmutableList.copyOf(
-          irType
-            .superTypes()
-            .filter(IrType::isInterface)
-            .map(IrType::makeNullable)
-            .map(::getSuperTypeDescriptor)
-            // We can have duplicate types after JVM intrinsics have been resolved. See b/308776304
-            .distinctBy { it.typeDeclaration }
-        )
-      }
-      .setSingleAbstractMethodDescriptorFactory { _ ->
-        classDeclaration.singleAbstractMethod?.let { getMethodDescriptor(it, emptyMap()) }
-      }
-      .setNullable(irType.isNullable())
-      .setTypeArgumentDescriptors(irType.arguments.map(::getReferenceTypeDescriptorForTypeArgument))
-      .build()
+    return td
   }
 
   fun getMethodDescriptor(
@@ -502,18 +432,13 @@ class KotlinEnvironment(
         )
     }
     require(!resolvedFunctionDeclaration.isFakeOverride)
-    val declarationMethodDescriptor = getDeclaredMethodDescriptor(resolvedFunctionDeclaration)
-    val methodDescriptor =
-      declarationMethodDescriptor.specializeTypeVariables(
-        cumulativeTypeArgumentsByTypeParameter.toTypeDescriptorByTypeVariableMap()
-      )
-    if (methodDescriptor == declarationMethodDescriptor) {
-      return declarationMethodDescriptor
-    }
 
-    return MethodDescriptor.Builder.from(methodDescriptor)
-      .setDeclarationDescriptor(declarationMethodDescriptor)
-      .build()
+    val declarationMethodDescriptor = getDeclaredMethodDescriptor(resolvedFunctionDeclaration)
+
+    if (cumulativeTypeArgumentsByTypeParameter.isEmpty()) return declarationMethodDescriptor
+    return declarationMethodDescriptor.specializeTypeVariables(
+      cumulativeTypeArgumentsByTypeParameter.toTypeDescriptorByTypeVariableMap()
+    )
   }
 
   private fun resolveTypeParametersForFunction(
@@ -561,63 +486,70 @@ class KotlinEnvironment(
   }
 
   fun getDeclaredMethodDescriptor(irFunction: IrFunction): MethodDescriptor {
-    val resolvedSymbol = builtinsResolver.resolveFunctionSymbol(irFunction.symbol)
-    if (resolvedSymbol != irFunction.symbol)
-      return getDeclaredMethodDescriptor(resolvedSymbol.owner)
-    val enclosingTypeDescriptor = getEnclosingTypeDescriptor(irFunction)!!
-    val isConstructor = irFunction is IrConstructor
-    val parameterDescriptors = ImmutableList.builder<MethodDescriptor.ParameterDescriptor>()
+    return methodDescriptorByIrFunction.getOrPut(irFunction) {
+      val resolvedSymbol = builtinsResolver.resolveFunctionSymbol(irFunction.symbol)
+      if (resolvedSymbol != irFunction.symbol)
+        return@getOrPut getDeclaredMethodDescriptor(resolvedSymbol.owner)
 
-    val parameters = irFunction.getParameters()
-    parameters.withIndex().forEach { (index, param) ->
-      parameterDescriptors.add(
-        MethodDescriptor.ParameterDescriptor.newBuilder()
-          .setTypeDescriptor(getTypeDescriptor(param.type))
-          .setJsOptional(param.isJsOptional)
-          .setDoNotAutobox(param.isDoNotAutobox)
-          .setVarargs(index == parameters.lastIndex && param.isVararg)
-          .build()
-      )
-    }
-
-    val visibility = irFunction.j2clVisibility
-    val isStatic = (irFunction.isStatic || irFunction.parent !is IrDeclaration) && !isConstructor
-
-    val isNative =
-      irFunction.isExternal ||
-        (!irFunction.getJsInfo().isJsOverlay &&
-          enclosingTypeDescriptor.isNative &&
-          irFunction.isAbstract)
-
-    return MethodDescriptor.newBuilder()
-      .setEnclosingTypeDescriptor(enclosingTypeDescriptor)
-      .setName(irFunction.javaName(jvmBackendContext))
-      .setParameterDescriptors(parameterDescriptors.build())
-      .setReturnTypeDescriptor(
-        if (irFunction.hasVoidReturn) {
-          PrimitiveTypes.VOID
-        } else {
-          getTypeDescriptor(irFunction.returnType)
+      val enclosingTypeDescriptor =
+        checkNotNull(getEnclosingTypeDescriptor(irFunction)) {
+          "No enclosing type for ${irFunction.dump()}"
         }
-      )
-      .setVisibility(visibility)
-      .setConstructor(isConstructor)
-      .setStatic(isStatic)
-      .setAbstract(irFunction.isAbstract)
-      .setFinal(irFunction.isFinal)
-      .setNative(isNative)
-      .setDefaultMethod(
-        enclosingTypeDescriptor.isInterface &&
-          !irFunction.isAbstract &&
-          !visibility.isPrivate &&
-          !isStatic
-      )
-      .setTypeParameterTypeDescriptors(irFunction.typeParameters.map(::getTypeVariable))
-      .setDeprecated(irFunction.isDeprecated)
-      .setOriginalJsInfo(irFunction.getJsInfo())
-      .setUncheckedCast(irFunction.isUncheckedCast)
-      .setWasmInfo(irFunction.getWasmInfo())
-      .build()
+
+      val isConstructor = irFunction is IrConstructor
+      val parameterDescriptors = ImmutableList.builder<MethodDescriptor.ParameterDescriptor>()
+
+      val parameters = irFunction.getParameters()
+      parameters.withIndex().forEach { (index, param) ->
+        parameterDescriptors.add(
+          MethodDescriptor.ParameterDescriptor.newBuilder()
+            .setTypeDescriptor(getTypeDescriptor(param.type))
+            .setJsOptional(param.isJsOptional)
+            .setDoNotAutobox(param.isDoNotAutobox)
+            .setVarargs(index == parameters.lastIndex && param.isVararg)
+            .build()
+        )
+      }
+
+      val visibility = irFunction.j2clVisibility
+      val isStatic = (irFunction.isStatic || irFunction.parent !is IrDeclaration) && !isConstructor
+
+      val isNative =
+        irFunction.isExternal ||
+          (!irFunction.getJsInfo().isJsOverlay &&
+            enclosingTypeDescriptor.isNative &&
+            irFunction.isAbstract)
+
+      MethodDescriptor.newBuilder()
+        .setEnclosingTypeDescriptor(enclosingTypeDescriptor)
+        .setName(irFunction.javaName(jvmBackendContext))
+        .setParameterDescriptors(parameterDescriptors.build())
+        .setReturnTypeDescriptor(
+          if (irFunction.hasVoidReturn) {
+            PrimitiveTypes.VOID
+          } else {
+            getTypeDescriptor(irFunction.returnType)
+          }
+        )
+        .setVisibility(visibility)
+        .setConstructor(isConstructor)
+        .setStatic(isStatic)
+        .setAbstract(irFunction.isAbstract)
+        .setFinal(irFunction.isFinal)
+        .setNative(isNative)
+        .setDefaultMethod(
+          enclosingTypeDescriptor.isInterface &&
+            !irFunction.isAbstract &&
+            !visibility.isPrivate &&
+            !isStatic
+        )
+        .setTypeParameterTypeDescriptors(irFunction.typeParameters.map(::getTypeVariable))
+        .setDeprecated(irFunction.isDeprecated)
+        .setOriginalJsInfo(irFunction.getJsInfo())
+        .setUncheckedCast(irFunction.isUncheckedCast)
+        .setWasmInfo(irFunction.getWasmInfo())
+        .build()
+    }
   }
 
   fun getFieldDescriptor(
@@ -625,51 +557,52 @@ class KotlinEnvironment(
     typeArgumentsByTypeParameter: Map<IrTypeParameterSymbol, IrTypeArgument>,
   ): FieldDescriptor {
     val declarationFieldDescriptor = getDeclaredFieldDescriptor(field)
-    val fieldDescriptor =
-      declarationFieldDescriptor.specializeTypeVariables(
-        typeArgumentsByTypeParameter.toTypeDescriptorByTypeVariableMap()
-      )
 
-    if (fieldDescriptor == declarationFieldDescriptor) {
-      return declarationFieldDescriptor
-    }
-
-    return FieldDescriptor.Builder.from(fieldDescriptor)
-      .setDeclarationDescriptor(declarationFieldDescriptor)
-      .build()
+    if (typeArgumentsByTypeParameter.isEmpty()) return declarationFieldDescriptor
+    return declarationFieldDescriptor.specializeTypeVariables(
+      typeArgumentsByTypeParameter.toTypeDescriptorByTypeVariableMap()
+    )
   }
 
   fun getDeclaredFieldDescriptor(irField: IrField): FieldDescriptor {
-    val resolvedSymbol = builtinsResolver.resolveFieldSymbol(irField.symbol)
-    if (resolvedSymbol != irField.symbol) return getDeclaredFieldDescriptor(resolvedSymbol.owner)
-    val fieldTypeDescriptor = getTypeDescriptor(irField.type)
+    return fieldDescriptorByIrField.getOrPut(irField) {
+      val resolvedSymbol = builtinsResolver.resolveFieldSymbol(irField.symbol)
+      if (resolvedSymbol != irField.symbol)
+        return@getOrPut getDeclaredFieldDescriptor(resolvedSymbol.owner)
 
-    var constantValue =
-      irField.constantValue()?.value?.let { Literal.fromValue(it, fieldTypeDescriptor) }
-    if (constantValue == null && irField.correspondingPropertySymbol?.owner?.isConst == true) {
-      // In Kotlin, const val initialized to their default value does not have initializer and
-      // `irField.constantValue()` returns null. In that case use the default value of the field
-      // type.
-      constantValue = fieldTypeDescriptor.defaultValue
+      val fieldTypeDescriptor = getTypeDescriptor(irField.type)
+
+      var constantValue =
+        irField.constantValue()?.value?.let { Literal.fromValue(it, fieldTypeDescriptor) }
+      if (
+        constantValue == null &&
+          !irField.isFromJava() &&
+          irField.correspondingPropertySymbol?.owner?.isConst == true
+      ) {
+        // In Kotlin, const val initialized to their default value does not have initializer and
+        // `irField.constantValue()` returns null. In that case use the default value of the field
+        // type.
+        constantValue = fieldTypeDescriptor.defaultValue
+      }
+
+      FieldDescriptor.newBuilder()
+        .setEnclosingTypeDescriptor(getEnclosingTypeDescriptor(irField))
+        .setName(irField.name.asString())
+        .setTypeDescriptor(fieldTypeDescriptor)
+        .setVisibility(irField.j2clVisibility)
+        .setCompileTimeConstant(constantValue != null)
+        .setConstantValue(constantValue)
+        // Kotlin has stricter requirements for val properties than exists for Java final fields;
+        // thus  we allow val properties to be native JS members, but we pretend like it's non-final
+        // in the  J2CL AST to not fail JsInterop restriction checks later on. Weaken the final
+        // semantics here should cause a practical problem as the JVM compilations would have
+        // already enforced the final semantics.
+        .setFinal(irField.isFinal && !irField.isNativeJsField)
+        .setStatic(irField.isStatic || irField.parent !is IrDeclaration)
+        .setDeprecated(irField.isDeprecated)
+        .setOriginalJsInfo(irField.getJsInfo())
+        .build()
     }
-
-    return FieldDescriptor.newBuilder()
-      .setEnclosingTypeDescriptor(getEnclosingTypeDescriptor(irField))
-      .setName(irField.name.asString())
-      .setTypeDescriptor(fieldTypeDescriptor)
-      .setVisibility(irField.j2clVisibility)
-      .setCompileTimeConstant(constantValue != null)
-      .setConstantValue(constantValue)
-      // Kotlin has stricter requirements for val properties than exists for Java final fields; thus
-      // we allow val properties to be native JS members, but we pretend like it's non-final in the
-      // J2CL AST to not fail JsInterop restriction checks later on. Weaken the final semantics here
-      // should cause a practical problem as the JVM compilations would have already enforced the
-      // final semantics.
-      .setFinal(irField.isFinal && !irField.isNativeJsField)
-      .setStatic(irField.isStatic || irField.parent !is IrDeclaration)
-      .setDeprecated(irField.isDeprecated)
-      .setOriginalJsInfo(irField.getJsInfo())
-      .build()
   }
 
   fun getDeclaredFieldDescriptor(irEnumEntry: IrEnumEntry): FieldDescriptor =
@@ -764,7 +697,7 @@ class KotlinEnvironment(
   private val IrTypeParameter.uniqueKey: String
     get() =
       getClassComponents().joinToString("::") +
-        superTypes.joinToString("|") { it.fullyQualifiedName.asString() }
+        superTypes.joinToString("|") { it.fqnOrFail.asString() }
 
   private fun Map<IrTypeParameterSymbol, IrTypeArgument>.toTypeDescriptorByTypeVariableMap() =
     entries.associate {
@@ -775,7 +708,6 @@ class KotlinEnvironment(
     useDeclarationVariance: Boolean = true
   ): IrSimpleType {
     val classSymbol = classOrNull ?: return this
-    @OptIn(FirIncompatiblePluginAPI::class)
     val builtinClass = builtinsResolver.resolveClass(classSymbol) ?: return this
 
     val originalTypeParams = classSymbol.owner.typeParameters
@@ -856,7 +788,3 @@ private fun remapDeclarationTypeVarianceOntoArguments(
       argument
     }
   }
-
-private fun DeclaredTypeDescriptor.withNullability(isNullable: Boolean): DeclaredTypeDescriptor {
-  return if (isNullable) toNullable() else toNonNullable()
-}

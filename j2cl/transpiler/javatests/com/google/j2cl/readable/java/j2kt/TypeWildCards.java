@@ -32,6 +32,10 @@ class TypeWildCards {
     Parent parent = supplier.get();
   }
 
+  static void testNullWithLowerBound(Observer<? super Child> observer) {
+    observer.on(null);
+  }
+
   interface Observer<E> {
     void on(E event);
   }
@@ -56,16 +60,12 @@ class TypeWildCards {
     void addObserver(Observer<E> observer);
   }
 
-  static class ObserverHolder<E> {
-    Observer<E> observer;
-  }
-
   public static void testObservable(Observable<?> observable) {
     observable.addObserver(e -> {});
   }
 
   public static <T extends Observable<?>> void testObservableParameterized(T observable) {
-    // TODO(b/261839232): "Expected Nothing" issue
+    // TODO(b/261839232): "Expected Nothing" issue, cast to Observable<@Nullable Object> would help
     // observable.addObserver(e -> {});
   }
 
@@ -82,7 +82,88 @@ class TypeWildCards {
     // observable.addObserver(e -> {});
   }
 
-  public static void testObserverHolder(ObserverHolder<?> observerHolder) {
-    observerHolder.observer = e -> {};
+  static class WithoutBounds {
+    interface Observer<E> {
+      void on(E event);
+    }
+
+    static class Holder<E> {
+      Observer<E> observer;
+
+      void set(Observer<E> observer) {}
+
+      static <E> void setStatic(Holder<E> holder, Observer<E> observer) {}
+    }
+
+    public static void testSetField(Holder<?> holder) {
+      holder.observer = e -> {};
+    }
+
+    public static void testSetMethod(Holder<?> holder) {
+      holder.set(e -> {});
+    }
+
+    public static void testSetStaticMethod(Holder<?> holder) {
+      Holder.setStatic(holder, e -> {});
+    }
+  }
+
+  static class WithBounds {
+    interface Event {}
+
+    interface Observer<E extends Event> {
+      void on(E event);
+    }
+
+    static class Holder<E extends Event> {
+      Observer<E> observer;
+
+      void set(Observer<E> observer) {}
+
+      static <E extends Event> void setStatic(Holder<E> holder, Observer<E> observer) {}
+    }
+
+    public static void testSetField(Holder<?> holder) {
+      holder.observer = e -> {};
+    }
+
+    public static void testSetMethod(Holder<?> holder) {
+      holder.set(e -> {});
+    }
+
+    public static void testSetStaticMethod(Holder<?> holder) {
+      Holder.setStatic(holder, e -> {});
+    }
+  }
+
+  static class WithDependentBounds {
+    interface Event {}
+
+    interface Collection<V> {}
+
+    interface Observer<E extends Event, C extends Collection<E>> {
+      void on(C events);
+    }
+
+    static class Holder<E extends Event, C extends Collection<E>> {
+      Observer<E, C> observer;
+
+      void set(Observer<E, C> observer) {}
+
+      static <E extends Event, C extends Collection<E>> void setStatic(
+          Holder<E, C> holder, Observer<E, C> observer) {}
+    }
+
+    public static void testSetField(Holder<?, ?> holder) {
+      holder.observer = e -> {};
+    }
+
+    public static void testSetMethod(Holder<?, ?> holder) {
+      holder.set(e -> {});
+    }
+
+    public static void testSetStaticMethod(Holder<?, ?> holder) {
+      Holder.setStatic(holder, e -> {});
+    }
   }
 }

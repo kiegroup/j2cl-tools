@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package genericmethod
 
@@ -124,15 +124,15 @@ open class GenericMethod<T> {
   @ObjCName("testErasureCast_wildcard")
   fun testErasureCast_wildcard() {
    val list: MutableList<GenericMethod.Container<*>?>? = ArrayList<GenericMethod.Container<*>>() as MutableList<GenericMethod.Container<*>?>?
-   val content: GenericMethod.Content? = (list!!.get(0) as GenericMethod.Container<GenericMethod.Content?>).get_pp_genericmethod()
+   val content: GenericMethod.Content? = list!!.get(0)!!.get_pp_genericmethod()
    GenericMethod.acceptsString(content!!.getProp_pp_genericmethod())
    GenericMethod.acceptsContent(content)
-   val nestedWildcardList: MutableList<GenericMethod.SuperContainer<out GenericMethod.Container<*>?>?>? = ArrayList<GenericMethod.SuperContainer<out GenericMethod.Container<*>>>() as MutableList<GenericMethod.SuperContainer<out GenericMethod.Container<*>?>?>?
-   val nestedContent: GenericMethod.Content? = (nestedWildcardList!!.get(0) as GenericMethod.SuperContainer<GenericMethod.Container<*>>).get_pp_genericmethod()!!.get_pp_genericmethod()
+   val nestedWildcardList: MutableList<GenericMethod.SuperContainer<out GenericMethod.Container<*>?>?>? = ArrayList<GenericMethod.SuperContainer<out GenericMethod.Container<out GenericMethod.Content>>>() as MutableList<GenericMethod.SuperContainer<out GenericMethod.Container<*>?>?>?
+   val nestedContent: GenericMethod.Content? = nestedWildcardList!!.get(0)!!.get_pp_genericmethod()!!.get_pp_genericmethod()
    GenericMethod.acceptsString(nestedContent!!.getProp_pp_genericmethod())
    GenericMethod.acceptsContent(nestedContent)
-   val deepWildcardList: MutableList<GenericMethod.SuperContainer<GenericMethod.Container<*>?>?>? = ArrayList<GenericMethod.SuperContainer<GenericMethod.Container<*>>>() as MutableList<GenericMethod.SuperContainer<GenericMethod.Container<*>?>?>?
-   val deepContent: GenericMethod.Content? = (deepWildcardList!!.get(0)!!.get_pp_genericmethod() as GenericMethod.Container<GenericMethod.Content?>?)!!.get_pp_genericmethod()
+   val deepWildcardList: MutableList<GenericMethod.SuperContainer<GenericMethod.Container<*>?>?>? = ArrayList<GenericMethod.SuperContainer<GenericMethod.Container<out GenericMethod.Content>>>() as MutableList<GenericMethod.SuperContainer<GenericMethod.Container<*>?>?>?
+   val deepContent: GenericMethod.Content? = deepWildcardList!!.get(0)!!.get_pp_genericmethod()!!.get_pp_genericmethod()
    GenericMethod.acceptsString(deepContent!!.getProp_pp_genericmethod())
    GenericMethod.acceptsContent(deepContent)
   }
@@ -161,7 +161,7 @@ open class GenericMethod<T> {
 
   @JvmStatic
   internal fun <V> testUpperWildcardBound_pp_genericmethod(supplier: GenericMethod.Supplier<out V>?): V {
-   return (supplier as GenericMethod.Supplier<V>?)!!.get()
+   return supplier!!.get()
   }
 
   @JvmStatic
@@ -173,24 +173,28 @@ open class GenericMethod<T> {
   }
  }
 
+ @ObjCName("J2ktGenericmethodGenericMethod_SuperContainer", exact = true)
  open class SuperContainer<C: GenericMethod.Container<*>?> internal constructor() {
   internal open fun get_pp_genericmethod(): C {
    return null as C
   }
  }
 
+ @ObjCName("J2ktGenericmethodGenericMethod_Container", exact = true)
  open class Container<CT: GenericMethod.Content?> internal constructor() {
   internal open fun get_pp_genericmethod(): CT {
    return null as CT
   }
  }
 
+ @ObjCName("J2ktGenericmethodGenericMethod_Content", exact = true)
  open class Content internal constructor() {
   internal open fun getProp_pp_genericmethod(): String? {
    return null
   }
  }
 
+ @ObjCName("J2ktGenericmethodGenericMethod_Consumer", exact = true)
  fun interface Consumer<V> {
   @ObjCName("accept")
   fun accept(
@@ -198,6 +202,7 @@ open class GenericMethod<T> {
   )
  }
 
+ @ObjCName("J2ktGenericmethodGenericMethod_Supplier", exact = true)
  fun interface Supplier<V> {
   @ObjCName("get")
   fun get(): V

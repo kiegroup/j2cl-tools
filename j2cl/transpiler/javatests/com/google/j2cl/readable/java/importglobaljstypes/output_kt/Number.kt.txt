@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package importglobaljstypes
 
@@ -23,10 +23,9 @@ import jsinterop.annotations.JsMethod
 import jsinterop.annotations.JsPackage
 import jsinterop.annotations.JsProperty
 import jsinterop.annotations.JsType
-import kotlin.Any
 import kotlin.Boolean
 import kotlin.Double
-import kotlin.IntArray
+import kotlin.Int
 import kotlin.OptIn
 import kotlin.String
 import kotlin.Suppress
@@ -46,9 +45,9 @@ open class Number {
  @ObjCName("J2ktImportglobaljstypesNumberCompanion", exact = true)
  companion object {
   @JvmStatic
-  @ObjCName("fun")
+  @ObjCName("f")
   @JsMethod(name = "Number.isInteger", namespace = JsPackage.GLOBAL)
-  external fun `fun`(
+  external fun f(
    @ObjCName("withDouble") x: Double
   ): Boolean
 
@@ -57,28 +56,34 @@ open class Number {
   fun test(
    @ObjCName("withDouble") x: Double
   ): Boolean {
-   return Number.`fun`(x)
+   return Number.f(x)
   }
 
   @JvmStatic
-  @JsProperty(name = "String.fromCharCode", namespace = JsPackage.GLOBAL)
-  internal external fun getFromCharCodeFunction_private_2(): Number.NativeFunction<String?>?
+  @JsMethod(name = "Array", namespace = JsPackage.GLOBAL)
+  private external fun <T> createArray(): Number.NativeArray<T>?
 
   @JvmStatic
-  @ObjCName("fromCharCode")
-  fun fromCharCode(
-   @ObjCName("withIntArray") array: IntArray?
-  ): String? {
-   return Number.getFromCharCodeFunction_private_2()!!.apply(null, array)
+  private fun getStringAt(index: Int): String? {
+   return Number.createArray<String?>()!!.at(index)
+  }
+
+  @JvmStatic
+  private fun getArrayLength(array: Number.NativeArray<*>?): Int {
+   return array!!.getLength()
   }
  }
 
- @JsType(name = "Function", namespace = JsPackage.GLOBAL, isNative = true)
- fun interface NativeFunction<T> {
-  @ObjCName("apply")
-  fun apply(
-   @ObjCName("withId") thisContext: Any?,
-   @ObjCName("withIntArray") argsArray: IntArray?
+ @ObjCName("J2ktImportglobaljstypesNumber_NativeArray", exact = true)
+ @JsType(name = "Array", namespace = JsPackage.GLOBAL, isNative = true)
+ interface NativeArray<T> {
+  @ObjCName("getLength")
+  @JsProperty
+  fun getLength(): Int
+
+  @ObjCName("at")
+  fun at(
+   @ObjCName("withInt") index: Int
   ): T
  }
 

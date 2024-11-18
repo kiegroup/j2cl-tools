@@ -16,6 +16,7 @@
 package com.google.j2cl.transpiler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.j2cl.common.StringUtils.unescapeWtf16;
@@ -64,7 +65,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -204,8 +204,7 @@ final class BazelJ2wasmBundler extends BazelWorker {
         new com.google.j2cl.transpiler.ast.Type(
             SourcePosition.NONE,
             TypeDeclaration.newBuilder()
-                .setClassComponents(
-                    ImmutableList.of("wasm", "stringLiteral", "StringLiteralHolder"))
+                .setQualifiedSourceName("wasm.stringLiteral.StringLiteralHolder")
                 .setKind(Kind.CLASS)
                 .build());
 
@@ -269,7 +268,7 @@ final class BazelJ2wasmBundler extends BazelWorker {
     // Synthesize the forwarding logic.
     TypeDeclaration typeDeclaration =
         TypeDeclaration.newBuilder()
-            .setClassComponents(Arrays.asList(enclosingTypeQualifiedSourceName.split("\\.")))
+            .setQualifiedSourceName(enclosingTypeQualifiedSourceName)
             .setKind(Kind.CLASS)
             .build();
     com.google.j2cl.transpiler.ast.Type type = getType(typeDeclaration);
@@ -282,7 +281,7 @@ final class BazelJ2wasmBundler extends BazelWorker {
       MethodDescriptor literalGetter, TypeDeclaration fromType, String forwardingMethodName) {
     MethodDescriptor forwarderDescriptor =
         MethodDescriptor.newBuilder()
-            .setEnclosingTypeDescriptor(fromType.toUnparameterizedTypeDescriptor())
+            .setEnclosingTypeDescriptor(fromType.toDescriptor())
             .setName(forwardingMethodName)
             .setOrigin(MethodOrigin.SYNTHETIC_STRING_LITERAL_GETTER)
             .setStatic(true)
@@ -356,15 +355,24 @@ final class BazelJ2wasmBundler extends BazelWorker {
           c ->
               c.getImplementedInterfaces()
                   .forEach(i -> implementedInterfaceNamesByTypeName.put(c.getName(), i.getName())));
+      ImmutableMap<String, String> superInterfaceNamesByTypeName =
+          interfaces.stream()
+              .filter(i -> i.superType != null)
+              .collect(toImmutableMap(Type::getName, i -> i.superType.getName()));
       return new ItableAllocator<>(
           classes.stream().map(Type::getName).collect(toImmutableList()),
-          implementedInterfaceNamesByTypeName::get);
+          implementedInterfaceNamesByTypeName::get,
+          superInterfaceNamesByTypeName::get);
     }
 
     private void addToTypeGraph(Summary summary) {
-      for (int interfaceId : summary.getInterfacesList()) {
-        var interfaceName = summary.getTypeNames(interfaceId);
+      for (TypeInfo interfaceInfo : summary.getInterfacesList()) {
+        var interfaceName = summary.getTypeNames(interfaceInfo.getTypeId());
         var interfaceType = new TypeGraph.Type(interfaceName);
+        if (interfaceInfo.getExtendsType() != NO_TYPE_INDEX) {
+          String superTypeName = summary.getTypeNames(interfaceInfo.getExtendsType());
+          interfaceType.superType = checkNotNull(typesByName.get(superTypeName));
+        }
         typesByName.put(interfaceName, interfaceType);
         interfaces.add(interfaceType);
       }
@@ -417,7 +425,8 @@ final class BazelJ2wasmBundler extends BazelWorker {
     public String getItableInterfaceGetters(WasmGenerationEnvironment environment) {
       SourceBuilder sourceBuilder = new SourceBuilder();
       WasmConstructsGenerator constructsGenerator =
-          new WasmConstructsGenerator(environment, sourceBuilder);
+          new WasmConstructsGenerator(
+              environment, sourceBuilder, /* sourceMappingPathPrefix= */ null);
       interfaces.forEach(
           i -> {
             int itableFieldIndex = itableAllocator.getItableFieldIndex(i.name);
@@ -452,6 +461,13 @@ final class BazelJ2wasmBundler extends BazelWorker {
         return implementedInterfaces;
       }
 
+      public boolean isSuperTypeOf(Type other) {
+        if (other == null) {
+          return false;
+        }
+        return this == other.superType || isSuperTypeOf(other.superType);
+      }
+
       public String getItableTypeName() {
         if (implementedInterfaces.isEmpty()) {
           return "$itable";
@@ -469,17 +485,9 @@ final class BazelJ2wasmBundler extends BazelWorker {
         StringBuilder sb = new StringBuilder();
         sb.append(format("(type %s.itable (sub %s (struct \n", name, superItableTypeName));
 
-        String[] itableFieldTypes = new String[itableAllocator.getItableSize()];
-
-        implementedInterfaces.forEach(
-            i ->
-                itableFieldTypes[itableAllocator.getItableFieldIndex(i.name)] = i.name + ".vtable");
-
-        for (String fieldDefinition : itableFieldTypes) {
+        for (Type i : getItableFieldTypes()) {
           sb.append(
-              format(
-                  "  (field (ref %s))\n",
-                  fieldDefinition != null ? fieldDefinition : "null struct"));
+              format("  (field (ref %s))\n", i != null ? (i.name + ".vtable") : "null struct"));
         }
         sb.append(")))\n");
         return sb.toString();
@@ -497,20 +505,46 @@ final class BazelJ2wasmBundler extends BazelWorker {
           sb.append(format("(global.get %s)", EMPTY_ITABLE_NAME));
         } else {
           sb.append(format("(struct.new %s \n", getItableTypeName()));
-
-          String[] itableFieldInitializer = new String[itableAllocator.getItableSize()];
-          implementedInterfaces.forEach(
-              i ->
-                  itableFieldInitializer[itableAllocator.getItableFieldIndex(i.name)] =
-                      format("(global.get %s.vtable@%s)\n", i.name, this.name));
-
-          for (String fieldInitializer : itableFieldInitializer) {
-            sb.append(fieldInitializer == null ? "(ref.null struct)\n" : fieldInitializer);
+          for (Type i : getItableFieldTypes()) {
+            sb.append(
+                i == null
+                    ? "(ref.null struct)\n"
+                    : format("(global.get %s.vtable@%s)\n", i.name, this.name));
           }
           sb.append(")");
         }
         sb.append(")\n");
         return sb.toString();
+      }
+
+      private Type[] itableFieldTypes;
+
+      /**
+       * Computes the itable for this type: gets an array of interface types indexed by itable slot
+       * assignment.
+       */
+      private Type[] getItableFieldTypes() {
+        if (itableFieldTypes == null) {
+          // Determine the type for each itable field by going through all implemented interfaces
+          // and assigning it to the index as determined by the itable allocator. If the itable
+          // index is shared by multiple interfaces, itable allocator guarantees that they are part
+          // of the same inheritance chain; use the more specific type.
+          itableFieldTypes = new Type[itableAllocator.getItableSize()];
+          for (Type i : implementedInterfaces) {
+            int itableIndex = itableAllocator.getItableFieldIndex(i.name);
+            if (itableFieldTypes[itableIndex] == null
+                || itableFieldTypes[itableIndex].isSuperTypeOf(i)) {
+              itableFieldTypes[itableIndex] = i;
+            } else {
+              checkState(
+                  i.isSuperTypeOf(itableFieldTypes[itableIndex]),
+                  "Interfaces %s and %s are expected to be in same inheritance chain.",
+                  i,
+                  itableFieldTypes[itableIndex]);
+            }
+          }
+        }
+        return itableFieldTypes;
       }
     }
   }

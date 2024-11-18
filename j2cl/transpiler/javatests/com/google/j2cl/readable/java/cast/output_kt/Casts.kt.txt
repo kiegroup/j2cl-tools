@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,12 +13,14 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package cast
 
 import javaemul.lang.*
 import java.io.Serializable
+import java.lang.Integer
 import kotlin.Any
 import kotlin.Array
 import kotlin.Boolean
@@ -72,7 +73,7 @@ open class Casts {
   val bar: Any? = null as Array<Array<Any?>?>?
  }
 
- internal fun functionForInstanceofTest_private_2() {}
+ private fun functionForInstanceofTest() {}
 
  @ObjCName("testCastObjectAfterInstanceOf")
  open fun testCastObjectAfterInstanceOf() {
@@ -97,7 +98,7 @@ open class Casts {
   }
   if (o is Casts) {
    val cAvoidsCastsTo_3: Casts? = o as Casts?
-   this.functionForInstanceofTest_private_2()
+   this.functionForInstanceofTest()
    val cNotAvoidCastsTo_2: Casts? = o as Casts?
   }
  }
@@ -120,7 +121,7 @@ open class Casts {
   }
   if (foo!!.field is Casts) {
    val cAvoidsCastsTo_2: Casts? = foo!!.field as Casts?
-   this.functionForInstanceofTest_private_2()
+   this.functionForInstanceofTest()
    val cNotAvoidCastsTo_2: Casts? = foo!!.field as Casts?
   }
  }
@@ -137,11 +138,15 @@ open class Casts {
  open fun testPrecedence() {
   val foo: Any? = "foo"
   val bar: Any? = "bar"
-  val s: String? = (if (false) foo else bar) as String?
+  val notString: Int? = Integer.valueOf(123)
+  val s1: String? = (if (false) foo else bar) as String?
+  val s2: String? = ("foo" + notString) as String
  }
 
+ @ObjCName("J2ktCastCasts_Foo", exact = true)
  open inner class Foo internal constructor() {
   @JvmField
+  @ObjCName("field_")
   var field: Any? = Any()
 
   @ObjCName("method")

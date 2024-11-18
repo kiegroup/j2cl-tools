@@ -15,7 +15,8 @@
  */
 package com.google.j2cl.transpiler.passes;
 
-import com.google.j2cl.transpiler.ast.AstUtils;
+import static com.google.j2cl.transpiler.ast.AstUtils.isBoxableJsEnumType;
+
 import com.google.j2cl.transpiler.ast.CompilationUnit;
 import com.google.j2cl.transpiler.ast.Expression;
 import com.google.j2cl.transpiler.ast.NullLiteral;
@@ -37,10 +38,10 @@ public class NormalizeNullLiterals extends NormalizationPass {
               @Override
               public Expression rewriteTypeConversionContext(
                   TypeDescriptor inferredTypeDescriptor,
-                  TypeDescriptor actualTypeDescriptor,
+                  TypeDescriptor declaredTypeDescriptor,
                   Expression expression) {
                 if (expression instanceof NullLiteral) {
-                  if (AstUtils.isNonNativeJsEnum(inferredTypeDescriptor)) {
+                  if (isBoxableJsEnumType(inferredTypeDescriptor)) {
                     // JsEnums types are removed, so this should be the boxed type. j.l.Object also
                     // works because boxed js enum types are never explicitly referred to in method
                     // signatures, and the only other types they can be passed as is Comparable and

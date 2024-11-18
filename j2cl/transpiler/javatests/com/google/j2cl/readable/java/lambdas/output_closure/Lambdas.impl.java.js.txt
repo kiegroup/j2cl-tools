@@ -26,6 +26,7 @@ let FunctionalInterfaceWithMethodReturningVoid = goog.forwardDeclare('lambdas.La
 let GenericFunctionalInterface = goog.forwardDeclare('lambdas.Lambdas.GenericFunctionalInterface$impl');
 let IdentityFunction = goog.forwardDeclare('lambdas.Lambdas.IdentityFunction$impl');
 let JsSupplier = goog.forwardDeclare('lambdas.Lambdas.JsSupplier$impl');
+let Wrapper = goog.forwardDeclare('lambdas.Lambdas.Wrapper$impl');
 let $Equality = goog.forwardDeclare('nativebootstrap.Equality$impl');
 let $Long = goog.forwardDeclare('nativebootstrap.Long$impl');
 let $Casts = goog.forwardDeclare('vmbootstrap.Casts$impl');
@@ -166,7 +167,7 @@ class Lambdas extends j_l_Object {
    return i_3;
   }), Error.$create__());
   Lambdas.m_callTypeVariableWithBounds__lambdas_Lambdas_GenericFunctionalInterface__java_lang_Enum__java_lang_Enum(GenericFunctionalInterface.$adapt((i_4) =>{
-   let i_5 = /**@type {Enum}*/ ($Casts.$to(i_4, Enum));
+   let i_5 = /**@type {Enum<T>}*/ ($Casts.$to(i_4, Enum));
    return i_5;
   }), /**@type {Enum<T>}*/ (null));
   this.m_callWithBiFunction__lambdas_Lambdas_BiFunction__lambdas_Lambdas_GenericFunctionalInterface_$pp_lambdas(BiFunction.$adapt((/** * */ x, y) =>{
@@ -178,8 +179,12 @@ class Lambdas extends j_l_Object {
    return 3;
   }));
   let f = Lambdas_Function.$adapt((item) =>{
-   let item_1 = /**@type {Enum}*/ ($Casts.$to(item, Enum));
+   let item_1 = /**@type {T}*/ ($Casts.$to(item, Enum));
    return Long.m_valueOf__long__java_lang_Long($Long.fromInt(1));
+  });
+  let f2 = Lambdas_Function.$adapt((item_2) =>{
+   let item_3 = /**@type {Wrapper<?string>}*/ ($Casts.$to(item_2, Wrapper));
+   return /**@type {?string}*/ ($Casts.$to(item_3.f_wrapped__lambdas_Lambdas_Wrapper, j_l_String));
   });
  }
  /** @nodts @return {*} */
@@ -234,21 +239,21 @@ class Lambdas extends j_l_Object {
  /** @nodts @template U, V */
  static m_testIntersectionTyping__void() {
   Lambdas.$clinit();
-  let o = /**@type {GenericFunctionalInterface<?string>}*/ (new $LambdaAdaptor$2((x) =>{
+  let o = /**@type {!GenericFunctionalInterface<?string>}*/ (new $LambdaAdaptor$2((x) =>{
    let x_1 = /**@type {?string}*/ ($Casts.$to(x, j_l_String));
    return x_1;
   }));
-  o = /**@type {GenericFunctionalInterface<?string>}*/ (new $LambdaAdaptor$3((x_2) =>{
+  o = /**@type {!GenericFunctionalInterface<?string>}*/ (new $LambdaAdaptor$3((x_2) =>{
    let x_3 = /**@type {?string}*/ ($Casts.$to(x_2, j_l_String));
    return x_3;
   }));
-  o = /**@type {GenericFunctionalInterface<U>}*/ (new $LambdaAdaptor$4((/** U */ x_4) =>{
+  o = /**@type {!GenericFunctionalInterface<U>}*/ (new $LambdaAdaptor$4((/** U */ x_4) =>{
    return x_4;
   }));
  }
  /** @nodts */
  m_testDefaultMethodsInIntersectionAdaptor__void() {
-  let o = /**@type {BiFunction<?string, ?string, ?string>}*/ (new $LambdaAdaptor$5((t, u) =>{
+  let o = /**@type {!BiFunction<?string, ?string, ?string>}*/ (new $LambdaAdaptor$5((t, u) =>{
    let t_1 = /**@type {?string}*/ ($Casts.$to(t, j_l_String));
    let u_1 = /**@type {?string}*/ ($Casts.$to(u, j_l_String));
    return null;
@@ -301,6 +306,7 @@ class Lambdas extends j_l_Object {
   GenericFunctionalInterface = goog.module.get('lambdas.Lambdas.GenericFunctionalInterface$impl');
   IdentityFunction = goog.module.get('lambdas.Lambdas.IdentityFunction$impl');
   JsSupplier = goog.module.get('lambdas.Lambdas.JsSupplier$impl');
+  Wrapper = goog.module.get('lambdas.Lambdas.Wrapper$impl');
   $Equality = goog.module.get('nativebootstrap.Equality$impl');
   $Long = goog.module.get('nativebootstrap.Long$impl');
   $Casts = goog.module.get('vmbootstrap.Casts$impl');

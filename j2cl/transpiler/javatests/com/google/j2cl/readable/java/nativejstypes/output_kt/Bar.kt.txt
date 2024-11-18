@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package nativejstypes
 
@@ -58,6 +58,7 @@ open class Bar {
   external fun getStatic(): Int
  }
 
+ @ObjCName("J2ktNativejstypesBar_Inner", exact = true)
  @JsType(isNative = true)
  open class Inner {
   constructor(
@@ -67,6 +68,7 @@ open class Bar {
   @ObjCName("square")
   external open fun square(): Int
 
+  @ObjCName("J2ktNativejstypesBar_InnerCompanion", exact = true)
   companion object {
    @JvmStatic
    @ObjCName("getInnerStatic")
@@ -75,6 +77,7 @@ open class Bar {
  }
 }
 
+@ObjCName("J2ktNativejstypesBarInnerWithDotInName", exact = true)
 @JsType(name = "Bar.Inner", isNative = true)
 open class BarInnerWithDotInName {
  constructor(
@@ -84,6 +87,7 @@ open class BarInnerWithDotInName {
  @ObjCName("square")
  external open fun square(): Int
 
+ @ObjCName("J2ktNativejstypesBarInnerWithDotInNameCompanion", exact = true)
  companion object {
   @JvmStatic
   @ObjCName("getInnerStatic")
@@ -91,6 +95,7 @@ open class BarInnerWithDotInName {
  }
 }
 
+@ObjCName("J2ktNativejstypesBarInnerWithDotInNameAndHasNamespace", exact = true)
 @JsType(name = "Bar.Inner", namespace = "nativejstypes", isNative = true)
 open class BarInnerWithDotInNameAndHasNamespace {
  constructor(
@@ -100,6 +105,7 @@ open class BarInnerWithDotInNameAndHasNamespace {
  @ObjCName("square")
  external open fun square(): Int
 
+ @ObjCName("J2ktNativejstypesBarInnerWithDotInNameAndHasNamespaceCompanion", exact = true)
  companion object {
   @JvmStatic
   @ObjCName("getInnerStatic")

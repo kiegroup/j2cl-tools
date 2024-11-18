@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package bridgemethods
 
@@ -28,6 +28,7 @@ import kotlin.native.ObjCName
 
 @ObjCName("J2ktBridgemethodsBridgeMethodShadowedSignature", exact = true)
 open class BridgeMethodShadowedSignature {
+ @ObjCName("J2ktBridgemethodsBridgeMethodShadowedSignature_I", exact = true)
  fun interface I<I1> {
   @ObjCName("get")
   fun get(
@@ -35,6 +36,7 @@ open class BridgeMethodShadowedSignature {
   ): String?
  }
 
+ @ObjCName("J2ktBridgemethodsBridgeMethodShadowedSignature_B", exact = true)
  abstract class B<B1, B2> internal constructor(): BridgeMethodShadowedSignature.I<B1> {
   @ObjCName("get")
   open fun get(
@@ -44,5 +46,6 @@ open class BridgeMethodShadowedSignature {
   }
  }
 
+ @ObjCName("J2ktBridgemethodsBridgeMethodShadowedSignature_C", exact = true)
  open class C<C1> internal constructor(): BridgeMethodShadowedSignature.B<C1, Consumer<in C1>?>(), BridgeMethodShadowedSignature.I<C1> {}
 }

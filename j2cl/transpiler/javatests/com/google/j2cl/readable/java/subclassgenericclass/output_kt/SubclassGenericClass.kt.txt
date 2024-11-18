@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package subclassgenericclass
 
@@ -24,8 +24,10 @@ import kotlin.Suppress
 import kotlin.experimental.ExperimentalObjCName
 import kotlin.native.ObjCName
 
+@ObjCName("J2ktSubclassgenericclassGenericClass", exact = true)
 open class GenericClass<T> internal constructor() {}
 
+@ObjCName("J2ktSubclassgenericclassGenericSubclassGenericClass", exact = true)
 open class GenericSubclassGenericClass<T> internal constructor(): GenericClass<T>() {}
 
 @ObjCName("J2ktSubclassgenericclassSubclassGenericClass", exact = true)

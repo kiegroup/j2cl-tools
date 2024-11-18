@@ -87,7 +87,10 @@ def _compile(
             backend,
             internal_transpiler_flags,
             kt_common_srcs,
-            kotlincopts,
+            # Forcefully enable IR serialization. J2CL only needs this to have
+            # Kotlinc deserialize IR from dependencies; we do not actually emit
+            # any serialized IR (that all happens on the JVM side).
+            kotlincopts + KOTLIN_SERIALIZE_IR_FLAGS,
         )
         library_info = [output_library_info]
     else:
@@ -295,6 +298,11 @@ def _j2cl_transpile(
     args.add("-libraryinfooutput", library_info_output)
     args.add("-experimentalJavaFrontend", ctx.attr._java_frontend[BuildSettingInfo].value)
     args.add("-experimentalBackend", backend)
+
+    if backend == "WASM_MODULAR":
+        # Add a prefix to where the Java source files will be located relative to the source map.
+        args.add(output_dir.short_path, format = "-sourceMappingPathPrefix=%s/")
+
     for flag, value in internal_transpiler_flags.items():
         if value:
             args.add("-" + flag.replace("_", ""))
@@ -345,16 +353,19 @@ DEFAULT_J2CL_KOTLINCOPTS = [
     # KMP should be enabled to allow for passing common sources and using
     # expect/actual syntax.
     "-Xmulti-platform",
-    # Enable the serialization of the IR
-    # Currently all IR elements are being serialized to workaround missing IR in
-    # some instances, ex. a lambda within an inline member. See: b/263391416
-    # TODO(b/264661698): Reduce to just serialization of inline functions.
-    "-Xserialize-ir=all",
     # Have kotlinc's IR lowering passes generate objects for SAM implementations.
     # J2CL lowering passes cannot handle invokedynamic-based representations.
     "-Xsam-conversions=class",
     # TODO(b/317551802): Remove this once the language version is updated.
     "-language-version=1.9",
+]
+
+KOTLIN_SERIALIZE_IR_FLAGS = [
+    # Enable the serialization of the IR
+    # Currently all IR elements are being serialized to workaround missing IR in
+    # some instances, ex. a lambda within an inline member. See: b/263391416
+    # TODO(b/264661698): Reduce to just serialization of inline functions.
+    "-Xserialize-ir=all",
 ]
 
 J2CL_JAVA_TOOLCHAIN_ATTRS = {
@@ -373,11 +384,6 @@ J2CL_TOOLCHAIN_ATTRS = {
         default = Label("//build_defs/internal_do_not_use:BazelJ2clBuilder"),
         cfg = "exec",
         executable = True,
-    ),
-    "_jar": attr.label(
-        cfg = "exec",
-        executable = True,
-        default = Label("@bazel_tools//tools/jdk:jar"),
     ),
     "_java_frontend": attr.label(
         default = Label("//:experimental_java_frontend"),

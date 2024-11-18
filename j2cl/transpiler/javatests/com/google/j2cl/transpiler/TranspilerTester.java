@@ -71,6 +71,8 @@ public class TranspilerTester {
         // JVM target.
         // Note: For Bazel compilation, this is provided through toolchain defaults.
         .addArgs("-kotlincOptions", "-jvm-target=11")
+        // TODO(b/317551802): Remove this flag once we support 2.0.
+        .addArgs("-kotlincOptions", "-language-version=1.9")
         .setClassPathArg(
             "transpiler/javatests/com/google/j2cl/transpiler/ktstdlib_bundle_deploy.jar");
   }
@@ -307,6 +309,16 @@ public class TranspilerTester {
   public TranspilerTester setOutputPath(Path outputPath) {
     this.outputPath = outputPath;
     return this;
+  }
+
+  public TranspilerTester addNullMarkPackageInfo(String pkg) {
+    var unused =
+        addCompilationUnit(
+            "org.jspecify.annotations.NullMarked", "public @interface NullMarked {}");
+    return addFile(
+        Path.of(pkg.replace('.', '/'), "package-info.java"),
+        "@org.jspecify.annotations.NullMarked",
+        "package " + pkg + ";");
   }
 
   public TranspileResult assertTranspileSucceeds() {

@@ -15,12 +15,14 @@
  */
 package com.google.j2cl.transpiler.ast;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.extension.memoized.Memoized;
 import com.google.common.collect.ImmutableSet;
 import com.google.j2cl.common.ThreadLocalInterner;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -43,11 +45,19 @@ public abstract class TypeVariable extends TypeDescriptor implements HasName {
 
   @Memoized
   public TypeDescriptor getUpperBoundTypeDescriptor() {
-    TypeDescriptor boundTypeDescriptor = getUpperBoundTypeDescriptorSupplier().get();
+    TypeDescriptor boundTypeDescriptor = getUpperBoundTypeDescriptorFactory().get(this);
     return boundTypeDescriptor != null ? boundTypeDescriptor : TypeDescriptors.get().javaLangObject;
   }
 
-  public abstract Supplier<TypeDescriptor> getUpperBoundTypeDescriptorSupplier();
+  /**
+   * References to some descriptors need to be deferred since type variables are immutable and the
+   * reference graph might be cyclic.
+   */
+  public interface DescriptorFactory<T> {
+    T get(TypeVariable typeVariable);
+  }
+
+  public abstract DescriptorFactory<TypeDescriptor> getUpperBoundTypeDescriptorFactory();
 
   @Nullable
   abstract String getUniqueKey();
@@ -139,7 +149,7 @@ public abstract class TypeVariable extends TypeDescriptor implements HasName {
     return this.getUpperBoundTypeDescriptor().isAssignableTo(that);
   }
 
-  /** Return true if it is an unnamed type variable, i.e. a wildcard or capture. */
+  @Override
   public final boolean isWildcardOrCapture() {
     return isWildcard() || isCapture();
   }
@@ -172,11 +182,6 @@ public abstract class TypeVariable extends TypeDescriptor implements HasName {
   }
 
   @Override
-  public TypeDescriptor toUnparameterizedTypeDescriptor() {
-    return this;
-  }
-
-  @Override
   public boolean canBeReferencedExternally() {
     return toRawTypeDescriptor().canBeReferencedExternally();
   }
@@ -196,7 +201,7 @@ public abstract class TypeVariable extends TypeDescriptor implements HasName {
         lowerBound != null ? replaceTypeDescriptors(lowerBound, fn, seen) : null;
     if (upperBound != newUpperBound || lowerBound != newLowerBound) {
       return Builder.from(this)
-          .setUpperBoundTypeDescriptorSupplier(() -> newUpperBound)
+          .setUpperBoundTypeDescriptorFactory(() -> newUpperBound)
           .setLowerBoundTypeDescriptor(newLowerBound)
           .setUniqueKey("<Auto>" + getUniqueId())
           .build();
@@ -221,23 +226,12 @@ public abstract class TypeVariable extends TypeDescriptor implements HasName {
         return this;
       }
 
-      seen = new ImmutableSet.Builder<TypeVariable>().addAll(seen).add(this).build();
+      ImmutableSet<TypeVariable> newSeen =
+          new ImmutableSet.Builder<TypeVariable>().addAll(seen).add(this).build();
 
-      TypeDescriptor specializedUpperBoundTypeDescriptor =
-          getUpperBoundTypeDescriptor()
-              .specializeTypeVariables(replacementTypeArgumentByTypeVariable, seen);
-      TypeDescriptor specializedLowerBoundTypeDescriptor =
-          getLowerBoundTypeDescriptor() == null
-              ? null
-              : getLowerBoundTypeDescriptor()
-                  .specializeTypeVariables(replacementTypeArgumentByTypeVariable, seen);
-
-      if (specializedUpperBoundTypeDescriptor != getUpperBoundTypeDescriptor()
-          || specializedLowerBoundTypeDescriptor != getLowerBoundTypeDescriptor()) {
-        return createWildcardWithUpperAndLowerBound(
-            specializedUpperBoundTypeDescriptor, specializedLowerBoundTypeDescriptor);
-      }
-      return this;
+      return toWildcard()
+          .withRewrittenBounds(
+              it -> it.specializeTypeVariables(replacementTypeArgumentByTypeVariable, newSeen));
     }
 
     TypeVariable declaration = toDeclaration();
@@ -248,14 +242,7 @@ public abstract class TypeVariable extends TypeDescriptor implements HasName {
     if (declaration != specializedTypeVariable) {
       // The variable has been specialized, apply the nullability annotation if the type variable
       // reference was annotated.
-      switch (getNullabilityAnnotation()) {
-        case NULLABLE:
-          return specializedTypeVariable.toNullable();
-        case NOT_NULLABLE:
-          return specializedTypeVariable.toNonNullable();
-        default:
-          return specializedTypeVariable;
-      }
+      return specializedTypeVariable.withNullabilityAnnotation(getNullabilityAnnotation());
     }
     return this;
   }
@@ -302,35 +289,80 @@ public abstract class TypeVariable extends TypeDescriptor implements HasName {
 
   /** Creates a wildcard type variable with a specific upper bound. */
   public static TypeVariable createWildcardWithUpperBound(TypeDescriptor bound) {
-    return createWildcardWithUpperAndLowerBound(bound, null);
+    return createWildcard(/* upperBound= */ bound, /* lowerBound= */ null);
   }
 
   /** Creates a wildcard type variable with a specific lower bound. */
   public static TypeVariable createWildcardWithLowerBound(TypeDescriptor bound) {
-    return createWildcardWithUpperAndLowerBound(TypeDescriptors.get().javaLangObject, bound);
-  }
-
-  /** Creates a wildcard type variable with a specific upper and lower bound. */
-  public static TypeVariable createWildcardWithUpperAndLowerBound(
-      TypeDescriptor upperBound, @Nullable TypeDescriptor lowerBound) {
-    String upperBoundKey = "<??_^_>" + upperBound.getUniqueId();
-    String lowerBoundKey = lowerBound == null ? "" : "<??_v_>" + lowerBound.getUniqueId();
-    return TypeVariable.newBuilder()
-        .setWildcard(true)
-        .setNullabilityAnnotation(NullabilityAnnotation.NONE)
-        .setUpperBoundTypeDescriptorSupplier(() -> upperBound)
-        .setLowerBoundTypeDescriptor(lowerBound)
-        // Create an unique key that does not conflict with the keys used for other types nor for
-        // type variables coming from JDT, which follow "<declaring_type>:<name>...".
-        // {@see org.eclipse.jdt.core.BindingKey}.
-        .setUniqueKey(upperBoundKey + lowerBoundKey)
-        .setName("?")
-        .build();
+    return createWildcard(
+        /* upperBound= */ TypeDescriptors.get().javaLangObject, /* lowerBound= */ bound);
   }
 
   /** Creates wildcard type variable with no bound. */
   public static TypeVariable createWildcard() {
     return createWildcardWithUpperBound(TypeDescriptors.get().javaLangObject);
+  }
+
+  private static TypeVariable createWildcard(
+      TypeDescriptor upperBound, @Nullable TypeDescriptor lowerBound) {
+    String upperBoundKey = "<??_^_>" + upperBound.getUniqueId();
+    String lowerBoundKey = lowerBound == null ? "" : "<??_v_>" + lowerBound.getUniqueId();
+
+    String name = "?";
+    if (lowerBound != null) {
+      name += " super " + lowerBound.getReadableDescription();
+    } else if (!TypeDescriptors.isJavaLangObject(upperBound)) {
+      name += " extends " + upperBound.getReadableDescription();
+    }
+
+    return TypeVariable.newBuilder()
+        .setWildcard(true)
+        .setNullabilityAnnotation(NullabilityAnnotation.NONE)
+        .setUpperBoundTypeDescriptorFactory(() -> upperBound)
+        .setLowerBoundTypeDescriptor(lowerBound)
+        // Create an unique key that does not conflict with the keys used for other types nor for
+        // type variables coming from JDT, which follow "<declaring_type>:<name>...".
+        // {@see org.eclipse.jdt.core.BindingKey}.
+        .setUniqueKey(upperBoundKey + lowerBoundKey)
+        .setName(name)
+        .build();
+  }
+
+  /** Returns wildcard with the same bounds . */
+  public TypeVariable toWildcard() {
+    if (isWildcard()) {
+      return this;
+    }
+    return createWildcard(getUpperBoundTypeDescriptor(), getLowerBoundTypeDescriptor());
+  }
+
+  /**
+   * Returns wildcard with bounds rewritten using the given function, or throws if this type
+   * variable is not a wildcard.
+   */
+  public TypeVariable withRewrittenBounds(
+      Function<? super TypeDescriptor, ? extends TypeDescriptor> fn) {
+    return withRewrittenBounds(fn, fn);
+  }
+
+  /**
+   * Returns wildcard with bounds rewritten using the given function, or throws if this type
+   * variable is not a wildcard.
+   */
+  public TypeVariable withRewrittenBounds(
+      Function<? super TypeDescriptor, ? extends TypeDescriptor> upperBoundFn,
+      Function<? super TypeDescriptor, ? extends TypeDescriptor> lowerBoundFn) {
+    checkArgument(isWildcard());
+    TypeDescriptor upperBound = getUpperBoundTypeDescriptor();
+    TypeDescriptor lowerBound = getLowerBoundTypeDescriptor();
+    TypeDescriptor updatedUpperBound = upperBoundFn.apply(upperBound);
+    TypeDescriptor updatedLowerBound = lowerBound != null ? lowerBoundFn.apply(lowerBound) : null;
+
+    if (upperBound.equals(updatedUpperBound) && Objects.equals(lowerBound, updatedLowerBound)) {
+      return this;
+    }
+
+    return createWildcard(updatedUpperBound, updatedLowerBound);
   }
 
   @Override
@@ -383,8 +415,13 @@ public abstract class TypeVariable extends TypeDescriptor implements HasName {
   @AutoValue.Builder
   public abstract static class Builder {
 
-    public abstract Builder setUpperBoundTypeDescriptorSupplier(
-        Supplier<TypeDescriptor> boundTypeDescriptorFactory);
+    public abstract Builder setUpperBoundTypeDescriptorFactory(
+        DescriptorFactory<TypeDescriptor> boundTypeDescriptorFactory);
+
+    public Builder setUpperBoundTypeDescriptorFactory(
+        Supplier<TypeDescriptor> boundTypeDescriptorFactory) {
+      return setUpperBoundTypeDescriptorFactory(self -> boundTypeDescriptorFactory.get());
+    }
 
     public abstract Builder setUniqueKey(String uniqueKey);
 

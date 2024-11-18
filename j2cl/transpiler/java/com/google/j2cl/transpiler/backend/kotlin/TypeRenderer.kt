@@ -40,6 +40,9 @@ import com.google.j2cl.transpiler.backend.kotlin.source.orEmpty
  * @property nameRenderer underlying name renderer
  */
 internal data class TypeRenderer(val nameRenderer: NameRenderer) {
+  private val environment: Environment
+    get() = nameRenderer.environment
+
   private fun memberRenderer(type: Type): MemberRenderer =
     MemberRenderer(nameRenderer.plusLocalNames(type), type)
 
@@ -73,7 +76,9 @@ internal data class TypeRenderer(val nameRenderer: NameRenderer) {
                 ),
                 superTypesSource(type),
               ),
-              nameRenderer.whereClauseSource(typeDeclaration.typeParameterDescriptors),
+              nameRenderer.whereClauseSource(
+                typeDeclaration.directlyDeclaredTypeParameterDescriptors
+              ),
               typeBodySource(type),
             ),
           )
@@ -97,9 +102,9 @@ internal data class TypeRenderer(val nameRenderer: NameRenderer) {
     return when {
       ktPrimaryConstructor != null ->
         memberRenderer(type).run {
-          ktPrimaryConstructor.toObjCNames().let { objCNames ->
+          objCNameRenderer.renderedObjCNames(ktPrimaryConstructor).let { objCNames ->
             spaceSeparated(
-              annotationsSource(ktPrimaryConstructor.descriptor, objCNames),
+              annotationsSource(ktPrimaryConstructor, objCNames),
               join(
                 KotlinSource.CONSTRUCTOR_KEYWORD,
                 methodParametersSource(ktPrimaryConstructor, objCNames?.parameterNames),
@@ -111,7 +116,7 @@ internal data class TypeRenderer(val nameRenderer: NameRenderer) {
         // Implicit constructors needs to follow the visiblity transpilation rules for members that
         // are different than the visibility transpilation rules for the class.
         spaceSeparated(
-          type.declaration.visibility.memberKtVisibility.source,
+          type.declaration.visibility.defaultMemberKtVisibility.source,
           join(KotlinSource.CONSTRUCTOR_KEYWORD, inParentheses(Source.EMPTY)),
         )
       else -> Source.EMPTY
