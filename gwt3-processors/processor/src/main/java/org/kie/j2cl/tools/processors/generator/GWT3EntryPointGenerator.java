@@ -100,7 +100,10 @@ public class GWT3EntryPointGenerator extends AbstractGenerator {
   private void generate(ExecutableElement methodInfo) {
     TypeElement clazz = (TypeElement) methodInfo.getEnclosingElement();
     boolean isJsType = utils.createTypeDescriptor(clazz.asType()).isJsType();
-    String methodName = utils.createDeclarationMethodDescriptor(methodInfo).getMangledName();
+    String methodName =
+        isJsType
+            ? methodInfo.getSimpleName().toString()
+            : utils.createDeclarationMethodDescriptor(methodInfo).getMangledName();
     String className = clazz.getSimpleName().toString();
     String classPkg = MoreElements.getPackage(clazz).getQualifiedName().toString();
 

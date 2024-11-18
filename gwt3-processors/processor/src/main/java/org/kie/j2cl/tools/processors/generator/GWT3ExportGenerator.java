@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2021
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +43,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsType;
 import org.kie.j2cl.tools.processors.annotations.ES6Module;
 import org.kie.j2cl.tools.processors.annotations.GWT3EntryPoint;
@@ -163,11 +165,19 @@ public class GWT3ExportGenerator extends AbstractGenerator {
   private MethodDTO getMethodDTO(TypeElement parent, Element m) {
     ExecutableElement method = checkMethod(m);
     String methodName = getSimpleName(method);
+
     DeclaredType declaredType = MoreTypes.asDeclared(parent.asType());
     DeclaredTypeDescriptor enclosingTypeDescriptor =
         utils.createDeclaredTypeDescriptor(declaredType);
-    String mangleName =
-        utils.createDeclarationMethodDescriptor(method, enclosingTypeDescriptor).getMangledName();
+    String mangleName;
+
+    if (method.getEnclosingElement().getAnnotation(JsType.class) != null
+        || method.getAnnotation(JsMethod.class) != null) {
+      mangleName = method.getSimpleName().toString();
+    } else {
+      mangleName =
+          utils.createDeclarationMethodDescriptor(method, enclosingTypeDescriptor).getMangledName();
+    }
     return new MethodDTO(methodName, mangleName, m.getModifiers().contains(Modifier.STATIC));
   }
 

@@ -19,28 +19,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.j2cl.transpiler.ast.TypeDeclaration.Kind;
 import static com.google.j2cl.transpiler.ast.TypeDeclaration.newBuilder;
+import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.WASM_ANNOTATION_NAME;
 
 import com.google.auto.common.MoreTypes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import com.google.j2cl.common.InternalCompilerError;
-import com.google.j2cl.transpiler.ast.ArrayTypeDescriptor;
-import com.google.j2cl.transpiler.ast.AstUtils;
-import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
-import com.google.j2cl.transpiler.ast.FieldDescriptor;
-import com.google.j2cl.transpiler.ast.JsEnumInfo;
-import com.google.j2cl.transpiler.ast.JsInfo;
-import com.google.j2cl.transpiler.ast.Literal;
-import com.google.j2cl.transpiler.ast.MemberDescriptor;
-import com.google.j2cl.transpiler.ast.MethodDescriptor;
+import com.google.j2cl.transpiler.ast.*;
 import com.google.j2cl.transpiler.ast.MethodDescriptor.ParameterDescriptor;
-import com.google.j2cl.transpiler.ast.PrimitiveTypes;
-import com.google.j2cl.transpiler.ast.TypeDeclaration;
-import com.google.j2cl.transpiler.ast.TypeDescriptor;
-import com.google.j2cl.transpiler.ast.TypeDescriptors;
-import com.google.j2cl.transpiler.ast.TypeVariable;
-import com.google.j2cl.transpiler.ast.Visibility;
+import com.google.j2cl.transpiler.frontend.javac.AnnotationUtils;
 import com.google.j2cl.transpiler.frontend.javac.JsInteropAnnotationUtils;
 import com.google.j2cl.transpiler.frontend.javac.JsInteropUtils;
 import java.util.ArrayList;
@@ -331,9 +319,8 @@ public class J2CLUtils {
           }
         });
 
-    DeclaredTypeDescriptor typeDescriptor =
-        createSyntheticJavaEmulInternalExceptionsTypeDescriptor();
-    builder.addReferenceType(typeDescriptor);
+    builder.addReferenceType(createSyntheticJavaEmulInternalExceptionsTypeDescriptor());
+
     builder.buildSingleton();
   }
 
@@ -343,14 +330,16 @@ public class J2CLUtils {
             .setClassComponents(ImmutableList.of("Exceptions"))
             .setNative(false)
             .setCustomizedJsNamespace("javaemul.internal")
-            .setPackageName("javaemul.internal")
+            .setPackage(PackageDeclaration.newBuilder().setName("javaemul.internal").build())
             .setTypeParameterDescriptors(ImmutableList.of())
             .setVisibility(Visibility.PUBLIC)
+            .setNullMarked(false)
             .setKind(Kind.CLASS)
             .build();
 
     return DeclaredTypeDescriptor.newBuilder()
         .setTypeDeclaration(typeDeclaration)
+        .setNullable(false)
         .setTypeArgumentDescriptors(Collections.EMPTY_LIST)
         .build();
   }
@@ -392,9 +381,6 @@ public class J2CLUtils {
       boolean inNullMarkedScope) {
     if (typeMirror == null || typeMirror.getKind() == TypeKind.NONE) {
       return null;
-    }
-    if (typeMirror.getKind().isPrimitive()) {
-      return PrimitiveTypes.get(typeMirror.toString());
     }
 
     if (typeMirror.getKind() == TypeKind.VOID) {
@@ -478,7 +464,7 @@ public class J2CLUtils {
 
     List<String> classComponents = getClassComponents(typeVariable);
     return TypeVariable.newBuilder()
-        .setUpperBoundTypeDescriptorSupplier(boundTypeDescriptorFactory)
+        .setUpperBoundTypeDescriptorFactory(boundTypeDescriptorFactory)
         .setUniqueKey(
             String.join("::", classComponents)
                 + (typeVariable.getUpperBound() != null
@@ -490,7 +476,7 @@ public class J2CLUtils {
 
   private TypeVariable createWildcardTypeVariable(TypeMirror bound) {
     return TypeVariable.newBuilder()
-        .setUpperBoundTypeDescriptorSupplier(() -> createTypeDescriptor(bound))
+        .setUpperBoundTypeDescriptorFactory(() -> createTypeDescriptor(bound))
         .setWildcard(true)
         .setName("?")
         .setUniqueKey("::?::" + (bound != null ? bound.toString() : ""))
@@ -666,7 +652,7 @@ public class J2CLUtils {
     if (isSpecialized(declarationMethodElement, parameters, returnType)) {
       declarationMethodDescriptor =
           createDeclarationMethodDescriptor(
-              declarationMethodElement, enclosingTypeDescriptor.toUnparameterizedTypeDescriptor());
+              declarationMethodElement, enclosingTypeDescriptor.getDeclarationDescriptor());
     }
 
     TypeDescriptor returnTypeDescriptor =
@@ -781,6 +767,7 @@ public class J2CLUtils {
         .setStatic(isStatic)
         .setConstructor(isConstructor)
         .setNative(isNative)
+        .setWasmInfo(getWasmInfo(declarationMethodElement))
         .setFinal(isFinal(declarationMethodElement))
         .setDefaultMethod(isDefault)
         .setAbstract(isAbstract(declarationMethodElement))
@@ -866,71 +853,9 @@ public class J2CLUtils {
       return cachedTypeDescriptor;
     }
 
-    Supplier<ImmutableList<MethodDescriptor>> declaredMethods =
-        () ->
-            getDeclaredMethods(classType).stream()
-                .map(
-                    methodDeclarationPair ->
-                        createMethodDescriptor(
-                            createDeclaredTypeDescriptor(classType, inNullMarkedScope),
-                            methodDeclarationPair,
-                            methodDeclarationPair))
-                .collect(toImmutableList());
-
-    Supplier<ImmutableList<FieldDescriptor>> declaredFields =
-        () ->
-            ((TypeElement) classType.asElement())
-                .getEnclosedElements().stream()
-                    .filter(
-                        element ->
-                            element.getKind() == ElementKind.FIELD
-                                || element.getKind() == ElementKind.ENUM_CONSTANT)
-                    .map(VariableElement.class::cast)
-                    .map(this::createFieldDescriptor)
-                    .collect(toImmutableList());
-
-    TypeDeclaration typeDeclaration = createDeclarationForType((TypeElement) classType.asElement());
-
-    // Compute these even later
     DeclaredTypeDescriptor typeDescriptor =
-        DeclaredTypeDescriptor.newBuilder()
-            .setTypeDeclaration(typeDeclaration)
-            .setEnclosingTypeDescriptor(createDeclaredTypeDescriptor(classType.getEnclosingType()))
-            .setSuperTypeDescriptorFactory(
-                td ->
-                    td.isInterface()
-                        ? null
-                        : createDeclaredTypeDescriptor(
-                            javacTypes.directSupertypes(classType).stream()
-                                .filter(type -> !asTypeElement(type).getKind().isInterface())
-                                .findFirst()
-                                .orElse(null),
-                            inNullMarkedScope))
-            .setInterfaceTypeDescriptorsFactory(
-                td ->
-                    createTypeDescriptors(
-                        javacTypes.directSupertypes(classType).stream()
-                            .filter(type -> !asTypeElement(type).getKind().isInterface())
-                            .collect(toImmutableList()),
-                        inNullMarkedScope,
-                        DeclaredTypeDescriptor.class))
-            .setSingleAbstractMethodDescriptorFactory(
-                td -> {
-                  // MethodSymbol functionalInterfaceMethod =
-                  // getFunctionalInterfaceMethod(classType);
-                  throw new UnsupportedOperationException("Not implemented yet");
-                  /*                              return createMethodDescriptor(
-                  td,
-                  (MethodSymbol)
-                          functionalInterfaceMethod.asMemberOf(
-                                  ((ClassSymbol) classType.asElement()).asType(), internalTypes),
-                  getFunctionalInterfaceMethodDecl(classType));*/
-                })
-            .setTypeArgumentDescriptors(
-                createTypeDescriptors(getTypeArguments(classType), inNullMarkedScope))
-            .setDeclaredFieldDescriptorsFactory(declaredFields)
-            .setDeclaredMethodDescriptorsFactory(declaredMethods)
-            .build();
+        createDeclarationForType((TypeElement) classType.asElement())
+            .toDescriptor(createTypeDescriptors(getTypeArguments(classType), inNullMarkedScope));
     putTypeDescriptorInCache(inNullMarkedScope, classType, typeDescriptor);
     return typeDescriptor;
   }
@@ -1023,11 +948,9 @@ public class J2CLUtils {
                     isNullMarked,
                     DeclaredTypeDescriptor.class,
                     typeElement))
-        .setUnparameterizedTypeDescriptorFactory(
-            () -> createDeclaredTypeDescriptor(typeElement.asType()))
         .setHasAbstractModifier(isAbstract)
         .setKind(kind)
-        // .setAnnotation(isAnnotation(typeElement))
+        .setAnnotation(isAnnotation(typeElement))
         .setCapturingEnclosingInstance(capturesEnclosingInstance(typeElement))
         .setFinal(isFinal)
         .setFunctionalInterface(isFunctionalInterface(typeElement.asType()))
@@ -1042,7 +965,7 @@ public class J2CLUtils {
         .setNullMarked(isNullMarked)
         /*            .setOriginalSimpleSourceName(
         typeElement.getSimpleName() != null ? typeElement.getSimpleName().toString() : null)*/
-        .setPackageName(packageName)
+        .setPackage(PackageDeclaration.newBuilder().setName(packageName).build())
         /*        .setSuperTypeDescriptorFactory(
         () ->
             (DeclaredTypeDescriptor)
@@ -1080,5 +1003,15 @@ public class J2CLUtils {
             .findFirst()
             .orElseGet(() -> AstUtils.createImplicitConstructorDescriptor(typeDeclaration));
     return ctorMethodDescriptorFromJavaConstructor(ctor);
+  }
+
+  private static String getWasmInfo(Element element) {
+    AnnotationMirror wasmAnnotation =
+        AnnotationUtils.findAnnotationBindingByName(
+            element.getAnnotationMirrors(), WASM_ANNOTATION_NAME);
+    if (wasmAnnotation == null) {
+      return null;
+    }
+    return AnnotationUtils.getAnnotationParameterString(wasmAnnotation, "value");
   }
 }
