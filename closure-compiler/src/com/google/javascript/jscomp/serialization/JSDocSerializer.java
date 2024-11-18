@@ -25,7 +25,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.TreeSet;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Utilities for serializing and deserializing JSDoc necessary for optimzations. */
 public final class JSDocSerializer {
@@ -61,9 +61,23 @@ public final class JSDocSerializer {
       builder.setLicenseTextPointer(stringPool.put(jsdoc.getLicense()));
     }
 
+    if (jsdoc.isSassGeneratedCssTs()) {
+      builder.addKind(JsdocTag.JSDOC_SASS_GENERATED_CSS_TS);
+    }
+
+    // Used by CoverageInstrumentationCallback
+    if (jsdoc.isNoCoverage()) {
+      builder.addKind(JsdocTag.JSDOC_NO_COVERAGE);
+    }
+
     if (jsdoc.isNoInline()) {
       builder.addKind(JsdocTag.JSDOC_NO_INLINE);
     }
+
+    if (jsdoc.isRequireInlining()) {
+      builder.addKind(JsdocTag.JSDOC_REQUIRE_INLINING);
+    }
+
     if (jsdoc.isNoCollapse()) {
       builder.addKind(JsdocTag.JSDOC_NO_COLLAPSE);
     }
@@ -156,6 +170,9 @@ public final class JSDocSerializer {
     if (jsdoc.getSuppressions().contains("messageConventions")) {
       builder.addKind(JsdocTag.JSDOC_SUPPRESS_MESSAGE_CONVENTION);
     }
+    if (jsdoc.getSuppressions().contains("untranspilableFeatures")) {
+      builder.addKind(JsdocTag.JSDOC_SUPPRESS_UNTRANSPILABLE_FEATURES);
+    }
 
     OptimizationJsdoc result = builder.build();
     if (OptimizationJsdoc.getDefaultInstance().equals(result)) {
@@ -240,6 +257,9 @@ public final class JSDocSerializer {
         case JSDOC_NO_INLINE:
           builder.recordNoInline();
           continue;
+        case JSDOC_REQUIRE_INLINING:
+          builder.recordRequireInlining();
+          continue;
         case JSDOC_PROVIDE_GOOG:
           builder.recordProvideGoog();
           continue;
@@ -316,8 +336,25 @@ public final class JSDocSerializer {
           suppressions.add("messageConventions");
           continue;
 
+          // ReportUntranspilableFeatures pass will run in stage2 since it uses languageOut
+          // information. It reports diagnostic {@code UNTRANSPILABLE_FEATURE_PRESENT} that can be
+          // supppressed using `untranspilableFeatures` suppression tag.
+          // Hence we must propagate it.
+        case JSDOC_SUPPRESS_UNTRANSPILABLE_FEATURES:
+          suppressions = (suppressions != null ? suppressions : new TreeSet<>());
+          suppressions.add("untranspilableFeatures");
+          continue;
+
         case JSDOC_FILEOVERVIEW:
           builder.recordFileOverview("");
+          continue;
+
+        case JSDOC_NO_COVERAGE:
+          builder.recordNoCoverage();
+          continue;
+
+        case JSDOC_SASS_GENERATED_CSS_TS:
+          builder.recordSassGeneratedCssTs();
           continue;
 
         case JSDOC_UNSPECIFIED:

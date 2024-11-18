@@ -19,7 +19,6 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.PolymerBehaviorExtractor.BehaviorDefinition;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
@@ -29,14 +28,14 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Parsed Polymer class (element) definition. Includes convenient fields for rewriting the class.
@@ -52,6 +51,8 @@ final class PolymerClassDefinition {
 
   /** The Polymer call or class node which defines the Element. */
   final Node definition;
+
+  final CompilerInput input;
 
   /** The target node (LHS) for the Polymer element definition. */
   final Node target;
@@ -98,7 +99,8 @@ final class PolymerClassDefinition {
       @Nullable Map<MemberDefinition, BehaviorDefinition> behaviorProps,
       List<MemberDefinition> methods,
       @Nullable ImmutableList<BehaviorDefinition> behaviors,
-      @Nullable FeatureSet features) {
+      @Nullable FeatureSet features,
+      CompilerInput input) {
     this.defType = defType;
     this.definition = definition;
     this.target = target;
@@ -112,6 +114,7 @@ final class PolymerClassDefinition {
     this.methods = methods;
     this.behaviors = behaviors;
     this.features = features;
+    this.input = input;
   }
 
   /**
@@ -194,11 +197,7 @@ final class PolymerClassDefinition {
     overwriteMembersIfPresent(
         properties,
         PolymerPassStaticUtils.extractProperties(
-            descriptor,
-            DefinitionType.ObjectLiteral,
-            compiler,
-            /** constructor= */
-            null));
+            descriptor, DefinitionType.ObjectLiteral, compiler, /* constructor= */ null));
 
     // Behaviors might get included multiple times for the same element. See test case
     // testDuplicatedBehaviorsAreCopiedOnce
@@ -227,6 +226,7 @@ final class PolymerClassDefinition {
                 NodeUtil.getBestJSDocInfo(keyNode), keyNode, keyNode.getFirstChild()));
       }
     }
+    CompilerInput input = compiler.getInput(NodeUtil.getEnclosingScript(callNode).getInputId());
 
     return new PolymerClassDefinition(
         DefinitionType.ObjectLiteral,
@@ -241,7 +241,8 @@ final class PolymerClassDefinition {
         behaviorProps,
         methods,
         behaviors,
-        newFeatures);
+        newFeatures,
+        input);
   }
 
   private static boolean isGoogModuleExports(Node assign) {
@@ -289,7 +290,7 @@ final class PolymerClassDefinition {
    * opposed to the Polymer 1 extraction, this operation is non-destructive.
    */
   static @Nullable PolymerClassDefinition extractFromClassNode(
-      Node classNode, AbstractCompiler compiler, GlobalNamespace globalNames) {
+      Node classNode, AbstractCompiler compiler) {
     checkState(classNode != null && classNode.isClass());
 
     // The supported case is for the config getter to return an object literal descriptor.
@@ -357,6 +358,7 @@ final class PolymerClassDefinition {
           new MemberDefinition(
               NodeUtil.getBestJSDocInfo(keyNode), keyNode, keyNode.getFirstChild()));
     }
+    CompilerInput input = compiler.getInput(NodeUtil.getEnclosingScript(classNode).getInputId());
 
     return new PolymerClassDefinition(
         DefinitionType.ES6Class,
@@ -371,7 +373,8 @@ final class PolymerClassDefinition {
         null,
         methods,
         null,
-        null);
+        null,
+        input);
   }
 
   /**
@@ -404,7 +407,7 @@ final class PolymerClassDefinition {
     }
     Iterator<Map.Entry<MemberDefinition, BehaviorDefinition>> behaviorsItr =
         behaviorProps.entrySet().iterator();
-    Set<String> seen = new HashSet<>();
+    Set<String> seen = new LinkedHashSet<>();
     while (behaviorsItr.hasNext()) {
       MemberDefinition memberDefinition = behaviorsItr.next().getKey();
       String propertyName = memberDefinition.name.getString();
@@ -451,13 +454,13 @@ final class PolymerClassDefinition {
         .toString();
   }
 
-  String getInterfaceName(Supplier<String> uniqueIdSupplier) {
+  String getInterfaceName(UniqueIdSupplier uniqueIdSupplier) {
     if (interfaceName == null) {
       interfaceName =
           "Polymer"
               + target.getQualifiedName().replace('.', '_')
-              + "Interface"
-              + uniqueIdSupplier.get();
+              + "Interface$"
+              + uniqueIdSupplier.getUniqueId(input);
     }
     return interfaceName;
   }

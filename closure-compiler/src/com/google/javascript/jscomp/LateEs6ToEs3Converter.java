@@ -30,7 +30,7 @@ import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Converts ES6 code to valid ES5 code. This class does most of the transpilation, and
@@ -70,7 +70,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, transpiledFeatures);
   }
 
   @Override
@@ -86,11 +86,6 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
           TranspilationUtil.cannotConvert(
               compiler, n, "ES5 getters/setters (consider using --language_out=ES5)");
           return false;
-        }
-        break;
-      case FUNCTION:
-        if (n.isAsyncFunction()) {
-          throw new IllegalStateException("async functions should have already been converted");
         }
         break;
       default:

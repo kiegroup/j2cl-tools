@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.DUPLICATE_NAME
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_MODULE_RENAMING_CONFLICT;
+import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_STMT_OF_GOOG_REQUIRE_DYNAMIC_IN_AWAIT;
 import static com.google.javascript.jscomp.ClosureRewriteModule.IMPORT_INLINING_SHADOWS_VAR;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_EXPORT_COMPUTED_PROPERTY;
 import static com.google.javascript.jscomp.ClosureRewriteModule.LOAD_MODULE_FN_MISSING_RETURN;
@@ -112,6 +113,51 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const */ var module$exports$ns$b = {};",
             "/** @const */ var module$exports$ns$c = {};",
             "/** @const */ var module$exports$ns$a = {};"));
+  }
+
+  @Test
+  public void testProvidedNamespaceGetsRequiredAndUsed() {
+    test(
+        srcs(
+            lines(
+                "goog.provide('goog.string.Const');",
+                "/** @constructor */ goog.string.Const = function() {};",
+                "goog.string.Const.from = function() {};"),
+            lines(
+                "goog.module('myModule');",
+                "var const1 = goog.require('goog.string.Const');",
+                "console.log(const1.from());")),
+        expected(
+            lines(
+                "goog.provide('goog.string.Const');",
+                "/** @constructor */ goog.string.Const = function() {};",
+                "goog.string.Const.from = function() {};"),
+            lines(
+                "/** @const */ var module$exports$myModule = {};",
+                "goog.require('goog.string.Const');",
+                "console.log(goog.string.Const.from());")));
+  }
+
+  @Test
+  public void testProvidedNamespaceGetsRequiredAndUsed_destructuringImport() {
+    test(
+        srcs(
+            lines(
+                "goog.provide('goog.string.Const');",
+                "/** @constructor */ goog.string.Const = function() {};",
+                "goog.string.Const.from = function() {};"),
+            lines(
+                "goog.module('myModule');",
+                "var {from} = goog.require('goog.string.Const');",
+                "console.log(from());")),
+        expected(
+            lines(
+                "goog.provide('goog.string.Const');",
+                "/** @constructor */ goog.string.Const = function() {};",
+                "goog.string.Const.from = function() {};"),
+            lines(
+                "/** @const */ var module$exports$myModule = {};",
+                "console.log((0, goog.string.Const.from)());")));
   }
 
   @Test
@@ -1279,6 +1325,54 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "     console.log(foo.Foo);",
                 "  });",
                 "}")));
+  }
+
+  @Test
+  public void testGoogRequireDynamic_then_name_laterLoadedModule() {
+    test(
+        srcs(
+            lines(
+                "async function test() {", //
+                "  goog.requireDynamic('a.b.c').then((foo) => {console.log(foo.Foo);});",
+                "}"),
+            lines("goog.module('a.b.c');", "exports.Foo=class{}")),
+        expected(
+            lines(
+                "async function test() {", //
+                "  goog.importHandler_('sG5M4c').then(() => { ",
+                "     const foo = module$exports$a$b$c;",
+                "     console.log(foo.Foo);",
+                "  });",
+                "}"),
+            lines(
+                "/** @const */ var module$exports$a$b$c = {};",
+                "/** @const */ module$exports$a$b$c.Foo = class {}")));
+  }
+
+  @Test
+  public void testGoogRequireDynamic_then_missingSources() {
+    test(
+        srcs(
+            lines(
+                "async function test() {", //
+                "  /** @suppress {missingSourcesWarnings} */",
+                "  goog.requireDynamic('a.b.c').then((foo) => {console.log(foo.Foo);});",
+                "}")),
+        expected(
+            lines(
+                "async function test() {", //
+                "  /** @suppress {missingSourcesWarnings} */",
+                "  null.then((foo) => {console.log(foo.Foo);});",
+                "}")));
+  }
+
+  @Test
+  public void testRequireDynamic_illegal_await_lhs() {
+    testError(
+        srcs(
+            lines("goog.module('a.b.c');", "exports.Foo=class{}"),
+            lines("async function test() {", "await goog.requireDynamic('a.b.c');", "}")),
+        ILLEGAL_STMT_OF_GOOG_REQUIRE_DYNAMIC_IN_AWAIT);
   }
 
   @Test

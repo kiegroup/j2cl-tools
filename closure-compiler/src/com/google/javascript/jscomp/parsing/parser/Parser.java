@@ -114,7 +114,7 @@ import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import java.util.ArrayDeque;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Parses a javascript file.
@@ -991,7 +991,6 @@ public class Parser {
           commaPositions.add(getTreeEndLocation());
         }
         if (peek(TokenType.CLOSE_PAREN)) {
-          recordFeatureUsed(Feature.TRAILING_COMMA_IN_PARAM_LIST);
           if (!config.atLeast8) {
             reportError(comma, "Invalid trailing comma in formal parameter list");
           }
@@ -1826,6 +1825,7 @@ public class Parser {
   private ParseTree parseRegularExpressionLiteral() {
     SourcePosition start = getTreeStartLocation();
     LiteralToken literal = nextRegularExpressionLiteralToken();
+    recordFeatureUsed(Feature.REGEXP_SYNTAX);
     return new LiteralExpressionTree(getTreeLocation(start), literal);
   }
 
@@ -3240,7 +3240,6 @@ public class Parser {
           commaPositions.add(comma.getStart());
         }
         if (peek(TokenType.CLOSE_PAREN)) {
-          recordFeatureUsed(Feature.TRAILING_COMMA_IN_PARAM_LIST);
           if (!config.atLeast8) {
             reportError(comma, "Invalid trailing comma in arguments list");
           }

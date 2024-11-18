@@ -24,7 +24,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -48,9 +48,6 @@ final class ClosureOptimizePrimitives implements CompilerPass {
 
   /** Reference to the JS compiler */
   private final AbstractCompiler compiler;
-
-  /** Whether property renaming is enabled */
-  private final boolean propertyRenamingEnabled;
 
   /** Whether we can use Es6 syntax */
   private final boolean canUseEs6Syntax;
@@ -79,11 +76,11 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     }
   }
 
-  /** @param compiler The AbstractCompiler */
-  ClosureOptimizePrimitives(
-      AbstractCompiler compiler, boolean propertyRenamingEnabled, boolean canUseEs6Syntax) {
+  /**
+   * @param compiler The AbstractCompiler
+   */
+  ClosureOptimizePrimitives(AbstractCompiler compiler, boolean canUseEs6Syntax) {
     this.compiler = compiler;
-    this.propertyRenamingEnabled = propertyRenamingEnabled;
     this.canUseEs6Syntax = canUseEs6Syntax;
   }
 
@@ -93,10 +90,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     NodeTraversal.traverse(compiler, root, pass);
   }
 
-  /**
-   * Converts all of the given call nodes to object literals that are safe to
-   * do so.
-   */
+  /** Converts all of the given call nodes to object literals that are safe to do so. */
   private void processObjectCreateCall(Node callNode) {
     Node curParam = callNode.getSecondChild();
     if (canOptimizeObjectCreate(curParam)) {
@@ -116,23 +110,8 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     }
   }
 
-  /**
-   * Converts all of the given call nodes to object literals that are safe to
-   * do so.
-   */
+  /** Converts all of the given call nodes to object literals that are safe to do so. */
   private void processRenamePropertyCall(Node callNode) {
-    // Property reflection calls are only needed if
-    // property renaming is enabled. Replace the call with the
-    // first argument in all other cases.
-    if (!propertyRenamingEnabled) {
-      Node propName = NodeUtil.getArgumentForCallOrNew(callNode, 0);
-      if (propName != null) {
-        callNode.replaceWith(propName.detach());
-        compiler.reportChangeToEnclosingScope(propName);
-        return;
-      }
-    }
-
     Node nameNode = callNode.getFirstChild();
     if (nameNode.matchesQualifiedName(NodeUtil.JSC_PROPERTY_NAME_FN)) {
       return;
@@ -146,10 +125,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     compiler.reportChangeToEnclosingScope(callNode);
   }
 
-  /**
-   * Returns whether the given call to goog.object.create can be converted to an
-   * object literal.
-   */
+  /** Returns whether the given call to goog.object.create can be converted to an object literal. */
   private boolean canOptimizeObjectCreate(Node firstParam) {
     Node curParam = firstParam;
     while (curParam != null) {
@@ -167,10 +143,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     return true;
   }
 
-  /**
-   * Converts all of the given call nodes to object literals that are safe to
-   * do so.
-   */
+  /** Converts all of the given call nodes to object literals that are safe to do so. */
   private void processObjectCreateSetCall(Node callNode) {
     Node curParam = callNode.getSecondChild();
     if (canOptimizeObjectCreateSet(curParam)) {
@@ -203,7 +176,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     }
 
     Node curParam = firstParam;
-    Set<String> keys = new HashSet<>();
+    Set<String> keys = new LinkedHashSet<>();
     while (curParam != null) {
       // All keys must be strings or numbers, otherwise we can't optimize the call.
       if (!isOptimizableKey(curParam)) {
@@ -222,12 +195,10 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     return true;
   }
 
-  private void addKeyValueToObjLit(Node objNode, Node keyNode, Node valueNode,
-      Node scriptNode) {
+  private void addKeyValueToObjLit(Node objNode, Node keyNode, Node valueNode, Node scriptNode) {
     if (keyNode.isNumber() || keyNode.isStringLit()) {
       if (keyNode.isNumber()) {
-        keyNode = IR.string(numberToString(keyNode.getDouble()))
-            .srcref(keyNode);
+        keyNode = IR.string(numberToString(keyNode.getDouble())).srcref(keyNode);
       }
       // It isn't valid for a `STRING_KEY` to be marked as parenthesized.
       keyNode.setIsParenthesized(false);

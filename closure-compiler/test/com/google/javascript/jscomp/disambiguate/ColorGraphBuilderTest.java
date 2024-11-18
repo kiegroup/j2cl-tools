@@ -48,7 +48,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -111,7 +111,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     LinkedHashMap<String, ColorGraphNode> testTypes = new LinkedHashMap<>();
     this.labelToId = new LinkedHashMap<>();
 
-    /** Flatten and collect the types of all NAMEs that start with "test". */
+    /* Flatten and collect the types of all NAMEs that start with "test". */
     this.processor =
         (externs, main) ->
             NodeTraversal.traverse(

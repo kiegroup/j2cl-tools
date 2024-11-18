@@ -52,7 +52,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, transpiledFeatures);
   }
 
   @Override
@@ -93,17 +93,28 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       return;
     }
 
+    // Now that the restParam is deleted, create a let declaration by making a new NAME node of the
+    // same name `paramName`
     Node let =
         astFactory
             .createSingleLetNameDeclaration(
-                paramName,
+                paramName, // creates a new NAME node with name `paramName`
                 astFactory.createCall(
-                    astFactory.createQNameWithUnknownType("$jscomp.getRestArguments.apply"),
+                    astFactory.createGetPropWithUnknownType(
+                        astFactory.createQName(this.namespace, "$jscomp.getRestArguments"),
+                        "apply"),
                     type(nameNode),
                     astFactory.createNumber(restIndex),
                     astFactory.createArgumentsReference()))
             .srcrefTreeIfMissing(functionBody);
-    functionBody.addChildToFront(let);
+    Node insertBeforePoint =
+        NodeUtil.getInsertionPointAfterAllInnerFunctionDeclarations(functionBody);
+    if (insertBeforePoint != null) {
+      let.insertBefore(insertBeforePoint);
+    } else {
+      // functionBody only contains hoisted function declarations
+      functionBody.addChildToBack(let);
+    }
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
     compiler.ensureLibraryInjected("es6/util/restarguments", /* force= */ false);
     t.reportCodeChange();
@@ -284,8 +295,9 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
         // If the first group is an array literal, we can just use that for concatenation,
         // otherwise use an empty array literal.
         //
-        // TODO(nickreid): Stop distringuishing between array literals and variables when this pass
-        // is moved after type-checking.
+        // TODO(bradfordcsmith): Now that this pass runs after type checking, it would be nice
+        // to skip creating an array literal when when the type of the first element says it is
+        // an Array.
         Node baseArrayLit =
             groups.get(0).isArrayLit() ? groups.remove(0) : astFactory.createArraylit();
         Node concat = astFactory.createGetProp(baseArrayLit, "concat", concatFnType);

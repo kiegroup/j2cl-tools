@@ -29,6 +29,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
 import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
@@ -53,14 +54,11 @@ import com.google.javascript.rhino.jstype.SimpleReference;
 import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
-import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -68,7 +66,7 @@ import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A symbol table for people that want to use Closure Compiler as an indexer.
@@ -361,10 +359,9 @@ public final class SymbolTable {
       return ImmutableList.of();
     }
 
-    UnionType unionType = type.toMaybeUnionType();
-    if (unionType != null) {
+    if (type.isUnionType()) {
       ImmutableList.Builder<Symbol> result = ImmutableList.builder();
-      for (JSType alt : unionType.getAlternates()) {
+      for (JSType alt : type.toMaybeUnionType().getAlternates()) {
         // Our type system never has nested unions.
         Symbol altSym = getSymbolForTypeHelper(alt, true);
         if (altSym != null) {
@@ -446,7 +443,7 @@ public final class SymbolTable {
 
     // All objects/classes have property scopes. They usually don't have parents. These scopes
     // confusingly are not included in "getAllScopes()" pass above.
-    HashSet<SymbolScope> visitedScopes = new HashSet<>(getAllScopes());
+    LinkedHashSet<SymbolScope> visitedScopes = new LinkedHashSet<>(getAllScopes());
     for (Symbol symbol : getAllSymbols()) {
       if (symbol.propertyScope == null || visitedScopes.contains(symbol.propertyScope)) {
         continue;
@@ -831,7 +828,7 @@ public final class SymbolTable {
           if (namespace == null && root.scope.isGlobalScope()) {
             // Originally UNKNOWN_TYPE has been always used for namespace symbols even though
             // compiler does have type information attached to a node. Unclear why. Changing code to
-            // propery type mostly works. It only fails on Foo.prototype cases for some reason.
+            // property type mostly works. It only fails on Foo.prototype cases for some reason.
             // It's pretty rare case when Foo.prototype defined in global scope though so for now
             // just carve it out.
             JSType nodeType = currentNode.getJSType();
@@ -905,9 +902,10 @@ public final class SymbolTable {
     // In this case the map will be {one: 1} => OBJ. Using this map will skip 'alias' when creating
     // property scopes.
     //
-    // NOTE: we are using IdentityHashMap to compare types using == because we need to find symbols
+    // NOTE: we are using LinkedIdentityHashMap to compare types using == because we need to find
+    // symbols
     // that point to the exact same type instance.
-    IdentityHashMap<JSType, Symbol> symbolThatDeclaresType = new IdentityHashMap<>();
+    LinkedIdentityHashMap<JSType, Symbol> symbolThatDeclaresType = new LinkedIdentityHashMap<>();
     for (Symbol s : allTypes) {
       // Symbols are sorted in reverse order so that those with more outer scope will come later in
       // the list, and therefore override those set by aliases in more inner scope. The sorting
@@ -1348,10 +1346,10 @@ public final class SymbolTable {
   void fillGoogProvideModuleRequires(Node externs, Node root) {
     // small optimization to keep symbols created within this function for fast access instead of
     // going through SymbolTable.getSymbolForName() every time.
-    Map<String, Symbol> declaredNamespaces = new HashMap<>();
+    Map<String, Symbol> declaredNamespaces = new LinkedHashMap<>();
     // Map containind goog.module names to Scope object representing them. For goog.provide
     // namespaces there is no scope as elements of goog.provide are global.
-    Map<String, SymbolScope> moduleScopes = new HashMap<>();
+    Map<String, SymbolScope> moduleScopes = new LinkedHashMap<>();
     Predicate<Node> looksLikeGoogCall =
         (Node n) -> {
           if (!n.isCall()) {
@@ -1890,9 +1888,25 @@ public final class SymbolTable {
     }
 
     private boolean maybeDefineReference(Node n, String propName, Symbol ownerSymbol) {
-      // getPropertyScope() will be null in some rare cases where there
-      // are no extern declarations for built-in types (like Function).
-      if (ownerSymbol != null && ownerSymbol.getPropertyScope() != null) {
+      if (ownerSymbol == null) {
+        return false;
+      }
+      // If current symbol is ObjectType - try using ObjectType.getPropertyNode to find a node.
+      // That function searches for property in all extended classes and interfaces, which supports
+      // multiple extended interfaces.
+      JSType owner = ownerSymbol.getType();
+      if (owner != null && owner.isObjectType()) {
+        Node propNode = owner.toObjectType().getPropertyNode(propName);
+        Symbol propSymbol = symbols.get(propNode, propName);
+        if (propSymbol != null) {
+          propSymbol.defineReferenceAt(n);
+          return true;
+        }
+      }
+      // Use PropertyScope to find property. PropertyScope doesn't support multiple parents so all
+      // cases where multiple parents can occur (e.g. class implementing 2+ interfaces) must be
+      // handled above.
+      if (ownerSymbol.getPropertyScope() != null) {
         Symbol prop = ownerSymbol.getPropertyScope().getSlot(propName);
         if (prop != null) {
           prop.defineReferenceAt(n);
@@ -1960,7 +1974,8 @@ public final class SymbolTable {
         }
         // There is no handy way to find symbol object the given property node. So we do
         // property node => namespace node => namespace symbol => property symbol.
-        if (propNodeDecl != null && propNodeDecl.isGetProp()) {
+        if (propNodeDecl != null
+            && (propNodeDecl.isGetProp() || propNodeDecl.isOptChainGetProp())) {
           Node namespace = propNodeDecl.getFirstChild();
           Symbol namespaceSym = getSymbolForName(namespace, namespace.getQualifiedName());
           if (namespaceSym != null && namespaceSym.getPropertyScope() != null) {
@@ -2005,7 +2020,7 @@ public final class SymbolTable {
       // definitions. e.g., for "a.b", it's more useful to record
       // this as "property b of the type of a", than as "symbol a.b".
 
-      if (n.isGetProp()) {
+      if (n.isGetProp() || n.isOptChainGetProp()) {
         JSType owner = n.getFirstChild().getJSType();
         if (owner != null) {
           boolean defined = maybeDefineTypedReference(n, n.getString(), owner);
@@ -2216,7 +2231,7 @@ public final class SymbolTable {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName()) {
         visitName(t, n);
-      } else if (n.isGetProp()) {
+      } else if (n.isGetProp() || n.isOptChainGetProp()) {
         visitProperty(n, parent);
       }
     }

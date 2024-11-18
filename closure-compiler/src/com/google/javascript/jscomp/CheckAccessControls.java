@@ -35,7 +35,7 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.function.Supplier;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A compiler pass that checks that the programmer has obeyed all the access control restrictions
@@ -869,15 +869,14 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
 
     // Check that:
     // (a) the property *can* be overridden,
-    // (b) the visibility of the override is the same as the
+    // (b) the visibility of the override is the same as (or broader than) the
     //     visibility of the original property,
     // (c) the visibility is explicitly redeclared if the override is in
     //     a file with default visibility in the @fileoverview block.
     if (visibility == Visibility.PRIVATE && !sameInput) {
       compiler.report(
           JSError.make(propRef.getSourceNode(), PRIVATE_OVERRIDE, objectType.toString()));
-    } else if (overridingVisibility != Visibility.INHERITED
-        && overridingVisibility != visibility
+    } else if (!canOverrideVisibility(visibility, overridingVisibility)
         && fileOverviewVisibility == null) {
       compiler.report(
           JSError.make(
@@ -887,6 +886,14 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
               objectType.toString(),
               overridingVisibility.name()));
     }
+  }
+
+  private static boolean canOverrideVisibility(
+      Visibility superclassVisibility, Visibility subclassVisibility) {
+    // This allows INHERITED to override anything, PUBLIC to override anything (except INHERITED),
+    // and PROTECTED to override anything (except PUBLIC or INHERITED). PRIVATE was already handled
+    // in a previous check, leaving PACKAGE as the lowest visibility.
+    return superclassVisibility.compareTo(subclassVisibility) <= 0;
   }
 
   private void checkPropertyAccessVisibility(
@@ -1368,7 +1375,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
               builder
                   .setName(sourceNode.getString())
                   .setReceiverType(typeRegistry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE))
-                  .setMutation(true)
+                  .setMutation(!(sourceNode.isMemberFieldDef() && !sourceNode.hasChildren()))
                   .setDeclaration(true)
                   // TODO(b/113704668): This definition is way too loose. It was used to prevent
                   // breakages during refactoring and should be tightened.

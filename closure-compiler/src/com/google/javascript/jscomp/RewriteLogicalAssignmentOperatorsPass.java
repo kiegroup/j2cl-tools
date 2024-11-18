@@ -36,13 +36,15 @@ public final class RewriteLogicalAssignmentOperatorsPass
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, Feature.LOGICAL_ASSIGNMENT);
+    TranspilationPasses.maybeMarkFeatureAsTranspiledAway(
+        compiler, root, Feature.LOGICAL_ASSIGNMENT);
   }
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     if (n.isScript()) {
       FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
+      // runs only if logical assignment present
       return scriptFeatures == null || scriptFeatures.contains(Feature.LOGICAL_ASSIGNMENT);
     }
     return true;

@@ -30,7 +30,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.List;
@@ -208,7 +207,7 @@ public final class SourceFileTest {
     assertThat(sourceFileFromFileStringCharset.getCode()).isEqualTo(expectedContent);
 
     // Test SourceFile#fromPath(Path, Charset)
-    Path zipEntryPath = Paths.get(jsZipPath + "!/foo.js");
+    Path zipEntryPath = Path.of(jsZipPath + "!/foo.js");
     SourceFile sourceFileFromPathCharset = SourceFile.fromPath(zipEntryPath, UTF_8);
     assertThat(sourceFileFromPathCharset.getCode()).isEqualTo(expectedContent);
   }
@@ -454,6 +453,23 @@ public final class SourceFileTest {
   }
 
   @Test
+  public void testGetProto_recordsClosureUnawareCodeMark() throws IOException {
+    SourceFile sourceFile = SourceFile.fromCode("file.js", "42");
+    sourceFile.markAsClosureUnawareCode();
+
+    SourceFileProto sourceFileProto = sourceFile.getProto();
+
+    assertThat(sourceFileProto)
+        .isEqualTo(
+            SourceFileProto.newBuilder()
+                .setFilename("file.js")
+                .setPreloadedContents("42")
+                .setIsClosureUnawareCode(true)
+                .setSourceKind(SourceFileProto.SourceKind.CODE)
+                .build());
+  }
+
+  @Test
   public void testGetProto_withGetCodeCalls_andClearCachedSource() throws IOException {
     SourceFile sourceFile = SourceFile.fromCode("file.js", "42");
     var unused = sourceFile.getCode();
@@ -488,6 +504,29 @@ public final class SourceFileTest {
 
     assertThat(sourceFile.getNumLines()).isEqualTo(1);
     assertThat(sourceFile.getNumBytes()).isEqualTo(2);
+  }
+
+  @Test
+  public void testRestoreCachedState_setsClosureUnawareCodeTrue() {
+    SourceFile sourceFile = SourceFile.fromCode("file.js", "42");
+    assertThat(sourceFile.isClosureUnawareCode()).isFalse();
+
+    sourceFile.restoreCachedStateFrom(
+        SourceFileProto.newBuilder().setFilename("file.js").setIsClosureUnawareCode(true).build());
+
+    assertThat(sourceFile.isClosureUnawareCode()).isTrue();
+  }
+
+  @Test
+  public void testRestoreCachedState_setsClosureUnawareCodeFalse_protoIsSourceOfTruth() {
+    SourceFile sourceFile = SourceFile.fromCode("file.js", "42");
+    sourceFile.markAsClosureUnawareCode();
+    assertThat(sourceFile.isClosureUnawareCode()).isTrue();
+
+    sourceFile.restoreCachedStateFrom(
+        SourceFileProto.newBuilder().setFilename("file.js").setIsClosureUnawareCode(false).build());
+
+    assertThat(sourceFile.isClosureUnawareCode()).isFalse();
   }
 
   @Test

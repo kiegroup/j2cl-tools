@@ -31,11 +31,11 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Checks that goog.module() is used correctly.
@@ -182,12 +182,12 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
     private final String name;
     // Mapping from fully qualified goog.required names to the import LHS node.
     // For standalone goog.require()s the value is the EXPR_RESULT node.
-    private final Map<String, Node> importsByLongRequiredName = new HashMap<>();
+    private final Map<String, Node> importsByLongRequiredName = new LinkedHashMap<>();
     // Module-local short names for goog.required symbols.
-    private final Set<String> shortImportNames = new HashSet<>();
+    private final Set<String> shortImportNames = new LinkedHashSet<>();
     // A map from the export names "exports.name" to the nodes of those named exports.
     // The default export is keyed with just "exports"
-    private final Map<String, Node> exportNodesByName = new HashMap<>();
+    private final Map<String, Node> exportNodesByName = new LinkedHashMap<>();
 
     ModuleInfo(String moduleName) {
       this.name = moduleName;
@@ -308,8 +308,24 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
             t.report(n, REFERENCE_TO_MODULE_GLOBAL_NAME);
           }
         } else {
-          checkImproperReferenceToImport(
-              t, n, n.getQualifiedName(), parent.isGetProp() ? parent.getString() : null);
+          if (!parent.isGetProp() && n.isQualifiedName()) {
+            Node node = n;
+
+            while (checkImproperReferenceToImport(
+                t,
+                node,
+                node.getQualifiedName(),
+                node.getParent().isGetProp() ? node.getParent().getString() : null)) {
+              if (node.isName() || !node.hasChildren()) {
+                // Don't get the value of a declaration (i.e. `var name = 2`)
+                return;
+              }
+              node = node.getOnlyChild();
+              if (node == null) {
+                return;
+              }
+            }
+          }
         }
         break;
       default:
@@ -336,9 +352,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
             String qname = node.getString();
             String nextQnamePart = null;
 
-            while (true) {
-              checkImproperReferenceToImport(t, node, qname, nextQnamePart);
-
+            while (checkImproperReferenceToImport(t, node, qname, nextQnamePart)) {
               int lastDot = qname.lastIndexOf('.');
               if (lastDot < 0) {
                 return;
@@ -357,19 +371,22 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
     return v.isLocal();
   }
 
-  private void checkImproperReferenceToImport(
+  /**
+   * @return true if the reference might be valid, false means an error was reported
+   */
+  private boolean checkImproperReferenceToImport(
       NodeTraversal t, Node n, String qname, @Nullable String nextQnamePart) {
     if (qname == null) {
-      return;
+      return true;
     }
 
     Node importLhs = currentModuleInfo.importsByLongRequiredName.get(qname);
     if (importLhs == null) {
-      return;
+      return true;
     }
 
     if (!qname.contains(".") && isLocalVar(t.getScope().getVar(qname))) {
-      return;
+      return true;
     }
 
     if (importLhs.isName()) {
@@ -379,7 +396,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
               REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
               qname,
               importLhs.getString()));
-      return;
+      return false;
     } else if (importLhs.isDestructuringLhs() && nextQnamePart != null) {
       Node objPattern = importLhs.getFirstChild();
       checkState(objPattern.isObjectPattern(), objPattern);
@@ -394,12 +411,21 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
                   REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
                   qname + "." + nextQnamePart,
                   strKey.getFirstChild().getString()));
-          return;
+          return false;
         }
       }
     }
+    if (importLhs.isExprResult() && NodeUtil.isGoogForwardDeclareCall(importLhs.getOnlyChild())) {
+      // goog.forwardDeclare does not need to be aliased.
+      // This is because goog.forwardDeclares that are aliased have stricter semantics than those
+      // that are not aliased: aliased goog.forwardDeclares always need to reference a namespace
+      // that's actually defined, while non-aliased forwardDeclares may reference namespaces that
+      // do not actually exist.
+      return true;
+    }
 
     this.compiler.report(JSError.make(n, REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME, qname));
+    return false;
   }
 
   /** Is this the LHS of a goog.module export? i.e. Either "exports" or "exports.name" */

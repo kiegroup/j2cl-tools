@@ -41,12 +41,12 @@ import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Compiler pass that computes function purity and annotates invocation nodes with those purities.
@@ -85,7 +85,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    *
    * @see {@link AmbiguatedFunctionSummary}
    */
-  private final Map<String, AmbiguatedFunctionSummary> summariesByName = new HashMap<>();
+  private final Map<String, AmbiguatedFunctionSummary> summariesByName = new LinkedHashMap<>();
 
   /**
    * Mapping from function node to summaries for all names associated with that node.
@@ -843,7 +843,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           break;
 
         case DYNAMIC_IMPORT:
-          // Modules may be imported for side-effecfts only. This is frequently
+          // Modules may be imported for side-effects only. This is frequently
           // a pattern used to load polyfills.
           encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
           break;

@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -77,7 +77,6 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
     // ECMASCRIPT5 to trigger module processing after parsing.
     enableCreateModuleMap();
     enableTypeInfoValidation();
-    disableScriptFeatureValidation();
   }
 
   @Override

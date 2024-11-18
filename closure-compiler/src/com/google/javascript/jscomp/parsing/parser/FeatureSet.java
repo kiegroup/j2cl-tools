@@ -85,6 +85,9 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet ES2021 = ES2021_MODULES.without(Feature.MODULES);
 
+  // NOTE: when ES2022 / ES2023 are added, the BROWSER_2024 FeatureSet defined below should be
+  // updated to include them.
+
   // Set of all fully supported features, even those part of language versions not fully supported
   public static final FeatureSet ES_NEXT = ES2021_MODULES.with(LangVersion.ES_NEXT.features());
 
@@ -128,6 +131,10 @@ public final class FeatureSet implements Serializable {
           // we need to change the way that is done to avoid incorrect inclusion of polyfills.
           Feature.REGEXP_LOOKBEHIND);
 
+  // According to https://compat-table.github.io/compat-table/es2016plus/ this should include all
+  // features through ES2023.
+  public static final FeatureSet BROWSER_2024 = ES2021_MODULES;
+
   public static final FeatureSet ALL = ES_UNSUPPORTED.with(LangVersion.TYPESCRIPT.features());
 
   private enum LangVersion {
@@ -159,6 +166,9 @@ public final class FeatureSet implements Serializable {
 
   /** Specific features that can be included in a FeatureSet. */
   public enum Feature {
+    // ES3 features
+    REGEXP_SYNTAX("RegExp syntax", LangVersion.ES3),
+
     // ES5 features
     ES3_KEYWORDS_AS_IDENTIFIERS("ES3 keywords as identifiers", LangVersion.ES5),
     GETTER("getters", LangVersion.ES5),
@@ -202,7 +212,6 @@ public final class FeatureSet implements Serializable {
 
     // ES 2017 features:
     ASYNC_FUNCTIONS("async function", LangVersion.ES2017),
-    TRAILING_COMMA_IN_PARAM_LIST("trailing comma in param list", LangVersion.ES2017),
 
     // ES 2018 adds https://github.com/tc39/proposal-object-rest-spread
     OBJECT_LITERALS_WITH_SPREAD("object literals with spread", LangVersion.ES2018),

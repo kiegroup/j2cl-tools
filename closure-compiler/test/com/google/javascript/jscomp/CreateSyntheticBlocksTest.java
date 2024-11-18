@@ -15,6 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
@@ -22,10 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link CreateSyntheticBlocks}
- *
- */
+/** Tests for {@link CreateSyntheticBlocks} */
 @RunWith(JUnit4.class)
 public final class CreateSyntheticBlocksTest extends CompilerTestCase {
   private static final String START_MARKER = "startMarker";
@@ -62,8 +62,7 @@ public final class CreateSyntheticBlocksTest extends CompilerTestCase {
 
   @Test
   public void testFold1() {
-    test("function f() { if (x) return; y(); }",
-         "function f(){x||y()}");
+    test("function f() { if (x) return; y(); }", "function f(){x||y()}");
   }
 
   @Test
@@ -78,15 +77,17 @@ public final class CreateSyntheticBlocksTest extends CompilerTestCase {
 
   @Test
   public void testFold2() {
-    test("function f() { if (x) return; y(); if (a) return; b(); }",
-         "function f(){if(!x){y();a||b()}}");
+    test(
+        "function f() { if (x) return; y(); if (a) return; b(); }",
+        "function f(){if(!x){y();a||b()}}");
   }
 
   @Test
   public void testFoldWithMarkers2() {
-    testSame("function f(){startMarker(\"FOO\");startMarker(\"BAR\");" +
-             "if(x)return;endMarker(\"BAR\");y();if(a)return;" +
-             "endMarker(\"FOO\");b()}");
+    testSame(
+        "function f(){startMarker(\"FOO\");startMarker(\"BAR\");"
+            + "if(x)return;endMarker(\"BAR\");y();if(a)return;"
+            + "endMarker(\"FOO\");b()}");
   }
 
   @Test
@@ -101,20 +102,17 @@ public final class CreateSyntheticBlocksTest extends CompilerTestCase {
 
   @Test
   public void testUnmatchedEndMarker2() {
-    testError("if(y){startMarker();x()}endMarker()",
-        CreateSyntheticBlocks.UNMATCHED_END_MARKER);
+    testError("if(y){startMarker();x()}endMarker()", CreateSyntheticBlocks.UNMATCHED_END_MARKER);
   }
 
   @Test
   public void testInvalid1() {
-    testError("startMarker() && true",
-        CreateSyntheticBlocks.INVALID_MARKER_USAGE);
+    testError("startMarker() && true", CreateSyntheticBlocks.INVALID_MARKER_USAGE);
   }
 
   @Test
   public void testInvalid2() {
-    testError("false && endMarker()",
-         CreateSyntheticBlocks.INVALID_MARKER_USAGE);
+    testError("false && endMarker()", CreateSyntheticBlocks.INVALID_MARKER_USAGE);
   }
 
   @Test
@@ -137,11 +135,8 @@ public final class CreateSyntheticBlocksTest extends CompilerTestCase {
   public void testArrowFunction() {
     testSame("var y=()=>{startMarker();x();endMarker()}");
     testError(
-        "var y=()=>{startMarker();x();};endMarker()",
-        CreateSyntheticBlocks.UNMATCHED_END_MARKER);
-    testError(
-        "var y=()=>startMarker();",
-        CreateSyntheticBlocks.INVALID_MARKER_USAGE);
+        "var y=()=>{startMarker();x();};endMarker()", CreateSyntheticBlocks.UNMATCHED_END_MARKER);
+    testError("var y=()=>startMarker();", CreateSyntheticBlocks.INVALID_MARKER_USAGE);
   }
 
   @Test
@@ -168,5 +163,17 @@ public final class CreateSyntheticBlocksTest extends CompilerTestCase {
     testSame("startMarker();var x=1;endMarker()");
     testSame("startMarker();let x=1;endMarker()");
     testSame("startMarker();const x=1;endMarker()");
+  }
+
+  @Test
+  public void testSyntheticBlock_doesNotCreateNewScope() {
+    testSame("startMarker();var x=1;endMarker()");
+    Node script = this.getLastCompiler().getJsRoot().getOnlyChild();
+    assertNode(script).isScript();
+    Node synctheticBlock = script.getFirstChild();
+    assertNode(synctheticBlock).isBlock();
+    assertThat(synctheticBlock.isSyntheticBlock()).isTrue();
+    // confirm that synthetic block does not create a new block scope
+    assertThat(NodeUtil.createsBlockScope(synctheticBlock)).isFalse();
   }
 }

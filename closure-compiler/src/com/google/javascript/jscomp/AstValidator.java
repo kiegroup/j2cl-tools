@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.common.collect.ImmutableSet;
@@ -31,7 +32,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSType.Nullability;
 import java.util.Objects;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** This class walks the AST and validates that the structure is correct. */
 public final class AstValidator implements CompilerPass {
@@ -138,6 +139,41 @@ public final class AstValidator implements CompilerPass {
       validateModuleContents(n.getFirstChild());
     } else {
       validateStatements(n.getFirstChild());
+    }
+    if (isScriptFeatureValidationEnabled) {
+      validateScriptFeatureSet(n);
+    }
+  }
+
+  /**
+   * Confirm that every SCRIPT node’s FEATURE_SET <= compiler's allowable featureSet. This is
+   * possbile because with go/accurately-maintain-script-node-featureSet, each transpiler pass
+   * updates script features anytime it updates the compiler's allowable features.
+   */
+  private void validateScriptFeatureSet(Node scriptNode) {
+    if (!scriptNode.isScript()) {
+      violation("Not a script node", scriptNode);
+      // unit tests for this pass perform "Negaive Testing" (i.e pass non-script nodes to {@code
+      // validateScript}) and expect a violation {@code expectInvalid(n, Check.SCRIPT);}
+      // report violation and return here instead of crashing below in {@code
+      // NodeUtil.getFeatureSetofScript}
+      // for test to complete
+      return;
+    }
+    FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(currentScript);
+    FeatureSet allowableFeatures = compiler.getAllowableFeatures();
+    if (scriptFeatures == null || allowableFeatures == null) {
+      return;
+    }
+    if (!allowableFeatures.contains(scriptFeatures)) {
+      if (!scriptNode.isFromExterns()) {
+        // Skip this check for externs because we don't need to complete transpilation on externs,
+        // and currently only transpile externs so that we can typecheck ES6+ features in externs.
+        FeatureSet differentFeatures = scriptFeatures.without(allowableFeatures);
+        violation(
+            "SCRIPT node contains these unallowable features:" + differentFeatures.getFeatures(),
+            currentScript);
+      }
     }
   }
 
@@ -256,7 +292,30 @@ public final class AstValidator implements CompilerPass {
       case NAMESPACE:
         validateNamespace(n, isAmbient);
         return;
+      case MODULE_BODY:
+        // Uncommon case where a module body is not the first child of a script. This may happen in
+        // a specific circumstance where the {@code LateEs6ToEs3Rewriter} pass injects code above a
+        // module body. Valid only when skipNonTranspilationPasses=true and
+        // setWrapGoogModulesForWhitespaceOnly=false
+        // TODO: b/294420383 Ideally the LateEs6ToEs3Rewriter pass should not inject code above the
+        // module body node
+        if (compiler.getOptions().skipNonTranspilationPasses) {
+          if (!compiler.getOptions().wrapGoogModulesForWhitespaceOnly) {
+            validateModuleContents(n);
+            return;
+          }
+        }
+        violation("Expected statement but was " + n.getToken() + ".", n);
+        return;
       default:
+        if (n.isModuleBody() && compiler.getOptions().skipNonTranspilationPasses) {
+          checkState(
+              !compiler.getOptions().wrapGoogModulesForWhitespaceOnly,
+              "Modules can exist in transpiler only if setWrapGoogModulesForWhitespaceOnly is"
+                  + " false");
+          validateModuleContents(n);
+          return;
+        }
         violation("Expected statement but was " + n.getToken() + ".", n);
     }
   }
@@ -506,6 +565,13 @@ public final class AstValidator implements CompilerPass {
    *     a BLOCK or IF)
    */
   private void validateTypeInformation(Node n) {
+    if (n.isClosureUnawareCode()) {
+      // We don't expect closure-unaware code to have type information.
+      // TODO: b/321233583 - Maybe this should be a separate validation step, to ensure that nothing
+      // tries to infer type information where we are mostly unsure of it?
+
+      return;
+    }
     if (typeValidationMode.equals(TypeInfoValidation.NONE)) {
       return;
     }
@@ -1136,9 +1202,6 @@ public final class AstValidator implements CompilerPass {
 
   private void validateParameters(Node n) {
     validateNodeType(Token.PARAM_LIST, n);
-    if (n.hasTrailingComma()) {
-      validateFeature(Feature.TRAILING_COMMA_IN_PARAM_LIST, n);
-    }
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       if (c.isRest()) {
         validateRestParameters(Token.PARAM_LIST, c);
@@ -1168,9 +1231,6 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.CALL, n);
     validateProperties(n);
     validateMinimumChildCount(n, 1);
-    if (n.hasTrailingComma()) {
-      validateFeature(Feature.TRAILING_COMMA_IN_PARAM_LIST, n);
-    }
     Node callee = n.getFirstChild();
     if (callee.isSuper()) {
       validateSuper(callee);
@@ -1189,9 +1249,6 @@ public final class AstValidator implements CompilerPass {
     validateMinimumChildCount(node, 1);
     Node callee = node.getFirstChild();
     validateExpression(callee);
-    if (node.hasTrailingComma()) {
-      validateFeature(Feature.TRAILING_COMMA_IN_PARAM_LIST, node);
-    }
     for (Node argument = callee.getNext(); argument != null; argument = argument.getNext()) {
       validatePseudoExpression(argument, Token.ITER_SPREAD);
     }
@@ -1308,9 +1365,6 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.NEW, n);
     validateProperties(n);
     validateMinimumChildCount(n, 1);
-    if (n.hasTrailingComma()) {
-      validateFeature(Feature.TRAILING_COMMA_IN_PARAM_LIST, n);
-    }
 
     validateExpression(n.getFirstChild());
     for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
@@ -2220,7 +2274,16 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateFeature(Feature feature, Node n) {
-    if (!n.isFromExterns() && !compiler.getFeatureSet().has(feature)) {
+    if (n.isClosureUnawareCode()) {
+      // Closure-unaware code is currently hidden from transpilation passes in the compiler, so it
+      // might still contain features that should have been transpiled.
+      // TODO: b/321233583 - Once JSCompiler can transpile closure-unaware code, remove this
+      // early-return to validate that all closure-unaware code is transpiled properly.
+      return;
+    }
+    FeatureSet allowbleFeatures = compiler.getAllowableFeatures();
+    // Checks that feature present in the AST is recorded in the compiler's featureSet.
+    if (!n.isFromExterns() && !allowbleFeatures.has(feature)) {
       // Skip this check for externs because we don't need to complete transpilation on externs,
       // and currently only transpile externs so that we can typecheck ES6+ features in externs.
       violation("AST should not contain " + feature, n);
@@ -2230,6 +2293,7 @@ public final class AstValidator implements CompilerPass {
       return;
     }
     FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(currentScript);
+    // Checks that feature present in the AST is recorded in the SCRIPT node's featureSet.
     if (scriptFeatures == null || !NodeUtil.getFeatureSetOfScript(currentScript).has(feature)) {
       violation("SCRIPT node should be marked as containing feature " + feature, currentScript);
     }

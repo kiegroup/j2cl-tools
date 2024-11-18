@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -34,7 +33,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A set of utility functions that replaces CALL with a specified FUNCTION body, replacing and
@@ -44,6 +44,7 @@ class FunctionInjector {
 
   /** Sentinel value indicating that the key contains no functions. */
   private static final Node NO_FUNCTIONS = new Node(Token.FUNCTION);
+
   /** Sentinel value indicating that the key contains multiple distinct functions. */
   private static final Node MULTIPLE_FUNCTIONS = new Node(Token.FUNCTION);
 
@@ -168,13 +169,13 @@ class FunctionInjector {
   static class Reference {
     final Node callNode;
     final Scope scope;
-    final JSChunk module;
+    final JSChunk chunk;
     final InliningMode mode;
 
-    Reference(Node callNode, Scope scope, JSChunk module, InliningMode mode) {
+    Reference(Node callNode, Scope scope, JSChunk chunk, InliningMode mode) {
       this.callNode = callNode;
       this.scope = scope;
-      this.module = module;
+      this.chunk = chunk;
       this.mode = mode;
     }
 
@@ -900,7 +901,7 @@ class FunctionInjector {
 
   /** Determine if inlining the function is likely to reduce the code size. */
   boolean inliningLowersCost(
-      JSChunk fnModule,
+      JSChunk fnChunk,
       Node fnNode,
       Collection<? extends Reference> refs,
       Set<String> namesToAlias,
@@ -913,8 +914,8 @@ class FunctionInjector {
 
     int referencesUsingBlockInlining = 0;
 
-    boolean checkModules = isRemovable && fnModule != null;
-    JSChunkGraph moduleGraph = compiler.getModuleGraph();
+    boolean checkModules = isRemovable && fnChunk != null;
+    JSChunkGraph chunkGraph = compiler.getChunkGraph();
 
     for (Reference ref : refs) {
       if (ref.mode == InliningMode.BLOCK) {
@@ -922,8 +923,8 @@ class FunctionInjector {
       }
 
       // Check if any of the references cross the module boundaries.
-      if (checkModules && ref.module != null) {
-        if (ref.module != fnModule && !moduleGraph.dependsOn(ref.module, fnModule)) {
+      if (checkModules && ref.chunk != null) {
+        if (ref.chunk != fnChunk && !chunkGraph.dependsOn(ref.chunk, fnChunk)) {
           // Calculate the cost as if the function were non-removable,
           // if it still lowers the cost inline it.
           isRemovable = false;
@@ -960,7 +961,9 @@ class FunctionInjector {
         isRemovable);
   }
 
-  /** @return Whether inlining will lower cost. */
+  /**
+   * @return Whether inlining will lower cost.
+   */
   private static boolean doesLowerCost(
       Node fnNode,
       int callCost,
@@ -1014,7 +1017,9 @@ class FunctionInjector {
     return callCost;
   }
 
-  /** @return The difference between the function definition cost and inline cost. */
+  /**
+   * @return The difference between the function definition cost and inline cost.
+   */
   private static int inlineCostDelta(Node fnNode, Set<String> namesToAlias, InliningMode mode) {
     // The part of the function that is never inlined:
     //    "function xx(xx,xx){}" (15 + (param count * 3) -1;

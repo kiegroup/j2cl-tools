@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** A simplified version of a Closure or TS type for use by optimizations */
 @AutoValue
@@ -135,7 +135,7 @@ public abstract class Color {
    * "primitive" by this method.
    */
   public final boolean isPrimitive() {
-    /**
+    /*
      * Avoid the design headache about whether unions are primitives. The union *color* isn't
      * primitive, but the *value* held by a union reference may be.
      */
@@ -150,7 +150,7 @@ public abstract class Color {
 
   @Memoized
   public Color subtractNullOrVoid() {
-    /** Avoid defining NULL_OR_VOID.subtract(NULL_OR_VOID) */
+    /* Avoid defining NULL_OR_VOID.subtract(NULL_OR_VOID) */
     checkState(this.isUnion());
 
     if (!this.getUnionElements().contains(StandardColors.NULL_OR_VOID)) {

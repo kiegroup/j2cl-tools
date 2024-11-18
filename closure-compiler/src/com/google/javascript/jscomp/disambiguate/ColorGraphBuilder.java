@@ -28,7 +28,7 @@ import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph.LinkedDiGraphNode;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
 import java.util.Collection;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Builds a graph of the {@link Color}s on the AST from a specified set of seed colors. */
 final class ColorGraphBuilder {
@@ -114,7 +114,7 @@ final class ColorGraphBuilder {
       return;
     }
 
-    /**
+    /*
      * Connect the LCAs to the union.
      *
      * <p>The union itself will be found in most cases, but since we don't add self-edges, that
@@ -165,7 +165,7 @@ final class ColorGraphBuilder {
       }
     }
 
-    /**
+    /*
      * Add all instance and prototype colors when visiting a constructor. We won't necessarily see
      * all possible instance colors that exist at runtime during an AST traversal.
      *

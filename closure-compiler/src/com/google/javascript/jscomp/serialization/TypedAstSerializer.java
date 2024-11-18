@@ -28,15 +28,15 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Transforms a compiler AST into a serialized TypedAst object. */
 @GwtIncompatible("protobuf.lite")
@@ -104,6 +104,7 @@ final class TypedAstSerializer {
     }
 
     return builder
+        .addAllRuntimeLibraryToInject(serializationMode.getRuntimeLibraries())
         .setTypePool(typeSerializer.generateTypePool())
         .setStringPool(this.stringPool.build().toProto())
         .setSourceFilePool(sourceFiles)
@@ -625,10 +626,11 @@ final class TypedAstSerializer {
   /** Used when the AST's JSTypes have not been converted to Colors */
   private static class JSTypeSerializer implements TypeSerializer {
     // Everything is pre-calculated with this form of serialization.
-    private final IdentityHashMap<JSType, Integer> typesToPointers;
+    private final LinkedIdentityHashMap<JSType, Integer> typesToPointers;
     private final TypePool typePool;
 
-    private JSTypeSerializer(IdentityHashMap<JSType, Integer> typesToPointers, TypePool typePool) {
+    private JSTypeSerializer(
+        LinkedIdentityHashMap<JSType, Integer> typesToPointers, TypePool typePool) {
       this.typesToPointers = typesToPointers;
       this.typePool = typePool;
     }

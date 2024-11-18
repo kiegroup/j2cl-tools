@@ -73,6 +73,11 @@ Animation.prototype.cancel = function() {};
 /**
  * @return {undefined}
  */
+Animation.prototype.commitStyles = function() {};
+
+/**
+ * @return {undefined}
+ */
 Animation.prototype.finish = function() {};
 
 /**
@@ -130,11 +135,21 @@ Animation.prototype.timeline;
 var AnimationEffect = function() {};
 
 /**
+ * [MDN Reference](https://developer.mozilla.org/en-US/docs/Web/API/AnimationEffect/getTiming)
+ * @return {!AnimationEffectTimingProperties}
+ */
+AnimationEffect.prototype.getTiming = function() {};
+
+/**
+ * [MDN Reference](https://developer.mozilla.org/en-US/docs/Web/API/AnimationEffect/getComputedTiming)
  * @return {!ComputedTimingProperties}
  */
 AnimationEffect.prototype.getComputedTiming = function() {};
 
-/** @param {AnimationEffectTimingProperties=} timing */
+/**
+ * [MDN Reference](https://developer.mozilla.org/en-US/docs/Web/API/AnimationEffect/updateTiming)
+ * @param {AnimationEffectTimingProperties=} timing
+ */
 AnimationEffect.prototype.updateTiming = function(timing) {};
 
 /** @type {!AnimationEffectTiming} */
@@ -165,6 +180,58 @@ KeyframeEffectReadOnly.prototype.timing;
  */
 var KeyframeEffect = function(target, frames, options) {};
 
+/**
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/KeyframeEffect/getKeyframes)
+ * @public
+ * @return {!Array<!ComputedKeyframe>}
+ */
+KeyframeEffect.prototype.getKeyframes = function() {};
+
+/**
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/KeyframeEffect/setKeyframes)
+ * @public
+ * @param {(null|!PropertyIndexedKeyframes|!Array<!Keyframe>)} keyframes
+ * @return {void}
+ */
+KeyframeEffect.prototype.setKeyframes = function(keyframes) {};
+
+/**
+ * @record
+ */
+var ComputedKeyframe = function() {};
+
+/** @type {string} */
+ComputedKeyframe.prototype.composite;
+/** @type {number} */
+ComputedKeyframe.prototype.computedOffset;
+/** @type {string} */
+ComputedKeyframe.prototype.easing;
+/** @type {(null|number)} */
+ComputedKeyframe.prototype.offset;
+
+/**
+ * @record
+ */
+var PropertyIndexedKeyframes = function() {};
+
+/** @type {(undefined|string|!Array<string>)} */
+PropertyIndexedKeyframes.prototype.composite;
+/** @type {(undefined|string|!Array<string>)} */
+PropertyIndexedKeyframes.prototype.easing;
+/** @type {(undefined|number|!Array<(null|number)>)} */
+PropertyIndexedKeyframes.prototype.offset;
+
+/**
+ * @record
+ */
+var Keyframe = function() {};
+
+/** @type {(undefined|string)} */
+Keyframe.prototype.composite;
+/** @type {(undefined|string)} */
+Keyframe.prototype.easing;
+/** @type {(undefined|null|number)} */
+Keyframe.prototype.offset;
 
 /**
  * @record

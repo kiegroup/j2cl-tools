@@ -187,7 +187,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testFunctionTrailingComma() {
-    expectFeatures(Feature.TRAILING_COMMA_IN_PARAM_LIST);
     parse("var f = function(x,y,z,) {}");
     parse("function f(x,y,z,) {}");
   }
@@ -208,7 +207,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testCallTrailingComma() {
-    expectFeatures(Feature.TRAILING_COMMA_IN_PARAM_LIST);
     parse("f(x,y,z,);");
   }
 
@@ -3701,6 +3699,24 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertThat(n.getJSDocInfo()).isNotNull();
     assertThat(n.getFirstChild().getJSDocInfo()).isNull();
     assertThat(n.getJSDocInfo().getFileOverview()).isEqualTo("Hi mom!");
+  }
+
+  @Test
+  public void testFileOverviewJSDoc_notOnTopOfFile() {
+    isIdeMode = true;
+
+    Node n = parse("// some comment \n let x; /** @fileoverview Hi mom! */ class Foo {}");
+    assertNode(n).hasType(Token.SCRIPT);
+    assertThat(n.getJSDocInfo()).isNotNull();
+    assertThat(n.getJSDocInfo().getFileOverview()).isEqualTo("Hi mom!");
+
+    Node letNode = n.getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+    assertThat(letNode.getJSDocInfo()).isNull();
+
+    Node classNode = n.getSecondChild();
+    assertNode(classNode).hasType(Token.CLASS);
+    assertThat(classNode.getJSDocInfo()).isNull();
   }
 
   @Test

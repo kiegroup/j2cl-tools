@@ -77,6 +77,7 @@ MediaSettingsRange.prototype.step;
  * @interface
  * @see https://www.w3.org/TR/mediacapture-streams/#idl-def-MediaTrackCapabilities
  * @see https://w3c.github.io/mediacapture-image/#mediatrackcapabilities-section
+ * @see https://www.w3.org/TR/screen-capture
  */
 function MediaTrackCapabilities() {}
 
@@ -158,8 +159,19 @@ MediaTrackCapabilities.prototype.zoom
 /** @type {boolean} */
 MediaTrackCapabilities.prototype.torch
 
+/** @type {string|undefined} */
+MediaTrackCapabilities.prototype.displaySurface;
+
+/** @type {boolean|undefined} */
+MediaTrackCapabilities.prototype.logicalSurface;
+
+/** @type {Array<string>} */
+MediaTrackCapabilities.prototype.cursor;
+
 /**
  * @interface
+ * @see https://www.w3.org/TR/screen-capture
+ * @see https://www.w3.org/TR/screen-capture/#extensions-to-mediatracksettings
  * @see https://www.w3.org/TR/mediacapture-streams/#media-track-settings
  * @see https://w3c.github.io/mediacapture-image/#mediatracksettings-section
  */
@@ -182,6 +194,21 @@ MediaTrackSettings.prototype.facingMode;
 
 /** @type {string} */
 MediaTrackSettings.prototype.resizeMode;
+
+/** @type {string|undefined} */
+MediaTrackSettings.prototype.displaySurface;
+
+/** @type {boolean|undefined} */
+MediaTrackSettings.prototype.logicalSurface;
+
+/** @type {string|undefined} */
+MediaTrackSettings.prototype.cursor;
+
+/** @type {boolean|undefined} */
+MediaTrackSettings.prototype.restrictOwnAudio;
+
+/** @type {boolean|undefined} */
+MediaTrackSettings.prototype.suppressLocalAudioPlayback;
 
 /** @type {number} */
 MediaTrackSettings.prototype.volume;
@@ -256,6 +283,8 @@ MediaTrackSettings.prototype.torch
 /**
  * @interface
  * @see https://w3c.github.io/mediacapture-main/#media-track-supported-constraints
+ * @see https://w3c.github.io/mediacapture-screen-share/#extensions-to-mediatracksupportedconstraints
+ * @see https://www.w3.org/TR/screen-capture
  */
 function MediaTrackSupportedConstraints() {}
 
@@ -307,10 +336,24 @@ MediaTrackSupportedConstraints.prototype.deviceId;
 /** @type {boolean|undefined} */
 MediaTrackSupportedConstraints.prototype.groupId;
 
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.displaySurface;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.logicalSurface;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.cursor;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.restrictOwnAudio;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.suppressLocalAudioPlayback;
 
 /**
- * @interface
- * @extends {EventTarget}
+ * @constructor
+ * @implements {EventTarget}
  * @see https://www.w3.org/TR/mediacapture-streams/#mediastreamtrack
  */
 function MediaStreamTrack() {}
@@ -353,7 +396,7 @@ MediaStreamTrack.prototype.contentHint;
 MediaStreamTrack.prototype.remote;
 
 /**
- * @type {MediaStreamTrackState}
+ * @const {!MediaStreamTrackState}
  * Read only.
  */
 MediaStreamTrack.prototype.readyState;
@@ -406,6 +449,20 @@ MediaStreamTrack.prototype.getConstraints = function() {};
 
 /** @return {!MediaTrackSettings} */
 MediaStreamTrack.prototype.getSettings = function() {};
+
+/** @override */
+MediaStreamTrack.prototype.addEventListener = function(
+    type, listener, opt_options) {};
+
+/** @override */
+MediaStreamTrack.prototype.removeEventListener = function(
+    type, listener, opt_options) {};
+
+/**
+ * @override
+ * @return {boolean}
+ */
+MediaStreamTrack.prototype.dispatchEvent = function(evt) {};
 
 /**
  * @typedef {{track: MediaStreamTrack}}
@@ -547,6 +604,21 @@ MediaStream.prototype.onremovetrack;
  * @return {undefined}
  */
 MediaStream.prototype.stop = function() {};
+
+/**
+ * @param {string} constraint
+ * @param {string=} message
+ * @constructor
+ * @extends {Error}
+ * @see https://www.w3.org/TR/mediacapture-streams/#overconstrainederror-interface
+ */
+function OverconstrainedError(constraint, message) {}
+
+/**
+ * @const {string}
+ * Read only.
+ */
+OverconstrainedError.prototype.constraint;
 
 /**
  * @typedef {{tone: string}}
@@ -1161,6 +1233,8 @@ var ConstrainLong;
 
 /**
  * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-mediatrackconstraintset
+ * @see https://w3c.github.io/mediacapture-screen-share/#extensions-to-mediatrackconstraintset
+ * @see https://www.w3.org/TR/screen-capture
  * @record
  */
 function MediaTrackConstraintSet() {}
@@ -1245,6 +1319,20 @@ MediaTrackConstraintSet.prototype.volume;
  */
 MediaTrackConstraintSet.prototype.width;
 
+/** @type {ConstrainDOMString|undefined} */
+MediaTrackConstraintSet.prototype.displaySurface;
+
+/** @type {ConstrainBoolean|undefined} */
+MediaTrackConstraintSet.prototype.logicalSurface;
+
+/** @type {ConstrainDOMString|undefined} */
+MediaTrackConstraintSet.prototype.cursor;
+
+/** @type {ConstrainBoolean|undefined} */
+MediaTrackConstraintSet.prototype.restrictOwnAudio;
+
+/** @type {ConstrainBoolean|undefined} */
+MediaTrackConstraintSet.prototype.suppressLocalAudioPlayback;
 
 /**
  * @record
@@ -1320,13 +1408,13 @@ DisplayMediaStreamOptions.prototype.controller;
 DisplayMediaStreamOptions.prototype.selfBrowserSurface;
 
 /**
- * @see https://w3c.github.io/mediacapture-screen-share/#dom-systemaudiopreferenceenum
+ * @see https://w3c.github.io/mediacapture-screen-share/#dom-surfaceswitchingpreferenceenum
  * @type {string|undefined}
  */
 DisplayMediaStreamOptions.prototype.surfaceSwitching;
 
 /**
- * @see https://w3c.github.io/mediacapture-screen-share/#dom-surfaceswitchingpreferenceenum
+ * @see https://w3c.github.io/mediacapture-screen-share/#dom-systemaudiopreferenceenum
  * @type {string|undefined}
  */
 DisplayMediaStreamOptions.prototype.systemAudio;
@@ -2457,10 +2545,20 @@ RTCInboundRtpStreamStats.prototype.totalSamplesDuration;
 /** @const {number|undefined} */
 RTCInboundRtpStreamStats.prototype.framesReceived;
 
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.freezeCount;
+
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.totalFreezesDuration;
+
 /** @const {string|undefined} */
 RTCInboundRtpStreamStats.prototype.decoderImplementation;
 
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.framesAssembledFromMultiplePackets;
 
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.totalAssemblyTime;
 
 /**
  * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcremoteinboundrtpstreamstats
@@ -3243,9 +3341,37 @@ var RTCDataChannelInitDictionary_;
 var RTCDataChannelInit;
 
 /**
- * @typedef {{expires: number}}
+ * @interface
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcdtlsfingerprint
  */
-var RTCCertificate;
+function RTCDtlsFingerprint() {}
+
+/** @const {string|undefined} */
+RTCDtlsFingerprint.prototype.algorithm;
+
+/** @const {string|undefined} */
+RTCDtlsFingerprint.prototype.value;
+
+/**
+ * @interface
+ * @see https://www.w3.org/TR/webrtc/#dom-rtccertificate
+ */
+function RTCCertificate() {}
+
+/** @const {number} */
+RTCCertificate.prototype.expires;
+
+/** @return {!Array<!RTCDtlsFingerprint>} */
+RTCCertificate.prototype.getFingerprints = function() {};
+
+/**
+ * @interface
+ * @see https://www.w3.org/TR/webrtc/#dom-rtccertificateexpiration
+ */
+function RTCCertificateExpiration() {}
+
+/** @const {number|undefined} */
+RTCCertificateExpiration.prototype.expires;
 
 /**
  * @record
@@ -3273,7 +3399,9 @@ RTCOfferOptions.prototype.offerToReceiveVideo;
 function RTCPeerConnection(configuration, constraints) {}
 
 /**
- * @param {Object} keygenAlgorithm
+ * TODO(b/240494860): Reference webCrypto.AlgorithmIdentifier instead of using
+ * Object.
+ * @param {!webCrypto.AlgorithmIdentifier|!RTCCertificateExpiration} keygenAlgorithm
  * @return {Promise<RTCCertificate>}
  */
 RTCPeerConnection.generateCertificate = function(keygenAlgorithm) {};
@@ -3629,3 +3757,43 @@ RTCErrorEvent.prototype.error;
 
 /** @const {string} */
 RTCErrorEvent.prototype.message;
+
+/**
+ * @template T
+ * @record
+ * @struct
+ */
+function MediaStreamTrackProcessor() {}
+
+/** @const {!ReadableStream<T>} */
+MediaStreamTrackProcessor.prototype.readable;
+
+/**
+ * @typedef {{kind: string}}
+ * @see https://alvestrand.github.io/mediacapture-transform/chrome-96.html#generator
+ */
+var MediaStreamTrackGeneratorInit;
+
+/**
+ * @template T
+ * @param {!MediaStreamTrackGeneratorInit} kind
+ * @extends {MediaStreamTrack}
+ * @constructor
+ */
+function MediaStreamTrackGenerator(kind) {}
+
+/** @const {!WritableStream<T>} */
+MediaStreamTrackGenerator.prototype.writable;
+
+/** @const {!ReadableStream} */
+MediaStreamTrackGenerator.prototype.readableControl;
+
+/**
+ * @type {?function(!MediaStreamTrackEvent)}
+ */
+MediaStreamTrackGenerator.prototype.onaddtrack;
+
+/**
+ * @type {?function(!MediaStreamTrackEvent)}
+ */
+MediaStreamTrackGenerator.prototype.onremovetrack;

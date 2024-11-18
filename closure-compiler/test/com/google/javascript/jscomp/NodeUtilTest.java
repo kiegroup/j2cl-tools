@@ -79,7 +79,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
@@ -1822,6 +1822,41 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getNumberValue(parseExpr("x.y"))).isNull();
       assertThat(NodeUtil.getNumberValue(parseExpr("1/2"))).isNull();
       assertThat(NodeUtil.getNumberValue(parseExpr("1-2"))).isNull();
+
+      assertThat(NodeUtil.getNumberValue(parseExpr("[1]"))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("{}"))).isNaN();
+    }
+
+    @Test
+    public void testGetNumberValueNoConversions() {
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("''"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("``"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("true"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("false"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("null"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("[1]"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("{}"))).isNull();
+
+      // Literals
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("1"))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("1n"))).isEqualTo(null);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("-1"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("+1"))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("22"))).isEqualTo(22.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("022"))).isEqualTo(18.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("0x22"))).isEqualTo(34.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("-0.1"))).isEqualTo(-0.1);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("-0.0"))).isEqualTo(-0.0);
+
+      // BITNOT
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~1"))).isEqualTo(-2.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~-1"))).isEqualTo(0.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~22"))).isEqualTo(-23.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~022"))).isEqualTo(-19.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~0.0"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~0.1"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~NaN"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~Infinity"))).isEqualTo(-1.0);
     }
 
     @Test
@@ -2482,6 +2517,31 @@ public final class NodeUtilTest {
       assertThat(functionIsRValueOfAssign("x = y ? x : function() {};")).isFalse();
     }
 
+    @Test
+    public void testGetRValueOfLValueInObjectLiteral() {
+      Node scriptNode = parse("var x = {[computedProp] : 5};");
+      Node computedProp =
+          scriptNode
+              .getFirstChild() // VAR
+              .getFirstChild() // x = {...}
+              .getFirstChild() // {...}
+              .getFirstChild(); // [computedProp] : 5
+      checkState(computedProp.isComputedProp(), computedProp);
+      assertNode(NodeUtil.getRValueOfLValue(computedProp)).hasType(Token.NUMBER);
+    }
+
+    @Test
+    public void testGetRValueOfLValueFromClass() {
+      Node scriptNode = parse("class Foo { ['computedField'] = 5}");
+      Node computedField =
+          scriptNode
+              .getFirstChild() // CLASS
+              .getLastChild() // CLASS_MEMBERS  { ['computedField'] = 5}
+              .getFirstChild(); // COMPUTED_FIELD_DEF  ['computedField'] = 5
+      checkState(computedField.isComputedFieldDef(), computedField);
+      assertNode(NodeUtil.getRValueOfLValue(computedField)).hasType(Token.NUMBER);
+    }
+
     /**
      * When the left side is a destructuring pattern, generally it's not possible to identify the
      * RHS for a specific name on the LHS.
@@ -2666,6 +2726,164 @@ public final class NodeUtilTest {
     }
 
     @Test
+    public void testGetBestJsDocInfoNodeStrict_declaredName_doesNotThrow() {
+      Node aName = parse("/** some */ let A;").getFirstFirstChild();
+      assertThat(aName.isName()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(aName);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(aName.getParent())).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(aName);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(aName.getParent())).isTrue();
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_classDeclaration_doesNotThrow() {
+      Node classNode = parse("/** some */ class A {}").getFirstChild();
+      assertThat(classNode.isClass()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(classNode);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(classNode)).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(classNode);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(classNode)).isTrue();
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_rhsNamedClassExpression_doesNotThrow() {
+      Node constNode = parse("/** some */ const x = class A {}").getFirstChild();
+      Node xName = constNode.getFirstChild();
+      Node classNode = xName.getFirstChild();
+      assertThat(classNode.isClass()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(classNode);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(constNode)).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(classNode);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(constNode)).isTrue();
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_rhsUnnamedClassExpression_throws() {
+      Node constNode = parse("/** some */ const x = class {}").getFirstChild();
+      Node xName = constNode.getFirstChild();
+      Node classNode = xName.getFirstChild();
+      assertThat(classNode.isClass()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(classNode);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(constNode)).isTrue();
+
+      // check that the strict version rejects an unnamed class expression
+      IllegalStateException e =
+          assertThrows(
+              IllegalStateException.class, () -> NodeUtil.getBestJsDocInfoNodeStrict(classNode));
+      assertThat(e).hasMessageThat().contains("Not allowed to get JSDocInfo node for node");
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_rhsClassName_doesNotThrow() {
+      Node constNode = parse("/** some */ const x = class A {}").getFirstChild();
+      Node xName = constNode.getFirstChild();
+      Node classNode = xName.getFirstChild();
+      assertThat(classNode.isClass()).isTrue();
+      Node className = classNode.getFirstChild();
+      assertThat(className.isName()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(className);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(constNode)).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(className);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(constNode)).isTrue();
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_rhsNamedFunctionExpression_doesNotThrow() {
+      Node constNode = parse("/** some */ const x = function A() {}").getFirstChild();
+      Node xName = constNode.getFirstChild();
+      Node functionNode = xName.getFirstChild();
+      assertThat(functionNode.isFunction()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(functionNode);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(constNode)).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(functionNode);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(constNode)).isTrue();
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_exportedFunction_doesNotThrow() {
+      Node exportNode = parse("/** some */ export function A() {}").getFirstFirstChild();
+      assertThat(exportNode.isExport()).isTrue();
+      Node functionNode = exportNode.getFirstChild();
+      assertThat(functionNode.isFunction()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(functionNode);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      // JSDoc gets attached to the children of export nodes, and there are no warnings.
+      // See https://github.com/google/closure-compiler/issues/781
+      // Hence, the best JSDocInfo node is the function node itself when the search is starting from
+      // it.
+      assertThat(bestJsDocInfoNode.equals(functionNode)).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(functionNode);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(functionNode)).isTrue();
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_exportNode_doesNotThrow() {
+      Node exportNode = parse("/** some */ export function A() {}").getFirstFirstChild();
+      assertThat(exportNode.isExport()).isTrue();
+      Node functionNode = exportNode.getFirstChild();
+      assertThat(functionNode.isFunction()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(exportNode);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(exportNode)).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(exportNode);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(exportNode)).isTrue();
+    }
+
+    @Test
+    public void testGetBestJsDocInfoNodeStrict_rhsFunctionName_doesNotThrow() {
+      Node constNode = parse("/** some */ const x = function A() {}").getFirstChild();
+      Node xName = constNode.getFirstChild();
+      Node functionNode = xName.getFirstChild();
+      assertThat(functionNode.isFunction()).isTrue();
+      Node functionName = functionNode.getFirstChild();
+      assertThat(functionName.isName()).isTrue();
+
+      Node bestJsDocInfoNode = NodeUtil.getBestJSDocInfoNode(functionName);
+      assertThat(bestJsDocInfoNode).isNotNull();
+      assertThat(bestJsDocInfoNode.equals(constNode)).isTrue();
+
+      // check that the strict version returns the same node
+      Node bestJsDocInfoNodeStrict = NodeUtil.getBestJsDocInfoNodeStrict(functionName);
+      assertThat(bestJsDocInfoNodeStrict).isNotNull();
+      assertThat(bestJsDocInfoNodeStrict.equals(constNode)).isTrue();
+    }
+
+    @Test
     public void testIsConstantDeclaration() {
       assertIsConstantDeclaration(false, parse("var x = 1;").getFirstFirstChild());
       assertIsConstantDeclaration(false, parse("let x = 1;").getFirstFirstChild());
@@ -2685,6 +2903,8 @@ public final class NodeUtilTest {
       assertIsConstantDeclaration(true, getNameNodeFrom("const {b: a} = {};", "a"));
       assertIsConstantDeclaration(true, getNameNodeFrom("const {[3]: a} = {};", "a"));
       assertIsConstantDeclaration(true, getNameNodeFrom("const {a: [a]} = {};", "a"));
+      assertIsConstantDeclaration(
+          true, getNameNodeFrom("/** @const */ var x = function a() {};", "a"));
 
       assertIsConstantDeclaration(false, getNameNodeFrom("var FOO = 1;", "FOO"));
 
@@ -3564,6 +3784,9 @@ public final class NodeUtilTest {
 
       classNode = parseFirst(CLASS, "/** @export */ var Foo = class Bar {}");
       assertThat(NodeUtil.getBestJSDocInfo(classNode).isExport()).isTrue();
+
+      classNode = parseFirst(CLASS, "var Foo_1; /** @export */ let Foo = Foo_1 = class Foo {}");
+      assertThat(NodeUtil.getBestJSDocInfo(classNode).isExport()).isTrue();
     }
 
     @Test
@@ -3725,7 +3948,7 @@ public final class NodeUtilTest {
       Scope blockScope = scopeCreator.createScope(block, moduleScope);
 
       assertThat(NodeUtil.getGoogRequireInfo("Foo", moduleScope))
-          .isEqualTo(GoogRequire.fromNamespace("d.Foo"));
+          .isEqualTo(GoogRequire.fromNamespace("d.Foo", true));
       assertThat(NodeUtil.getGoogRequireInfo("Foo", blockScope)).isNull();
     }
 
@@ -4064,6 +4287,30 @@ public final class NodeUtilTest {
     }
 
     @Test
+    public void testCallTargetNodeResolution_qualifiedName() {
+      assertThat(
+              NodeUtil.getCallTargetResolvingIndirectCalls(parse("foo()").getFirstFirstChild())
+                  .matchesQualifiedName("foo")) // matches `foo`
+          .isTrue();
+
+      assertThat(
+              NodeUtil.getCallTargetResolvingIndirectCalls(
+                      parse("a.b.c.foo()").getFirstFirstChild())
+                  .matchesQualifiedName("a.b.c.foo"))
+          .isTrue();
+    }
+
+    @Test
+    public void testCallTargetNodeResolution_notAQualifiedName() {
+      Node script = parse("({valueOf: () => {}}.valueOf());");
+      assertThat(script.isScript()).isTrue();
+      Node callNode = script.getFirstFirstChild();
+      assertThat(callNode.isCall()).isTrue();
+      assertThat(NodeUtil.getCallTargetResolvingIndirectCalls(callNode).isQualifiedName())
+          .isFalse();
+    }
+
+    @Test
     public void testIsGoogModuleGetCall() {
       Node root = parse("const Foo = goog.module.get('a.b.c.Foo');");
       Node call = root.getFirstChild().getFirstChild().getFirstChild();
@@ -4379,15 +4626,51 @@ public final class NodeUtilTest {
     }
 
     @Test
-    public void addFeatureToScriptUpdatesCompilerFeatureSet() {
+    public void prohibitAddingNonAllowableFeatureToScriptExceptModules() {
       Node scriptNode = parse("");
       Compiler compiler = new Compiler();
-      compiler.setFeatureSet(FeatureSet.BARE_MINIMUM);
+      compiler.setAllowableFeatures(FeatureSet.BARE_MINIMUM);
       NodeUtil.addFeatureToScript(scriptNode, Feature.MODULES, compiler);
 
+      // Adding MODULES to the script featureSet is okay, any other feature isn't
       assertThat(NodeUtil.getFeatureSetOfScript(scriptNode))
           .isEqualTo(FeatureSet.BARE_MINIMUM.with(Feature.MODULES));
-      assertFS(compiler.getFeatureSet()).equals(FeatureSet.BARE_MINIMUM.with(Feature.MODULES));
+      assertFS(compiler.getAllowableFeatures())
+          .equals(FeatureSet.BARE_MINIMUM.with(Feature.MODULES));
+
+      compiler.setAllowableFeatures(FeatureSet.BARE_MINIMUM); // reset
+      assertThrows(
+          IllegalStateException.class,
+          () -> NodeUtil.addFeatureToScript(scriptNode, Feature.LET_DECLARATIONS, compiler));
+    }
+
+    @Test
+    public void removeFeatureFromAllScriptUpdatesCompilerFeatureSet() {
+      Node rootNode = IR.root();
+      rootNode.addChildToFront(parse(""));
+      Compiler compiler = new Compiler();
+      compiler.setAllowableFeatures(FeatureSet.ES2020);
+      assertFS(compiler.getAllowableFeatures()).equals(FeatureSet.ES2020);
+
+      NodeUtil.removeFeatureFromAllScripts(rootNode, Feature.LET_DECLARATIONS, compiler);
+      assertFS(compiler.getAllowableFeatures())
+          .equals(FeatureSet.ES2020.without(Feature.LET_DECLARATIONS));
+    }
+
+    @Test
+    public void removeFeatureSetFromAllScriptUpdatesCompilerFeatureSet() {
+      Node rootNode = IR.root();
+      rootNode.addChildToFront(parse(""));
+      Compiler compiler = new Compiler();
+      compiler.setAllowableFeatures(FeatureSet.ES2020);
+      assertFS(compiler.getAllowableFeatures()).equals(FeatureSet.ES2020);
+
+      NodeUtil.removeFeaturesFromAllScripts(
+          rootNode,
+          FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS, Feature.CONST_DECLARATIONS),
+          compiler);
+      assertFS(compiler.getAllowableFeatures())
+          .equals(FeatureSet.ES2020.without(Feature.LET_DECLARATIONS, Feature.CONST_DECLARATIONS));
     }
 
     /**
@@ -4438,13 +4721,13 @@ public final class NodeUtilTest {
             {
               "goog.module('a.b.c'); const {Bar} = goog.require('d.Foo');",
               "Bar",
-              GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar")
+              GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar", true)
             },
             {"goog.module('a.b.c'); const {Bar} = goog.require('d.Foo');", "Foo", null},
             {
               "goog.module('a.b.c'); const {Bar: BarLocal} = goog.require('d.Foo');",
               "BarLocal",
-              GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar")
+              GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar", true)
             },
             {
               "goog.module('a.b.c'); const {Bar: BarLocal} =" + " goog.require('d.Foo');",
@@ -4454,22 +4737,22 @@ public final class NodeUtilTest {
             {
               "goog.module('a.b.c'); const Foo = goog.require('d.Foo');",
               "Foo",
-              GoogRequire.fromNamespace("d.Foo")
+              GoogRequire.fromNamespace("d.Foo", true)
             },
             {
               "goog.module('a.b.c'); const dFoo = goog.require('d.Foo');",
               "dFoo",
-              GoogRequire.fromNamespace("d.Foo")
+              GoogRequire.fromNamespace("d.Foo", true)
             },
             {
               "goog.module('a.b.c'); const Foo = goog.requireType('d.Foo');",
               "Foo",
-              GoogRequire.fromNamespace("d.Foo")
+              GoogRequire.fromNamespace("d.Foo", false)
             },
             {
               "goog.module('a.b.c'); const {Bar} = goog.requireType('d.Foo');",
               "Bar",
-              GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar")
+              GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar", false)
             },
             // Test that non-requires just return null.
             {"goog.module('a.b.c'); let Foo;", "Foo", null},
@@ -4572,7 +4855,7 @@ public final class NodeUtilTest {
                                 });
                           })));
 
-      /**
+      /*
        * Add a few cases using `super` to check it behaves the same.
        *
        * <p>These aren't exhaustive becuase it's hard to construct valid strings that use `super`.

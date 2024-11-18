@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.OptionalChainRewriter.TmpVarNameCreator;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.function.Function;
@@ -54,9 +53,8 @@ final class RewriteOptionalChainingOperator implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseRoots(compiler, new ArrowRewriteCallBack(), externs, root);
     NodeTraversal.traverseRoots(compiler, new TranspilationCallback(), externs, root);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, Feature.OPTIONAL_CHAINING);
+    TranspilationPasses.maybeMarkFeatureAsTranspiledAway(compiler, root, Feature.OPTIONAL_CHAINING);
   }
 
   /** Locates and transpiles all optional chains. */
@@ -71,6 +69,7 @@ final class RewriteOptionalChainingOperator implements CompilerPass {
         // Set the TmpVarNameCreator to be used when rewriting optional chains in this script.
         rewriterBuilder.setTmpVarNameCreator(getTmpVarNameCreatorForInput.apply(t.getInput()));
         FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
+        // ensures that the pass early exits if script does not contain the feature
         return scriptFeatures == null || scriptFeatures.contains(Feature.OPTIONAL_CHAINING);
       }
       return true;
@@ -89,43 +88,6 @@ final class RewriteOptionalChainingOperator implements CompilerPass {
             optChain.rewrite();
           }
           optChains.clear();
-        }
-      }
-    }
-  }
-
-  /**
-   * Optional chaining rewriting declares new variables within the enclosing scope of the chain.
-   * This callback makes arrow functions have a block around the body to prevent new declarations
-   * from leaking into the higher scope.
-   */
-  //  TODO(b/197349249) Rewriting arrows would become unnecessary if this pass ran normalized.
-  private class ArrowRewriteCallBack implements NodeTraversal.Callback {
-
-    @Override
-    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      if (n.isScript()) {
-        FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
-        return scriptFeatures == null || scriptFeatures.contains(Feature.OPTIONAL_CHAINING);
-      }
-      return true;
-    }
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!NodeUtil.isEndOfFullOptChain(n)) {
-        return;
-      }
-      Node arrowOrBlock =
-          NodeUtil.getEnclosingNode(n, (node) -> node.isArrowFunction() || node.isBlock());
-      if (arrowOrBlock != null && arrowOrBlock.isArrowFunction()) {
-        if (!NodeUtil.getFunctionBody(arrowOrBlock).isBlock()) {
-          // create a block around the arrow function body.
-          Node returnValue = NodeUtil.getFunctionBody(arrowOrBlock);
-          Node body = IR.block(IR.returnNode(returnValue.detach()));
-          body.srcrefTreeIfMissing(returnValue);
-          arrowOrBlock.addChildToBack(body);
-          compiler.reportChangeToEnclosingScope(body);
         }
       }
     }

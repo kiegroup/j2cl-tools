@@ -12,17 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//:bazel/expand_template_with_defines.bzl", "expand_template_with_defines")
-load("//:bazel/oss_java_library.bzl", "oss_java_library")
-load("//:bazel/sonatype_artifact_bundle.bzl", "sonatype_artifact_bundle")
-load("//:bazel/typedast.bzl", "typedast")
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@google_bazel_common//testing:test_defs.bzl", "gen_java_tests")
 
 # Produce an unshaded export jar based on :compiler_lib
 load("@rules_jvm_external//:defs.bzl", "java_export")
+load("//:bazel/expand_template_with_defines.bzl", "expand_template_with_defines")
+load("//:bazel/oss_java_library.bzl", "oss_java_library")
+load("//:bazel/sonatype_artifact_bundle.bzl", "sonatype_artifact_bundle")
+load("//:bazel/typedast.bzl", "typedast")
 
 package(licenses = ["notice"])
+
+exports_files([
+    "LICENSE",
+])
 
 filegroup(
     name = "sonatype_bundles",
@@ -81,16 +85,44 @@ jar_jar(
 java_binary(
     name = "compiler_uberjar",
     main_class = "com.google.javascript.jscomp.CommandLineRunner",
+    resources = [
+        ":LICENSE",
+    ],
     runtime_deps = [":compiler_lib"],
 )
 
 version = "$(COMPILER_VERSION)" or "1.0-SNAPSHOT"
+
+genrule(
+    name = "third_party_licenses_genrule",
+    srcs = [
+        "//license_check:THIRD_PARTY_NOTICES",
+    ],
+    outs = [
+        "THIRD_PARTY_NOTICES",
+    ],
+    cmd = "cp $(location //license_check:THIRD_PARTY_NOTICES) $(location THIRD_PARTY_NOTICES)",
+)
 
 java_export(
     name = "compiler_unshaded",
     maven_coordinates = "com.google.javascript:closure-compiler-unshaded:{0}".format(version),
     pom_template = "maven/closure-compiler-unshaded.pom.xml.tpl",
     runtime_deps = [
+        "//:compiler_unshaded_lib",
+    ],
+)
+
+java_library(
+    name = "compiler_unshaded_lib",
+    srcs = [
+        ":CommandLineRunnerVersion",
+    ],
+    resources = [
+        ":LICENSE",
+        ":THIRD_PARTY_NOTICES",
+    ],
+    deps = [
         "//:compiler_lib",
     ],
 )
@@ -115,8 +147,8 @@ java_library(
 java_library(
     name = "compiler_lib",
     resources = [
-        "src/com/google/javascript/jscomp/js/polyfills.txt",
-        ":runtime_lib_typedast_srcs",
+        ":src/java/com/google/javascript/jscomp/js/polyfills.txt",
+        ":runtime_libs_srcs",
         ":runtime_libs_typedast",
     ],
     exports = [":compiler_lib_no_runtime_libs"],
@@ -124,12 +156,22 @@ java_library(
 
 typedast(
     name = "runtime_libs_typedast",
-    srcs = [":runtime_lib_typedast_srcs"],
+    srcs = [":runtime_libs_srcs"],
     compiler = ":compiler_unshaded_no_runtime_libs",
 )
 
+genrule(
+    name = "gen_polyfill_table",
+    srcs = [":runtime_libs_srcs"],
+    outs = ["src/java/com/google/javascript/jscomp/js/polyfills.txt"],
+    cmd = "node $(location src/com/google/javascript/jscomp/js/build_polyfill_table.js) $(SRCS) | sed 's,[^ ]*jscomp/js/,,g' > $@",
+    tools = [
+        "src/com/google/javascript/jscomp/js/build_polyfill_table.js",
+    ],
+)
+
 filegroup(
-    name = "runtime_lib_typedast_srcs",
+    name = "runtime_libs_srcs",
     srcs = glob(
         ["src/com/google/javascript/jscomp/js/**/*.js"],
         exclude = [
@@ -141,6 +183,10 @@ filegroup(
 java_binary(
     name = "compiler_unshaded_no_runtime_libs",
     main_class = "com.google.javascript.jscomp.CommandLineRunner",
+    resources = [
+        ":LICENSE",
+        ":THIRD_PARTY_NOTICES",
+    ],
     runtime_deps = [":compiler_lib_no_runtime_libs"],
 )
 
@@ -152,6 +198,8 @@ oss_java_library(
             "-target 11",
         ],
         resources = [
+            ":LICENSE",
+            ":THIRD_PARTY_NOTICES",
             ":externs_zip",
         ] + glob([
             "src/**/*.properties",
@@ -180,16 +228,16 @@ oss_java_library(
             "//src/com/google/javascript/jscomp/conformance:conformance_java_proto",
             "//src/com/google/javascript/jscomp/instrumentation/reporter/proto:profile_java_proto",
             "//src/com/google/javascript/rhino/typed_ast:typed_ast_java_proto",
-            "@args4j_args4j",
-            "@com_google_code_gson_gson",
-            "@com_google_errorprone_error_prone_annotations",
-            "@com_google_guava_failureaccess//jar",
-            "@com_google_guava_guava//jar",
-            "@com_google_re2j_re2j",
             "@google_bazel_common//third_party/java/auto:value",
+            "@maven//:args4j_args4j",
+            "@maven//:com_google_code_gson_gson",
+            "@maven//:com_google_errorprone_error_prone_annotations",
+            "@maven//:com_google_guava_failureaccess",
+            "@maven//:com_google_guava_guava",
             "@maven//:com_google_protobuf_protobuf_java",
-            "@org_apache_ant_ant",
-            "@org_jspecify_jspecify",
+            "@maven//:com_google_re2j_re2j",
+            "@maven//:org_apache_ant_ant",
+            "@maven//:org_jspecify_jspecify",
         ],
     ),
 )
@@ -247,23 +295,23 @@ gen_java_tests(
         "//src/com/google/javascript/jscomp/conformance:conformance_java_proto",
         "//src/com/google/javascript/jscomp/instrumentation/reporter/proto:profile_java_proto",
         "//src/com/google/javascript/rhino/typed_ast:typed_ast_java_proto",
-        "@args4j_args4j",
-        "@com_google_code_gson_gson",
-        "@com_google_errorprone_error_prone_annotations",
-        "@com_google_guava_failureaccess//jar",
-        "@com_google_guava_guava//jar",
-        "@com_google_guava_guava_testlib//jar",
-        "@com_google_jimfs_jimfs",
-        "@com_google_re2j_re2j",
-        "@com_google_truth_extensions_truth_liteproto_extension",
-        "@com_google_truth_extensions_truth_proto_extension",
         "@google_bazel_common//third_party/java/auto:value",
         "@google_bazel_common//third_party/java/junit",
         "@google_bazel_common//third_party/java/mockito",
         "@google_bazel_common//third_party/java/truth",
-        "@io_github_java_diff_utils_java_diff_utils",
+        "@maven//:args4j_args4j",
+        "@maven//:com_google_code_gson_gson",
+        "@maven//:com_google_errorprone_error_prone_annotations",
+        "@maven//:com_google_guava_failureaccess",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_guava_guava_testlib",
+        "@maven//:com_google_jimfs_jimfs",
         "@maven//:com_google_protobuf_protobuf_java",
-        "@org_jspecify_jspecify",
+        "@maven//:com_google_re2j_re2j",
+        "@maven//:com_google_truth_extensions_truth_liteproto_extension",
+        "@maven//:com_google_truth_extensions_truth_proto_extension",
+        "@maven//:io_github_java_diff_utils_java_diff_utils",
+        "@maven//:org_jspecify_jspecify",
     ],
 )
 

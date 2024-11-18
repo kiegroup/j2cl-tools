@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
@@ -29,11 +30,11 @@ import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.GoogleCodingConvention;
 import com.google.javascript.jscomp.JSError;
-import com.google.javascript.jscomp.PolymerExportPolicy;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -54,28 +55,48 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());
+    options.setClosurePass(true);
     return options;
   }
 
   private void addPolymerExterns() {
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
-    externsList.addAll(externs);
     externsList.add(
-        SourceFile.fromCode(
-            "polymer_externs.js",
-            lines(
-                "/** @return {function(new: PolymerElement)} */",
-                "var Polymer = function(descriptor) {};",
+        new TestExternsBuilder()
+            .addObject()
+            .addClosureExterns()
+            .addPolymer()
+            .addExtra(
+                "/**",
+                " * @see"
+                    + " https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry",
+                " * @constructor",
+                " */",
+                "function CustomElementRegistry() {}",
                 "",
-                "/** @constructor @extends {HTMLElement} */",
-                "var PolymerElement = function() {};",  // Polymer 1
+                "/**",
+                " * @param {string} tagName",
+                " * @param {function(new:HTMLElement)} klass",
+                " * @param {{extends: string}=} options",
+                " * @return {undefined}",
+                " */",
+                "CustomElementRegistry.prototype.define = function (tagName, klass, options) {};",
                 "",
-                "/** @constructor @extends {HTMLElement} */",
-                "Polymer.Element = function() {};",  // Polymer 2
+                "/**",
+                " * @param {string} tagName",
+                " * @return {function(new:HTMLElement)|undefined}",
+                " */",
+                "CustomElementRegistry.prototype.get = function(tagName) {};",
                 "",
-                "/** @typedef {Object} */",
-                "let PolymerElementProperties;",
-                "")));
+                "/**",
+                " * @param {string} tagName",
+                " * @return {!Promise<undefined>}",
+                " */",
+                "CustomElementRegistry.prototype.whenDefined = function(tagName) {};",
+                "",
+                "/** @type {!CustomElementRegistry} */",
+                "var customElements;")
+            .buildExternsFile("polymer_externs.js"));
     externs = externsList.build();
   }
 
@@ -103,16 +124,18 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "});",
             "})();"),
         lines(
+            "var $jscomp = $jscomp || {};",
+            "$jscomp.scope = {};",
+            "$jscomp.reflectObject = function(type, object) { return object; };",
             "var XFooElement=function(){};",
             "var MyTypedef;",
             "(function(){",
             "XFooElement.prototype.value;",
             "Polymer({",
-            "is:'x-foo',",
-            "properties: {",
-            "value:string}",
-            "}",
-            ")",
+            "  is:'x-foo',",
+            "  properties: $jscomp.reflectObject(XFooElement, {",
+            "    value:string})",
+            "  });",
             "})()"));
   }
 
@@ -125,9 +148,9 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
     options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setRemoveUnusedPrototypeProperties(true);
-    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
+    options.setGeneratePseudoNames(true); // to make the expected output easier to follow
     addPolymerExterns();
 
     test(
@@ -145,13 +168,19 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "",
             "const obj = {randomProperty: 0, otherProperty: 1};"),
         EMPTY_JOINER.join(
-            "var a=function(){};",
+            "var $$jscomp$$ = $$jscomp$$ || {};",
+            "$$jscomp$$.scope = {};",
+            "$$jscomp$$.$reflectObject$ = function($type$$, $object$$) { return $object$$; };",
+            "var $FooElement$$ = function(){};",
             "(function(){",
-            "a.prototype.value;",
-            "Polymer({",
-            "a:\"foo\",",
-            "c:{value:Object}})})();",
-            "var b={randomProperty:0,b:1};"));
+            "  $FooElement$$.prototype.value;",
+            "  Polymer({",
+            "    $is$:\"foo\",",
+            "    $properties$: $$jscomp$$.$reflectObject$($FooElement$$, {value:Object})",
+            "  });",
+            "})();",
+            // Note that randomProperty is not renamed (no '$' added) while otherProperty is
+            "var $obj$$ = {randomProperty:0, $otherProperty$: 1};"));
   }
 
   @Test
@@ -163,9 +192,9 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
     options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setRemoveUnusedPrototypeProperties(true);
-    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
+    options.setGeneratePseudoNames(true); // to make the expected output easier to follow
     addPolymerExterns();
 
     test(
@@ -183,12 +212,19 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "",
             "const obj = {randomProperty: 0, otherProperty: 1};"),
         EMPTY_JOINER.join(
-            "var a=function(){};",
-            "(function(){a.prototype.value;",
-            "Polymer({",
-            "a:\"foo\",",
-            "c:{value:Object}})})();",
-            "var b={randomProperty:0,b:1};"));
+            "var $$jscomp$$ = $$jscomp$$ || {};",
+            "$$jscomp$$.scope = {};",
+            "$$jscomp$$.$reflectObject$ = function($type$$, $object$$) { return $object$$; };",
+            "var $FooElement$$ = function(){};",
+            "(function(){",
+            "  $FooElement$$.prototype.value;",
+            "  Polymer({",
+            "    $is$:\"foo\",",
+            "    $properties$: $$jscomp$$.$reflectObject$($FooElement$$, {value:Object})",
+            "  });",
+            "})();",
+            // Note that randomProperty is not renamed (no '$' added) while otherProperty is
+            "var $obj$$ = {randomProperty:0, $otherProperty$: 1};"));
   }
 
   @Test
@@ -215,11 +251,17 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "});",
             "})();"),
         lines(
+            "var $jscomp = $jscomp || {};",
+            "$jscomp.scope = {};",
+            "$jscomp.reflectObject = function(type, object) { return object; };",
             "var XFooElement=function(){};",
             "(function(){",
             "XFooElement.prototype.value;",
             "var localTypeDef;",
-            "Polymer({is:'x-foo',properties:{value:string}})})()"));
+            "Polymer({",
+            "  is:'x-foo',",
+            "  properties: $jscomp.reflectObject(XFooElement, {value:string})",
+            "})})()"));
   }
 
   @Test
@@ -245,10 +287,16 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "});",
             "})();"),
         lines(
+            "var $jscomp = $jscomp || {};",
+            "$jscomp.scope = {};",
+            "$jscomp.reflectObject = function(type, object) { return object; };",
             "var XFooElement=function(){};",
             "(function(){",
             "XFooElement.prototype.value;",
-            "Polymer({is:'x-foo',properties:{value:string}})})()"));
+            "Polymer({",
+            "  is:'x-foo',",
+            "  properties: $jscomp.reflectObject(XFooElement, {value:string}) })",
+            "})()"));
   }
 
   @Test
@@ -276,11 +324,17 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "},",
             "});"),
         lines(
+            "var $jscomp = $jscomp || {};",
+            "$jscomp.scope = {};",
+            "$jscomp.reflectObject = function(type, object) { return object; };",
             "var module$exports$a={};",
             "var module$contents$a_MyTypedef;",
             "var XFooElement=function(){};",
             "XFooElement.prototype.value;",
-            "Polymer({is:\"x-foo\",properties:{value:number}})"));
+            "Polymer({",
+            "is:\"x-foo\",",
+            "properties: $jscomp.reflectObject(XFooElement, {value:number})",
+            "})"));
   }
 
   @Test
@@ -458,91 +512,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     testNoWarnings(options, "const Foo = Polymer({ is: 'x-foo' });");
   }
 
-  private void addPolymer2Externs() {
-    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
-    externsList.addAll(externs);
-
-    externsList.add(
-        SourceFile.fromCode(
-            "polymer_externs.js",
-            lines(
-                "",
-                "/**",
-                " * @param {!Object} init",
-                " * @return {!function(new:HTMLElement)}",
-                " */",
-                "function Polymer(init) {}",
-                "",
-                "Polymer.ElementMixin = function(mixin) {}",
-                "",
-                "/** @typedef {!Object} */",
-                "var PolymerElementProperties;",
-                "",
-                "/** @interface */",
-                "function Polymer_ElementMixin() {}",
-                "/** @type {string} */",
-                "Polymer_ElementMixin.prototype._importPath;",
-
-                "",
-                "/**",
-                "* @interface",
-                "* @extends {Polymer_ElementMixin}",
-                "*/",
-                "function Polymer_LegacyElementMixin(){}",
-                "/** @type {boolean} */",
-                "Polymer_LegacyElementMixin.prototype.isAttached;",
-
-                "/**",
-                " * @constructor",
-                " * @extends {HTMLElement}",
-                " * @implements {Polymer_LegacyElementMixin}",
-                " */",
-                "var PolymerElement = function() {};",
-
-                ""
-                )));
-
-    externsList.add(
-        SourceFile.fromCode(
-            "html5.js",
-            lines(
-                "/** @constructor */",
-                "function Element() {}",
-                "",
-                "/**",
-                " * @see"
-                    + " https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry",
-                " * @constructor",
-                " */",
-                "function CustomElementRegistry() {}",
-                "",
-                "/**",
-                " * @param {string} tagName",
-                " * @param {function(new:HTMLElement)} klass",
-                " * @param {{extends: string}=} options",
-                " * @return {undefined}",
-                " */",
-                "CustomElementRegistry.prototype.define = function (tagName, klass, options) {};",
-                "",
-                "/**",
-                " * @param {string} tagName",
-                " * @return {function(new:HTMLElement)|undefined}",
-                " */",
-                "CustomElementRegistry.prototype.get = function(tagName) {};",
-                "",
-                "/**",
-                " * @param {string} tagName",
-                " * @return {!Promise<undefined>}",
-                " */",
-                "CustomElementRegistry.prototype.whenDefined = function(tagName) {};",
-                "",
-                "/** @type {!CustomElementRegistry} */",
-                "var customElements;",
-                "")));
-
-    externs = externsList.build();
-  }
-
   // Regression test for b/77650996
   @Test
   public void testPolymer2b() {
@@ -550,7 +519,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    addPolymer2Externs();
+    addPolymerExterns();
 
     test(
         options,
@@ -579,17 +548,10 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
               "   * @extends {HTMLElement}",
               "   */",
               "  const Element = Polymer.ElementMixin(HTMLElement);",
-              "",
-              "  /**",
-              "   * @constructor",
-              "   * @implements {Polymer_ElementMixin}",
-              "   * @extends {HTMLElement}",
-              "   */",
-              "  Polymer.Element = Element;",
               "})();",
               ""),
         },
-        (String []) null);
+        (String[]) null);
   }
 
   @Test
@@ -598,15 +560,12 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    addPolymer2Externs();
+    addPolymerExterns();
 
     test(
         options,
         new String[] {
-          lines(
-              "Polymer({",
-              "  is: 'paper-button'",
-              "});"),
+          lines("Polymer({", "  is: 'paper-button'", "});"),
           lines(
               "(function() {",
               "  /**",
@@ -618,17 +577,10 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
               "   * @extends {HTMLElement}",
               "   */",
               "  const Element = Polymer.ElementMixin(HTMLElement);",
-              "",
-              "  /**",
-              "   * @constructor",
-              "   * @implements {Polymer_ElementMixin}",
-              "   * @extends {HTMLElement}",
-              "   */",
-              "  Polymer.Element = Element;",
               "})();",
               ""),
         },
-        (String []) null);
+        (String[]) null);
   }
 
   @Test
@@ -639,13 +591,14 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymerExterns();
 
-    Compiler compiler = compile(
-        options,
-        lines(
-            "class XFoo extends Polymer.Element {",
-            "  get is() { return 'x-foo'; }",
-            "  static get properties() { return {}; }",
-            "}"));
+    Compiler compiler =
+        compile(
+            options,
+            lines(
+                "class XFoo extends Polymer.Element {",
+                "  get is() { return 'x-foo'; }",
+                "  static get properties() { return {}; }",
+                "}"));
     assertThat(compiler.getErrors()).isEmpty();
     assertThat(compiler.getWarnings()).isEmpty();
   }
@@ -743,10 +696,8 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
     addPolymerExterns();
 
-    options.setRenamingPolicy(
-        VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setRemoveUnusedPrototypeProperties(true);
-    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
 
@@ -787,8 +738,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setRemoveUnusedPrototypeProperties(true);
     options.setRemoveUnusedVariables(Reach.ALL);
-    options.setRemoveDeadCode(true);
-    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
 
@@ -823,11 +772,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    // By setting the EXPORT_ALL export policy, all properties will be added to an interface that
-    // is injected into the externs. We need to make sure the types of the properties on this
-    // interface aligns with the types we declared in the constructor, or else we'll get an error.
-    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
-    addPolymer2Externs();
+    addPolymerExterns();
 
     Compiler compiler =
         compile(
@@ -878,5 +823,57 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     assertThat(warnings).hasSize(1);
     JSError warning = warnings.get(0);
     assertThat(warning.getNode().getString()).isEqualTo("p1");
+  }
+
+  @Test
+  public void testDisambiguationForPolymerElementProperties() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setPolymerVersion(2);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDisambiguateProperties(true);
+    options.setGeneratePseudoNames(true);
+    addPolymerExterns();
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(
+                new TestExternsBuilder()
+                    .addString()
+                    .addConsole()
+                    .buildExternsFile("extra_externs.js"))
+            .build();
+
+    String fooElement =
+        lines(
+            "const FooElement = Polymer({",
+            "  is: \"foo-element\",",
+            "  properties: {",
+            "    longUnusedProperty: String,",
+            "  },",
+            "  longUnusedMethod: function() {",
+            "    return this.longUnusedProperty;",
+            "  },",
+            "});",
+            "class Other { longUnusedProperty() {} }",
+            "console.log(new Other().longUnusedProperty());");
+    test(
+        options,
+        new String[] {fooElement, "function unused() { console.log(FooElement); }"},
+        new String[] {
+          lines(
+              "Polymer({",
+              "  $is$: 'foo-element',",
+              // Ensure the compiler doesn't rename the references to longUnusedProperty here and in
+              // longUnusedMethod. They may be referenced from templates or computed property
+              // definitions. It's ok to disambiguate/rename the longUnusedProperty method on the
+              // `class Other {` though.
+              "  $properties$: { longUnusedProperty: String },",
+              "  longUnusedMethod: function(){ return this.longUnusedProperty; }",
+              "});",
+              "console.log(void 0);"),
+          ""
+        });
   }
 }

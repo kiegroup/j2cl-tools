@@ -76,13 +76,13 @@ import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The type registry is used to resolve named types.
@@ -106,40 +106,36 @@ public final class JSTypeRegistry {
 
   private static final String I_OBJECT_ELEMENT_TEMPLATE = "IOBJECT_VALUE";
 
-  /** The template variable corresponding to the VALUE type in {@code Iterable<VALUE>} */
-  private TemplateType iterableTemplate;
-
-  /** The template variable corresponding to the VALUE type in {@code IteratorIterable<T>} */
-  private TemplateType iteratorIterableTemplateKey;
+  /** The template variable corresponding to the T type in {@code Iterable<T, TReturn, TNext>} */
+  private TemplateType iterableValueTemplate;
 
   /**
-   * The template variable corresponding to the VALUE type in {@code Iterator<VALUE,
-   * UNUSED_RETURN_T, UNUSED_NEXT_T>}
+   * The template variable corresponding to the T type in {@code IteratorIterable<T, TReturn,
+   * TNext>}
    */
+  private TemplateType iteratorIterableValueTemplate;
+
+  /** The template variable corresponding to the T type in {@code Iterator<T, TReturn, TNext>}. */
   private TemplateType iteratorValueTemplate;
 
-  /** The template variable corresponding to the VALUE type in {@code IIterableResult<VALUE>} */
-  private TemplateType iiterableResultTemplate;
+  /** The template variable corresponding to the TYield type in {@code IIterableResult<TYield>} */
+  private TemplateType iiterableResultValueTemplate;
 
-  /** The template variable corresponding to the VALUE type in {@code AsyncIterable<VALUE>} */
-  private TemplateType asyncIterableTemplate;
+  /**
+   * The template variable corresponding to the T type in {@code AsyncIterable<T, TReturn, TNext>}
+   */
+  private TemplateType asyncIterableValueTemplate;
 
-  /** The template variable corresponding to the VALUE type in {@code AsyncIterator<VALUE>} */
+  /**
+   * The template variable corresponding to the T type in {@code AsyncIterator<T, TReturn, TNext>}
+   */
   private TemplateType asyncIteratorValueTemplate;
 
-  /**
-   * The template variable corresponding to the VALUE type in {@code Generator<VALUE,
-   * UNUSED_RETURN_T, UNUSED_NEXT_T>}
-   */
+  /** The template variable corresponding to the T type in {@code Generator<T, TReturn, TNext>} */
   private TemplateType generatorValueTemplate;
 
-  /**
-   * The template variable corresponding to the VALUE type in {@code AsyncGenerator<VALUE,
-   * UNUSED_RETURN_T, UNUSED_NEXT_T>}
-   */
-  private TemplateType asyncGeneratorValueTemplate;
-
-  /** The template variable corresponding to the VALUE type in {@code IThenable<VALUE>} */
+  /** The template variable corresponding to the TYPE type in {@code IThenable<TYPE>} */
+  /** The template variable corresponding to the TYPE type in {@code IThenable<TYPE>} */
   private TemplateType iThenableTemplateKey;
 
   /** The template variable corresponding to the TYPE in {@code Promise<TYPE>} */
@@ -150,6 +146,18 @@ public final class JSTypeRegistry {
 
   /** The template variable in {@code ReadonlyArray<T>}. */
   private TemplateType readonlyArrayElementTemplateKey;
+
+  /** The key variable in {@code ReadonlyMap<K, V>}. */
+  private TemplateType readonlyMapKeyTemplateKey;
+
+  /** The value variable in {@code ReadonlyMap<K, V>}. */
+  private TemplateType readonlyMapValueTemplateKey;
+
+  /** The key variable in {@code Map<K, V>}. */
+  private TemplateType mapKeyTemplateKey;
+
+  /** The value variable in {@code Map<K, V>}. */
+  private TemplateType mapValueTemplateKey;
 
   @Deprecated public static final String OBJECT_ELEMENT_TEMPLATE = I_OBJECT_ELEMENT_TEMPLATE;
 
@@ -168,7 +176,7 @@ public final class JSTypeRegistry {
   private final Table<Node, String, JSType> scopedNameTable = HashBasedTable.create();
 
   // Only needed for type resolution at the moment
-  private final transient Map<String, ClosureNamespace> closureNamespaces = new HashMap<>();
+  private final transient Map<String, ClosureNamespace> closureNamespaces = new LinkedHashMap<>();
 
   // NOTE: This would normally be "static final" but that causes unit test failures
   // when serializing and deserializing compiler state for multistage builds.
@@ -215,8 +223,8 @@ public final class JSTypeRegistry {
   // consider it to possibly have any property in droppedPropertiesOfUnions. This is a loose
   // check, but we restrict it to records that may be present in unions, and it allows us to
   // keep nonRefTypesIndexedByProperty small.
-  private final Set<String> propertiesOfSupertypesInUnions = new HashSet<>();
-  private final Set<String> droppedPropertiesOfUnions = new HashSet<>();
+  private final Set<String> propertiesOfSupertypesInUnions = new LinkedHashSet<>();
+  private final Set<String> droppedPropertiesOfUnions = new LinkedHashSet<>();
 
   // A map of properties to each reference type on which those properties have been declared.
   private final SetMultimap<String, ObjectType> eachRefTypeIndexedByProperty =
@@ -263,6 +271,16 @@ public final class JSTypeRegistry {
     return readonlyArrayElementTemplateKey;
   }
 
+  /** Returns the template variable for the key type of ReadonlyMaps. */
+  public TemplateType getReadonlyMapKey() {
+    return readonlyMapKeyTemplateKey;
+  }
+
+  /** Returns the template variable for the value type of ReadonlyMaps. */
+  public TemplateType getReadonlyMapValue() {
+    return readonlyMapValueTemplateKey;
+  }
+
   /**
    * @return The template variable corresponding to the property value type for Javascript Objects
    *     and Arrays.
@@ -280,40 +298,34 @@ public final class JSTypeRegistry {
     return iObjectIndexTemplateKey;
   }
 
-  /**
-   * @return The template variable for the Iterable interface.
-   */
-  public TemplateType getIterableTemplate() {
-    return checkNotNull(iterableTemplate);
+  /** Returns the value template variable for the Iterable interface. */
+  public TemplateType getIterableValueTemplate() {
+    return checkNotNull(iterableValueTemplate);
   }
 
-  /**
-   * @return The template variable for the IteratorIterable interface.
-   */
-  public TemplateType getIteratorIterableTemplateKey() {
-    return checkNotNull(iteratorIterableTemplateKey);
+  /** Returns the value template variable for the IteratorIterable interface. */
+  public TemplateType getIteratorIterableValueTemplate() {
+    return checkNotNull(iteratorIterableValueTemplate);
   }
 
-  /**
-   * @return The template variable for the IteratorIterable interface.
-   */
-  public TemplateType getIIterableResultTemplateKey() {
-    return checkNotNull(iiterableResultTemplate);
+  /** Returns the value template variable for the IIterableResult interface. */
+  public TemplateType getIIterableResultValueTemplate() {
+    return checkNotNull(iiterableResultValueTemplate);
   }
 
-  /** Return the value template variable for the Iterator interface. */
+  /** Returns the value template variable for the Iterator interface. */
   public TemplateType getIteratorValueTemplate() {
     return checkNotNull(iteratorValueTemplate);
   }
 
-  /** Return the value template variable for the Generator interface. */
+  /** Returns the value template variable for the Generator interface. */
   public TemplateType getGeneratorValueTemplate() {
     return checkNotNull(generatorValueTemplate);
   }
 
   /** Returns the template variable for the AsyncIterable interface. */
-  public TemplateType getAsyncIterableTemplate() {
-    return checkNotNull(asyncIterableTemplate);
+  public TemplateType getAsyncIterableValueTemplate() {
+    return checkNotNull(asyncIterableValueTemplate);
   }
 
   /** Returns the template variable for the AsyncIterator interface. */
@@ -375,35 +387,26 @@ public final class JSTypeRegistry {
     registerNativeType(JSTypeNative.ALL_TYPE, allType);
 
     // Template Types
+    // These should match the template type name in externs files.
     iObjectIndexTemplateKey = new TemplateType(this, "IOBJECT_KEY");
     iObjectElementTemplateKey = new TemplateType(this, I_OBJECT_ELEMENT_TEMPLATE);
-    // These should match the template type name in externs files.
+
+    // Array-related template types.
     TemplateType iArrayLikeTemplate = new TemplateType(this, "VALUE2");
     arrayElementTemplateKey = new TemplateType(this, "T");
     readonlyArrayElementTemplateKey = new TemplateType(this, "T");
-    iteratorValueTemplate = new TemplateType(this, "VALUE");
-    // TODO(b/142881197): start using these unused iterator (and related type) template params
-    // https://github.com/google/closure-compiler/issues/3489
-    TemplateType iteratorReturnTemplate = new TemplateType(this, "UNUSED_RETURN_T");
-    TemplateType iteratorNextTemplate = new TemplateType(this, "UNUSED_NEXT_T");
-    iiterableResultTemplate = new TemplateType(this, "VALUE");
-    asyncIteratorValueTemplate = new TemplateType(this, "VALUE");
-    TemplateType asyncIteratorReturnTemplate = new TemplateType(this, "UNUSED_RETURN_T");
-    TemplateType asyncIteratorNextTemplate = new TemplateType(this, "UNUSED_NEXT_T");
-    TemplateType asyncIteratorIterableTemplate = new TemplateType(this, "VALUE");
-    generatorValueTemplate = new TemplateType(this, "VALUE");
-    TemplateType generatorReturnTemplate = new TemplateType(this, "UNUSED_RETURN_T");
-    TemplateType generatorNextTemplate = new TemplateType(this, "UNUSED_NEXT_T");
-    asyncGeneratorValueTemplate = new TemplateType(this, "VALUE");
-    TemplateType asyncGeneratorReturnTemplate = new TemplateType(this, "UNUSED_RETURN_T");
-    TemplateType asyncGeneratorNextTemplate = new TemplateType(this, "UNUSED_NEXT_T");
-    iterableTemplate = new TemplateType(this, "VALUE");
-    iteratorIterableTemplateKey = new TemplateType(this, "T");
-    asyncIterableTemplate = new TemplateType(this, "VALUE");
+
+    // Map-related template types.
+    readonlyMapKeyTemplateKey = new TemplateType(this, "K");
+    readonlyMapValueTemplateKey = new TemplateType(this, "V");
+    mapKeyTemplateKey = new TemplateType(this, "K");
+    mapValueTemplateKey = new TemplateType(this, "V");
+
+    // Promise-related template types.
     iThenableTemplateKey = new TemplateType(this, "TYPE");
     promiseTemplateKey = new TemplateType(this, "TYPE");
 
-    /**
+    /*
      * The default implicit prototype of all functions, as well as the ".prototype" field of
      * `(typeof Function)`.
      *
@@ -420,7 +423,7 @@ public final class JSTypeRegistry {
             .build();
     registerNativeType(JSTypeNative.FUNCTION_PROTOTYPE, functionPrototype);
 
-    /**
+    /*
      * The ".prototype" property of the type `Function`.
      *
      * <p>So named because `Function` constructs `?`s. This type is not particularly interesting,
@@ -434,7 +437,7 @@ public final class JSTypeRegistry {
             .build();
     registerNativeType(JSTypeNative.FUNCTION_INSTANCE_PROTOTYPE, functionInstancePrototype);
 
-    /**
+    /*
      * `Function`
      *
      * <p>The default implicit prototype of all `FunctionType`s is `functionPrototype`.
@@ -451,7 +454,7 @@ public final class JSTypeRegistry {
     functionType.setPrototype(functionInstancePrototype, null);
     registerNativeType(JSTypeNative.FUNCTION_TYPE, functionType);
 
-    /**
+    /*
      * `(typeof Function)`
      *
      * <p>The default implict prototype of all `FunctionType`s is `functionPrototype`.
@@ -509,14 +512,22 @@ public final class JSTypeRegistry {
     NoObjectType noObjectType = new NoObjectType(this);
     registerNativeType(JSTypeNative.NO_OBJECT_TYPE, noObjectType);
 
-    NoResolvedType noResolvedType = new NoResolvedType(this);
-    registerNativeType(JSTypeNative.NO_RESOLVED_TYPE, noResolvedType);
+    // TODO(b/142881197): start using unused iterator (and related type) template params
+    // https://github.com/google/closure-compiler/issues/3489
 
-    FunctionType iterableFunctionType = nativeInterface("Iterable", iterableTemplate);
+    iterableValueTemplate = new TemplateType(this, "T");
+    TemplateType iterableReturnTemplate = new TemplateType(this, "TReturn");
+    TemplateType iterableNextTemplate = new TemplateType(this, "TNext");
+    FunctionType iterableFunctionType =
+        nativeInterface(
+            "Iterable", iterableValueTemplate, iterableReturnTemplate, iterableNextTemplate);
     registerNativeType(JSTypeNative.ITERABLE_FUNCTION_TYPE, iterableFunctionType);
     ObjectType iterableType = iterableFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.ITERABLE_TYPE, iterableType);
 
+    iteratorValueTemplate = new TemplateType(this, "T");
+    TemplateType iteratorReturnTemplate = new TemplateType(this, "TReturn");
+    TemplateType iteratorNextTemplate = new TemplateType(this, "TNext");
     FunctionType iteratorFunctionType =
         nativeInterface(
             "Iterator", iteratorValueTemplate, iteratorReturnTemplate, iteratorNextTemplate);
@@ -524,18 +535,26 @@ public final class JSTypeRegistry {
     ObjectType iteratorType = iteratorFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.ITERATOR_TYPE, iteratorType);
 
+    iteratorIterableValueTemplate = new TemplateType(this, "T");
+    TemplateType iteratorIterableReturnTemplate = new TemplateType(this, "TReturn");
+    TemplateType iteratorIterableNextTemplate = new TemplateType(this, "TNext");
     FunctionType iteratorIterableFunctionType =
-        nativeInterface("IteratorIterable", iteratorIterableTemplateKey);
+        nativeInterface(
+            "IteratorIterable",
+            iteratorIterableValueTemplate,
+            iteratorIterableReturnTemplate,
+            iteratorIterableNextTemplate);
     registerNativeType(JSTypeNative.ITERATOR_ITERABLE_FUNCTION_TYPE, iteratorIterableFunctionType);
     iteratorIterableFunctionType.setExtendedInterfaces(
         ImmutableList.of(
-            createTemplatizedType(iterableType, iteratorIterableTemplateKey),
-            createTemplatizedType(iteratorType, iteratorIterableTemplateKey)));
+            createTemplatizedType(iterableType, iteratorIterableValueTemplate),
+            createTemplatizedType(iteratorType, iteratorIterableValueTemplate)));
     ObjectType iteratorIterableType = iteratorIterableFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.ITERATOR_ITERABLE_TYPE, iteratorIterableType);
 
+    iiterableResultValueTemplate = new TemplateType(this, "TYield");
     FunctionType iiterableResultFunctionType =
-        nativeInterface("IIterableResult", iiterableResultTemplate);
+        nativeInterface("IIterableResult", iiterableResultValueTemplate);
     registerNativeType(JSTypeNative.I_ITERABLE_RESULT_FUNCTION_TYPE, iiterableResultFunctionType);
     ObjectType iiterableResultType = iiterableResultFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.I_ITERABLE_RESULT_TYPE, iiterableResultType);
@@ -580,6 +599,9 @@ public final class JSTypeRegistry {
     registerNativeType(
         JSTypeNative.I_TEMPLATE_ARRAY_TYPE, iTemplateArrayFunctionType.getInstanceType());
 
+    generatorValueTemplate = new TemplateType(this, "T");
+    TemplateType generatorReturnTemplate = new TemplateType(this, "TReturn");
+    TemplateType generatorNextTemplate = new TemplateType(this, "TNext");
     FunctionType generatorFunctionType =
         nativeInterface(
             "Generator", generatorValueTemplate, generatorReturnTemplate, generatorNextTemplate);
@@ -588,6 +610,9 @@ public final class JSTypeRegistry {
     registerNativeType(JSTypeNative.GENERATOR_FUNCTION_TYPE, generatorFunctionType);
     registerNativeType(JSTypeNative.GENERATOR_TYPE, generatorFunctionType.getInstanceType());
 
+    asyncIteratorValueTemplate = new TemplateType(this, "T");
+    TemplateType asyncIteratorReturnTemplate = new TemplateType(this, "TReturn");
+    TemplateType asyncIteratorNextTemplate = new TemplateType(this, "TNext");
     FunctionType asyncIteratorFunctionType =
         nativeInterface(
             "AsyncIterator",
@@ -598,14 +623,28 @@ public final class JSTypeRegistry {
     registerNativeType(
         JSTypeNative.ASYNC_ITERATOR_TYPE, asyncIteratorFunctionType.getInstanceType());
 
+    asyncIterableValueTemplate = new TemplateType(this, "T");
+    TemplateType asyncIterableReturnTemplate = new TemplateType(this, "TReturn");
+    TemplateType asyncIterableNextTemplate = new TemplateType(this, "TNext");
     FunctionType asyncIterableFunctionType =
-        nativeInterface("AsyncIterable", asyncIterableTemplate);
+        nativeInterface(
+            "AsyncIterable",
+            asyncIterableValueTemplate,
+            asyncIterableReturnTemplate,
+            asyncIterableNextTemplate);
     registerNativeType(JSTypeNative.ASYNC_ITERABLE_FUNCTION_TYPE, asyncIterableFunctionType);
     registerNativeType(
         JSTypeNative.ASYNC_ITERABLE_TYPE, asyncIterableFunctionType.getInstanceType());
 
+    TemplateType asyncIteratorIterableTemplate = new TemplateType(this, "T");
+    TemplateType asyncIteratorIterableReturnTemplate = new TemplateType(this, "TReturn");
+    TemplateType asyncIteratorIterableNextTemplate = new TemplateType(this, "TNext");
     FunctionType asyncIteratorIterableFunctionType =
-        nativeInterface("AsyncIteratorIterable", asyncIteratorIterableTemplate);
+        nativeInterface(
+            "AsyncIteratorIterable",
+            asyncIteratorIterableTemplate,
+            asyncIteratorIterableReturnTemplate,
+            asyncIteratorIterableNextTemplate);
     asyncIteratorIterableFunctionType.setExtendedInterfaces(
         ImmutableList.of(
             createTemplatizedType(
@@ -619,6 +658,9 @@ public final class JSTypeRegistry {
         JSTypeNative.ASYNC_ITERATOR_ITERABLE_TYPE,
         asyncIteratorIterableFunctionType.getInstanceType());
 
+    TemplateType asyncGeneratorValueTemplate = new TemplateType(this, "T");
+    TemplateType asyncGeneratorReturnTemplate = new TemplateType(this, "TReturn");
+    TemplateType asyncGeneratorNextTemplate = new TemplateType(this, "TNext");
     FunctionType asyncGeneratorFunctionType =
         nativeInterface(
             "AsyncGenerator",
@@ -850,12 +892,55 @@ public final class JSTypeRegistry {
     // Register the prototype property. See the comments below in
     // registerPropertyOnType about the bootstrapping process.
     registerPropertyOnType("prototype", objectFunctionType);
+
+    // ReadonlyMap
+    FunctionType readonlyMapFunctionType =
+        nativeInterface("ReadonlyMap", readonlyMapKeyTemplateKey, readonlyMapValueTemplateKey);
+    registerNativeType(JSTypeNative.READONLY_MAP_FUNCTION_TYPE, readonlyMapFunctionType);
+    readonlyMapFunctionType.setExtendedInterfaces(
+        ImmutableList.of(
+            createTemplatizedType(
+                iterableType,
+                createTemplatizedType(
+                    arrayType,
+                    createUnionType(readonlyMapKeyTemplateKey, readonlyMapValueTemplateKey)))));
+    ObjectType readonlyMapType = readonlyMapFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.READONLY_MAP_TYPE, readonlyMapType);
+
+    // Map
+    FunctionType mapFunctionType =
+        nativeConstructorBuilder("Map")
+            .withParameters(
+                createOptionalParameters(
+                    createUnionType(
+                        nullType,
+                        createTemplatizedType(
+                            iterableType,
+                            createTemplatizedType(
+                                arrayType,
+                                createUnionType(mapKeyTemplateKey, mapValueTemplateKey))),
+                        createTemplatizedType(
+                            arrayType,
+                            createTemplatizedType(
+                                arrayType,
+                                createUnionType(mapKeyTemplateKey, mapValueTemplateKey))))))
+            .withTemplateKeys(mapKeyTemplateKey, mapValueTemplateKey)
+            .build();
+    registerNativeType(JSTypeNative.MAP_FUNCTION_TYPE, mapFunctionType);
+    mapFunctionType.getPrototype(); // Force initialization
+    mapFunctionType.setImplementedInterfaces(
+        ImmutableList.of(
+            createTemplatizedType(readonlyMapType, mapKeyTemplateKey, mapValueTemplateKey)));
+    ObjectType mapType = mapFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.MAP_TYPE, mapType);
   }
 
   private void initializeRegistry() {
     registerGlobalType(getNativeType(JSTypeNative.ARGUMENTS_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ARRAY_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.READONLY_ARRAY_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.MAP_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.READONLY_MAP_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERABLE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERATOR_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERATOR_ITERABLE_TYPE));

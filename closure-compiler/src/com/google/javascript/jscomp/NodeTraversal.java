@@ -30,7 +30,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * NodeTraversal allows an iteration through the nodes in the parse tree, and facilitates the
@@ -78,10 +78,17 @@ public class NodeTraversal {
   /** Callback for tree-based traversals */
   public interface Callback {
     /**
-     * Visits a node in preorder (before its children) and decides whether its children should be
-     * traversed. If the children should be traversed, they will be visited by {@link
+     * Visits a node in preorder (before its children) and decides whether the node and its children
+     * should be traversed.
+     *
+     * <p>If this method returns true, the node will be visited by {@link #visit(NodeTraversal,
+     * Node, Node)} in postorder and its children will be visited by both {@link
      * #shouldTraverse(NodeTraversal, Node, Node)} in preorder and by {@link #visit(NodeTraversal,
      * Node, Node)} in postorder.
+     *
+     * <p>If this method returns false, the node will not be visited by {@link #visit(NodeTraversal,
+     * Node, Node)} and its children will neither be visited by {@link
+     * #shouldTraverse(NodeTraversal, Node, Node)} nor {@link #visit(NodeTraversal, Node, Node)}.
      *
      * <p>Siblings are always visited left-to-right.
      *
@@ -98,8 +105,8 @@ public class NodeTraversal {
 
     /**
      * Visits a node in postorder (after its children). A node is visited in postorder iff {@link
-     * #shouldTraverse(NodeTraversal, Node, Node)} returned true for its parent. In particular, the
-     * root node is never visited in postorder.
+     * #shouldTraverse(NodeTraversal, Node, Node)} returned true for its parent and itself. In
+     * particular, the root node is never visited in postorder.
      *
      * <p>Siblings are always visited left-to-right.
      *
@@ -651,6 +658,7 @@ public class NodeTraversal {
         }
         break;
       case BLOCK:
+      case SWITCH:
         if (callback.shouldTraverse(this, n, null)) {
           pushScope(s);
 
@@ -695,16 +703,6 @@ public class NodeTraversal {
           traverseBranch(forAssignmentParam, n);
           traverseBranch(forIterableParam, n);
           traverseBranch(forBodyScope, n);
-
-          popScope();
-          callback.visit(this, n, null);
-        }
-        break;
-      case SWITCH:
-        if (callback.shouldTraverse(this, n, null)) {
-          pushScope(s);
-
-          traverseChildren(n);
 
           popScope();
           callback.visit(this, n, null);
@@ -939,7 +937,7 @@ public class NodeTraversal {
       }
     }
 
-    /**
+    /*
      * Intentionally inlined call to traverseChildren.
      *
      * <p>Calling traverseChildren here would double the maximum stack depth seen during
@@ -1087,6 +1085,9 @@ public class NodeTraversal {
           break;
         case COMPUTED_FIELD_DEF:
           currentNode = n;
+
+          Node previousHoistScopeRoot = currentHoistScopeRoot;
+          currentHoistScopeRoot = n;
           pushScope(child);
 
           if (callback.shouldTraverse(this, child, n)) {
@@ -1098,13 +1099,10 @@ public class NodeTraversal {
           }
 
           popScope();
+          currentHoistScopeRoot = previousHoistScopeRoot;
           break;
         case MEMBER_FIELD_DEF:
-          pushScope(child);
-
-          traverseBranch(child, n);
-
-          popScope();
+          handleMemberFieldDef(n, child);
           break;
         case BLOCK:
         case MEMBER_FUNCTION_DEF:
@@ -1121,6 +1119,15 @@ public class NodeTraversal {
 
     this.currentNode = n;
     callback.visit(this, n, parent);
+  }
+
+  private void handleMemberFieldDef(Node n, Node child) {
+    Node previousHoistScopeRoot = currentHoistScopeRoot;
+    currentHoistScopeRoot = n;
+    pushScope(child);
+    traverseBranch(child, n);
+    popScope();
+    currentHoistScopeRoot = previousHoistScopeRoot;
   }
 
   private void traverseChildren(Node n) {
@@ -1287,6 +1294,33 @@ public class NodeTraversal {
     }
   }
 
+  /** Returns the closest scope binding the `this` or `super` keyword */
+  public @Nullable Node getClosestScopeRootNodeBindingThisOrSuper() {
+    for (int i = scopes.size() - 1; i >= 0; i--) {
+      Node rootNode = getNodeRootFromScopeObj(scopes.get(i));
+      switch (rootNode.getToken()) {
+        case FUNCTION:
+          if (rootNode.isArrowFunction()) {
+            continue;
+          }
+          return rootNode;
+        case MEMBER_FIELD_DEF:
+        case COMPUTED_FIELD_DEF:
+        case CLASS:
+        case MODULE_BODY:
+        case ROOT:
+          return rootNode;
+        case BLOCK:
+          if (NodeUtil.isClassStaticBlock(rootNode)) {
+            return rootNode;
+          }
+          continue;
+        default:
+          continue;
+      }
+    }
+    return null;
+  }
 
   public ScopeCreator getScopeCreator() {
     return scopeCreator;
@@ -1339,6 +1373,15 @@ public class NodeTraversal {
     compiler.report(error);
   }
 
+  /**
+   * Reports a diagnostic (error or warning) This variant is particularly useful for reporting on
+   * GETPROP nodes whose length is otherwise just the last component (`abc` in `foo.abc`).
+   */
+  public void report(Node start, Node end, DiagnosticType diagnosticType, String... arguments) {
+    JSError error = JSError.make(start, end, diagnosticType, arguments);
+    compiler.report(error);
+  }
+
   public void reportCodeChange() {
     Node changeScope = this.currentChangeScope;
     checkNotNull(changeScope);
@@ -1351,12 +1394,19 @@ public class NodeTraversal {
   }
 
   /**
-   * Returns the SCRIPT node enclosing the current scope, or `null` if unknown
+   * Returns the SCRIPT node enclosing the current scope
    *
-   * <p>e.g. returns null if {@link #traverseInnerNode(Node, Node, AbstractScope)} was used
+   * @throws UnsupportedOperationException if inside a NodeTraversal that does not support this
+   *     operation, or if called while visiting a ROOT node during a global traversal. Only
+   *     traversals that begin at a ROOT node (which includes most usages of NodeTraversal) will
+   *     support this operation. For example, {@link
+   *     NodeTraversal.Builder#traverseAtScope(AbstractScope<?, ?>)} is unsupported because it can
+   *     begin at any arbitrary scope root like a FUNCTION.
    */
-  @Nullable
-  Node getCurrentScript() {
+  public @Nullable Node getCurrentScript() {
+    if (currentScript == null) {
+      throw new UnsupportedOperationException("getCurrentScript not supported");
+    }
     return currentScript;
   }
 

@@ -23,13 +23,13 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.EntityResolver;
@@ -60,7 +60,7 @@ public final class XtbMessageBundle implements MessageBundle {
    * @param projectId  the translation console project id (i.e. name)
    */
   public XtbMessageBundle(InputStream xtb, @Nullable String projectId) {
-    this.messages = new HashMap<>();
+    this.messages = new LinkedHashMap<>();
     this.idGenerator = new GoogleJsMessageIdGenerator(projectId);
 
     try {

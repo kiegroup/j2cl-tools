@@ -26,7 +26,7 @@ import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -159,6 +159,8 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
 
     // Allow testing of features that are not yet fully supported.
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     disableCompareJsDoc();
     enableGatherExternProperties();
     enableTypeCheck();
@@ -1463,7 +1465,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
 
   @Test
   public void testThrow_insideTry_afterNestedTry_hasNoSideEffects() {
-    /** Ensure we track the stack of trys correctly, rather than just toggling a boolean. */
+    /* Ensure we track the stack of trys correctly, rather than just toggling a boolean. */
     String source =
         lines(
             "function f() {",
@@ -1484,7 +1486,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
 
   @Test
   public void testThrow_insideFunction_insideTry_hasNoSideEffects() {
-    /** Ensure we track the stack of trys correctly, rather than just toggling a boolean. */
+    /* Ensure we track the stack of trys correctly, rather than just toggling a boolean. */
     String source =
         lines(
             "function f() {",
@@ -2813,7 +2815,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     assertNoPureCalls(
         lines(
             "function foo(a) { const [...x] = a; }", //
-            "foo(x);"));
+            "foo(v);"));
   }
 
   @Test

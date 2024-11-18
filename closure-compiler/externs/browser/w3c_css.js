@@ -149,8 +149,8 @@ DocumentStyle.prototype.styleSheets;
  *
  * The actual property definitions are in wicg_constructable_stylesheets.js,
  * which must be explicitly passed to the compiler in order to use them. This
- * record is defined here since CSSStyleSheet cannot be redefined with its optional
- * init parameter.
+ * record is defined here since CSSStyleSheet cannot be redefined with its
+ * optional init parameter.
  * @record
  * @see https://wicg.github.io/construct-stylesheets/#dictdef-cssstylesheetinit
  */
@@ -514,7 +514,14 @@ CSSStyleDeclaration.prototype.removeProperty = function(propertyName) {};
  * @return {undefined}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-setProperty
  */
-CSSStyleDeclaration.prototype.setProperty = function(propertyName, value, opt_priority) {};
+CSSStyleDeclaration.prototype.setProperty = function(
+    propertyName, value, opt_priority) {};
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-view-transitions/#propdef-view-transition-name
+ */
+CSSStyleDeclaration.prototype.viewTransitionName;
 
 // IE-specific
 
@@ -539,8 +546,7 @@ CSSStyleDeclaration.prototype.getExpression = function(name) {};
  * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms536696(VS.85).aspx
  */
-CSSStyleDeclaration.prototype.removeAttribute =
-    function(name, opt_flags) {};
+CSSStyleDeclaration.prototype.removeAttribute = function(name, opt_flags) {};
 
 /**
  * @param {string} name
@@ -557,7 +563,8 @@ CSSStyleDeclaration.prototype.removeExpression = function(name) {};
  * @see http://msdn.microsoft.com/en-us/library/ms536739(VS.85).aspx
  * @return {undefined}
  */
-CSSStyleDeclaration.prototype.setAttribute = function(name, value, opt_flags) {};
+CSSStyleDeclaration.prototype.setAttribute = function(
+    name, value, opt_flags) {};
 
 /**
  * @param {string} name
@@ -566,8 +573,8 @@ CSSStyleDeclaration.prototype.setAttribute = function(name, value, opt_flags) {}
  * @return {undefined}
  * @see http://msdn.microsoft.com/en-us/library/ms531196(VS.85).aspx
  */
-CSSStyleDeclaration.prototype.setExpression =
-    function(name, expr, opt_language) {};
+CSSStyleDeclaration.prototype.setExpression = function(
+    name, expr, opt_language) {};
 
 
 /**
@@ -835,7 +842,8 @@ CSSPrimitiveValue.prototype.setFloatValue = function(unitType, floatValue) {};
  * @throws DOMException {@see DomException.INVALID_ACCESS_ERR},
  *                      {@see DomException.NO_MODIFICATION_ALLOWED_ERR}
  */
-CSSPrimitiveValue.prototype.setStringValue = function(stringType, stringValue) {};
+CSSPrimitiveValue.prototype.setStringValue = function(
+    stringType, stringValue) {};
 
 /**
  * @constructor
@@ -1445,6 +1453,12 @@ CSSProperties.prototype.gridAutoColumns;
 
 /**
  * @type {string}
+ * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-auto-flow
+ */
+CSSProperties.prototype.gridAutoFlow;
+
+/**
+ * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-auto-rows
  */
 CSSProperties.prototype.gridAutoRows;
@@ -1514,6 +1528,48 @@ CSSProperties.prototype.gridTemplateRows;
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-height
  */
 CSSProperties.prototype.height;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-logical/#propdef-inset
+ */
+CSSProperties.prototype.inset;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-logical/#position-properties
+ */
+CSSProperties.prototype.insetBlock;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-logical/#position-properties
+ */
+CSSProperties.prototype.insetBlockEnd;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-logical/#position-properties
+ */
+CSSProperties.prototype.insetBlockStart;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-logical/#position-properties
+ */
+CSSProperties.prototype.insetInline;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-logical/#position-properties
+ */
+CSSProperties.prototype.insetInlineEnd;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-logical/#position-properties
+ */
+CSSProperties.prototype.insetInlineStart;
 
 /**
  * @type {string}
@@ -1658,6 +1714,12 @@ CSSProperties.prototype.outlineWidth;
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-overflow
  */
 CSSProperties.prototype.overflow;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-overscroll-1/#propdef-overscroll-behavior
+ */
+CSSProperties.prototype.overscrollBehavior;
 
 /**
  * @type {string|number}
@@ -2230,6 +2292,12 @@ CSSProperties.prototype.objectPosition;
  */
 CSSProperties.prototype.clipPath;
 
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-masking-1/
+ */
+CSSProperties.prototype.maskImage;
+
 // CSS Containment
 
 /**
@@ -2391,7 +2459,7 @@ var ScrollToOptions;
  * @record
  * @see https://www.w3.org/TR/cssom-view/#dictdef-scrollintoviewoptions
  */
-function ScrollIntoViewOptions () {}
+function ScrollIntoViewOptions() {}
 
 /** @type {string|undefined} */
 ScrollIntoViewOptions.prototype.behavior;
@@ -2546,7 +2614,8 @@ var MediaQueryListListener;
 function MediaQueryListEvent() {}
 
 /**
- * A boolean value; returns true if the document currently matches the media query list, false if not.
+ * A boolean value; returns true if the document currently matches the media
+ * query list, false if not.
  * @const {boolean}
  */
 MediaQueryListEvent.prototype.matches;
@@ -2705,6 +2774,72 @@ Element.prototype.scrollWidth;
 Element.prototype.scrollHeight;
 
 /**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-scroll-snap-1/
+ */
+Element.prototype.scrollPadding;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-scroll-snap-1/
+ */
+Element.prototype.scrollPaddingBlock;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-scroll-snap-1/
+ */
+Element.prototype.scrollPaddingBlockEnd;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-scroll-snap-1/
+ */
+Element.prototype.scrollPaddingBlockStart;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-scroll-snap-1/
+ */
+Element.prototype.scrollPaddingBottom;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-scroll-snap-1/
+ */
+Element.prototype.scrollPaddingInline;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-scroll-snap-1/
+ */
+Element.prototype.scrollPaddingInlineEnd;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-scroll-snap-1/
+ */
+Element.prototype.scrollPaddingInlineStart;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-scroll-snap-1/
+ */
+Element.prototype.scrollPaddingLeft;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-scroll-snap-1/
+ */
+Element.prototype.scrollPaddingRight;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-scroll-snap-1/
+ */
+Element.prototype.scrollPaddingTop;
+
+/**
  * @type {number}
  * @see http://www.w3.org/TR/cssom-view/#dom-element-clienttop
  */
@@ -2727,6 +2862,25 @@ Element.prototype.clientWidth;
  * @see http://www.w3.org/TR/cssom-view/#dom-element-clientheight
  */
 Element.prototype.clientHeight;
+
+/**
+ * @record
+ * @see https://drafts.csswg.org/cssom-view/#dictdef-checkvisibilityoptions
+ */
+function CheckVisibilityOptions() {}
+
+/** @type {(boolean|undefined)} */
+CheckVisibilityOptions.prototype.checkOpacity;
+
+/** @type {(boolean|undefined)} */
+CheckVisibilityOptions.prototype.checkVisibilityCSS;
+
+/**
+ * @param {CheckVisibilityOptions=} options
+ * @return {boolean}
+ * @see https://drafts.csswg.org/cssom-view/#dom-element-checkvisibility
+ */
+Element.prototype.checkVisibility = function(options) {};
 
 // http://www.w3.org/TR/cssom-view/#extensions-to-the-htmlelement-interface
 
@@ -2787,13 +2941,13 @@ Range.prototype.getBoundingClientRect = function() {};
  * @type {number}
  * @see http://www.w3.org/TR/cssom-view/#dom-mouseevent-screenx
  */
-//MouseEvent.prototype.screenX;
+// MouseEvent.prototype.screenX;
 
 /**
  * @type {number}
  * @see http://www.w3.org/TR/cssom-view/#dom-mouseevent-screeny
  */
-//MouseEvent.prototype.screenY;
+// MouseEvent.prototype.screenY;
 
 /**
  * @type {number}
@@ -2811,13 +2965,13 @@ MouseEvent.prototype.pageY;
  * @type {number}
  * @see http://www.w3.org/TR/cssom-view/#dom-mouseevent-clientx
  */
-//MouseEvent.prototype.clientX;
+// MouseEvent.prototype.clientX;
 
 /**
  * @type {number}
  * @see http://www.w3.org/TR/cssom-view/#dom-mouseevent-clienty
  */
-//MouseEvent.prototype.clientY;
+// MouseEvent.prototype.clientY;
 
 /**
  * @type {number}
@@ -2886,6 +3040,25 @@ CSSInterface.prototype.escape = function(ident) {};
  * @return {boolean}
  */
 CSSInterface.prototype.supports = function(property, opt_value) {};
+
+/**
+* @typedef {{
+*   name: string,
+*   syntax: (string|undefined),
+*   inherits: boolean,
+*   initialValue: (string|undefined),
+* }}
+* @see https://www.w3.org/TR/css-properties-values-api-1/#the-propertydefinition-dictionary
+*/
+var PropertyDefinition;
+
+/**
+ * @param {PropertyDefinition} propertyDefinition
+ * @return {undefined}
+ * @see https://www.w3.org/TR/css-properties-values-api-1/#the-registerproperty-function
+ * @throws {DOMException|TypeError} {@see DOMException.InvalidModificationError}, {@see DOMException.SyntaxError}
+ */
+CSSInterface.prototype.registerProperty = function(propertyDefinition) {};
 
 /**
  * TODO(nicksantos): This suppress tag probably isn't needed, and
@@ -3157,6 +3330,58 @@ AnimationEvent.prototype.elapsedTime;
  * @see https://drafts.csswg.org/css-animations/#dom-animationevent-pseudoelement
  */
 AnimationEvent.prototype.pseudoElement;
+
+/**
+ * @record
+ * @extends {EventInit}
+ * @see https://www.w3.org/TR/css-transitions-1/#dictdef-transitioneventinit
+ */
+function TransitionEventInit() {};
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-transitions-1/#dom-transitioneventinit-propertyname
+ */
+TransitionEventInit.prototype.propertyName;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/css-transitions-1/#dom-transitioneventinit-elapsedtime
+ */
+TransitionEventInit.prototype.elapsedTime;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-transitions-1/#dom-transitioneventinit-pseudoelement
+ */
+TransitionEventInit.prototype.pseudoElement;
+
+/**
+ * @constructor
+ * @param {string} type
+ * @param {!TransitionEventInit=} transitionEventInitDict
+ * @extends {Event}
+ * @see https://www.w3.org/TR/css-transitions-1/#interface-transitionevent
+ */
+function TransitionEvent(type, transitionEventInitDict) {};
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-transitions-1/#Events-TransitionEvent-propertyName
+ */
+TransitionEvent.prototype.propertyName;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/css-transitions-1/#Events-TransitionEvent-elapsedTime
+ */
+TransitionEvent.prototype.elapsedTime;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-transitions-1/#Events-TransitionEvent-pseudoElement
+ */
+TransitionEvent.prototype.pseudoElement;
 
 /**
  * @constructor

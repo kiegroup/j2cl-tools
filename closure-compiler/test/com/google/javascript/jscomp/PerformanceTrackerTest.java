@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
@@ -31,10 +32,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Unit tests for PerformanceTracker.
- *
- */
+/** Unit tests for PerformanceTracker. */
 @RunWith(JUnit4.class)
 public final class PerformanceTrackerTest {
   private final Node emptyExternRoot = new Node(Token.BLOCK);
@@ -168,6 +166,9 @@ public final class PerformanceTrackerTest {
                 "Estimated Size\\(bytes\\): -?[0-9]+",
                 "Estimated GzSize\\(bytes\\): -?[0-9]+",
                 "",
+                "DisambiguateProperties: not executed",
+                "AmbiguateProperties: not executed",
+                "",
                 "Inputs:",
                 "JS lines:   [0-9]+",
                 "JS sources: [0-9]+",
@@ -190,7 +191,7 @@ public final class PerformanceTrackerTest {
     try (PrintStream outstream = new PrintStream(output)) {
       tracker.outputTracerReport(outstream);
     }
-    return output.toString();
+    return output.toString(UTF_8);
   }
 
   private static String lines(String... lines) {

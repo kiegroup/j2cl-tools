@@ -28,7 +28,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Encapsulates something that could be a declaration.
@@ -58,11 +58,19 @@ abstract class PotentialDeclaration {
   static PotentialDeclaration fromName(Node nameNode) {
     checkArgument(nameNode.isQualifiedName(), nameNode);
     Node rhs = NodeUtil.getRValueOfLValue(nameNode);
-    if (ClassUtil.isThisProp(nameNode)) {
-      String name = ClassUtil.getPrototypeNameOfThisProp(nameNode);
+    if (ClassUtil.isThisPropInsideClassWithName(nameNode)) {
+      String name = ClassUtil.getFullyQualifiedNameOfThisProp(nameNode);
       return new ThisPropDeclaration(name, nameNode, rhs);
     }
     return new NameDeclaration(nameNode.getQualifiedName(), nameNode, rhs);
+  }
+
+  static PotentialDeclaration fromMemberFieldDef(Node fieldNode) {
+    checkArgument(fieldNode.isMemberFieldDef());
+    Node rhs = NodeUtil.getRValueOfLValue(fieldNode);
+    String name = ClassUtil.getFullyQualifiedNameOfMemberFieldDef(fieldNode);
+    // lhs is MEMBER_FIELD_DEF  rhs is the value assigned to the field if any.
+    return new MemberFieldDeclaration(name, fieldNode, rhs);
   }
 
   static PotentialDeclaration fromMethod(Node functionNode) {
@@ -102,13 +110,11 @@ abstract class PotentialDeclaration {
     return lhs;
   }
 
-  @Nullable
-  Node getRhs() {
+  @Nullable Node getRhs() {
     return rhs;
   }
 
-  @Nullable
-  JSDocInfo getJsDoc() {
+  @Nullable JSDocInfo getJsDoc() {
     return NodeUtil.getBestJSDocInfo(lhs);
   }
 
@@ -413,6 +419,25 @@ abstract class PotentialDeclaration {
     }
   }
 
+  private static class MemberFieldDeclaration extends PotentialDeclaration {
+    MemberFieldDeclaration(@Nullable String name, Node lhs, Node rhs) {
+      super(name, lhs, rhs);
+    }
+
+    @Override
+    void simplify(AbstractCompiler compiler) {
+      Node rhs = getRhs();
+      if (rhs != null) {
+        NodeUtil.deleteNode(rhs, compiler);
+      }
+    }
+
+    @Override
+    Node getRemovableNode() {
+      return getLhs();
+    }
+  }
+
   private static class StringKeyDeclaration extends PotentialDeclaration {
     StringKeyDeclaration(String name, Node stringKeyNode) {
       super(name, stringKeyNode, stringKeyNode.getLastChild());
@@ -474,7 +499,8 @@ abstract class PotentialDeclaration {
    *     foo: String,
    *     bar: {
    *       type: Number,
-   *       value: 123
+   *       value: 123,
+   *       readOnly: true
    *     }
    *   },
    *   baz: function() {}
@@ -505,13 +531,13 @@ abstract class PotentialDeclaration {
           propKey = propKey.getNext()) {
         Node propDef = propKey.getOnlyChild();
         // A property definition is either a function reference (e.g. String, Number), or another
-        // object literal. If it's an object literal, only the "type" sub-property matters for type
-        // checking, so we can delete everything else (which may include e.g. a "value" sub-property
-        // with a function expression).
+        // object literal. If it's an object literal, only the "type" and "readOnly" sub-properties
+        // matters for type checking, so we can delete everything else (which may include e.g. a
+        // "value" sub-property with a function expression).
         if (propDef.isObjectLit()) {
           for (Node subProp = propDef.getFirstChild(); subProp != null; ) {
             final Node next = subProp.getNext();
-            if (!subProp.getString().equals("type")) {
+            if (!subProp.getString().equals("type") && !subProp.getString().equals("readOnly")) {
               NodeUtil.deleteNode(subProp, compiler);
             }
             subProp = next;
@@ -678,7 +704,7 @@ abstract class PotentialDeclaration {
   }
 
   static boolean isAliasDeclaration(Node lhs, @Nullable Node rhs) {
-    return !ClassUtil.isThisProp(lhs)
+    return !ClassUtil.isThisPropInsideClassWithName(lhs)
         && isConstToBeInferred(lhs)
         && rhs != null
         && isQualifiedAliasExpression(rhs);

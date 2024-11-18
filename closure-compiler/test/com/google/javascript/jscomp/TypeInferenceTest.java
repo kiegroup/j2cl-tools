@@ -79,7 +79,7 @@ import com.google.javascript.rhino.testing.TypeSubject;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -198,12 +198,12 @@ public final class TypeInferenceTest {
 
   private void withModules(ImmutableList<String> js) {
     Node script = compiler.parseTestCode(js);
-    JSChunk module = new JSChunk("entry");
+    JSChunk chunk = new JSChunk("entry");
     Collection<CompilerInput> inputs = compiler.getInputsById().values();
     for (CompilerInput input : inputs) {
-      module.add(input.getSourceFile());
+      chunk.add(input.getSourceFile());
     }
-    compiler.initModules(ImmutableList.of(), ImmutableList.of(module), compiler.getOptions());
+    compiler.initChunks(ImmutableList.of(), ImmutableList.of(chunk), compiler.getOptions());
     compiler.initializeModuleLoader();
     assertWithMessage("parsing error: " + Joiner.on(", ").join(compiler.getErrors()))
         .that(compiler.getErrorCount())
@@ -3902,7 +3902,7 @@ public final class TypeInferenceTest {
             "Y: y"));
 
     assertTypeOfExpression("X").toStringIsEqualTo("number");
-    assertTypeOfExpression("Y").toStringIsEqualTo("Iterable<number>");
+    assertTypeOfExpression("Y").toStringIsEqualTo("Iterable<number,?,?>");
   }
 
   @Test

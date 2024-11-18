@@ -217,6 +217,12 @@ public final class JsFileFullParserTest {
     assertThat(info.delcalls).containsExactly("a");
   }
 
+  @Test
+  public void testReadToggle() {
+    FileInfo info = parse("const {TOGGLE_foo_bar} = goog.require('foo$2etoggles');");
+    assertThat(info.readToggles).containsExactly("foo_bar");
+  }
+
   private static FileInfo parse(String... lines) {
     return JsFileFullParser.parse(
         Joiner.on('\n').join(lines),

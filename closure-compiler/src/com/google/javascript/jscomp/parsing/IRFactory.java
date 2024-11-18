@@ -136,12 +136,11 @@ import com.google.javascript.rhino.dtoa.DToA;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** IRFactory transforms the external AST to the internal AST. */
 class IRFactory {
@@ -193,6 +192,7 @@ class IRFactory {
 
   private final StaticSourceFile sourceFile;
   private final @Nullable String sourceName;
+
   /** Source file reference that also contains the file content. */
   private final SourceFile fileWithContent;
 
@@ -227,7 +227,7 @@ class IRFactory {
   /** If non-null, use this set of keywords instead of TokenStream.isKeyword(). */
   private final @Nullable ImmutableSet<String> reservedKeywords;
 
-  private final Set<Comment> parsedComments = new HashSet<>();
+  private final Set<Comment> parsedComments = new LinkedHashSet<>();
 
   private final LinkedHashSet<String> licenseBuilder = new LinkedHashSet<>();
   private @Nullable JSDocInfo firstFileoverview = null;
@@ -238,18 +238,21 @@ class IRFactory {
 
   private final CommentTracker jsdocTracker;
   private final CommentTracker nonJsdocTracker;
+  private final JsDocInfoParser.JsDocSourceKind jsDocSourceKind;
 
   private boolean currentFileIsExterns = false;
 
   private FeatureSet features = FeatureSet.BARE_MINIMUM;
   private Node resultNode;
+  private boolean isClosureUnawareCode = false;
 
   private IRFactory(
       StaticSourceFile sourceFile,
       Config config,
       ErrorReporter errorReporter,
       ImmutableList<Comment> comments,
-      SourceFile fileWithContent) {
+      SourceFile fileWithContent,
+      JsDocInfoParser.JsDocSourceKind jsDocSourceKind) {
     this.jsdocTracker = new CommentTracker(comments, (c) -> c.type == Comment.Type.JSDOC);
     this.nonJsdocTracker = new CommentTracker(comments, (c) -> c.type != Comment.Type.JSDOC);
     this.sourceFile = sourceFile;
@@ -261,7 +264,14 @@ class IRFactory {
     this.sourceName = sourceFile == null ? null : sourceFile.getName();
 
     this.config = config;
-    this.errorReporter = errorReporter;
+    // We can't just use the existing error reporter, because we might be parsing code that is
+    // closure-unaware, and there is a conceptually-circular dependency that makes suppressing
+    // spurious errors difficult: we need to be able to parse a file to determine if the JSDoc was
+    // annotated as closure-unaware, but that parsing hasn't finished when the existing error
+    // reporter is called with the parse errors from that code. Instead, we have to locally track
+    /// whether the parser has seen the relevant closure-unaware annotation, and locally drop the
+    // errors, handing any other errors off to the provided error reporter.
+    this.errorReporter = new ClosureUnawareCodeSkippingJsDocInfoErroReporter(this, errorReporter);
     this.transformDispatcher = new TransformDispatcher();
 
     if (config.strictMode().isStrict()) {
@@ -271,6 +281,7 @@ class IRFactory {
     } else {
       reservedKeywords = ES5_RESERVED_KEYWORDS;
     }
+    this.jsDocSourceKind = jsDocSourceKind;
   }
 
   private static final class CommentTracker {
@@ -285,8 +296,7 @@ class IRFactory {
       this.advance();
     }
 
-    @Nullable
-    Comment current() {
+    @Nullable Comment current() {
       return (this.index >= this.source.size()) ? null : this.source.get(this.index);
     }
 
@@ -324,8 +334,13 @@ class IRFactory {
       Config config,
       ErrorReporter errorReporter,
       SourceFile file) {
+    JsDocInfoParser.JsDocSourceKind jsDocSourceKind =
+        (sourceFile.isTypeScriptSource())
+            ? JsDocInfoParser.JsDocSourceKind.TSICKLE
+            : JsDocInfoParser.JsDocSourceKind.NORMAL;
     IRFactory irFactory =
-        new IRFactory(sourceFile, config, errorReporter, tree.sourceComments, file);
+        new IRFactory(
+            sourceFile, config, errorReporter, tree.sourceComments, file, jsDocSourceKind);
 
     // don't call transform as we don't want standard jsdoc handling.
     Node n = irFactory.transformDispatcher.process(tree);
@@ -632,6 +647,9 @@ class IRFactory {
     }
 
     JSDocInfo newFileoverview = jsDocParser.getFileOverviewJSDocInfo();
+    if (newFileoverview != null && newFileoverview.isClosureUnawareCode()) {
+      this.isClosureUnawareCode = true;
+    }
     if (identical(newFileoverview, this.firstFileoverview)) {
       return false;
     }
@@ -647,6 +665,9 @@ class IRFactory {
       if (newFileoverview.isExterns()) {
         this.currentFileIsExterns = true;
         merged.recordExterns();
+      }
+      if (newFileoverview.isNoCoverage()) {
+        merged.recordNoCoverage();
       }
       this.firstFileoverview = merged.build();
     }
@@ -1008,6 +1029,7 @@ class IRFactory {
             position,
             templateNode,
             config,
+            jsDocSourceKind,
             errorReporter);
     jsdocParser.setFileOverviewJSDocInfo(this.firstFileoverview);
     if (node.type == Comment.Type.IMPORTANT && node.value.length() > 0) {
@@ -1035,6 +1057,7 @@ class IRFactory {
             node.location.start.offset,
             templateNode,
             config,
+            jsDocSourceKind,
             errorReporter);
     return parser.parseInlineTypeDoc();
   }
@@ -1046,6 +1069,34 @@ class IRFactory {
 
   void setLengthFrom(Node node, Node ref) {
     node.setLength(ref.getLength());
+  }
+
+  private static final class ClosureUnawareCodeSkippingJsDocInfoErroReporter
+      implements ErrorReporter {
+    private final ErrorReporter delegate;
+    private final IRFactory host;
+
+    private ClosureUnawareCodeSkippingJsDocInfoErroReporter(
+        IRFactory host, ErrorReporter delegate) {
+      this.delegate = delegate;
+      this.host = host;
+    }
+
+    @Override
+    public void error(String message, String sourceName, int line, int lineOffset) {
+      if (host.isClosureUnawareCode) {
+        return;
+      }
+      delegate.error(message, sourceName, line, lineOffset);
+    }
+
+    @Override
+    public void warning(String message, String sourceName, int line, int lineOffset) {
+      if (host.isClosureUnawareCode) {
+        return;
+      }
+      delegate.warning(message, sourceName, line, lineOffset);
+    }
   }
 
   private static final QualifiedName GOOG_MODULE = QualifiedName.of("goog.module");

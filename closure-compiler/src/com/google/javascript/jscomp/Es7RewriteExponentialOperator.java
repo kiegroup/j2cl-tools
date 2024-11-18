@@ -52,13 +52,14 @@ public final class Es7RewriteExponentialOperator implements NodeTraversal.Callba
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, Feature.EXPONENT_OP);
+    TranspilationPasses.maybeMarkFeatureAsTranspiledAway(compiler, root, Feature.EXPONENT_OP);
   }
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     if (n.isScript()) {
       FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
+      // Runs only if features exist in the script
       return scriptFeatures == null || scriptFeatures.contains(Feature.EXPONENT_OP);
     }
     return true;

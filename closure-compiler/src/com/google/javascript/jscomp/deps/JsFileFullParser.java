@@ -72,12 +72,14 @@ public class JsFileFullParser {
     public boolean provideGoog = false;
     public boolean testonly = false;
     public ModuleType moduleType = ModuleType.UNKNOWN;
+    public boolean isLegacyNamespace = false;
 
     public final Set<String> delcalls = new TreeSet<>();
     public final Set<String> deltemplates = new TreeSet<>();
     // Use a LinkedHashSet as import order matters!
     public final Set<String> importedModules = new LinkedHashSet<>();
     public final Set<String> dynamicRequires = new LinkedHashSet<>();
+    public final Set<String> readToggles = new LinkedHashSet<>();
     public final List<String> modName = new ArrayList<>();
     public final List<String> mods = new ArrayList<>();
 
@@ -86,6 +88,7 @@ public class JsFileFullParser {
     public final Multiset<String> provides = TreeMultiset.create();
     public final Multiset<String> requires = TreeMultiset.create();
     public final Multiset<String> typeRequires = TreeMultiset.create();
+    public final Multiset<String> maybeRequires = TreeMultiset.create();
     public final Multiset<String> requiresCss = TreeMultiset.create();
     public final Multiset<String> visibility = TreeMultiset.create();
 
@@ -223,8 +226,11 @@ public class JsFileFullParser {
         info.moduleType = FileInfo.ModuleType.GOOG_PROVIDE;
         break;
       case GOOG_MODULE:
+        info.moduleType = FileInfo.ModuleType.GOOG_MODULE;
+        break;
       case LEGACY_GOOG_MODULE:
         info.moduleType = FileInfo.ModuleType.GOOG_MODULE;
+        info.isLegacyNamespace = true;
         break;
       case ES6_MODULE:
         info.moduleType = FileInfo.ModuleType.ES_MODULE;
@@ -250,7 +256,9 @@ public class JsFileFullParser {
     if (module.usesClosure()) {
       info.provides.addAll(module.googNamespaces());
       info.requires.addAll(module.stronglyRequiredGoogNamespaces());
+      info.maybeRequires.addAll(module.maybeRequiredGoogNamespaces());
       info.dynamicRequires.addAll(module.dynamicallyRequiredGoogNamespaces().elementSet());
+      info.readToggles.addAll(module.readToggles().elementSet());
       info.typeRequires.addAll(module.weaklyRequiredGoogNamespaces());
       info.testonly = module.isTestOnly();
     }

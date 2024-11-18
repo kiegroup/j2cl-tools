@@ -46,7 +46,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import java.util.LinkedHashSet;
 import java.util.Objects;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An object type with declared template types, such as
@@ -175,10 +175,13 @@ public final class TemplatizedType extends ProxyObjectType {
 
     if (!wrapsSameRawType(rawThat)) {
       if (!rawThat.isTemplatizedType()) {
+        if (this.isNoResolvedType() && rawThat.isNoResolvedType()) {
+          return registry.createUnionType(this, rawThat);
+        }
         if (this.isSubtype(rawThat)) {
           return this;
         } else if (rawThat.isSubtypeOf(this)) {
-          return filterNoResolvedType(rawThat);
+          return rawThat;
         }
       }
       if (this.isObject() && rawThat.isObject()) {

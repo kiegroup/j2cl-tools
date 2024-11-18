@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.ReferenceCollector.Behavior;
 import com.google.javascript.rhino.IR;
@@ -26,13 +25,12 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * Using the infrastructure provided by {@link ReferenceCollector}, identify variables that are only
@@ -73,7 +71,7 @@ class InlineObjectLiterals implements CompilerPass {
      * A list of variables that should not be inlined, because their reference information is out of
      * sync with the state of the AST.
      */
-    private final Set<Var> staleVars = new HashSet<>();
+    private final Set<Var> staleVars = new LinkedHashSet<>();
 
     @Override
     public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {
@@ -147,7 +145,7 @@ class InlineObjectLiterals implements CompilerPass {
      */
     private boolean isInlinableObject(List<Reference> refs) {
       boolean ret = false;
-      Set<String> validProperties = new HashSet<>();
+      Set<String> validProperties = new LinkedHashSet<>();
       for (Reference ref : refs) {
         Node name = ref.getNode();
         Node parent = ref.getParent();
@@ -397,7 +395,7 @@ class InlineObjectLiterals implements CompilerPass {
       // can all be properly set as necessary.
       Map<String, String> varmap = computeVarList(referenceInfo);
 
-      Map<String, Node> initvals = new HashMap<>();
+      Map<String, Node> initvals = new LinkedHashMap<>();
       // Figure out the top-level of the var assign node. If it's a plain
       // ASSIGN, then there's an EXPR_STATEMENT above it, if it's a
       // VAR then it should be directly replaced.

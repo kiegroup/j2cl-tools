@@ -32,7 +32,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.math.BigInteger;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Peephole optimization to fold constants (e.g. x + 1 + 7 --> x + 8).
@@ -73,13 +73,16 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     switch (subtree.getToken()) {
       case OPTCHAIN_CALL:
       case CALL:
-        return tryFoldCall(subtree);
+        return tryFoldUselessObjectDotDefinePropertiesCall(subtree);
 
       case NEW:
         return tryFoldCtorCall(subtree);
 
       case TYPEOF:
         return tryFoldTypeof(subtree);
+
+      case ITER_SPREAD:
+        return tryFoldSpread(subtree);
 
       case ARRAYLIT:
       case OBJECTLIT:
@@ -164,10 +167,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case SUB:
       case DIV:
       case MOD:
+      case MUL:
       case EXPONENT:
         return tryFoldArithmeticOp(subtree, left, right);
 
-      case MUL:
       case BITAND:
       case BITOR:
       case BITXOR:
@@ -833,6 +836,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         }
         if (lValObj != null && lValObj == 0) {
           // 0 - x -> -x
+          // NOTE: this optimization has the subtle side effect of changing `0` to `-0` because
+          // `0-0 -> 0` but `-0 -> -0`.
           return IR.neg(right.cloneTree(true));
         } else if (rValObj != null && rValObj == 0) {
           // x - 0 -> x
@@ -1017,8 +1022,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Expressions such as [foo() * 10 * 20] generate parse trees where no node has two const children
-   * ((foo() * 10) * 20), so performArithmeticOp() won't fold it: tryFoldLeftChildOp() will.
+   * Expressions such as [foo() && 10 && 20] generate parse trees where no node has two const
+   * children ((foo() && 10) && 20), so performArithmeticOp() won't fold it: tryFoldLeftChildOp()
+   * will.
    *
    * <p>Specifically, this folds associative expressions where:
    *
@@ -1029,9 +1035,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    */
   private Node tryFoldLeftChildOp(Node n, Node left, Node right) {
     Token opType = n.getToken();
-    checkState((NodeUtil.isAssociative(opType) && NodeUtil.isCommutative(opType)) || n.isAdd());
-
-    checkState(!n.isAdd() || !NodeUtil.mayBeString(n, shouldUseTypes));
+    checkState((NodeUtil.isAssociative(opType) && NodeUtil.isCommutative(opType)));
 
     // Use getNumberValue to handle constants like "NaN" and "Infinity"
     // other values are converted to numbers elsewhere.
@@ -1087,7 +1091,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       if (result != node) {
         return result;
       }
-      return tryFoldLeftChildOp(node, left, right);
+      return node;
     }
   }
 
@@ -1391,7 +1395,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           {
             BigInteger lv = peepholeOptimization.getSideEffectFreeBigIntValue(left);
             BigInteger rv = peepholeOptimization.getSideEffectFreeBigIntValue(right);
-            return Tri.forBoolean(lv.equals(rv));
+            if (lv != null && rv != null) {
+              return Tri.forBoolean(lv.equals(rv));
+            }
+            break;
           }
         default: // Symbol and Object cannot be folded in the general case.
           return Tri.UNKNOWN;
@@ -1451,11 +1458,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return n;
   }
 
-  /**
-   * Remove useless calls:
-   *   Object.defineProperties(o, {})  ->  o
-   */
-  private Node tryFoldCall(Node n) {
+  /** Remove useless calls: Object.defineProperties(o, {}) -> o */
+  private Node tryFoldUselessObjectDotDefinePropertiesCall(Node n) {
     checkArgument(n.isCall() || n.isOptChainCall());
 
     if (NodeUtil.isObjectDefinePropertiesDefinition(n)) {
@@ -1632,6 +1636,26 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return elem;
   }
 
+  /** Fold any occurrences of spread of array literals e.g. {@code ...[1,2,3]} to {@code 1,2,3} */
+  private Node tryFoldSpread(Node spread) {
+    checkState(spread.isSpread());
+    Node parent = spread.getParent();
+    Node child = spread.getOnlyChild();
+    if (child.isArrayLit()) {
+      for (Node n = child.getFirstChild(); n != null; n = n.getNext()) {
+        if (n.isEmpty()) {
+          // Do not fold if the array literal has any holes as it's a syntax error to have holes
+          // (empty arg) if the spread happens to be a call arg
+          return spread;
+        }
+      }
+      parent.addChildrenAfter(child.removeChildren(), spread);
+      spread.detach();
+      reportChangeToEnclosingScope(parent);
+    }
+    return parent;
+  }
+
   /**
    * Flattens array- or object-literals that contain spreads of other literals.
    *
@@ -1788,12 +1812,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    /** `super` captures a hidden reference to the declaring objectlit, so we can't fold it away. */
+    /* `super` captures a hidden reference to the declaring objectlit, so we can't fold it away. */
     if (NodeUtil.referencesSuper(value)) {
       return n;
     }
 
-    /**
+    /*
      * Check to see if there are any side-effects to this object-literal.
      *
      * <p>We remove the value we're going to use because its side-effects will be preserved.
@@ -1815,7 +1839,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       //   {get x() {...}}.x;
       //   {get ['x']() {...}}.x;
 
-      /**
+      /*
        * It's not safe, in general, to convert that to just a function call, because the receiver
        * value will be wrong.
        *
@@ -1832,7 +1856,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     if (NodeUtil.isOptChainNode(parent)) {
 
-      /**
+      /*
        * If the chain continues after `n`, simply doing `n.replaceWith(value)` below would leave the
        * subsequent nodes in the current chain segment optional, with their start `n` replaced.
        *

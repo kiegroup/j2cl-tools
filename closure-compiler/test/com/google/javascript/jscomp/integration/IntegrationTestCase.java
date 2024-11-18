@@ -23,6 +23,7 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.BlackHoleErrorManager;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -40,7 +41,7 @@ import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 
 /** Framework for end-to-end test cases. */
@@ -82,8 +83,13 @@ abstract class IntegrationTestCase {
                       " * @extends {Array<string>}",
                       " */",
                       "var ITemplateArray = function() {};",
-                      "/** @constructor */",
-                      "var Map;",
+                      "/**",
+                      " * @constructor @struct",
+                      " * @param {?Iterable<!Array<K|V>>|!Array<!Array<K|V>>=} opt_iterable",
+                      " * @implements {ReadonlyMap<K, V>}",
+                      " * @template K, V",
+                      " */",
+                      "function Map(opt_iterable) {}",
                       "/** @constructor */",
                       "var Set;",
                       "/** @constructor */ function Window() {}",
@@ -158,7 +164,7 @@ abstract class IntegrationTestCase {
   }
 
   protected void testSame(CompilerOptions options, String original) {
-    testSame(options, new String[] { original });
+    testSame(options, new String[] {original});
   }
 
   protected void testSame(CompilerOptions options, String[] original) {
@@ -166,20 +172,18 @@ abstract class IntegrationTestCase {
   }
 
   /**
-   * Asserts that when compiling with the given compiler options,
-   * {@code original} is transformed into {@code compiled}.
+   * Asserts that when compiling with the given compiler options, {@code original} is transformed
+   * into {@code compiled}.
    */
-  protected void test(CompilerOptions options,
-      String original, String compiled) {
-    test(options, new String[] { original }, new String[] { compiled });
+  protected void test(CompilerOptions options, String original, String compiled) {
+    test(options, new String[] {original}, new String[] {compiled});
   }
 
   /**
-   * Asserts that when compiling with the given compiler options,
-   * {@code original} is transformed into {@code compiled}.
+   * Asserts that when compiling with the given compiler options, {@code original} is transformed
+   * into {@code compiled}.
    */
-  protected void test(CompilerOptions options,
-      String[] original, String[] compiled) {
+  protected void test(CompilerOptions options, String[] original, String[] compiled) {
     Compiler compiler = compile(options, original);
 
     Node root = compiler.getRoot().getLastChild();
@@ -293,8 +297,7 @@ abstract class IntegrationTestCase {
     }
   }
 
-  protected void checkUnexpectedErrorsOrWarnings(
-      Compiler compiler, int expected) {
+  protected void checkUnexpectedErrorsOrWarnings(Compiler compiler, int expected) {
     int actual = compiler.getErrors().size() + compiler.getWarnings().size();
     if (actual != expected) {
       String msg = "";
@@ -309,7 +312,7 @@ abstract class IntegrationTestCase {
   }
 
   protected Compiler compile(CompilerOptions options, String original) {
-    return compile(options, new String[] { original });
+    return compile(options, new String[] {original});
   }
 
   protected Compiler compile(CompilerOptions options, String[] original) {
@@ -322,14 +325,15 @@ abstract class IntegrationTestCase {
                 .build()));
   }
 
-  protected Compiler compile(CompilerOptions options, ImmutableList<JSChunk> modules) {
+  @CanIgnoreReturnValue
+  protected Compiler compile(CompilerOptions options, ImmutableList<JSChunk> chunks) {
     Compiler compiler =
         useNoninjectingCompiler
             ? createNoninjectingCompiler(new BlackHoleErrorManager())
             : createCompiler(new BlackHoleErrorManager());
 
     lastCompiler = compiler;
-    compiler.compileModules(externs, modules, options);
+    var unused = compiler.compileChunks(externs, chunks, options);
     return compiler;
   }
 
@@ -346,7 +350,7 @@ abstract class IntegrationTestCase {
   }
 
   protected void testNoWarnings(CompilerOptions options, String code) {
-    testNoWarnings(options, new String[] { code });
+    testNoWarnings(options, new String[] {code});
   }
 
   protected void testNoWarnings(CompilerOptions options, String[] sources) {
@@ -381,5 +385,4 @@ abstract class IntegrationTestCase {
 
     return compiler.getRoot().getLastChild();
   }
-
 }

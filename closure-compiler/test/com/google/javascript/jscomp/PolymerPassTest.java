@@ -29,9 +29,12 @@ import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_UNQUALIFIED
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -103,8 +106,6 @@ public class PolymerPassTest extends CompilerTestCase {
           "Polymer.Element.prototype.$;",
           "var alert = function(msg) {};");
 
-  private static final String EXTERNS = lines(EXTERNS_PREFIX, EXTERNS_SUFFIX);
-
   private static final String INPUT_EXTERNS =
       lines(
           EXTERNS_PREFIX,
@@ -139,19 +140,9 @@ public class PolymerPassTest extends CompilerTestCase {
           " * @return {T}",
           " * @template T",
           " */",
-          "$jscomp.reflectObject = function (type, object) { return object; };",
-          "/**",
-          " * @param {string} propName",
-          " * @param {?Object} type class, interface, or record",
-          " * @return {string}",
-          " */",
-          "$jscomp.reflectProperty = function(propName, type) {",
-          "  return propName;",
-          "};");
+          "$jscomp.reflectObject = function (type, object) {};");
 
-  private int polymerVersion = 1;
-  private PolymerExportPolicy polymerExportPolicy = PolymerExportPolicy.LEGACY;
-  private boolean propertyRenamingEnabled = false;
+  private static final String EXTERNS = lines(EXTERNS_PREFIX, EXTERNS_SUFFIX, REFLECT_OBJECT_DEF);
 
   public PolymerPassTest() {
     super(EXTERNS);
@@ -159,7 +150,14 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new PolymerPass(compiler, polymerVersion, polymerExportPolicy, propertyRenamingEnabled);
+    return new PolymerPass(compiler);
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setPreventLibraryInjection(true);
+    return options;
   }
 
   @Override
@@ -171,7 +169,6 @@ public class PolymerPassTest extends CompilerTestCase {
     enableRunTypeCheckAfterProcessing();
     enableParseTypeInfo();
     enableCreateModuleMap();
-    polymerExportPolicy = PolymerExportPolicy.LEGACY;
   }
 
   @Test
@@ -194,7 +191,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "/**",
                 " * @constructor",
                 " * @extends {PolymerElement}",
-                " * @implements {PolymerYtuIconInterface0}",
+                " * @implements {PolymerYtuIconInterface$UID$0}",
                 " */",
                 "  var YtuIcon = function(){}",
                 "  YtuIcon = Polymer(/** @lends {YtuIcon.prototype} */ {is:\"ytu-icon\"});",
@@ -219,7 +216,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "/**",
                 " * @constructor",
                 " * @extends {PolymerElement}",
-                " * @implements {PolymerYtuIconElementInterface0}",
+                " * @implements {PolymerYtuIconElementInterface$m1176578414$0}",
                 " */",
                 "  var YtuIconElement = function(){}",
                 TestExternsBuilder.getClosureExternsAsSource()),
@@ -246,7 +243,7 @@ public class PolymerPassTest extends CompilerTestCase {
             lines(
                 "goog.module('modOne');",
                 "/** @constructor @extends {PolymerElement}",
-                " * @implements {PolymerexportsForPolymer$jscomp0Interface1}",
+                " * @implements {PolymerexportsForPolymer$jscomp0Interface$UID$0}",
                 " */",
                 "var exportsForPolymer$jscomp0 = function() {};",
                 "exportsForPolymer$jscomp0 = Polymer(",
@@ -274,7 +271,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "goog.loadModule(function(exports) {",
                 "goog.module('modOne');",
                 "/** @constructor @extends {PolymerElement}",
-                " * @implements {PolymerexportsForPolymer$jscomp0Interface1}",
+                " * @implements {PolymerexportsForPolymer$jscomp0Interface$UID$0}",
                 " */",
                 "var exportsForPolymer$jscomp0 = function() {};",
                 "exportsForPolymer$jscomp0 = Polymer(",
@@ -304,16 +301,16 @@ public class PolymerPassTest extends CompilerTestCase {
             TestExternsBuilder.getClosureExternsAsSource(),
             lines(
                 "goog.module('modOne');",
-                "/** @constructor @extends {PolymerElement} @implements {PolymerButtonInterface0}"
-                    + " */",
+                "/** @constructor @extends {PolymerElement} @implements"
+                    + " {PolymerButtonInterface$UID$0} */",
                 "var Button = function() {};",
                 "Button = Polymer(/** @lends {Button.prototype} */ {",
                 "  is: 'x-element',",
                 "});"),
             lines(
                 "goog.module('modTwo');",
-                "/** @constructor @extends {PolymerElement} @implements {PolymerButtonInterface1}"
-                    + " */",
+                "/** @constructor @extends {PolymerElement} @implements"
+                    + " {PolymerButtonInterface$UID$0} */",
                 "var Button = function() {};",
                 "Button = Polymer(/** @lends {Button.prototype} */ {",
                 "  is: 'y-element',",
@@ -334,7 +331,8 @@ public class PolymerPassTest extends CompilerTestCase {
             TestExternsBuilder.getClosureExternsAsSource(),
             lines(
                 "goog.module('mod');",
-                "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
+                "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface$UID$0}"
+                    + " */",
                 "var X = function() {};",
                 "X = Polymer(/** @lends {X.prototype} */ {",
                 "  is: 'x-element',",
@@ -354,7 +352,7 @@ public class PolymerPassTest extends CompilerTestCase {
         expected(
             lines(
                 "/** @constructor @extends {PolymerElement} @implements"
-                    + " {PolymerXElementElementInterface0} */",
+                    + " {PolymerXElementElementInterface$m1176578414$0} */",
                 "var XElementElement = function() {};",
                 TestExternsBuilder.getClosureExternsAsSource()),
             lines(
@@ -391,7 +389,7 @@ public class PolymerPassTest extends CompilerTestCase {
             lines(
                 "/**",
                 " * @constructor @extends {PolymerElement}",
-                " * @implements {PolymerYtuCancelOfferElementInterface0} ",
+                " * @implements {PolymerYtuCancelOfferElementInterface$m1176578413$0} ",
                 " */",
                 "var YtuCancelOfferElement = function() {};",
                 TestExternsBuilder.getClosureExternsAsSource(),
@@ -407,8 +405,10 @@ public class PolymerPassTest extends CompilerTestCase {
                 "const CancelOfferRenderer = goog.require('a.UnpluggedCancelOfferRenderer');",
                 "const {Property} = goog.require('a.mod');",
                 "/** @type {CancelOfferRenderer} */ YtuCancelOfferElement.prototype.data;",
-                "Polymer(/** @lends {YtuCancelOfferElement.prototype} */",
-                " {is:'ytu-cancel-offer', properties:{data:Object}});")));
+                "Polymer(/** @lends {YtuCancelOfferElement.prototype} */ {",
+                "  is:'ytu-cancel-offer',",
+                "  properties: $jscomp.reflectObject(YtuCancelOfferElement, {data:Object})",
+                "});")));
   }
 
   @Test
@@ -432,7 +432,7 @@ public class PolymerPassTest extends CompilerTestCase {
         expected(
             lines(
                 "/** @constructor @extends {PolymerElement} @implements",
-                " {PolymerYtuCancelOfferElementInterface0} */",
+                " {PolymerYtuCancelOfferElementInterface$m1176578414$0} */",
                 "var YtuCancelOfferElement = function() {};",
                 TestExternsBuilder.getClosureExternsAsSource(),
                 "goog.provide('a.UnpluggedCancelOfferRenderer');",
@@ -445,7 +445,10 @@ public class PolymerPassTest extends CompilerTestCase {
                 "YtuCancelOfferElement.prototype.data;",
                 "Polymer(",
                 "/** @lends {YtuCancelOfferElement.prototype} */",
-                " {is:'ytu-cancel-offer', properties:{data:Object}});")));
+                " {",
+                "    is:'ytu-cancel-offer',",
+                "    properties: $jscomp.reflectObject(YtuCancelOfferElement, {data:Object})",
+                "});")));
   }
 
   @Test
@@ -461,7 +464,8 @@ public class PolymerPassTest extends CompilerTestCase {
         expected(
             lines(""),
             lines(
-                "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
+                "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface$UID$0}"
+                    + " */",
                 "var X = function() {};",
                 "X = Polymer(/** @lends {X.prototype} */ {",
                 "  is: 'x-element',})",
@@ -482,7 +486,7 @@ public class PolymerPassTest extends CompilerTestCase {
         expected(
             lines(
                 "/** @constructor @extends {PolymerElement} @implements"
-                    + " {PolymerXElementElementInterface0} */",
+                    + " {PolymerXElementElementInterface$m1176578414$0} */",
                 "var XElementElement = function() {};"),
             lines(
                 "var PI = 3.14",
@@ -508,7 +512,8 @@ public class PolymerPassTest extends CompilerTestCase {
             lines(
                 "goog.module('mod');",
                 "(function() {",
-                "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
+                "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface$UID$0}"
+                    + " */",
                 "var X = function() {};",
                 "    X = Polymer(/** @lends {X.prototype} */ {",
                 "    is: 'x-element',",
@@ -531,7 +536,7 @@ public class PolymerPassTest extends CompilerTestCase {
         expected(
             lines(
                 "/** @constructor @extends {PolymerElement} @implements"
-                    + " {PolymerXElementElementInterface0} */",
+                    + " {PolymerXElementElementInterface$m1176578414$0} */",
                 "var XElementElement = function() {};",
                 TestExternsBuilder.getClosureExternsAsSource()),
             lines(
@@ -563,7 +568,8 @@ public class PolymerPassTest extends CompilerTestCase {
                 "const Component = goog.require('a');",
                 "goog.forwardDeclare('something.else');",
                 "const someLocal = (function() { return 0; })();",
-                "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
+                "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface$UID$0}"
+                    + " */",
                 "var X = function() {};",
                 "X = Polymer(/** @lends {X.prototype} */ {",
                 "  is: 'x-element',",
@@ -586,7 +592,7 @@ public class PolymerPassTest extends CompilerTestCase {
         expected(
             lines(
                 "/** @constructor @extends {PolymerElement} @implements"
-                    + " {PolymerXElementElementInterface0} */",
+                    + " {PolymerXElementElementInterface$m1176578414$0} */",
                 "var XElementElement = function() {};",
                 TestExternsBuilder.getClosureExternsAsSource()),
             lines(
@@ -604,7 +610,7 @@ public class PolymerPassTest extends CompilerTestCase {
     test(
         lines("var X = Polymer({", "  is: 'x-element',", "});"),
         lines(
-            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface$UID$0} */",
             "var X = function() {};",
             "X = Polymer(/** @lends {X.prototype} */ {",
             "  is: 'x-element',",
@@ -617,11 +623,12 @@ public class PolymerPassTest extends CompilerTestCase {
             "  static get properties() { return {}; }",
             "};"),
         lines(
+            "/** @implements {PolymerXInterface$UID$0} */",
             "var X = class extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
             "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() { return {}; }",
+            "  static get properties() { return $jscomp.reflectObject(X, {}); }",
             "};"));
   }
 
@@ -646,7 +653,7 @@ public class PolymerPassTest extends CompilerTestCase {
         lines(
             "/**",
             " * @constructor",
-            " * @implements {PolymerXInterface0}",
+            " * @implements {PolymerXInterface$UID$0}",
             " * @extends {PolymerElement}",
             " */",
             "var X = function() {};",
@@ -659,11 +666,12 @@ public class PolymerPassTest extends CompilerTestCase {
             "  static get properties() { return { }; }",
             "};"),
         lines(
+            "/** @implements {PolymerXInterface$UID$0} */",
             "let X = class extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
             "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() { return {}; }",
+            "  static get properties() { return $jscomp.reflectObject(X, {}); }",
             "};"));
   }
 
@@ -675,7 +683,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "/**\n",
             "* @constructor\n",
             "* @extends {PolymerElement}\n",
-            "* @implements {PolymerXInterface0}\n",
+            "* @implements {PolymerXInterface$UID$0}\n",
             "*/\n",
             "var X=function(){};X=Polymer(/** @lends {X.prototype} */ {is:\"x-element\"})"));
 
@@ -686,11 +694,12 @@ public class PolymerPassTest extends CompilerTestCase {
             "  static get properties() { return {}; }",
             "};"),
         lines(
+            "/** @implements {PolymerXInterface$UID$0} */",
             "const X = class extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
             "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() { return {}; }",
+            "  static get properties() { return $jscomp.reflectObject(X, {}); }",
             "};"));
   }
 
@@ -700,7 +709,7 @@ public class PolymerPassTest extends CompilerTestCase {
         lines("Polymer({", "  is: 'x',", "});"),
         lines(
             "/**",
-            " * @implements {PolymerXElementInterface0}",
+            " * @implements {PolymerXElementInterface$UID$0}",
             " * @constructor @extends {PolymerElement}",
             " */",
             "var XElement = function() {};",
@@ -715,7 +724,7 @@ public class PolymerPassTest extends CompilerTestCase {
         lines("/** @const */ var x = {};", "x.Z = Polymer({", "  is: 'x-element',", "});"),
         lines(
             "/** @const */ var x = {};",
-            "/** @constructor @extends {PolymerElement} @implements {Polymerx_ZInterface0} */",
+            "/** @constructor @extends {PolymerElement} @implements {Polymerx_ZInterface$UID$0} */",
             "x.Z = function() {};",
             "x.Z = Polymer(/** @lends {x.Z.prototype} */ {",
             "  is: 'x-element',",
@@ -730,18 +739,19 @@ public class PolymerPassTest extends CompilerTestCase {
             "};"),
         lines(
             "const x = {};",
+            "/** @implements {Polymerx_ZInterface$UID$0} */",
             "x.Z = class extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
             "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "  static get properties() { return {}; }",
+            "  static get properties() { return $jscomp.reflectObject(x.Z, {}); }",
             "};"));
 
     test(
         lines("var x = {};", "x.Z = Polymer({", "  is: 'x-element',", "});"),
         lines(
             "var x = {};",
-            "/** @constructor @extends {PolymerElement} @implements {Polymerx_ZInterface0} */",
+            "/** @constructor @extends {PolymerElement} @implements {Polymerx_ZInterface$UID$0} */",
             "x.Z = function() {};",
             "x.Z = Polymer(/** @lends {x.Z.prototype} */ {",
             "  is: 'x-element',",
@@ -754,7 +764,7 @@ public class PolymerPassTest extends CompilerTestCase {
     test(
         "var X = Polymer({is:'x-element', [name + (() => 42)]: function() {return 42;}});",
         lines(
-            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface$UID$0} */",
             "var X = function() {}",
             "",
             "X = Polymer(/** @lends {X.prototype} */{",
@@ -782,13 +792,16 @@ public class PolymerPassTest extends CompilerTestCase {
         lines(
             "/** @const */ var x = {};",
             "(function() {",
-            "  /** @constructor @extends {PolymerElement} @implements {Polymerx_ZInterface0}*/",
+            "  /** @constructor @extends {PolymerElement} @implements"
+                + " {Polymerx_ZInterface$UID$0}*/",
             "  x.Z = function() {};",
             "  x.Z = Polymer(/** @lends {x.Z.prototype} */ {",
             "    is: 'x-element',",
             "    /** @this {x.Z} */",
             "    sayHi: function() { alert('hi'); },",
             "  });",
+            "  /** @export */",
+            "  x.Z.prototype.sayHi;",
             "})()"));
 
     test(
@@ -803,11 +816,12 @@ public class PolymerPassTest extends CompilerTestCase {
         lines(
             "const x = {};",
             "(function() {",
+            "  /** @implements {Polymerx_ZInterface$UID$0} */",
             "  x.Z = class extends Polymer.Element {",
             "    /** @return {string} */",
             "    static get is() { return 'x-element'; }",
             "    /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "    static get properties() { return {}; }",
+            "    static get properties() { return $jscomp.reflectObject(x.Z, {}); }",
             "  };",
             "})();"));
   }
@@ -829,7 +843,7 @@ public class PolymerPassTest extends CompilerTestCase {
         lines(
             "/**",
             " * @constructor @extends {PolymerElement}",
-            " * @implements {PolymerXElementInterface0}",
+            " * @implements {PolymerXElementInterface$UID$0}",
             " */",
             "var XElement = function() {};",
             "(function() {",
@@ -838,6 +852,8 @@ public class PolymerPassTest extends CompilerTestCase {
             "    /** @this {XElement} */",
             "    sayHi: function() { alert('hi'); },",
             "  });",
+            "  /** @export */",
+            "  XElement.prototype.sayHi;",
             "})()"));
 
     test(
@@ -850,11 +866,12 @@ public class PolymerPassTest extends CompilerTestCase {
             "})();"),
         lines(
             "(function() {",
+            "  /** @implements {PolymerXInterface$UID$0} */",
             "  const X = class extends Polymer.Element {",
             "    /** @return {string} */",
             "    static get is() { return 'x-element'; }",
             "    /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
-            "    static get properties() { return {}; }",
+            "    static get properties() { return $jscomp.reflectObject(X, {}); }",
             "  };",
             "})();"));
   }
@@ -862,7 +879,6 @@ public class PolymerPassTest extends CompilerTestCase {
   @Test
   public void testIIFEExtractionVarTarget() {
     test(
-        1,
         lines(
             "(function() {",
             "  Polymer({",
@@ -873,7 +889,7 @@ public class PolymerPassTest extends CompilerTestCase {
         lines(
             "/**",
             " * @constructor @extends {PolymerElement}",
-            " * @implements {PolymerFooThingElementInterface0}",
+            " * @implements {PolymerFooThingElementInterface$UID$0}",
             " */",
             "var FooThingElement = function() {};",
             "(function() {",
@@ -882,6 +898,8 @@ public class PolymerPassTest extends CompilerTestCase {
             "    /** @this {FooThingElement} */",
             "    sayHi: function() { alert('hi'); },",
             "  });",
+            "  /** @export */",
+            "  FooThingElement.prototype.sayHi;",
             "})()"));
   }
 
@@ -900,13 +918,15 @@ public class PolymerPassTest extends CompilerTestCase {
             "/**",
             " * @param {string} name",
             " * @constructor @extends {PolymerElement}",
-            " * @implements {PolymerXInterface0}",
+            " * @implements {PolymerXInterface$UID$0}",
             " */",
             "var X = function(name) { alert('hi, ' + name); };",
             "X = Polymer(/** @lends {X.prototype} */ {",
             "  is: 'x-element',",
             "  factoryImpl: function(name) { alert('hi, ' + name); },",
-            "});"));
+            "});",
+            "/** @export */",
+            "X.prototype.factoryImpl;"));
   }
 
   @Test
@@ -924,14 +944,16 @@ public class PolymerPassTest extends CompilerTestCase {
             "/**",
             " * @param {string} name",
             " * @constructor @extends {PolymerElement}",
-            " * @implements {PolymerXInterface0}",
+            " * @implements {PolymerXInterface$UID$0}",
             " */",
             "var X = function(name) { alert('hi, ' + name); };",
             "",
             "X = Polymer(/** @lends {X.prototype} */ {",
             "  is: 'x-element',",
             "  factoryImpl(name) { alert('hi, ' + name); },",
-            "});"));
+            "});",
+            "/** @export */",
+            "X.prototype.factoryImpl;"));
   }
 
   @Test
@@ -949,7 +971,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "  },",
             "});"),
         lines(
-            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface$UID$0}*/",
             "var X = function() {};",
             "X = Polymer(/** @lends {X.prototype} */ {",
             "  is: 'x-element',",
@@ -961,7 +983,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "  handleClick: function(e) {",
             "    alert('Thank you for clicking');",
             "  },",
-            "});"));
+            "});",
+            "/** @export */",
+            "X.prototype.handleClick;"));
 
     test(
         lines(
@@ -972,13 +996,16 @@ public class PolymerPassTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
+            "/** @implements {PolymerXInterface$UID$0} */",
             "class X extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
             "  handleClick(e) {",
             "    alert('Thank you for clicking');",
             "  }",
-            "}"));
+            "}",
+            "/** @export */",
+            "X.prototype.handleClick;"));
   }
 
   @Test
@@ -1002,7 +1029,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "  },",
             "});"),
         lines(
-            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface$UID$0}*/",
             "var X = function() {};",
             "X = Polymer(/** @lends {X.prototype} */ {",
             "  is: 'x-element',",
@@ -1020,7 +1047,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "  handleClick: function(e) {",
             "    alert('Thank you for clicking');",
             "  },",
-            "});"));
+            "});",
+            "/** @export */",
+            "X.prototype.handleClick;"));
   }
 
   @Test
@@ -1032,7 +1061,7 @@ public class PolymerPassTest extends CompilerTestCase {
         lines(
             "/**",
             " * @constructor @extends {PolymerInputElement}",
-            " * @implements {PolymerXInputElementInterface0}",
+            " * @implements {PolymerXInputElementInterface$UID$0}",
             " */",
             "var XInputElement = function() {};",
             "Polymer(/** @lends {XInputElement.prototype} */ {",
@@ -1044,13 +1073,14 @@ public class PolymerPassTest extends CompilerTestCase {
         externs(EXTERNS),
         srcs(js),
         expected(
-            lines("/** @interface */", "var PolymerXInputElementInterface0 = function() {};"),
-            INPUT_EXTERNS));
+            lines(
+                "/** @interface */",
+                "var PolymerXInputElementInterface$m1146332801$0 = function() {};"),
+            lines(INPUT_EXTERNS, REFLECT_OBJECT_DEF)));
   }
 
   @Test
   public void testExtendNonExistentElement() {
-    polymerVersion = 1;
     String js = lines("Polymer({", "  is: 'x-input',", "  extends: 'nonexist',", "});");
 
     testError(js, POLYMER_INVALID_EXTENDS);
@@ -1073,10 +1103,10 @@ public class PolymerPassTest extends CompilerTestCase {
             lines(
                 "",
                 "/** @interface */",
-                "var PolymerXInputElementInterface0 = function() {};",
+                "var PolymerXInputElementInterface$m1146332801$0 = function() {};",
                 "/** @interface */",
-                "var PolymerYInputElementInterface1 = function() {};"),
-            INPUT_EXTERNS);
+                "var PolymerYInputElementInterface$m1146332801$1 = function() {};"),
+            lines(INPUT_EXTERNS, REFLECT_OBJECT_DEF));
 
     testExternChanges(externs(EXTERNS), srcs(js), newExterns);
   }
@@ -1105,7 +1135,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "/** @constructor */",
             "var User = function() {};",
             "/** @const */ var a = {};",
-            "/** @constructor @extends {PolymerElement} @implements {Polymera_BInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {Polymera_BInterface$UID$0}*/",
             "a.B = function() {};",
             "/** @type {!User} @private */",
             "a.B.prototype.user_;",
@@ -1117,7 +1147,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "a.B.prototype.thingToDo;",
             "a.B = Polymer(/** @lends {a.B.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(a.B, {",
             "    user_: Object,",
             "    pets: {",
             "      type: Array,",
@@ -1125,7 +1155,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "    },",
             "    name: String,",
             "    thingToDo: Function,",
-            "  },",
+            "  }),",
             "});"));
 
     test(
@@ -1152,12 +1182,13 @@ public class PolymerPassTest extends CompilerTestCase {
             "/** @constructor */",
             "var User = function() {};",
             "var a = {};",
+            "/** @implements {Polymera_BInterface$UID$0} */",
             "a.B = class extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
             "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
             "  static get properties() {",
-            "    return {",
+            "    return $jscomp.reflectObject(a.B, {",
             "      user_: Object,",
             "      pets: {",
             "        type: Array,",
@@ -1165,7 +1196,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "      },",
             "      name: String,",
             "      thingToDo: Function,",
-            "    };",
+            "    });",
             "  }",
             "};",
             "/** @type {!User} @private */",
@@ -1205,7 +1236,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "/** @constructor */",
             "var User = function() {};",
             "/** @const */ var a = {};",
-            "/** @constructor @extends {PolymerElement} @implements {Polymera_BInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {Polymera_BInterface$UID$0}*/",
             "a.B = function() {};",
             "/** @type {!User} @private */",
             "a.B.prototype.user_;",
@@ -1215,7 +1246,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "a.B.prototype.name;",
             "a.B = Polymer(/** @lends {a.B.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(a.B, {",
             "    user_: {",
             "      type: Object,",
             "      /** @this {a.B} @return {!User} */",
@@ -1228,7 +1259,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "      value: function() { return [this.name]; },",
             "    },",
             "    name: String,",
-            "  },",
+            "  }),",
             "});"));
 
     test(
@@ -1258,12 +1289,13 @@ public class PolymerPassTest extends CompilerTestCase {
             "/** @constructor */",
             "var User = function() {};",
             "/** @const */ var a = {};",
+            "/** @implements {Polymera_BInterface$UID$0} */",
             "a.B = class extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
             "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
             "  static get properties() {",
-            "    return {",
+            "    return $jscomp.reflectObject(a.B, {",
             "      user_: {",
             "        type: Object,",
             "        /** @this {a.B} @return {!User} */",
@@ -1276,7 +1308,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "        value: function() { return [this.name]; },",
             "      },",
             "      name: String,",
-            "    };",
+            "    });",
             "  }",
             "};",
             "/** @type {!User} @private */",
@@ -1308,7 +1340,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "",
             "/** ",
             " * @constructor @extends {PolymerElement} ",
-            " * @implements {PolymerES6TestInterface0}",
+            " * @implements {PolymerES6TestInterface$UID$0}",
             " */",
             "var ES6Test = function() {};",
             "/** @type {!Object} */",
@@ -1316,13 +1348,13 @@ public class PolymerPassTest extends CompilerTestCase {
             "",
             "ES6Test = Polymer(/** @lends {ES6Test.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(ES6Test, {",
             "    user: {",
             "      type: Object,",
             "      /** @this {ES6Test} @return {!Object} */",
             "      value() { return new User(); },",
             "    },",
-            "  },",
+            "  }),",
             "});"));
 
     test(
@@ -1352,12 +1384,13 @@ public class PolymerPassTest extends CompilerTestCase {
             "/** @constructor */",
             "var User = function() {};",
             "var a = {};",
+            "/** @implements {Polymera_BInterface$UID$0} */",
             "a.B = class extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
             "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
             "  static get properties() {",
-            "    return {",
+            "    return $jscomp.reflectObject(a.B, {",
             "      user_: {",
             "        type: Object,",
             "        /** @this {a.B} @return {!User} */",
@@ -1370,7 +1403,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "        value() { return [this.name]; },",
             "      },",
             "      name: String,",
-            "    };",
+            "    });",
             "  }",
             "};",
             "/** @type {!User} @private */",
@@ -1400,11 +1433,10 @@ public class PolymerPassTest extends CompilerTestCase {
             "});");
 
     test(
-        1,
         js,
         lines(
             "/** @const */ var a = {};",
-            "/** @constructor @extends {PolymerElement} @implements {Polymera_BInterface0} */",
+            "/** @constructor @extends {PolymerElement} @implements {Polymera_BInterface$UID$0} */",
             "a.B = function() {};",
             "/** @type {!Array<string>} */",
             "a.B.prototype.pets;",
@@ -1414,69 +1446,30 @@ public class PolymerPassTest extends CompilerTestCase {
             "a.B.prototype._setPets = function(pets) {};",
             "a.B = Polymer(/** @lends {a.B.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(a.B, {",
             "    pets: {",
             "      type: Array,",
             "      readOnly: true,",
             "    },",
             "    name_: String,",
-            "  },",
+            "  }),",
             "});"));
 
     testExternChanges(
-        1,
-        EXTERNS,
-        js,
+        externs(EXTERNS),
+        srcs(js),
         expected(
             lines(
                 "/** @interface */",
-                "var Polymera_BInterface0 = function() {};",
+                "var Polymera_BInterface$m1146332801$0 = function() {};",
                 "/** @type {?} */",
-                "Polymera_BInterface0.prototype.pets;",
+                "Polymera_BInterface$m1146332801$0.prototype.pets;",
                 "/** @private {?} */",
-                "Polymera_BInterface0.prototype.name_;",
+                "Polymera_BInterface$m1146332801$0.prototype.name_;",
                 "/** @param {?} pets **/",
-                "Polymera_BInterface0.prototype._setPets;"),
+                "Polymera_BInterface$m1146332801$0.prototype._setPets;"),
             EXTERNS));
-
-    test(
-        2,
-        js,
-        lines(
-            "/** @const */ var a = {};",
-            "/** @constructor @extends {PolymerElement} @implements {Polymera_BInterface0} */",
-            "a.B = function() {};",
-            "/** @type {!Array<string>} */",
-            "a.B.prototype.pets;",
-            "/** @private {string} */",
-            "a.B.prototype.name_;",
-            "/** @param {!Array<string>} pets @override */",
-            "a.B.prototype._setPets = function(pets) {};",
-            "a.B = Polymer(/** @lends {a.B.prototype} */ {",
-            "  is: 'x-element',",
-            "  properties: {",
-            "    pets: {",
-            "      type: Array,",
-            "      readOnly: true,",
-            "    },",
-            "    name_: String,",
-            "  },",
-            "});"));
-
-    testExternChanges(
-        2,
-        EXTERNS,
-        js,
-        expected(
-            lines(
-                "/** @interface */",
-                "var Polymera_BInterface0 = function() {};",
-                "/** @type {?} */",
-                "Polymera_BInterface0.prototype.pets;",
-                "/** @param {?} pets **/",
-                "Polymera_BInterface0.prototype._setPets;"),
-            EXTERNS));
-
+    
     String jsClass =
         lines(
             "class A extends Polymer.Element {",
@@ -1492,33 +1485,31 @@ public class PolymerPassTest extends CompilerTestCase {
             "}");
 
     testExternChanges(
-        2,
-        EXTERNS,
-        jsClass,
+        externs(EXTERNS),
+        srcs(jsClass),
         expected(
             lines(
                 "/** @interface */",
-                "var PolymerAInterface0 = function() {};",
+                "var PolymerAInterface$m1146332801$0 = function() {};",
                 "/** @type {?} */",
-                "PolymerAInterface0.prototype.pets;",
+                "PolymerAInterface$m1146332801$0.prototype.pets;",
                 "/** @param {?} pets **/",
-                "PolymerAInterface0.prototype._setPets;"),
+                "PolymerAInterface$m1146332801$0.prototype._setPets;"),
             EXTERNS));
 
     test(
-        2,
         jsClass,
         lines(
-            "/** @implements {PolymerAInterface0} */",
+            "/** @implements {PolymerAInterface$UID$0} */",
             "class A extends Polymer.Element {",
             "  /** @return {string} */ static get is() { return 'a-element'; }",
             "  /** @return {PolymerElementProperties} */ static get properties() {",
-            "    return {",
+            "    return $jscomp.reflectObject(A, {",
             "      pets: {",
             "        type: Array,",
             "        readOnly: true",
             "      }",
-            "    };",
+            "    });",
             "  }",
             "}",
             "/** @type {!Array} */",
@@ -1543,13 +1534,12 @@ public class PolymerPassTest extends CompilerTestCase {
             "",
             "const obj = {randomProperty: 0, otherProperty: 1};");
     test(
-        1,
         js,
         lines(
             "/**",
             "* @constructor",
             "* @extends {PolymerElement}",
-            "* @implements {PolymerFooElementInterface0}",
+            "* @implements {PolymerFooElementInterface$UID$0}",
             "*/",
             "var FooElement=function(){};",
             "(function(){",
@@ -1557,19 +1547,18 @@ public class PolymerPassTest extends CompilerTestCase {
             "   FooElement.prototype.value;",
             "   Polymer(/** @lends {FooElement.prototype} */ {",
             "     is:\"foo\",",
-            "     properties:{",
-            "       value:Object}})})();",
+            "     properties: $jscomp.reflectObject(FooElement, {value:Object})",
+            "   })})();",
             "const obj={randomProperty:0,otherProperty:1}"));
 
-    polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
     testExternChanges(
         externs(INPUT_EXTERNS),
         srcs(js),
         expected(
             lines(
-                "/** @interface */ var PolymerFooElementInterface0=function(){};",
-                "/** @type {{randomProperty:?}} */ var PolymerDummyVar1;",
-                "/** @type {?} */ PolymerFooElementInterface0.prototype.value"),
+                "/** @interface */ var PolymerFooElementInterface$m1146332801$0=function(){};",
+                "/** @type {{randomProperty:?}} */ var PolymerDummyVar0;",
+                "/** @type {?} */ PolymerFooElementInterface$m1146332801$0.prototype.value"),
             INPUT_EXTERNS));
   }
 
@@ -1594,11 +1583,11 @@ public class PolymerPassTest extends CompilerTestCase {
             "});");
 
     test(
-        1,
         js,
         lines(
             "/** @const */ var a = {};",
-            "/** @constructor @extends {PolymerElement} @implements {Polymera_BInterface0} */",
+            "/** @constructor @extends {PolymerElement} @implements"
+                + " {Polymera_BInterface$m1146332801$0} */",
             "a.B = function() {};",
             "/** @type {!Array<string>} */",
             "a.B.prototype.pets;",
@@ -1606,7 +1595,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "a.B.prototype.name;",
             "a.B = Polymer(/** @lends {a.B.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(a.B, {",
             "    pets: {",
             "      type: Array,",
             "      readOnly: false,",
@@ -1615,58 +1604,20 @@ public class PolymerPassTest extends CompilerTestCase {
             "      type: String,",
             "      reflectToAttribute: true",
             "    }",
-            "  },",
+            "  }),",
             "});"));
 
     testExternChanges(
-        1,
-        EXTERNS,
-        js,
+        externs(EXTERNS),
+        srcs(js),
         expected(
             lines(
                 "/** @interface */",
-                "var Polymera_BInterface0 = function() {};",
+                "var Polymera_BInterface$m1146332801$0 = function() {};",
                 "/** @type {?} */",
-                "Polymera_BInterface0.prototype.pets;",
+                "Polymera_BInterface$m1146332801$0.prototype.pets;",
                 "/** @type {?} */",
-                "Polymera_BInterface0.prototype.name;"),
-            EXTERNS));
-
-    test(
-        2,
-        js,
-        lines(
-            "/** @const */ var a = {};",
-            "/** @constructor @extends {PolymerElement} @implements {Polymera_BInterface0} */",
-            "a.B = function() {};",
-            "/** @type {!Array<string>} */",
-            "a.B.prototype.pets;",
-            "/** @type {string} */",
-            "a.B.prototype.name;",
-            "a.B = Polymer(/** @lends {a.B.prototype} */ {",
-            "  is: 'x-element',",
-            "  properties: {",
-            "    pets: {",
-            "      type: Array,",
-            "      readOnly: false,",
-            "    },",
-            "    name: {",
-            "      type: String,",
-            "      reflectToAttribute: true",
-            "    }",
-            "  },",
-            "});"));
-
-    testExternChanges(
-        2,
-        EXTERNS,
-        js,
-        expected(
-            lines(
-                "/** @interface */",
-                "var Polymera_BInterface0 = function() {};",
-                "/** @type {?} */",
-                "Polymera_BInterface0.prototype.name;"),
+                "Polymera_BInterface$m1146332801$0.prototype.name;"),
             EXTERNS));
   }
 
@@ -1681,6 +1632,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
+            "/** @implements {PolymerFooElementInterface$UID$0} */",
             "class FooElement extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
@@ -1704,7 +1656,7 @@ public class PolymerPassTest extends CompilerTestCase {
         lines(
             "/** ",
             " * @constructor @extends {PolymerElement} ",
-            " * @implements {PolymerES6TestInterface0} ",
+            " * @implements {PolymerES6TestInterface$UID$0} ",
             " */",
             "var ES6Test = function() {};",
             "",
@@ -1714,7 +1666,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "  sayHi() {",
             "    alert('hi');",
             "  },",
-            "});"));
+            "});",
+            "/** @export */",
+            "ES6Test.prototype.sayHi;"));
   }
 
   @Test
@@ -1728,7 +1682,7 @@ public class PolymerPassTest extends CompilerTestCase {
         lines(
             "/** ",
             " * @constructor @extends {PolymerElement} ",
-            " * @implements {PolymerES6TestInterface0} ",
+            " * @implements {PolymerES6TestInterface$UID$0} ",
             " */",
             "var ES6Test = function() {};",
             "",
@@ -1736,7 +1690,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "  is: 'x-element',",
             "  /** @this {ES6Test} */",
             "  sayHi: () => 42,",
-            "});"));
+            "});",
+            "/** @export */",
+            "ES6Test.prototype.sayHi;"));
   }
 
   @Test
@@ -1771,16 +1727,21 @@ public class PolymerPassTest extends CompilerTestCase {
                 "",
                 "/** ",
                 " * @constructor @extends {PolymerElement} ",
-                " * @implements {Polymeres6_TestInterface0} ",
+                " * @implements {Polymeres6_TestInterface$UID$0} ",
                 " */",
                 "es6.Test = function() {};",
-                "/** @suppress {unusedPrivateMembers} */",
+                "/**",
+                " * @suppress {unusedPrivateMembers}",
+                " * @return {?}",
+                " */",
                 "es6.Test.prototype.sayHi = () => void 0;",
                 "",
                 "es6.Test = Polymer(/** @lends {es6.Test.prototype} */ {",
                 "  is: 'x-element',",
                 "  behaviors: [es6.Behavior]",
-                "});")));
+                "});",
+                "/** @export */",
+                "es6.Test.prototype.sayHi;")));
   }
 
   @Test
@@ -1797,7 +1758,7 @@ public class PolymerPassTest extends CompilerTestCase {
         lines(
             "/** ",
             " * @constructor @extends {PolymerElement} ",
-            " * @implements {PolymerES6TestInterface0} ",
+            " * @implements {PolymerES6TestInterface$UID$0} ",
             " */",
             "var ES6Test = function() {};",
             "",
@@ -1807,7 +1768,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "  created() {",
             "    alert('Shorthand created');",
             "  },",
-            "});"));
+            "});",
+            "/** @export */",
+            "ES6Test.prototype.created;"));
   }
 
   @Test
@@ -1823,7 +1786,7 @@ public class PolymerPassTest extends CompilerTestCase {
         lines(
             "/** ",
             " * @constructor @extends {PolymerElement} ",
-            " * @implements {PolymerESTestInterface0} ",
+            " * @implements {PolymerESTestInterface$UID$0} ",
             " */",
             "var ESTest = function() {};",
             "",
@@ -1833,7 +1796,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "  sayHi() {",
             "    return [1, 2];",
             "  },",
-            "});"));
+            "});",
+            "/** @export */",
+            "ESTest.prototype.sayHi;"));
   }
 
   @Test
@@ -1859,7 +1824,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "  },",
             "});"),
         lines(
-            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface$UID$0} */",
             "var X = function() {};",
             "X = Polymer(/** @lends {X.prototype} */ {",
             "  is: 'x-element',",
@@ -1880,7 +1845,13 @@ public class PolymerPassTest extends CompilerTestCase {
             "  sayHelloTo_: function(name) {",
             "    alert('Hello, ' + name);",
             "  },",
-            "});"));
+            "});",
+            "/** @export @private */",
+            "X.prototype.sayHelloTo_;",
+            "/** @export */",
+            "X.prototype.created;",
+            "/** @export */",
+            "X.prototype.sayHi;"));
 
     test(
         lines(
@@ -1902,6 +1873,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
+            "/** @implements {PolymerFooInterface$UID$0} */",
             "class Foo extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
@@ -1919,7 +1891,13 @@ public class PolymerPassTest extends CompilerTestCase {
             "  sayHelloTo_(name) {",
             "    alert('Hello, ' + name);",
             "  }",
-            "}"));
+            "}",
+            "/** @export @private */",
+            "Foo.prototype.sayHelloTo_;",
+            "/** @export */",
+            "Foo.prototype.connectedCallback;",
+            "/** @export */",
+            "Foo.prototype.sayHi;"));
   }
 
   @Test
@@ -1962,19 +1940,19 @@ public class PolymerPassTest extends CompilerTestCase {
             "SomeType.prototype.toggle = function() {};",
             "SomeType.prototype.switch = function() {};",
             "SomeType.prototype.touch = function() {};",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface$UID$0} */",
             "var X = function() {};",
             "/** @type {!HTMLElement} */",
             "X.prototype.propName;",
             "X = Polymer(/** @lends {X.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(X, {",
             "    propName: {",
             "      type: Object,",
             "      /** @this {X} @return {!HTMLElement} */",
             "      value: function() { return this.$['id']; },",
             "    },",
-            "  },",
+            "  }),",
             "  /** @this {X} */",
             "  sayHi: function() {",
             "    this.$['checkbox'].toggle();",
@@ -1992,7 +1970,13 @@ public class PolymerPassTest extends CompilerTestCase {
             "  sayHelloTo_: function(name) {",
             "    this.$['otherThing'].touch();",
             "  },",
-            "});"));
+            "});",
+            "/** @export @private */",
+            "X.prototype.sayHelloTo_;",
+            "/** @export */",
+            "X.prototype.created;",
+            "/** @export */",
+            "X.prototype.sayHi;"));
   }
 
   @Test
@@ -2029,12 +2013,13 @@ public class PolymerPassTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
+            "/** @implements {PolymerFooInterface$UID$0} */",
             "class Foo extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
             "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
             "  static get properties() {",
-            "    return {",
+            "    return $jscomp.reflectObject(Foo, {",
             "      propName: {",
             "        type: Object,",
             "        /** @this {Foo} @return {!HTMLElement} */",
@@ -2042,7 +2027,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "          return /** @type {!HTMLElement} */ (this.$['id']);",
             "        },",
             "      }",
-            "    };",
+            "    });",
             "  }",
             "  sayHi() {",
             "    this.$['checkbox'].toggle();",
@@ -2060,7 +2045,13 @@ public class PolymerPassTest extends CompilerTestCase {
             "  }",
             "}",
             "/** @type {!HTMLElement} */",
-            "Foo.prototype.propName;"));
+            "Foo.prototype.propName;",
+            "/** @export @private */",
+            "Foo.prototype.sayHelloTo_;",
+            "/** @export */",
+            "Foo.prototype.connectedCallback;",
+            "/** @export */",
+            "Foo.prototype.sayHi;"));
   }
 
   @Test
@@ -2083,7 +2074,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "",
             "/** ",
             " * @constructor @extends {PolymerElement} ",
-            " * @implements {PolymerES6TestInterface0} ",
+            " * @implements {PolymerES6TestInterface$UID$0} ",
             " */",
             "var ES6Test = function() {};",
             "",
@@ -2093,7 +2084,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "  sayHi() {",
             "    this.$['checkbox'].toggle();",
             "  },",
-            "});"));
+            "});",
+            "/** @export */",
+            "ES6Test.prototype.sayHi;"));
   }
 
   @Test
@@ -2139,7 +2132,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "};",
             "/** ",
             " * @constructor @extends {PolymerElement} ",
-            " * @implements {PolymerES6TestInterface0} ",
+            " * @implements {PolymerES6TestInterface$UID$0} ",
             " */",
             "var ES6Test = function() {};",
             "",
@@ -2156,7 +2149,11 @@ public class PolymerPassTest extends CompilerTestCase {
             "  toggle(el) {",
             "    el.toggle();",
             "  },",
-            "});"));
+            "});",
+            "/** @export */",
+            "ES6Test.prototype.toggle;",
+            "/** @export */",
+            "ES6Test.prototype.sayHi;"));
   }
 
   /**
@@ -2206,7 +2203,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "    }",
             "  },",
             "};",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/",
             "var A = function() {};",
             "/** @type {!FunObject} */",
             "A.prototype.funThing;",
@@ -2216,16 +2213,17 @@ public class PolymerPassTest extends CompilerTestCase {
             "A.prototype.name;",
             "A = Polymer(/** @lends {A.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(A, {",
             "    pets: {",
             "      type: Array,",
             "      notify: true,",
             "    },",
             "    name: String,",
-            "  },",
+            "  }),",
             "  behaviors: [ FunBehavior ],",
             "});",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerBInterface1}*/",
+            "/** @constructor @extends {PolymerElement} @implements"
+                + " {PolymerBInterface$m1146332801$1*/",
             "var B = function() {};",
             "/** @type {!FunObject} */",
             "B.prototype.funThing;",
@@ -2233,9 +2231,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "B.prototype.foo;",
             "B = Polymer(/** @lends {B.prototype} */ {",
             "  is: 'y-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(B, {",
             "    foo: String,",
-            "  },",
+            "  }),",
             "  behaviors: [ FunBehavior ],",
             "});"));
   }
@@ -2369,7 +2367,8 @@ public class PolymerPassTest extends CompilerTestCase {
                 "  /** @suppress {checkTypes|globalThis|visibility} */",
                 "  created: function() {}",
                 "};",
-                "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+                "/** @constructor @extends {PolymerElement} @implements"
+                    + " {PolymerAInterface$UID$0}*/",
                 "var A = function() {};",
                 "/** @type {boolean} */",
                 "A.prototype.isFun;",
@@ -2390,15 +2389,17 @@ public class PolymerPassTest extends CompilerTestCase {
                 "A.prototype.someNumber;",
                 "A = Polymer(/** @lends {A.prototype} */ {",
                 "  is: 'x-element',",
-                "  properties: {",
+                "  properties: $jscomp.reflectObject(A, {",
                 "    pets: {",
                 "      type: Array,",
                 "      notify: true,",
                 "    },",
                 "    name: String,",
-                "  },",
+                "  }),",
                 "  behaviors: [ FunBehavior ],",
-                "});")),
+                "});",
+                "/** @export */",
+                "A.prototype.doSomethingFun;")),
         (Postcondition)
             compiler -> {
               // The original doSomethingFun definition in FunBehavior is on line 21, so make sure
@@ -2441,7 +2442,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "/**",
                 " * @constructor",
                 " * @extends {PolymerElement}",
-                " * @implements {PolymerMyElementInterface0}",
+                " * @implements {PolymerMyElementInterface$UID$0}",
                 " */",
                 "var MyElement = function(){};",
                 "/** @type {boolean} */",
@@ -2468,54 +2469,55 @@ public class PolymerPassTest extends CompilerTestCase {
   @Test
   public void testBehaviorWithProtectedMethod() {
     enableCheckAccessControls();
-    for (int i = 1; i <= 2; i++) {
-      this.polymerVersion = i;
-      test(
-          srcs(
-              lines(
-                  "/** @polymerBehavior */",
-                  "var FunBehavior = {",
-                  "  /** @protected */",
-                  "  doSomethingFun: function() {},",
-                  "};"),
-              lines(
-                  "var A = Polymer({",
-                  "  is: 'x-element',",
-                  "  callBehaviorMethod: function() {",
-                  "    this.doSomethingFun();",
-                  "  },",
-                  "  behaviors: [ FunBehavior ],",
-                  "});")),
-          expected(
-              lines(
-                  "/** @polymerBehavior @nocollapse */",
-                  "var FunBehavior = {",
-                  "  /**",
-                  "   * @suppress {checkTypes|globalThis|visibility}",
-                  "   */",
-                  "  doSomethingFun: function() {},",
-                  "};"),
-              lines(
-                  "/**",
-                  " * @constructor",
-                  " * @extends {PolymerElement}",
-                  " * @implements {PolymerAInterface0}",
-                  " */",
-                  "var A = function() {};",
-                  "",
-                  "/**",
-                  " * @public",
-                  " * @suppress {unusedPrivateMembers}",
-                  " */",
-                  "A.prototype.doSomethingFun = function(){};",
-                  "",
-                  "A = Polymer(/** @lends {A.prototype} */ {",
-                  "  is: 'x-element',",
-                  "  /** @this {A} */",
-                  "  callBehaviorMethod: function(){ this.doSomethingFun(); },",
-                  "  behaviors: [FunBehavior],",
-                  "})")));
-    }
+    test(
+        srcs(
+            lines(
+                "/** @polymerBehavior */",
+                "var FunBehavior = {",
+                "  /** @protected */",
+                "  doSomethingFun: function() {},",
+                "};"),
+            lines(
+                "var A = Polymer({",
+                "  is: 'x-element',",
+                "  callBehaviorMethod: function() {",
+                "    this.doSomethingFun();",
+                "  },",
+                "  behaviors: [ FunBehavior ],",
+                "});")),
+        expected(
+            lines(
+                "/** @polymerBehavior @nocollapse */",
+                "var FunBehavior = {",
+                "  /**",
+                "   * @suppress {checkTypes|globalThis|visibility}",
+                "   */",
+                "  doSomethingFun: function() {},",
+                "};"),
+            lines(
+                "/**",
+                " * @constructor",
+                " * @extends {PolymerElement}",
+                " * @implements {PolymerAInterface$UID$0}",
+                " */",
+                "var A = function() {};",
+                "",
+                "/**",
+                " * @public",
+                " * @suppress {unusedPrivateMembers}",
+                " */",
+                "A.prototype.doSomethingFun = function(){};",
+                "",
+                "A = Polymer(/** @lends {A.prototype} */ {",
+                "  is: 'x-element',",
+                "  /** @this {A} */",
+                "  callBehaviorMethod: function(){ this.doSomethingFun(); },",
+                "  behaviors: [FunBehavior],",
+                "})",
+                "/** @export */",
+                "A.prototype.callBehaviorMethod;",
+                "/** @export @protected */",
+                "A.prototype.doSomethingFun;")));
   }
 
   /** If a behavior method is {@code @private} there is a visibility warning. */
@@ -2575,7 +2577,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "  /** @suppress {checkTypes|globalThis|visibility} */",
             "  doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },",
             "};",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/",
             "var A = function() {};",
             "/** @type {!Array} */",
             "A.prototype.pets;",
@@ -2583,13 +2585,13 @@ public class PolymerPassTest extends CompilerTestCase {
             "A.prototype.name;",
             "A = Polymer(/** @lends {A.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(A, {",
             "    pets: {",
             "      type: Array,",
             "      notify: true,",
             "    },",
             "    name: String,",
-            "  },",
+            "  }),",
             "  /**",
             "   * @param {string} funAmount",
             "   * @this {A}",
@@ -2598,7 +2600,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "    alert('Element doing something' + funAmount + ' fun!');",
             "  },",
             "  behaviors: [ FunBehavior ],",
-            "});"));
+            "});",
+            "/** @export */",
+            "A.prototype.doSomethingFun;"));
   }
 
   @Test
@@ -2629,7 +2633,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "  doSomethingFun(funAmount) { alert('Something ' + funAmount + ' fun!'); },",
             "};",
             "",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/",
             "var A = function() {};",
             "",
             "/** @type {string} */",
@@ -2637,9 +2641,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "",
             "A = Polymer(/** @lends {A.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(A, {",
             "    name: String,",
-            "  },",
+            "  }),",
             "  /**",
             "   * @param {string} funAmount",
             "   * @this {A}",
@@ -2648,7 +2652,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "    alert('Element doing something' + funAmount + ' fun!');",
             "  },",
             "  behaviors: [ FunBehavior ],",
-            "});"));
+            "});",
+            "/** @export */",
+            "A.prototype.doSomethingFun;"));
   }
 
   @Test
@@ -2700,7 +2706,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "    },",
             "  },",
             "};",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/",
             "var A = function() {};",
             "/** @type {boolean} */",
             "A.prototype.isFun;",
@@ -2712,9 +2718,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "A.prototype.name;",
             "A = Polymer(/** @lends {A.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(A, {",
             "    name: String,",
-            "  },",
+            "  }),",
             "  behaviors: [ FunBehavior ],",
             "});"));
   }
@@ -2795,7 +2801,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "  /** @suppress {checkTypes|globalThis|visibility} */",
             "  doSomething: function(boredYet) { alert(boredYet + ' ' + this.boringString); },",
             "};",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/",
             "var A = function() {};",
             "/** @type {boolean} */",
             "A.prototype.isFun;",
@@ -2830,15 +2836,21 @@ public class PolymerPassTest extends CompilerTestCase {
             "};",
             "A = Polymer(/** @lends {A.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(A, {",
             "    pets: {",
             "      type: Array,",
             "      notify: true,",
             "    },",
             "    name: String,",
-            "  },",
+            "  }),",
             "  behaviors: [ SuperCoolBehaviors, BoringBehavior ],",
-            "});"));
+            "});",
+            "/** @export */",
+            "A.prototype.doSomething;",
+            "/** @export */",
+            "A.prototype.doSomethingRad;",
+            "/** @export */",
+            "A.prototype.doSomethingFun;"));
   }
 
   @Test
@@ -2897,7 +2909,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "  /** @suppress {checkTypes|globalThis|visibility} */",
             "  ready: function() {}",
             "}];",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/",
             "var A = function() {};",
             "/** @type {boolean} */",
             "A.prototype.isFun;",
@@ -2923,15 +2935,19 @@ public class PolymerPassTest extends CompilerTestCase {
             "};",
             "A = Polymer(/** @lends {A.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(A, {",
             "    pets: {",
             "      type: Array,",
             "      notify: true,",
             "    },",
             "    name: String,",
-            "  },",
+            "  }),",
             "  behaviors: [ SuperCoolBehaviors ],",
-            "});"));
+            "});",
+            "/** @export */",
+            "A.prototype.doSomethingRad;",
+            "/** @export */",
+            "A.prototype.doSomethingFun;"));
   }
 
   @Test
@@ -2955,7 +2971,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "    isFun: Boolean",
             "  },",
             "}",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/",
             "var A = function() {};",
             "/** @type {boolean} */",
             "A.prototype.isFun;",
@@ -2990,7 +3006,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "}",
             "/** @polymerBehavior @nocollapse */",
             "var SuperCoolBehaviors = [FunBehavior];",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/",
             "var A = function() {};",
             "/** @type {boolean} */",
             "A.prototype.isFun;",
@@ -3080,7 +3096,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "  /** @suppress {checkTypes|globalThis|visibility} */",
             "  doSomething: function(boredYet) { alert(boredYet + ' ' + this.boringString); },",
             "};",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/",
             "var A = function() {};",
             "/** @type {boolean} */",
             "A.prototype.isFun;",
@@ -3101,15 +3117,17 @@ public class PolymerPassTest extends CompilerTestCase {
             "};",
             "A = Polymer(/** @lends {A.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(A, {",
             "    pets: {",
             "      type: Array,",
             "      notify: true,",
             "    },",
             "    name: String,",
-            "  },",
+            "  }),",
             "  behaviors: [ SuperCoolBehaviors, BoringBehavior ],",
-            "});"));
+            "});",
+            "/** @export */",
+            "A.prototype.doSomething;"));
   }
 
   @Test
@@ -3187,7 +3205,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "  doSomething(boredYet) { alert(boredYet + ' ' + this.boringString); },",
             "};",
             "",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/",
             "var A = function() {};",
             "",
             "/** @type {boolean} */",
@@ -3210,15 +3228,17 @@ public class PolymerPassTest extends CompilerTestCase {
             "",
             "A = Polymer(/** @lends {A.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(A, {",
             "    pets: {",
             "      type: Array,",
             "      notify: true,",
             "    },",
             "    name: String,",
-            "  },",
+            "  }),",
             "  behaviors: [ SuperCoolBehaviors, BoringBehavior ],",
-            "});"));
+            "});",
+            "/** @export */",
+            "A.prototype.doSomething;"));
   }
 
   @Test
@@ -3267,7 +3287,8 @@ public class PolymerPassTest extends CompilerTestCase {
             "  /** @suppress {checkTypes|globalThis|visibility} */",
             "  created: function() {}",
             "};",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements"
+                + " {PolymerAInterface$m1146332801$0}*/",
             "var A = function() {};",
             "/** @type {boolean} */",
             "A.prototype.isFun;",
@@ -3286,46 +3307,33 @@ public class PolymerPassTest extends CompilerTestCase {
             "A.prototype._setIsFun = function(isFun) {};",
             "A = Polymer(/** @lends {A.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(A, {",
             "    pets: {",
             "      type: Array,",
             "      notify: true,",
             "    },",
             "    name: String,",
-            "  },",
+            "  }),",
             "  behaviors: [ FunBehavior ],",
-            "});"));
+            "});",
+            "/** @export */",
+            "A.prototype.doSomethingFun;"));
 
     testExternChanges(
-        1,
-        EXTERNS,
-        js,
+        externs(EXTERNS),
+        srcs(js),
         expected(
             lines(
                 "/** @interface */",
-                "var PolymerAInterface0 = function() {};",
+                "var PolymerAInterface$m1146332801$0 = function() {};",
                 "/** @type {?} */",
-                "PolymerAInterface0.prototype.isFun;",
+                "PolymerAInterface$m1146332801$0.prototype.isFun;",
                 "/** @type {?} */",
-                "PolymerAInterface0.prototype.pets;",
+                "PolymerAInterface$m1146332801$0.prototype.pets;",
                 "/** @type {?} */",
-                "PolymerAInterface0.prototype.name;",
+                "PolymerAInterface$m1146332801$0.prototype.name;",
                 "/** @param {?} isFun **/",
-                "PolymerAInterface0.prototype._setIsFun;"),
-            EXTERNS));
-
-    testExternChanges(
-        2,
-        EXTERNS,
-        js,
-        expected(
-            lines(
-                "/** @interface */",
-                "var PolymerAInterface0 = function() {};",
-                "/** @type {?} */",
-                "PolymerAInterface0.prototype.isFun;",
-                "/** @param {?} isFun **/",
-                "PolymerAInterface0.prototype._setIsFun;"),
+                "PolymerAInterface$m1146332801$0.prototype._setIsFun;"),
             EXTERNS));
   }
 
@@ -3397,7 +3405,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "    created: function() {}",
             "  };",
             "})();",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/",
             "var A = function() {};",
             "/** @type {boolean} */",
             "A.prototype.isFun;",
@@ -3408,6 +3416,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "/**",
             " * @param {string} funAmount",
             " * @suppress {unusedPrivateMembers}",
+            " * @return {?}",
             " */",
             "A.prototype.doSomethingFun = function(funAmount) {};",
             "/** @type {string} */",
@@ -3416,15 +3425,17 @@ public class PolymerPassTest extends CompilerTestCase {
             "A.prototype.someNumber;",
             "A = Polymer(/** @lends {A.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(A, {",
             "    pets: {",
             "      type: Array,",
             "      notify: true,",
             "    },",
             "    name: String,",
-            "  },",
+            "  }),",
             "  behaviors: [ Polymer.FunBehavior ],",
-            "});"));
+            "});",
+            "/** @export */",
+            "A.prototype.doSomethingFun;"));
   }
 
   /**
@@ -3463,7 +3474,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "    },",
             "  };",
             "})();",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/",
             "var A = function() {};",
             "/** @type {boolean} */",
             "A.prototype.isFun;",
@@ -3568,31 +3579,41 @@ public class PolymerPassTest extends CompilerTestCase {
                 "};"),
             lines(
                 "goog.require('behaviors.CoolBehavior');",
-                "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+                "/** @constructor @extends {PolymerElement} @implements"
+                    + " {PolymerAInterface$UID$0}*/",
                 "var A = function() {};",
                 "/** @type {string} */ A.prototype.name;",
                 "/**",
                 " * @param {string} funAmount",
                 " * @suppress {unusedPrivateMembers}",
+                " * @return {?}",
                 " */",
                 "A.prototype.doSomethingFun = function(funAmount) {};",
                 "/**",
                 " * @suppress {unusedPrivateMembers}",
+                " * @return {?}",
                 " */",
                 "A.prototype.doSomethingVeryFun =",
                 "    function(a, param$polymer$1, c, veryFun = void 0) {};",
                 "/**",
                 " * @param {string} coolAmount",
                 " * @suppress {unusedPrivateMembers}",
+                " * @return {?}",
                 " */",
                 "A.prototype.doSomethingCool = function(coolAmount) {};",
                 "A = Polymer(/** @lends {A.prototype} */ {",
                 "  is: 'x-element',",
-                "  properties: {",
+                "  properties: $jscomp.reflectObject(A, {",
                 "    name: String,",
-                "  },",
+                "  }),",
                 "  behaviors: [ Polymer.VeryFunBehavior, behaviors.CoolBehavior ],",
-                "});")));
+                "});",
+                "/** @export */",
+                "A.prototype.doSomethingCool;",
+                "/** @export */",
+                "A.prototype.doSomethingVeryFun;",
+                "/** @export */",
+                "A.prototype.doSomethingFun;")));
   }
 
   /**
@@ -3644,19 +3665,25 @@ public class PolymerPassTest extends CompilerTestCase {
                 "};"),
             lines(
                 "goog.require('behaviors.CoolBehavior');",
-                "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+                "/** @constructor @extends {PolymerElement} @implements"
+                    + " {PolymerAInterface$UID$0}*/",
                 "var A = function() {};",
                 "/** @type {string} */ A.prototype.name;",
-                "/** @suppress {unusedPrivateMembers} */",
+                "/**",
+                " * @suppress {unusedPrivateMembers}",
+                " * @return {?}",
+                " */",
                 "A.prototype.doSomethingCool =",
                 "    function(param$polymer$0 = void 0, ...param$polymer$1) {};",
                 "A = Polymer(/** @lends {A.prototype} */ {",
                 "  is: 'x-element',",
-                "  properties: {",
+                "  properties: $jscomp.reflectObject(A, {",
                 "    name: String,",
-                "  },",
+                "  }),",
                 "  behaviors: [ behaviors.CoolBehavior ],",
-                "});")));
+                "});",
+                "/** @export */",
+                "A.prototype.doSomethingCool;")));
   }
 
   @Test
@@ -3721,7 +3748,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "};",
             "/** @polymerBehavior @nocollapse */",
             "var SuperCoolBehaviors = [FunBehavior, RadBehavior];",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/",
             "var A = function() {};",
             "/** @type {boolean} */",
             "A.prototype.isFun;",
@@ -3747,15 +3774,19 @@ public class PolymerPassTest extends CompilerTestCase {
             "};",
             "A = Polymer(/** @lends {A.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(A, {",
             "    pets: {",
             "      type: Array,",
             "      notify: true,",
             "    },",
             "    name: String,",
-            "  },",
+            "  }),",
             "  behaviors: [ SuperCoolBehaviors, FunBehavior ],",
-            "});"));
+            "});",
+            "/** @export */",
+            "A.prototype.doSomethingRad;",
+            "/** @export */",
+            "A.prototype.doSomethingFun;"));
   }
 
   @Test
@@ -3944,20 +3975,22 @@ public class PolymerPassTest extends CompilerTestCase {
             "  },",
             "});"),
         lines(
-            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface$UID$0} */",
             "var X = function() {};",
             "/** @type {boolean} */",
             "X.prototype.isHappy;",
             "X = Polymer(/** @lends {X.prototype} */ {",
             "  is: 'x-element',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(X, {",
             "    isHappy: Boolean,",
-            "  },",
+            "  }),",
             "  /** @override @this {X} */",
             "  created: function() {",
             "    this.isHappy = 7;",
             "  },",
-            "});"),
+            "});",
+            "/** @export */",
+            "X.prototype.created;"),
         warning(TYPE_MISMATCH_WARNING));
   }
 
@@ -3980,7 +4013,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "  },",
             "});"),
         lines(
-            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface$UID$0} */",
             "var X = function() {};",
             "X = Polymer(/** @lends {X.prototype} */ {",
             "  is: 'x-element',",
@@ -3996,7 +4029,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "    var arr = [1, 2, 3];",
             "    var [eins, zwei, drei] = arr;",
             "  },",
-            "});"));
+            "});",
+            "/** @export */",
+            "X.prototype.funcWithES6;"));
   }
 
   @Test
@@ -4026,13 +4061,13 @@ public class PolymerPassTest extends CompilerTestCase {
             "class Bar {}",
             "/** @constructor */",
             "var User = function() {};",
-            "/** @polymer */",
+            "/** @polymer @implements {PolymerFooInterface$UID$0} */",
             "class Foo extends Bar {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
             "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
             "  static get properties() {",
-            "    return {",
+            "    return $jscomp.reflectObject(Foo, {",
             "      user_: Object,",
             "      pets: {",
             "        type: Array,",
@@ -4040,7 +4075,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "      },",
             "      name: String,",
             "      thingToDo: Function",
-            "    };",
+            "    });",
             "  }",
             "}",
             "/** @type {!User} @private */",
@@ -4082,13 +4117,13 @@ public class PolymerPassTest extends CompilerTestCase {
             "/** @constructor */",
             "var User = function() {};",
             "var a = {};",
-            "/** @polymer */",
+            "/** @polymer @implements {Polymera_BInterface$UID$0} */",
             "a.B = class extends Foo {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
             "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
             "  static get properties() {",
-            "    return {",
+            "    return $jscomp.reflectObject(a.B, {",
             "      user_: Object,",
             "      pets: {",
             "        type: Array,",
@@ -4096,7 +4131,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "      },",
             "      name: String,",
             "      thingToDo: Function,",
-            "    };",
+            "    });",
             "  }",
             "};",
             "/** @type {!User} @private */",
@@ -4143,20 +4178,20 @@ public class PolymerPassTest extends CompilerTestCase {
             "/**",
             " * @polymer",
             " * @implements {User}",
-            " * @implements {Polymera_BInterface0}",
+            " * @implements {Polymera_BInterface$UID$0}",
             " */",
             "a.B = class extends Foo {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
             "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
             "  static get properties() {",
-            "    return {",
+            "    return $jscomp.reflectObject(a.B, {",
             "      id: Boolean,",
             "      other: {",
             "        type: String,",
             "        reflectToAttribute: true",
             "      }",
-            "    };",
+            "    });",
             "  }",
             "};",
             "/** @type {boolean} */",
@@ -4167,9 +4202,7 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testObjectReflectionAddedToConfigProperties1() {
-    propertyRenamingEnabled = true;
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4188,11 +4221,10 @@ public class PolymerPassTest extends CompilerTestCase {
             "  },",
             "});"),
         lines(
-            REFLECT_OBJECT_DEF,
             "/** @constructor */",
             "var User = function() {};",
             "/** @const */ var a = {};",
-            "/** @constructor @extends {PolymerElement} @implements {Polymera_BInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {Polymera_BInterface$UID$0}*/",
             "a.B = function() {};",
             "/** @type {!User} @private */",
             "a.B.prototype.user_;",
@@ -4216,7 +4248,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
 
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4237,10 +4268,10 @@ public class PolymerPassTest extends CompilerTestCase {
             "  }",
             "};"),
         lines(
-            REFLECT_OBJECT_DEF,
             "/** @constructor */",
             "var User = function() {};",
             "var a = {};",
+            "/** @implements {Polymera_BInterface$UID$0} */",
             "a.B = class extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
@@ -4269,9 +4300,7 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testObjectReflectionAddedToConfigProperties2() {
-    propertyRenamingEnabled = true;
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4289,10 +4318,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "  },",
             "});"),
         lines(
-            REFLECT_OBJECT_DEF,
             "/** @constructor */",
             "var User = function() {};",
-            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface$UID$0}*/",
             "var A = function() {};",
             "/** @type {!User} @private */",
             "A.prototype.user_;",
@@ -4316,7 +4344,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
 
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4336,9 +4363,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "  }",
             "};"),
         lines(
-            REFLECT_OBJECT_DEF,
             "/** @constructor */",
             "var User = function() {};",
+            "/** @implements {PolymerAInterface$UID$0} */",
             "const A = class extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
@@ -4367,9 +4394,7 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testObjectReflectionAddedToConfigProperties3() {
-    propertyRenamingEnabled = true;
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4387,12 +4412,11 @@ public class PolymerPassTest extends CompilerTestCase {
             "  },",
             "});"),
         lines(
-            REFLECT_OBJECT_DEF,
             "/** @constructor */",
             "var User = function() {};",
             "/**",
             " * @constructor @extends {PolymerElement}",
-            " * @implements {PolymerXElementElementInterface0}",
+            " * @implements {PolymerXElementElementInterface$UID$0}",
             " */",
             "var XElementElement = function() {};",
             "/** @type {!User} @private */",
@@ -4417,7 +4441,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
 
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4437,9 +4460,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            REFLECT_OBJECT_DEF,
             "/** @constructor */",
             "var User = function() {};",
+            "/** @implements {PolymerXElementInterface$UID$0} */",
             "class XElement extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
@@ -4468,16 +4491,14 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testExportsMethodsFromClassBasedElement() {
-    polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
     test(
-        2,
         lines(
             "class TestElement extends PolymerElement {",
             "  /** @public */ method1() {}",
             "  /** @private */ method2() {}",
             "}"),
         lines(
-            "/** @implements {PolymerTestElementInterface0} */",
+            "/** @implements {PolymerTestElementInterface$UID$0} */",
             "class TestElement extends PolymerElement {",
             "  /** @public */ method1() {}",
             "  /** @private */ method2() {}",
@@ -4488,9 +4509,7 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testExportMethodsFromLegacyElement() {
-    polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
     test(
-        2,
         lines(
             "Polymer({",
             "  is: 'test-element',",
@@ -4501,7 +4520,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "/**",
             " * @constructor",
             " * @extends {PolymerElement}",
-            " * @implements {PolymerTestElementElementInterface0}",
+            " * @implements {PolymerTestElementElementInterface$UID$0}",
             " */",
             "var TestElementElement = function() {};",
             "Polymer(/** @lends {TestElementElement.prototype} */ {",
@@ -4515,9 +4534,7 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testExportsUniqueMethodsFromLegacyElementAndBehaviors() {
-    polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
     test(
-        2,
         lines(
             "/** @polymerBehavior */",
             "const Behavior1 = {",
@@ -4560,7 +4577,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "/**",
             " * @constructor",
             " * @extends {PolymerElement}",
-            " * @implements {PolymerTestElementElementInterface0}",
+            " * @implements {PolymerTestElementElementInterface$UID$0}",
             " */",
             "var TestElementElement = function() {};",
             "/**",
@@ -4587,10 +4604,8 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testSimpleObserverStringsConvertedToReferences1() {
-    propertyRenamingEnabled = true;
 
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4615,9 +4630,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "  _nameChanged(newValue, oldValue) {}",
             "}"),
         lines(
-            REFLECT_OBJECT_DEF,
             "/** @constructor */",
             "var User = function() {};",
+            "/** @implements {PolymerXElementInterface$UID$0} */",
             "class XElement extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
@@ -4646,15 +4661,16 @@ public class PolymerPassTest extends CompilerTestCase {
             "/** @type {string} */",
             "XElement.prototype.name;",
             "/** @type {!Function} */",
-            "XElement.prototype.thingToDo;"));
+            "XElement.prototype.thingToDo;",
+            "/** @export */",
+            "XElement.prototype._nameChanged;",
+            "/** @export */",
+            "XElement.prototype._petsChanged"));
   }
 
   @Test
   public void testSimpleObserverStringsConvertedToReferences2() {
-    propertyRenamingEnabled = true;
-
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4680,10 +4696,10 @@ public class PolymerPassTest extends CompilerTestCase {
             "  _nameChanged(newValue, oldValue) {}",
             "};"),
         lines(
-            REFLECT_OBJECT_DEF,
             "/** @constructor */",
             "var User = function() {};",
             "var a = {};",
+            "/** @implements {Polymera_BInterface$UID$0} */",
             "a.B = class extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
@@ -4712,15 +4728,16 @@ public class PolymerPassTest extends CompilerTestCase {
             "/** @type {string} */",
             "a.B.prototype.name;",
             "/** @type {!Function} */",
-            "a.B.prototype.thingToDo;"));
+            "a.B.prototype.thingToDo;",
+            "/** @export */",
+            "a.B.prototype._nameChanged;",
+            "/** @export */",
+            "a.B.prototype._petsChanged"));
   }
 
   @Test
   public void testSimpleObserverStringsConvertedToReferences3() {
-    propertyRenamingEnabled = true;
-
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4745,9 +4762,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "  _nameChanged(newValue, oldValue) {}",
             "};"),
         lines(
-            REFLECT_OBJECT_DEF,
             "/** @constructor */",
             "var User = function() {};",
+            "/** @implements {PolymerAInterface$UID$0} */",
             "const A = class extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
@@ -4776,15 +4793,16 @@ public class PolymerPassTest extends CompilerTestCase {
             "/** @type {string} */",
             "A.prototype.name;",
             "/** @type {!Function} */",
-            "A.prototype.thingToDo;"));
+            "A.prototype.thingToDo;",
+            "/** @export */",
+            "A.prototype._nameChanged;",
+            "/** @export */",
+            "A.prototype._petsChanged"));
   }
 
   @Test
   public void testReflectionForComputedPropertyStrings1() {
-    propertyRenamingEnabled = true;
-
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4809,9 +4827,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "  _computeName(user, thingToDo) {}",
             "}"),
         lines(
-            REFLECT_OBJECT_DEF,
             "/** @constructor */",
             "var User = function() {};",
+            "/** @implements {PolymerXElementInterface$UID$0} */",
             "class XElement extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
@@ -4821,16 +4839,11 @@ public class PolymerPassTest extends CompilerTestCase {
             "      user_: Object,",
             "      pets: {",
             "        type: Array,",
-            "        computed: $jscomp.reflectProperty(",
-            "            '_computePets', /** @type {!XElement} */ ({})) + '()'",
+            "        computed: '_computePets()'",
             "      },",
             "      name: {",
             "        type: String,",
-            "        computed: $jscomp.reflectProperty(",
-            "            '_computeName', /** @type {!XElement} */ ({})) + '(' +",
-            "            $jscomp.reflectProperty('user_', /** @type {!XElement} */ ({})) + ',' + ",
-            "            $jscomp.reflectProperty('thingToDo', /** @type {!XElement} */ ({})) + ",
-            "            ')'",
+            "        computed: '_computeName(user_, thingToDo)'",
             "      },",
             "      thingToDo: Function,",
             "    });",
@@ -4846,18 +4859,15 @@ public class PolymerPassTest extends CompilerTestCase {
             "XElement.prototype.name;",
             "/** @type {!Function} */",
             "XElement.prototype.thingToDo;",
-            "JSCOMPILER_PRESERVE(XElement.prototype._computePets);",
-            "JSCOMPILER_PRESERVE(XElement.prototype._computeName);",
-            "JSCOMPILER_PRESERVE(XElement.prototype.user_);",
-            "JSCOMPILER_PRESERVE(XElement.prototype.thingToDo);"));
+            "/** @export */",
+            "XElement.prototype._computeName;",
+            "/** @export */",
+            "XElement.prototype._computePets;"));
   }
 
   @Test
   public void testReflectionForComputedPropertyStrings2() {
-    propertyRenamingEnabled = true;
-
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -4880,10 +4890,10 @@ public class PolymerPassTest extends CompilerTestCase {
             "  _computeName(user, thingToDo) {}",
             "}"),
         lines(
-            REFLECT_OBJECT_DEF,
             "/** @constructor */",
             "var User = function() {};",
             "/** @type {string} */ User.prototype.id;",
+            "/** @implements {PolymerXElementInterface$UID$0} */",
             "class XElement extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
@@ -4894,15 +4904,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "      pets: Array,",
             "      name: {",
             "        type: String,",
-            "        computed: $jscomp.reflectProperty(",
-            "            '_computeName', /** @type {!XElement} */ ({})) + '(' +",
-            "            '\"user\"' + ',' + '12.0' + ',' + ",
-            "            $jscomp.reflectProperty('user_', /** @type {!XElement} */ ({})) + '.' + ",
-            "            $jscomp.reflectProperty(",
-            "                'id', /** @type {!XElement} */ ({}).user_)",
-            "                + ',' + ",
-            "            $jscomp.reflectProperty('user_', /** @type {!XElement} */ ({})) + ",
-            "            '.*' + ')'",
+            "        computed: '_computeName(\"user\", 12.0, user_.id, user_.*)'",
             "      },",
             "      thingToDo: Function,",
             "    });",
@@ -4918,16 +4920,14 @@ public class PolymerPassTest extends CompilerTestCase {
             "XElement.prototype.name;",
             "/** @type {!Function} */",
             "XElement.prototype.thingToDo;",
-            "JSCOMPILER_PRESERVE(XElement.prototype._computeName);",
-            "JSCOMPILER_PRESERVE(XElement.prototype.user_);",
-            "JSCOMPILER_PRESERVE(XElement.prototype.user_);"));
+            "/** @export */",
+            "XElement.prototype._computeName;",
+            "/** @export */",
+            "XElement.prototype._computePets;"));
   }
 
   @Test
   public void testParseErrorForComputedPropertyStrings1() {
-    propertyRenamingEnabled = true;
-
-    polymerVersion = 2;
     super.testError(
         lines(
             "/** @constructor */",
@@ -4955,9 +4955,6 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testParseErrorForComputedPropertyStrings2() {
-    propertyRenamingEnabled = true;
-
-    polymerVersion = 2;
     super.testError(
         lines(
             "/** @constructor */",
@@ -4985,10 +4982,7 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Test
   public void testReflectionForComplexObservers() {
-    propertyRenamingEnabled = true;
-
     test(
-        2,
         lines(
             "/** @constructor */",
             "var User = function() {};",
@@ -5013,9 +5007,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "  _userOrThingToDoChanged(user, thingToDo) {}",
             "}"),
         lines(
-            REFLECT_OBJECT_DEF,
             "/** @constructor */",
             "var User = function() {};",
+            "/** @implements {PolymerXElementInterface$UID$0} */",
             "class XElement extends Polymer.Element {",
             "  /** @return {string} */",
             "  static get is() { return 'x-element'; }",
@@ -5031,13 +5025,8 @@ public class PolymerPassTest extends CompilerTestCase {
             "  /** @return {!Array<string>} */",
             "  static get observers() {",
             "    return [",
-            "      $jscomp.reflectProperty('_userChanged', /** @type {!XElement} */ ({})) + '(' +",
-            "          $jscomp.reflectProperty('user_', /** @type {!XElement} */ ({})) + ')',",
-            "      $jscomp.reflectProperty(",
-            "          '_userOrThingToDoChanged', /** @type {!XElement} */ ({})) + '(' +",
-            "          $jscomp.reflectProperty('user_', /** @type {!XElement} */ ({})) + ',' + ",
-            "          $jscomp.reflectProperty('thingToDo', /** @type {!XElement} */ ({})) + ",
-            "          ')'",
+            "      '_userChanged(user_)',",
+            "      '_userOrThingToDoChanged(user_, thingToDo)'",
             "    ];",
             "  }",
             "  _userChanged(user_) {}",
@@ -5051,11 +5040,10 @@ public class PolymerPassTest extends CompilerTestCase {
             "XElement.prototype.name;",
             "/** @type {!Function} */",
             "XElement.prototype.thingToDo;",
-            "JSCOMPILER_PRESERVE(XElement.prototype._userChanged);",
-            "JSCOMPILER_PRESERVE(XElement.prototype.user_);",
-            "JSCOMPILER_PRESERVE(XElement.prototype._userOrThingToDoChanged);",
-            "JSCOMPILER_PRESERVE(XElement.prototype.user_);",
-            "JSCOMPILER_PRESERVE(XElement.prototype.thingToDo);"));
+            "/** @export */",
+            "XElement.prototype._userOrThingToDoChanged;",
+            "/** @export */",
+            "XElement.prototype._userChanged;"));
   }
 
   @Test
@@ -5070,16 +5058,16 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"),
         lines(
             "/** @constructor @extends {PolymerElement}",
-            " * @implements {PolymerPaperMenuButtonInterface0}",
+            " * @implements {PolymerPaperMenuButtonInterface$UID$0}",
             " */",
             "var PaperMenuButton = function() {};",
             "/** @type {boolean} */",
             "PaperMenuButton.prototype.opened;",
             "PaperMenuButton = Polymer(/** @lends {PaperMenuButton.prototype} */ {",
             "  is: 'paper-menu-button',",
-            "  properties: {",
+            "  properties: $jscomp.reflectObject(PaperMenuButton, {",
             "    opened: {type: Boolean, value: false}",
-            "  }",
+            "  })",
             "});",
             "export {PaperMenuButton};"));
   }
@@ -5216,58 +5204,117 @@ public class PolymerPassTest extends CompilerTestCase {
         PolymerClassRewriter.POLYMER_ELEMENT_CONFLICT);
   }
 
+  @Test
+  public void testPolyerObjectPropertiesAccessedBeforeDefinition() {
+    test(
+        srcs(
+            TestExternsBuilder.getClosureExternsAsSource(),
+            lines(
+                "/** @polymerBehavior */", //
+                "var PtGaUXBehavior = {",
+                " _abc: function() { ",
+                "    if (true) {}",
+                " }",
+                "}",
+                "function func() {",
+                " if (true) {",
+                "   Polymer({",
+                "     is: 'pt-test-component',",
+                "     behaviors: [PtGaUXBehavior],",
+                "     properties: {disabled: Boolean}",
+                "   });",
+                " }",
+                "}")),
+        expected(
+            TestExternsBuilder.getClosureExternsAsSource(),
+            lines(
+                "/**",
+                " * @constructor",
+                " * @extends {PolymerElement}",
+                " * @implements {PolymerPtTestComponentElementInterface$m1176578414$0}",
+                " */",
+                // This `var PtTestComponentElement = ...` is placed before any
+                // `PtTestComponentElement.prototype.<...>` calls. We don't want to access
+                // properties on `PtTestComponentElement` before it is defined.
+                "var PtTestComponentElement = function() {",
+                "};",
+                "/**",
+                " * @polymerBehavior",
+                " * @nocollapse",
+                " * @polymerBehavior",
+                " */",
+                "var PtGaUXBehavior = {/**",
+                " * @suppress {checkTypes,globalThis,visibility}",
+                " */",
+                "_abc:function() {",
+                "  if (true) {",
+                "  }",
+                "}};",
+                "function func() {",
+                "  if (true) {",
+                "    Polymer(/** @lends {PtTestComponentElement.prototype} */ ",
+                "    {is:\"pt-test-component\", behaviors:[PtGaUXBehavior],"
+                    + " properties:$jscomp.reflectObject(PtTestComponentElement,"
+                    + " {disabled:Boolean})});",
+                "    /** @export */",
+                "    PtTestComponentElement.prototype._abc;",
+                "  }",
+                "}",
+                "/** @type {boolean} */ ",
+                "PtTestComponentElement.prototype.disabled;",
+                "/**",
+                " * @suppress {unusedPrivateMembers}",
+                " */",
+                "PtTestComponentElement.prototype._abc = function() {",
+                "  if (true) {",
+                "  }",
+                "};")));
+  }
+
   @Override
   public void test(String js, String expected) {
-    polymerVersion = 1;
-    super.test(js, expected);
-
-    polymerVersion = 2;
-    super.test(js, expected);
-  }
-
-  public void test(int polymerVersion, String js, String expected) {
-    this.polymerVersion = polymerVersion;
-    super.test(js, expected);
-  }
-
-  protected void testExternChanges(String extern, String input, Expected expectedExtern) {
-    polymerVersion = 1;
-    testExternChanges(externs(extern), srcs(input), expectedExtern);
-
-    polymerVersion = 2;
-    testExternChanges(externs(extern), srcs(input), expectedExtern);
-  }
-
-  protected void testExternChanges(
-      int polymerVersion, String extern, String input, Expected expectedExtern) {
-    this.polymerVersion = polymerVersion;
-    testExternChanges(externs(extern), srcs(input), expectedExtern);
+    this.test(srcs(js), expected(expected));
   }
 
   @Override
-  public void testError(String js, DiagnosticType error) {
-    polymerVersion = 1;
-    super.testError(js, error);
-
-    polymerVersion = 2;
-    super.testError(js, error);
+  public void test(TestPart... testParts) {
+    // Override this method so that we can ensure getActualExpected gets called
+    Sources srcs = null;
+    Expected expected = null;
+    ArrayList<TestPart> modifiedTestParts = new ArrayList<>();
+    for (TestPart testPart : testParts) {
+      if (testPart instanceof Sources) {
+        srcs = (Sources) testPart;
+        modifiedTestParts.add(srcs);
+      } else if (testPart instanceof Expected) {
+        expected = (Expected) testPart;
+      } else {
+        modifiedTestParts.add(testPart);
+      }
+    }
+    Preconditions.checkNotNull(srcs);
+    if (expected != null) {
+      modifiedTestParts.add(getActualExpected(srcs, expected));
+    }
+    TestPart[] testPartsArray = modifiedTestParts.toArray(new TestPart[0]);
+    super.test(testPartsArray);
   }
 
-  @Override
-  public void testError(Externs externs, Sources srcs, Diagnostic error) {
-    polymerVersion = 1;
-    super.testError(externs, srcs, error);
+  // Note: we don't have a version of testExternChanges that calls getActualExpected() here and
+  // require test cases to hardcode the
+  // full "Interface$m123..456$0" id instead. This is because "Interface$m123..456$0" gets put
+  // in the synthetic externs, but named based on an input source file path, so getActualExpected
+  // doesn't know what file path to use.
+  // TODO(lharker): it would be a minor readability improvement to add a different helper to
+  // support this case.
 
-    polymerVersion = 2;
-    super.testError(externs, srcs, error);
-  }
-
-  @Override
-  public void testWarning(String js, DiagnosticType error) {
-    polymerVersion = 1;
-    super.testWarning(js, error);
-
-    polymerVersion = 2;
-    super.testWarning(js, error);
+  // Helper to change the generic name string "Interface$UID$0" in the expected code with
+  // actual string "Interface$m123..456$0" that will get produced
+  private Expected getActualExpected(Sources originalSources, Expected originalExpected) {
+    return expected(
+        UnitTestUtils.updateGenericVarNamesInExpectedFiles(
+            (FlatSources) originalSources,
+            originalExpected,
+            ImmutableMap.of("Interface$UID", "Interface$")));
   }
 }

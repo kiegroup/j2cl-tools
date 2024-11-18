@@ -32,7 +32,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathResolver;
 import java.util.ArrayList;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -258,6 +258,13 @@ public final class ModuleLoaderTest {
     assertThat(ModuleNames.canonicalizePath("/a/b/../../..")).isEqualTo("/");
     assertThat(ModuleNames.canonicalizePath("/a/../../../b")).isEqualTo("/b");
     assertThat(ModuleNames.canonicalizePath("/a/..")).isEqualTo("/");
+  }
+
+  @Test
+  public void testToJSIdentifier() {
+    assertThat(ModuleNames.toJSIdentifier("com/example/test")).isEqualTo("com$example$test");
+    assertThat(ModuleNames.toJSIdentifier("file://a/b.jar!com/example/test"))
+        .isEqualTo("file_$$a$b_jar$com$example$test");
   }
 
   @Test
@@ -537,9 +544,7 @@ public final class ModuleLoaderTest {
                         .buildOrThrow()))
             .build();
 
-    assertUri(
-        "index.js",
-        loader.resolve("fake.js").resolveModuleAsPath("@project0/index.js"));
+    assertUri("index.js", loader.resolve("fake.js").resolveModuleAsPath("@project0/index.js"));
     assertUri(
         "foo/bar/index.js",
         loader.resolve("fake.js").resolveModuleAsPath("+project1/foo/bar/index.js"));

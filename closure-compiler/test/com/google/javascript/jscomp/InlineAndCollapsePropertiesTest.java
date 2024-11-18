@@ -20,9 +20,11 @@ import static com.google.javascript.jscomp.InlineAndCollapseProperties.PARTIAL_N
 import static com.google.javascript.jscomp.InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.NodeSubject;
 import org.junit.Before;
@@ -64,7 +66,143 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     disableCompareJsDoc();
+  }
+
+  @Test
+  public void testTs52OutputChange() {
+    test(
+        srcs(
+            lines(
+                "", //
+                "var alias;",
+                "var module$exports$C = class {",
+                "  method1() {",
+                "    return alias.staticPropOnC;",
+                "  }",
+                "  method2() {",
+                "    return alias.staticPropOnAlias;",
+                "  }",
+                "};",
+                "alias = module$exports$C;",
+                "(() => {",
+                "  alias.staticPropOnAlias = 1;",
+                "})();",
+                "module$exports$C.staticPropOnC = 2;",
+                "")),
+        expected(
+            lines(
+                "", //
+                "var alias;",
+                "var module$exports$C = class {",
+                "  method1() {",
+                "    return module$exports$C$staticPropOnC;",
+                "  }",
+                "  method2() {",
+                "    return module$exports$C$staticPropOnAlias;",
+                "  }",
+                "};",
+                "var module$exports$C$staticPropOnAlias;",
+                "alias = null;",
+                "(() => {",
+                "  module$exports$C$staticPropOnAlias = 1;",
+                "})();",
+                "var module$exports$C$staticPropOnC = 2;",
+                "")));
+  }
+
+  @Test
+  public void testTs52OutputChangeVariableReassignment() {
+    // This test case was created by executing
+    // AdvancedOptimizationsIntegrationTest#testTSVariableReassignmentAndAliasingDueToDecoration
+    // with `options.setPrintSourceAfterEachPass(true)`.
+    // The input source here is how the source code looks at the point just before
+    // InlineAndCollapseProperties runs in that test case except for the addition of one line of
+    // JSDoc to make the unit test recognize a function declaration as a class declaration.
+    test(
+        externs(
+            ImmutableList.of(
+                new TestExternsBuilder()
+                    .addObject()
+                    .addConsole()
+                    .addClosureExterns()
+                    .addExtra(
+                        // simulate "const tslib_1 = goog.require('tslib');",
+                        lines(
+                            "var tslib_1 = {", //
+                            "  __decorate: function(decorators, clazz) {}",
+                            "};"))
+                    .buildExternsFile("externs.js"))),
+        srcs(
+            lines(
+                "var module$exports$main = {};", //
+                "var module$contents$main_module =",
+                "    module$contents$main_module || {id: 'main.ts'};",
+                "var module$contents$main_Foo_1;",
+                "function module$contents$main_noopDecorator(arg) {",
+                "  return arg;",
+                "}",
+                // This JSDoc annotation makes this unit test recognize the declaration as a
+                // class definition.
+                "/** @constructor */",
+                "var i0$classdecl$var0 = function() {};",
+                "i0$classdecl$var0.foo = function() {",
+                "  console.log('Hello');",
+                "};",
+                "i0$classdecl$var0.prototype.bar = function() {",
+                "  module$contents$main_Foo_1.foo();",
+                "  console.log('ID: ' + module$contents$main_Foo_1.ID + '');",
+                "};",
+                "var module$contents$main_Foo = module$contents$main_Foo_1 = i0$classdecl$var0;",
+                "module$contents$main_Foo.ID = 'original';",
+                "module$contents$main_Foo.ID2 = module$contents$main_Foo_1.ID;",
+                "(function() {",
+                "module$contents$main_Foo_1.foo();",
+                "console.log('ID: ' + module$contents$main_Foo_1.ID + '');",
+                "})();",
+                "module$contents$main_Foo = module$contents$main_Foo_1 = tslib_1.__decorate(",
+                "    [module$contents$main_noopDecorator], module$contents$main_Foo);",
+                "if (false) {",
+                "  module$contents$main_Foo.ID;",
+                "  module$contents$main_Foo.ID2;",
+                "}",
+                "(new module$contents$main_Foo()).bar();")),
+        expected(
+            lines(
+                "var module$contents$main_module =", //
+                "    module$contents$main_module || {id: 'main.ts'};",
+                "var module$contents$main_Foo_1;",
+                "function module$contents$main_noopDecorator(arg) {",
+                "  return arg;",
+                "}",
+                "/** @constructor */",
+                "var i0$classdecl$var0 = function() {};",
+                // TODO : b/299055739 - This property collapse breaks the output code.
+                "var i0$classdecl$var0$foo = function() {",
+                // "i0$classdecl$var0.foo = function() {", // this is the correct line
+                "  console.log('Hello');",
+                "};",
+                "i0$classdecl$var0.prototype.bar = function() {",
+                // This reference to foo() is broken.
+                "  module$contents$main_Foo_1.foo();",
+                "  console.log('ID: ' + module$contents$main_Foo_1.ID + '');",
+                "};",
+                "var module$contents$main_Foo = module$contents$main_Foo_1 = i0$classdecl$var0;",
+                "module$contents$main_Foo.ID = 'original';",
+                "module$contents$main_Foo.ID2 = module$contents$main_Foo_1.ID;",
+                "(function() {",
+                "module$contents$main_Foo_1.foo();",
+                "console.log('ID: ' + module$contents$main_Foo_1.ID + '');",
+                "})();",
+                "module$contents$main_Foo = module$contents$main_Foo_1 = tslib_1.__decorate(",
+                "    [module$contents$main_noopDecorator], module$contents$main_Foo);",
+                "if (false) {",
+                "  module$contents$main_Foo.ID;",
+                "  module$contents$main_Foo.ID2;",
+                "}",
+                "(new module$contents$main_Foo()).bar();")));
   }
 
   @Test
@@ -91,8 +229,12 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
                 "  [`${module$name.cssClasses.CLASS_A}`]: 'old-class-a',",
                 "};",
                 "")),
-        // TODO(bradfordcsmith): Shouldn't we be leaving the computed property in place?
-        expected("var module$name$cssClasses$CLASS_A = 'class-a';"));
+        expected(
+            lines(
+                "var module$name$cssClasses$CLASS_A = 'class-a';",
+                "var module$name$oldCssClassesMap = {",
+                "  [`${module$name$cssClasses$CLASS_A}`]:'old-class-a'",
+                "};")));
   }
 
   @Test
@@ -2521,6 +2663,53 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "function getSuperclass() { return 1 < 2 ? A : B; }",
             "class C extends getSuperclass() {}",
             "use(C.foo);"));
+  }
+
+  @Test
+  public void testTypeScriptDecoratedClass() {
+    // TypeScript 5.1 emits this for decorated classes.
+    test(
+        lines(
+            "let A = class A { static getId() { return A.ID; } };", //
+            "A.ID = \"a\";",
+            "A = tslib.__decorate([], A);",
+            "if (false) {",
+            "  /** @const {string} */ A.ID;",
+            "}",
+            "console.log(A.getId());"),
+        lines(
+            "let A = class A$jscomp$1 { static getId() { return A$jscomp$1.ID; } };",
+            "A.ID = \"a\";",
+            "A = tslib.__decorate([], A);",
+            "if (false) {",
+            "  /** @const */ A.ID;",
+            "}",
+            "console.log(A.getId());"));
+  }
+
+  @Test
+  public void testTypeScriptDecoratedClass_withExtraVarAssignment() {
+    // TypeScript 5.2 emits this for decorated classes, which reference static properties on
+    // themselves.
+    test(
+        lines(
+            "var A_1;", //
+            "let A = A_1 = class A { static getId() { return A_1.ID; } };",
+            "A.ID = \"a\";",
+            "A = A_1 = tslib.__decorate([], A);",
+            "if (false) {",
+            "  /** @const {string} */ A.ID;",
+            "}",
+            "console.log(A.getId());"),
+        lines(
+            "var A_1;", //
+            "let A = A_1 = class A$jscomp$1 { static getId() { return A_1.ID; } };",
+            "A.ID = \"a\";",
+            "A = A_1 = tslib.__decorate([], A);",
+            "if (false) {",
+            "  /** @const */ A.ID;",
+            "}",
+            "console.log(A.getId());"));
   }
 
   @Test

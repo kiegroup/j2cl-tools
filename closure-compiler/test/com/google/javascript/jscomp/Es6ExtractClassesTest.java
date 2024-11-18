@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,9 +48,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   public void testExtractionFromCall() {
     test(
         "f(class{});",
-        lines(
-            "const testcode$classdecl$var0 = class {};",
-            "f(testcode$classdecl$var0);"));
+        lines("const testcode$classdecl$var0 = class {};", "f(testcode$classdecl$var0);"));
   }
 
   @Test
@@ -98,11 +95,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   @Test
   public void testSelfReference3() {
     test(
-        lines(
-            "alert(class C {",
-            "  m1() { class C {}; alert(C); }",
-            "  m2() { alert(C); }",
-            "});"),
+        lines("alert(class C {", "  m1() { class C {}; alert(C); }", "  m2() { alert(C); }", "});"),
         lines(
             "const testcode$classdecl$var0 = class {",
             "  m1() { class C {}; alert(C); }",
@@ -223,9 +216,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   public void testExtractionFromArrayLiteral() {
     test(
         "var c = [class C {}];",
-        lines(
-            "const testcode$classdecl$var0 = class {};",
-            "var c = [testcode$classdecl$var0];"));
+        lines("const testcode$classdecl$var0 = class {};", "var c = [testcode$classdecl$var0];"));
   }
 
   @Test
@@ -285,36 +276,6 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "         }",
             "  )()) {}",
             "use(foo());"));
-  }
-
-  @Test
-  public void classExtractedInUnnormalizedArrows() {
-    test(
-        lines(
-            "goog.module('some');", //
-            "exports.some = ((c) =>  class extends c{});"),
-        lines(
-            "/** @const */ var module$exports$some = {}; ",
-            "/** @const */ module$exports$some.some = c => {",
-            "  const testcode$classdecl$var0 = class extends c {};",
-            "  return testcode$classdecl$var0;",
-            "};"));
-  }
-
-  @Test
-  public void classExtractedInUnnormalizedArrowsNested() {
-    test(
-        lines(
-            "goog.module('some');", //
-            "exports.some = ((outer) => ((c) =>  class extends c{}));"),
-        lines(
-            "/** @const */ var module$exports$some = {}; ",
-            "/** @const */ module$exports$some.some = outer => {",
-            "  return c => {",
-            "    const testcode$classdecl$var0 = class extends c {};",
-            "    return testcode$classdecl$var0;",
-            "  };",
-            "};"));
   }
 
   @Test

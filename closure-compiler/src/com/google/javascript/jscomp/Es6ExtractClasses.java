@@ -24,14 +24,12 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.deps.ModuleNames;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import org.jspecify.nullness.Nullable;
 
 /**
  * Extracts ES6 classes defined in function calls to local constants.
@@ -67,7 +65,6 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
   private final AstFactory astFactory;
   private final ExpressionDecomposer expressionDecomposer;
   private int classDeclVarCounter = 0;
-  private static final FeatureSet features = FeatureSet.BARE_MINIMUM.with(Feature.CLASSES);
 
   Es6ExtractClasses(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -77,16 +74,8 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
 
   @Override
   public void process(Node externs, Node root) {
-    if (compiler.getFeatureSet().contains(Feature.ARROW_FUNCTIONS)) {
-      // Normalize hasn't run yet if class transpilation is forced. Normalize arrows here to make
-      // sure class extraction generates legitimate code (b/262387538).
-      // TODO(b/197349249): Remove once b/197349249 is fixed.
-      NodeTraversal.traverse(compiler, root, new NormalizeArrows());
-    }
-    TranspilationPasses.processTranspile(
-        compiler, externs, features, this, new SelfReferenceRewriter());
-    TranspilationPasses.processTranspile(
-        compiler, root, features, this, new SelfReferenceRewriter());
+    NodeTraversal.traverseRoots(compiler, this, externs, root);
+    NodeTraversal.traverseRoots(compiler, new SelfReferenceRewriter(), externs, root);
   }
 
   @Override
@@ -147,41 +136,15 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
           if (var != null && var.getNameNode() == klass.nameNode) {
             Node newNameNode =
                 astFactory.createName(klass.outerName, type(nameNode)).srcref(nameNode);
+            checkState(klass.outerName.contains(CLASS_DECL_VAR), klass.outerName);
+            // Explicitly mark the usage node as constant as the declaration is marked constant
+            // when this pass runs post normalization because of b/322009741
+            newNameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
             nameNode.replaceWith(newNameNode);
             compiler.reportChangeToEnclosingScope(newNameNode);
             return;
           }
         }
-      }
-    }
-  }
-
-  private final class NormalizeArrows extends NodeTraversal.AbstractPostOrderCallback {
-
-    @Override
-    public void visit(NodeTraversal t, Node n, @Nullable Node parent) {
-      switch (n.getToken()) {
-        case FUNCTION:
-          visitFunction(n);
-          break;
-        default:
-          break;
-      }
-    }
-
-    /**
-     * Rewrite blockless arrow functions to have a block with a single return statement.
-     *
-     * <p>For example: {@code (x) => x} becomes {@code (x) => { return x; }}.
-     */
-    void visitFunction(Node n) {
-      checkState(n.isFunction(), n);
-      if (n.isFunction() && !NodeUtil.getFunctionBody(n).isBlock()) {
-        Node returnValue = NodeUtil.getFunctionBody(n);
-        Node body = IR.block(IR.returnNode(returnValue.detach()));
-        body.srcrefTreeIfMissing(returnValue);
-        n.addChildToBack(body);
-        compiler.reportChangeToEnclosingScope(body);
       }
     }
   }
@@ -232,6 +195,7 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
     arrowFn.setColor(StandardColors.UNKNOWN);
     Node iife = astFactory.createCallWithUnknownType(arrowFn).srcrefTreeIfMissing(n);
     parent.addChildToBack(iife);
+    NodeUtil.addFeatureToScript(NodeUtil.getEnclosingScript(n), Feature.ARROW_FUNCTIONS, compiler);
     compiler.reportChangeToEnclosingScope(iife);
   }
 
@@ -248,7 +212,7 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
 
     Node statement = NodeUtil.getEnclosingStatement(parent);
     // class name node used as LHS in newly created assignment
-    Node classNameLhs = astFactory.createName(name, type(classNode));
+    Node classNameLhs = astFactory.createConstantName(name, type(classNode));
     // class name node that replaces the class literal in the original statement
     Node classNameRhs = classNameLhs.cloneTree();
     classNode.replaceWith(classNameRhs);

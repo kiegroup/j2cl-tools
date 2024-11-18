@@ -25,6 +25,13 @@
 var Intl = {};
 
 /**
+ * @param {string} key
+ * @return {Array<string>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/supportedValuesOf
+ */
+Intl.supportedValuesOf = function(key) {};
+
+/**
  * NOTE: this API is not from ecma402 and is subject to change.
  * @param {string|Array<string>=} locales
  * @param {{type: (string|undefined)}=}
@@ -105,7 +112,9 @@ Intl.Collator.prototype.resolvedOptions = function() {};
  *     maximumSignificantDigits: (number|undefined),
  *     compactDisplay: (string|undefined), currencySign: (string|undefined),
  *     signDisplay: (string|undefined), unit: (string|undefined),
- *     unitDisplay: (string|undefined)
+ *     unitDisplay: (string|undefined), roundingIncrement: (number|undefined),
+ *     roundingMode: (string|undefined), roundingPriority: (string|undefined),
+ *     trailingZeroDisplay: (string|undefined)
  *     }=}
  *         options
  */
@@ -139,7 +148,10 @@ Intl.NumberFormat.prototype.formatToParts = function(num) {};
  *     maximumSignificantDigits: number, useGrouping: boolean,
  *     compactDisplay: (string|undefined), currencySign: (string|undefined),
  *     signDisplay: (string|undefined), unit: (string|undefined),
- *     unitDisplay: (string|undefined)}}
+ *     unitDisplay: (string|undefined), roundingIncrement: number,
+ *     roundingMode: string, roundingPriority: string,
+ *     trailingZeroDisplay: string
+ * }}
  */
 Intl.NumberFormat.prototype.resolvedOptions = function() {};
 
@@ -224,7 +236,7 @@ Intl.DisplayNames = function(locales, options) {};
  * @param {!Array<string>} locales
  * @param {{localeMatcher: string}=} options
  * @return {!Array<string>}
- * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/supportedValuesOf
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DisplayNames/supportedLocalesOf
  */
 Intl.DisplayNames.supportedLocalesOf = function(locales, options) {};
 
@@ -246,13 +258,18 @@ Intl.DisplayNames.prototype.resolvedOptions = function() {};
  * @constructor
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/PluralRules#Syntax
  * @param {string|Array<string>=} locales
- * @param {{localeMatcher: (string|undefined), type: (string|undefined),
- *     minimumIntegerDigits: (number|undefined),
- *     minimumFractionDigits: (number|undefined),
- *     maximumFractionDigits: (number|undefined),
- *     minimumSignificantDigits: (number|undefined),
- *     maximumSignificantDigits: (number|undefined)}=}
- *         options
+ * @param {{
+ *   localeMatcher: (string|undefined), type: (string|undefined),
+ *   minimumIntegerDigits: (number|undefined),
+ *   minimumFractionDigits: (number|undefined),
+ *   maximumFractionDigits: (number|undefined),
+ *   minimumSignificantDigits: (number|undefined),
+ *   maximumSignificantDigits: (number|undefined),
+ *   roundingMode: (string|undefined),
+ *   roundingIncrement: (number|undefined),
+ *   roundingPriority: (string|undefined),
+ *   trailingZeroDisplay: (string|undefined),
+ * }=} options
  */
 Intl.PluralRules = function(locales, options) {};
 
@@ -269,7 +286,7 @@ Intl.PluralRules.supportedLocalesOf = function(locales, options) {};
  * @return {{locale: string, pluralCategories: Array<string>, type: string,
  *            minimumIntegerDigits: number, minimumFractionDigits: number,
  *            maximumFractionDigits: number, minimumSignificantDigits: number,
- *            maximumSignificantDigits: number }}
+ *            maximumSignificantDigits: number, roundingMode: string}}
  */
 Intl.PluralRules.prototype.resolvedOptions = function() {};
 

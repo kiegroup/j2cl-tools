@@ -41,7 +41,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Process variables annotated as {@code @define}. A define is a special constant that may be
@@ -55,7 +55,12 @@ class ProcessDefines implements CompilerPass {
    * always set these defines, even when they might not be in the binary.
    */
   private static final ImmutableSet<String> KNOWN_DEFINES =
-      ImmutableSet.of("COMPILED", "goog.DEBUG", "$jscomp.ISOLATE_POLYFILLS");
+      ImmutableSet.of(
+          "COMPILED",
+          "goog.DEBUG",
+          "$jscomp.ASSUME_ES5",
+          "$jscomp.ISOLATE_POLYFILLS",
+          "$jscomp.INSTRUMENT_ASYNC_CONTEXT");
 
   private static final Node GOOG_DEFINE = IR.getprop(IR.name("goog"), "define");
 
@@ -329,7 +334,7 @@ class ProcessDefines implements CompilerPass {
         totalSets += existingDefine.name.getTotalSets();
       }
 
-      /**
+      /*
        * We have to report this here because otherwise we don't remember which names have the same
        * define name. It's not worth it tracking a set of names, because it makes the rest of the
        * pass more complex.
@@ -456,7 +461,7 @@ class ProcessDefines implements CompilerPass {
                 define.defineName));
       }
 
-      /**
+      /*
        * Process defines should not depend on check types being enabled, so we look for the JSDoc
        * instead of the inferred type.
        */
@@ -473,7 +478,7 @@ class ProcessDefines implements CompilerPass {
       return;
     }
 
-    /**
+    /*
      * This has to be done using a traversal because the global namespace doesn't record symbols
      * which only appear in local scopes.
      *
@@ -711,7 +716,6 @@ class ProcessDefines implements CompilerPass {
         @Nullable Node value) {
       checkState(valueParent == null || value == null || value.getParent() == valueParent);
       checkState(declaration.isSet());
-      checkState(declaration.name.equals(name));
 
       this.defineName = defineName;
       this.name = name;

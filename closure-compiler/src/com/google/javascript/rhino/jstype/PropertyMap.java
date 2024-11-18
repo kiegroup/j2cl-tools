@@ -44,14 +44,14 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Representation for a collection of properties on an object. */
 final class PropertyMap {
@@ -106,8 +106,7 @@ final class PropertyMap {
   }
 
   /** Returns the direct parent of this property map. */
-  @Nullable
-  PropertyMap getPrimaryParent() {
+  @Nullable PropertyMap getPrimaryParent() {
     if (parentSource == null) {
       return null;
     }
@@ -129,39 +128,7 @@ final class PropertyMap {
     return parentSource.getCtorExtendedInterfaces();
   }
 
-  @Nullable
-  OwnedProperty findTopMost(String name) {
-    // Check primary parents which always has precendence over secondary.
-    OwnedProperty found = null;
-    for (PropertyMap map = this; map != null; map = map.getPrimaryParent()) {
-      Property prop = map.properties.get(name);
-      if (prop != null) {
-        found = new OwnedProperty(map.parentSource, prop);
-      }
-    }
-    if (found != null) {
-      return found;
-    }
-
-    // Recurse into secondary parents. Note that there is no single top most definition with
-    // interfaces so we simple return the first result.
-    for (PropertyMap map = this; map != null; map = map.getPrimaryParent()) {
-      for (ObjectType o : map.getSecondaryParentObjects()) {
-        PropertyMap parent = o.getPropertyMap();
-        if (parent != null) {
-          OwnedProperty e = parent.findTopMost(name);
-          if (e != null) {
-            return e;
-          }
-        }
-      }
-    }
-
-    return null;
-  }
-
-  @Nullable
-  OwnedProperty findClosest(String name) {
+  @Nullable OwnedProperty findClosest(String name) {
     // Check primary parents which always has precendence over secondary.
     for (PropertyMap map = this; map != null; map = map.getPrimaryParent()) {
       Property prop = map.properties.get(name);
@@ -204,7 +171,7 @@ final class PropertyMap {
   }
 
   ImmutableSortedSet<String> keySet() {
-    Set<PropertyMap> ancestors = Sets.newIdentityHashSet();
+    LinkedHashSet<PropertyMap> ancestors = new LinkedHashSet<>();
     this.collectAllAncestors(ancestors);
 
     int maxAncestorCounter = 0;
@@ -214,14 +181,14 @@ final class PropertyMap {
       }
     }
 
-    /**
+    /*
      * If any counter is greater than this counter, there has been a mutation and the cache must be
      * rebuilt.
      */
     if (maxAncestorCounter != this.cachedKeySetCounter || this.cachedKeySet == null) {
       TreeSet<String> keys = new TreeSet<>();
       for (PropertyMap ancestor : ancestors) {
-        /**
+        /*
          * Update the counters in all ancestors.
          *
          * <p>This update scheme is convergent. As long as there are no mutations, calls {@link
@@ -238,7 +205,7 @@ final class PropertyMap {
     return this.cachedKeySet;
   }
 
-  private void collectAllAncestors(Set<PropertyMap> ancestors) {
+  private void collectAllAncestors(LinkedHashSet<PropertyMap> ancestors) {
     if (!ancestors.add(this)) {
       return;
     }
@@ -254,15 +221,6 @@ final class PropertyMap {
         parentMap.collectAllAncestors(ancestors);
       }
     }
-  }
-
-  boolean removeProperty(String name) {
-    if (properties.remove(name) == null) {
-      return false;
-    }
-
-    this.incrementCachedKeySetCounter();
-    return true;
   }
 
   void putProperty(String name, Property newProp) {
@@ -285,6 +243,9 @@ final class PropertyMap {
 
   @Override
   public int hashCode() {
+    // We need to override hashCode so that JSType.hashCode is consistent. JSType uses the hashcode
+    // of its PropertyMap. Otherwise PropertyMap uses identity equality.
+    //
     // Calculate the hash just based on the property names, not their types.
     // Otherwise we can get into an infinite loop because the ObjectType hashCode
     // method calls this one.

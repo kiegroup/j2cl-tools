@@ -31,7 +31,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Helper classes for dealing with coding conventions.
@@ -291,9 +291,6 @@ public final class CodingConventions {
   @Immutable
   private static class DefaultCodingConvention implements CodingConvention {
 
-    private static final QualifiedName JSCOMP_REFLECT_PROPERTY =
-        QualifiedName.of("$jscomp.reflectProperty");
-
     private static final long serialVersionUID = 1L;
 
     @Override
@@ -482,9 +479,7 @@ public final class CodingConventions {
 
     @Override
     public boolean isPropertyRenameFunction(Node nameNode) {
-      return nameNode.matchesName(NodeUtil.JSC_PROPERTY_NAME_FN)
-          || JSCOMP_REFLECT_PROPERTY.matches(nameNode)
-          || nameNode.matchesName("$jscomp$reflectProperty");
+      return nameNode.matchesName(NodeUtil.JSC_PROPERTY_NAME_FN);
     }
 
     @Override

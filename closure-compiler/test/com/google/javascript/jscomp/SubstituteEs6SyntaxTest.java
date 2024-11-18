@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -24,13 +23,6 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link SubstituteEs6Syntax} in isolation. */
 @RunWith(JUnit4.class)
 public final class SubstituteEs6SyntaxTest extends CompilerTestCase {
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-    disableScriptFeatureValidation();
-  }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {

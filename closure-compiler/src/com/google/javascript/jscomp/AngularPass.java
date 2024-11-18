@@ -26,7 +26,7 @@ import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Compiler pass for AngularJS-specific needs. Generates {@code $inject} \ properties for functions
@@ -271,11 +271,7 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
             name = NodeUtil.getName(classNode);
           }
           fn = n.getFirstChild();
-          if (classNode.getParent().isAssign() || classNode.getParent().isName()) {
-            injectAfter = classNode.getGrandparent();
-          } else {
-            injectAfter = classNode;
-          }
+          injectAfter = NodeUtil.getEnclosingStatement(classNode);
         }
         break;
       default:

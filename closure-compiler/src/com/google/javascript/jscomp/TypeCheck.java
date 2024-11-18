@@ -69,8 +69,6 @@ import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -79,7 +77,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Checks the types of JS expressions against any declared type information. */
 public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
@@ -142,7 +140,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "Property {0} never defined on {1}. Did you mean {2}?");
 
   static final DiagnosticType NOT_A_CONSTRUCTOR =
-      DiagnosticType.warning("JSC_NOT_A_CONSTRUCTOR", "cannot instantiate non-constructor");
+      DiagnosticType.warning(
+          "JSC_NOT_A_CONSTRUCTOR", "cannot instantiate non-constructor, found type: {0}");
 
   static final DiagnosticType INSTANTIATE_ABSTRACT_CLASS =
       DiagnosticType.warning("JSC_INSTANTIATE_ABSTRACT_CLASS", "cannot instantiate abstract class");
@@ -196,6 +195,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   static final DiagnosticType ES5_CLASS_EXTENDING_ES6_CLASS =
       DiagnosticType.warning(
           "JSC_ES5_CLASS_EXTENDING_ES6_CLASS", "ES5 class {0} cannot extend ES6 class {1}");
+
+  static final DiagnosticType DICT_EXTEND_STRUCT_TYPE =
+      DiagnosticType.warning(
+          "JSC_DICT_EXTEND_STRUCT_TYPE", "@dict class {0} cannot extend @struct class {1}");
+
+  static final DiagnosticType STRUCT_EXTEND_DICT_TYPE =
+      DiagnosticType.warning(
+          "JSC_DICT_EXTEND_STRUCT_TYPE", "@struct class {0} cannot extend @dict class {1}");
 
   static final DiagnosticType ES6_CLASS_EXTENDING_CLASS_WITH_GOOG_INHERITS =
       DiagnosticType.warning(
@@ -359,6 +366,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           NON_STRINGIFIABLE_OBJECT_KEY,
           NOT_A_CONSTRUCTOR,
           NOT_CALLABLE,
+          STRUCT_EXTEND_DICT_TYPE,
+          DICT_EXTEND_STRUCT_TYPE,
           POSSIBLE_INEXISTENT_PROPERTY,
           PROPERTY_ASSIGNMENT_TO_READONLY_VALUE,
           RhinoErrorReporter.CYCLIC_INHERITANCE_ERROR,
@@ -374,6 +383,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           UNKNOWN_OVERRIDE,
           UNKNOWN_PROTOTYPAL_OVERRIDE,
           WRONG_ARGUMENT_COUNT);
+
+  public static final DiagnosticGroup ES5_INHERITANCE_DIAGNOSTIC_GROUP =
+      new DiagnosticGroup(ES5_CLASS_EXTENDING_ES6_CLASS);
 
   private final AbstractCompiler compiler;
   private final TypeValidator validator;
@@ -2005,7 +2017,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           iterableType
               .autobox()
               .getTemplateTypeMap()
-              .getResolvedTemplateType(typeRegistry.getIterableTemplate());
+              .getResolvedTemplateType(typeRegistry.getIterableValueTemplate());
     }
 
     if (NodeUtil.isNameDeclaration(lhs)) {
@@ -2207,7 +2219,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkPropertyAccessHelper(
       JSType objectType, Node propNode, @Nullable Node objNode, boolean strictCheck) {
     final boolean isGetprop = NodeUtil.isNormalOrOptChainGetProp(propNode);
-    final String propName = isGetprop ? propNode.getString() : propNode.getString();
+    final String propName = propNode.getString();
 
     if (!reportMissingProperties
         || objectType.isEmptyType()
@@ -2248,8 +2260,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       Node propNode,
       PropDefinitionKind kind,
       boolean strictReport) {
-    final boolean isGetprop = NodeUtil.isNormalOrOptChainGetProp(propNode);
-    final String propName = isGetprop ? propNode.getString() : propNode.getString();
+    final String propName = propNode.getString();
 
     boolean isObjectType = objectType.equals(getNativeType(OBJECT_TYPE));
     boolean lowConfidence = objectType.isUnknownType() || objectType.isAllType() || isObjectType;
@@ -2400,7 +2411,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (!couldBeAConstructor(type)
         || type.equals(typeRegistry.getNativeType(SYMBOL_OBJECT_FUNCTION_TYPE))
         || type.equals(typeRegistry.getNativeType(BIGINT_OBJECT_FUNCTION_TYPE))) {
-      report(n, NOT_A_CONSTRUCTOR);
+      report(n, NOT_A_CONSTRUCTOR, type.toString());
       ensureTyped(n);
       return;
     }
@@ -2564,6 +2575,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
                 functionType.getDisplayName(),
                 baseConstructor.getDisplayName()));
       }
+      if (baseConstructor != null) {
+        checkStructDictSubtyping(n, functionType, baseConstructor);
+      }
 
       // Warn if any @implemented types are not interfaces or if there are any duplicates
       Set<JSType> alreadySeenInterfaces = new LinkedHashSet<>();
@@ -2604,6 +2618,18 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     return maybeTemplatizedType.toMaybeTemplatizedType().getRawType();
   }
 
+  private void checkStructDictSubtyping(Node n, FunctionType subtype, FunctionType supertype) {
+    if (subtype.makesDicts() && supertype.makesStructs()) {
+      compiler.report(
+          JSError.make(
+              n, DICT_EXTEND_STRUCT_TYPE, subtype.getDisplayName(), supertype.getDisplayName()));
+    } else if (subtype.makesStructs() && supertype.makesDicts()) {
+      compiler.report(
+          JSError.make(
+              n, STRUCT_EXTEND_DICT_TYPE, subtype.getDisplayName(), supertype.getDisplayName()));
+    }
+  }
+
   /** Checks an interface, which may be either an ES5-style FUNCTION node, or a CLASS node. */
   private void checkInterface(Node n, FunctionType functionType) {
     // Interface must extend only interfaces
@@ -2617,7 +2643,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // Check whether the extended interfaces have any conflicts
     if (functionType.getExtendedInterfacesCount() > 1) {
       // Only check when extending more than one interfaces
-      HashMap<String, ObjectType> properties = new HashMap<>();
+      LinkedHashMap<String, ObjectType> properties = new LinkedHashMap<>();
       LinkedHashMap<String, ObjectType> currentProperties = new LinkedHashMap<>();
       for (ObjectType interfaceType : functionType.getExtendedInterfaces()) {
         currentProperties.clear();
@@ -2964,7 +2990,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           // don't do any further typechecking of the yield* type.
           return;
         }
-        TemplateType templateType = typeRegistry.getIterableTemplate();
+        TemplateType templateType = typeRegistry.getIterableValueTemplate();
         actualYieldType =
             actualYieldType.autobox().getTemplateTypeMap().getResolvedTemplateType(templateType);
       }
@@ -3293,7 +3319,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkTypeContainsObjectWithBadKey(Node n, JSTypeExpression type) {
     if (type != null && type.getRoot().getJSType() != null) {
       JSType realType = type.getRoot().getJSType();
-      JSType objectWithBadKey = findObjectWithNonStringifiableKey(realType, new HashSet<JSType>());
+      JSType objectWithBadKey =
+          findObjectWithNonStringifiableKey(realType, new LinkedHashSet<JSType>());
       if (objectWithBadKey != null) {
         compiler.report(JSError.make(n, NON_STRINGIFIABLE_OBJECT_KEY, objectWithBadKey.toString()));
       }

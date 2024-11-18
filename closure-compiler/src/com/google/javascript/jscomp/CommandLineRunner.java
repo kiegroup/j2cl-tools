@@ -82,7 +82,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -161,12 +161,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "goog.FEATURESET_YEAR=YYYY."
                 + " The minimum valid value of the browser year is 2012")
     private Integer browserFeaturesetYear = 0;
-
-    @Option(
-        name = "--emit_async_functions_with_zonejs",
-        handler = BooleanOptionHandler.class,
-        usage = "Relax the restriction on disallowing --language_out=ES_2017 together with Zone.js")
-    private boolean emitAsyncFunctionsWithZonejs = false;
 
     @Option(
         name = "--help",
@@ -640,13 +634,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private @Nullable Integer polymerVersion = null;
 
     @Option(
-        name = "--polymer_export_policy",
-        usage =
-            "How to handle exports/externs for Polymer properties and methods. "
-                + "Values: LEGACY, EXPORT_ALL.")
-    private String polymerExportPolicy = PolymerExportPolicy.LEGACY.name();
-
-    @Option(
         name = "--chrome_pass",
         handler = BooleanOptionHandler.class,
         usage = "Enable Chrome-specific options for handling cr.* functions.",
@@ -967,6 +954,20 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "stub functions in a parent chunk.")
     private boolean assumeNoPrototypeMethodEnumeration = false;
 
+    @Option(
+        name = "--variable_map_input_file",
+        usage =
+            "File containing the serialized version of the variable "
+                + "renaming map produced by a previous compilation")
+    private String variableMapInputFile = "";
+
+    @Option(
+        name = "--property_map_input_file",
+        usage =
+            "File containing the serialized version of the property "
+                + "renaming map produced by a previous compilation")
+    private String propertyMapInputFile = "";
+
     @Argument private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
 
@@ -1160,7 +1161,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 });
             stringWriter.flush();
             String rawOptionUsage = stringWriter.toString();
-            Matcher optionNameMatches = Pattern.compile(" *--([a-z0-9_]+)").matcher(rawOptionUsage);
             int delimiterIndex = rawOptionUsage.indexOf(" : ");
             if (delimiterIndex > 0) {
               outputStream.write(
@@ -1552,7 +1552,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
   }
 
   private void processFlagFile(String flagFileString) throws CmdLineException, IOException {
-    Path flagFile = Paths.get(flagFileString);
+    Path flagFile = Path.of(flagFileString);
 
     BufferedReader buffer = java.nio.file.Files.newBufferedReader(flagFile, UTF_8);
     // Builds the tokens.
@@ -1628,6 +1628,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
   }
 
+  @Override
   protected final String getVersionText() {
     return String.join(
         "\n", //
@@ -1762,6 +1763,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setVariableMapOutputFile(flags.variableMapOutputFile)
           .setCreateNameMapFiles(flags.createNameMapFiles)
           .setPropertyMapOutputFile(flags.propertyMapOutputFile)
+          .setPropertyMapInputFile(flags.propertyMapInputFile)
+          .setVariableMapInputFile(flags.variableMapInputFile)
           .setInstrumentationMappingFile(flags.instrumentationMappingOutputFile)
           .setCodingConvention(conv)
           .setSummaryDetailLevel(flags.summaryDetailLevel)
@@ -1777,7 +1780,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setWarningGuards(Flags.guardLevels)
           .setDefine(flags.define)
           .setBrowserFeaturesetYear(flags.browserFeaturesetYear)
-          .setEmitAsyncFunctionsWithZonejs(flags.emitAsyncFunctionsWithZonejs)
           .setCharset(flags.charset)
           .setDependencyOptions(dependencyOptions)
           .setOutputManifest(ImmutableList.of(flags.outputManifest))
@@ -1798,7 +1800,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         stage1RestoreFile = flags.continueSavedCompilationFile;
       }
       if (stage1RestoreFile != null) {
-        config.setContinueSavedCompilationFileName(stage1RestoreFile, /* stage= */ 1);
+        config.setContinueSavedCompilationFileName(
+            stage1RestoreFile, /* restoredCompilationStage= */ 1);
       }
       String stage2RestoreFile = flags.restoreStage2FromFile;
       if (stage1RestoreFile != null) {
@@ -1853,7 +1856,11 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       if (languageMode != null) {
         options.setLanguageIn(languageMode);
       } else {
-        throw new FlagUsageException("Unknown language `" + flags.languageIn + "' specified.");
+        throw new FlagUsageException(
+            "Unknown language `"
+                + flags.languageIn
+                + "' specified. Expected one of: "
+                + LanguageMode.validCommandLineNames());
       }
     }
 
@@ -1865,8 +1872,13 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     if (languageMode != null) {
       options.setLanguageOut(languageMode);
     } else {
-      throw new FlagUsageException("Unknown language `" + flags.languageOut + "' specified.");
+      throw new FlagUsageException(
+          "Unknown language `"
+              + flags.languageOut
+              + "' specified. Expected one of: "
+              + LanguageMode.validCommandLineNames());
     }
+
 
     options.setCodingConvention(new ClosureCodingConvention());
 
@@ -1906,7 +1918,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
 
     if (flags.typedAstOutputFile != null) {
-      options.setTypedAstOutputFile(Paths.get(flags.typedAstOutputFile));
+      options.setTypedAstOutputFile(Path.of(flags.typedAstOutputFile));
     }
     options.setGenerateExports(flags.generateExports);
     options.setExportLocalPropertyDefinitions(flags.exportLocalPropertyDefinitions);
@@ -1921,14 +1933,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     options.angularPass = flags.angularPass;
 
-    options.polymerVersion = flags.polymerVersion;
-    try {
-      options.polymerExportPolicy =
-          PolymerExportPolicy.valueOf(Ascii.toUpperCase(flags.polymerExportPolicy));
-    } catch (IllegalArgumentException ex) {
-      throw new FlagUsageException(
-          "Unknown PolymerExportPolicy `" + flags.polymerExportPolicy + "' specified.");
-    }
+    options.setPolymerVersion(flags.polymerVersion);
 
     options.setChromePass(flags.chromePass);
 
@@ -2202,7 +2207,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         if (matchedFile.isDirectory()) {
           matchPaths(new File(matchedFile, "**.js").toString(), allJsInputs, excludes);
         } else {
-          Path original = Paths.get(pattern);
+          Path original = Path.of(pattern);
           String pathStringAbsolute = original.normalize().toAbsolutePath().toString();
           if (!excludes.contains(pathStringAbsolute)) {
             allJsInputs.put(pathStringAbsolute, original.toString());

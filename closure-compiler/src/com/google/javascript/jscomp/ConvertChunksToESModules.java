@@ -30,7 +30,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Finds all references to global symbols in a different output chunk and add ES Module imports and
@@ -110,7 +110,7 @@ final class ConvertChunksToESModules implements CompilerPass {
     // Force every output chunk to parse as an ES Module. If a chunk has no imports and
     // no exports, add an empty export list to generate an empty export statement:
     // example: export {};
-    for (JSChunk chunk : compiler.getModuleGraph().getAllChunks()) {
+    for (JSChunk chunk : compiler.getChunkGraph().getAllChunks()) {
       if (!crossChunkExports.containsKey(chunk)
           && !crossChunkImports.containsKey(chunk)
           && !chunk.getInputs().isEmpty()) {
@@ -123,7 +123,7 @@ final class ConvertChunksToESModules implements CompilerPass {
     addImportStatements();
     rewriteDynamicImportCallbacks();
 
-    compiler.setFeatureSet(compiler.getFeatureSet().with(FeatureSet.Feature.MODULES));
+    NodeUtil.addFeatureToAllScripts(root, FeatureSet.Feature.MODULES, compiler);
   }
 
   /**
@@ -131,7 +131,7 @@ final class ConvertChunksToESModules implements CompilerPass {
    * compilation, all input files should be scripts.
    */
   private void convertChunkSourcesToModules() {
-    for (JSChunk chunk : compiler.getModuleGraph().getAllChunks()) {
+    for (JSChunk chunk : compiler.getChunkGraph().getAllChunks()) {
       if (chunk.getInputs().isEmpty()) {
         continue;
       }

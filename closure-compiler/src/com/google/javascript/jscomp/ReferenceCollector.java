@@ -28,7 +28,7 @@ import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A helper class for passes that want to access all information about where a variable is
@@ -167,7 +167,7 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
       return;
     }
 
-    /**
+    /*
      * Replace the block stack with a new one matching the hoist position.
      *
      * <p>This algorithm only works because we know hoisted functions cannot be inside loops. It
@@ -190,7 +190,7 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
       }
     }
 
-    /**
+    /*
      * Record the function declaration reference explicitly because it is a bleeding name. The
      * reference must be recorded with the containing scope, and traverseAtScope skips bleeding
      * function NAME nodes

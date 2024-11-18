@@ -29,7 +29,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,6 +58,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "goog.reflect = {};",
             "goog.reflect.object = function(obj, propertiesObj) {};",
             "goog.reflect.objectProperty = function(prop, obj) {};",
+            "goog.weakUsage = function(nameArg) {};",
             "function goog$inherits(subClass, superClass) {}",
             "function valueType$mixin(dstPrototype, srcPrototype, flags, ...args) {}",
             "function alert() {}",
@@ -69,7 +70,6 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "console.log = function(var_args) {};",
             "/** @constructor @return {!Array} */ function Array(/** ...* */ var_args) {}",
             "/** @constructor @return {string} */ function String(/** *= */ opt_arg) {}",
-            "/** @constructor */ function Map() {}",
             "/** @constructor */ function Set() {}",
             "/** @constructor */ function WeakMap() {}",
             ""));
@@ -82,12 +82,20 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
           "    /** string */ name, /** Function */ func, /** string */ from, /** string */ to) {};",
           "");
 
+  private static final String JSCOMP_PATCH =
+      lines(
+          "var $jscomp = {};",
+          "$jscomp.patch = function(/** string */ name, /** Function */ func) {};",
+          "");
+
   @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
     // Allow testing of features that aren't supported for output yet.
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     enableGatherExternProperties();
     removeGlobal = true;
     preserveFunctionExpressionNames = false;
@@ -149,14 +157,15 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Test
   public void testRemoveInBlock() {
-    test(lines(
-        "if (true) {",
-        "  if (true) {",
-        "    var foo = function() {};",
-        "  }",
-        "}"),
+    test(
         lines(
-            "if (true) {",
+            "if (true) {", //
+            "  if (true) {",
+            "    var foo = function() {};",
+            "  }",
+            "}"),
+        lines(
+            "if (true) {", //
             "  if (true) {",
             "  }",
             "}"));
@@ -230,11 +239,12 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Test
   public void testReferenceInObjectLiteral() {
-    testSame(lines(
-        "function f(a) {",
-        "  return {a: a};",
-        "}",
-        "f(1);"));
+    testSame(
+        lines(
+            "function f(a) {", //
+            "  return {a: a};",
+            "}",
+            "f(1);"));
   }
 
   @Test
@@ -443,7 +453,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     test(
         "var b=function(c,d,e,f){return c+d};b(1,2)", // preserve alignment
         "var b=function(c,d    ){return c+d};b(1,2)");
-    test("var b=function(e,c,f,d,g){return c+d};b(1,2)",
+    test(
+        "var b=function(e,c,f,d,g){return c+d};b(1,2)",
         "var b=function(e,c,f,d){return c+d};b(1,2)");
   }
 
@@ -733,7 +744,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "function countArgs(x, ...{length}) {",
             "  return length;",
             "}",
-          "alert(countArgs(1, 1, 1, 1, 1));"));
+            "alert(countArgs(1, 1, 1, 1, 1));"));
 
     testSame("function foo([...rest]) {/* rest unused*/}; foo();");
 
@@ -842,27 +853,33 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Test
   public void testIssue168a() {
-    test("function _a(){" +
-            "  (function(x){ _b(); })(1);" +
-            "}" +
-            "function _b(){" +
-            "  _a();" +
+    test(
+        lines(
+            "function _a(){", //
+            "  (function(x){ _b(); })(1);",
             "}",
-        "function _a(){(function(){_b()})(1)}" +
-            "function _b(){_a()}");
+            "function _b(){",
+            "  _a();",
+            "}"),
+        lines(
+            "function _a(){(function(){_b()})(1)}", //
+            "function _b(){_a()}"));
   }
 
   @Test
   public void testIssue168b() {
     removeGlobal = false;
-    test("function a(){" +
-            "  (function(x){ b(); })(1);" +
-            "}" +
-            "function b(){" +
-            "  a();" +
+    test(
+        lines(
+            "function a(){", //
+            "  (function(x){ b(); })(1);",
             "}",
-        "function a(){(function(x){b()})(1)}" +
-            "function b(){a()}");
+            "function b(){",
+            "  a();",
+            "}"),
+        lines(
+            "function a(){(function(x){b()})(1)}", //
+            "function b(){a()}"));
   }
 
   @Test
@@ -872,7 +889,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Test
   public void testUnusedAssign2() {
-    test("function f(a) { a = 3; } this.x = f;",
+    test(
+        "function f(a) { a = 3; } this.x = f;", //
         "function f(){} this.x=f");
   }
 
@@ -880,25 +898,29 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   public void testUnusedAssign3() {
     // e can't be removed, so we don't try to remove the dead assign.
     // We might be able to improve on this case.
-    test("try { throw ''; } catch (e) { e = 3; }",
+    test(
+        "try { throw ''; } catch (e) { e = 3; }", //
         "try{throw\"\";}catch(e){e=3}");
   }
 
   @Test
   public void testUnusedAssign4() {
-    test("function f(a, b) { this.foo(b); a = 3; } this.x = f;",
+    test(
+        "function f(a, b) { this.foo(b); a = 3; } this.x = f;",
         "function f(a,b){this.foo(b);}this.x=f");
   }
 
   @Test
   public void testUnusedAssign5() {
-    test("var z = function f() { f = 3; }; z();",
+    test(
+        "var z = function f() { f = 3; }; z();", //
         "var z=function(){};z()");
   }
 
   @Test
   public void testUnusedAssign5b() {
-    test("var z = function f() { f = alert(); }; z();",
+    test(
+        "var z = function f() { f = alert(); }; z();", //
         "var z=function(){alert()};z()");
   }
 
@@ -915,7 +937,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   @Test
   public void testUnusedAssign7() {
     // This loop is normalized to "var i;for(i in..."
-    test("var a = 3; for (var i in {}) { i = a; }",
+    test(
+        "var a = 3; for (var i in {}) { i = a; }",
         // TODO(johnlenz): "i = a" should be removed here.
         "var a = 3; var i; for (i in {}) {i = a;}");
   }
@@ -923,7 +946,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   @Test
   public void testUnusedAssign8() {
     // This loop is normalized to "var i;for(i in..."
-    test("var a = 3; for (var i in {}) { i = a; } alert(a);",
+    test(
+        "var a = 3; for (var i in {}) { i = a; } alert(a);",
         // TODO(johnlenz): "i = a" should be removed here.
         "var a = 3; var i; for (i in {}) {i = a} alert(a);");
   }
@@ -974,7 +998,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Test
   public void testUnusedPropAssign3b() {
-    test("var x = {}; x[alert()] = alert(); x[alert() + alert()] = alert()",
+    test(
+        "var x = {}; x[alert()] = alert(); x[alert() + alert()] = alert()",
         "alert(),alert();(alert() + alert()),alert()");
   }
 
@@ -1017,7 +1042,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Test
   public void testUnusedPropAssign7c() {
-    test("var x = {}; x[alert(x.foo)] = x.bar;",
+    test(
+        "var x = {}; x[alert(x.foo)] = x.bar;", //
         "var x={};x[alert(x.foo)]=x.bar");
   }
 
@@ -1079,13 +1105,15 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Test
   public void testDependencies1b() {
-    test("var a = 3; var b = alert(function() { alert(a); });",
+    test(
+        "var a = 3; var b = alert(function() { alert(a); });",
         "var a=3;alert(function(){alert(a)})");
   }
 
   @Test
   public void testDependencies1c() {
-    test("var a = 3; var _b = function() { alert(a); };",
+    test(
+        "var a = 3; var _b = function() { alert(a); };", //
         "var a=3;var _b=function(){alert(a)}");
   }
 
@@ -1096,7 +1124,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Test
   public void testDependencies2b() {
-    test("var a = 3; var b = 3; b = alert(function() { alert(a); });",
+    test(
+        "var a = 3; var b = 3; b = alert(function() { alert(a); });",
         "var a=3;alert(function(){alert(a)})");
   }
 
@@ -1117,26 +1146,47 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Test
   public void testLocalVarReferencesGlobalVar2() {
-    test("var a=3;function f(b, c){b=a; alert(c);} f();",
+    test(
+        "var a=3;function f(b, c){b=a; alert(c);} f();", //
         "function f(b, c) { alert(c); } f();");
   }
 
   @Test
   public void testNestedAssign1() {
-    test("var b = null; var a = (b = 3); alert(a);",
+    test(
+        "var b = null; var a = (b = 3); alert(a);", //
         "var a = 3; alert(a);");
   }
 
   @Test
   public void testNestedAssign2() {
-    test("var a = 1; var b = 2; var c = (b = a); alert(c);",
+    test(
+        "var a = 1; var b = 2; var c = (b = a); alert(c);", //
         "var a = 1; var c = a; alert(c);");
   }
 
   @Test
   public void testNestedAssign3() {
-    test("var b = 0; var z; z = z = b = 1; alert(b);",
+    test(
+        "var b = 0; var z; z = z = b = 1; alert(b);", //
         "var b = 0; b = 1; alert(b);");
+  }
+
+  @Test
+  public void testWeakUsageRemoved() {
+    // There are no other references to `a`, so it can be removed.
+    test(
+        "var a=function(){return}; use(goog.weakUsage(a));", //
+        "use(void 0);");
+  }
+
+  @Test
+  public void testWeakUsageNotRemoved() {
+    // There is another reference to `a`, so it cannot be removed.
+    //
+    // Normally the PeepholeReplaceKnownMethods pass would remove the call to `goog.weakUsage`
+    // entirely, but in this unit test we are only testing RemoveUnusedCode.
+    testSame("var a=function(){return}; use(goog.weakUsage(a)); use(a);");
   }
 
   @Test
@@ -1144,7 +1194,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     testSame("var b=function(){return};b()");
     testSame("var b=function(c){return c};b(1)");
     test(
-        "var b=function(c){return};b(1)",
+        "var b=function(c){return};b(1)", //
         "var b=function(){return};b(1)");
     test(
         "var b=function(c){};b.call(null, externVar)",
@@ -1154,8 +1204,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
         "var b=function( ){};b.apply(null, externVar)");
 
     // Recursive calls
-    testSame(
-        "var b=function(c,d){b(1, 2);return d};b(3,4);b(5,6)");
+    testSame("var b=function(c,d){b(1, 2);return d};b(3,4);b(5,6)");
 
     testSame("var b=function(c){return arguments};b(1,2);b(3,4)");
   }
@@ -1194,10 +1243,13 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   @Test
   public void testDoNotOptimizeJSCompiler_renameProperty() {
     // Only the function definition can be modified, none of the call sites.
-    test("function JSCompiler_renameProperty(a) {};" +
-            "JSCompiler_renameProperty('a');",
-        "function JSCompiler_renameProperty() {};" +
-            "JSCompiler_renameProperty('a');");
+    test(
+        lines(
+            "function JSCompiler_renameProperty(a) {};", //
+            "JSCompiler_renameProperty('a');"),
+        lines(
+            "function JSCompiler_renameProperty() {};", //
+            "JSCompiler_renameProperty('a');"));
   }
 
   @Test
@@ -1207,9 +1259,11 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Test
   public void testRemoveSingletonClass1() {
-    test("function goog$addSingletonGetter(a){}" +
-            "/**@constructor*/function a(){}" +
-            "goog$addSingletonGetter(a);",
+    test(
+        lines(
+            "function goog$addSingletonGetter(a){}", //
+            "/**@constructor*/function a(){}",
+            "goog$addSingletonGetter(a);"),
         "");
   }
 
@@ -1237,19 +1291,23 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Test
   public void testRemoveInheritedClass3() {
-    testSame("/**@constructor*/function a(){}" +
-        "/**@constructor*/function b(){}" +
-        "goog$inherits(b,a); new b");
+    testSame(
+        lines(
+            "/**@constructor*/function a(){}", //
+            "/**@constructor*/function b(){}",
+            "goog$inherits(b,a); new b"));
   }
 
   @Test
   public void testRemoveInheritedClass4() {
-    testSame("function goog$inherits(){}" +
-        "/**@constructor*/function a(){}" +
-        "/**@constructor*/function b(){}" +
-        "goog$inherits(b,a);" +
-        "/**@constructor*/function c(){}" +
-        "goog$inherits(c,b); new c");
+    testSame(
+        lines(
+            "function goog$inherits(){}", //
+            "/**@constructor*/function a(){}",
+            "/**@constructor*/function b(){}",
+            "goog$inherits(b,a);",
+            "/**@constructor*/function c(){}",
+            "goog$inherits(c,b); new c"));
   }
 
   @Test
@@ -1271,10 +1329,12 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Test
   public void testRemoveInheritedClass8() {
-    testSame("/**@constructor*/function a(){}" +
-        "/**@constructor*/function b(){}" +
-        "/**@constructor*/function c(){}" +
-        "b.inherits(a);c.mixin(b.prototype);new c");
+    testSame(
+        lines(
+            "/**@constructor*/function a(){}", //
+            "/**@constructor*/function b(){}",
+            "/**@constructor*/function c(){}",
+            "b.inherits(a);c.mixin(b.prototype);new c"));
   }
 
   @Test
@@ -1311,7 +1371,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     // It also simplifies removal logic.
     testSame(
         lines(
-            "function a(){}",
+            "function a(){}", //
             "function b(){}",
             "goog$inherits(b, a) + 1;"));
 
@@ -1320,7 +1380,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     // remove this case.
     test(
         lines(
-            "function a(){}",
+            "function a(){}", //
             "function b(){}",
             "(goog$inherits(b, a), 1);"),
         "1");
@@ -1339,24 +1399,26 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   @Test
   public void testReflectedMethods() {
     testSame(
-        "/** @constructor */" +
-            "function Foo() {}" +
-            "Foo.prototype.handle = function(x, y) { alert(y); };" +
-            "var x = goog.reflect.object(Foo, {handle: 1});" +
-            "for (var i in x) { x[i].call(x); }" +
-            "window['Foo'] = Foo;");
+        lines(
+            "/** @constructor */", //
+            "function Foo() {}",
+            "Foo.prototype.handle = function(x, y) { alert(y); };",
+            "var x = goog.reflect.object(Foo, {handle: 1});",
+            "for (var i in x) { x[i].call(x); }",
+            "window['Foo'] = Foo;"));
   }
 
   @Test
   public void testIssue618_1() {
     this.removeGlobal = false;
     testSame(
-        "function f() {\n" +
-            "  var a = [], b;\n" +
-            "  a.push(b = []);\n" +
-            "  b[0] = 1;\n" +
-            "  return a;\n" +
-            "}");
+        lines(
+            "function f() {\n", //
+            "  var a = [], b;\n",
+            "  a.push(b = []);\n",
+            "  b[0] = 1;\n",
+            "  return a;\n",
+            "}"));
   }
 
   @Test
@@ -1494,22 +1556,18 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   public void testArrowFunctions() {
     test(
         lines(
-            "class C {",
+            "class C {", //
             "  g() {",
             "    var x;",
             "  }",
             "}",
-            "new C"
-        )
-        ,
+            "new C"),
         lines(
-            "class C {",
+            "class C {", //
             "  g() {",
             "  }",
             "}",
-            "new C"
-        )
-    );
+            "new C"));
 
     test("() => {var x}", "() => {};");
 
@@ -1844,32 +1902,28 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Test
   public void testGenerators() {
+    test(lines("function* f() {", "  var x;", "  yield x;", "}"), "");
     test(
         lines(
-            "function* f() {",
+            "function* f() {", //
             "  var x;",
             "  yield x;",
-            "}"
-        ),
-        ""
-    );
+            "}"),
+        "");
     test(
         lines(
-            "function* f() {",
+            "function* f() {", //
             "  var x;",
             "  var y;",
             "  yield x;",
             "}",
-            "f();"
-        ),
+            "f();"),
         lines(
-            "function* f() {",
+            "function* f() {", //
             "  var x;",
             "  yield x;",
             "}",
-            "f()"
-        )
-    );
+            "f()"));
   }
 
   @Test
@@ -1964,10 +2018,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   public void testTemplateStrings() {
     testSame(
         lines(
-            "var name = 'foo';",
-            "`Hello ${name}`"
-        )
-    );
+            "var name = 'foo';", //
+            "`Hello ${name}`"));
   }
 
   @Test
@@ -2049,24 +2101,21 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   public void testDestructuringArrayPattern1() {
     test(
         lines(
-            "var a; var b",
+            "var a; var b", //
             "[a, b] = [1, 2]"),
-        lines(
-            "[] = [1, 2]"));
+        lines("[] = [1, 2]"));
 
     test(
         lines(
-            "var b; var a",
+            "var b; var a", //
             "[a, b] = [1, 2]"),
-        lines(
-            "[] = [1, 2]"));
+        lines("[] = [1, 2]"));
 
     test(
         lines(
-            "var a; var b;",
+            "var a; var b;", //
             "[a] = [1]"),
-        lines(
-            "[] = [1]"));
+        lines("[] = [1]"));
 
     testSame("var [a, b] = [1, 2]; alert(a); alert(b);");
   }
@@ -2334,10 +2383,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     PolyfillRemovalTester tester =
         new PolyfillRemovalTester()
             .addExterns(
-                new TestExternsBuilder()
-                    .addConsole()
-                    .addExtra(JSCOMP_POLYFILL, "/** @constructor */ function Map() {}")
-                    .build())
+                new TestExternsBuilder().addConsole().addExtra(JSCOMP_POLYFILL).addMap().build())
             .addPolyfill(mapPolyfill);
 
     // unused polyfill is removed
@@ -2348,8 +2394,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     // Local names shadowing global polyfills are not themselves polyfill references.
     tester.expectPolyfillsRemovedTest(
         lines(
-            "console.log(function(Map) {", //
-            "  console.log(new Map());",
+            "console.log(function(Map$jscomp$1) {", //
+            "  console.log(new Map$jscomp$1());",
             "});"),
         mapPolyfill);
   }
@@ -2371,7 +2417,6 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
                     .addConsole()
                     .addExtra(
                         JSCOMP_POLYFILL,
-                        "/** @constructor */ function Map() {}",
                         "/** @const */ var goog = {};",
                         "/** @const {!Global} */ goog.global;",
                         "/** @const */ goog.structs = {};",
@@ -2380,6 +2425,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
                         "/** @const */ var notGlobal = {};",
                         "/** @constructor */ notGlobal.Map = function() {};",
                         "")
+                    .addMap()
                     .build())
             .addPolyfill(mapPolyfill);
 
@@ -2784,9 +2830,9 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             .addExterns(
                 new TestExternsBuilder()
                     .addConsole()
+                    .addMap()
                     .addExtra(
                         JSCOMP_POLYFILL,
-                        "/** @constructor */ function Map() {}",
                         "/** @constructor */ function Set() {}",
                         "/** @constructor */ function WeakMap() {}")
                     .build())
@@ -2812,11 +2858,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   @Test
   public void testRemoveUnusedPolyfills_continued() {
     Externs externs =
-        externs(
-            new TestExternsBuilder()
-                .addConsole()
-                .addExtra(JSCOMP_POLYFILL, "/** @constructor */ function Map() {}")
-                .build());
+        externs(new TestExternsBuilder().addConsole().addMap().addExtra(JSCOMP_POLYFILL).build());
 
     // Ensure that continuations occur so that retained polyfill definitions are still optimized.
     test(
@@ -2839,7 +2881,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
         externs(
             new TestExternsBuilder()
                 .addConsole()
-                .addExtra("function $jscomp$polyfill() {}", "/** @constructor */ function Map() {}")
+                .addMap()
+                .addExtra("function $jscomp$polyfill() {}")
                 .build());
 
     // The pass should also work after CollapseProperties.
@@ -2868,10 +2911,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             .addExterns(
                 new TestExternsBuilder()
                     .addConsole()
-                    .addExtra(
-                        JSCOMP_POLYFILL,
-                        "/** @constructor */ function Map() {}",
-                        "/** @constructor */ function Promise() {}")
+                    .addMap()
+                    .addExtra(JSCOMP_POLYFILL, "/** @constructor */ function Promise() {}")
                     .build())
             .addPolyfill(mapPolyfill);
 
@@ -2982,10 +3023,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     PolyfillRemovalTester tester =
         new PolyfillRemovalTester()
             .addExterns(
-                new TestExternsBuilder()
-                    .addConsole()
-                    .addExtra(JSCOMP_POLYFILL, "/** @constructor */ function Map() {}")
-                    .build())
+                new TestExternsBuilder().addConsole().addMap().addExtra(JSCOMP_POLYFILL).build())
             .addPolyfill(mapPolyfill);
 
     // Map is not removed because it has an unguarded usage.
@@ -2995,6 +3033,46 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "  console.log(Map);",
             "}",
             "console.log(Map);"));
+  }
+
+  @Test
+  public void testRemoveUnusedPatches() {
+    final String mapPatch = "$jscomp.patch('Map', function() {});";
+    PolyfillRemovalTester tester =
+        new PolyfillRemovalTester()
+            .addExterns(
+                new TestExternsBuilder().addConsole().addExtra(JSCOMP_PATCH).addMap().build())
+            .addPolyfill(mapPatch);
+
+    // unused polyfill is removed
+    tester.expectPolyfillsRemovedTest("console.log()", mapPatch);
+    // used polyfill is not removed
+    tester.expectNoRemovalTest("console.log(new Map())");
+
+    // Local names shadowing global polyfills are not themselves polyfill references.
+    tester.expectPolyfillsRemovedTest(
+        lines(
+            "console.log(function(Map$jscomp$1) {", //
+            "  console.log(new Map$jscomp$1());",
+            "});"),
+        mapPatch);
+  }
+
+  @Test
+  public void testRemoveUnusedPatches_guardedUsage() {
+    final String mapPatch = "$jscomp.patch('Map', function() {});";
+    PolyfillRemovalTester tester =
+        new PolyfillRemovalTester()
+            .addExterns(
+                new TestExternsBuilder().addConsole().addExtra(JSCOMP_PATCH).addMap().build())
+            .addPolyfill(mapPatch);
+
+    // Map is not removed because it is a patch.
+    tester.expectNoRemovalTest(
+        lines(
+            "if (typeof Map == 'undefined') {", //
+            "  console.log(Map);",
+            "}"));
   }
 
   @Test
@@ -3368,6 +3446,19 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testVariableAssignedToItselfInORNode() {
+    // Fix for b/359932022, where variable is assigned to itself in an OR node.
+    // 1) the node to which a value is being assigned
+    // 2) the value being assigned and the
+    // Handle the case in an OR node,where both (1) and (2) are the same variable.
+    test("var a = a || {}; a[\"hi\"] = true;", "");
+    test("var a = {}; a[\"hi\"] = true;", ""); // without the OR node
+
+    // test RHS of OR is not removable
+    testSame("var not_removable = 5; var a = a || not_removable ; a[\"hi\"] = true;");
+  }
+
+  @Test
   public void testRemovalFromExpression() {
     test(
         lines(
@@ -3383,5 +3474,14 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "  CONDITION ? 0 : 'something';",
             "};",
             "alert(a);"));
+  }
+
+  @Test
+  public void testPreserveDestructuringWithObjectRest() {
+    testSame(
+        lines(
+            "const obj = {'one': 1, 'two': 2};",
+            "const {['one']: unused, ...remaining} = obj;",
+            "console.log(remaining);"));
   }
 }

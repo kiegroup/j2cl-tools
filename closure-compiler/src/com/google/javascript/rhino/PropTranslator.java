@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.serialization.NodeProperty;
 import com.google.javascript.rhino.Node.Prop;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A translator for converting between Rhino node properties and TypedAST proto node properties used
@@ -143,8 +143,6 @@ final class PropTranslator {
         return NodeProperty.COMPUTED_PROP_VARIABLE;
       case GOOG_MODULE:
         return NodeProperty.GOOG_MODULE;
-      case TRANSPILED:
-        return NodeProperty.TRANSPILED;
       case MODULE_ALIAS:
         return NodeProperty.MODULE_ALIAS;
       case MODULE_EXPORT:
@@ -176,7 +174,6 @@ final class PropTranslator {
       case PARSE_RESULTS:
       case IS_TYPESCRIPT_ABSTRACT:
       case TYPEDEF_TYPE:
-      case MARK_FOR_PARENTHESIZE:
         // These cases cannot be translated to a NodeProperty
         return null;
     }

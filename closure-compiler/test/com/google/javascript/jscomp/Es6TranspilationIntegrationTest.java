@@ -20,7 +20,10 @@ import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
@@ -38,16 +41,33 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
-  private static final String EXTERNS_BASE =
-      new TestExternsBuilder()
-          .addArguments()
-          .addFunction()
-          .addJSCompLibraries()
-          .addObject()
-          .build();
-
   public Es6TranspilationIntegrationTest() {
-    super(EXTERNS_BASE);
+    super(getDefaultExterns());
+  }
+
+  private static String getDefaultExterns() {
+    return getDefaultExternsBuilder().build();
+  }
+
+  private static TestExternsBuilder getDefaultExternsBuilder() {
+    return new TestExternsBuilder()
+        .addAsyncIterable()
+        .addArray()
+        .addArguments()
+        .addObject()
+        .addMath()
+        .addExtra(
+            // stubs of runtime libraries
+            lines(
+                "/** @const */",
+                "var $jscomp = {};",
+                "$jscomp.generator = {};",
+                "$jscomp.generator.createGenerator = function() {};",
+                "/** @constructor */",
+                "$jscomp.generator.Context = function() {};",
+                "/** @constructor */",
+                "$jscomp.generator.Context.PropertyIterator = function() {};",
+                "$jscomp.asyncExecutePromiseGeneratorFunction = function(program) {};"));
   }
 
   @Override
@@ -56,15 +76,26 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
+    // We will do normalization as part of transpilation in getProcessor()
+    disableNormalize();
     disableTypeCheck();
     disableCompareJsDoc(); // optimization passes see simplified JSDoc.
+    // Normalization does renaming on the externs (parameter names and maybe other things) and the
+    // pass that inverts renaming ignores the externs, leaving them changed.
+    allowExternsChanges();
+    // Our getProcessor() returns a fake "pass" that actually runs several passes,
+    // including one that undoes some of the changes that were made.
+    // this confuses the logic for validating AST change marking.
+    // That logic is really only valid when testing a single, real pass.
+    disableValidateAstChangeMarking();
   }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
 
-    PassListBuilder passes = new PassListBuilder(compiler.getOptions());
+    CompilerOptions compilerOptions = compiler.getOptions();
+    PassListBuilder passes = new PassListBuilder(compilerOptions);
 
     passes.maybeAdd(
         PassFactory.builder()
@@ -76,13 +107,46 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         PassFactory.builder()
             .setName("convertTypesToColors")
             .setInternalFactory(
-                (c) -> new ConvertTypesToColors(c, SerializationOptions.INCLUDE_DEBUG_INFO))
+                (c) ->
+                    new ConvertTypesToColors(
+                        c, SerializationOptions.builder().setIncludeDebugInfo(true).build()))
             .build());
 
-    TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, compiler.getOptions());
+    passes.maybeAdd(
+        PassFactory.builder()
+            .setName(PassNames.NORMALIZE)
+            .setInternalFactory((abstractCompiler) -> Normalize.builder(abstractCompiler).build())
+            .build());
+    TranspilationPasses.addTranspilationPasses(passes, compilerOptions);
+    // Since we're testing the transpile-only case, we need to put back the original variable names
+    // where possible once transpilation is complete. This matches the behavior in
+    // DefaultPassConfig. See comments there for further explanation.
+    passes.maybeAdd(
+        PassFactory.builder()
+            .setName("invertContextualRenaming")
+            .setInternalFactory(MakeDeclaredNamesUnique::getContextualRenameInverter)
+            .build());
     optimizer.consume(passes.build());
 
     return optimizer;
+  }
+
+  private void rewriteUniqueIdAndTest(Sources srcs, Expected originalExpected) {
+    Externs externs = externs("");
+    test(externs, srcs, originalExpected);
+  }
+
+  private void testForOf(Sources srcs, Expected originalExpected) {
+    testForOf(externs(""), srcs, originalExpected);
+  }
+
+  private void testForOf(Externs externs, Sources srcs, Expected originalExpected) {
+    // change the UID in expected with "$jscomp$key$m123..456" name
+    Expected modifiedExpected =
+        expected(
+            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
+                (FlatSources) srcs, originalExpected, ImmutableMap.of("KEY", "$jscomp$key$")));
+    test(externs, srcs, modifiedExpected);
   }
 
   @Test
@@ -93,7 +157,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testSpreadLibInjection() {
-    test("var x = [...a];", "var x=[].concat($jscomp.arrayFromIterable(a))");
+    test("var x = [...a];", "var x=[].concat((0, $jscomp.arrayFromIterable)(a))");
     assertThat(getLastCompiler().getInjected()).containsExactly("es6/util/arrayfromiterable");
   }
 
@@ -154,21 +218,23 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "C.prototype.foo = function() { console.log(this.a); };",
             "C.prototype.bar = function() { alert(this.a); };"));
 
-    test(
-        lines(
-            "if (true) {", //
-            "   class Foo{}",
-            "} else {",
-            "   class Foo{}",
-            "}"),
-        lines(
-            "if (true) {",
-            "    /** @constructor */",
-            "    var Foo = function() {};",
-            "} else {",
-            "    /** @constructor */",
-            "    var Foo$0 = function() {};",
-            "}"));
+    rewriteUniqueIdAndTest(
+        srcs(
+            lines(
+                "if (true) {", //
+                "   class Foo{}",
+                "} else {",
+                "   class Foo{}",
+                "}")),
+        expected(
+            lines(
+                "if (true) {",
+                "    /** @constructor */",
+                "    var Foo = function() {};",
+                "} else {",
+                "    /** @constructor */",
+                "    var Foo$jscomp$1 = function() {};",
+                "}")));
   }
 
   @Test
@@ -201,8 +267,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         "/** @deprecated */ class C { }", "/** @constructor @deprecated */ var C = function() {};");
 
     test(
-        "/** @dict */ class C { }",
-        "/** @constructor @dict */ var C = function() {};");
+        "/**              @dict */ class C              { }", //
+        "/** @constructor @dict */ var   C = function() { };");
 
     test(
         "/** @template T */ class C { }", "/** @constructor @template T */ var C = function() {};");
@@ -486,10 +552,11 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             " * @extends {Error}",
             " */",
             "var C = function() {",
-            "  var $jscomp$tmp$error;",
-            "  $jscomp$tmp$error = Error.apply(this, arguments),",
-            "      this.message = $jscomp$tmp$error.message,",
-            "      ('stack' in $jscomp$tmp$error) && (this.stack = $jscomp$tmp$error.stack),",
+            "  var $jscomp$tmp$error$m1146332801$1;",
+            "  $jscomp$tmp$error$m1146332801$1 = Error.apply(this, arguments),",
+            "      this.message = $jscomp$tmp$error$m1146332801$1.message,",
+            "      ('stack' in $jscomp$tmp$error$m1146332801$1) && (this.stack ="
+                + " $jscomp$tmp$error$m1146332801$1.stack),",
             "      this;",
             "};",
             "$jscomp.inherits(C, Error);"));
@@ -506,11 +573,12 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             " * @extends {Error}",
             " */",
             "var C = function() {",
-            "  var $jscomp$tmp$error;",
+            "  var $jscomp$tmp$error$m1146332801$1;",
             "  var self =",
-            "      ($jscomp$tmp$error = Error.call(this, 'C error'),",
-            "          this.message = $jscomp$tmp$error.message,",
-            "          ('stack' in $jscomp$tmp$error) && (this.stack = $jscomp$tmp$error.stack),",
+            "      ($jscomp$tmp$error$m1146332801$1 = Error.call(this, 'C error'),",
+            "          this.message = $jscomp$tmp$error$m1146332801$1.message,",
+            "          ('stack' in $jscomp$tmp$error$m1146332801$1) && (this.stack ="
+                + " $jscomp$tmp$error$m1146332801$1.stack),",
             "          this)",
             "      || this;",
             "};",
@@ -750,10 +818,11 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         lines(
             "/** @constructor @extends {D} */",
             "var C = function(str, n) {",
-            "  var $jscomp$super$this;",
-            "  ($jscomp$super$this = D.call(this,str) || this).n = n;",
-            "  return $jscomp$super$this;", // Duplicate because of existing return statement.
-            "  return $jscomp$super$this;",
+            "  var $jscomp$super$this$m1146332801$0;",
+            "  ($jscomp$super$this$m1146332801$0 = D.call(this,str) || this).n = n;",
+            "  return $jscomp$super$this$m1146332801$0;", // Duplicate because of existing return
+            // statement.
+            "  return $jscomp$super$this$m1146332801$0;",
             "}",
             "$jscomp.inherits(C, D);"));
   }
@@ -814,14 +883,14 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         lines(
             "/** @constructor @extends {D} */",
             "var C = function(str, n) {",
-            "  var $jscomp$super$this;",
+            "  var $jscomp$super$this$m1146332801$0;",
             "  if (n >= 0) {",
-            "    $jscomp$super$this = D.call(this, 'positive: ' + str) || this;",
+            "    $jscomp$super$this$m1146332801$0 = D.call(this, 'positive: ' + str) || this;",
             "  } else {",
-            "    $jscomp$super$this = D.call(this, 'negative: ' + str) || this;",
+            "    $jscomp$super$this$m1146332801$0 = D.call(this, 'negative: ' + str) || this;",
             "  }",
-            "  $jscomp$super$this.n = n;",
-            "  return $jscomp$super$this;",
+            "  $jscomp$super$this$m1146332801$0.n = n;",
+            "  return $jscomp$super$this$m1146332801$0;",
             "}",
             "$jscomp.inherits(C, D);"));
   }
@@ -945,10 +1014,11 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             " * @extends {Promise}",
             " */",
             "var FooPromise = function(callback, msg) {",
-            "  var $jscomp$super$this;",
-            "  $jscomp$super$this = $jscomp.construct(Promise, [callback], this.constructor)",
-            "  $jscomp$super$this.msg = msg;",
-            "  return $jscomp$super$this;",
+            "  var $jscomp$super$this$m1146332801$0;",
+            "  $jscomp$super$this$m1146332801$0 = $jscomp.construct(Promise, [callback],"
+                + " this.constructor)",
+            "  $jscomp$super$this$m1146332801$0.msg = msg;",
+            "  return $jscomp$super$this$m1146332801$0;",
             "}",
             "$jscomp.inherits(FooPromise, Promise);",
             ""));
@@ -1005,15 +1075,35 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testExtendNonNativeObject() {
-    // TODO(sdh): If a normal Object extern is found, then this test fails because
-    // the pass adds extra handling for super() possibly changing 'this'.  Does setting
-    // the externs to "" to prevent this defeat the purpose of this test?  It became
-    // necessary as a result of adding "/** @constructor */ function Object() {}" to
-    // the externs used by this test.
-
     // No special handling when Object is redefined.
+    Externs customExterns =
+        externs(
+            new TestExternsBuilder()
+                .addAsyncIterable()
+                .addArray()
+                .addArguments()
+                // TODO(sdh): If a normal Object extern is found, then this test fails because
+                // the pass adds extra handling for super() possibly changing 'this'.  Does setting
+                // the externs to "" to prevent this defeat the purpose of this test?  It became
+                // necessary as a result of adding "/** @constructor */ function Object() {}" to
+                // the externs used by this test.
+                // .addObject()
+                .addMath()
+                .addExtra(
+                    // stubs of runtime libraries
+                    lines(
+                        "/** @const */",
+                        "var $jscomp = {};",
+                        "$jscomp.generator = {};",
+                        "$jscomp.generator.createGenerator = function() {};",
+                        "/** @constructor */",
+                        "$jscomp.generator.Context = function() {};",
+                        "/** @constructor */",
+                        "$jscomp.generator.Context.PropertyIterator = function() {};",
+                        "$jscomp.asyncExecutePromiseGeneratorFunction = function(program) {};"))
+                .build());
     test(
-        externs(""),
+        customExterns,
         srcs(
             lines(
                 "class Object {}",
@@ -1040,7 +1130,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
                 "};",
                 "$jscomp.inherits(Foo, Object);")));
     test(
-        externs(""),
+        customExterns,
         srcs(
             lines(
                 "class Object {}", //
@@ -1078,6 +1168,63 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "var testcode$classdecl$var0 = function(){};",
             "/** @constructor */",
             "F = testcode$classdecl$var0;"));
+  }
+
+  @Test
+  public void testOutputLevelES3_compilerFeatureSetIsUpdated() {
+    setLanguageOut(LanguageMode.ECMASCRIPT3);
+    test(
+        "class C { f() { class D {} } }",
+        lines(
+            "/** @constructor */",
+            "var C = function() {};",
+            "C.prototype.f = function() {",
+            "  /** @constructor */",
+            "  var D = function() {}",
+            "};"));
+    // The compiler feature set gets updated to ES3.
+    assertThat(getLastCompiler().getAllowableFeatures()).isEqualTo(FeatureSet.ES3);
+  }
+
+  @Test
+  public void testOutputLevelES3_gettersSettersAreReported() {
+    setLanguageOut(LanguageMode.ECMASCRIPT3);
+    testError("class C { get x() { return 1; }}", TranspilationUtil.CANNOT_CONVERT);
+    testError("class C { set x(value) {}}", TranspilationUtil.CANNOT_CONVERT);
+  }
+
+  @Test
+  public void testES5FeatureTrailingCommaIsRemovedUnconditionally() {
+    setLanguageOut(LanguageMode.ECMASCRIPT3);
+    // trailing comma is removed
+    test("let obj = {a: 1, b: 2,};", "var obj = {a: 1, b: 2};");
+    // also removed from the featureset
+    assertThat(getLastCompiler().getAllowableFeatures()).isEqualTo(FeatureSet.ES3);
+
+    // also removed for ES5 output
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    // trailing comma is removed unconditionally regardless of output level
+    test("let obj = {a: 1, b: 2,};", "var obj = {a: 1, b: 2};");
+    // also removed from the featureset
+    assertThat(getLastCompiler().getAllowableFeatures().contains(Feature.TRAILING_COMMA)).isFalse();
+  }
+
+  @Test
+  public void testES5FeatureMultiLineStringContinuationIsRemovedUnconditionally() {
+    setLanguageOut(LanguageMode.ECMASCRIPT3);
+    // string continuation is removed
+    test("let obj = 'a\\\nb';", "var obj = 'ab';");
+    // also removed from the featureset
+    assertThat(getLastCompiler().getAllowableFeatures().contains(Feature.STRING_CONTINUATION))
+        .isFalse();
+
+    // also removed for ES5 output
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    // string continuation is removed
+    test("let obj = 'a\\\nb';", "var obj = 'ab';");
+    // also removed from the featureset
+    assertThat(getLastCompiler().getAllowableFeatures().contains(Feature.STRING_CONTINUATION))
+        .isFalse();
   }
 
   @Test
@@ -1401,9 +1548,12 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   public void testInheritFromExterns() {
     test(
         externs(
-            lines(
-                "/** @constructor */ function ExternsClass() {}",
-                "ExternsClass.m = function() {};")),
+            getDefaultExternsBuilder()
+                .addExtra(
+                    lines(
+                        "/** @constructor */ function ExternsClass() {}",
+                        "ExternsClass.m = function() {};"))
+                .build()),
         srcs("class CodeClass extends ExternsClass {}"),
         expected(
             lines(
@@ -1442,60 +1592,77 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testInvalidClassUse() {
+    SourceFile externsFile =
+        new TestExternsBuilder()
+            .addArguments()
+            .addFunction()
+            .addJSCompLibraries()
+            .buildExternsFile("externs.js");
+    // Normalization changes some externs declarations,
+    allowExternsChanges();
     enableTypeCheck();
 
     test(
-        lines(
-            "/** @constructor */",
-            "function Foo() {}",
-            "Foo.prototype.f = function() {};",
-            "class Sub extends Foo {}",
-            "(new Sub).f();"),
-        lines(
-            "/** @constructor */",
-            "function Foo() {}",
-            "Foo.prototype.f = function() {};",
-            "/**",
-            " * @constructor",
-            " * @extends {Foo}",
-            " */",
-            "var Sub=function() { Foo.apply(this, arguments); }",
-            "$jscomp.inherits(Sub, Foo);",
-            "(new Sub).f();"));
+        externs(externsFile),
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "Foo.prototype.f = function() {};",
+                "class Sub extends Foo {}",
+                "(new Sub).f();")),
+        expected(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "Foo.prototype.f = function() {};",
+                "/**",
+                " * @constructor",
+                " * @extends {Foo}",
+                " */",
+                "var Sub=function() { Foo.apply(this, arguments); }",
+                "$jscomp.inherits(Sub, Foo);",
+                "(new Sub).f();")));
 
     test(
-        lines(
-            "/** @constructor @struct */",
-            "function Foo() {}",
-            "Foo.f = function() {};",
-            "class Sub extends Foo {}",
-            "Sub.f();"),
-        lines(
-            "/** @constructor @struct */",
-            "function Foo() {}",
-            "Foo.f = function() {};",
-            "/** @constructor",
-            " * @extends {Foo}",
-            " */",
-            "var Sub = function() { Foo.apply(this, arguments); };",
-            "$jscomp.inherits(Sub, Foo);",
-            "Sub.f();"));
+        externs(externsFile),
+        srcs(
+            lines(
+                "/** @constructor @struct */",
+                "function Foo() {}",
+                "Foo.f = function() {};",
+                "class Sub extends Foo {}",
+                "Sub.f();")),
+        expected(
+            lines(
+                "/** @constructor @struct */",
+                "function Foo() {}",
+                "Foo.f = function() {};",
+                "/** @constructor",
+                " * @extends {Foo}",
+                " */",
+                "var Sub = function() { Foo.apply(this, arguments); };",
+                "$jscomp.inherits(Sub, Foo);",
+                "Sub.f();")));
 
     test(
-        lines(
-            "/** @constructor */",
-            "function Foo() {}",
-            "Foo.f = function() {};",
-            "class Sub extends Foo {}"),
-        lines(
-            "/** @constructor */",
-            "function Foo() {}",
-            "Foo.f = function() {};",
-            "/** @constructor",
-            " * @extends {Foo}",
-            " */",
-            "var Sub = function() { Foo.apply(this, arguments); };",
-            "$jscomp.inherits(Sub, Foo);"));
+        externs(externsFile),
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "Foo.f = function() {};",
+                "class Sub extends Foo {}")),
+        expected(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "Foo.f = function() {};",
+                "/** @constructor",
+                " * @extends {Foo}",
+                " */",
+                "var Sub = function() { Foo.apply(this, arguments); };",
+                "$jscomp.inherits(Sub, Foo);")));
   }
 
   /**
@@ -1676,37 +1843,53 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     // Using @type instead of @return on a getter.
+    SourceFile externsFile =
+        new TestExternsBuilder()
+            .addArguments()
+            .addFunction()
+            .addJSCompLibraries()
+            .addObject()
+            .buildExternsFile("externs.js");
+    // Normalization changes some externs declarations,
+    allowExternsChanges();
+
     test(
-        "class C { /** @type {string} */ get value() { } }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "$jscomp.global.Object.defineProperties(C.prototype, {",
-            "  value: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    /** @type {string} */",
-            "    get: function() {}",
-            "  }",
-            "});"));
+        externs(externsFile),
+        srcs("class C { /** @type {string} */ get value() { } }"),
+        expected(
+            lines(
+                "/** @constructor */",
+                "var C = function() {};",
+                "$jscomp.global.Object.defineProperties(C.prototype, {",
+                "  value: {",
+                "    configurable: true,",
+                "    enumerable: true,",
+                "    /** @type {string} */",
+                "    get: function() {}",
+                "  }",
+                "});")));
 
     // Using @type instead of @param on a setter.
     test(
-        "class C { /** @type {string} */ set value(v) { } }",
-        lines(
-            "/** @constructor */",
-            "var C = function() {};",
-            "$jscomp.global.Object.defineProperties(C.prototype, {",
-            "  value: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    /** @type {string} */",
-            "    set: function(v) {}",
-            "  }",
-            "});"));
+        externs(externsFile),
+        srcs("class C { /** @type {string} */ set value(v) { } }"),
+        expected(
+            lines(
+                "/** @constructor */",
+                "var C = function() {};",
+                "$jscomp.global.Object.defineProperties(C.prototype, {",
+                "  value: {",
+                "    configurable: true,",
+                "    enumerable: true,",
+                "    /** @type {string} */",
+                "    set: function(v) {}",
+                "  }",
+                "});")));
   }
 
-  /** @bug 20536614 */
+  /**
+   * @bug 20536614
+   */
   @Test
   public void testStaticGetterSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -1771,54 +1954,86 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testInitSymbol() {
-    test("let a = alert(Symbol.thimble);", "var a = alert(Symbol.thimble)");
+    // Include the extern for Symbol, because we're testing renaming of local variables with the
+    // same name.
+    SourceFile externsFileWithSymbol =
+        new TestExternsBuilder()
+            .addIterable() // there's no method for just Symbol, but this will get it
+            .buildExternsFile("externs.js");
+
+    test(
+        externs(externsFileWithSymbol), //
+        srcs("let a = alert(Symbol.thimble);"),
+        expected("var a = alert(Symbol.thimble)"));
     assertThat(getLastCompiler().getInjected()).containsExactly("es6/symbol");
 
-    test("let a = alert(Symbol.iterator);", "var a = alert(Symbol.iterator)");
+    test(
+        externs(externsFileWithSymbol), //
+        srcs("let a = alert(Symbol.iterator);"),
+        expected("var a = alert(Symbol.iterator)"));
     assertThat(getLastCompiler().getInjected()).containsExactly("es6/symbol");
 
     test(
-        lines(
-            "function f() {",
-            "  let x = 1;",
-            "  let y = Symbol('nimble');",
-            "}"),
-        lines(
-            "function f() {",
-            "  var x = 1;",
-            "  var y = Symbol('nimble');",
-            "}"));
-    test(
-        lines(
-            "function f() {",
-            "  if (true) {",
-            "     let Symbol = function() {};",
-            "  }",
-            "  alert(Symbol.ism)",
-            "}"),
-        lines(
-            "function f() {",
-            "  if (true) {",
-            "     var Symbol$0 = function() {};",
-            "  }",
-            "  alert(Symbol.ism)",
-            "}"));
+        externs(externsFileWithSymbol),
+        srcs(
+            lines(
+                "function f() {", //
+                "  let x = 1;",
+                "  let y = Symbol('nimble');",
+                "}")),
+        expected(
+            lines(
+                "function f() {", //
+                "  var x = 1;",
+                "  var y = Symbol('nimble');",
+                "}")));
+    Externs externs = externs(externsFileWithSymbol);
+    Sources srcs =
+        srcs(
+            lines(
+                "function f() {",
+                "  if (true) {",
+                "     let Symbol = function() {};",
+                "  }",
+                // This Symbol is the global one
+                "  alert(Symbol.ism)",
+                "}"));
+    Expected expected =
+        expected(
+            lines(
+                "function f() {",
+                "  if (true) {",
+                // normalization renames the local Symbol to be different from the global Symbol
+                "     var Symbol$jscomp$0 = function() {};",
+                "  }",
+                "  alert(Symbol.ism)",
+                "}"));
+    test(externs, srcs, expected);
 
-    test(
-        lines(
-            "function f() {",
-            "  if (true) {",
-            "    let Symbol = function() {};",
-            "    alert(Symbol.ism)",
-            "  }",
-            "}"),
-        lines(
-            "function f() {",
-            "  if (true) {",
-            "    var Symbol$0 = function() {};",
-            "    alert(Symbol$0.ism)",
-            "  }",
-            "}"));
+    externs = externs(externsFileWithSymbol);
+    srcs =
+        srcs(
+            lines(
+                "function f() {",
+                "  if (true) {",
+                "    let Symbol = function() {};",
+                // This Symbol is the local definition. There's no use of the global Symbol in
+                // this function.
+                "    alert(Symbol.ism)",
+                "  }",
+                "}"));
+    expected =
+        expected(
+            lines(
+                "function f() {",
+                "  if (true) {",
+                // The local definition of Symbol doesn't have to be renamed, because there's
+                // no usage of the global Symbol to conflict with it.
+                "    var Symbol = function() {};",
+                "    alert(Symbol.ism)",
+                "  }",
+                "}"));
+    test(externs, srcs, expected);
     // No $jscomp.initSymbol in externs
     testExternChanges(
         externs("alert(Symbol.thimble);"), srcs(""), expected("alert(Symbol.thimble)"));
@@ -1850,61 +2065,149 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   }
 
   @Test
-  public void testForOf() {
+  public void testForOfLoop() {
     // Iteration var shadows an outer var ()
-    test(
-        "var i = 'outer'; for (let i of [1, 2, 3]) { alert(i); } alert(i);",
-        lines(
-            "var i = 'outer';",
-            "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
-            "    $jscomp$key$i = $jscomp$iter$0.next();",
-            "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-            "  var i$1 = $jscomp$key$i.value;",
-            "  {",
-            "    alert(i$1);",
-            "  }",
-            "}",
-            "alert(i);"));
+    Sources srcs = srcs("var i = 'outer'; for (let i of [1, 2, 3]) { alert(i); } alert(i);");
+    Expected expected =
+        expected(
+            lines(
+                "var i = 'outer';",
+                "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1, 2, 3]);",
+                // Normalize runs before for-of rewriting. Therefore, first Normalize renames the
+                // `let i` to `let i$jscomp$1` to avoid conficting it with outer `i`. Then, the
+                // for-of rewriting prepends the unique ID `$jscomp$key$m123..456$0` to its declared
+                // name as it does to all for-of loop keys.
+                "var KEY$0$i$jscomp$1 = $jscomp$iter$0.next();",
+                "for (; !KEY$0$i$jscomp$1.done; KEY$0$i$jscomp$1 =" + " $jscomp$iter$0.next()) {",
+                "  var i$jscomp$1 = KEY$0$i$jscomp$1.value;",
+                "  {",
+                "    alert(i$jscomp$1);",
+                "  }",
+                "}",
+                "alert(i);"));
+    testForOf(srcs, expected);
+  }
+
+  @Test
+  public void testForOfWithConstInitiliazer() {
+    enableNormalize();
+
+    Sources srcs = srcs("for(const i of [1,2]) {i;}");
+    Expected expected =
+        expected(
+            lines(
+                "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1, 2]);",
+                // Normalize runs before for-of rewriting. Normalize does not rename the `const i`
+                // if there is no other conflicting `i` declaration. Then, the  for-of rewriting
+                // prepends `$jscomp$key$m123..456$0` to its declared name as it does to all for-of
+                // loop keys.
+                "var KEY$0$i = $jscomp$iter$0.next();",
+                "for (; !KEY$0$i.done; KEY$0$i =" + " $jscomp$iter$0.next()) {",
+                "  /** @const */ ",
+                "  var i = KEY$0$i.value;", // marked as const name
+                "  {",
+                "    i;", // marked as const name
+                "  }",
+                "}"));
+    testForOf(srcs, expected);
+  }
+
+  @Test
+  public void testMultipleForOfWithSameInitializerName() {
+    enableNormalize();
+    Sources srcs =
+        srcs(
+            lines(
+                "function* inorder1(t) {",
+                "    for (var x of []) {",
+                "      yield x;",
+                "    }",
+                "    for (var x of []) {",
+                "      yield x;",
+                "    }",
+                "}"));
+    Expected expected =
+        expected(
+            lines(
+                "function inorder1(t) {",
+                "  var x;",
+                "  var $jscomp$iter$0;",
+                "  var KEY$0$x;", // key for first for-of loop
+                "  var $jscomp$iter$1;",
+                "  var KEY$1$x;", // key for second for-of loop
+                "  return $jscomp.generator.createGenerator(inorder1,"
+                    + " function($jscomp$generator$context$m1146332801$2) {",
+                "    switch($jscomp$generator$context$m1146332801$2.nextAddress) {",
+                "      case 1:",
+                "        $jscomp$iter$0 = (0, $jscomp.makeIterator)([]);",
+                "        KEY$0$x = $jscomp$iter$0.next();",
+                "      case 2:",
+                "        if (!!KEY$0$x.done) {",
+                "          $jscomp$generator$context$m1146332801$2.jumpTo(4);",
+                "          break;",
+                "        }",
+                "        x = KEY$0$x.value;",
+                "        return $jscomp$generator$context$m1146332801$2.yield(x, 3);",
+                "      case 3:",
+                "        KEY$0$x = $jscomp$iter$0.next();",
+                "        $jscomp$generator$context$m1146332801$2.jumpTo(2);",
+                "        break;",
+                "      case 4:",
+                "        $jscomp$iter$1 = (0, $jscomp.makeIterator)([]);",
+                "        KEY$1$x = $jscomp$iter$1.next();",
+                "      case 6:",
+                "        if (!!KEY$1$x.done) {",
+                "          $jscomp$generator$context$m1146332801$2.jumpTo(0);",
+                "          break;",
+                "        }",
+                "        x = KEY$1$x.value;",
+                "        return $jscomp$generator$context$m1146332801$2.yield(x, 7);",
+                "      case 7:",
+                "        KEY$1$x = $jscomp$iter$1.next();",
+                "        $jscomp$generator$context$m1146332801$2.jumpTo(6);",
+                "        break;",
+                "    }",
+                "  });}"));
+    testForOf(srcs, expected);
   }
 
   @Test
   public void testForOfRedeclaredVar() {
-    test(
-        lines(
-            "for (let x of []) {",
-            "  let x = 0;",
-            "}"),
-        lines(
-            "for(var $jscomp$iter$0=$jscomp.makeIterator([]),",
-            "    $jscomp$key$x=$jscomp$iter$0.next();",
-            "    !$jscomp$key$x.done;$jscomp$key$x=$jscomp$iter$0.next()) {",
-            "  var x = $jscomp$key$x.value;",
-            "  {",
-            "    var x$1 = 0;",
-            "  }",
-            "}"));
+    testForOf(
+        srcs(
+            lines(
+                "for (let x of []) {", //
+                "  let x = 0;",
+                "}")),
+        expected(
+            lines(
+                "var $jscomp$iter$0 = (0, $jscomp.makeIterator)([]);",
+                "var KEY$0$x = $jscomp$iter$0.next();",
+                "for (; !KEY$0$x.done; KEY$0$x = $jscomp$iter$0.next()) {",
+                "  var x = KEY$0$x.value;",
+                "  {",
+                "    var x$jscomp$1 = 0;",
+                "  }",
+                "}")));
   }
 
   @Test
   public void testArgumentsEscaped() {
-    test(
+    testSame(
         lines(
-            "function f() {",
-            "  return g(arguments);",
-            "}"),
-        lines(
-            "function f() {",
+            "function f() {", //
             "  return g(arguments);",
             "}"));
   }
 
   @Test
   public void testMethodInObject() {
-    test("var obj = { f() {alert(1); } };",
+    test(
+        "var obj = {           f() {alert(1); } };", //
         "var obj = { f: function() {alert(1); } };");
 
     test(
-        "var obj = { f() { alert(1); }, x };",
+        "var obj = {           f() { alert(1); },    x };", //
         "var obj = { f: function() { alert(1); }, x: x };");
   }
 
@@ -1966,12 +2269,14 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "($jscomp$compprop0['f' + 1] = 1,",
             "  ($jscomp$compprop0['a'] = 2, $jscomp$compprop0));"));
 
-    test("({'a' : 1, ['f' + 1] : 1, 'b' : 1})",
+    test(
+        "({'a' : 1, ['f' + 1] : 1, 'b' : 1})", //
         lines(
-        "var $jscomp$compprop0 = {};",
-        "($jscomp$compprop0['a'] = 1,",
-        "  ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0['b'] = 1, $jscomp$compprop0)));"
-    ));
+            "var $jscomp$compprop0 = {};", //
+            "($jscomp$compprop0['a'] = 1,",
+            "  ($jscomp$compprop0['f' + 1] = 1,",
+            "    ($jscomp$compprop0['b'] = 1,",
+            "      $jscomp$compprop0)));"));
 
     test(
         "({'a' : x++, ['f' + x++] : 1, 'b' : x++})",
@@ -2084,53 +2389,64 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testUnicodeEscapes() {
-    test("var \\u{73} = \'\\u{2603}\'", "var s = \'\u2603\'");  // ☃
-    test("var \\u{63} = \'\\u{1f42a}\'", "var c = \'\uD83D\uDC2A\'");  // 🐪
-    test("var str = `begin\\u{2026}end`", "var str = 'begin\\u2026end'");
+    test(
+        "var \\u{73} = \'\\u{2603}\'", // ☃
+        "var       s = \'\u2603\'");
+    test(
+        "var \\u{63} = \'\\u{1f42a}\'", // 🐪
+        "var       c = \'\uD83D\uDC2A\'");
+    test(
+        "var str = `begin\\u{2026}end`", //
+        "var str = 'begin\\u2026end'");
   }
 
   @Test
   public void testObjectLiteralShorthand() {
-    test(
-        lines(
-            "function f() {",
-            "  var x = 1;",
-            "  if (a) {",
-            "    let x = 2;",
-            "    return {x};",
-            "  }",
-            "  return x;",
-            "}"),
-        lines(
-            "function f() {",
-            "  var x = 1;",
-            "  if (a) {",
-            "    var x$0 = 2;",
-            "    return {x: x$0};",
-            "  }",
-            "  return x;",
-            "}"));
+    rewriteUniqueIdAndTest(
+        srcs(
+            lines(
+                "function f() {",
+                "  var x = 1;",
+                "  if (a) {",
+                "    let x = 2;",
+                "    return {x};",
+                "  }",
+                "  return x;",
+                "}")),
+        expected(
+            lines(
+                "function f() {",
+                "  var x = 1;",
+                "  if (a) {",
+                "    var x$jscomp$0 = 2;",
+                "    return {x: x$jscomp$0};",
+                "  }",
+                "  return x;",
+                "}")));
 
-    test(
-        lines(
-            "function f(a) {",
-            "  var {x} = a;",
-            "  if (a) {",
-            "    let x = 2;",
-            "    return x;",
-            "  }",
-            "  return x;",
-            "}"),
-        lines(
-            "function f(a) {",
-            "  var $jscomp$destructuring$var0 = a;",
-            "  var x = $jscomp$destructuring$var0.x;",
-            "  if (a) {",
-            "    var x$0 = 2;",
-            "    return x$0;",
-            "  }",
-            "  return x;",
-            "}"));
+    rewriteUniqueIdAndTest(
+        srcs(
+            lines(
+                "function f(a) {",
+                "  var {x} = a;",
+                "  if (a) {",
+                "    let x = 2;",
+                "    return x;",
+                "  }",
+                "  return x;",
+                "}")),
+        expected(
+            lines(
+                "function f(a) {",
+                "  var x;",
+                "  var $jscomp$destructuring$var0 = a;",
+                "  x = $jscomp$destructuring$var0.x;",
+                "  if (a) {",
+                "    var x$jscomp$0 = 2;",
+                "    return x$jscomp$0;",
+                "  }",
+                "  return x;",
+                "}")));
 
     // Note: if the inner `let` declaration is defined as a destructuring assignment
     // then the test would fail because Es6RewriteBlockScopeDeclaration does not even
@@ -2144,7 +2460,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   }
 
   @Override
-  protected  NoninjectingCompiler getLastCompiler() {
+  protected NoninjectingCompiler getLastCompiler() {
     return (NoninjectingCompiler) super.getLastCompiler();
   }
 }

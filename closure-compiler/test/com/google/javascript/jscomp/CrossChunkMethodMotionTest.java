@@ -43,18 +43,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
     return options;
   }
 
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
     canMoveExterns = false;
     noStubs = false;
     enableNormalize();
-    // We move code from one script to another, and thus may move a feature from one to
-    // another.
-    // By the time CCMM runs we no longer care about what features individual scripts say
-    // they contain.
-    disableScriptFeatureValidation();
   }
 
   @Test
@@ -270,6 +263,8 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void doNotMoveClassMethodContainingSuperInAnArrow() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     test(
         srcs(
             JSChunkGraphBuilder.forChain()
@@ -402,7 +397,9 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void doNotMoveFunctionCall_thatIsSideEffected() {
-    JSChunk[] modules =
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forChain()
             // m1
             .addChunk(
@@ -415,7 +412,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             .addChunk("var c = b")
             .build();
 
-    testSame(srcs(modules));
+    testSame(srcs(chunks));
   }
 
   @Test
@@ -1049,7 +1046,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void movePrototypeMethodToDeepestCommonDependencyOfReferencingChunks() {
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forUnordered()
             .addChunk(
                 lines(
@@ -1064,11 +1061,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             .addChunk("(new Foo).baz() , 2")
             .build();
 
-    modules[1].addDependency(modules[0]);
-    modules[2].addDependency(modules[1]);
-    modules[3].addDependency(modules[1]);
+    chunks[1].addDependency(chunks[0]);
+    chunks[2].addDependency(chunks[1]);
+    chunks[3].addDependency(chunks[1]);
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             lines(
                 STUB_DECLARATIONS, //
@@ -1084,7 +1081,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void moveClassMethodToDeepestCommonDependencyOfReferencingChunks() {
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forUnordered()
             .addChunk("class Foo { baz() {} }")
             // Chunk 2
@@ -1096,12 +1093,12 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             .addChunk("(new Foo).baz() , 2")
             .build();
 
-    modules[1].addDependency(modules[0]);
-    modules[2].addDependency(modules[1]);
-    modules[3].addDependency(modules[1]);
+    chunks[1].addDependency(chunks[0]);
+    chunks[2].addDependency(chunks[1]);
+    chunks[3].addDependency(chunks[1]);
 
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             lines(
                 STUB_DECLARATIONS, //
@@ -1278,6 +1275,8 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void doNotMoveClassMethodThatUsesLocalClosureVariable() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     testSame(
         srcs(
             JSChunkGraphBuilder.forChain()
@@ -1648,6 +1647,8 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void staticBlockWithoutMethodReference() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     test(
         srcs(
             JSChunkGraphBuilder.forChain()
@@ -1687,6 +1688,8 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void referenceToMethodInOwnStaticBlock() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     testSame(
         srcs(
             JSChunkGraphBuilder.forChain()
@@ -1710,6 +1713,8 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void staticBlockReferenceToMethodInDifferentClassNoMovement() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     testSame(
         srcs(
             JSChunkGraphBuilder.forChain()

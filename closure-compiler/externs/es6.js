@@ -30,31 +30,31 @@
  */
 
 /**
- * TODO(b/142881197): UNUSED_RETURN_T and UNUSED_NEXT_T are not yet used for
- * anything. https://github.com/google/closure-compiler/issues/3489
+ * TODO(b/142881197): TReturn and TNext are not yet used for anything.
+ * https://github.com/google/closure-compiler/issues/3489
  * @interface
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator
- * @extends {IteratorIterable<VALUE>}
- * @template VALUE, UNUSED_RETURN_T, UNUSED_NEXT_T
+ * @extends {IteratorIterable<T, ?, *>}
+ * @template T, TReturn, TNext
  */
 function Generator() {}
 
 /**
  * @param {?=} opt_value
- * @return {!IIterableResult<VALUE>}
+ * @return {!IIterableResult<T>}
  * @override
  */
 Generator.prototype.next = function(opt_value) {};
 
 /**
- * @param {VALUE} value
- * @return {!IIterableResult<VALUE>}
+ * @param {T} value
+ * @return {!IIterableResult<T>}
  */
 Generator.prototype.return = function(value) {};
 
 /**
  * @param {?} exception
- * @return {!IIterableResult<VALUE>}
+ * @return {!IIterableResult<T>}
  */
 Generator.prototype.throw = function(exception) {};
 
@@ -486,7 +486,7 @@ TypedArray.prototype.copyWithin = function(target, start, opt_end) {};
 TypedArray.prototype.entries = function() {};
 
 /**
- * @param {function(this:S, number, number, !TypedArray) : ?} callback
+ * @param {function(this:S, number, number, !TypedArray) : *} callback
  * @param {S=} opt_thisArg
  * @return {boolean}
  * @template S
@@ -506,7 +506,7 @@ TypedArray.prototype.every = function(callback, opt_thisArg) {};
 TypedArray.prototype.fill = function(value, opt_begin, opt_end) {};
 
 /**
- * @param {function(this:S, number, number, !TypedArray) : boolean} callback
+ * @param {function(this:S, number, number, !TypedArray) : *} callback
  * @param {S=} opt_thisArg
  * @return {THIS}
  * @this {THIS}
@@ -516,7 +516,7 @@ TypedArray.prototype.fill = function(value, opt_begin, opt_end) {};
 TypedArray.prototype.filter = function(callback, opt_thisArg) {};
 
 /**
- * @param {function(this:S, number, number, !TypedArray) : boolean} callback
+ * @param {function(this:S, number, number, !TypedArray) : *} callback
  * @param {S=} opt_thisArg
  * @return {(number|undefined)}
  * @template S
@@ -525,13 +525,31 @@ TypedArray.prototype.filter = function(callback, opt_thisArg) {};
 TypedArray.prototype.find = function(callback, opt_thisArg) {};
 
 /**
- * @param {function(this:S, number, number, !TypedArray) : boolean} callback
+ * @param {function(this:S, number, number, !TypedArray) : *} callback
  * @param {S=} opt_thisArg
  * @return {number}
  * @template S
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/findIndex
  */
 TypedArray.prototype.findIndex = function(callback, opt_thisArg) {};
+
+/**
+ * @param {function(this:S, number, number, !TypedArray) : boolean} callback
+ * @param {S=} opt_thisArg
+ * @return {(number|undefined)}
+ * @template S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/findLast
+ */
+TypedArray.prototype.findLast = function(callback, opt_thisArg) {};
+
+/**
+ * @param {function(this:S, number, number, !TypedArray) : boolean} callback
+ * @param {S=} opt_thisArg
+ * @return {number}
+ * @template S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/findLastIndex
+ */
+TypedArray.prototype.findLastIndex = function(callback, opt_thisArg) {};
 
 /**
  * @param {function(this:S, number, number, !TypedArray) : ?} callback
@@ -649,7 +667,7 @@ TypedArray.prototype.set = function(array, opt_offset) {};
 TypedArray.prototype.slice = function(opt_begin, opt_end) {};
 
 /**
- * @param {function(this:S, number, number, !TypedArray) : boolean} callback
+ * @param {function(this:S, number, number, !TypedArray) : *} callback
  * @param {S=} opt_thisArg
  * @return {boolean}
  * @template S
@@ -1464,6 +1482,36 @@ Promise.allSettled = function(iterable) {};
  */
 Promise.race = function(iterable) {};
 
+/**
+ * Record type representing the return of Promise.withResolvers.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/withResolvers
+ * @record
+ * @template VALUE
+ */
+Promise.PromiseWithResolvers = function() {};
+
+/**
+ * @type {!Promise<VALUE>}
+ */
+Promise.PromiseWithResolvers.prototype.promise;
+
+/**
+ * @type {function((VALUE|IThenable<VALUE>|Thenable)=)}
+ */
+Promise.PromiseWithResolvers.prototype.resolve;
+
+/**
+ * @type {function(*=)}
+ */
+Promise.PromiseWithResolvers.prototype.reject;
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/withResolvers
+ * @return {!Promise.PromiseWithResolvers<VALUE>}
+ * @template VALUE
+ */
+Promise.withResolvers = function() {};
 
 /**
  * @param {?(function(this:void, TYPE):VALUE)=} opt_onFulfilled
@@ -1566,7 +1614,7 @@ Array.prototype.entries;
 
 /**
  * @override
- * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {function(this:S, T, number, !Array<T>): *} predicateFn
  * @param {S=} opt_this
  * @return {T|undefined}
  * @this {IArrayLike<T>|string}
@@ -1578,7 +1626,7 @@ Array.prototype.find = function(predicateFn, opt_this) {};
 
 /**
  * @override
- * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {function(this:S, T, number, !Array<T>): *} predicateFn
  * @param {S=} opt_this
  * @return {number}
  * @this {IArrayLike<T>|string}
@@ -1587,6 +1635,30 @@ Array.prototype.find = function(predicateFn, opt_this) {};
  */
 Array.prototype.findIndex = function(predicateFn, opt_this) {};
 
+/**
+ * NOTE: this is an ES2023 extern.
+ * @override
+ * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {S=} opt_this
+ * @return {T|undefined}
+ * @this {IArrayLike<T>|string}
+ * @template T,S
+ * @see https://tc39.es/ecma262/#sec-array.prototype.findlast
+ */
+Array.prototype.findLast = function(predicateFn, opt_this) {};
+
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @override
+ * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {S=} opt_this
+ * @return {number}
+ * @this {IArrayLike<T>|string}
+ * @template T,S
+ * @see https://tc39.es/ecma262/#sec-array.prototype.findlastindex
+ */
+Array.prototype.findLastIndex = function(predicateFn, opt_this) {};
 
 /**
  * @param {T} value
@@ -1694,7 +1766,7 @@ ReadonlyArray.prototype.entries;
 
 
 /**
- * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {function(this:S, T, number, !Array<T>): *} predicateFn
  * @param {S=} opt_this
  * @return {T|undefined}
  * @this {IArrayLike<T>|string}
@@ -1705,7 +1777,7 @@ ReadonlyArray.prototype.find = function(predicateFn, opt_this) {};
 
 
 /**
- * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {function(this:S, T, number, !Array<T>): *} predicateFn
  * @param {S=} opt_this
  * @return {number}
  * @this {IArrayLike<T>|string}
@@ -1713,6 +1785,29 @@ ReadonlyArray.prototype.find = function(predicateFn, opt_this) {};
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.findindex
  */
 ReadonlyArray.prototype.findIndex = function(predicateFn, opt_this) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {S=} opt_this
+ * @return {T|undefined}
+ * @this {IArrayLike<T>|string}
+ * @template T,S
+ * @see https://tc39.es/ecma262/#sec-array.prototype.findlast
+ */
+ReadonlyArray.prototype.findLast = function(predicateFn, opt_this) {};
+
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {function(this:S, T, number, !Array<T>): boolean} predicateFn
+ * @param {S=} opt_this
+ * @return {number}
+ * @this {IArrayLike<T>|string}
+ * @template T,S
+ * @see https://tc39.es/ecma262/#sec-array.prototype.findlastindex
+ */
+ReadonlyArray.prototype.findLastIndex = function(predicateFn, opt_this) {};
 
 
 /**
@@ -1885,6 +1980,7 @@ Number.isSafeInteger = function(value) {};
  * @param {!Object} target
  * @param {...(Object|null|undefined)} var_args
  * @return {!Object}
+ * @modifies {arguments}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
  */
 Object.assign = function(target, var_args) {};
@@ -2183,70 +2279,69 @@ Atomics.xor = function(typedArray, index, value) {};
 
 
 /**
- * TODO(b/142881197): UNUSED_RETURN_T and UNUSED_NEXT_T are not yet used for
- * anything.
+ * TODO(b/142881197): TReturn and TNext are not yet used for anything.
  * https://github.com/google/closure-compiler/issues/3489
  * @interface
- * @template VALUE, UNUSED_RETURN_T, UNUSED_NEXT_T
+ * @template T, TReturn, TNext
  * @see https://tc39.github.io/proposal-async-iteration/
  */
 function AsyncIterator() {}
 
 /**
  * @param {?=} opt_value
- * @return {!Promise<!IIterableResult<VALUE>>}
+ * @return {!Promise<!IIterableResult<T>>}
  */
 AsyncIterator.prototype.next;
 
 
 /**
  * @interface
- * @template VALUE
+ * @template T, TReturn, TNext
  */
 function AsyncIterable() {}
 
 
 /**
- * @return {!AsyncIterator<VALUE, ?, *>}
+ * @return {!AsyncIterator<T, ?, *>}
  */
 AsyncIterable.prototype[Symbol.asyncIterator] = function() {};
 
 
 /**
  * @interface
- * @extends {AsyncIterator<VALUE, ?, *>}
- * @extends {AsyncIterable<VALUE>}
- * @template VALUE
+ * @extends {AsyncIterator<T, ?, *>}
+ * @extends {AsyncIterable<T>}
+ * @template T
  * @see https://tc39.github.io/proposal-async-iteration/
  */
 function AsyncIteratorIterable() {}
 
 /**
- * TODO(b/142881197): UNUSED_RETURN_T and UNUSED_NEXT_T are not yet used for
- * anything. https://github.com/google/closure-compiler/issues/3489
+ * TODO(b/142881197): TReturn and TNext are not yet used for anything.
+ * https://github.com/google/closure-compiler/issues/3489
  * @interface
  * @see https://tc39.github.io/proposal-async-iteration/
- * @extends {AsyncIteratorIterable<VALUE>}
- * @template VALUE, UNUSED_RETURN_T, UNUSED_NEXT_T
+ * @extends {AsyncIteratorIterable<T, TReturn, TNext>}
+ * @template T, TReturn, TNext
  */
 function AsyncGenerator() {}
 
 /**
  * @param {?=} opt_value
- * @return {!Promise<!IIterableResult<VALUE>>}
+ * @return {!Promise<!IIterableResult<T>>}
  * @override
  */
 AsyncGenerator.prototype.next = function(opt_value) {};
 
 /**
- * @param {VALUE} value
- * @return {!Promise<!IIterableResult<VALUE>>}
+ * @param {T} value
+ * @return {!Promise<!IIterableResult<T>>}
  */
 AsyncGenerator.prototype.return = function(value) {};
 
 /**
  * @param {?} exception
- * @return {!Promise<!IIterableResult<VALUE>>}
+ * @return {!Promise<!IIterableResult<T>>}
  */
 AsyncGenerator.prototype.throw = function(exception) {};
 
@@ -2282,8 +2377,8 @@ function FinalizationRegistry(cleanupCallback) {}
  * @param {TOKEN=} unregisterToken
  * @return {void}
  */
-FinalizationRegistry.prototype.register =
-    function(target, heldValue, unregisterToken) {};
+FinalizationRegistry.prototype.register = function(
+    target, heldValue, unregisterToken) {};
 
 /**
  * @param {TOKEN} unregisterToken
@@ -2295,3 +2390,39 @@ FinalizationRegistry.prototype.unregister = function(unregisterToken) {};
  * @type {!Global}
  */
 var globalThis;
+
+/**
+ * @const {symbol}
+ */
+Symbol.dispose;
+
+/**
+ * @const {symbol}
+ */
+Symbol.asyncDispose;
+
+/**
+ * Wraps an error that suppresses another error, and the error that was
+ * suppressed.
+ *
+ * @constructor
+ * @extends {Error}
+ * @param {?} error The error that resulted in a suppression.
+ * @param {?} suppressed The error that was suppressed.
+ * @param {string=} message The message for the error.
+ * @return {!SuppressedError}
+ * @nosideeffects
+ */
+function SuppressedError(error, suppressed, message) {}
+
+/**
+ * The error that resulted in a suppression.
+ * @type {?}
+ */
+SuppressedError.prototype.error;
+
+/**
+ * The error that was suppressed.
+ * @type {?}
+ */
+SuppressedError.prototype.suppressed;

@@ -38,7 +38,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Predicate;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -90,7 +90,10 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
                   .build(),
               this.stringPoolBuilder,
               this.shouldSerializeProperty,
-              SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS);
+              SerializationOptions.builder()
+                  .setIncludeDebugInfo(true)
+                  .setRunValidation(true)
+                  .build());
 
       NodeTraversal.traverseRoots(
           compiler,

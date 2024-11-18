@@ -47,6 +47,28 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("-0b110n", "-6n");
     assertPrint("-0o7n", "-7n");
     assertPrint("-0x8n", "-8n");
+    assertPrintSame("1000000000n");
+    assertPrintSame("-10000000000n");
+    assertPrint(
+        "7182582809266874004429817360811601465721521679690913024666851123813995272999n",
+        "0xfe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n");
+    assertPrint(
+        "0x000000fe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n",
+        "0xfe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n");
+    assertPrint(
+        "-7182582809266874004429817360811601465721521679690913024666851123813995272999n",
+        "-0xfe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n");
+    assertPrint(
+        "-0o00774114521526730576223631215443757451360052750070365011677201040647213506301316055447n",
+        "-0xfe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n");
+    assertPrint(
+        "0o774114521526730576223631215443757451360052750070365011677201040647213506301316055447n",
+        "0xfe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n");
+    assertPrint(
+        "0b111111100001001100101010001101010110111011000101111110010010011110011001010001101100100"
+            + "0111111011111001010010111100000001010101111010000001110000111101010000010011101111110"
+            + "10000001000100000110100111010001011101000110011000001011001110000101101100100111n",
+        "0xfe132a356ec5f9279946c8fdf29780abd0387a8277e811069d174660b385b27n");
   }
 
   @Test
@@ -1647,7 +1669,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "function f([a, b]) {}"),
         lines(
             "/**",
-            " * @param {!Iterable<number>} p0", // old JSDoc name is ignored
+            " * @param {!Iterable<number,?,?>} p0", // old JSDoc name is ignored
             " * @return {undefined}",
             " */",
             "function f([a, b]) {", // whitespace in output must match
@@ -1663,7 +1685,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "function f([a, b] = [1, 2]) {}"),
         lines(
             "/**",
-            " * @param {!Iterable<number>=} p0", // old JSDoc name is ignored
+            " * @param {!Iterable<number,?,?>=} p0", // old JSDoc name is ignored
             " * @return {undefined}",
             " */",
             "function f([a, b] = [1, 2]) {", // whitespace in output must match
@@ -3332,6 +3354,19 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testParensAroundArrowFnInCast() {
+    preserveTypeAnnotations = false;
+    assertPrint("x(/** @type {?} */ (()=>{x}))", "x(()=>{x})");
+    assertPrint("x(/** @type {?} */ (()=>{x})())", "x((()=>{x})())");
+    assertPrint("x(/** @type {string} */ (/** @type {?} */ (()=>{x}))())", "x((()=>{x})())");
+
+    preserveTypeAnnotations = true;
+    assertPrintSame("x(/** @type {?} */ (()=>{x}))");
+    assertPrintSame("x(/** @type {?} */ (()=>{x})())");
+    assertPrintSame("x(/** @type {string} */ (/** @type {?} */ (()=>{x}))())");
+  }
+
+  @Test
   public void testParensAroundVariableDeclarator() {
     assertPrintSame("var o=(test++,{one:1})");
     assertPrintSame("({one}=(test++,{one:1}))");
@@ -3565,6 +3600,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("class f{}");
     assertPrintSame("if(a){class f{}}");
     assertPrintSame("if(a)(class{})");
+
+    assertPrintSame("class P extends(_Component=Component){}");
   }
 
   @Test
@@ -3815,7 +3852,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     String code = "(x)=>{this.foo[0](3);}";
     String expectedCode =
         ""
-            + "var $jscomp$this = this;\n" // TODO(tomnguyen): Avoid printing this line.
+            + "var $jscomp$this$3556498$0 = this;\n" // TODO(tomnguyen): Avoid printing this line.
             + "(function(x) {\n" // TODO(tomnguyen): This should print as an => function.
             + "  this.foo[0](3);\n"
             + "});\n";
@@ -3832,7 +3869,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     String code = "(x)=>{arguments[0]();}";
     String expectedCode =
         ""
-            + "var $jscomp$arguments = arguments;\n"
+            + "var $jscomp$arguments$3556498$0 = arguments;\n"
             + "(function(x) {\n"
             + "  arguments[0]();\n"
             + "});\n";

@@ -32,7 +32,7 @@ import com.google.javascript.rhino.NonJSDocComment;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** CodeGenerator generates codes from a parse tree, sending it to the specified CodeConsumer. */
 public class CodeGenerator {
@@ -418,7 +418,7 @@ public class CodeGenerator {
 
       case BIGINT:
         Preconditions.checkState(childCount == 0, node);
-        cc.add(node.getBigInt() + "n");
+        cc.addBigInt(node.getBigInt());
         break;
 
       case TYPEOF:
@@ -589,7 +589,7 @@ public class CodeGenerator {
           if (!superClass.isEmpty()) {
             add("extends");
 
-            // Parentheses are required for a comma expression
+            // Parentheses are required for a comma expression or an assignment expression.
             addExpr(superClass, 1, Context.OTHER);
           }
 
@@ -769,6 +769,8 @@ public class CodeGenerator {
               add("static");
             }
           }
+          // A BLOCK marked as synthetic is not a real JS block with {} around it in the JS code.
+          // It just represents a span of statements that need to be kept together.
           boolean preserveBlock = node.isBlock() && !node.isSyntheticBlock();
           if (preserveBlock) {
             cc.beginBlock();
@@ -1540,8 +1542,21 @@ public class CodeGenerator {
     }
   }
 
-  private static boolean arrowFunctionNeedsParens(Node n) {
+  private boolean arrowFunctionNeedsParens(Node n) {
     Node parent = n.getParent();
+    Node expressionOrEnclosingCast = n;
+    while (parent != null && parent.isCast()) {
+      if (preserveTypeAnnotations) {
+        // If printing type annotations, any expression in a CAST automatically is wrapped in
+        // parentheses when printing the CAST. Returning true here would add a second, unnecessary
+        // pair of parentheses.
+        return false;
+      }
+      // If not printing type annotations, then pretend the CAST node is not there and check the
+      // parent of the CAST.
+      expressionOrEnclosingCast = parent;
+      parent = parent.getParent();
+    }
 
     // Once you cut through the layers of non-terminals used to define operator precedence,
     // you can see the following are true.
@@ -1585,7 +1600,7 @@ public class CodeGenerator {
       // MemberExpression '[' Expression ']'
       // MemberFunction '(' AssignmentExpressionList ')'
       // LeftHandSideExpression ? AssignmentExpression : AssignmentExpression
-      return isFirstChild(n);
+      return expressionOrEnclosingCast.isFirstChildOf(parent);
     } else {
       // All other cases are either illegal (e.g. because you cannot assign a value to an
       // ArrowFunction) or do not require parens.
@@ -1593,14 +1608,9 @@ public class CodeGenerator {
     }
   }
 
-  private static boolean isFirstChild(Node n) {
-    Node parent = n.getParent();
-    return parent != null && n == parent.getFirstChild();
-  }
-
   private void addArrowFunction(Node n, Node first, Node last, Context context) {
     checkState(first.getString().isEmpty(), first);
-    boolean funcNeedsParens = arrowFunctionNeedsParens(n) || n.getMarkForParenthesize();
+    boolean funcNeedsParens = arrowFunctionNeedsParens(n);
     if (funcNeedsParens) {
       add("(");
     }
@@ -1630,7 +1640,7 @@ public class CodeGenerator {
   }
 
   private void addFunction(Node n, Node first, Node last, Context context) {
-    boolean funcNeedsParens = (context == Context.START_OF_EXPR || n.getMarkForParenthesize());
+    boolean funcNeedsParens = (context == Context.START_OF_EXPR);
     if (funcNeedsParens) {
       add("(");
     }
@@ -1865,6 +1875,9 @@ public class CodeGenerator {
         || isNullishCoalesceChildOfLogicalANDorLogicalOR(n)) {
       // precedence is not enough here since using && or || with ?? without parentheses
       // is a syntax error as ?? expands directly to |
+      return true;
+    } else if (n.isAssign() && n.getParent().isClass()) {
+      // Class declarations with assignments should be wrapped in parentheses.
       return true;
     } else {
       return precedence(n) < minPrecedence;
@@ -2359,17 +2372,17 @@ public class CodeGenerator {
     // until we reach expressions which no longer have the limitation.
     IN_FOR_INIT_CLAUSE(
         /* inForInitClause= */ true,
-        /** at start of arrow fn */
+        /* at start of arrow fn */
         false),
     // Handle object literals at the start of a non-block arrow function body.
     // This is only important when the first token after the "=>" is "{".
     START_OF_ARROW_FN_BODY(
         /* inForInitClause= */ false,
-        /** at start of arrow fn */
+        /* at start of arrow fn */
         true),
     START_OF_ARROW_FN_IN_FOR_INIT(
         /* inForInitClause= */ true,
-        /** atArrowFunctionBody */
+        /* atArrowFunctionBody */
         true),
     OTHER; // nothing special to watch out for.
 

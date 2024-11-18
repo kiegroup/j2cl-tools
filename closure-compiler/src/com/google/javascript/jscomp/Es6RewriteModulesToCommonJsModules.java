@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
@@ -27,12 +26,11 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Rewrites an ES6 module to a CommonJS-like module for the sake of per-file transpilation +
@@ -45,16 +43,9 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
   private static final String REQUIRE = "$$require";
 
   private final AbstractCompiler compiler;
-  private final String pragma;
 
   public Es6RewriteModulesToCommonJsModules(AbstractCompiler compiler) {
-    this(compiler, "use strict");
-  }
-
-  @VisibleForTesting
-  Es6RewriteModulesToCommonJsModules(AbstractCompiler compiler, String pragma) {
     this.compiler = compiler;
-    this.pragma = pragma;
   }
 
   @Override
@@ -62,10 +53,14 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
       if (Es6RewriteModules.isEs6ModuleRoot(script)) {
         NodeTraversal.traverse(compiler, script, new Rewriter(compiler, script));
-        script.putBooleanProp(Node.TRANSPILED, true);
       }
     }
-    compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
+    // It is unusual to call this NodeUtil method instead of the TranspilationPasses one. This
+    // pass is included in the {@code dependency_resolution} BUILD target and does not have access
+    // to {@code TranspilationPasses}. Adding that dep produces a cycle in the BUILD dep graph.
+    // Regular transpiler passes must use the {@code
+    // TranspilationPasses.maybeMarkFeaturesAsTranspiledAway}
+    NodeUtil.removeFeatureFromAllScripts(root, Feature.MODULES, compiler);
     GatherGetterAndSetterProperties.update(this.compiler, externs, root);
   }
 
@@ -129,7 +124,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
    * Rewrites a single ES6 module into a CommonJS like module designed to be loaded in the
    * compiler's module runtime.
    */
-  private class Rewriter extends AbstractPostOrderCallback {
+  private static class Rewriter extends AbstractPostOrderCallback {
     private @Nullable Node requireInsertSpot;
     private final Node script;
     private final Map<String, LocalQName> exportedNameToLocalQName;
@@ -145,7 +140,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       // TreeMap because ES6 orders the export key using natural ordering.
       exportedNameToLocalQName = new TreeMap<>();
       importRequests = new LinkedHashSet<>();
-      imports = new HashSet<>();
+      imports = new LinkedHashSet<>();
       modulePath = compiler.getInput(script.getInputId()).getPath();
     }
 
@@ -173,21 +168,25 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
      * Given an import node gets the name of the var to use for the imported module.
      *
      * <p>Example: {@code import {v} from './foo.js'; use(v);} Can become:
+     *
      * <pre>
      *   const module$foo = require('./foo.js');
      *   use(module$foo.v);
      * </pre>
+     *
      * This method would return "module$foo".
      *
      * <p>Note that if there is a star import the name will be preserved.
      *
      * <p>Example:
+     *
      * <pre>
      *   import defaultValue, * as foo from './foo.js';
      *   use(defaultValue, foo.bar);
      * </pre>
      *
      * Can become:
+     *
      * <pre>
      *   const foo = require('./foo.js'); use(foo.defaultValue, foo.bar);
      * </pre>
@@ -309,7 +308,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
           importDecl.detach();
         }
 
-        Set<String> importedNames = new HashSet<>();
+        Set<String> importedNames = new LinkedHashSet<>();
 
         for (ModuleRequest request : importRequests) {
           String varName = request.varName();
@@ -334,7 +333,15 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       Node block = IR.block();
       block.addChildrenToFront(script.removeChildren());
 
-      block.addChildToFront(IR.exprResult(IR.string(pragma)));
+      // TODO(b/282006497): Maybe mark this function for strict mode?
+      // NOTE: One might be tempted to add `'use strict';` here, but that causes problems.
+      // Optimizations and transpilations are not written to look for this statement,
+      // and are likely to either remove it or move other statements ahead of it,
+      // making it ineffective.
+      // The "right" way to mark the method for strict mode would be to apply the
+      // USE_STRICT node property to its body, but at the moment that will have no
+      // effect because 1) the code printer ignores it and 2) TypedAst doesn't
+      // serialize it.
 
       Node moduleFunction =
           IR.function(

@@ -16,8 +16,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_EXTENDS;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISSING_EXTERNS;
 
@@ -31,9 +29,9 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Rewrites "Polymer({})" calls into a form that is suitable for type checking and dead code
@@ -48,9 +46,6 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
 
   private final AbstractCompiler compiler;
   private final ImmutableMap<String, String> tagNameMap;
-  private final int polymerVersion;
-  private final PolymerExportPolicy polymerExportPolicy;
-  private final boolean propertyRenamingEnabled;
 
   private Node polymerElementExterns;
   private final Set<String> nativeExternsAdded;
@@ -60,22 +55,10 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
   private boolean warnedPolymer1ExternsMissing = false;
   private boolean propertySinkExternInjected = false;
 
-  PolymerPass(
-      AbstractCompiler compiler,
-      Integer polymerVersion,
-      PolymerExportPolicy polymerExportPolicy,
-      boolean propertyRenamingEnabled) {
-    checkArgument(
-        polymerVersion == null || polymerVersion == 1 || polymerVersion == 2,
-        "Invalid Polymer version: (%s)",
-        polymerVersion);
+  PolymerPass(AbstractCompiler compiler) {
     this.compiler = compiler;
     tagNameMap = TagNameToType.getMap();
-    nativeExternsAdded = new HashSet<>();
-    this.polymerVersion = polymerVersion == null ? 1 : polymerVersion;
-    this.polymerExportPolicy =
-        polymerExportPolicy == null ? PolymerExportPolicy.LEGACY : polymerExportPolicy;
-    this.propertyRenamingEnabled = propertyRenamingEnabled;
+    nativeExternsAdded = new LinkedHashSet<>();
   }
 
   @Override
@@ -84,16 +67,6 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
     NodeTraversal.traverse(compiler, externs, externsCallback);
     polymerElementExterns = externsCallback.getPolymerElementExterns();
     polymerElementProps = externsCallback.getPolymerElementProps();
-
-    if (polymerVersion == 1 && polymerElementExterns == null) {
-      this.warnedPolymer1ExternsMissing = true;
-      compiler.report(JSError.make(POLYMER_MISSING_EXTERNS));
-      return;
-    }
-
-    if (polymerVersion > 1 && propertyRenamingEnabled) {
-      compiler.ensureLibraryInjected("util/reflectobject", false);
-    }
 
     globalNames = new GlobalNamespace(compiler, externs, root);
     behaviorExtractor =
@@ -109,8 +82,6 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
 
   @Override
   public void visit(NodeTraversal traversal, Node node, Node parent) {
-    checkNotNull(globalNames, "Cannot call visit() before process()");
-
     if (PolymerPassStaticUtils.isPolymerCall(node)) {
       if (polymerElementExterns != null) {
         rewritePolymer1ClassDefinition(node, parent, traversal);
@@ -162,27 +133,16 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
       if (def.nativeBaseElement != null) {
         appendPolymerElementExterns(def);
       }
-      PolymerClassRewriter rewriter =
-          new PolymerClassRewriter(
-              compiler,
-              polymerVersion,
-              polymerExportPolicy,
-              this.propertyRenamingEnabled);
+      PolymerClassRewriter rewriter = new PolymerClassRewriter(compiler);
       rewriter.rewritePolymerCall(def, traversal);
     }
   }
 
   /** Polymer 2.x Class Nodes */
   private void rewritePolymer2ClassDefinition(Node node, NodeTraversal traversal) {
-    PolymerClassDefinition def =
-        PolymerClassDefinition.extractFromClassNode(node, compiler, globalNames);
+    PolymerClassDefinition def = PolymerClassDefinition.extractFromClassNode(node, compiler);
     if (def != null) {
-      PolymerClassRewriter rewriter =
-          new PolymerClassRewriter(
-              compiler,
-              polymerVersion,
-              polymerExportPolicy,
-              this.propertyRenamingEnabled);
+      PolymerClassRewriter rewriter = new PolymerClassRewriter(compiler);
       rewriter.propertySinkExternInjected = propertySinkExternInjected;
       rewriter.rewritePolymerClassDeclaration(node, traversal, def);
       propertySinkExternInjected = rewriter.propertySinkExternInjected;
@@ -201,9 +161,9 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
   }
 
   /**
-   * Duplicates the PolymerElement externs with a different element base class if needed.
-   * For example, if the base class is HTMLInputElement, then a class PolymerInputElement will be
-   * added. If the element does not extend a native HTML element, this method is a no-op.
+   * Duplicates the PolymerElement externs with a different element base class if needed. For
+   * example, if the base class is HTMLInputElement, then a class PolymerInputElement will be added.
+   * If the element does not extend a native HTML element, this method is a no-op.
    */
   private void appendPolymerElementExterns(final PolymerClassDefinition def) {
     if (!nativeExternsAdded.add(def.nativeBaseElement)) {
@@ -232,8 +192,7 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
 
     for (Node baseProp : polymerElementProps) {
       Node newProp = baseProp.cloneTree();
-      Node newPropRootName =
-          NodeUtil.getRootOfQualifiedName(newProp.getFirstFirstChild());
+      Node newPropRootName = NodeUtil.getRootOfQualifiedName(newProp.getFirstFirstChild());
       newPropRootName.setString(polymerElementType);
       block.addChildToBack(newProp);
     }

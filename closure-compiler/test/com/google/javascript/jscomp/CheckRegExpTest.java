@@ -18,13 +18,15 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author johnlenz@google.com (John Lenz) */
+/**
+ * @author johnlenz@google.com (John Lenz)
+ */
 @RunWith(JUnit4.class)
 public final class CheckRegExpTest extends CompilerTestCase {
   @Nullable CheckRegExp last = null;
@@ -120,14 +122,16 @@ public final class CheckRegExpTest extends CompilerTestCase {
     testReference("var x = {RegExp: {}}; x.RegExp.$1;", false);
 
     // Class property is also OK.
-    testReference(lines(
-        "class x {",
-        "  constructor() {this.RegExp = {};}",
-        "  method() {",
-        "    this.RegExp.$1;",
-        "    this.RegExp.test();",
-        "  }",
-        "}"), false);
+    testReference(
+        lines(
+            "class x {",
+            "  constructor() {this.RegExp = {};}",
+            "  method() {",
+            "    this.RegExp.$1;",
+            "    this.RegExp.test();",
+            "  }",
+            "}"),
+        false);
   }
 
   @Test

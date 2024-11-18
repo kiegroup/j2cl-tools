@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.ClosureOptimizePrimitives.DUPLICATE_S
 import static com.google.javascript.jscomp.parsing.parser.testing.FeatureSetSubject.assertFS;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -29,19 +28,11 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
 
-  private boolean propertyRenamingEnabled = true;
   private boolean canUseEs6Syntax = true;
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new ClosureOptimizePrimitives(compiler, propertyRenamingEnabled, canUseEs6Syntax);
-  }
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-    disableScriptFeatureValidation();
+    return new ClosureOptimizePrimitives(compiler, canUseEs6Syntax);
   }
 
   @Test
@@ -105,7 +96,7 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
         "var a = goog.object.create('a', 1, 2, 3, foo, bar);", //
         "var a = {'a': 1, 2: 3, [foo]: bar};");
 
-    assertFS(getLastCompiler().getFeatureSet()).has(Feature.COMPUTED_PROPERTIES);
+    assertFS(getLastCompiler().getAllowableFeatures()).has(Feature.COMPUTED_PROPERTIES);
   }
 
   @Test
@@ -223,13 +214,6 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
   public void testObjectCreateSetSingleLiteralArg() {
     test("const s = goog.object.createSet(3);", "const s = {3: true};");
     test("const s = goog.object.createSet('a');", "const s = {'a': true};");
-  }
-
-  @Test
-  public void testPropertyReflectionSimple() {
-    propertyRenamingEnabled = false;
-    test("goog.reflect.objectProperty('push', [])", "'push'");
-    test("JSCompiler_renameProperty('push', [])", "'push'");
   }
 
   @Test

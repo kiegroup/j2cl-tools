@@ -21,7 +21,7 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Msg;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An error reporter for serializing Rhino errors into our error format.
@@ -101,8 +101,9 @@ class RhinoErrorReporter {
           "JSC_INVALID_OCTAL_LITERAL",
           "This style of octal literal is not supported in strict mode.");
 
+  // This check should only be enabled in the lintChecks DiagnosticGroup as part of the linter
   static final DiagnosticType STRING_CONTINUATION =
-      DiagnosticType.warning("JSC_STRING_CONTINUATION", "{0}");
+      DiagnosticType.disabled("JSC_STRING_CONTINUATION", "{0}");
 
   static final DiagnosticType LANGUAGE_FEATURE =
       DiagnosticType.error("JSC_LANGUAGE_FEATURE", "{0}.");
@@ -120,6 +121,11 @@ class RhinoErrorReporter {
           "JSC_BOUNDED_GENERIC_TYPE_ERROR",
           "Bounded generic type error. "
               + "{0} assigned to template type {1} is not a subtype of bound {2}");
+
+  static final DiagnosticType CLOSURE_UNAWARE_ANNOTATION_PRESENT =
+      DiagnosticType.disabled(
+          "JSC_CLOSURE_UNAWARE_ANNOTATION_PRESENT",
+          Msg.JSDOC_CLOSURE_UNAWARE_CODE_INVALID.format());
 
   // A map of Rhino messages to their DiagnosticType.
   private static final ImmutableMap<Pattern, DiagnosticType> typeMap =
@@ -161,6 +167,7 @@ class RhinoErrorReporter {
               JSDOC_IMPORT_TYPE_WARNING)
           // Type annotation errors.
           .put(Pattern.compile("^Bad type annotation.*"), TYPE_PARSE_ERROR)
+          .put(Pattern.compile("constructed type must be an object type"), TYPE_PARSE_ERROR)
           // Parse tree too deep.
           .put(Pattern.compile("Too deep recursion while parsing"), PARSE_TREE_TOO_DEEP)
           // Old-style octal literals
@@ -175,6 +182,9 @@ class RhinoErrorReporter {
               Pattern.compile("Bounded generic semantics are currently still in development"),
               UNSUPPORTED_BOUNDED_GENERIC_TYPES)
           .put(Pattern.compile("^Bounded generic type error.*"), BOUNDED_GENERIC_TYPE_ERROR)
+          .put(
+              replacePlaceHolders(Msg.JSDOC_CLOSURE_UNAWARE_CODE_INVALID.format()),
+              CLOSURE_UNAWARE_ANNOTATION_PRESENT)
           .buildOrThrow();
 
   private final ErrorHandler internalReporter;

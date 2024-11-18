@@ -66,7 +66,9 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   private Set<String> extraAnnotations;
   private Set<String> extraSuppressions;
   private Set<String> extraPrimitives;
+  private boolean allowClosureUnawareCode = false;
   private String prevLicense;
+  private JsDocInfoParser.JsDocSourceKind jsDocSourceKind;
 
   private static final String MISSING_TYPE_DECL_WARNING_TEXT = "Missing type declaration.";
   private static final MapBasedScope EMPTY_SCOPE = MapBasedScope.emptyScope();
@@ -90,6 +92,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     extraPrimitives.add("id");
     extraPrimitives.add("idA");
     extraPrimitives.add("idB");
+
+    jsDocSourceKind = JsDocInfoParser.JsDocSourceKind.NORMAL;
   }
 
   @Test
@@ -1508,6 +1512,27 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseExtends_multipleExtends() {
+    jsDocSourceKind = JsDocInfoParser.JsDocSourceKind.NORMAL;
+    parse(
+        "@extends {Foo}\n@extends {Bar} */",
+        "Bad type annotation. type annotation incompatible with other annotations. See"
+            + " https://github.com/google/closure-compiler/wiki/Annotating-JavaScript-for-the-Closure-Compiler"
+            + " for more information.");
+  }
+
+  @Test
+  public void testParseExtends_multipleExtendsTsickleMode() {
+    jsDocSourceKind = JsDocInfoParser.JsDocSourceKind.TSICKLE;
+    JSDocInfo result = parse("@extends {Foo}\n@extends {Bar} */");
+    // Treated as "@extends {JsDocInfoParser_TsickleMode_MissingSupertypePlaceholder}"
+    // which has an implicit "!" (Token.BANG) when parsed.
+    assertNode(result.getBaseType().getRoot()).hasToken(Token.BANG);
+    assertNode(result.getBaseType().getRoot().getOnlyChild())
+        .isString("JsDocInfoParser_TsickleMode_MissingSupertypePlaceholder");
+  }
+
+  @Test
   public void testParseEnum1() {
     assertTypeEquals(NUMBER_TYPE, parse("@enum*/").getEnumParameterType());
   }
@@ -2249,6 +2274,73 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseClosureUnawareCode1() {
+    assertThat(
+            parseFileOverview(
+                    "@fileoverview\n@closureUnaware*/",
+                    "@closureUnaware annotation is not allowed in this compilation")
+                .isClosureUnawareCode())
+        .isTrue();
+  }
+
+  @Test
+  public void testParseClosureUnawareCode2() {
+    parseFileOverview(
+        "@closureUnaware\n@closureUnaware*/",
+        "@closureUnaware annotation is not allowed in this compilation",
+        "extra @closureUnaware tag");
+  }
+
+  @Test
+  public void testParseNoClosureUnawareCode() {
+    assertThat(parseFileOverview("@fileoverview*/").isClosureUnawareCode()).isFalse();
+  }
+
+  @Test
+  public void testParseClosureUnawareCode() {
+    assertThat(
+            parse(
+                    "@closureUnaware*/",
+                    "@closureUnaware annotation is not allowed in this compilation")
+                .isClosureUnawareCode())
+        .isTrue();
+  }
+
+  @Test
+  public void testParseClosureUnawareCode_allowed() {
+    allowClosureUnawareCode = true;
+    assertThat(parse("@closureUnaware*/").isClosureUnawareCode()).isTrue();
+  }
+
+  @Test
+  public void testParseClosureUnawareCode_fileoverview_allowed() {
+    allowClosureUnawareCode = true;
+    assertThat(parseFileOverview("@fileoverview\n@closureUnaware*/").isClosureUnawareCode())
+        .isTrue();
+  }
+
+  @Test
+  public void testParseClosureUnawareCode_doesNotCreateFileoverviewCommentStandalone() {
+    allowClosureUnawareCode = true;
+    assertThat(parseFileOverview("@closureUnaware*/")).isNull();
+  }
+
+  @Test
+  public void testParseNoCoverage_fileOverview() {
+    assertThat(parseFileOverview("@nocoverage*/").isNoCoverage()).isTrue();
+  }
+
+  @Test
+  public void testParseNoCoverage_extraTag() {
+    parseFileOverview("@nocoverage\n@nocoverage*/", "extra @nocoverage tag");
+  }
+
+  @Test
+  public void testParseNoCoverage_nonFileOverview() {
+    assertThat(parse("@nocoverage*/")).isNull();
+  }
+
+  @Test
   public void testParseNoDts1() {
     JSDocInfo doc = parse("@nodts*/", true);
     assertThat(doc.isNoDts()).isTrue();
@@ -2923,9 +3015,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         lines("@suppress {x} Some description.", " * @suppress {x} Another description.", "*/");
     JSDocInfo info = parse(jsDocComment, /* parseDocumentation= */ true);
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x"));
-    assertThat(info.getSuppressionsAndTheirDescription()).hasSize(1);
     assertThat(info.getSuppressionsAndTheirDescription())
-        .containsEntry(ImmutableSet.of("x"), "Some description.");
+        .containsExactly(ImmutableSet.of("x"), "Some description.");
   }
 
   // A different @suppress annotation containing a non-repeated warning, we store both annotations.
@@ -3915,6 +4006,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@template t */");
     parse("@template s,t */");
     parse("@template key,value */");
+  }
+
+  @Test
+  public void testParserWithTemplateTypeNameWithDollar() {
+    JSDocInfo info = parse("@template A,B$,C */");
+    assertThat(info.getTemplateTypeNames()).containsExactly("A", "B$", "C");
   }
 
   @Test
@@ -5326,6 +5423,16 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseSassGeneratedCssTs() {
+    assertThat(parse("@sassGeneratedCssTs*/").isSassGeneratedCssTs()).isTrue();
+  }
+
+  @Test
+  public void testParseSassGeneratedCssTsExtra() {
+    parse("@sassGeneratedCssTs \n@sassGeneratedCssTs*/", "extra @sassGeneratedCssTs tag");
+  }
+
+  @Test
   public void testParseWizaction1() {
     assertThat(parse("@wizaction*/").isWizaction()).isTrue();
   }
@@ -5926,6 +6033,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
       boolean parseFileOverview,
       String... warnings) {
     TestErrorReporter errorReporter = new TestErrorReporter().expectAllWarnings(warnings);
+    if (allowClosureUnawareCode) {
+      var unused =
+          errorReporter.expectAllWarnings(
+              "@closureUnaware annotation is not allowed in this compilation");
+    }
 
     Config config =
         Config.builder()
@@ -5943,7 +6055,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     templateNode.setStaticSourceFile(file);
 
     JsDocInfoParser jsdocParser =
-        new JsDocInfoParser(stream(comment), comment, 0, templateNode, config, errorReporter);
+        new JsDocInfoParser(
+            stream(comment), comment, 0, templateNode, config, jsDocSourceKind, errorReporter);
 
     jsdocParser.parse();
     this.prevLicense = jsdocParser.getLicenseText();

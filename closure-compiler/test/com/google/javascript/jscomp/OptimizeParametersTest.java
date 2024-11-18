@@ -48,6 +48,8 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     enableGatherExternProperties();
   }
 
@@ -200,10 +202,10 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   public void testRemovalRestWithDestructuring1() {
     test(
         "function f(...[a]){          } f();", //
-        "function f(      ){var [a]=[];} f()");
+        "function f(      ){var a; [a]=[];} f()");
     test(
         "function f(...[a]){          } f(1);", //
-        "function f(      ){var [a]=[1];} f()");
+        "function f(      ){var a; [a]=[1];} f()");
     test(
         "function f(...{a}){          } f();", //
         "function f(      ){var {a}=[];} f()");
@@ -213,7 +215,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
 
     test(
         "function f(...{a}){            } f(1);", //
-        "function f(      ){var {a}=[1];} f( )");
+        "function f(      ){var a; ({a}=[1]);} f( )");
   }
 
   @Test
@@ -229,19 +231,19 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "function f(           ){var a = alert();} f()");
     test(
         "function f([a] = []){             } f();", //
-        "function f(        ){var [a] = [];} f()");
+        "function f(        ){var a; [a] = [];} f()");
     test(
         "function f([a] = []){             } f?.();", //
-        "function f(        ){var [a] = [];} f?.()");
+        "function f(        ){var a; [a] = [];} f?.()");
     test(
         "function f([a = 1] = []){                 } f();",
-        "function f(            ){var [a = 1] = [];} f()");
+        "function f(            ){var a; [a = 1] = [];} f()");
     test(
         "function f([a = 1]){                 } f([]);",
-        "function f(       ){var [a = 1] = [];} f(  );");
+        "function f(       ){var a; [a = 1] = [];} f(  );");
     test(
         "function f([a = 1]){                 } f?.([]);",
-        "function f(       ){var [a = 1] = [];} f?.(  );");
+        "function f(       ){var a; [a = 1] = [];} f?.(  );");
   }
 
   @Test
@@ -251,19 +253,27 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "function f(     ){var a = 1;} f( )");
     test(
         "function f({a} = 0){           } f([]);", //
-        "function f(       ){var {a}=[];} f(  )");
+        "function f(       ){var a; ({a}=[]);} f(  )");
     test(
         "function f({a = 1} = 0){               } f([]);",
-        "function f(           ){var {a = 1}=[];} f(  )");
+        "function f(           ){var a; ({a = 1}=[]);} f(  )");
     test(
         "function f({a = 1} = 0){               } f?.([]);",
-        "function f(           ){var {a = 1}=[];} f?.(  )");
+        "function f(           ){var a; ({a = 1}=[]);} f?.(  )");
     test(
         "function f({a = 1}){               } f({});",
-        "function f(       ){var {a = 1}={};} f(  )");
+        "function f(       ){var a; ({a = 1}={});} f(  )");
     test(
         "function f({a: a = 1}){               } f({});",
-        "function f(          ){var {a = 1}={};} f(  )");
+        "function f(          ){var a; ({a = 1}={});} f(  )");
+  }
+
+  @Test
+  public void testRemoveMultipleParams_withDestructuring_withDefaultValue() {
+    // test removing multiple parameters
+    test(
+        "var x = 0; function f(a, {b} = {b: 1}) {} f(1, {b:4});", //
+        "var x = 0; function f() { var a = 1; var b; ({b} = {b: 4});} f();");
   }
 
   @Test
@@ -1038,7 +1048,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   public void testFunctionWithReferenceToArgumentsShouldNotBeOptimized() {
     testSame("function foo(a,b,c) { return arguments.size; }; foo(1);");
     testSame("var foo = function(a,b,c) { return arguments.size }; foo(1);");
-    testSame("var foo = function bar(a,b,c) { return arguments.size }; foo(2); bar(2);");
+    testSame("var foo = function bar(a,b,c) { return arguments.size }; foo(2);");
   }
 
   @Test
@@ -1063,11 +1073,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   public void testFunctionWithTwoNames() {
     testSame("var foo = function bar(a,b) {};");
     testSame("var foo = function bar(a,b) {}; foo(1)");
-    testSame("var foo = function bar(a,b) {}; bar(1);");
     testSame("var foo = function bar(a,b) {}; foo(1); foo(2)");
-    testSame("var foo = function bar(a,b) {}; foo(1); bar(1)");
-    testSame("var foo = function bar(a,b) {}; foo(1); bar(2)");
-    testSame("var foo = function bar(a,b) {}; foo(1,2); bar(2,1)");
   }
 
   @Test
@@ -1941,8 +1947,8 @@ public final class OptimizeParametersTest extends CompilerTestCase {
 
   @Test
   public void testRemoveOptionalDestructuringParam() {
-    test("function f({x}) {} f();", "function f() { var {x} = void 0; } f();");
-    test("function f({x} = {}) {} f();", "function f() { var {x} = {}; } f();");
+    test("function f({x}) {} f();", "function f() { var x; ({x} = void 0); } f();");
+    test("function f({x} = {}) {} f();", "function f() { var x; ({x} = {}); } f();");
   }
 
   @Test

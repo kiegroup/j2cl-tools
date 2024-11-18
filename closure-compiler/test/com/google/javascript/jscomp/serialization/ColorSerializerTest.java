@@ -37,7 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -60,7 +60,7 @@ public class ColorSerializerTest {
                 .build());
 
     new Tester()
-        .setSerializationMode(SerializationOptions.SKIP_DEBUG_INFO)
+        .setSerializationMode(SerializationOptions.builder().setIncludeDebugInfo(false).build())
         .init()
         // don't add anything
         .generateTypePool()
@@ -335,27 +335,15 @@ public class ColorSerializerTest {
   @Test
   public void skipMismatches() {
     TestColor testColor1 =
-        new TestObjectColorBuilder()
-            .setColorId("color001")
-            .setTrimmedPoolOffset(0)
-            .build();
+        new TestObjectColorBuilder().setColorId("color001").setTrimmedPoolOffset(0).build();
     TestColor testColor2 =
-        new TestObjectColorBuilder()
-            .setColorId("color002")
-            .setTrimmedPoolOffset(1)
-            .build();
+        new TestObjectColorBuilder().setColorId("color002").setTrimmedPoolOffset(1).build();
     TestMismatch testMismatch1 = TestMismatch.create("location1", testColor1, testColor2);
 
     TestColor testColor3 =
-        new TestObjectColorBuilder()
-            .setColorId("color003")
-            .setTrimmedPoolOffset(2)
-            .build();
+        new TestObjectColorBuilder().setColorId("color003").setTrimmedPoolOffset(2).build();
     TestColor testColor4 =
-        new TestObjectColorBuilder()
-            .setColorId("color004")
-            .setTrimmedPoolOffset(3)
-            .build();
+        new TestObjectColorBuilder().setColorId("color004").setTrimmedPoolOffset(3).build();
     TestMismatch testMismatch2 = TestMismatch.create("location2", testColor3, testColor4);
 
     final TypePool expectedTypePool =
@@ -368,7 +356,7 @@ public class ColorSerializerTest {
             .build();
 
     new Tester()
-        .setSerializationMode(SerializationOptions.SKIP_DEBUG_INFO)
+        .setSerializationMode(SerializationOptions.builder().setIncludeDebugInfo(false).build())
         .init()
         .addColors(testColor1, testColor2, testColor3, testColor4)
         .addMismatch(testMismatch1)
@@ -652,14 +640,14 @@ public class ColorSerializerTest {
     public abstract @Nullable TypeProto getNullableExpectedTypeProto();
 
     // The Integer we expect ColorSerializer to create for this Color.
-    public abstract Integer getExpectedTypePointer();
+    public abstract int getExpectedTypePointer();
 
     public TypeProto getExpectedTypeProto() {
       return checkNotNull(getNullableExpectedTypeProto());
     }
 
     static TestColor create(
-        Color color, @Nullable TypeProto expectedTypeProto, Integer nullableExpectedTypePointer) {
+        Color color, @Nullable TypeProto expectedTypeProto, int nullableExpectedTypePointer) {
       return new AutoValue_ColorSerializerTest_TestColor(
           color, expectedTypeProto, nullableExpectedTypePointer);
     }
@@ -714,7 +702,7 @@ public class ColorSerializerTest {
     // If the test case includes information that doesn't make it into the expected result,
     // then I want the test case to clearly request that the information be omitted.
     private SerializationOptions serializationMode =
-        SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS;
+        SerializationOptions.builder().setIncludeDebugInfo(true).setRunValidation(true).build();
     // Tells ColorSerializer which property names to serialize
     private Predicate<String> propertyNameFilter = propName -> true;
 

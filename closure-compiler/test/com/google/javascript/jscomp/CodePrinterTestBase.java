@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.Node;
 import java.nio.charset.Charset;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 
 /** Base class for tests that exercise {@link CodePrinter}. */
@@ -89,26 +89,25 @@ public abstract class CodePrinterTestBase {
     return root.getFirstChild();
   }
 
-  private void checkUnexpectedErrorsOrWarnings(
-      Compiler compiler, int expected) {
+  private void checkUnexpectedErrorsOrWarnings(Compiler compiler, int expected) {
     int actual = 0;
-      String msg = "";
-      for (JSError err : compiler.getErrors()) {
+    String msg = "";
+    for (JSError err : compiler.getErrors()) {
       if (shouldIgnore(err)) {
         continue;
       }
       actual++;
-        msg += "Error:" + err + "\n";
-      }
-      if (!allowWarnings) {
-        for (JSError err : compiler.getWarnings()) {
+      msg += "Error:" + err + "\n";
+    }
+    if (!allowWarnings) {
+      for (JSError err : compiler.getWarnings()) {
         if (shouldIgnore(err)) {
           continue;
         }
         actual++;
-          msg += "Warning:" + err + "\n";
-        }
+        msg += "Warning:" + err + "\n";
       }
+    }
     if (actual != expected) {
       assertWithMessage("Unexpected warnings or errors.\n " + msg).that(actual).isEqualTo(expected);
     }
