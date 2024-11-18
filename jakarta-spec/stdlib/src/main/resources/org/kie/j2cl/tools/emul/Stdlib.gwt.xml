@@ -3,5 +3,6 @@
   "http://gwtproject.org/doctype/2.8.2/gwt-module.dtd">
 <module>
     <inherits name="elemental2.webstorage.WebStorage" />
+    <inherits name="org.gwtproject.nio.Nio" />
     <super-source path="client" />
 </module>
