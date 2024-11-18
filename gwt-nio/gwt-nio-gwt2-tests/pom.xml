@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.kie.j2cl.tools.nio</groupId>
         <artifactId>gwt-nio-parent</artifactId>
-        <version>1.4</version>
+        <version>1.5</version>
     </parent>
     <artifactId>gwt-nio-gwt2-tests</artifactId>
     <packaging>gwt-lib</packaging>
@@ -51,25 +51,25 @@
         <maven.gwt.plugin>1.0.0</maven.gwt.plugin>
         <maven.surfire.plugin>2.22.1</maven.surfire.plugin>
 
-        <elemental2.version>1.2.1</elemental2.version>
-        <gwt.version>2.10.0</gwt.version>
-        <junit.version>4.12</junit.version>
+        <elemental2.version>1.2.3</elemental2.version>
+        <gwt.version>2.12.0</gwt.version>
+        <junit.version>4.13.1</junit.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.kie.j2cl.tools.nio</groupId>
             <artifactId>gwt-nio</artifactId>
-            <version>1.4</version>
+            <version>1.5</version>
         </dependency>
         <dependency>
-            <groupId>com.google.gwt</groupId>
+            <groupId>org.gwtproject</groupId>
             <artifactId>gwt-user</artifactId>
             <version>${gwt.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.google.gwt</groupId>
+            <groupId>org.gwtproject</groupId>
             <artifactId>gwt-dev</artifactId>
             <version>${gwt.version}</version>
             <scope>test</scope>

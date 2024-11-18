@@ -4,7 +4,7 @@
 
   <groupId>org.kie.j2cl.tools.nio</groupId>
   <artifactId>gwt-nio</artifactId>
-  <version>1.4</version>
+  <version>1.5</version>
   <packaging>jar</packaging>
 
   <name>GWT NIO</name>
@@ -41,7 +41,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <elemental2.version>1.2.1</elemental2.version>
+    <elemental2.version>1.2.3</elemental2.version>
 
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
