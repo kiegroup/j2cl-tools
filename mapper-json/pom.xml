@@ -80,7 +80,7 @@
         <auto.service.version>1.1.1</auto.service.version>
 
         <!-- J2CL deps -->
-        <gwt.jakarta.version>0.4</gwt.jakarta.version>
+        <gwt.jakarta.version>0.5</gwt.jakarta.version>
 
         <!-- J2CL deps -->
         <com.google.jsinterop.base.version>1.0.0</com.google.jsinterop.base.version>
