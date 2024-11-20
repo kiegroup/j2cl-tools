@@ -43,13 +43,12 @@ import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Process aliases in goog.modules.
@@ -141,6 +140,12 @@ final class ClosureRewriteModule implements CompilerPass {
       DiagnosticType.error(
           "JSC_ILLEGAL_MODULE_RENAMING_CONFLICT",
           "Internal compiler error: rewritten module global name {0} is already in use.");
+
+  static final DiagnosticType ILLEGAL_STMT_OF_GOOG_REQUIRE_DYNAMIC_IN_AWAIT =
+      DiagnosticType.error(
+          "ILLEGAL_STMT_OF_GOOG_REQUIRE_DYNAMIC_IN_AWAIT",
+          "Illegal use of dynamic import: LHS of await goog.requireDynamic() must be a destructing"
+              + " LHS or name, and it must be in a declaration statement.");
 
   static final String MODULE_EXPORTS_PREFIX = "module$exports$";
 
@@ -281,9 +286,10 @@ final class ClosureRewriteModule implements CompilerPass {
     boolean declareLegacyNamespace;
     String namespaceId; // "a.b.c"
     String contentsPrefix; // "module$contents$a$b$c_
-    final Set<String> topLevelNames = new HashSet<>(); // For prefixed content renaming.
+    final Set<String> topLevelNames = new LinkedHashSet<>(); // For prefixed content renaming.
     final Deque<ScriptDescription> childScripts = new ArrayDeque<>();
-    final Map<String, AliasName> namesToInlineByAlias = new HashMap<>(); // For alias inlining.
+    final Map<String, AliasName> namesToInlineByAlias =
+        new LinkedHashMap<>(); // For alias inlining.
 
     /** Transient state. */
     boolean willCreateExportsObject;
@@ -291,8 +297,8 @@ final class ClosureRewriteModule implements CompilerPass {
     boolean hasCreatedExportObject;
     ExportDefinition defaultExport;
     @Nullable String defaultExportLocalName;
-    final Set<String> namedExports = new HashSet<>();
-    final Map<Var, ExportDefinition> exportsToInline = new HashMap<>();
+    final Set<String> namedExports = new LinkedHashSet<>();
+    final Map<Var, ExportDefinition> exportsToInline = new LinkedHashMap<>();
 
     // The root of the module. The MODULE_BODY node that contains the module contents.
     // For recognizing top level names.
@@ -652,9 +658,9 @@ final class ClosureRewriteModule implements CompilerPass {
   // JsDoc type references to goog.module() types in legacy scripts.
   private static final class GlobalRewriteState {
     private final Map<String, ScriptDescription> scriptDescriptionsByGoogModuleNamespace =
-        new HashMap<>();
+        new LinkedHashMap<>();
     private final Multimap<Node, String> namespaceIdsByScriptNode = HashMultimap.create();
-    private final Set<String> providedNamespaces = new HashSet<>();
+    private final Set<String> providedNamespaces = new LinkedHashSet<>();
 
     boolean containsModule(String namespaceId) {
       return scriptDescriptionsByGoogModuleNamespace.containsKey(namespaceId);
@@ -687,12 +693,12 @@ final class ClosureRewriteModule implements CompilerPass {
 
   private final GlobalRewriteState rewriteState = new GlobalRewriteState();
   // All prefix namespaces from goog.provides and legacy goog.modules.
-  private final Set<String> legacyScriptNamespacesAndPrefixes = new HashSet<>();
+  private final Set<String> legacyScriptNamespacesAndPrefixes = new LinkedHashSet<>();
   private final List<UnrecognizedRequire> unrecognizedRequires = new ArrayList<>();
   private final ArrayList<Node> googModuleGetCalls = new ArrayList<>();
   private final ArrayList<Node> googRequireDynamicCalls = new ArrayList<>();
 
-  private final TypedScope globalTypedScope;
+  private final @Nullable TypedScope globalTypedScope;
 
   ClosureRewriteModule(
       AbstractCompiler compiler,
@@ -1057,7 +1063,6 @@ final class ClosureRewriteModule implements CompilerPass {
       recordExportToInline(defaultExport);
     }
 
-    return;
   }
 
   private void updateModuleBodyEarly(Node moduleScopeRoot) {
@@ -1217,6 +1222,11 @@ final class ClosureRewriteModule implements CompilerPass {
 
   private void updateGoogRequireDynamicCall(Node call) {
     final Node parent = call.getParent();
+    if (parent == null) {
+      // This call has been detached from the AST in unrecognized require handling. Nothing else to
+      // do here.
+      return;
+    }
     checkState(
         parent.isAwait() || (parent.isGetProp() && parent.getString().equals("then")),
         "goog.requireDynamic() in only allowed in await/then expression");
@@ -1351,17 +1361,17 @@ final class ClosureRewriteModule implements CompilerPass {
 
     // `{Foo} = await goog.requireDynamic('a.b.c')`
     Node awaitParent = existingAwait.getParent();
-    checkState(
-        awaitParent != null && (awaitParent.isDestructuringLhs() || awaitParent.isName()),
-        "LHS must be a destructing LHS or name");
+    if (awaitParent == null || (!awaitParent.isDestructuringLhs() && !awaitParent.isName())) {
+      compiler.report(JSError.make(call, ILLEGAL_STMT_OF_GOOG_REQUIRE_DYNAMIC_IN_AWAIT));
+    }
 
     // `const {Foo} = await goog.requireDynamic('a.b.c')`
     Node declarationStatement = awaitParent.getParent();
     // Reject non-declarations or declarations in a for loop.
-    checkState(
-        NodeUtil.isNameDeclaration(declarationStatement)
-            && NodeUtil.isStatement(declarationStatement),
-        "must be a declaration statement");
+    if (!NodeUtil.isNameDeclaration(declarationStatement)
+        || !NodeUtil.isStatement(declarationStatement)) {
+      compiler.report(JSError.make(call, ILLEGAL_STMT_OF_GOOG_REQUIRE_DYNAMIC_IN_AWAIT));
+    }
 
     // `module$exports$a$b$c`
     Node exportedNamespaceNameNode =
@@ -1643,7 +1653,6 @@ final class ClosureRewriteModule implements CompilerPass {
     compiler.reportChangeToEnclosingScope(jsdocNode);
 
     maybeUpdateExportObjectLiteral(t, rhs);
-    return;
   }
 
   private void maybeUpdateExportNameRef(NodeTraversal t, Node n) {
@@ -1885,6 +1894,10 @@ final class ClosureRewriteModule implements CompilerPass {
         this.astFactory
             .createQNameFromTypedScope(this.globalTypedScope, newString)
             .srcrefTree(nameNode);
+    // Sometimes the typechecker gave `nameNode` the correct type, but we can't infer the right type
+    // for `newQualifiedName`. If so, giving `newQualifiedName` the same type typechecking used for
+    // `nameNode` is less confusing.
+    newQualifiedName.setJSType(nameNode.getJSType());
 
     boolean replaced = safeSetStringIfDeclaration(nameParent, nameNode, newQualifiedName);
     if (replaced) {

@@ -86,7 +86,6 @@ internal data class CompilationUnitRenderer(val nameRenderer: NameRenderer) {
         listOf(
             "ALWAYS_NULL",
             "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
-            "REPEATED_BOUND",
             "SENSELESS_COMPARISON",
             "UNCHECKED_CAST",
             "UNNECESSARY_LATEINIT",
@@ -98,6 +97,7 @@ internal data class CompilationUnitRenderer(val nameRenderer: NameRenderer) {
             "USELESS_CAST",
             "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
             "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+            "REDUNDANT_ELSE_IN_WHEN",
           )
           .map { literal(it) },
       )

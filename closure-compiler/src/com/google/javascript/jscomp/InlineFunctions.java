@@ -22,7 +22,6 @@ import static com.google.common.base.Predicates.alwaysTrue;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
@@ -33,14 +32,14 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Inlines functions that are divided into two types: "direct call node replacement" (aka "direct")
@@ -56,13 +55,18 @@ import org.jspecify.nullness.Nullable;
  */
 class InlineFunctions implements CompilerPass {
 
+  static final DiagnosticType FAILED_REQUIRED_INLINING =
+      DiagnosticType.error(
+          "JSC_FAILED_REQUIRED_INLINING",
+          "function {1} annotated @requireInlining could not be inlined here");
+
   // TODO(nicksantos): This needs to be completely rewritten to use scopes
   // to do variable lookups. Right now, it assumes that all functions are
   // uniquely named variables. There's currently a stopgap scope-check
   // to ensure that this doesn't produce invalid code. But in the long run,
   // this needs a major refactor.
   private final Map<String, FunctionState> fns = new LinkedHashMap<>();
-  private final Map<Node, String> anonFns = new HashMap<>();
+  private final Map<Node, String> anonFns = new LinkedHashMap<>();
 
   private final AbstractCompiler compiler;
 
@@ -259,10 +263,21 @@ class InlineFunctions implements CompilerPass {
    * Updates the FunctionState object for the given function. Checks if the given function matches
    * the criteria for an inlinable function.
    */
-  void maybeAddFunction(Function fn, JSChunk module) {
+  void maybeAddFunction(Function fn, JSChunk chunk) {
     String name = fn.getName();
     FunctionState functionState = getOrCreateFunctionState(name);
+    updateFunctionStateForInlining(fn, chunk, name, functionState);
+    if (hasRequireInliningAnnotation(fn.getFunctionNode()) && !functionState.canInline()) {
+      compiler.report(JSError.make(fn.getFunctionNode(), FAILED_REQUIRED_INLINING));
+    }
+  }
 
+  /**
+   * Updates the FunctionState object for the given function. Checks if the given function matches
+   * the criteria for an inlinable function.
+   */
+  void updateFunctionStateForInlining(
+      Function fn, JSChunk chunk, String name, FunctionState functionState) {
     // TODO(johnlenz): Maybe "smarten" FunctionState by adding this logic to it?
 
     // If the function has multiple definitions, don't inline it.
@@ -306,7 +321,7 @@ class InlineFunctions implements CompilerPass {
 
       // Set the module and gather names that need temporaries.
       if (functionState.canInline()) {
-        functionState.setModule(module);
+        functionState.setChunk(chunk);
 
         Set<String> namesToAlias = functionArgumentInjector.findModifiedParameters(fnNode);
         if (!namesToAlias.isEmpty()) {
@@ -358,6 +373,11 @@ class InlineFunctions implements CompilerPass {
     return jsDocInfo != null && jsDocInfo.isNoInline();
   }
 
+  private boolean hasRequireInliningAnnotation(Node fnNode) {
+    JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(fnNode);
+    return jsDocInfo != null && jsDocInfo.isRequireInlining();
+  }
+
   /**
    * @param fnNode The function to inspect.
    * @return Whether the function has parameters, var/const/let, class, or function declarations.
@@ -392,7 +412,9 @@ class InlineFunctions implements CompilerPass {
     return injector.doesFunctionMeetMinimumRequirements(fnName, fnNode);
   }
 
-  /** @see CallVisitor */
+  /**
+   * @see CallVisitor
+   */
   private interface CallVisitorCallback {
     public void visitCallSite(NodeTraversal t, Node callNode, FunctionState functionState);
   }
@@ -451,7 +473,9 @@ class InlineFunctions implements CompilerPass {
     }
   }
 
-  /** @return Whether the name is used in a way that might be a candidate for inlining. */
+  /**
+   * @return Whether the name is used in a way that might be a candidate for inlining.
+   */
   static boolean isCandidateUsage(Node name) {
     Node parent = name.getParent();
     checkState(name.isName());
@@ -509,19 +533,19 @@ class InlineFunctions implements CompilerPass {
     }
 
     void maybeAddReference(
-        NodeTraversal t, FunctionState functionState, Node callNode, JSChunk module) {
+        NodeTraversal t, FunctionState functionState, Node callNode, JSChunk chunk) {
       if (!functionState.canInline()) {
         return;
       }
 
       InliningMode mode =
           functionState.canInlineDirectly() ? InliningMode.DIRECT : InliningMode.BLOCK;
-      boolean referenceAdded = maybeAddReferenceUsingMode(t, functionState, callNode, module, mode);
+      boolean referenceAdded = maybeAddReferenceUsingMode(t, functionState, callNode, chunk, mode);
       if (!referenceAdded && mode == InliningMode.DIRECT) {
         // This reference can not be directly inlined, see if
         // block replacement inlining is possible.
         mode = InliningMode.BLOCK;
-        referenceAdded = maybeAddReferenceUsingMode(t, functionState, callNode, module, mode);
+        referenceAdded = maybeAddReferenceUsingMode(t, functionState, callNode, chunk, mode);
       }
 
       if (!referenceAdded) {
@@ -535,7 +559,7 @@ class InlineFunctions implements CompilerPass {
         NodeTraversal t,
         FunctionState functionState,
         Node callNode,
-        JSChunk module,
+        JSChunk chunk,
         InliningMode mode) {
 
       // If many functions are inlined into the same function F in the same
@@ -548,7 +572,7 @@ class InlineFunctions implements CompilerPass {
         return false;
       }
 
-      Reference candidate = new Reference(callNode, t.getScope(), module, mode);
+      Reference candidate = new Reference(callNode, t.getScope(), chunk, mode);
       CanInlineResult result =
           injector.canInlineReferenceToFunction(
               candidate,
@@ -652,6 +676,9 @@ class InlineFunctions implements CompilerPass {
     Iterator<Entry<String, FunctionState>> i;
     for (i = fns.entrySet().iterator(); i.hasNext(); ) {
       FunctionState functionState = i.next().getValue();
+      if (hasRequireInliningAnnotation(functionState.getFn().getFunctionNode())) {
+        continue;
+      }
       if (functionState.hasReferences()) {
         // Only inline function if it decreases the code size.
         boolean lowersCost = minimizeCost(functionState);
@@ -689,10 +716,12 @@ class InlineFunctions implements CompilerPass {
     return true;
   }
 
-  /** @return Whether inlining the function reduces code size. */
+  /**
+   * @return Whether inlining the function reduces code size.
+   */
   private boolean inliningLowersCost(FunctionState functionState) {
     return injector.inliningLowersCost(
-        functionState.getModule(),
+        functionState.getChunk(),
         functionState.getFn().getFunctionNode(),
         functionState.getReferences(),
         functionState.getNamesToAlias(),
@@ -731,7 +760,9 @@ class InlineFunctions implements CompilerPass {
     return NodeUtil.has(node, pred, alwaysTrue());
   }
 
-  /** @see #resolveInlineConflicts */
+  /**
+   * @see #resolveInlineConflicts
+   */
   private void resolveInlineConflictsForFunction(FunctionState functionState) {
     // Functions that aren't referenced don't cause conflicts.
     if (!functionState.hasReferences() || !functionState.canInline()) {
@@ -762,12 +793,14 @@ class InlineFunctions implements CompilerPass {
 
   /** This functions that may be called directly. */
   private Set<String> findCalledFunctions(Node node) {
-    Set<String> changed = new HashSet<>();
+    Set<String> changed = new LinkedHashSet<>();
     findCalledFunctions(NodeUtil.getFunctionBody(node), changed);
     return changed;
   }
 
-  /** @see #findCalledFunctions(Node) */
+  /**
+   * @see #findCalledFunctions(Node)
+   */
   private static void findCalledFunctions(Node node, Set<String> changed) {
     checkArgument(changed != null);
     // For each referenced function, add a new reference
@@ -838,7 +871,7 @@ class InlineFunctions implements CompilerPass {
     private boolean referencesThis = false;
     private boolean hasInnerFunctions = false;
     private @Nullable Map<Node, Reference> references = null;
-    private @Nullable JSChunk module = null;
+    private @Nullable JSChunk chunk = null;
     private @Nullable Set<String> namesToAlias = null;
 
     boolean hasExistingFunctionDefinition() {
@@ -963,12 +996,12 @@ class InlineFunctions implements CompilerPass {
       namesToAlias = names;
     }
 
-    public void setModule(JSChunk module) {
-      this.module = module;
+    public void setChunk(JSChunk chunk) {
+      this.chunk = chunk;
     }
 
-    public JSChunk getModule() {
-      return module;
+    public JSChunk getChunk() {
+      return chunk;
     }
   }
 
@@ -1105,8 +1138,8 @@ class InlineFunctions implements CompilerPass {
     boolean requiresDecomposition = false;
     boolean inlined = false;
 
-    Reference(Node callNode, Scope scope, JSChunk module, InliningMode mode) {
-      super(callNode, scope, module, mode);
+    Reference(Node callNode, Scope scope, JSChunk chunk, InliningMode mode) {
+      super(callNode, scope, chunk, mode);
     }
 
     void setRequiresDecomposition(boolean newVal) {

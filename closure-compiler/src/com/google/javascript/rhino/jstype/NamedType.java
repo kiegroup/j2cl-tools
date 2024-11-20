@@ -52,7 +52,7 @@ import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
 import java.util.ArrayList;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A {@code NamedType} is a named reference to some other type.  This provides
@@ -401,6 +401,8 @@ public final class NamedType extends ProxyObjectType {
       if (localVariableShadowsGlobalNamespace(root)) {
         msg += "\nIt's possible that a local variable called '" + root
             + "' is shadowing the intended global namespace.";
+      } else if (resolutionScope.getSlot(root) != null) {
+        msg += "\nIt's possible that '" + reference + "' refers to a value, not a type.";
       }
       warning(reporter, msg);
     } else {

@@ -46,6 +46,7 @@ import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.NodeSubject;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -55,6 +56,333 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestCase {
+
+  @Test
+  public void testGoogProvideAndRequire_used() {
+    useNoninjectingCompiler = true;
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addClosureExterns()
+                .buildExternsFile("externs.js"));
+    test(
+        options,
+        new String[] {
+          lines(
+              "goog.provide('goog.string.Const');",
+              "/** @constructor */goog.string.Const = function() {};",
+              "goog.string.Const.from = function(x) { console.log(x)};"),
+          lines(
+              "goog.module('test');",
+              "const Const = goog.require('goog.string.Const');",
+              "Const.from('foo');")
+        },
+        new String[] {
+          lines(
+              "goog.string = {};",
+              "goog.string.Const = function() {};",
+              "goog.string.Const.from = function() { console.log('foo')};"),
+          lines("goog.string.Const.from();")
+        });
+
+    test(
+        options,
+        new String[] {
+          lines(
+              "goog.provide('goog.string.Const');",
+              "/** @constructor */goog.string.Const = function() {};",
+              "goog.string.Const.from = function(x) { console.log(x)};"),
+          lines(
+              "goog.module('test');",
+              "const {from} = goog.require('goog.string.Const');",
+              "from('foo');")
+        },
+        new String[] {
+          lines(
+              "goog.string = {};",
+              "goog.string.Const = function() {};",
+              "goog.string.Const.from = function() { console.log('foo')};"),
+          lines("(0,goog.string.Const.from)();")
+        });
+  }
+
+  @Test
+  public void testObjectDestructuring_forLoopInitializer_doesNotCrash() {
+    useNoninjectingCompiler = true;
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addObject().addConsole().buildExternsFile("externs.js"));
+    test(
+        options,
+        lines(
+            "/** @suppress {uselessCode} */",
+            "function isDeclaredInLoop(path) {",
+            "  for (let {",
+            "      parentPath,",
+            "      key",
+            "    } = path;",
+            "    parentPath; {",
+            "      parentPath,",
+            "      key",
+            "    } = parentPath) {",
+            "    return isDeclaredInLoop(parentPath);",
+            "  }",
+            "  return false;",
+            "}",
+            "isDeclaredInLoop({parentPath: 'jh', key: 2});"),
+        lines(
+            "/** @suppress {uselessCode} */",
+            "function isDeclaredInLoop(path) {",
+            "  var $jscomp$loop$98447280$2 = {parentPath:void 0, key:void 0};",
+            "  for (function($jscomp$loop$98447280$2) {",
+            "    return function() {",
+            "      $jscomp$loop$98447280$2.parentPath = path.parentPath;",
+            "      $jscomp$loop$98447280$2.key = path.key;",
+            "      return path;",
+            "    };",
+            "  }($jscomp$loop$98447280$2)();",
+            "  $jscomp$loop$98447280$2.parentPath;",
+            "  $jscomp$loop$98447280$2 = {",
+            "    parentPath:$jscomp$loop$98447280$2.parentPath,",
+            "    key:$jscomp$loop$98447280$2.key",
+            "  },",
+            "  function($jscomp$loop$98447280$2) { ",
+            "    return function() { ",
+            "      var $jscomp$destructuring$var3 = $jscomp$loop$98447280$2.parentPath; ",
+            "      $jscomp$loop$98447280$2.parentPath = $jscomp$destructuring$var3.parentPath; ",
+            "      $jscomp$loop$98447280$2.key = $jscomp$destructuring$var3.key; ",
+            "      return $jscomp$destructuring$var3; ",
+            "    }; ",
+            "  }($jscomp$loop$98447280$2)()) {",
+            "    return isDeclaredInLoop($jscomp$loop$98447280$2.parentPath);",
+            "   }",
+            "  return !1;",
+            " }",
+            "isDeclaredInLoop({parentPath:\"jh\", key:2});"));
+  }
+
+  @Test
+  public void testVariableUsedAsArgumentMultipleTimes() {
+    useNoninjectingCompiler = true;
+    CompilerOptions options = createCompilerOptions();
+    options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addObject().addConsole().buildExternsFile("externs.js"));
+    test(
+        options,
+        lines(
+            "let value = 10;",
+            "function add(a,b) {",
+            " return (value = 0)+a+b;",
+            "}",
+            "let f = function() {",
+            "  return add(++value, ++value);",
+            "};",
+            "console.log(f());"),
+        lines(
+            "let a = 10;",
+            "var b = console, c = b.log, d, e = ++a, f = ++a;",
+            "d = (a = 0) + e + f;",
+            "c.call(b, d);"));
+  }
+
+  @Test
+  public void testTSVariableReassignmentAndAliasingDueToDecoration() {
+    useNoninjectingCompiler = true;
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addObject()
+                .addConsole()
+                .addClosureExterns()
+                .addExtra(
+                    // simulate "const tslib_1 = goog.require('tslib');",
+                    lines(
+                        "var tslib_1 = {", //
+                        "  __decorate: function(decorators, clazz) {}",
+                        "};"))
+                .buildExternsFile("externs.js"));
+    test(
+        options,
+        lines(
+            "/* output - 1387 characters long */", //
+            "goog.module('main');",
+            "var module = module || { id: 'main.ts' };",
+            "var Foo_1;",
+            "/**",
+            " * @fileoverview added by tsickle",
+            " * Generated from: main.ts",
+            " * @suppress {checkTypes} added by tsickle",
+            " * @suppress {extraRequire} added by tsickle",
+            " * @suppress {missingRequire} added by tsickle",
+            " * @suppress {uselessCode} added by tsickle",
+            " * @suppress {missingReturn} added by tsickle",
+            " * @suppress {unusedPrivateMembers} added by tsickle",
+            " * @suppress {missingOverride} added by tsickle",
+            " * @suppress {const} added by tsickle",
+            " */",
+            "/**",
+            " * @param {?} arg",
+            " * @return {?}",
+            " */",
+            "function noopDecorator(arg) { return arg; }",
+            "let Foo = Foo_1 = class Foo {",
+            "    /**",
+            "     * @public",
+            "     * @return {void}",
+            "     */",
+            "    static foo() {",
+            "        console.log('Hello');",
+            "    }",
+            "    /**",
+            "     * @public",
+            "     * @return {void}",
+            "     */",
+            "    bar() {",
+            "        Foo_1.foo();",
+            "        console.log('ID: ' + Foo_1.ID + '');",
+            "    }",
+            "};",
+            "Foo.ID = 'original';",
+            "Foo.ID2 = Foo_1.ID;",
+            "(() => {",
+            "    Foo_1.foo();",
+            "    console.log('ID: ' + Foo_1.ID + '');",
+            "})();",
+            "Foo = Foo_1 = tslib_1.__decorate([",
+            "    noopDecorator",
+            "], Foo);",
+            "/* istanbul ignore if */",
+            "if (false) {",
+            "    /**",
+            "     * @type {string}",
+            "     * @public",
+            "     */",
+            "    Foo.ID;",
+            "    /**",
+            "     * @type {string}",
+            "     * @public",
+            "     */",
+            "    Foo.ID2;",
+            "    /* Skipping unhandled member: static {",
+            "        Foo.foo();",
+            "        console.log('ID: ' + Foo.ID + '');",
+            "      }*/",
+            "}",
+            "new Foo().bar();",
+            ""),
+        lines(
+            "var a, b = a = function() {",
+            "};",
+            "b.a = 'original';",
+            "b.c = a.a;",
+            // TODO: b/299055739 - a.b() is not defined because its definition was removed
+            "a.b();",
+            "console.log('ID: ' + a.a);",
+            "b = a = tslib_1.__decorate([function(c) {",
+            "  return c;",
+            "}], b);",
+            "new b();",
+            // TODO: b/299055739 - a.b() is not defined because its definition was removed
+            "a.b();",
+            "console.log('ID: ' + a.a);",
+            ""));
+  }
+
+  @Test
+  public void testFoldSpread() {
+    useNoninjectingCompiler = true;
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addObject().addConsole().buildExternsFile("externs.js"));
+    test(
+        options,
+        lines("function foo(x) {console.log(x);} foo(...(false ? [0] : [1]))"),
+        lines(
+            // tests that we do not generate (function(a) { console.log(a); })(...[1]);
+            "console.log(1)"));
+  }
+
+  @Test
+  public void testBug303058080() {
+    // Avoid including the transpilation library
+    useNoninjectingCompiler = true;
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setRewritePolyfills(true);
+    options.setPrettyPrint(true);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addExtra(
+                    "/**",
+                    " * @template T",
+                    " * @record",
+                    " */",
+                    "var Foo = function() {};",
+                    "",
+                    "/**",
+                    " * @return {!Foo<!Array<T>>}",
+                    " */",
+                    "Foo.prototype.partition = function() {};",
+                    "",
+                    "/**",
+                    " * @return {!Foo<?>}",
+                    " */",
+                    "Foo.prototype.flatten = function() {};",
+                    "",
+                    "/**",
+                    " * @extends {Foo}",
+                    " * @template T",
+                    " * @record",
+                    " */",
+                    "var Bar = function() {};",
+                    "",
+                    "/**",
+                    " * @return {!Foo<T>}",
+                    " */",
+                    "Bar.prototype.flatten = function() {};")
+                .buildExternsFile("externs.js"));
+    // The timeout happened while processing the externs, so there's no need to have any input
+    // code.
+    test(options, "", "");
+  }
 
   @Test
   public void testBug123583793() {
@@ -143,7 +471,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "  var $$jscomp$forAwait$retFn0$$;",
             "  try {",
             "    for (var $$jscomp$forAwait$tempIterator0$$ ="
-                + " $jscomp.makeAsyncIterator(asyncIterator);;) {",
+                + " (0, $jscomp.makeAsyncIterator)(asyncIterator);;) {",
             "      var $$jscomp$forAwait$tempResult0$$ = await"
                 + " $$jscomp$forAwait$tempIterator0$$.next();",
             "      if ($$jscomp$forAwait$tempResult0$$.done) {",
@@ -951,7 +1279,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "",
             "isFunction = function(a){",
             "  var b={};",
-            "  return a && '[object Function]' === b.toString.apply(a);",
+            "  return a && b.toString.apply(a) === '[object Function]';",
             "}",
             "");
 
@@ -1141,7 +1469,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "}",
             "",
             "a(input);"),
-        "'log' != input && alert('Hi!')");
+        "input != 'log' && alert('Hi!')");
   }
 
   // http://blickly.github.io/closure-compiler-issues/#1131
@@ -1686,15 +2014,10 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     useNoninjectingCompiler = true;
 
     // include externs definitions for the stuff that would have been injected
-    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
-    externsList.add(
-        SourceFile.fromCode(
-            "extraExterns",
-            new TestExternsBuilder()
-                .addExtra("/** @type {!Global} */ var globalThis;")
-                .addJSCompLibraries()
-                .build()));
-    externs = externsList.build();
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "extraExterns", new TestExternsBuilder().addJSCompLibraries().build()));
 
     test(
         options,
@@ -1828,11 +2151,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "  return a + b.foo;",
             "}",
             "alert(foo(3, {foo: 9}));"),
-        "var a={a:9}; a=void 0===a?{a:5}:a;alert(3+a.a)");
+        "var a={a:9}; a=a===void 0?{a:5}:a;alert(3+a.a)");
   }
 
+  @Ignore("b/78345133")
   // TODO(b/78345133): Re-enable if/when InlineFunctions supports inlining default parameters
-  public void disabled_testDefaultParametersNonTranspiling() {
+  @Test
+  public void testDefaultParametersNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
@@ -1885,9 +2210,11 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "}(1,1,1,1,1))"));
   }
 
+  @Ignore
+  @Test
   // TODO(tbreisacher): Re-enable if/when InlineFunctions supports rest parameters that are
   // object patterns.
-  public void disabled_testRestObjectPatternParametersNonTranspiling() {
+  public void testRestObjectPatternParametersNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
@@ -2109,6 +2436,40 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   }
 
   @Test
+  public void testArrayDestructuringAndAwait_inlineAndCollapseProperties() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setPrettyPrint(true);
+    options.setGeneratePseudoNames(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addPromise()
+                .addExtra("var window; function bar() {}")
+                .buildExternsFile("externs.js"));
+
+    // Test that the compiler can optimize out most of this code and that
+    // InlineAndCollapseProperties does not report
+    // "JSC_PARTIAL_NAMESPACE. Partial alias created for namespace $jscomp"
+    test(
+        options,
+        lines(
+            "window['Foo'] = class Foo {",
+            "async method() {",
+            "          const [resultA, resultB] = await Promise.all([",
+            "            bar(),",
+            "            bar(),",
+            "          ]);",
+            "  }",
+            "",
+            "}"),
+        lines("window.Foo = function() {};"));
+  }
+
+  @Test
   public void testOptionalCatchBinding_optimizeAndTypecheck() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
@@ -2218,7 +2579,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     externs =
         ImmutableList.of(new TestExternsBuilder().addExtra("var x, y").buildExternsFile("externs"));
 
-    test(options, "x ?? y", "let a; null != (a = x) ? a : y");
+    test(options, "x ?? y", "let a; (a = x) != null ? a : y");
   }
 
   @Test
@@ -2232,7 +2593,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         ImmutableList.of(
             new TestExternsBuilder().addExtra("var x, y, z").buildExternsFile("externs"));
 
-    test(options, "x ?? y ?? z", "let a, b; null != (b = null != (a = x) ? a : y) ? b : z");
+    test(options, "x ?? y ?? z", "let a, b; (b = (a = x) != null ? a : y) != null ? b : z");
   }
 
   @Test

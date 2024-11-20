@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package overridingmethods
 
@@ -24,11 +24,13 @@ import kotlin.Suppress
 import kotlin.experimental.ExperimentalObjCName
 import kotlin.native.ObjCName
 
+@ObjCName("J2ktOverridingmethodsSomeInterface", exact = true)
 fun interface SomeInterface {
  @ObjCName("interfaceMethod")
  fun interfaceMethod()
 }
 
+@ObjCName("J2ktOverridingmethodsParent", exact = true)
 open class Parent internal constructor() {
  @ObjCName("nonFinal")
  open fun nonFinal() {}
@@ -40,6 +42,7 @@ open class Parent internal constructor() {
  fun finalInParent() {}
 }
 
+@ObjCName("J2ktOverridingmethodsChild", exact = true)
 open class Child internal constructor(): Parent(), SomeInterface {
  override fun nonFinal() {}
 
@@ -48,6 +51,7 @@ open class Child internal constructor(): Parent(), SomeInterface {
  override fun interfaceMethod() {}
 }
 
+@ObjCName("J2ktOverridingmethodsFinalChild", exact = true)
 class FinalChild internal constructor(): Parent(), SomeInterface {
  override fun nonFinal() {}
 

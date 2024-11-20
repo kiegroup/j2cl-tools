@@ -85,6 +85,9 @@ final class BazelJ2clBuilder extends BazelWorker {
   @Option(name = "-readablesourcemaps", hidden = true)
   boolean readableSourceMaps = false;
 
+  @Option(name = "-sourceMappingPathPrefix", hidden = true)
+  String sourceMappingPathPrefix = "";
+
   @Option(name = "-generatekytheindexingmetadata", hidden = true)
   boolean generateKytheIndexingMetadata = false;
 
@@ -131,10 +134,6 @@ final class BazelJ2clBuilder extends BazelWorker {
 
   @Option(name = "-experimentalDefineForWasm", handler = MapOptionHandler.class, hidden = true)
   Map<String, String> definesForWasm = new HashMap<>();
-
-  // TODO(b/181615162): Remove this flag after optimizing JsEnums and enabling it.
-  @Option(name = "-experimentalWasmEnableNonNativeJsEnum", hidden = true)
-  boolean wasmEnableNonNativeJsEnum = false;
 
   @Override
   protected void run(Problems problems) {
@@ -200,14 +199,13 @@ final class BazelJ2clBuilder extends BazelWorker {
         .setLibraryInfoOutput(this.libraryInfoOutput)
         .setEmitReadableLibraryInfo(readableLibraryInfo)
         .setEmitReadableSourceMap(this.readableSourceMaps)
+        .setSourceMappingPathPrefix(this.sourceMappingPathPrefix)
         .setGenerateKytheIndexingMetadata(this.generateKytheIndexingMetadata)
         .setOptimizeAutoValue(this.optimizeAutoValue)
         .setFrontend(allKotlinSources.isEmpty() ? javaFrontend : Frontend.KOTLIN)
         .setBackend(this.backend)
         .setWasmEntryPointStrings(ImmutableList.copyOf(this.wasmEntryPoints))
         .setDefinesForWasm(ImmutableMap.copyOf(definesForWasm))
-        // TODO(b/325056024): jsenums are not yet supported in the modular pipeline
-        .setWasmEnableNonNativeJsEnum(wasmEnableNonNativeJsEnum && backend != Backend.WASM_MODULAR)
         .setNullMarkedSupported(this.enableJSpecifySupport)
         .setKotlincOptions(ImmutableList.copyOf(kotlincOptions))
         .setForbiddenAnnotations(ImmutableList.copyOf(forbiddenAnnotations))
@@ -217,9 +215,7 @@ final class BazelJ2clBuilder extends BazelWorker {
   private static List<String> getPathEntries(String path) {
     List<String> entries = new ArrayList<>();
     for (String entry : Splitter.on(File.pathSeparatorChar).omitEmptyStrings().split(path)) {
-      if (new File(entry).exists()) {
-        entries.add(entry);
-      }
+      entries.add(entry);
     }
     return entries;
   }

@@ -48,7 +48,7 @@ import java.time.Instant;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -70,10 +70,17 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   private boolean includeTypes;
   private boolean resolveSourceMapAnnotations;
   private boolean parseInlineSourceMaps;
+  private ImmutableList<String> runtimeLibraries = null;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new SerializeTypedAstPass(compiler, consumer, SerializationOptions.SKIP_DEBUG_INFO);
+    return new SerializeTypedAstPass(
+        compiler,
+        consumer,
+        SerializationOptions.builder()
+            .setIncludeDebugInfo(false)
+            .setRuntimeLibraries(this.runtimeLibraries)
+            .build());
   }
 
   @Override
@@ -86,6 +93,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     this.includeTypes = true;
     this.resolveSourceMapAnnotations = true;
     this.parseInlineSourceMaps = true;
+    this.runtimeLibraries = ImmutableList.of();
   }
 
   @Test
@@ -706,6 +714,16 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     assertThat(result.ast.getExternProperties()).containsAtLeast("method", "arg");
   }
 
+  @Test
+  public void includesRuntimeLibraryPaths() throws IOException {
+    enableGatherExternProperties();
+    this.runtimeLibraries = ImmutableList.of("base", "es6/string");
+
+    Result result = this.testAndReturnResult(externs(""), srcs(""), expected(""));
+
+    assertThat(result.ast.getRuntimeLibraries()).containsExactly("base", "es6/string");
+  }
+
   @Override
   public void testSame(String code) {
     this.test(code, code);
@@ -779,7 +797,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     new AstValidator(deserializingCompiler, /* validateScriptFeatures= */ true)
         .validateRoot(IR.root(newExternsRoot, newSourceRoot));
     consumer = null;
-    return new Result(ast, registry, newExternsRoot, newSourceRoot, deserializingCompiler);
+    return new Result(ast, registry, newSourceRoot, deserializingCompiler);
   }
 
   private ImmutableList<SourceFile> collectSourceFilesFromScripts(Node root) {
@@ -796,12 +814,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     final Node sourceRoot;
     final Compiler compiler;
 
-    Result(
-        DeserializedAst ast,
-        ColorRegistry registry,
-        Node externRoot,
-        Node sourceRoot,
-        Compiler compiler) {
+    Result(DeserializedAst ast, ColorRegistry registry, Node sourceRoot, Compiler compiler) {
       this.ast = ast;
       this.registry = registry;
       this.sourceRoot = sourceRoot;

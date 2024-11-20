@@ -10,7 +10,7 @@
 
   <properties>
     <j2cl.maven.plugin.version>${project.version}</j2cl.maven.plugin.version>
-    <elemental2.version>1.2.1</elemental2.version>
+    <elemental2.version>1.2.3</elemental2.version>
 
     <jsinterop.base.version>1.0.0</jsinterop.base.version>
     <j2cl.version>${j2cl.version}</j2cl.version>

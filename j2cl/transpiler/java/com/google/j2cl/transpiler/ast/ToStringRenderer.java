@@ -300,7 +300,7 @@ class ToStringRenderer {
         if (initializerBlock.isStatic()) {
           print("static ");
         }
-        accept(initializerBlock.getBlock());
+        accept(initializerBlock.getBody());
         return false;
       }
 
@@ -419,6 +419,17 @@ class ToStringRenderer {
       }
 
       @Override
+      public boolean enterYieldStatement(YieldStatement yieldStatement) {
+        print("yield");
+        if (yieldStatement.getExpression() != null) {
+          print(" ");
+          accept(yieldStatement.getExpression());
+        }
+        print(";");
+        return false;
+      }
+
+      @Override
       public boolean enterStatement(Statement statement) {
         print("<statement>");
         return false;
@@ -436,13 +447,13 @@ class ToStringRenderer {
 
       @Override
       public boolean enterSwitchCase(SwitchCase switchCase) {
-        if (switchCase.getCaseExpression() != null) {
-          print("case ");
-          accept(switchCase.getCaseExpression());
-        } else {
+        if (switchCase.isDefault()) {
           print("default");
+        } else {
+          print("case ");
+          printSeparated(", ", switchCase.getCaseExpressions());
         }
-        print(":");
+        print(getParent() instanceof SwitchExpression ? " ->" : ":");
         indent();
         for (Statement statement : switchCase.getStatements()) {
           newLine();
@@ -454,9 +465,25 @@ class ToStringRenderer {
       }
 
       @Override
+      public boolean enterSwitchExpression(SwitchExpression switchExpression) {
+        print("when (");
+        accept(switchExpression.getExpression());
+        print(") {");
+        indent();
+        for (SwitchCase switchCase : switchExpression.getCases()) {
+          newLine();
+          accept(switchCase);
+        }
+        unIndent();
+        newLine();
+        print("}");
+        return false;
+      }
+
+      @Override
       public boolean enterSwitchStatement(SwitchStatement switchStatement) {
         print("switch (");
-        accept(switchStatement.getSwitchExpression());
+        accept(switchStatement.getExpression());
         print(") {");
         indent();
         for (SwitchCase switchCase : switchStatement.getCases()) {

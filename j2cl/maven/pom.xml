@@ -6,7 +6,7 @@
 
   <groupId>org.kie.j2cl.tools</groupId>
   <artifactId>j2cl-parent</artifactId>
-  <version>v20240622-2</version>
+  <version>v20241110-1</version>
   <packaging>pom</packaging>
 
   <name>J2CL</name>
@@ -100,9 +100,9 @@
 
     <module>javac-bootstrap-classpath</module>
 
+    <module>junit/closure-test</module>
     <module>junit/emul</module>
     <module>junit/gwttestcase</module>
-    <module>junit/closure-test</module>
     <module>junit/annotations</module>
     <module>junit/async</module>
     <module>junit/processor/unshaded-pom.xml</module>
@@ -249,9 +249,9 @@
       </dependency>
 
       <dependency>
-        <groupId>com.google.javascript</groupId>
+        <groupId>org.kie.j2cl.tools</groupId>
         <artifactId>closure-compiler-unshaded</artifactId>
-        <version>v20230411</version>
+        <version>v20241106-1</version>
         <exclusions>
           <exclusion>
             <groupId>com.google.elemental2</groupId>
@@ -273,7 +273,7 @@
       <dependency>
         <groupId>org.jspecify</groupId>
         <artifactId>jspecify</artifactId>
-        <version>0.2.0</version>
+        <version>0.3.0</version>
       </dependency>
 
       <dependency>

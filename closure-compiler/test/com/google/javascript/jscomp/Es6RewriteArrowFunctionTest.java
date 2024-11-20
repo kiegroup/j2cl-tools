@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +39,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     languageOut = LanguageMode.ECMASCRIPT3;
 
+    enableNormalize();
     enableTypeInfoValidation();
     enableTypeCheck();
     replaceTypesWithColors();
@@ -56,19 +58,42 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
     return new Es6RewriteArrowFunction(compiler);
   }
 
+  // Helper to change the generic name string "$jscomp$this$UID$0" in the expected code with
+  // actual string "$jscomp$this$m123..456$0" that will get produced
+  private Expected getActualExpected(Sources originalSources, Expected originalExpected) {
+    return expected(
+        UnitTestUtils.updateGenericVarNamesInExpectedFiles(
+            (FlatSources) originalSources,
+            originalExpected,
+            ImmutableMap.of("$jscomp$this$UID", "$jscomp$this$")));
+  }
+
+  protected void testArrowRewriting(String source, String expected) {
+    Sources originalSources = srcs(source);
+    Expected originalExpected = expected(expected);
+    Expected actualExpected = getActualExpected(originalSources, originalExpected);
+    test(originalSources, actualExpected);
+  }
+
+  protected void testArrowRewriting(
+      Externs externs, Sources originalSources, Expected originalExpected) {
+    Expected actualExpected = getActualExpected(originalSources, originalExpected);
+    test(externs, originalSources, actualExpected);
+  }
+
   @Test
   public void testAssigningArrowToVariable_BlockBody() {
-    test("var f = x => { return x+1; };", "var f = function(x) { return x+1; };");
+    testArrowRewriting("var f = x => { return x+1; };", "var f = function(x) { return x+1; };");
   }
 
   @Test
   public void testAssigningArrowToVariable_ExpressionBody() {
-    test("var f = x => x+1;", "var f = function(x) { return x+1; };");
+    testArrowRewriting("var f = x => x+1;", "var f = function(x) { return x+1; };");
   }
 
   @Test
   public void testPassingArrowToMethod_ExpressionBody() {
-    test(
+    testArrowRewriting(
         externs(
             MINIMAL_EXTERNS
                 + lines(
@@ -83,13 +108,14 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testCapturingThisInArrow_ExpressionBody() {
-    test("var f = () => this;",
-         "const $jscomp$this = this; var f = function() { return $jscomp$this; };");
+    testArrowRewriting(
+        "var f = () => this;",
+        "const $jscomp$this$UID$0 = this; var f = function() { return $jscomp$this$UID$0; };");
   }
 
   @Test
   public void testCapturingThisInArrow_BlockBody() {
-    test(
+    testArrowRewriting(
         externs(
             lines(
                 "window.init = function() { };",
@@ -100,31 +126,31 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
                 "var f = x => {", "  this.init();", "  this.doThings();", "  this.done();", "};")),
         expected(
             lines(
-                "const $jscomp$this = this;",
+                "const $jscomp$this$UID$0 = this;",
                 "var f = function(x) {",
-                "  $jscomp$this.init();",
-                "  $jscomp$this.doThings();",
-                "  $jscomp$this.done();",
+                "  $jscomp$this$UID$0.init();",
+                "  $jscomp$this$UID$0.doThings();",
+                "  $jscomp$this$UID$0.done();",
                 "};")));
   }
 
   @Test
   public void testCapturingThisInArrowPlacesAliasAboveContainingStatement() {
-    // We use `switch` here becuse it's a very complex kind of statement.
-    test(
+    // We use `switch` here because it's a very complex kind of statement.
+    testArrowRewriting(
         "switch(a) { case b: (() => { this; })(); }",
         lines(
-            "const $jscomp$this = this;",
+            "const $jscomp$this$UID$0 = this;",
             "switch(a) {",
             "  case b:",
-            "    (function() { $jscomp$this; })();",
+            "    (function() { $jscomp$this$UID$0; })();",
             "}"));
   }
 
   @Test
   public void testCapturingThisInMultipleArrowsPlacesOneAliasAboveContainingStatement() {
-    // We use `switch` here becuse it's a very complex kind of statement.
-    test(
+    // We use `switch` here because it's a very complex kind of statement.
+    testArrowRewriting(
         lines(
             "switch(a) {",
             "  case b:",
@@ -133,19 +159,19 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "    (() => { this; })();",
             "}"),
         lines(
-            "const $jscomp$this = this;",
+            "const $jscomp$this$UID$0 = this;",
             "switch(a) {",
             "  case b:",
-            "    (function() { $jscomp$this; })();",
+            "    (function() { $jscomp$this$UID$0; })();",
             "  case c:",
-            "    (function() { $jscomp$this; })();",
+            "    (function() { $jscomp$this$UID$0; })();",
             "}"));
   }
 
   @Test
   public void testCapturingThisInMultipleArrowsPlacesOneAliasAboveAllContainingStatements() {
-    // We use `switch` here becuse it's a very complex kind of statement.
-    test(
+    // We use `switch` here because it's a very complex kind of statement.
+    testArrowRewriting(
         lines(
             "switch(a) {",
             "  case b:",
@@ -156,35 +182,32 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "    (() => { this; })();",
             "}"),
         lines(
-            "const $jscomp$this = this;",
+            "const $jscomp$this$UID$0 = this;",
             "switch(a) {",
             "  case b:",
-            "    (function() { $jscomp$this; })();",
+            "    (function() { $jscomp$this$UID$0; })();",
             "}",
             "switch (c) {",
             "  case d:",
-            "    (function() { $jscomp$this; })();",
+            "    (function() { $jscomp$this$UID$0; })();",
             "}"));
   }
 
   @Test
   public void testCapturingEnclosingFunctionArgumentsInArrow() {
-    test(
+    testArrowRewriting(
+        lines("function f() {", "  var x = () => arguments;", "}"),
         lines(
             "function f() {",
-            "  var x = () => arguments;",
-            "}"),
-        lines(
-            "function f() {",
-            "  const $jscomp$arguments = arguments;",
-            "  var x = function() { return $jscomp$arguments; };",
+            "  const $jscomp$arguments$m1146332801$1 = arguments;",
+            "  var x = function() { return $jscomp$arguments$m1146332801$1; };",
             "}"));
   }
 
   @Test
   public void testAssigningArrowToObjectLiteralField_ExpressionBody() {
-    test("var obj = { f: () => 'bar' };",
-         "var obj = { f: function() { return 'bar'; } };");
+    testArrowRewriting(
+        "var obj = { f: () => 'bar' };", "var obj = { f: function() { return 'bar'; } };");
   }
 
   @Test
@@ -195,7 +218,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
     disableTypeInfoValidation();
     disableTypeCheck();
 
-    test(
+    testArrowRewriting(
         lines(
             "class C {",
             "  constructor() {",
@@ -217,8 +240,8 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "  }",
             "",
             "  init() {",
-            "    const $jscomp$this = this;",
-            "    document.onclick = function() {return $jscomp$this.logClick()}",
+            "    const $jscomp$this$UID$2 = this;",
+            "    document.onclick = function() {return $jscomp$this$UID$2.logClick()}",
             "  }",
             "",
             "  logClick() {",
@@ -235,7 +258,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
     disableTypeInfoValidation();
     disableTypeCheck();
 
-    test(
+    testArrowRewriting(
         lines(
             "class B {",
             "  constructor(x) {",
@@ -258,13 +281,13 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "  }",
             "}",
             "class C extends B {",
-            "  constructor(x, y) {",
+            "  constructor(x$jscomp$1, y) {",
             "    console.log('statement before super');",
-            "    super(x);",
-            "    const $jscomp$this = this;", // Must not use `this` before super() call.
-            "    this.wrappedXGetter = function() { return $jscomp$this.x; };",
+            "    super(x$jscomp$1);",
+            "    const $jscomp$this$UID$2 = this;", // Must not use `this` before super() call.
+            "    this.wrappedXGetter = function() { return $jscomp$this$UID$2.x; };",
             "    this.y = y;",
-            "    this.wrappedYGetter = function() { return $jscomp$this.y; };",
+            "    this.wrappedYGetter = function() { return $jscomp$this$UID$2.y; };",
             "  }",
             "}"));
   }
@@ -277,7 +300,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
     disableTypeInfoValidation();
     disableTypeCheck();
 
-    test(
+    testArrowRewriting(
         lines(
             "class B {",
             "  constructor(x) {",
@@ -303,41 +326,42 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "  }",
             "}",
             "class C extends B {",
-            "  constructor(x, y) {",
-            "    if (x < 1) {",
-            "      super(x);",
+            "  constructor(x$jscomp$1, y) {",
+            "    if (x$jscomp$1 < 1) {",
+            "      super(x$jscomp$1);",
             "    } else {",
-            "      super(-x);",
+            "      super(-x$jscomp$1);",
             "    }",
-            "    const $jscomp$this = this;", // Must not use `this` before super() call.
-            "    this.wrappedXGetter = function() { return $jscomp$this.x; };",
+            "    const $jscomp$this$UID$2 = this;", // Must not use `this` before super() call.
+            "    this.wrappedXGetter = function() { return $jscomp$this$UID$2.x; };",
             "    this.y = y;",
-            "    this.wrappedYGetter = function() { return $jscomp$this.y; };",
+            "    this.wrappedYGetter = function() { return $jscomp$this$UID$2.y; };",
             "  }",
             "}"));
   }
 
   @Test
   public void testMultipleArrowsInSameFreeScope() {
-    test(
+    testArrowRewriting(
         "var a1 = x => x+1; var a2 = x => x-1;",
-        "var a1 = function(x) { return x+1; }; var a2 = function(x) { return x-1; };");
+        "var a1 = function(x) { return x+1; }; var a2 = function(x$jscomp$1) { return x$jscomp$1-1;"
+            + " };");
   }
 
   @Test
   public void testMultipleArrowsInSameFunctionScope() {
-    test(
+    testArrowRewriting(
         "function f() { var a1 = x => x+1; var a2 = x => x-1; }",
         lines(
             "function f() {",
             "  var a1 = function(x) { return x+1; };",
-            "  var a2 = function(x) { return x-1; };",
+            "  var a2 = function(x$jscomp$1) { return x$jscomp$1-1; };",
             "}"));
   }
 
   @Test
   public void testCapturingThisInMultipleArrowsInSameFunctionScope() {
-    test(
+    testArrowRewriting(
         lines(
             "({",
             "  x: 0,",
@@ -352,16 +376,42 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "  x: 0,",
             "  y: 'a',",
             "  f: function() {",
-            "    const $jscomp$this = this;",
-            "    var a1 = function() { return $jscomp$this.x; };",
-            "    var a2 = function() { return $jscomp$this.y; };",
+            "    const $jscomp$this$UID$1 = this;",
+            "    var a1 = function() { return $jscomp$this$UID$1.x; };",
+            "    var a2 = function() { return $jscomp$this$UID$1.y; };",
+            "  },",
+            "})"));
+  }
+
+  @Test
+  public void testGeneratedVariableDeclarations_placedAfterFunctionDeclarations() {
+    testArrowRewriting(
+        lines(
+            "({",
+            "  x: 0,",
+            "  y: 'a',",
+            "  f: function() {",
+            "    function foo() { this.x;}",
+            "    var a2 = () => this.y;",
+            "  },",
+            "})"),
+        lines(
+            "({",
+            "  x: 0,",
+            "  y: 'a',",
+            "  f: function() {",
+            // stays hoisted
+            "    function foo() { this.x; }",
+            // variable declarations placed after function declarations
+            "    const $jscomp$this$UID$1 = this;",
+            "    var a2 = function() { return $jscomp$this$UID$1.y; };",
             "  },",
             "})"));
   }
 
   @Test
   public void testPassingMultipleArrowsInSameFreeScopeAsMethodParams() {
-    test(
+    testArrowRewriting(
         externs(
             MINIMAL_EXTERNS
                 + lines(
@@ -375,12 +425,13 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
         expected(
             lines(
                 "var a = [1,2,3,4];",
-                "var b = a.map(function(x) { return x+1; }).map(function(x) { return x*x; });")));
+                "var b = a.map(function(x) { return x+1; }).map(function(x$jscomp$1) { return"
+                    + " x$jscomp$1*x$jscomp$1; });")));
   }
 
   @Test
   public void testMultipleArrowsInSameFunctionScopeAsMethodParams() {
-    test(
+    testArrowRewriting(
         externs(
             MINIMAL_EXTERNS
                 + lines(
@@ -400,13 +451,14 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             lines(
                 "function f() {",
                 "  var a = [1,2,3,4];",
-                "  var b = a.map(function(x) { return x+1; }).map(function(x) { return x*x; });",
+                "  var b = a.map(function(x) { return x+1; }).map(function(x$jscomp$1) { return"
+                    + " x$jscomp$1*x$jscomp$1; });",
                 "}")));
   }
 
   @Test
   public void testCapturingThisInArrowFromNestedScopes() {
-    test(
+    testArrowRewriting(
         lines(
             "var outer = {",
             "  x: null,",
@@ -427,14 +479,14 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "  x: null,",
             "",
             "  f: function() {",
-            "     const $jscomp$this = this;",
-            "     var a1 = function() { return $jscomp$this.x; }",
+            "     const $jscomp$this$UID$1 = this;",
+            "     var a1 = function() { return $jscomp$this$UID$1.x; }",
             "     var inner = {",
             "       y: null,",
             "",
             "       f: function() {",
-            "         const $jscomp$this = this;",
-            "         var a2 = function() { return $jscomp$this.y; }",
+            "         const $jscomp$this$UID$2 = this;",
+            "         var a2 = function() { return $jscomp$this$UID$2.y; }",
             "       }",
             "     };",
             "  }",
@@ -443,7 +495,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testCapturingThisInArrowWithNestedConstructor() {
-    test(
+    testArrowRewriting(
         lines(
             "({",
             "  f: null,",
@@ -462,12 +514,12 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "  f: null,",
             "",
             "  g: function() {",
-            "    const $jscomp$this = this;",
+            "    const $jscomp$this$UID$1 = this;",
             "    var setup = function() {",
             "      /** @constructor */",
             "      function Foo() { this.x = 5; }",
             "",
-            "      $jscomp$this.f = new Foo;",
+            "      $jscomp$this$UID$1.f = new Foo;",
             "    };",
             "  },",
             "})"));
@@ -475,7 +527,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testNestingArrow() {
-    test(
+    testArrowRewriting(
         externs(""),
         srcs("var f = x =>\n y => x+y;"),
         expected("var f = function(x) {return function(y) { return x+y; }; };"));
@@ -483,15 +535,15 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   @Test
   public void testNestingArrowsCapturingThis() {
-    test(
+    testArrowRewriting(
         externs("window.foo = function() { };"),
         srcs("var f = (x => { var g = (y => { this.foo(); }) });"),
         expected(
             lines(
-                "const $jscomp$this = this;",
+                "const $jscomp$this$UID$0 = this;",
                 "var f = function(x) {",
                 "  var g = function(y) {",
-                "    $jscomp$this.foo();",
+                "    $jscomp$this$UID$0.foo();",
                 "  }",
                 "}")));
   }

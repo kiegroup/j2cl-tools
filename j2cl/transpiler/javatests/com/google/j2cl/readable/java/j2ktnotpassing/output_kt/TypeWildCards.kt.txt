@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,11 +13,13 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package j2ktnotpassing
 
 import javaemul.lang.*
+import kotlin.Any
 import kotlin.OptIn
 import kotlin.Suppress
 import kotlin.experimental.ExperimentalObjCName
@@ -34,7 +35,7 @@ open class TypeWildCards {
   fun <T: TypeWildCards.Observable<*>?> testObservableParameterized(
    @ObjCName("withJ2ktnotpassingTypeWildCards_Observable") observable: T
   ) {
-   observable!!.addObserver(TypeWildCards.Observer { e ->
+   (observable as TypeWildCards.Observable<Any?>?)!!.addObserver(TypeWildCards.Observer { e /* capture#1-of * */ ->
    })
   }
 
@@ -43,11 +44,12 @@ open class TypeWildCards {
   fun testRecursiveObservable(
    @ObjCName("withJ2ktnotpassingTypeWildCards_RecursiveObservable") observable: TypeWildCards.RecursiveObservable<*>?
   ) {
-   observable!!.addObserver(TypeWildCards.Observer { e ->
+   (observable as TypeWildCards.RecursiveObservable<TypeWildCards.RecursiveObservable<E>?>?)!!.addObserver(TypeWildCards.Observer { e /* capture#2-of out TypeWildCards.RecursiveObservable<*>? */ ->
    })
   }
  }
 
+ @ObjCName("J2ktJ2ktnotpassingTypeWildCards_Observer", exact = true)
  fun interface Observer<E> {
   @ObjCName("on")
   fun on(
@@ -55,6 +57,7 @@ open class TypeWildCards {
   )
  }
 
+ @ObjCName("J2ktJ2ktnotpassingTypeWildCards_Observable", exact = true)
  fun interface Observable<E> {
   @ObjCName("addObserver")
   fun addObserver(
@@ -62,6 +65,7 @@ open class TypeWildCards {
   )
  }
 
+ @ObjCName("J2ktJ2ktnotpassingTypeWildCards_RecursiveObservable", exact = true)
  fun interface RecursiveObservable<E: TypeWildCards.RecursiveObservable<E>?> {
   @ObjCName("addObserver")
   fun addObserver(

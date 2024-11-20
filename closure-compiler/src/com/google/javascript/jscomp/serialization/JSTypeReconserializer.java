@@ -31,6 +31,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.InvalidatingTypes;
+import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -42,11 +43,10 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.function.Predicate;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Takes {@link JSType}s produced by JSCompiler's typechecker and deduplicates and serializes them
@@ -69,7 +69,8 @@ final class JSTypeReconserializer {
   private final SeenTypeRecord unknownRecord;
   private final SeenTypeRecord topObjectRecord;
 
-  private final IdentityHashMap<JSType, SeenTypeRecord> typeToRecordCache = new IdentityHashMap<>();
+  private final LinkedIdentityHashMap<JSType, SeenTypeRecord> typeToRecordCache =
+      new LinkedIdentityHashMap<>();
   private final LinkedHashMap<ColorId, SeenTypeRecord> seenTypeRecords = new LinkedHashMap<>();
   private final SetMultimap<Integer, Integer> disambiguateEdges = LinkedHashMultimap.create();
 
@@ -232,7 +233,7 @@ final class JSTypeReconserializer {
 
     if (record.unionMembers == null) {
       record.unionMembers = ImmutableSet.copyOf(altRecords);
-    } else if (this.serializationMode.runValidation()) {
+    } else if (this.serializationMode.getRunValidation()) {
       checkState(
           altRecords.equals(record.unionMembers),
           "Unions with same ID must have same members: %s => %s == %s",
@@ -338,7 +339,7 @@ final class JSTypeReconserializer {
 
       isInvalidating |= this.invalidatingTypes.isInvalidating(objType);
 
-      /**
+      /*
        * To support legacy code, property disambiguation never renames properties of enums (e.g. 'A'
        * in '/** @enum * / const E = {A: 0}`). In theory this would be safe to remove if we clean up
        * code depending on the lack of renaming
@@ -409,7 +410,7 @@ final class JSTypeReconserializer {
 
   /** Checks that this instance is in a valid state. */
   private void checkValidLinearTime() {
-    if (!this.serializationMode.runValidation()) {
+    if (!this.serializationMode.getRunValidation()) {
       return;
     }
 
@@ -439,7 +440,7 @@ final class JSTypeReconserializer {
 
     TypePool.Builder builder = TypePool.newBuilder();
 
-    if (this.serializationMode.includeDebugInfo()) {
+    if (this.serializationMode.getIncludeDebugInfo()) {
       TypePool.DebugInfo.Builder debugInfo = builder.getDebugInfoBuilder();
       this.invalidatingTypes
           .getMismatchLocations()

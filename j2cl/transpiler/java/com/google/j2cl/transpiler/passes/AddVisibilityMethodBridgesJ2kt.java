@@ -41,33 +41,48 @@ public class AddVisibilityMethodBridgesJ2kt extends NormalizationPass {
     for (Method method : type.getMethods()) {
       MethodDescriptor methodDescriptor = method.getDescriptor();
       if (AstUtils.needsVisibilityBridge(methodDescriptor)) {
+        // This is the case of a package private method that became public or protected in this
+        // class and it only needs to be considered override if at the same time the class
+        // implements an interface which this method overrides.
+        if (methodDescriptor.getJavaOverriddenMethodDescriptors().stream()
+            .allMatch(it -> !it.getEnclosingTypeDescriptor().isInterface())) {
+          method.setForcedJavaOverride(false);
+        }
+
         type.addMember(createBridgeMethod(type, methodDescriptor));
       }
     }
   }
 
   private static Method createBridgeMethod(Type type, MethodDescriptor targetMethod) {
-    MethodDescriptor originMethod =
+    MethodDescriptor overriddenMethod =
         targetMethod.getJavaOverriddenMethodDescriptors().stream()
             .filter(md -> md.getVisibility().isPackagePrivate())
             .findFirst()
             .orElseThrow();
 
     List<Variable> parameters =
-        AstUtils.createParameterVariables(originMethod.getParameterTypeDescriptors());
+        AstUtils.createParameterVariables(overriddenMethod.getParameterTypeDescriptors());
 
     ImmutableList<Expression> arguments =
         parameters.stream().map(Variable::createReference).collect(toImmutableList());
 
     return Method.newBuilder()
         .setMethodDescriptor(
-            MethodDescriptor.Builder.from(originMethod)
+            MethodDescriptor.Builder.from(overriddenMethod)
                 .makeDeclaration()
                 .setEnclosingTypeDescriptor(type.getTypeDescriptor())
+                // Use the parameter and return types from the target methods since it might have
+                // been specialized;
+                .setParameterDescriptors(targetMethod.getParameterDescriptors())
+                .setReturnTypeDescriptor(targetMethod.getReturnTypeDescriptor())
+                // and carry over the type parameters since the parameter or return type might
+                // depend on them.
+                .setTypeParameterTypeDescriptors(targetMethod.getTypeParameterTypeDescriptors())
                 .setNative(false)
                 .setAbstract(false)
                 .setOriginalJsInfo(JsInfo.NONE)
-                .makeBridge(MethodOrigin.GENERALIZING_BRIDGE, originMethod, targetMethod)
+                .makeBridge(MethodOrigin.GENERALIZING_BRIDGE, overriddenMethod, targetMethod)
                 .build())
         .setParameters(parameters)
         .addStatements(

@@ -34,7 +34,7 @@ import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Converts ES6 classes to valid ES5 or ES3 code. */
 public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPass {
@@ -63,7 +63,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
 
   @Override
   public void process(Node externs, Node root) {
-    // TODO(b/171853310): This tranpilation should be turned off in externs
+    // TODO(b/171853310): This transpilation should be turned off in externs
     TranspilationPasses.processTranspile(compiler, externs, features, this);
     TranspilationPasses.processTranspile(compiler, root, features, this);
     // Super constructor calls are done all at once as a separate step largely for historical
@@ -71,9 +71,11 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
     // have an invalid AST state between passes.
     // TODO(bradfordcsmith): It would probably be more readable and efficient to merge the super
     //     constructor rewriting logic into this class.
+    // The code here only creates the GlobalNamespace object which is very cheap. The expensive
+    // building of global namespace happens inside es6ConvertSuperConstructorCalls pass.
     convertSuperConstructorCalls.setGlobalNamespace(new GlobalNamespace(compiler, externs, root));
-    TranspilationPasses.processTranspile(compiler, root, features, convertSuperConstructorCalls);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, features);
+    NodeTraversal.traverse(compiler, root, convertSuperConstructorCalls);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, features);
   }
 
   @Override
@@ -256,7 +258,9 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
         this.transpilationNamespace, "Object.defineProperty");
   }
 
-  /** @param member A getter or setter */
+  /**
+   * @param member A getter or setter
+   */
   private void addToDefinePropertiesObject(ClassDeclarationMetadata metadata, Node member) {
     Preconditions.checkArgument(!member.isComputedProp());
     Node obj =
@@ -614,14 +618,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
     public static Builder builder() {
       return new AutoValue_Es6RewriteClass_ClassDeclarationMetadata.Builder()
           .setClassMembersToDeclare(new LinkedHashMap<>());
-    }
-
-    /**
-     * Creates an instance for a class statement or a class expression in a simple assignment or var
-     * statement with a qualified name. In any other case, returns null.
-     */
-    static @Nullable ClassDeclarationMetadata create(Node classNode, Node parent) {
-      return create(classNode, parent, AstFactory.createFactoryWithoutTypes());
     }
 
     private static @Nullable ClassDeclarationMetadata create(

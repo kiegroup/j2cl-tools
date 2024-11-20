@@ -19,12 +19,12 @@
   >
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.kie.j2cl.tools</groupId>
+  <groupId>com.vertispan.javascript</groupId>
   <artifactId>closure-compiler-unshaded</artifactId>
   <packaging>jar</packaging>
 
   <name>Closure Compiler Unshaded</name>
-  <version>0.3-SNAPSHOT</version>
+  <version>1.0-SNAPSHOT</version>
 
   <url>https://developers.google.com/closure/compiler/</url>
   <description>
@@ -38,11 +38,21 @@
   <inceptionYear>2009</inceptionYear>
 
   <parent>
-    <groupId>org.kie.j2cl.tools</groupId>
+    <groupId>com.vertispan.javascript</groupId>
     <artifactId>closure-compiler-main</artifactId>
     <version>0.3-SNAPSHOT</version>
     <relativePath>closure-compiler-main.pom.xml</relativePath>
   </parent>
+
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>A business-friendly OSS license</comments>
+    </license>
+  </licenses>
+
   <dependencies>
 {dependencies}
   </dependencies>

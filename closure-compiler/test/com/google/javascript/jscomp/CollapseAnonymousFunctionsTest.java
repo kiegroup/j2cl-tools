@@ -16,21 +16,19 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
+import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link CollapseAnonymousFunctions}
- *
- */
+/** Tests for {@link CollapseAnonymousFunctions} */
 @RunWith(JUnit4.class)
 public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
     this.enableNormalize();
   }
 
@@ -45,34 +43,69 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSeparateDeclarationAndInitilization_unchanged() {
+    testSame("var f; f = function(){}");
+  }
+
+  @Test
   public void testLocalScope1() {
-    test("function f(){ var x = function(){}; x() }",
-         "function f(){ function x(){} x() }");
+    test("function f(){ var x = function(){}; x() }", "function f(){ function x(){} x() }");
   }
 
   @Test
   public void testLocalScope2() {
-    test("function f(){ var x = function(){}; return x }",
-         "function f(){ function x(){} return x }");
+    test(
+        "function f(){ var x = function(){}; return x }",
+        "function f(){ function x(){} return x }");
   }
 
   @Test
   public void testLet() {
-    test(
-        "let f = function() {};",
-        "function f() {}");
+    test("let f = function() {};", "function f() {}");
+    Node fnName = getLastCompiler().getJsRoot().getFirstFirstChild().getFirstChild();
+    checkState(fnName.isName());
+    checkState(fnName.getString().equals("f"));
+    // The function name `f` is not marked as IS_CONSTANT_NAME property as LHS declaration is
+    // `let`.
+    checkState(!fnName.getBooleanProp(Node.IS_CONSTANT_NAME));
+
+    // The function name `f` and call name `f` are not marked as IS_CONSTANT_NAME property as LHS
+    // declaration is `let`
+    test("let f = function() {}; f();", "function f(){} f();");
+    fnName = getLastCompiler().getJsRoot().getFirstFirstChild().getFirstChild();
+    checkState(fnName.isName());
+    checkState(fnName.getString().equals("f"));
+    checkState(!fnName.getBooleanProp(Node.IS_CONSTANT_NAME));
+    Node calledFnName = fnName.getParent().getNext().getFirstFirstChild();
+    checkState(calledFnName.isName());
+    checkState(calledFnName.getString().equals("f"));
+    checkState(!calledFnName.getBooleanProp(Node.IS_CONSTANT_NAME));
   }
 
   @Test
   public void testConst() {
-    test(
-        "let f = function() {};",
-        "function f() {}");
+    // The function name `f` gets marked as IS_CONSTANT_NAME property as LHS declaration is `const`.
+    test("const f = function() {};", "function f() {}");
+    Node fnName = getLastCompiler().getJsRoot().getFirstFirstChild().getFirstChild();
+    checkState(fnName.isName());
+    checkState(fnName.getString().equals("f"));
+    checkState(fnName.getBooleanProp(Node.IS_CONSTANT_NAME));
+
+    // The function name `f` and call name `f` stays marked as IS_CONSTANT_NAME property
+    test("const f = function() {}; f();", "function f(){} f();");
+    fnName = getLastCompiler().getJsRoot().getFirstFirstChild().getFirstChild();
+    checkState(fnName.isName());
+    checkState(fnName.getString().equals("f"));
+    checkState(fnName.getBooleanProp(Node.IS_CONSTANT_NAME));
+    Node calledFnName = fnName.getParent().getNext().getFirstFirstChild();
+    checkState(calledFnName.isName());
+    checkState(calledFnName.getString().equals("f"));
+    checkState(calledFnName.getBooleanProp(Node.IS_CONSTANT_NAME));
   }
 
   @Test
   public void testArrow() {
-    testSame("function f() { var g = () => this; }");
+    testSame("function f() { var g = () => { return this; }; }");
     // It would be safe to collapse this one because it doesn't reference 'this' or 'arguments'
     // but (at least for now) we don't.
     testSame("let f = () => { console.log(0); };");
@@ -80,11 +113,11 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testDestructuring() {
-    testSame("var {name} = function() {};");
+    testSame("var name; ({name} = function() {});");
     testSame("let {name} = function() {};");
     testSame("const {name} = function() {};");
 
-    testSame("var [x] = function() {};");
+    test("var [x] = function() {};", "var x; [x] = function() {};");
     testSame("let [x] = function() {};");
     testSame("const [x] = function() {};");
   }
@@ -131,44 +164,46 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testMultipleVar2() {
-    test("var f = function(){}; var g = f; var h = function(){}",
-         "function f(){}var g = f;function h(){}");
+    test(
+        "var f = function(){}; var g = f; var h = function(){}",
+        "function f(){}var g = f;function h(){}");
   }
 
   @Test
   public void testBothScopes() {
-    test("var x = function() { var y = function(){} }",
-         "function x() { function y(){} }");
+    test("var x = function() { var y = function(){} }", "function x() { function y(){} }");
   }
 
   @Test
   public void testLocalScopeOnly1() {
-    test("if (x) var f = function(){ var g = function(){} }",
-         "if (x) var f = function(){ function g(){} }");
+    test(
+        "if (x) var f = function(){ var g = function(){} }",
+        "if (x) var f = function(){ function g(){} }");
   }
 
   @Test
   public void testLocalScopeOnly2() {
-    test("if (x) var f = function(){ var g = function(){} };",
-         "if (x) var f = function(){ function g(){} }");
+    test(
+        "if (x) var f = function(){ var g = function(){} };",
+        "if (x) var f = function(){ function g(){} }");
   }
 
   @Test
   public void testLocalScopeOnly3() {
-    test("if (x){ var f = function(){ var g = function(){} };}",
-         "if (x){ var f = function(){ function g(){} }}");
+    test(
+        "if (x){ var f = function(){ var g = function(){} };}",
+        "if (x){ var f = function(){ function g(){} }}");
   }
 
   @Test
   public void testReturn() {
-    test("var f = function(x){return 2*x}; var g = f(2);",
-         "function f(x){return 2*x} var g = f(2)");
+    test(
+        "var f = function(x){return 2*x}; var g = f(2);", "function f(x){return 2*x} var g = f(2)");
   }
 
   @Test
   public void testAlert() {
-    test("var x = 1; var f = function(){alert(x)};",
-         "var x = 1; function f(){alert(x)}");
+    test("var x = 1; var f = function(){alert(x)};", "var x = 1; function f(){alert(x)}");
   }
 
   @Test
@@ -183,20 +218,19 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testRecursiveExternal1() {
-    test("var f = function foo() { f() }",
-         "function f() { f() }");
+    test("var f = function foo() { f() }", "function f() { f() }");
   }
 
   @Test
   public void testRecursiveExternal2() {
-    test("var f = function foo() { function g(){f()} g() }",
-         "function f() { function g(){f()} g() }");
+    test(
+        "var f = function foo() { function g(){f()} g() }",
+        "function f() { function g(){f()} g() }");
   }
 
   @Test
   public void testConstantFunction1() {
-    test("var FOO = function(){};FOO()",
-         "function FOO(){}FOO()");
+    test("var FOO = function(){};FOO()", "function FOO(){}FOO()");
   }
 
   @Test

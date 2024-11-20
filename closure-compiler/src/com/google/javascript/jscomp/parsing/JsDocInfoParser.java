@@ -38,10 +38,10 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.TokenUtil;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 // TODO(nicksantos): Unify all the JSDocInfo stuff into one package, instead of
 // spreading it across multiple packages.
@@ -54,16 +54,20 @@ public final class JsDocInfoParser {
   private static final String TTL_END_DELIMITER = "=:";
 
   private static final CharMatcher TEMPLATE_NAME_MATCHER =
-      CharMatcher.javaLetterOrDigit().or(CharMatcher.is('_'));
+      CharMatcher.javaLetterOrDigit().or(CharMatcher.anyOf("_$"));
 
   @VisibleForTesting
   public static final String BAD_TYPE_WIKI_LINK =
       " See https://github.com/google/closure-compiler/wiki/Annotating-JavaScript-for-the-Closure-Compiler"
           + " for more information.";
 
+  private static final String TSICKLE_MISSING_TYPE_PLACEHOLDER =
+      "JsDocInfoParser_TsickleMode_MissingSupertypePlaceholder";
+
   private final JsDocTokenStream stream;
   private final JSDocInfo.Builder jsdocBuilder;
   private final ErrorReporter errorReporter;
+  private final JsDocSourceKind jsDocSourceKind;
 
   // Use a template node for properties set on all nodes to minimize the
   // memory footprint associated with these (similar to IRFactory).
@@ -158,12 +162,19 @@ public final class JsDocInfoParser {
     NEXT_IS_ANNOTATION
   }
 
+  /** How to handle unexpected JSDoc format */
+  public enum JsDocSourceKind {
+    NORMAL, // classic Closure Compiler
+    TSICKLE // make some extra allowances for tsickle-generated JSDoc
+  }
+
   public JsDocInfoParser(
       JsDocTokenStream stream,
       String comment,
       int commentPosition,
       @Nullable Node templateNode,
       Config config,
+      JsDocSourceKind jsDocSourceKind,
       ErrorReporter errorReporter) {
     this.stream = stream;
 
@@ -180,6 +191,7 @@ public final class JsDocInfoParser {
     this.suppressionNames = config.suppressionNames();
     this.closurePrimitiveNames = config.closurePrimitiveNames();
     this.preserveWhitespace = config.jsDocParsingMode().shouldPreserveWhitespace();
+    this.jsDocSourceKind = jsDocSourceKind;
 
     this.errorReporter = errorReporter;
     this.templateNode = templateNode == null ? IR.script() : templateNode;
@@ -251,7 +263,13 @@ public final class JsDocInfoParser {
             .setClosurePrimitiveNames(ImmutableSet.of("testPrimitive"))
             .build();
     return new JsDocInfoParser(
-        new JsDocTokenStream(toParse), toParse, 0, null, config, ErrorReporter.NULL_INSTANCE);
+        new JsDocTokenStream(toParse),
+        toParse,
+        0,
+        null,
+        config,
+        JsDocSourceKind.NORMAL,
+        ErrorReporter.NULL_INSTANCE);
   }
 
   /**
@@ -593,6 +611,12 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case NO_COVERAGE:
+          if (!jsdocBuilder.recordNoCoverage()) {
+            addParserWarning(Msg.JSDOC_NOCOVERAGE);
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case TYPE_SUMMARY:
           if (!jsdocBuilder.recordTypeSummary()) {
             addParserWarning(Msg.JSDOC_TYPESUMMARY);
@@ -719,9 +743,21 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case REQUIRE_INLINING:
+          if (!jsdocBuilder.recordRequireInlining()) {
+            addParserWarning(Msg.JSDOC_REQUIRE_INLINING);
+          }
+          if (jsdocBuilder.isNoInline()) {
+            addParserWarning(Msg.JSDOC_INCOMPAT_INLINING);
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case NO_INLINE:
           if (!jsdocBuilder.recordNoInline()) {
             addParserWarning(Msg.JSDOC_NOINLINE);
+          }
+          if (jsdocBuilder.isRequireInlining()) {
+            addParserWarning(Msg.JSDOC_INCOMPAT_INLINING);
           }
           return eatUntilEOLIfNotAnnotation();
 
@@ -790,6 +826,25 @@ public final class JsDocInfoParser {
             addParserWarning(Msg.JSDOC_MIXINFUNCTION_EXTRA);
           } else {
             jsdocBuilder.recordMixinFunction();
+          }
+          return eatUntilEOLIfNotAnnotation();
+
+        case SASS_GENERATED_CSS_TS:
+          if (jsdocBuilder.isSassGeneratedCssTsRecorded()) {
+            addParserWarning(Msg.JSDOC_SASS_GENERATED_CSS_TS);
+          } else {
+            jsdocBuilder.recordSassGeneratedCssTs();
+          }
+          return eatUntilEOLIfNotAnnotation();
+
+        case CLOSURE_UNAWARE_CODE:
+          if (!jsdocBuilder.recordClosureUnawareCode()) {
+            addParserWarning(Msg.JSDOC_CLOSURE_UNAWARE_CODE_EXTRA);
+          } else {
+            // This warning that is always reported is translated into an off-by-default error,
+            // and that is conditionally elevated into a build-blocking error using the relevant
+            // DiagnosticGroup flags.
+            addParserWarning(Msg.JSDOC_CLOSURE_UNAWARE_CODE_INVALID);
           }
           return eatUntilEOLIfNotAnnotation();
 
@@ -1037,6 +1092,7 @@ public final class JsDocInfoParser {
         case JSX_FRAGMENT:
         case SOY_MODULE:
         case SOY_TEMPLATE:
+        case WIZ_ANALYZER:
           return eatUntilEOLIfNotAnnotation();
         case WIZACTION:
           if (!jsdocBuilder.recordWizaction()) {
@@ -1264,7 +1320,10 @@ public final class JsDocInfoParser {
     return ttlParser.getTypeTransformationAst();
   }
 
-  /** The types in @template annotations must contain only letters, digits, and underscores. */
+  /**
+   * The types in @template annotations must contain only letters, digits, underscores and dollar
+   * signs.
+   */
   private static boolean validTemplateTypeName(String name) {
     return name != null && !name.isEmpty() && TEMPLATE_NAME_MATCHER.matchesAllOf(name);
   }
@@ -1285,6 +1344,23 @@ public final class JsDocInfoParser {
   }
 
   private void checkExtendedTypes(List<ExtendedTypeInfo> extendedTypes) {
+    if (extendedTypes.size() > 1) {
+      // Multiple extends is always ok for an interface.
+      boolean isInterface = jsdocBuilder.isInterfaceRecorded();
+      // Normally having multiple extended types is an error for a non-interface, but in TSICKLE
+      // mode, we instead record there being a single @extends with a placeholder name. This
+      // works around some weirdness with TypeScript allowing extending classes.
+      boolean isFromTsickle = this.jsDocSourceKind.equals(JsDocSourceKind.TSICKLE);
+      if (!isInterface && isFromTsickle) {
+        boolean result =
+            jsdocBuilder.recordBaseType(
+                createJSTypeExpression(
+                    wrapNode(Token.BANG, newStringNode(TSICKLE_MISSING_TYPE_PLACEHOLDER))
+                        .srcrefTree(extendedTypes.get(0).type.getRoot())));
+        checkState(result, "Unexpected failure to record base type");
+        return;
+      }
+    }
     for (ExtendedTypeInfo typeInfo : extendedTypes) {
       // If interface, record the multiple extended interfaces
       if (jsdocBuilder.isInterfaceRecorded()) {
@@ -1309,7 +1385,7 @@ public final class JsDocInfoParser {
       addParserWarning(Msg.JSDOC_SUPPRESS);
       return token;
     } else {
-      Set<String> suppressions = new HashSet<>();
+      Set<String> suppressions = new LinkedHashSet<>();
       while (true) {
         if (match(JsDocToken.STRING)) {
           String name = stream.getString();
@@ -1412,7 +1488,7 @@ public final class JsDocInfoParser {
    */
   private JsDocToken parseModifiesTag(JsDocToken token) {
     if (token == JsDocToken.LEFT_CURLY) {
-      Set<String> modifies = new HashSet<>();
+      Set<String> modifies = new LinkedHashSet<>();
       while (true) {
         if (match(JsDocToken.STRING)) {
           String name = stream.getString();
@@ -2524,7 +2600,7 @@ public final class JsDocInfoParser {
   private @Nullable Node parseFieldTypeList(JsDocToken token) {
     Node fieldTypeList = newNode(Token.LB);
 
-    Set<String> names = new HashSet<>();
+    Set<String> names = new LinkedHashSet<>();
 
     do {
       Node fieldType = parseFieldType(token);

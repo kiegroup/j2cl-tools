@@ -34,14 +34,14 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.SideEffectFlags;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * ReplaceMessages replaces user-visible messages with alternatives. It uses Google specific
@@ -336,7 +336,7 @@ public final class ReplaceMessages {
   class ReplacementCompletionPass implements CompilerPass {
     // Keep track of which messages actually got translated, so we know what do do when we
     // see a message fallback call.
-    final Set<String> translatedMsgKeys = new HashSet<>();
+    final Set<String> translatedMsgKeys = new LinkedHashSet<>();
 
     @Override
     public void process(Node externs, Node root) {

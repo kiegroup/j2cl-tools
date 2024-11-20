@@ -81,7 +81,7 @@ public class AstAnalyzer {
   /**
    * Returns true if the node may create new mutable state, or change existing state.
    *
-   * @see <a href="http://www.xkcd.org/326/">XKCD Cartoon</a>
+   * @see <a href="http://www.xkcd.com/326/">XKCD Cartoon</a>
    */
   boolean mayEffectMutableState(Node n) {
     return checkForStateChangeHelper(n, /* checkForNewObjects= */ true);
@@ -314,6 +314,12 @@ public class AstAnalyzer {
       case COMPUTED_PROP:
         if (n.getParent().isClassMembers()) {
           return checkForStateChangeHelper(n.getFirstChild(), checkForNewObjects);
+        }
+        if (parent.isObjectPattern() && parent.getLastChild().isObjectRest()) {
+          // Due to language syntax, only the last child can be an OBJECT_REST.
+          // `({ ['thisKey']: target, ...rest} = something())`
+          // The presence of `thisKey` affects what properties get put into `rest`.
+          return true;
         }
         break; // Assume that COMPUTED_PROP keys in OBJECT_PATTERN never trigger getters.
       case MEMBER_FIELD_DEF:

@@ -24,12 +24,11 @@ import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Serializes `Color`s and information about them into a `TypePool`.
@@ -51,7 +50,7 @@ class ColorSerializer {
    * Stores the `Integer` values assigned to `Color`s as they are added for serialization, so they
    * can be looked up and used for references between the output `TypeProto`s.
    */
-  private final HashMap<ColorId, Integer> colorIdToTypePointer = new HashMap<>();
+  private final LinkedHashMap<ColorId, Integer> colorIdToTypePointer = new LinkedHashMap<>();
 
   /**
    * Stores the `Color`s to be serialized in the order they will be serialized.
@@ -120,9 +119,9 @@ class ColorSerializer {
    * to this method.
    *
    * @param getDisambiguationSupertypesFn Given a `Color` return a set of `Color`s it inherits from.
-   * @param getMismatchSourceRefsFn May be `null` if this `serializationMode` is `SKIP_DEBUG_INFO`.
-   *     Otherwise, this function must provide a set of all the source reference strings indicating
-   *     code locations where the given `Color` encountered a type mismatch.
+   * @param getMismatchSourceRefsFn May be `null` if this `serializationMode` does not include debug
+   *     info. Otherwise, this function must provide a set of all the source reference strings
+   *     indicating code locations where the given `Color` encountered a type mismatch.
    * @return a new `TypePool` proto
    */
   TypePool generateTypePool(
@@ -146,7 +145,7 @@ class ColorSerializer {
       }
     }
 
-    if (serializationMode != SerializationOptions.SKIP_DEBUG_INFO) {
+    if (serializationMode.getIncludeDebugInfo()) {
       checkNotNull(getMismatchSourceRefsFn);
       final TypePool.DebugInfo.Builder debugInfoBuilder = typePoolBuilder.getDebugInfoBuilder();
 

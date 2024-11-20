@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -36,7 +37,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,6 +51,7 @@ public final class ExpressionDecomposerTest {
 
   /** The language out to set in the compiler options. If null, use the default. */
   private @Nullable LanguageMode languageOut;
+
   // Whether we should run type checking and test the type information in the output expression
   private boolean shouldTestTypes;
 
@@ -86,6 +88,30 @@ public final class ExpressionDecomposerTest {
             "var temp_const$jscomp$1 = window.location;",
             "var temp_const$jscomp$0 = temp_const$jscomp$1.assign;",
             "temp_const$jscomp$0.call(temp_const$jscomp$1, foo());"));
+  }
+
+  @Test
+  public void testObjectDestructuring_withComputedKey_doesNotCrash() {
+    // computed prop is found to be decomposable
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE,
+        lines("var a; ({ [foo()]: a} = obj);"),
+        exprMatchesStr("foo()"));
+
+    // TODO(b/339040894): Fix this crash.
+    IllegalStateException ex =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                helperExposeExpression(
+                    lines("var a; ({ [foo()]: a} = obj);"), //
+                    exprMatchesStr("foo()"),
+                    lines(
+                        "var a;", //
+                        "var temp_const$jscomp$0 = obj;",
+                        "var temp_const$jscomp$1 = foo();",
+                        "({ [temp_const$jscomp$1]: a} = temp_const$jscomp$0);")));
+    assertThat(ex).hasMessageThat().contains("DecomposeExpression depth exceeded on");
   }
 
   @Test
@@ -477,8 +503,22 @@ public final class ExpressionDecomposerTest {
     // Default value expressions are conditional, which would make the expressions complex.
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE,
+        // default value inside array pattern
         "[{ [foo()]: a } = goo()] = arr;",
         exprMatchesStr("foo()"));
+
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE, //
+        // computed property inside object pattern; decomposed
+        "({ [foo()]: a = goo()} = arr);",
+        exprMatchesStr("foo()"));
+
+    // default value expressions are conditional, which would make the expressions complex
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, //
+        // default value inside object pattern
+        "({ [foo()]: a = goo()} = arr);",
+        exprMatchesStr("goo()"));
 
     helperExposeExpression(
         lines(
@@ -487,19 +527,50 @@ public final class ExpressionDecomposerTest {
             "    JSCOMPILER_PRESERVE(e), [getObj().propName] = CN();",
             "  }",
             "  function CN() {",
-            "    let t;",
+            "    return [1];",
             "  }",
             "});"),
         exprMatchesStr("CN()"),
         lines(
             "var Di = I(() => {",
             "  function zv() {",
-            "    var temp_const$jscomp$1 = JSCOMPILER_PRESERVE(e);",
-            "    var temp_const$jscomp$0 = getObj().propName;",
-            "    temp_const$jscomp$1, [temp_const$jscomp$0] = CN();",
+            "    var temp_const$jscomp$0 = JSCOMPILER_PRESERVE(e);",
+            // TODO(b/339701959): We decided to back off here because of b/338660589. But we should
+            // optimize this to:
+            //   var temp_const$jscomp$1 = CN();
+            //   var temp_const$jscomp$2 = getObj();
+            //   temp_const$jscomp$0, [temp_const$jscomp$2.propName] = temp_const$jscomp$1;
+            "    temp_const$jscomp$0, [getObj().propName] = CN();",
             "  }",
             "  function CN() {",
-            "    let t;",
+            "    return [1];",
+            "  }",
+            "});"));
+
+    helperExposeExpression(
+        lines(
+            "var Di = I(() => {",
+            "  function zv() {",
+            "    JSCOMPILER_PRESERVE(e), ({x: getObj().propName} = CN());",
+            "  }",
+            "  function CN() {",
+            "    return {x: 1};",
+            "  }",
+            "});"),
+        exprMatchesStr("CN()"),
+        lines(
+            "var Di = I(() => {",
+            "  function zv() {",
+            "    var temp_const$jscomp$0 = JSCOMPILER_PRESERVE(e);",
+            // TODO(b/339701959): We decided to back off here because of b/338246627. But we should
+            // optimize this to:
+            //   var temp_const$jscomp$1 = CN();
+            //   var temp_const$jscomp$2 = getObj();
+            //   temp_const$jscomp$0, {x: temp_const$jscomp$2.propName} = temp_const$jscomp$1;
+            "    temp_const$jscomp$0, {x:getObj().propName} = CN();",
+            "  }",
+            "  function CN() {",
+            "    return {x: 1};",
             "  }",
             "});"));
 
@@ -511,10 +582,100 @@ public final class ExpressionDecomposerTest {
             "    JSCOMPILER_PRESERVE(e), [f] = CN();",
             "  }",
             "  function CN() {",
-            "    let t;",
+            "    return [1];",
             "  }",
             "});"),
         exprMatchesStr("CN()"));
+
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE,
+        lines(
+            "var Di = I(() => {",
+            "  function zv() {",
+            "    JSCOMPILER_PRESERVE(e), [f = foo()] = CN();",
+            "  }",
+            "  function CN() {",
+            "    return [1];",
+            "  }",
+            "});"),
+        exprMatchesStr("foo()"));
+
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE,
+        lines(
+            "var Di = I(() => {",
+            "  function zv() {",
+            "    JSCOMPILER_PRESERVE(e), ({f: g} = CN());",
+            "  }",
+            "  function CN() {",
+            "    return {f: 1};",
+            "  }",
+            "});"),
+        exprMatchesStr("CN()"));
+
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE,
+        lines(
+            "var Di = I(() => {",
+            "  function zv() {",
+            "    JSCOMPILER_PRESERVE(e), ({f: g = goo()} = CN());",
+            "  }",
+            "  function CN() {",
+            "    return {f: 1};",
+            "  }",
+            "});"),
+        exprMatchesStr("goo()"));
+  }
+
+  @Test
+  public void testObjectDestructuring_withDefaultValue_generatesValidAST() {
+    helperExposeExpression(
+        lines("var d; ({c: d = 4} = condition ? y() :  {c: 1});"),
+        exprMatchesStr("y()"),
+        lines(
+            "var d;",
+            "var temp$jscomp$0;",
+            "if (condition) {",
+            "  temp$jscomp$0 = y();",
+            "} else {",
+            "  temp$jscomp$0 = {c: 1};",
+            "}",
+            "({c: d = 4} = temp$jscomp$0);"));
+  }
+
+  @Test
+  public void testObjectDestructuring_withDefaultValue_withComputedKey() {
+    // default value expressions are conditional, which would make the expressions complex
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE,
+        lines("var a; ({ [foo()]: a = bar()} = baz());"),
+        exprMatchesStr("bar()"));
+
+    helperCanExposeExpression(
+        DecompositionType.MOVABLE,
+        lines("var a; ({ [foo()]: a = bar()} = baz());"),
+        exprMatchesStr("baz()"));
+
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE,
+        lines("var a; ({ [foo()]: a = bar()} = baz());"),
+        exprMatchesStr("foo()"));
+  }
+
+  @Test
+  public void testArrayDestructuring_withDefaultValue_generatesValidAST() {
+    helperExposeExpression(
+        lines("var [c = 4] = condition ? y() :  [c = 2];"),
+        exprMatchesStr("y()"),
+        lines(
+            "var c;",
+            "var temp$jscomp$0;",
+            "if (condition) {",
+            "  temp$jscomp$0 = y();",
+            "} else {",
+            "  temp$jscomp$0 = [c = 2];",
+            "}",
+            "[c = 4] = temp$jscomp$0;"));
   }
 
   @Test
@@ -1415,6 +1576,14 @@ public final class ExpressionDecomposerTest {
             "var temp_const$jscomp$1 = x;",
             "var temp_const$jscomp$0 = temp_const$jscomp$1.foo;",
             "temp_const$jscomp$0.call(temp_const$jscomp$1, y());"));
+  }
+
+  @Test
+  public void testExposeFreeCall() {
+    helperExposeExpression(
+        "(0,x.foo)(y())",
+        exprMatchesStr("y()"),
+        lines("var temp_const$jscomp$0 = x.foo;", "temp_const$jscomp$0(y());"));
   }
 
   @Test

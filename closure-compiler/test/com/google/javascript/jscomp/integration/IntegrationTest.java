@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.AliasStringsMode;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
+import com.google.javascript.jscomp.CompilerOptions.ExperimentalForceTranspile;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
@@ -309,7 +310,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  case 0:",
             "    { var x = 3; break; }",
             "  case 1:",
-            "    { var x$0 = 5; break; }",
+            "    { var x$jscomp$1 = 5; break; }",
             "}");
     test(options, before, after);
   }
@@ -400,7 +401,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setFoldConstants(true);
     options.setInlineVariables(true);
-    options.setRemoveDeadCode(true);
     test(options, "var x; x && alert(1);", "");
   }
 
@@ -1122,9 +1122,9 @@ public final class IntegrationTest extends IntegrationTestCase {
             "",
             "function mixinX(baseType) {",
             "  var i0$classdecl$var0 = function() {",
-            "    var $jscomp$super$this = baseType.call(this) || this;",
-            "    $jscomp$super$this.c = 'x';", // unique property name
-            "    return $jscomp$super$this;",
+            "    var $jscomp$super$this$98447280$0 = baseType.call(this) || this;",
+            "    $jscomp$super$this$98447280$0.c = 'x';", // unique property name
+            "    return $jscomp$super$this$98447280$0;",
             "  };",
             "  $jscomp.inherits(i0$classdecl$var0,baseType);",
             "  return i0$classdecl$var0;",
@@ -1133,9 +1133,9 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var BSuper = mixinX(A);",
             "",
             "var B = function() {",
-            "  var $jscomp$super$this = BSuper.call(this) || this;",
-            "  $jscomp$super$this.b = 'bProp';", // unique property name
-            "  return $jscomp$super$this;",
+            "  var $jscomp$super$this$98447280$1 = BSuper.call(this) || this;",
+            "  $jscomp$super$this$98447280$1.b = 'bProp';", // unique property name
+            "  return $jscomp$super$this$98447280$1;",
             "};",
             "$jscomp.inherits(B,BSuper);",
             ""));
@@ -1236,7 +1236,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             + "}",
         "var COMPILED = true;\n" + "function getCss() {\n" + "  return 'bar';" + "}");
 
-    assertThat(lastCompiler.getResult().cssNames).containsExactly("foo", 1);
+    assertThat(lastCompiler.getResult().cssNames).containsExactly("foo");
   }
 
   @Test
@@ -1350,18 +1350,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testOptimizeArgumentsArray() {
-    String code = "function f() { return arguments[0]; }";
-
-    CompilerOptions options = createCompilerOptions();
-    testSame(options, code);
-
-    options.setOptimizeArgumentsArray(true);
-    String argName = "JSCompiler_OptimizeArgumentsArray_p0";
-    test(options, code, "function f(" + argName + ") { return " + argName + "; }");
-  }
-
-  @Test
   public void testOptimizeParameters() {
     String code = "function f(a) {} f(true);";
 
@@ -1463,8 +1451,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         code,
-        "function Foo(){} Foo.prototype.JSC$43_bar = 3;"
-            + "function Baz(){} Baz.prototype.JSC$45_bar = 3;");
+        "function Foo(){} Foo.prototype.JSC$44_bar = 3;"
+            + "function Baz(){} Baz.prototype.JSC$46_bar = 3;");
   }
 
   // When closure-code-removal runs before disambiguate-properties, make sure
@@ -1475,7 +1463,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
-    options.setRemoveDeadCode(true);
     options.setRemoveAbstractMethods(true);
     test(
         options,
@@ -1503,7 +1490,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
     options.setPropertiesThatMustDisambiguate(ImmutableSet.of("a"));
-    options.setRemoveDeadCode(true);
     options.setRemoveAbstractMethods(true);
     test(
         options,
@@ -1530,7 +1516,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testMarkPureCalls() {
     String testCode = "function foo() {} foo();";
     CompilerOptions options = createCompilerOptions();
-    options.setRemoveDeadCode(true);
+    options.setFoldConstants(true);
 
     testSame(options, testCode);
 
@@ -1706,7 +1692,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     options.setInlineVariables(true);
-    test(options, code, "(function foo() {})(3);");
+    test(options, code, "(function() {})(3);");
   }
 
   @Test
@@ -1747,7 +1733,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     String code = "function f() { return; f(); }";
     testSame(options, code);
 
-    options.setRemoveDeadCode(true);
+    options.setFoldConstants(true);
     test(options, code, "function f() {}");
   }
 
@@ -1783,7 +1769,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
-    options.setRemoveDeadCode(true);
     options.setRemoveUnusedVariables(Reach.ALL);
     options.setRemoveUnusedPrototypeProperties(true);
     options.setSmartNameRemoval(true);
@@ -1810,13 +1795,13 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     String expected =
         "function A() {} "
-            + "A.prototype.JSC$43_foo = function() { "
+            + "A.prototype.JSC$44_foo = function() { "
             + "  window.console.log('A'); "
             + "}; "
             + "function B() {} "
             + "window['main'] = function() { "
             + "  var a = window['a'] = new A; "
-            + "  a.JSC$43_foo(); "
+            + "  a.JSC$44_foo(); "
             + "  window['b'] = new B; "
             + "}";
 
@@ -1831,7 +1816,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
-    options.setRemoveDeadCode(true);
     options.setRemoveUnusedVariables(Reach.ALL);
     options.setRemoveUnusedPrototypeProperties(true);
     options.setSmartNameRemoval(true);
@@ -1876,21 +1860,21 @@ public final class IntegrationTest extends IntegrationTestCase {
     // type ambiguity in function notCalled is unreachable.
     String expected =
         "function A() {} "
-            + "A.prototype.JSC$43_always = function() { "
+            + "A.prototype.JSC$44_always = function() { "
             + "  window.console.log('AA'); "
             + "}; "
-            + "A.prototype.JSC$43_sometimes = function(){ "
+            + "A.prototype.JSC$44_sometimes = function(){ "
             + "  window.console.log('SA'); "
             + "}; "
             + "function B() {} "
-            + "B.prototype.JSC$45_always=function(){ "
+            + "B.prototype.JSC$46_always=function(){ "
             + "  window.console.log('AB'); "
             + "};"
             + "window['main'] = function() { "
             + "  var a = window['a'] = new A; "
-            + "  a.JSC$43_always(); "
-            + "  a.JSC$43_sometimes(); "
-            + "  (window['b'] = new B).JSC$45_always(); "
+            + "  a.JSC$44_always(); "
+            + "  a.JSC$44_sometimes(); "
+            + "  (window['b'] = new B).JSC$46_always(); "
             + "}";
 
     test(options, code, expected);
@@ -1984,10 +1968,10 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var Arrays = function() {};",
             "Arrays.$create = function() { return {}; }",
             "/** @constructor */",
-            "function Foo() { this.JSC$43_myprop = 1; }",
+            "function Foo() { this.JSC$44_myprop = 1; }",
             "/** @constructor */",
-            "function Bar() { this.JSC$45_myprop = 2; }",
-            "var x = {}.JSC$43_myprop;"));
+            "function Bar() { this.JSC$46_myprop = 2; }",
+            "var x = {}.JSC$44_myprop;"));
   }
 
   @Test
@@ -2023,16 +2007,16 @@ public final class IntegrationTest extends IntegrationTestCase {
         code,
         lines(
             "/** @constructor */",
-            "function Foo() { this.JSC$42_myprop = 1; }",
+            "function Foo() { this.JSC$43_myprop = 1; }",
             "/** @constructor */",
-            "function Bar() { this.JSC$44_myprop = 2; }",
+            "function Bar() { this.JSC$45_myprop = 2; }",
             "/** @return {Object} */",
             "function getSomething() {",
             "  var x = new Bar();",
             "  return new Foo();",
             "}",
             "(function someMethod() {",
-            "  return 1 != getSomething().JSC$42_myprop;",
+            "  return 1 != getSomething().JSC$43_myprop;",
             "})()"));
   }
 
@@ -2075,16 +2059,16 @@ public final class IntegrationTest extends IntegrationTestCase {
         code,
         lines(
             "/** @constructor */",
-            "function Foo() { this.JSC$42_myprop = 1; }",
+            "function Foo() { this.JSC$43_myprop = 1; }",
             "/** @constructor */",
-            "function Bar() { this.JSC$44_myprop = 2; }",
+            "function Bar() { this.JSC$45_myprop = 2; }",
             "/** @return {Object} */",
             "function getSomething() {",
             "  var x = new Bar();",
             "  return new Foo();",
             "}",
             "(function someMethod() {",
-            "  return 1 != getSomething().JSC$42_myprop;",
+            "  return 1 != getSomething().JSC$43_myprop;",
             "})()"));
   }
 
@@ -2224,7 +2208,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, "function f() { var x = 3; return 5; }");
 
     String unusedVar = "function f() { var x; x = 5; return x; } f()";
-    test(options, unusedVar, "(function f() { var x; return 5; })()");
+    test(options, unusedVar, "(function() { var x; return 5; })()");
 
     options.setRemoveUnusedVariables(Reach.ALL);
     test(options, unusedVar, "(function () { return 5; })()");
@@ -2836,18 +2820,19 @@ public final class IntegrationTest extends IntegrationTestCase {
         lines(
             "class Foo {",
             "  bar() {",
-            "    return $jscomp.asyncExecutePromiseGeneratorFunction(function*() {",
+            "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(function*() {",
             "      console.log(\"bar\");",
             "    });",
             "  }",
             "}",
             "class Baz extends Foo {",
             "  bar() {",
-            "    const $jscomp$async$this = this, $jscomp$async$super$get$bar =",
+            "    const $jscomp$async$this$98447280$3 = this, $jscomp$async$super$get$98447280$5$bar"
+                + " =",
             "        () => super.bar;",
-            "    return $jscomp.asyncExecutePromiseGeneratorFunction(function*() {",
+            "    return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(function*() {",
             "      yield Promise.resolve();",
-            "      $jscomp$async$super$get$bar().call($jscomp$async$this);",
+            "      $jscomp$async$super$get$98447280$5$bar().call($jscomp$async$this$98447280$3);",
             "    });",
             "  }",
             "}"));
@@ -2896,11 +2881,12 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}",
             "class Baz extends Foo {",
             "  bar() {",
-            "    const $jscomp$asyncIter$this = this,",
+            "    const $jscomp$asyncIter$this$98447280$1 = this,",
             "          $jscomp$asyncIter$super$get$bar =",
             "              () => super.bar;",
             "    return new $jscomp.AsyncGeneratorWrapper(function*() {",
-            "      $jscomp$asyncIter$super$get$bar().call($jscomp$asyncIter$this).next();",
+            "     "
+                + " $jscomp$asyncIter$super$get$bar().call($jscomp$asyncIter$this$98447280$1).next();",
             "    }());",
             "  }",
             "}"));
@@ -3106,7 +3092,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         "if (((x < 1 || x > 1) || 1 < x) || 1 > x) { alert(x) }",
-        "   (((1 > x || 1 < x) || 1 < x) || 1 > x) && alert(x) ");
+        "   (((x < 1 || x > 1) || 1 < x) || 1 > x) && alert(x) ");
   }
 
   @Test
@@ -3343,7 +3329,10 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    test(options, code, "if (true) { _.f = function() {}; } if (true) { _.f$0 = function() {}; }");
+    test(
+        options,
+        code,
+        "if (true) { _.f = function() {}; } if (true) { _.f$jscomp$1 = function() {}; }");
   }
 
   @Test
@@ -3722,7 +3711,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "if (/** @type {Array|undefined} */ (window['c']) === null) {",
             "  window['d'] = 12;",
             "}"),
-        "null===window['c']&&(window['d']=12)");
+        "window['c']===null&&(window['d']=12)");
   }
 
   @Test
@@ -3825,18 +3814,18 @@ public final class IntegrationTest extends IntegrationTestCase {
             "};",
             "function foo() {",
             "  var JSCompiler_temp_const;",
-            "  var JSCompiler_temp_const$jscomp$1;",
-            "  return $jscomp.asyncExecutePromiseGeneratorProgram(",
-            "      function ($jscomp$generator$context) {",
-            "        if ($jscomp$generator$context.nextAddress == 1) {",
+            "  var JSCompiler_temp_const$jscomp$0;",
+            "  return (0, $jscomp.asyncExecutePromiseGeneratorProgram)(",
+            "      function ($jscomp$generator$context$98447280$5) {",
+            "        if ($jscomp$generator$context$98447280$5.nextAddress == 1) {",
             "          JSCompiler_temp_const = A;",
-            "          JSCompiler_temp_const$jscomp$1 = A$doSomething;",
-            "          return $jscomp$generator$context.yield(3, 2);",
+            "          JSCompiler_temp_const$jscomp$0 = A$doSomething;",
+            "          return $jscomp$generator$context$98447280$5.yield(3, 2);",
             "        }",
-            "        JSCompiler_temp_const$jscomp$1.call(",
+            "        JSCompiler_temp_const$jscomp$0.call(",
             "            JSCompiler_temp_const,",
-            "            $jscomp$generator$context.yieldResult);",
-            "        $jscomp$generator$context.jumpToEnd();",
+            "            $jscomp$generator$context$98447280$5.yieldResult);",
+            "        $jscomp$generator$context$98447280$5.jumpToEnd();",
             "      });",
             "}",
             "foo();"));
@@ -3936,7 +3925,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "async function abc() {",
             "  var $jscomp$forAwait$retFn0;",
             "  try {",
-            "    for (var $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
+            "    for (var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());;)"
+                + " {",
             "      var $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
             "      if ($jscomp$forAwait$tempResult0.done) {",
             "        break;",
@@ -4210,7 +4200,7 @@ public final class IntegrationTest extends IntegrationTestCase {
               "function reportError() {}",
               "try {",
               " foo();",
-              "} catch ($jscomp$unused$catch) {",
+              "} catch ($jscomp$unused$catch$98447280$0) {",
               "  reportError();",
               "}")
         });
@@ -4620,7 +4610,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void forceClassTranspilationKeepAsync_withNoTranspile() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.NO_TRANSPILE);
-    options.setForceClassTranspilation(true);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.CLASS);
 
     // test transpiling classes but leave async functions untranspiled
     test(
@@ -4636,7 +4626,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void forceLetConstTranspilationKeepAsync_doesNotKeepClass_withNoTranspile() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.NO_TRANSPILE);
-    options.setForceLetConstTranspilation(true);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.LET_CONST);
 
     // test transpiling classes but leave async functions untranspiled
     test(
@@ -4652,7 +4642,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void forceClassTranspilationKeepAsyncFunctions_withEs2021Out() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
-    options.setForceClassTranspilation(true);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.CLASS);
 
     // test transpiling classes but leave async functions untranspiled
     test(
@@ -4668,7 +4658,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void forceLetConstTranspilationKeepsAsyncFunctions_doesNotKeepClass_withEs2021Out() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
-    options.setForceLetConstTranspilation(true);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.LET_CONST);
 
     // test transpiling let/const, classes but leave async functions untranspiled
     test(
@@ -4681,10 +4671,60 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void forceTranspileExceptAsyncAwait_doesNotRemoveAsyncAwait() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(
+        LanguageMode
+            .ECMASCRIPT_2021); // does not matter when setForceTranspileExceptAsyncAwait(true)
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.ALL_EXCEPT_ASYNC_AWAIT);
+
+    // test transpiling let/const and classes but leave async functions untranspiled
+    test(
+        options,
+        "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
+        lines(
+            "var i0$classdecl$var0 = function() {};",
+            "i0$classdecl$var0.prototype.f = async function(p) { await p; return 0 };",
+            "window['C'] = i0$classdecl$var0"));
+  }
+
+  @Test
+  public void forceTranspileExceptAsyncAwait_doesNotRemoveAsyncAwait2() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(
+        LanguageMode
+            .ECMASCRIPT_2021); // does not matter when setForceTranspileExceptAsyncAwait(true)
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.ALL_EXCEPT_ASYNC_AWAIT);
+
+    // test transpiling let/const, opt-chain and classes but leave async functions untranspiled
+    test(
+        options,
+        "class C { async f(p) { let obj = await p; return obj?.prop; } }",
+        lines(
+            "var C=function(){};",
+            "C.prototype.f=async function(p){var obj=await p;",
+            "  var $jscomp$optchain$tmp98447280$0;",
+            "  return($jscomp$optchain$tmp98447280$0=obj)==null?void"
+                + " 0:$jscomp$optchain$tmp98447280$0.prop}"));
+  }
+
+  @Test
+  public void forceTranspileExceptAsyncAwait_withEs5Out() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.ALL_EXCEPT_ASYNC_AWAIT);
+
+    // respects ES5 mode and lowers async await down to ES5 despite forcing `ALL_EXCEPT_ASYNC_AWAIT`
+    testNoWarnings(options, "class C { async f(p) { let obj = await p; return obj?.prop; } }");
+    assertThat(lastCompiler.toSource()).doesNotContain("async ");
+    assertThat(lastCompiler.toSource()).doesNotContain("await ");
+  }
+
+  @Test
   public void forceClassTranspilationKeepDestructuring_withEs2015Out() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-    options.setForceClassTranspilation(true);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.CLASS);
 
     // check that we can transpile the ES2016 `**` + classes, but leave the ES2015 destructuring
     // parameter behind.
@@ -4701,7 +4741,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void forceLetConstTranspilationAlsoLowersDestructuringAndClasses_withEs2015Out() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-    options.setForceLetConstTranspilation(true);
+    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.LET_CONST);
 
     // check that we transpile the ES2016 `**`, let/const, classes and the ES2015 destructuring
     // parameter
@@ -4713,5 +4753,72 @@ public final class IntegrationTest extends IntegrationTestCase {
                 + " $jscomp$destructuring$var1=$jscomp$destructuring$var0;var"
                 + " num=$jscomp$destructuring$var1.num;return"
                 + " Math.pow(num,3)};window[\"C\"]=i0$classdecl$var0"));
+  }
+
+  @Test
+  public void testNoSideEffectsPropagationOnStaticMembers_withEs2018Out() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
+
+    test(
+        options,
+        lines(
+            "class ClazzWithStatic {\n"
+                + "constructor() {}\n"
+                + "\n"
+                + "  /** @nosideeffects */\n"
+                + "  static Create() {\n"
+                + "    if (Math.random() > .5) {\n"
+                + "      throw new Error('Bad input');\n"
+                + "    }\n"
+                + "    return new ClazzWithStatic();\n"
+                + "  }\n"
+                + "}\n"
+                + "\n"
+                + "const xUnused = ClazzWithStatic.Create();\n"
+                + "const yUnused = ClazzWithStatic.Create();"),
+        // This should optimize to nothing, because the two variables are unused and we are trying
+        // to hide side-effects.
+        "");
+  }
+
+  @Test
+  public void testDeclareLegacyNamespaceSubModuleCrash() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2016);
+
+    options.setRemoveUnusedVariables(Reach.NONE);
+    options.setRemoveUnusedClassProperties(false);
+
+    // Ensures that references to aliases that occur within member function defs do not crash the
+    // compiler (see b/293184904). In this example, the name 'method' in 'static method() {...}'
+    // is a reference to a.b.Foo.method, but since the reference is not fully qualified, the
+    // compiler should not try to touch it.
+    //
+    // This test case contains a use of a computed property to ensure that the fix for the above
+    // problem does not affect computed properties.
+    test(
+        options,
+        new String[] {
+          lines(
+              "goog.module('a.b');",
+              "goog.module.declareLegacyNamespace();",
+              "var b = {};",
+              "exports = b;\n"),
+          lines(
+              "goog.provide('a.b.Foo');",
+              "a.b.Foo = class {",
+              "  static method() {}",
+              "  static getVarName() { return 'someVar'; }",
+              "};",
+              "var x = {[a.b.Foo.getVarName()]: '4'};",
+              "alert(x['someVar']);")
+        },
+        new String[] {
+          lines(""), lines("alert(\"4\");"),
+        });
   }
 }

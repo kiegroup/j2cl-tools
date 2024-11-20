@@ -120,12 +120,12 @@ public abstract class FieldDescriptor extends MemberDescriptor {
   // the details.
   abstract FieldDescriptor getDeclarationDescriptorOrNullIfSelf();
 
-  @Override
   @Memoized
   public FieldDescriptor toRawMemberDescriptor() {
     return toBuilder()
         .setEnclosingTypeDescriptor(getEnclosingTypeDescriptor().toRawTypeDescriptor())
         .setTypeDescriptor(getTypeDescriptor().toRawTypeDescriptor())
+        .setDeclarationDescriptor(getDeclarationDescriptor())
         .build();
   }
 
@@ -210,6 +210,8 @@ public abstract class FieldDescriptor extends MemberDescriptor {
     }
 
     return FieldDescriptor.Builder.from(this)
+        // Ensure that declaration descriptor is set to original since we are modifying the types.
+        .setDeclarationDescriptor(getDeclarationDescriptor())
         .setTypeDescriptor(
             getTypeDescriptor().specializeTypeVariables(replacingTypeDescriptorByTypeVariable))
         .build();

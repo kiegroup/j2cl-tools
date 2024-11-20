@@ -73,6 +73,9 @@ public class TypeDescriptors {
   @QualifiedBinaryName("java.lang.NullPointerException")
   public DeclaredTypeDescriptor javaLangNullPointerException;
 
+  @QualifiedBinaryName("java.lang.AssertionError")
+  public DeclaredTypeDescriptor javaLangAssertionError;
+
   public DeclaredTypeDescriptor javaLangNumber;
   public DeclaredTypeDescriptor javaLangObject;
   public DeclaredTypeDescriptor javaLangRunnable;
@@ -82,7 +85,6 @@ public class TypeDescriptors {
 
   public DeclaredTypeDescriptor javaUtilArrays;
   public DeclaredTypeDescriptor javaUtilCollection;
-  public DeclaredTypeDescriptor javaUtilIterator;
   public DeclaredTypeDescriptor javaUtilMap;
   public DeclaredTypeDescriptor javaUtilObjects;
 
@@ -149,18 +151,6 @@ public class TypeDescriptors {
   @QualifiedBinaryName("javaemul.internal.Enums$BoxedComparableLightEnum")
   public DeclaredTypeDescriptor javaemulInternalBoxedComparableLightEnum;
 
-  @Nullable
-  @QualifiedBinaryName("javaemul.internal.Enums$BoxedIntegerEnum")
-  public DeclaredTypeDescriptor javaemulInternalBoxedIntegerEnum;
-
-  @Nullable
-  @QualifiedBinaryName("javaemul.internal.Enums$BoxedComparableIntegerEnum")
-  public DeclaredTypeDescriptor javaemulInternalBoxedComparableIntegerEnum;
-
-  @Nullable
-  @QualifiedBinaryName("javaemul.internal.Enums$BoxedStringEnum")
-  public DeclaredTypeDescriptor javaemulInternalBoxedStringEnum;
-
   @Nullable public DeclaredTypeDescriptor javaemulInternalConstructor;
   @Nullable public DeclaredTypeDescriptor javaemulInternalPlatform;
   public DeclaredTypeDescriptor javaemulInternalExceptions;
@@ -197,6 +187,10 @@ public class TypeDescriptors {
   @Nullable
   @QualifiedBinaryName("kotlin.jvm.internal.ReflectionFactory")
   public DeclaredTypeDescriptor kotlinJvmInternalReflectionFactory;
+
+  @Nullable
+  @QualifiedBinaryName("javaemul.lang.J2ktMonitor")
+  public DeclaredTypeDescriptor javaemulLangJ2ktMonitor;
 
   /**
    * Global window reference that is the enclosing class of native global methods and properties.
@@ -436,9 +430,6 @@ public class TypeDescriptors {
 
   public static TypeDescriptor getEnumBoxType(TypeDescriptor typeDescriptor) {
     checkState(AstUtils.isNonNativeJsEnum(typeDescriptor));
-    if (TypeDescriptors.get().javaemulInternalBoxedComparableLightEnum == null) {
-      return getEnumBoxTypeNonparameterized(typeDescriptor);
-    }
     TypeDescriptor boxType =
         typeDescriptor.getJsEnumInfo().supportsComparable()
             ? TypeDescriptors.get().javaemulInternalBoxedComparableLightEnum
@@ -448,19 +439,6 @@ public class TypeDescriptors {
             ImmutableMap.of(
                 Iterables.getOnlyElement(boxType.getAllTypeVariables()), typeDescriptor));
     return typeDescriptor.isNullable() ? specializedType : specializedType.toNonNullable();
-  }
-
-  private static TypeDescriptor getEnumBoxTypeNonparameterized(TypeDescriptor typeDescriptor) {
-    TypeDescriptor valueType = AstUtils.getJsEnumValueFieldType(typeDescriptor);
-    boolean supportsComparable = typeDescriptor.getJsEnumInfo().supportsComparable();
-    if (isPrimitiveInt(valueType)) {
-      return supportsComparable
-          ? TypeDescriptors.get().javaemulInternalBoxedComparableIntegerEnum
-          : TypeDescriptors.get().javaemulInternalBoxedIntegerEnum;
-    } else if (isJavaLangString(valueType)) {
-      return TypeDescriptors.get().javaemulInternalBoxedStringEnum;
-    }
-    throw new IllegalArgumentException("Unknown enum type: " + valueType.getReadableDescription());
   }
 
   /** Gets the type descriptor representing a native string. */
@@ -540,28 +518,21 @@ public class TypeDescriptors {
   private static DeclaredTypeDescriptor createSyntheticTypeDescriptor(
       Kind kind, String jsNamespace, String className, TypeDescriptor... typeArgumentDescriptors) {
 
-    TypeDeclaration typeDeclaration =
-        TypeDeclaration.newBuilder()
-            .setClassComponents(ImmutableList.of(className))
-            // Mark bootstrap classes as non native so that the goog.require doesn't reference
-            // overlay.
-            .setNative(!isBootstrapNamespace(jsNamespace))
-            .setCustomizedJsNamespace(jsNamespace)
-            .setPackageName(getSyntheticPackageName(jsNamespace))
-            .setUnparameterizedTypeDescriptorFactory(
-                () -> createSyntheticTypeDescriptor(kind, jsNamespace, className))
-            // Synthetic type declarations do not need to have type variables.
-            // TODO(b/63118697): Make sure declarations are consistent with descriptor w.r.t
-            // type parameters.
-            .setTypeParameterDescriptors(ImmutableList.of())
-            .setVisibility(Visibility.PUBLIC)
-            .setKind(kind)
-            .build();
-
-    return DeclaredTypeDescriptor.newBuilder()
-        .setTypeDeclaration(typeDeclaration)
-        .setTypeArgumentDescriptors(Arrays.asList(typeArgumentDescriptors))
-        .build();
+    return TypeDeclaration.newBuilder()
+        .setClassComponents(className)
+        // Mark bootstrap classes as non native so that the goog.require doesn't reference
+        // overlay.
+        .setNative(!isBootstrapNamespace(jsNamespace))
+        .setCustomizedJsNamespace(jsNamespace)
+        .setPackage(getSyntheticPackage(jsNamespace))
+        // Synthetic type declarations do not need to have type variables.
+        // TODO(b/63118697): Make sure declarations are consistent with descriptor w.r.t
+        // type parameters.
+        .setTypeParameterDescriptors(ImmutableList.of())
+        .setVisibility(Visibility.PUBLIC)
+        .setKind(kind)
+        .build()
+        .toDescriptor(Arrays.asList(typeArgumentDescriptors));
   }
 
   private static boolean isBootstrapNamespace(String jsNamespace) {
@@ -581,32 +552,26 @@ public class TypeDescriptors {
    * to the same TypeDeclaration creating potential for inconsistencies. The prefix "$synthetic" was
    * chosen to avoid collision with packages in the actual source code.
    */
-  private static String getSyntheticPackageName(String jsNamespace) {
-    if (isBootstrapNamespace(jsNamespace)) {
+  private static PackageDeclaration getSyntheticPackage(String jsNamespace) {
+    if (!isBootstrapNamespace(jsNamespace)) {
       // Avoid prepending synthetic to our runtime types. Those are not really synthetic. Bootstrap
       // types are handwritten non native types.
-      return jsNamespace;
+      jsNamespace = "$synthetic." + jsNamespace;
     }
-    return "$synthetic." + jsNamespace;
+    return PackageDeclaration.newBuilder().setName(jsNamespace).build();
   }
 
-  /** Returns the unparameterized version of {@code typeDescriptors}. */
-  @SuppressWarnings("unchecked")
-  public static <T extends TypeDescriptor> ImmutableList<T> toUnparameterizedTypeDescriptors(
-      List<T> typeDescriptors) {
+  /** Returns the declaration version of {@code typeDescriptors}. */
+  public static ImmutableList<DeclaredTypeDescriptor> getDeclarationDescriptors(
+      List<DeclaredTypeDescriptor> typeDescriptors) {
     return typeDescriptors.stream()
-        .map(TypeDescriptor::toUnparameterizedTypeDescriptor)
-        .map(typeDescriptor -> (T) typeDescriptor)
+        .map(DeclaredTypeDescriptor::getDeclarationDescriptor)
         .collect(toImmutableList());
   }
 
   /** Return java implementation class for an array */
   public static DeclaredTypeDescriptor getWasmArrayType(ArrayTypeDescriptor arrayTypeDescriptor) {
     TypeDescriptor componentTypeDescriptor = arrayTypeDescriptor.getComponentTypeDescriptor();
-
-    if (AstUtils.isNonNativeJsEnumArray(arrayTypeDescriptor)) {
-      componentTypeDescriptor = AstUtils.getJsEnumValueFieldType(componentTypeDescriptor);
-    }
 
     if (!componentTypeDescriptor.isPrimitive()) {
       return TypeDescriptors.get().javaemulInternalWasmArrayOfObject;

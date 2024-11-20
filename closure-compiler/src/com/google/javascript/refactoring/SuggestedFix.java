@@ -43,7 +43,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Object representing the fixes to apply to the source code to create the
@@ -652,13 +652,13 @@ public final class SuggestedFix {
       if (scriptMetadata.supportsRequireAliases()) {
         String existingAlias = scriptMetadata.getAlias(namespace);
         if (existingAlias != null) {
-          /**
+          /*
            * Each fix muct be independently valid, so go through the steps of adding a require even
            * if one may already exist or have been added by another fix.
            */
           alias = existingAlias;
         } else if (namespace.indexOf('.') == -1) {
-          /**
+          /*
            * For unqualified names, the exisiting references will still be valid so long as we keep
            * the same name for the alias.
            */
@@ -683,7 +683,13 @@ public final class SuggestedFix {
 
         // Add an alias to a naked require if allowed in this file.
         if (existingNode.isExprResult() && alias != null) {
-          Node newNode = IR.constNode(IR.name(alias), existingNode.getFirstChild().cloneTree());
+          Node newNode;
+          // Replace goog.forwardDeclare with the appropriate alternative
+          if (NodeUtil.isCallTo(existingNode.getFirstChild(), "goog.forwardDeclare")) {
+            newNode = createImportNode(importType, alias, namespace);
+          } else {
+            newNode = IR.constNode(IR.name(alias), existingNode.getFirstChild().cloneTree());
+          }
           replace(existingNode, newNode, m.getMetadata().getCompiler());
           scriptMetadata.addAlias(namespace, alias);
         }

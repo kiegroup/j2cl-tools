@@ -968,6 +968,15 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning(srcs(inputs));
   }
 
+  private void testConformance(String src1, String src2, String src3) {
+    ImmutableList<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("SRC1", src1),
+            SourceFile.fromCode("SRC2", src2),
+            SourceFile.fromCode("SRC3", src3));
+    testNoWarning(srcs(inputs));
+  }
+
   private void testConformance(String src1, String src2, DiagnosticType warning) {
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(SourceFile.fromCode("SRC1", src1), SourceFile.fromCode("SRC2", src2));
@@ -991,7 +1000,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
     String dDecl =
         lines("/** @constructor */ function D() {}", "/** @type {string} */", "D.prototype.p;");
 
-    testConformance(cDecl, dDecl);
+    String typedefDecl =
+        lines(
+            "/** @typedef {{p: string}} */ let E;",
+            "/** @const {!E} */ const value = {p: 'foo'};",
+            "/** @type {string} */ const s = value.p;");
+
+    testConformance(cDecl, dDecl, typedefDecl);
   }
 
   @Test
@@ -2384,6 +2399,18 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning("function f() {goog.asserts.assertInstanceof(this, Error);}");
   }
 
+  @Test
+  public void testCustomBanUnknownThis_allowsTs() {
+    configuration =
+        "requirement: {\n"
+            + "  type: CUSTOM\n"
+            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'\n"
+            + "  error_message: 'BanUnknownThis Message'\n"
+            + "}";
+
+    testNoWarning(srcs(SourceFile.fromCode("file.closure.js", "function f() {alert(this);}")));
+  }
+
   private static String config(String rule, String message, String... fields) {
     String result = "requirement: {\n" + "  type: CUSTOM\n" + "  java_class: '" + rule + "'\n";
     for (String field : fields) {
@@ -2910,8 +2937,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
                 "}")),
         warning(CheckConformance.CONFORMANCE_VIOLATION)
             .withMessage(
-                // TODO(lharker): instead of 'Foo' could we print something like 'Foo|Bar'?
-                "Violation: BanUnresolvedType Message\nReference to type 'Foo' never resolved."));
+                "Violation: BanUnresolvedType Message\n"
+                    + "Reference to type 'Foo|Bar' never resolved."));
 
     testNoWarning(
         lines(
@@ -2974,10 +3001,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
                     + "Reference to type 'Foo' never resolved."),
         warning(CheckConformance.CONFORMANCE_VIOLATION)
             .withMessage(
-                // TODO(lharker): instead of 'NoResolvedType', could we print something like
-                // 'Foo|Bar' ? We'd need to modify anything calling JSType.filterNoResolvedType.
                 "Violation: StrictBanUnresolvedType Message\n"
-                    + "Reference to type 'NoResolvedType' never resolved."),
+                    + "Reference to type 'Bar|Foo' never resolved."),
         warning(CheckConformance.CONFORMANCE_VIOLATION)
             .withMessage(
                 "Violation: StrictBanUnresolvedType Message\n"
@@ -3229,6 +3254,145 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     testNoWarning("goog.dom.createElement('iframe');");
     testNoWarning("goog.dom.createElement(goog.dom.TagName.SCRIPT);");
+  }
+
+  private String getBannedNonLiteralArgsConfiguration() {
+    return lines(
+        "requirement: {",
+        "  type: CUSTOM",
+        "  java_class:'com.google.javascript.jscomp.ConformanceRules$BanNonLiteralArgsToGoogStringConstFrom'",
+        "  error_message: 'BanNonLiteralArgsToGoogStringConstFrom Message'",
+        "}");
+  }
+
+  @Test
+  public void testBanNonLiteralArgsToGoogStringConstFrom_directCall() {
+    configuration = getBannedNonLiteralArgsConfiguration();
+
+    // test direct calls to goog.string.Const.from
+    testNoWarning("goog.string.Const.from('foo');");
+    testNoWarning("goog.string.Const.from(`foo`);");
+
+    testWarning(
+        "const foo = 42; goog.string.Const.from(foo);",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanNonLiteralArgsToGoogStringConstFrom Message");
+    testWarning(
+        "const foo = 42; goog.string.Const.from(`literal_with_interpolation_${foo}`);",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanNonLiteralArgsToGoogStringConstFrom Message");
+  }
+
+  @Test
+  public void testBanNonLiteralArgsToGoogStringConstFrom_alias() {
+    configuration = getBannedNonLiteralArgsConfiguration();
+
+    // test aliases
+    testNoWarning("const foo = goog.string.Const.from; foo('foo');");
+    testWarning(
+        "const foo = goog.string.Const.from; const bar = ''; foo(bar);",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanNonLiteralArgsToGoogStringConstFrom Message");
+
+    // test alias of alias
+    testNoWarning("const foo = goog.string.Const.from; const bar = foo; bar('foo');");
+    // this should be a warning, but it isn't.
+    testNoWarning("const foo = goog.string.Const.from; const bar = foo; const baz = ''; bar(baz);");
+  }
+
+  @Test
+  public void testBanNonLiteralArgsToGoogStringConstFrom_googRequire_noAlias() {
+    configuration = getBannedNonLiteralArgsConfiguration();
+
+    Externs externs =
+        externs(
+            lines(
+                DEFAULT_EXTERNS,
+                lines(
+                    "goog.provide('goog.string.Const');",
+                    "/** @constructor */ goog.string.Const = function() {};",
+                    "goog.string.Const.from = function(x) {};")));
+    testNoWarning(
+        externs,
+        srcs(
+            lines(
+                "goog.module('test')",
+                "goog.require('goog.string.Const'); ",
+                "goog.string.Const.from('');")));
+
+    testWarning(
+        externs,
+        srcs(
+            lines(
+                "goog.module('test')",
+                "goog.require('goog.string.Const'); ",
+                "const bar = '';",
+                "goog.string.Const.from(bar);")),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanNonLiteralArgsToGoogStringConstFrom Message");
+  }
+
+  @Test
+  public void testBanNonLiteralArgsToGoogStringConstFrom_googRequired_localAlias() {
+    configuration = getBannedNonLiteralArgsConfiguration();
+
+    Externs externs =
+        externs(
+            lines(
+                DEFAULT_EXTERNS,
+                lines(
+                    "goog.provide('goog.string.Const');",
+                    "/** @constructor */ goog.string.Const = function() {};",
+                    "goog.string.Const.from = function(x) {};")));
+    testNoWarning(
+        externs,
+        srcs(
+            lines(
+                "goog.module('test')",
+                "const const1 = goog.require('goog.string.Const'); ",
+                "const1.from('');")));
+
+    testWarning(
+        externs,
+        srcs(
+            lines(
+                "goog.module('test')",
+                "const const1 = goog.require('goog.string.Const'); ",
+                "const bar = '';",
+                "const1.from(bar);")),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanNonLiteralArgsToGoogStringConstFrom Message");
+  }
+
+  @Test
+  public void testBanNonLiteralArgsToGoogStringConstFrom_googRequired_destructuringImport() {
+    configuration = getBannedNonLiteralArgsConfiguration();
+
+    Externs externs =
+        externs(
+            lines(
+                DEFAULT_EXTERNS,
+                lines(
+                    "goog.provide('goog.string.Const');",
+                    "/** @constructor */ goog.string.Const = function() {};",
+                    "goog.string.Const.from = function(x) {};")));
+    testNoWarning(
+        externs,
+        srcs(
+            lines(
+                "goog.module('test')",
+                "const {from} = goog.require('goog.string.Const'); ",
+                "from('');")));
+    testWarning(
+        externs,
+        srcs(
+            lines(
+                "goog.module('test')",
+                "const {from} = goog.require('goog.string.Const'); ",
+                "const bar = '';",
+                "from(bar);")),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanNonLiteralArgsToGoogStringConstFrom Message");
   }
 
   @Test
@@ -3687,6 +3851,23 @@ public final class CheckConformanceTest extends CompilerTestCase {
                 "const foo = 'safe';",
                 "const bar = foo;",
                 "(new HTMLScriptElement).setAttribute(bar, 'xxx');")));
+
+    testNoWarning(
+        externs(externs),
+        srcs(
+            lines(
+                "/** @const */",
+                "var foo = 'safe';",
+                "(new HTMLScriptElement).setAttribute(foo, 'xxx');")));
+
+    testNoWarning(
+        externs(externs),
+        srcs(
+            lines(
+                "goog.provide('test.Attribute');",
+                "/** @const */",
+                "test.Attribute.foo = 'safe';",
+                "(new HTMLScriptElement).setAttribute(test.Attribute.foo, 'xxx');")));
 
     testNoWarning(
         externs(externs),

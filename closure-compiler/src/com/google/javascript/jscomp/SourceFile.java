@@ -43,14 +43,13 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An abstract representation of a source file that provides access to language-neutral features.
@@ -296,6 +295,17 @@ public final class SourceFile implements StaticSourceFile {
   /** Sets the source kind. */
   public void setKind(SourceKind kind) {
     this.kind = kind;
+  }
+
+  private boolean isClosureUnawareCode = false;
+
+  @Override
+  public boolean isClosureUnawareCode() {
+    return isClosureUnawareCode;
+  }
+
+  public void markAsClosureUnawareCode() {
+    this.isClosureUnawareCode = true;
   }
 
   @Override
@@ -551,6 +561,7 @@ public final class SourceFile implements StaticSourceFile {
     // file when compilation began and parsing ran.
     this.numLines = protoNumLines != -1 ? protoNumLines : this.numLines;
     this.numBytes = protoNumBytes != -1 ? protoNumBytes : this.numBytes;
+    this.isClosureUnawareCode = protoSourceFile.getIsClosureUnawareCode();
   }
 
   @GwtIncompatible("java.io.Reader")
@@ -560,6 +571,9 @@ public final class SourceFile implements StaticSourceFile {
     // Restore the number of lines/bytes, which are offset by 1 in the proto.
     sourceFile.numLines = protoSourceFile.getNumLinesPlusOne() - 1;
     sourceFile.numBytes = protoSourceFile.getNumBytesPlusOne() - 1;
+    if (protoSourceFile.getIsClosureUnawareCode()) {
+      sourceFile.markAsClosureUnawareCode();
+    }
     return sourceFile;
   }
 
@@ -726,7 +740,7 @@ public final class SourceFile implements StaticSourceFile {
 
       return new SourceFile(
           new CodeLoader.OnDisk(
-              (this.pathWithFilesystem != null) ? this.pathWithFilesystem : Paths.get(this.path),
+              (this.pathWithFilesystem != null) ? this.pathWithFilesystem : Path.of(this.path),
               this.charset),
           displayPath,
           this.kind);
@@ -900,6 +914,7 @@ public final class SourceFile implements StaticSourceFile {
         .toProtoLocationBuilder(this.getName())
         .setFilename(this.getName())
         .setSourceKind(sourceKindToProto(this.getKind()))
+        .setIsClosureUnawareCode(this.isClosureUnawareCode)
         .setNumLinesPlusOne(this.numLines + 1)
         .setNumBytesPlusOne(this.numBytes + 1)
         .build();

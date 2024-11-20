@@ -625,4 +625,23 @@ public class ConcretizeStaticInheritanceForInliningTest extends CompilerTestCase
             "$jscomp.inherits(Subclass, Example);",
             "goog.addSingletonGetter(Subclass);"));
   }
+
+  @Test
+  public void testNonQnameConstructor_doesntPolluteListOfAssignments() {
+    // Reproduce a bug that once created a nonsensical assignment:
+    //   Subclass.staticMethod = Example.staticMethod;
+    testSame(
+        lines(
+            "const ns = {};",
+            "/** @constructor */",
+            "ns['NOT_A_NAME'] = function() {};",
+            "ns['NOT_A_NAME'].staticMethod = function() { alert(1); }",
+            "",
+            "/** @constructor */",
+            "const Example = function() {}",
+            "",
+            "/** @constructor @extends {Example} */",
+            "function Subclass() {}",
+            "$jscomp.inherits(Subclass, Example);"));
+  }
 }

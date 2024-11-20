@@ -31,16 +31,15 @@ import org.jetbrains.kotlin.backend.jvm.fullValueParameterList
 import org.jetbrains.kotlin.backend.jvm.getRequiresMangling
 import org.jetbrains.kotlin.backend.jvm.ir.getJvmNameFromAnnotation
 import org.jetbrains.kotlin.backend.jvm.ir.getSingleAbstractMethod
-import org.jetbrains.kotlin.backend.jvm.lower.StaticInitializersLowering
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.descriptors.ClassKind
+import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.SourceFile
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI
-import org.jetbrains.kotlin.ir.backend.js.ir.JsIrBuilder
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
@@ -55,6 +54,7 @@ import org.jetbrains.kotlin.ir.declarations.IrField
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrOverridableMember
+import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.declarations.IrTypeParametersContainer
@@ -74,9 +74,11 @@ import org.jetbrains.kotlin.ir.expressions.IrFunctionReference
 import org.jetbrains.kotlin.ir.expressions.IrGetField
 import org.jetbrains.kotlin.ir.expressions.IrLoop
 import org.jetbrains.kotlin.ir.expressions.IrMemberAccessExpression
+import org.jetbrains.kotlin.ir.expressions.IrPropertyReference
 import org.jetbrains.kotlin.ir.expressions.IrSetField
 import org.jetbrains.kotlin.ir.expressions.IrSetValue
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
+import org.jetbrains.kotlin.ir.expressions.IrTypeOperator
 import org.jetbrains.kotlin.ir.expressions.IrTypeOperatorCall
 import org.jetbrains.kotlin.ir.symbols.IrClassifierSymbol
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
@@ -88,6 +90,7 @@ import org.jetbrains.kotlin.ir.types.IrTypeArgument
 import org.jetbrains.kotlin.ir.types.IrTypeProjection
 import org.jetbrains.kotlin.ir.types.classOrFail
 import org.jetbrains.kotlin.ir.types.classOrNull
+import org.jetbrains.kotlin.ir.types.classifierOrNull
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.extractTypeParameters
 import org.jetbrains.kotlin.ir.types.impl.makeTypeProjection
@@ -128,12 +131,14 @@ import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.utils.addIfNotNull
 
 /** Returns the actual function expression from inside a nested type operator. */
-fun IrTypeOperatorCall.getFunctionExpression(): IrFunctionExpression =
+fun IrTypeOperatorCall.unfoldExpression(): IrExpression =
   // TODO(b/225955286): Fix to handle the general case.
   argument.let {
     when (it) {
-      is IrTypeOperatorCall -> it.getFunctionExpression()
-      is IrFunctionExpression -> it
+      is IrTypeOperatorCall -> it.unfoldExpression()
+      is IrFunctionExpression,
+      is IrFunctionReference,
+      is IrPropertyReference -> it
       else -> throw IllegalStateException("Unsupported arguments type")
     }
   }
@@ -241,8 +246,7 @@ fun IrMemberAccessExpression<*>.getTypeSubstitutionMap(
 
   val receiverType =
     if (superQualifierSymbol != null) superQualifierSymbol.defaultType as? IrSimpleType
-    else dispatchReceiver?.type as? IrSimpleType
-
+    else getRealDispatcherReceiverForTypeSubstitution(irFunction)
   val dispatchReceiverTypeArguments = receiverType?.arguments ?: emptyList()
 
   if (typeParameters.isEmpty() && dispatchReceiverTypeArguments.isEmpty()) {
@@ -278,6 +282,44 @@ fun IrMemberAccessExpression<*>.getTypeSubstitutionMap(
     it.value.symbol to makeTypeProjection(getTypeArgument(it.index)!!, it.value.variance)
     // End of modification
   }
+}
+
+// TODO(b/377502016): remove this method when bug on JetBrain side is fixed.
+private fun IrMemberAccessExpression<*>.getRealDispatcherReceiverForTypeSubstitution(
+  callee: IrFunction
+): IrSimpleType? {
+  val dispatchReceiver = this.dispatchReceiver
+  // With K2, we see extra implicit cast inserted on the dispatch receiver on fakeoverride function
+  // calls.
+  // The targeted function still being the fakeoverride defined on the original dispatch receiver
+  // class (before the implicit cast), we need to return the original type to not lose any type
+  // argument information that would break our type substitution mechanism.
+  // Ex: let say we have a property `var foo : Foo<String> = ...`, when we call the
+  // equals() methods on it, Kotlinc *may* implicitly cast `foo` to `Any` losing the type argument
+  // of `Foo`. The call to `equals` is still targeting to the fakeoverride `equals` method defined
+  // on Foo.
+
+  // We try to narrow as much as we can the cases where we need to "patch" the dispatchReceiver type
+  if (
+    dispatchReceiver is IrTypeOperatorCall &&
+      dispatchReceiver.operator == IrTypeOperator.IMPLICIT_CAST
+  ) {
+    val originalDispatchReceiver = dispatchReceiver.argument
+
+    if (
+      // We only need that for fake override where we need to propagate type parameter substitution.
+      callee.isFakeOverride &&
+        // Patch the dispatchReceiver only if the callee is defined on the class of the type before
+        // the implicit cast
+        callee.parentClassOrNull != null &&
+        callee.parentClassOrNull!!.symbol == originalDispatchReceiver.type.classOrNull
+    ) {
+
+      return originalDispatchReceiver.type as? IrSimpleType
+    }
+  }
+
+  return dispatchReceiver?.type as? IrSimpleType
 }
 
 // Adapted from org/jetbrains/kotlin/ir/util/IrUtils.kt
@@ -416,11 +458,14 @@ fun IrDeclaration.getTopLevelEnclosingClass(): IrClass {
   return checkNotNull(parentClassOrNull).getTopLevelEnclosingClass()
 }
 
-val IrClassifierSymbol.nonNullFqn: FqName
+val IrClassifierSymbol.fqnOrFail: FqName
   get() =
     checkNotNull((owner as? IrDeclarationWithName)?.fqNameWhenAvailable) {
       "Fqn not available for this kind of class [$this]"
     }
+
+val IrType.fqnOrFail: FqName
+  get() = checkNotNull(classifierOrNull?.fqnOrFail) { "Fqn not available for this type [$this]" }
 
 val IrFunction.isAbstract: Boolean
   get() = this is IrOverridableMember && modality == Modality.ABSTRACT
@@ -482,32 +527,16 @@ val IrDeclaration.isSynthetic
       // onto the original annotations. We have no use for these stubs.
       origin == JvmLoweredDeclarationOrigin.SYNTHETIC_METHOD_FOR_PROPERTY_OR_TYPEALIAS_ANNOTATIONS
 
+private val clinitName = Name.special("<clinit>")
+
 val IrDeclaration.isClinit: Boolean
-  get() = this is IrFunction && name == StaticInitializersLowering.Companion.clinitName
+  get() = this is IrFunction && name == clinitName
 
 private val IrFunction.isPropertyGetter: Boolean
   get() = this is IrSimpleFunction && this == this.correspondingPropertySymbol?.owner?.getter
 
-val IrFunction.isDecomposedFieldInitializer
-  get() = origin == JsIrBuilder.SYNTHESIZED_DECLARATION && name.asString().endsWith("\$init\$")
-
-val IrFunction.hasVoidReturn
-  // Functions that explicitly return Unit should be treated as a void return. However, decomposed
-  // blocks from field initializers will be transformed into an init function. In that case we want
-  // to honor the Unit return rather than void.
-  //
-  // For example:
-  // fun foo(): Unit {}
-  // val f = foo()
-  //
-  // will be decomposed into:
-  //
-  // val f = f$init()
-  // fun f$init() {
-  //   foo()
-  //   return Unit
-  // }
-  get() = returnType.isUnit() && !isDecomposedFieldInitializer && !isPropertyGetter
+val IrFunction.hasVoidReturn: Boolean
+  get() = returnType.isUnit() && !isPropertyGetter
 
 fun IrFunction.javaName(jvmBackendContext: JvmBackendContext): String? =
   when (this) {
@@ -688,6 +717,9 @@ val IrElement.isFieldAssignment: Boolean
 val IrElement.isLabeledExpression: Boolean
   get() = this is IrLoop && label != null
 
+val IrElement.isPrimaryConstructor: Boolean
+  get() = this is IrConstructor && this.isPrimary
+
 fun IrAnnotationContainer.copyAnnotationsWhen(
   filter: IrConstructorCall.() -> Boolean
 ): List<IrConstructorCall> {
@@ -695,3 +727,16 @@ fun IrAnnotationContainer.copyAnnotationsWhen(
     if (it.filter()) it.deepCopyWithSymbols(this as? IrDeclarationParent) else null
   }
 }
+
+val IrProperty.hasAccessors: Boolean
+  get() = visibility != DescriptorVisibilities.PRIVATE || hasDefinedAccessors
+
+private val IrProperty.hasDefinedAccessors: Boolean
+  get() =
+    (getter != null && !getter!!.isDefaultPropertyAccessor) ||
+      (setter != null && !setter!!.isDefaultPropertyAccessor)
+
+private val IrFunction.isDefaultPropertyAccessor: Boolean
+  get() =
+    origin == IrDeclarationOrigin.DEFAULT_PROPERTY_ACCESSOR &&
+      (this is IrSimpleFunction && correspondingPropertySymbol != null)

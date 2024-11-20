@@ -19,14 +19,13 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -106,7 +105,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
   static final DiagnosticType DUPLICATE_CLASS =
       DiagnosticType.error("DUPLICATE_CLASS", "Multiple classes cannot share the same name: {0}");
 
-  private final Set<String> duplicateClassNames = new HashSet<>();
+  private final Set<String> duplicateClassNames = new LinkedHashSet<>();
 
   // Property names that may cause issues if they are concretized.
   private static final ImmutableSet<String> BANNED_PROP_NAMES =
@@ -116,7 +115,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
     // All static members to the class including get set properties.
     private final Set<Node> staticMembers = new LinkedHashSet<>();
     // Keep updated the set of static member names to avoid O(n^2) searches.
-    private final Set<String> staticMemberNames = new HashSet<>();
+    private final Set<String> staticMemberNames = new LinkedHashSet<>();
     // Collect all the static field accesses to the class.
     private final Set<Node> staticFieldAccess = new LinkedHashSet<>();
     // Collect all get set properties as defined by Object.defineProperties(...)
@@ -202,7 +201,9 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
   }
 
   private void copyStaticMembers(
-      JavascriptClass superClass, JavascriptClass subClass, Node inheritsCall,
+      JavascriptClass superClass,
+      JavascriptClass subClass,
+      Node inheritsCall,
       FindStaticMembers findStaticMembers) {
     for (Node staticMember : superClass.staticMembers) {
       checkState(staticMember.isAssign(), staticMember);
@@ -275,7 +276,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
     final List<Node> inheritsCalls = new ArrayList<>();
     // Store the order we find class definitions and static fields.  Copied statics must occur
     // after both the namespace and the copied property are defined.
-    final Map<Node, Integer> nodeOrder = new HashMap<>();
+    final Map<Node, Integer> nodeOrder = new LinkedHashMap<>();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -325,6 +326,9 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
       JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(n);
       if (classInfo != null && classInfo.isConstructor()) {
         String name = NodeUtil.getName(n);
+        if (name == null) {
+          return;
+        }
         if (classByAlias.containsKey(name)) {
           duplicateClassNames.add(name);
         } else {
@@ -334,6 +338,8 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
     }
 
     private void setAlias(String original, String alias) {
+      Preconditions.checkNotNull(original, "original is null");
+      Preconditions.checkNotNull(alias, "alias is null");
       checkArgument(classByAlias.containsKey(original));
       classByAlias.put(alias, classByAlias.get(original));
     }
@@ -369,7 +375,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
         return;
       }
       String maybeOriginalName = child.getFirstChild().getQualifiedName();
-      if (classByAlias.containsKey(maybeOriginalName)) {
+      if (maybeOriginalName != null && classByAlias.containsKey(maybeOriginalName)) {
         String maybeAlias = child.getQualifiedName();
         if (maybeAlias != null) {
           setAlias(maybeOriginalName, maybeAlias);

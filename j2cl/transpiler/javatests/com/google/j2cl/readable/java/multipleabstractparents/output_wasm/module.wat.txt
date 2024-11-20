@@ -25,6 +25,38 @@
  ))
 )
 
+;;; Code for multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor [type definition]
+(type $multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_getFoo__java_lang_Object__java_lang_String (ref $function.m_getFoo__java_lang_Object__java_lang_String))
+ ))
+)
+(type $multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor (sub $java.lang.Object (struct
+ (field $vtable (ref $multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor.vtable))
+ (field $itable (ref $multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
+;;; Code for multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor [type definition]
+(type $multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_getFoo__java_lang_Object__java_lang_String (ref $function.m_getFoo__java_lang_Object__java_lang_String))
+ ))
+)
+(type $multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor (sub $java.lang.Object (struct
+ (field $vtable (ref $multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor.vtable))
+ (field $itable (ref $multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
 ;;; Code for multipleabstractparents.MultipleAbstractParents.AbstractListCollection [type definition]
 (type $multipleabstractparents.MultipleAbstractParents.AbstractListCollection.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
@@ -74,9 +106,26 @@
 )
 
 ;;; Code for multipleabstractparents.MultipleAbstractParents.IStringList [type definition]
-(type $multipleabstractparents.MultipleAbstractParents.IStringList.vtable (sub (struct
+(type $multipleabstractparents.MultipleAbstractParents.IStringList.vtable (sub $multipleabstractparents.MultipleAbstractParents.List.vtable (struct
  (field $m_getFoo__java_lang_Object__java_lang_String (ref $function.m_getFoo__java_lang_Object__java_lang_String))
  (field $m_getFoo__java_lang_String__java_lang_String (ref $function.m_getFoo__java_lang_String__java_lang_String))
+ ))
+)
+
+;;; Code for multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor [type definition]
+(type $multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_getFoo__java_lang_Object__java_lang_String (ref $function.m_getFoo__java_lang_Object__java_lang_String))
+ (field $m_getFoo__java_lang_String__java_lang_String (ref $function.m_getFoo__java_lang_String__java_lang_String))
+ ))
+)
+(type $multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor (sub $java.lang.Object (struct
+ (field $vtable (ref $multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor.vtable))
+ (field $itable (ref $multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
 
@@ -162,6 +211,23 @@
  ))
 )
 
+;;; Code for multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 [type definition]
+(type $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2.vtable (sub $multipleabstractparents.MultipleAbstractParents.AbstractStringList2.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_getFoo__java_lang_Object__java_lang_String (ref $function.m_getFoo__java_lang_Object__java_lang_String))
+ (field $m_getFoo__java_lang_String__java_lang_String (ref $function.m_getFoo__java_lang_String__java_lang_String))
+ ))
+)
+(type $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 (sub $multipleabstractparents.MultipleAbstractParents.AbstractStringList2 (struct
+ (field $vtable (ref $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2.vtable))
+ (field $itable (ref $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
 ;;; Code for multipleabstractparents.MultipleAbstractParents.StringList [type definition]
 (type $multipleabstractparents.MultipleAbstractParents.StringList.vtable (sub $multipleabstractparents.MultipleAbstractParents.AbstractStringList.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
@@ -202,6 +268,10 @@
 
 ;;; Code for multipleabstractparents.MultipleAbstractParents [imports]
 
+;;; Code for multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor [imports]
+
+;;; Code for multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor [imports]
+
 ;;; Code for multipleabstractparents.MultipleAbstractParents.AbstractListCollection [imports]
 
 ;;; Code for multipleabstractparents.MultipleAbstractParents.AbstractCollection [imports]
@@ -209,6 +279,8 @@
 ;;; Code for multipleabstractparents.MultipleAbstractParents.AbstractList2 [imports]
 
 ;;; Code for multipleabstractparents.MultipleAbstractParents.IStringList [imports]
+
+;;; Code for multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor [imports]
 
 ;;; Code for multipleabstractparents.MultipleAbstractParents.AbstractList [imports]
 
@@ -220,6 +292,8 @@
 
 ;;; Code for multipleabstractparents.MultipleAbstractParents.AbstractStringList [imports]
 
+;;; Code for multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 [imports]
+
 ;;; Code for multipleabstractparents.MultipleAbstractParents.StringList [imports]
 
 ;;; Code for multipleabstractparents.MultipleAbstractParents.StringListChild [imports]
@@ -229,6 +303,30 @@
  (i32.const 0)
 )
 (global $$class@multipleabstractparents.MultipleAbstractParents (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor [static fields]
+(global $$class-initialized@multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor (mut i32)
+ (i32.const 0)
+)
+(global $$class@multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor [static fields]
+(global $$class-initialized@multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor (mut i32)
+ (i32.const 0)
+)
+(global $$class@multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor [static fields]
+(global $$class-initialized@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor (mut i32)
+ (i32.const 0)
+)
+(global $$class@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor (mut (ref null $java.lang.Class))
  (ref.null $java.lang.Class)
 )
 
@@ -312,6 +410,14 @@
  (ref.null $java.lang.Class)
 )
 
+;;; Code for multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 [static fields]
+(global $$class-initialized@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 (mut i32)
+ (i32.const 0)
+)
+(global $$class@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
 ;;; Code for multipleabstractparents.MultipleAbstractParents.AbstractStringList3 [static fields]
 (global $$class-initialized@multipleabstractparents.MultipleAbstractParents.AbstractStringList3 (mut i32)
  (i32.const 0)
@@ -362,6 +468,25 @@
  )
 )
 
+;;; Code for multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 [vtable.init]
+(global $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2.vtable (ref $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2.vtable)
+ (struct.new $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2.vtable
+  (ref.func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2)
+  (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
+  (ref.func $m_hashCode__int@java.lang.Object)
+  (ref.func $m_toString__java_lang_String@java.lang.Object)
+  (ref.func $m_getFoo__java_lang_Object__java_lang_String@multipleabstractparents.MultipleAbstractParents.AbstractStringList2)
+  (ref.func $m_getFoo__java_lang_String__java_lang_String@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2)
+ )
+)
+(global $multipleabstractparents.MultipleAbstractParents.IStringList.vtable@$multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 (ref $multipleabstractparents.MultipleAbstractParents.IStringList.vtable)
+ (struct.new $multipleabstractparents.MultipleAbstractParents.IStringList.vtable
+  (ref.func $m_getFoo__java_lang_Object__java_lang_String@multipleabstractparents.MultipleAbstractParents.AbstractStringList2)
+  (ref.func $m_getFoo__java_lang_String__java_lang_String@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2)
+ )
+)
+(global $multipleabstractparents.MultipleAbstractParents.List.vtable@$multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 (ref $multipleabstractparents.MultipleAbstractParents.IStringList.vtable) (global.get $multipleabstractparents.MultipleAbstractParents.IStringList.vtable@$multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2))
+
 ;;; Code for multipleabstractparents.MultipleAbstractParents.StringList [vtable.init]
 (global $multipleabstractparents.MultipleAbstractParents.StringList.vtable (ref $multipleabstractparents.MultipleAbstractParents.StringList.vtable)
  (struct.new $multipleabstractparents.MultipleAbstractParents.StringList.vtable
@@ -379,11 +504,7 @@
   (ref.func $m_getFoo__java_lang_String__java_lang_String@multipleabstractparents.MultipleAbstractParents.AbstractStringList)
  )
 )
-(global $multipleabstractparents.MultipleAbstractParents.List.vtable@$multipleabstractparents.MultipleAbstractParents.StringList (ref $multipleabstractparents.MultipleAbstractParents.List.vtable)
- (struct.new $multipleabstractparents.MultipleAbstractParents.List.vtable
-  (ref.func $m_getFoo__java_lang_Object__java_lang_String@multipleabstractparents.MultipleAbstractParents.AbstractCollection)
- )
-)
+(global $multipleabstractparents.MultipleAbstractParents.List.vtable@$multipleabstractparents.MultipleAbstractParents.StringList (ref $multipleabstractparents.MultipleAbstractParents.IStringList.vtable) (global.get $multipleabstractparents.MultipleAbstractParents.IStringList.vtable@$multipleabstractparents.MultipleAbstractParents.StringList))
 
 ;;; Code for multipleabstractparents.MultipleAbstractParents.StringListChild [vtable.init]
 (global $multipleabstractparents.MultipleAbstractParents.StringListChild.vtable (ref $multipleabstractparents.MultipleAbstractParents.StringListChild.vtable)
@@ -402,26 +523,22 @@
   (ref.func $m_getFoo__java_lang_String__java_lang_String@multipleabstractparents.MultipleAbstractParents.AbstractStringList)
  )
 )
-(global $multipleabstractparents.MultipleAbstractParents.List.vtable@$multipleabstractparents.MultipleAbstractParents.StringListChild (ref $multipleabstractparents.MultipleAbstractParents.List.vtable)
- (struct.new $multipleabstractparents.MultipleAbstractParents.List.vtable
-  (ref.func $m_getFoo__java_lang_Object__java_lang_String@multipleabstractparents.MultipleAbstractParents.AbstractCollection)
- )
-)
+(global $multipleabstractparents.MultipleAbstractParents.List.vtable@$multipleabstractparents.MultipleAbstractParents.StringListChild (ref $multipleabstractparents.MultipleAbstractParents.IStringList.vtable) (global.get $multipleabstractparents.MultipleAbstractParents.IStringList.vtable@$multipleabstractparents.MultipleAbstractParents.StringListChild))
 
 ;;; Code for multipleabstractparents.MultipleAbstractParents.List [methods]
 
 ;;; void List.$clinit()
 (func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.List
- ;;@ multipleabstractparents/MultipleAbstractParents.java:19:19
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:19:19
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:19:19
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:19:19
   (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.List)
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:19:19
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:19:19
     (return )
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:19:19
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:19:19
   (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.List (i32.const 1))
  )
 )
@@ -444,16 +561,16 @@
 
 ;;; void Collection.$clinit()
 (func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.Collection
- ;;@ multipleabstractparents/MultipleAbstractParents.java:23:19
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:23:19
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:23:19
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:23:19
   (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.Collection)
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:23:19
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:23:19
     (return )
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:23:19
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:23:19
   (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.Collection (i32.const 1))
  )
 )
@@ -477,16 +594,16 @@
 ;;; MultipleAbstractParents MultipleAbstractParents.$create()
 (func $$create__@multipleabstractparents.MultipleAbstractParents
  (result (ref null $multipleabstractparents.MultipleAbstractParents))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:18:13
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:18:13
  (local $$instance (ref null $multipleabstractparents.MultipleAbstractParents))
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:18:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:18:13
   (call $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:18:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:18:13
   (local.set $$instance (struct.new $multipleabstractparents.MultipleAbstractParents (ref.as_non_null (global.get $multipleabstractparents.MultipleAbstractParents.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:18:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:18:13
   (call $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents@multipleabstractparents.MultipleAbstractParents (ref.as_non_null (local.get $$instance)))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:18:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:18:13
   (return (local.get $$instance))
  )
 )
@@ -494,9 +611,9 @@
 ;;; void MultipleAbstractParents.$ctor()
 (func $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents@multipleabstractparents.MultipleAbstractParents
  (param $this (ref null $multipleabstractparents.MultipleAbstractParents))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:18:13
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:18:13
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:18:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:18:13
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -504,37 +621,37 @@
 ;;; void MultipleAbstractParents.main(String... args)
 (func $m_main__arrayOf_java_lang_String__void@multipleabstractparents.MultipleAbstractParents
  (param $args (ref null $javaemul.internal.WasmArray.OfObject))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:59:21
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:66:21
  (local $$qualifier (ref null $multipleabstractparents.MultipleAbstractParents.ArrayList))
  (local $$qualifier_1 (ref null $multipleabstractparents.MultipleAbstractParents.StringList))
  (local $$qualifier_2 (ref null $java.lang.Object))
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:59:42
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:66:42
   (call $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:60:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:67:4
   (if (call $m_areWasmAssertionsEnabled__boolean@javaemul.internal.Asserts )
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:60:4
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:67:4
     (call $$assert__boolean__void@javaemul.internal.Asserts (call $m_equals__java_lang_Object__boolean@java.lang.String (ref.as_non_null (block (result (ref null $java.lang.String))
      (local.set $$qualifier (call $$create__@multipleabstractparents.MultipleAbstractParents.ArrayList ))
      (call_ref $function.m_getFoo__java_lang_Object__java_lang_String (ref.as_non_null (local.get $$qualifier))(ref.null $java.lang.String)(struct.get $multipleabstractparents.MultipleAbstractParents.ArrayList.vtable $m_getFoo__java_lang_Object__java_lang_String (struct.get $multipleabstractparents.MultipleAbstractParents.ArrayList $vtable(local.get $$qualifier))))
     ))(call $$getString_|AbstractColl...|__java_lang_String_<once>_@multipleabstractparents.MultipleAbstractParents )))
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:61:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:68:4
   (if (call $m_areWasmAssertionsEnabled__boolean@javaemul.internal.Asserts )
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:61:4
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:68:4
     (call $$assert__boolean__void@javaemul.internal.Asserts (call $m_equals__java_lang_Object__boolean@java.lang.String (ref.as_non_null (block (result (ref null $java.lang.String))
      (local.set $$qualifier_1 (call $$create__@multipleabstractparents.MultipleAbstractParents.StringList ))
      (call_ref $function.m_getFoo__java_lang_Object__java_lang_String (ref.as_non_null (local.get $$qualifier_1))(ref.null $java.lang.String)(struct.get $multipleabstractparents.MultipleAbstractParents.StringList.vtable $m_getFoo__java_lang_Object__java_lang_String (struct.get $multipleabstractparents.MultipleAbstractParents.StringList $vtable(local.get $$qualifier_1))))
     ))(call $$getString_|AbstractColl...|__java_lang_String_<once>_@multipleabstractparents.MultipleAbstractParents )))
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:62:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:69:4
   (if (call $m_areWasmAssertionsEnabled__boolean@javaemul.internal.Asserts )
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:62:4
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:69:4
     (call $$assert__boolean__void@javaemul.internal.Asserts (call $m_equals__java_lang_Object__boolean@java.lang.String (ref.as_non_null (block (result (ref null $java.lang.String))
      (local.set $$qualifier_2 (call $$create__@multipleabstractparents.MultipleAbstractParents.StringList ))
      (call_ref $function.m_getFoo__java_lang_String__java_lang_String (ref.as_non_null (local.get $$qualifier_2))(ref.null $java.lang.String)(struct.get $multipleabstractparents.MultipleAbstractParents.IStringList.vtable $m_getFoo__java_lang_String__java_lang_String (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.IStringList.vtable) (call $get.itable.$multipleabstractparents.MultipleAbstractParents.IStringList (local.get $$qualifier_2)))))
@@ -546,18 +663,18 @@
 
 ;;; void MultipleAbstractParents.$clinit()
 (func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents
- ;;@ multipleabstractparents/MultipleAbstractParents.java:18:13
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:18:13
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:18:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:18:13
   (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents)
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:18:13
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:18:13
     (return )
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:18:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:18:13
   (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents (i32.const 1))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:18:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:18:13
   (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
@@ -589,32 +706,146 @@
 )
 (elem declare func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents)
 
+;;; Code for multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor [methods]
+
+;;; void $LambdaAdaptor.$ctor()
+(func $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_List_$LambdaAdaptor@multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor
+ (param $this (ref null $multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor))
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:19:19
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:19:19
+  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; void $LambdaAdaptor.$clinit()
+(func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:19:19
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:19:19
+  (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor)
+   (then
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:19:19
+    (return )
+   )
+  )
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:19:19
+  (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor (i32.const 1))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:19:19
+  (call $$clinit__void_<once>_@java.lang.Object )
+ )
+)
+
+;;; Class<T> $LambdaAdaptor.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor
+ (result (ref null $java.lang.Class))
+ (block
+  (if (i32.eqz (ref.is_null (global.get $$class@multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor)))
+   (then
+    (return (global.get $$class@multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor))
+   )
+  )
+  (global.set $$class@multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|multipleabst...|__java_lang_String_<once>_@multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor))
+ )
+)
+
+;;; Class<?> $LambdaAdaptor.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor))
+ (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor) (local.get $this.untyped)))
+ (block
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.List.$LambdaAdaptor)
+
+;;; Code for multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor [methods]
+
+;;; void $LambdaAdaptor.$ctor()
+(func $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_Collection_$LambdaAdaptor@multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor
+ (param $this (ref null $multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor))
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:23:19
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:23:19
+  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; void $LambdaAdaptor.$clinit()
+(func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:23:19
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:23:19
+  (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor)
+   (then
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:23:19
+    (return )
+   )
+  )
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:23:19
+  (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor (i32.const 1))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:23:19
+  (call $$clinit__void_<once>_@java.lang.Object )
+ )
+)
+
+;;; Class<T> $LambdaAdaptor.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor
+ (result (ref null $java.lang.Class))
+ (block
+  (if (i32.eqz (ref.is_null (global.get $$class@multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor)))
+   (then
+    (return (global.get $$class@multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor))
+   )
+  )
+  (global.set $$class@multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|multipleabst...|__java_lang_String_<once>_@multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor))
+ )
+)
+
+;;; Class<?> $LambdaAdaptor.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor))
+ (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor) (local.get $this.untyped)))
+ (block
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.Collection.$LambdaAdaptor)
+
 ;;; Code for multipleabstractparents.MultipleAbstractParents.AbstractListCollection [methods]
 
 ;;; void AbstractListCollection.$ctor()
 (func $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_AbstractListCollection@multipleabstractparents.MultipleAbstractParents.AbstractListCollection
  (param $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractListCollection))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:27:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:27:31
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:27:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:27:31
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; void AbstractListCollection.$clinit()
 (func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractListCollection
- ;;@ multipleabstractparents/MultipleAbstractParents.java:27:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:27:31
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:27:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:27:31
   (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.AbstractListCollection)
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:27:31
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:27:31
     (return )
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:27:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:27:31
   (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.AbstractListCollection (i32.const 1))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:27:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:27:31
   (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
@@ -633,14 +864,27 @@
  )
 )
 
+;;; Class<?> AbstractListCollection.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.AbstractListCollection
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractListCollection))
+ (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.AbstractListCollection) (local.get $this.untyped)))
+ (block
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractListCollection ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.AbstractListCollection)
+
 ;;; Code for multipleabstractparents.MultipleAbstractParents.AbstractCollection [methods]
 
 ;;; void AbstractCollection.$ctor()
 (func $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_AbstractCollection@multipleabstractparents.MultipleAbstractParents.AbstractCollection
  (param $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractCollection))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:29:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:29:31
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:29:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:29:31
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -651,11 +895,11 @@
  (param $this.untyped (ref $java.lang.Object))
  (param $t (ref null $java.lang.Object))
  (result (ref null $java.lang.String))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:31:18
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:31:18
  (local $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractCollection))
  (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.AbstractCollection) (local.get $this.untyped)))
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:32:6
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:32:6
   (return (call $$getString_|AbstractColl...|__java_lang_String_<once>_@multipleabstractparents.MultipleAbstractParents ))
  )
 )
@@ -663,18 +907,18 @@
 
 ;;; void AbstractCollection.$clinit()
 (func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractCollection
- ;;@ multipleabstractparents/MultipleAbstractParents.java:29:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:29:31
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:29:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:29:31
   (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.AbstractCollection)
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:29:31
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:29:31
     (return )
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:29:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:29:31
   (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.AbstractCollection (i32.const 1))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:29:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:29:31
   (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
@@ -693,32 +937,45 @@
  )
 )
 
+;;; Class<?> AbstractCollection.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.AbstractCollection
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractCollection))
+ (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.AbstractCollection) (local.get $this.untyped)))
+ (block
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractCollection ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.AbstractCollection)
+
 ;;; Code for multipleabstractparents.MultipleAbstractParents.AbstractList2 [methods]
 
 ;;; void AbstractList2.$ctor()
 (func $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_AbstractList2@multipleabstractparents.MultipleAbstractParents.AbstractList2
  (param $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractList2))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:38:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:38:31
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:38:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:38:31
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; void AbstractList2.$clinit()
 (func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractList2
- ;;@ multipleabstractparents/MultipleAbstractParents.java:38:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:38:31
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:38:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:38:31
   (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.AbstractList2)
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:38:31
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:38:31
     (return )
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:38:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:38:31
   (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.AbstractList2 (i32.const 1))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:38:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:38:31
   (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
@@ -737,20 +994,33 @@
  )
 )
 
+;;; Class<?> AbstractList2.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.AbstractList2
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractList2))
+ (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.AbstractList2) (local.get $this.untyped)))
+ (block
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractList2 ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.AbstractList2)
+
 ;;; Code for multipleabstractparents.MultipleAbstractParents.IStringList [methods]
 
 ;;; void IStringList.$clinit()
 (func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.IStringList
- ;;@ multipleabstractparents/MultipleAbstractParents.java:42:19
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:42:19
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:42:19
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:42:19
   (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.IStringList)
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:42:19
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:42:19
     (return )
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:42:19
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:42:19
   (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.IStringList (i32.const 1))
  )
 )
@@ -769,32 +1039,105 @@
  )
 )
 
+;;; Code for multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor [methods]
+
+;;; void $LambdaAdaptor.$ctor()
+(func $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_IStringList_$LambdaAdaptor@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor
+ (param $this (ref null $multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor))
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:42:19
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:42:19
+  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; String $LambdaAdaptor.getFoo(T arg0)
+(func $m_getFoo__java_lang_Object__java_lang_String@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor
+ (type $function.m_getFoo__java_lang_Object__java_lang_String)
+ (param $this.untyped (ref $java.lang.Object))
+ (param $arg0 (ref null $java.lang.Object))
+ (result (ref null $java.lang.String))
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:42:19
+ (local $this (ref null $multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor))
+ (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor) (local.get $this.untyped)))
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:42:19
+  (return (call_ref $function.m_getFoo__java_lang_String__java_lang_String (ref.as_non_null (local.get $this))(ref.cast (ref null $java.lang.String) (local.get $arg0))(struct.get $multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor.vtable $m_getFoo__java_lang_String__java_lang_String (struct.get $multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor $vtable(local.get $this)))))
+ )
+)
+(elem declare func $m_getFoo__java_lang_Object__java_lang_String@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor)
+
+;;; void $LambdaAdaptor.$clinit()
+(func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:42:19
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:42:19
+  (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor)
+   (then
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:42:19
+    (return )
+   )
+  )
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:42:19
+  (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor (i32.const 1))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:42:19
+  (call $$clinit__void_<once>_@java.lang.Object )
+ )
+)
+
+;;; Class<T> $LambdaAdaptor.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor
+ (result (ref null $java.lang.Class))
+ (block
+  (if (i32.eqz (ref.is_null (global.get $$class@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor)))
+   (then
+    (return (global.get $$class@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor))
+   )
+  )
+  (global.set $$class@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|multipleabst...|__java_lang_String_<once>_@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor))
+ )
+)
+
+;;; Class<?> $LambdaAdaptor.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor))
+ (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor) (local.get $this.untyped)))
+ (block
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.IStringList.$LambdaAdaptor)
+
 ;;; Code for multipleabstractparents.MultipleAbstractParents.AbstractList [methods]
 
 ;;; void AbstractList.$ctor()
 (func $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_AbstractList@multipleabstractparents.MultipleAbstractParents.AbstractList
  (param $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractList))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:36:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:36:31
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:36:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:36:31
   (call $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_AbstractCollection@multipleabstractparents.MultipleAbstractParents.AbstractCollection (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; void AbstractList.$clinit()
 (func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractList
- ;;@ multipleabstractparents/MultipleAbstractParents.java:36:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:36:31
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:36:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:36:31
   (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.AbstractList)
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:36:31
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:36:31
     (return )
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:36:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:36:31
   (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.AbstractList (i32.const 1))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:36:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:36:31
   (call $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractCollection )
  )
 )
@@ -813,48 +1156,61 @@
  )
 )
 
+;;; Class<?> AbstractList.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.AbstractList
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractList))
+ (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.AbstractList) (local.get $this.untyped)))
+ (block
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractList ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.AbstractList)
+
 ;;; Code for multipleabstractparents.MultipleAbstractParents.AbstractStringList2 [methods]
 
 ;;; void AbstractStringList2.$ctor()
 (func $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_AbstractStringList2@multipleabstractparents.MultipleAbstractParents.AbstractStringList2
  (param $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractStringList2))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:50:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:50:31
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:50:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:50:31
   (call $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_AbstractList2@multipleabstractparents.MultipleAbstractParents.AbstractList2 (ref.as_non_null (local.get $this)))
  )
 )
 
-;;; String AbstractStringList2.getFoo(String arg0)
-(func $m_getFoo__java_lang_String__java_lang_String@multipleabstractparents.MultipleAbstractParents.AbstractStringList2
- (type $function.m_getFoo__java_lang_String__java_lang_String)
+;;; String AbstractStringList2.getFoo(T arg0)
+(func $m_getFoo__java_lang_Object__java_lang_String@multipleabstractparents.MultipleAbstractParents.AbstractStringList2
+ (type $function.m_getFoo__java_lang_Object__java_lang_String)
  (param $this.untyped (ref $java.lang.Object))
- (param $arg0 (ref null $java.lang.String))
+ (param $arg0 (ref null $java.lang.Object))
  (result (ref null $java.lang.String))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:50:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:50:31
  (local $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractStringList2))
  (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.AbstractStringList2) (local.get $this.untyped)))
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:50:31
-  (return (call_ref $function.m_getFoo__java_lang_Object__java_lang_String (ref.as_non_null (local.get $this))(local.get $arg0)(struct.get $multipleabstractparents.MultipleAbstractParents.AbstractStringList2.vtable $m_getFoo__java_lang_Object__java_lang_String (struct.get $multipleabstractparents.MultipleAbstractParents.AbstractStringList2 $vtable(local.get $this)))))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:50:31
+  (return (call_ref $function.m_getFoo__java_lang_String__java_lang_String (ref.as_non_null (local.get $this))(ref.cast (ref null $java.lang.String) (local.get $arg0))(struct.get $multipleabstractparents.MultipleAbstractParents.AbstractStringList2.vtable $m_getFoo__java_lang_String__java_lang_String (struct.get $multipleabstractparents.MultipleAbstractParents.AbstractStringList2 $vtable(local.get $this)))))
  )
 )
-(elem declare func $m_getFoo__java_lang_String__java_lang_String@multipleabstractparents.MultipleAbstractParents.AbstractStringList2)
+(elem declare func $m_getFoo__java_lang_Object__java_lang_String@multipleabstractparents.MultipleAbstractParents.AbstractStringList2)
 
 ;;; void AbstractStringList2.$clinit()
 (func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractStringList2
- ;;@ multipleabstractparents/MultipleAbstractParents.java:50:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:50:31
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:50:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:50:31
   (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.AbstractStringList2)
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:50:31
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:50:31
     (return )
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:50:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:50:31
   (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.AbstractStringList2 (i32.const 1))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:50:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:50:31
   (call $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractList2 )
  )
 )
@@ -873,32 +1229,45 @@
  )
 )
 
+;;; Class<?> AbstractStringList2.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.AbstractStringList2
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractStringList2))
+ (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.AbstractStringList2) (local.get $this.untyped)))
+ (block
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractStringList2 ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.AbstractStringList2)
+
 ;;; Code for multipleabstractparents.MultipleAbstractParents.AbstractStringList3 [methods]
 
 ;;; void AbstractStringList3.$ctor()
 (func $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_AbstractStringList3@multipleabstractparents.MultipleAbstractParents.AbstractStringList3
  (param $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractStringList3))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:53:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:60:31
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:53:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:60:31
   (call $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_AbstractList2@multipleabstractparents.MultipleAbstractParents.AbstractList2 (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; void AbstractStringList3.$clinit()
 (func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractStringList3
- ;;@ multipleabstractparents/MultipleAbstractParents.java:53:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:60:31
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:53:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:60:31
   (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.AbstractStringList3)
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:53:31
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:60:31
     (return )
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:53:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:60:31
   (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.AbstractStringList3 (i32.const 1))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:53:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:60:31
   (call $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractList2 )
  )
 )
@@ -917,21 +1286,34 @@
  )
 )
 
+;;; Class<?> AbstractStringList3.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.AbstractStringList3
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractStringList3))
+ (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.AbstractStringList3) (local.get $this.untyped)))
+ (block
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractStringList3 ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.AbstractStringList3)
+
 ;;; Code for multipleabstractparents.MultipleAbstractParents.ArrayList [methods]
 
 ;;; ArrayList<T> ArrayList.$create()
 (func $$create__@multipleabstractparents.MultipleAbstractParents.ArrayList
  (result (ref null $multipleabstractparents.MultipleAbstractParents.ArrayList))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:40:22
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:40:22
  (local $$instance (ref null $multipleabstractparents.MultipleAbstractParents.ArrayList))
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:40:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:40:22
   (call $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.ArrayList )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:40:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:40:22
   (local.set $$instance (struct.new $multipleabstractparents.MultipleAbstractParents.ArrayList (ref.as_non_null (global.get $multipleabstractparents.MultipleAbstractParents.ArrayList.vtable)) (ref.as_non_null (global.get $multipleabstractparents.MultipleAbstractParents.ArrayList.itable)) (i32.const 0)))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:40:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:40:22
   (call $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_ArrayList@multipleabstractparents.MultipleAbstractParents.ArrayList (ref.as_non_null (local.get $$instance)))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:40:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:40:22
   (return (local.get $$instance))
  )
 )
@@ -939,27 +1321,27 @@
 ;;; void ArrayList.$ctor()
 (func $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_ArrayList@multipleabstractparents.MultipleAbstractParents.ArrayList
  (param $this (ref null $multipleabstractparents.MultipleAbstractParents.ArrayList))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:40:22
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:40:22
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:40:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:40:22
   (call $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_AbstractList@multipleabstractparents.MultipleAbstractParents.AbstractList (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; void ArrayList.$clinit()
 (func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.ArrayList
- ;;@ multipleabstractparents/MultipleAbstractParents.java:40:22
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:40:22
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:40:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:40:22
   (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.ArrayList)
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:40:22
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:40:22
     (return )
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:40:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:40:22
   (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.ArrayList (i32.const 1))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:40:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:40:22
   (call $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractList )
  )
 )
@@ -996,9 +1378,9 @@
 ;;; void AbstractStringList.$ctor()
 (func $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_AbstractStringList@multipleabstractparents.MultipleAbstractParents.AbstractStringList
  (param $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractStringList))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:47:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:47:31
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:47:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:47:31
   (call $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_AbstractList@multipleabstractparents.MultipleAbstractParents.AbstractList (ref.as_non_null (local.get $this)))
  )
 )
@@ -1009,11 +1391,11 @@
  (param $this.untyped (ref $java.lang.Object))
  (param $arg0 (ref null $java.lang.String))
  (result (ref null $java.lang.String))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:47:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:47:31
  (local $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractStringList))
  (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.AbstractStringList) (local.get $this.untyped)))
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:47:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:47:31
   (return (call $m_getFoo__java_lang_Object__java_lang_String@multipleabstractparents.MultipleAbstractParents.AbstractCollection (ref.as_non_null (local.get $this))(local.get $arg0)))
  )
 )
@@ -1021,18 +1403,18 @@
 
 ;;; void AbstractStringList.$clinit()
 (func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractStringList
- ;;@ multipleabstractparents/MultipleAbstractParents.java:47:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:47:31
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:47:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:47:31
   (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.AbstractStringList)
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:47:31
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:47:31
     (return )
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:47:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:47:31
   (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.AbstractStringList (i32.const 1))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:47:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:47:31
   (call $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractList )
  )
 )
@@ -1051,21 +1433,124 @@
  )
 )
 
+;;; Class<?> AbstractStringList.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.AbstractStringList
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $multipleabstractparents.MultipleAbstractParents.AbstractStringList))
+ (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.AbstractStringList) (local.get $this.untyped)))
+ (block
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractStringList ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.AbstractStringList)
+
+;;; Code for multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 [methods]
+
+;;; SubAbstractStringList2 SubAbstractStringList2.$create()
+(func $$create__@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2
+ (result (ref null $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2))
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:53:22
+ (local $$instance (ref null $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2))
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:53:22
+  (call $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 )
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:53:22
+  (local.set $$instance (struct.new $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 (ref.as_non_null (global.get $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2.vtable)) (ref.as_non_null (global.get $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2.itable)) (i32.const 0)))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:53:22
+  (call $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_SubAbstractStringList2@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 (ref.as_non_null (local.get $$instance)))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:53:22
+  (return (local.get $$instance))
+ )
+)
+
+;;; void SubAbstractStringList2.$ctor()
+(func $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_SubAbstractStringList2@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2
+ (param $this (ref null $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2))
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:53:22
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:53:22
+  (call $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_AbstractStringList2@multipleabstractparents.MultipleAbstractParents.AbstractStringList2 (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; String SubAbstractStringList2.getFoo(String t)
+(func $m_getFoo__java_lang_String__java_lang_String@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2
+ (type $function.m_getFoo__java_lang_String__java_lang_String)
+ (param $this.untyped (ref $java.lang.Object))
+ (param $t (ref null $java.lang.String))
+ (result (ref null $java.lang.String))
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:55:18
+ (local $this (ref null $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2))
+ (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2) (local.get $this.untyped)))
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:56:6
+  (return (ref.null $java.lang.String))
+ )
+)
+(elem declare func $m_getFoo__java_lang_String__java_lang_String@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2)
+
+;;; void SubAbstractStringList2.$clinit()
+(func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:53:22
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:53:22
+  (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2)
+   (then
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:53:22
+    (return )
+   )
+  )
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:53:22
+  (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 (i32.const 1))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:53:22
+  (call $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractStringList2 )
+ )
+)
+
+;;; Class<T> SubAbstractStringList2.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2
+ (result (ref null $java.lang.Class))
+ (block
+  (if (i32.eqz (ref.is_null (global.get $$class@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2)))
+   (then
+    (return (global.get $$class@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2))
+   )
+  )
+  (global.set $$class@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|multipleabst...|__java_lang_String_<once>_@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 )(call $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractStringList2 )))
+  (return (global.get $$class@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2))
+ )
+)
+
+;;; Class<?> SubAbstractStringList2.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2))
+ (local.set $this (ref.cast (ref $multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2) (local.get $this.untyped)))
+ (block
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2 ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@multipleabstractparents.MultipleAbstractParents.SubAbstractStringList2)
+
 ;;; Code for multipleabstractparents.MultipleAbstractParents.StringList [methods]
 
 ;;; StringList StringList.$create()
 (func $$create__@multipleabstractparents.MultipleAbstractParents.StringList
  (result (ref null $multipleabstractparents.MultipleAbstractParents.StringList))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:55:22
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:62:22
  (local $$instance (ref null $multipleabstractparents.MultipleAbstractParents.StringList))
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:55:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:62:22
   (call $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.StringList )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:55:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:62:22
   (local.set $$instance (struct.new $multipleabstractparents.MultipleAbstractParents.StringList (ref.as_non_null (global.get $multipleabstractparents.MultipleAbstractParents.StringList.vtable)) (ref.as_non_null (global.get $multipleabstractparents.MultipleAbstractParents.StringList.itable)) (i32.const 0)))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:55:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:62:22
   (call $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_StringList@multipleabstractparents.MultipleAbstractParents.StringList (ref.as_non_null (local.get $$instance)))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:55:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:62:22
   (return (local.get $$instance))
  )
 )
@@ -1073,27 +1558,27 @@
 ;;; void StringList.$ctor()
 (func $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_StringList@multipleabstractparents.MultipleAbstractParents.StringList
  (param $this (ref null $multipleabstractparents.MultipleAbstractParents.StringList))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:55:22
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:62:22
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:55:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:62:22
   (call $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_AbstractStringList@multipleabstractparents.MultipleAbstractParents.AbstractStringList (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; void StringList.$clinit()
 (func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.StringList
- ;;@ multipleabstractparents/MultipleAbstractParents.java:55:22
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:62:22
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:55:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:62:22
   (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.StringList)
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:55:22
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:62:22
     (return )
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:55:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:62:22
   (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.StringList (i32.const 1))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:55:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:62:22
   (call $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.AbstractStringList )
  )
 )
@@ -1130,16 +1615,16 @@
 ;;; StringListChild StringListChild.$create()
 (func $$create__@multipleabstractparents.MultipleAbstractParents.StringListChild
  (result (ref null $multipleabstractparents.MultipleAbstractParents.StringListChild))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:57:22
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:64:22
  (local $$instance (ref null $multipleabstractparents.MultipleAbstractParents.StringListChild))
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:57:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:64:22
   (call $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.StringListChild )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:57:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:64:22
   (local.set $$instance (struct.new $multipleabstractparents.MultipleAbstractParents.StringListChild (ref.as_non_null (global.get $multipleabstractparents.MultipleAbstractParents.StringListChild.vtable)) (ref.as_non_null (global.get $multipleabstractparents.MultipleAbstractParents.StringListChild.itable)) (i32.const 0)))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:57:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:64:22
   (call $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_StringListChild@multipleabstractparents.MultipleAbstractParents.StringListChild (ref.as_non_null (local.get $$instance)))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:57:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:64:22
   (return (local.get $$instance))
  )
 )
@@ -1147,27 +1632,27 @@
 ;;; void StringListChild.$ctor()
 (func $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_StringListChild@multipleabstractparents.MultipleAbstractParents.StringListChild
  (param $this (ref null $multipleabstractparents.MultipleAbstractParents.StringListChild))
- ;;@ multipleabstractparents/MultipleAbstractParents.java:57:22
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:64:22
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:57:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:64:22
   (call $$ctor__void_$p_multipleabstractparents_MultipleAbstractParents_StringList@multipleabstractparents.MultipleAbstractParents.StringList (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; void StringListChild.$clinit()
 (func $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.StringListChild
- ;;@ multipleabstractparents/MultipleAbstractParents.java:57:22
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:64:22
  (block
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:57:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:64:22
   (if (global.get $$class-initialized@multipleabstractparents.MultipleAbstractParents.StringListChild)
    (then
-    ;;@ multipleabstractparents/MultipleAbstractParents.java:57:22
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:64:22
     (return )
    )
   )
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:57:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:64:22
   (global.set $$class-initialized@multipleabstractparents.MultipleAbstractParents.StringListChild (i32.const 1))
-  ;;@ multipleabstractparents/MultipleAbstractParents.java:57:22
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/multipleabstractparents/readable-j2wasm.js/multipleabstractparents/MultipleAbstractParents.java:64:22
   (call $$clinit__void_<once>_@multipleabstractparents.MultipleAbstractParents.StringList )
  )
 )

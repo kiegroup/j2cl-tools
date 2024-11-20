@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package abstractmethodoverridedefault
 
@@ -26,6 +26,7 @@ import kotlin.native.ObjCName
 
 @ObjCName("J2ktAbstractmethodoverridedefaultAbstractMethodOverrideDefault", exact = true)
 open class AbstractMethodOverrideDefault {
+ @ObjCName("J2ktAbstractmethodoverridedefaultAbstractMethodOverrideDefault_I", exact = true)
  fun interface I {
   @ObjCName("foo")
   fun foo()
@@ -34,6 +35,7 @@ open class AbstractMethodOverrideDefault {
   fun bar() {}
  }
 
+ @ObjCName("J2ktAbstractmethodoverridedefaultAbstractMethodOverrideDefault_J", exact = true)
  fun interface J {
   @ObjCName("foo")
   fun foo() {}
@@ -42,10 +44,12 @@ open class AbstractMethodOverrideDefault {
   fun bar()
  }
 
+ @ObjCName("J2ktAbstractmethodoverridedefaultAbstractMethodOverrideDefault_A", exact = true)
  abstract class A internal constructor(): AbstractMethodOverrideDefault.I {
   abstract override fun foo()
  }
 
+ @ObjCName("J2ktAbstractmethodoverridedefaultAbstractMethodOverrideDefault_B", exact = true)
  abstract class B internal constructor(): AbstractMethodOverrideDefault.A(), AbstractMethodOverrideDefault.J {
   override fun bar() {
    if (false) {
@@ -56,6 +60,7 @@ open class AbstractMethodOverrideDefault {
   abstract override fun foo()
  }
 
+ @ObjCName("J2ktAbstractmethodoverridedefaultAbstractMethodOverrideDefault_C", exact = true)
  open class C internal constructor(): AbstractMethodOverrideDefault.A() {
   override fun foo() {}
 

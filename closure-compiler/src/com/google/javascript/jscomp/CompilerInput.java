@@ -40,7 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A class for the internal representation of an input to the compiler. Wraps a {@link SourceAst}
@@ -52,7 +52,7 @@ public class CompilerInput implements DependencyInfo {
   private static final long serialVersionUID = 2L;
 
   // Info about where the file lives.
-  private JSChunk module;
+  private JSChunk chunk;
   private final InputId id;
 
   // The AST.
@@ -555,21 +555,21 @@ public class CompilerInput implements DependencyInfo {
     return getSourceFile().getCode();
   }
 
-  /** Returns the module to which the input belongs. */
+  /** Returns the chunk to which the input belongs. */
   public JSChunk getChunk() {
-    return module;
+    return chunk;
   }
 
-  /** Sets the module to which the input belongs. */
-  public void setModule(JSChunk module) {
+  /** Sets the chunk to which the input belongs. */
+  public void setChunk(JSChunk chunk) {
     // An input may only belong to one module.
-    checkArgument(module == null || this.module == null || this.module == module);
-    this.module = module;
+    checkArgument(chunk == null || this.chunk == null || this.chunk == chunk);
+    this.chunk = chunk;
   }
 
   /** Overrides the module to which the input belongs. */
-  void overrideModule(JSChunk module) {
-    this.module = module;
+  void overrideModule(JSChunk chunk) {
+    this.chunk = chunk;
   }
 
   public boolean isExtern() {

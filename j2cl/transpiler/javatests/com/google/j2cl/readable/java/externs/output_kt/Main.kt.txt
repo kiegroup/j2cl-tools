@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package externs
 
@@ -49,13 +49,13 @@ open class Main {
  @ObjCName("J2ktExternsMainCompanion", exact = true)
  companion object {
   @JvmStatic
-  internal fun testFooOverlay_private_2(fooOverlay: Main.FooOverlay?): Boolean {
+  private fun testFooOverlay(fooOverlay: Main.FooOverlay?): Boolean {
    return fooOverlay!!.getFoo()!!.equals("Hello")
   }
 
   @JvmStatic
-  @JsMethod(name = "useDirectlyAsFoo")
-  internal external fun useDirectlyAsFoo_private_2(fooOverlay: Any?)
+  @JsMethod
+  private external fun useDirectlyAsFoo(fooOverlay: Any?)
 
   @JvmStatic
   @ObjCName("main")
@@ -63,17 +63,19 @@ open class Main {
    vararg @ObjCName("withNSStringArray") args: String?
   ) {
    val args_1: Array<String?>? = args as Array<String?>?
-   Main.testFooOverlay_private_2((Main.FooImpl() as Any) as Main.FooOverlay)
-   Main.useDirectlyAsFoo_private_2(Main.FooImpl())
+   Main.testFooOverlay(Main.FooImpl() as Any as Main.FooOverlay)
+   Main.useDirectlyAsFoo(Main.FooImpl())
   }
  }
 
+ @ObjCName("J2ktExternsMain_FooImpl", exact = true)
  open class FooImpl internal constructor() {
   @JvmField
   @JsProperty(name = "foo")
   internal var foo_pp_externs: String? = null
  }
 
+ @ObjCName("J2ktExternsMain_FooOverlay", exact = true)
  @JsType(name = "Foo", namespace = JsPackage.GLOBAL, isNative = true)
  fun interface FooOverlay {
   @ObjCName("getFoo")

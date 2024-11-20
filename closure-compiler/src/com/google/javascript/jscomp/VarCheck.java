@@ -28,7 +28,7 @@ import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Checks that all variables are declared, that file-private variables are accessed only in the file
@@ -162,7 +162,14 @@ class VarCheck implements ScopedCallback, CompilerPass {
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    return true;
+    // VarCheck is one of the few passes that runs after unwrapping closure-unaware code during
+    // finalization, and unfortunately that kind of code can contain all sorts of references.
+    // We could adjust the pass order so that unwrapping happens after this pass, but that would
+    // move VarCheck before AST Validity checking. Instead, we will just teach VarCheck to skip
+    // closure-unaware code.
+    // TODO: b/321233583 - once NodeTraversal supports skipping closure unaware code as a feature,
+    // replace this check with that.
+    return !n.isClosureUnawareCode();
   }
 
   @Override
@@ -232,17 +239,17 @@ class VarCheck implements ScopedCallback, CompilerPass {
     // Check module dependencies.
     JSChunk currModule = currInput.getChunk();
     JSChunk varModule = varInput.getChunk();
-    JSChunkGraph moduleGraph = compiler.getModuleGraph();
+    JSChunkGraph chunkGraph = compiler.getChunkGraph();
     if (!validityCheck && varModule != currModule && varModule != null && currModule != null) {
       if (varModule.isWeak()) {
         this.handleUndeclaredVariableRef(t, n);
       }
 
-      if (moduleGraph.dependsOn(currModule, varModule)) {
+      if (chunkGraph.dependsOn(currModule, varModule)) {
         // The module dependency was properly declared.
       } else {
         if (scope.isGlobal()) {
-          if (moduleGraph.dependsOn(varModule, currModule)) {
+          if (chunkGraph.dependsOn(varModule, currModule)) {
             // The variable reference violates a declared module dependency.
             t.report(
                 n, VIOLATED_MODULE_DEP_ERROR, currModule.getName(), varModule.getName(), varName);

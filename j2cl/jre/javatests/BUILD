@@ -3,9 +3,10 @@
 
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@io_bazel_rules_closure//closure:defs.bzl", "closure_js_binary")
-load("//build_defs:rules.bzl", "j2cl_library", "j2cl_test", "j2kt_native_library")
+load("//build_defs:rules.bzl", "j2cl_library", "j2cl_test", "j2kt_native_library", "j2wasm_test")
 load("//javascript/tools/jscompiler/builddefs:flags.bzl", "VERBOSE_WARNING_FLAGS_STRICT", "WHITESPACE_ONLY_FLAGS")
 load("//third_party/bazel_rules/rules_closure/closure:defs.bzl", "closure_js_binary")
+load("@rules_java//java:defs.bzl", "java_test")
 load(":j2cl_multi_test.bzl", "j2cl_multi_test")
 
 package(
@@ -181,6 +182,17 @@ j2cl_test(
     ],
 )
 
+j2wasm_test(
+    name = "ConcurrentSuite_wasm_magic_string_imports",
+    shard_count = 4,
+    test_class = "com.google.j2cl.jre.ConcurrentSuite",
+    use_magic_string_imports = True,
+    runtime_deps = [
+        ":emul_tests_lib-j2wasm",
+        "//third_party/java/junit:junit-j2wasm",
+    ],
+)
+
 build_test(
     name = "conformance_test",
     tags = ["j2cl"],
@@ -194,7 +206,7 @@ build_test(
 COMFORMANCE_CHECK_FLAGS = VERBOSE_WARNING_FLAGS_STRICT + [
     "--conformance_config=conformance_proto.txt",
     "--jscomp_error=conformanceViolations",
-    "--jscomp_error=unusedLocalVariables",
+    "--jscomp_error=strictPrimitiveOperators",
     # TODO(michaelthomas): Enable once all errors are fixed. Yes, seriously.
     # "--jscomp_error=reportUnknownTypes",
 ]
@@ -203,6 +215,7 @@ closure_js_binary(
     name = "conformance_binary",
     defs = COMFORMANCE_CHECK_FLAGS,
     extra_inputs = ["conformance_proto.txt"],
+    use_precompiled_libraries = False,
     deps = ["//:jre"],
 )
 
@@ -211,6 +224,7 @@ closure_js_binary(
     compiler = "//javascript/tools/jscompiler:head",
     defs = COMFORMANCE_CHECK_FLAGS,
     extra_inputs = ["conformance_proto.txt"],
+    use_precompiled_libraries = False,
     deps = ["//:jre"],
 )
 
@@ -219,6 +233,7 @@ closure_js_binary(
     compiler = "//javascript/tools/jscompiler:head",
     defs = COMFORMANCE_CHECK_FLAGS + WHITESPACE_ONLY_FLAGS,
     extra_inputs = ["conformance_proto.txt"],
+    use_precompiled_libraries = False,
     deps = ["//:jre"],
 )
 

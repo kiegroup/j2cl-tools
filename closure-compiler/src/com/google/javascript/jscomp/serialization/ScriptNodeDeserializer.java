@@ -30,7 +30,7 @@ import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.ExtensionRegistry;
 import java.io.IOException;
 import java.math.BigInteger;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Class that deserializes an AstNode-tree representing a SCRIPT into a Node-tree.
@@ -159,9 +159,6 @@ final class ScriptNodeDeserializer {
         case PARAM_LIST:
         case CALL:
         case NEW:
-          if (node.hasTrailingComma()) {
-            this.addScriptFeature(Feature.TRAILING_COMMA_IN_PARAM_LIST);
-          }
           return;
 
         case STRING_KEY:

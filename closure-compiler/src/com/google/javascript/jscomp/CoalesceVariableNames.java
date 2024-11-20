@@ -45,7 +45,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Reuse variable names if possible.
@@ -214,13 +214,7 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
       // Rename.
       n.setString(coalescedVar.getName());
       compiler.reportChangeToEnclosingScope(n);
-
-      if (NodeUtil.isNameDeclaration(parent)
-          || (NodeUtil.getEnclosingType(n, Token.DESTRUCTURING_LHS) != null
-              && NodeUtil.isLhsByDestructuring(n))) {
-        makeDeclarationVar(coalescedVar);
-        removeVarDeclaration(n);
-      }
+      updateDeclarationsPostCoalescing(n, coalescedVar, parent);
     } else {
       // This code block is slow but since usePseudoName is for debugging,
       // we should not sacrifice performance for non-debugging compilation to
@@ -250,14 +244,69 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
       n.setString(pseudoName);
       compiler.reportChangeToEnclosingScope(n);
 
-      if (!vNode.getValue().equals(coalescedVar)
-          && (NodeUtil.isNameDeclaration(parent)
-              || (NodeUtil.getEnclosingType(n, Token.DESTRUCTURING_LHS) != null
-                  && NodeUtil.isLhsByDestructuring(n)))) {
-        makeDeclarationVar(coalescedVar);
-        removeVarDeclaration(n);
+      if (vNode.getValue().equals(coalescedVar)) {
+        return;
       }
+      updateDeclarationsPostCoalescing(n, coalescedVar, parent);
     }
+  }
+
+  /**
+   * Updates declarations of the given name node and the coalesced variable. Firstly, it converts
+   * the coalesced variable's declaration into a `var` if it is a `const` or a `let`. Secondly, it
+   * removes the declaration of the given name node if it is under a parent which is a name
+   * declaration or if the given name is a destructuring LHS name under a destructuring LHS
+   * declaration.
+   *
+   * <p>For example, when coalescing the names `a` and `b` below, it changes:
+   *
+   * <pre>
+   *   const a = 1;
+   *   const [{prop: b} = {prop: undefined}] = [{prop: 10}]; // declares `b`
+   * </pre>
+   *
+   * to
+   *
+   * <pre>
+   *   var a = 1;
+   *   [{prop: a} = {prop: undefined}] = [{prop: 10}]; // coalescing renames `b` to `a` and this
+   *                                                   // method undeclares it by removing the
+   *                                                   // `const`
+   * </pre>
+   *
+   * @param n The name node which is getting coalesced with the coalescedVar
+   * @param coalescedVar the first declared variable of a group that is being coalesced
+   * @param parent The parent node of the name node n
+   */
+  private void updateDeclarationsPostCoalescing(Node n, Var coalescedVar, Node parent) {
+    checkState(n.isName(), "trying to update the declaration of a non-name node");
+    if (NodeUtil.isNameDeclaration(parent)
+        || (NodeUtil.getEnclosingType(n, Token.DESTRUCTURING_LHS) != null
+            && NodeUtil.isLhsByDestructuring(n)
+            // Consider this to be a destructuring LHS declaration only if we don't hit an
+            // assignment like `[a,b] = [3,4]` first.
+            && !isNameInsideDestructuringAssignment(n))) {
+      // convert the coalesced variable's declaration into a `var` if it is a `const` or a `let`
+      makeDeclarationVar(coalescedVar);
+      // remove the declaration of the given name node as it has been coalesced with coalescedVar
+      removeVarDeclaration(n);
+    }
+  }
+
+  /**
+   * Is the given name node inside the LHS of a destructuring pattern assignment like `[a,b,c] =
+   * [1,2,3]`.
+   *
+   * <p>Importantly, for this pass, it means that the name is not inside a declaration like `const
+   * [a,b,c] = [1,2,3]` and must not be undeclared.
+   */
+  private boolean isNameInsideDestructuringAssignment(Node n) {
+    Node enclosingTarget = NodeUtil.getRootTarget(n);
+    if (enclosingTarget.isDestructuringPattern() && enclosingTarget.getParent().isAssign()) {
+      // This is a destructuring pattern assignment.
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -456,8 +505,8 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
       } else {
         // convert `let x;` to ``
         // and `for (let x;;) {}` to `for (;;) {}`
-        // TODO(b/260620378): We should handle `isUninitializedLetNameInLoopBody(name);` cases
-        //  separately here but it causes multiple test failures.
+        // We can expect uninitialized declarations at this point and it's okay to remove them
+        // and they've been coalesced with another declaration.
         NodeUtil.removeChild(parent, var);
       }
     }

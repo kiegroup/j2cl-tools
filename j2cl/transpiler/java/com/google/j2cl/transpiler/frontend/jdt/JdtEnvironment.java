@@ -43,6 +43,7 @@ import com.google.j2cl.transpiler.ast.Literal;
 import com.google.j2cl.transpiler.ast.MethodDescriptor;
 import com.google.j2cl.transpiler.ast.MethodDescriptor.ParameterDescriptor;
 import com.google.j2cl.transpiler.ast.NullabilityAnnotation;
+import com.google.j2cl.transpiler.ast.PackageDeclaration;
 import com.google.j2cl.transpiler.ast.PostfixOperator;
 import com.google.j2cl.transpiler.ast.PrefixOperator;
 import com.google.j2cl.transpiler.ast.PrimitiveTypes;
@@ -54,6 +55,7 @@ import com.google.j2cl.transpiler.ast.TypeVariable;
 import com.google.j2cl.transpiler.ast.Variable;
 import com.google.j2cl.transpiler.ast.Visibility;
 import com.google.j2cl.transpiler.frontend.common.Nullability;
+import com.google.j2cl.transpiler.frontend.common.PackageInfoCache;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -69,6 +71,7 @@ import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.IAnnotationBinding;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.IPackageBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.InfixExpression;
@@ -104,7 +107,8 @@ public class JdtEnvironment {
    */
   @CanIgnoreReturnValue
   public JdtEnvironment(JdtParser jdtParser, Collection<String> wellKnownTypesBinaryNames) {
-    this.packageAnnotationsResolver = PackageAnnotationsResolver.create(Stream.of(), jdtParser);
+    PackageInfoCache.init(ImmutableList.of(), null);
+    this.packageAnnotationsResolver = PackageAnnotationsResolver.create(Stream.of());
     this.initWellKnownTypes(jdtParser.resolveBindings(wellKnownTypesBinaryNames));
   }
 
@@ -383,7 +387,7 @@ public class JdtEnvironment {
                   .get();
     }
     return TypeVariable.newBuilder()
-        .setUpperBoundTypeDescriptorSupplier(upperBoundTypeDescriptorFactory)
+        .setUpperBoundTypeDescriptorFactory(upperBoundTypeDescriptorFactory)
         .setLowerBoundTypeDescriptor(getLowerBoundTypeDescriptor(typeBinding, inNullMarkedScope))
         .setWildcard(typeBinding.isWildcardType())
         .setCapture(typeBinding.isCapture())
@@ -425,13 +429,19 @@ public class JdtEnvironment {
         TypeDescriptor boundTypeDescriptor =
             createTypeDescriptorWithNullability(
                 bound, bound.getTypeAnnotations(), inNullMarkedScope);
-        return typeBinding.isUpperbound()
-            ? boundTypeDescriptor
-            : TypeDescriptors.get()
-                .javaLangObject
-                // Use the nullability of the lower bound for the upper bound of a lower bounded
-                // wildcard.
-                .toNullable(boundTypeDescriptor.isNullable());
+        if (typeBinding.isUpperbound()) {
+          return boundTypeDescriptor;
+        }
+
+        // Fallback to use type bounds to cover cases for lower bounds that also have upper bound
+        // type constraints as in the following example:
+        //
+        // interface Parent {}
+        // interface Child extends Parent {}
+        // interface Generic<T extends Parent> {}
+        //
+        // To satisfy declaration constraints, the upper bound for `Generic<? super Child>` should
+        // be `Parent`.
       }
     }
     ITypeBinding[] bounds = typeBinding.getTypeBounds();
@@ -472,7 +482,12 @@ public class JdtEnvironment {
     return false;
   }
 
-  private static TypeDescriptor withNullability(TypeDescriptor typeDescriptor, boolean nullable) {
+  @Nullable
+  private static DeclaredTypeDescriptor withNullability(
+      DeclaredTypeDescriptor typeDescriptor, boolean nullable) {
+    if (typeDescriptor == null) {
+      return null;
+    }
     return nullable ? typeDescriptor.toNullable() : typeDescriptor.toNonNullable();
   }
 
@@ -520,7 +535,6 @@ public class JdtEnvironment {
 
     return NullabilityAnnotation.NONE;
   }
-
 
   private static boolean isIntersectionType(ITypeBinding binding) {
     return binding.isIntersectionType()
@@ -868,33 +882,8 @@ public class JdtEnvironment {
     ImmutableList<TypeDescriptor> typeArgumentTypeDescriptors =
         convertTypeArguments(methodBinding.getTypeArguments(), inNullMarkedScope);
 
-    ImmutableList.Builder<ParameterDescriptor> parameterDescriptorBuilder = ImmutableList.builder();
-    // The descriptor needs to have the same number of parameters as its declaration, however in
-    // some cases with lambdas (see b/231457578) jdt adds synthetic parameters at the beginning.
-    // Hence we keep just the last n parameters, where n is the number of parameters in
-    // the declaration binding.
-    int firstNonSyntheticParameter =
-        methodBinding.getParameterTypes().length
-            - methodBinding.getMethodDeclaration().getParameterTypes().length;
-
-    for (int i = firstNonSyntheticParameter; i < methodBinding.getParameterTypes().length; i++) {
-      TypeDescriptor parameterTypeDescriptor =
-          adjustForSyntheticEnumMethod(
-              methodBinding,
-              createTypeDescriptorWithNullability(
-                  methodBinding.getParameterTypes()[i],
-                  methodBinding.getParameterAnnotations(i),
-                  inNullMarkedScope));
-
-      parameterDescriptorBuilder.add(
-          ParameterDescriptor.newBuilder()
-              .setTypeDescriptor(parameterTypeDescriptor)
-              .setJsOptional(JsInteropUtils.isJsOptional(methodBinding, i))
-              .setVarargs(
-                  i == methodBinding.getParameterTypes().length - 1 && methodBinding.isVarargs())
-              .setDoNotAutobox(JsInteropUtils.isDoNotAutobox(methodBinding, i))
-              .build());
-    }
+    ImmutableList<ParameterDescriptor> parameterDescriptors =
+        convertParameterDescriptors(methodBinding, inNullMarkedScope);
 
     ImmutableList<TypeDescriptor> exceptionTypeDescriptors =
         FluentIterable.from(methodBinding.getExceptionTypes()).stream()
@@ -902,12 +891,11 @@ public class JdtEnvironment {
             .map(TypeDescriptor::toNonNullable)
             .collect(toImmutableList());
 
-    boolean hasUncheckedCast = hasUncheckedCastAnnotation(methodBinding);
     methodDescriptor =
         MethodDescriptor.newBuilder()
             .setEnclosingTypeDescriptor(enclosingTypeDescriptor)
             .setName(isConstructor ? null : methodName)
-            .setParameterDescriptors(parameterDescriptorBuilder.build())
+            .setParameterDescriptors(parameterDescriptors)
             .setDeclarationDescriptor(declarationMethodDescriptor)
             .setReturnTypeDescriptor(returnTypeDescriptor)
             .setExceptionTypeDescriptors(exceptionTypeDescriptors)
@@ -931,10 +919,39 @@ public class JdtEnvironment {
                 JsInteropAnnotationUtils.isUnusableByJsSuppressed(methodBinding))
             .setSideEffectFree(isAnnotatedWithHasNoSideEffects(methodBinding))
             .setDeprecated(isDeprecated(methodBinding))
-            .setUncheckedCast(hasUncheckedCast)
+            .setUncheckedCast(hasUncheckedCastAnnotation(methodBinding))
             .build();
     cachedMethodDescriptorByMethodBinding.put(methodBinding, methodDescriptor);
     return methodDescriptor;
+  }
+
+  private ImmutableList<ParameterDescriptor> convertParameterDescriptors(
+      IMethodBinding methodBinding, boolean inNullMarkedScope) {
+    ITypeBinding[] parameterTypes = methodBinding.getParameterTypes();
+    ImmutableList.Builder<ParameterDescriptor> parameterDescriptorBuilder = ImmutableList.builder();
+    // The descriptor needs to have the same number of parameters as its declaration, however in
+    // some cases with lambdas (see b/231457578) jdt adds synthetic parameters at the beginning.
+    // Hence we keep just the last n parameters, where n is the number of parameters in
+    // the declaration binding.
+    int firstNonSyntheticParameter =
+        parameterTypes.length - methodBinding.getMethodDeclaration().getParameterTypes().length;
+
+    for (int i = firstNonSyntheticParameter; i < parameterTypes.length; i++) {
+      TypeDescriptor parameterTypeDescriptor =
+          adjustForSyntheticEnumMethod(
+              methodBinding,
+              createTypeDescriptorWithNullability(
+                  parameterTypes[i], methodBinding.getParameterAnnotations(i), inNullMarkedScope));
+
+      parameterDescriptorBuilder.add(
+          ParameterDescriptor.newBuilder()
+              .setTypeDescriptor(parameterTypeDescriptor)
+              .setJsOptional(JsInteropUtils.isJsOptional(methodBinding, i))
+              .setVarargs(i == parameterTypes.length - 1 && methodBinding.isVarargs())
+              .setDoNotAutobox(JsInteropUtils.isDoNotAutobox(methodBinding, i))
+              .build());
+    }
+    return parameterDescriptorBuilder.build();
   }
 
   /**
@@ -999,9 +1016,8 @@ public class JdtEnvironment {
   }
 
   public void initWellKnownTypes(Iterable<ITypeBinding> typesToResolve) {
-    if (TypeDescriptors.isInitialized()) {
-      return;
-    }
+    checkState(!TypeDescriptors.isInitialized());
+
     TypeDescriptors.SingletonBuilder builder = new TypeDescriptors.SingletonBuilder();
     // Add well-known reference types.`
     createDescriptorsFromBindings(typesToResolve).forEach(builder::addReferenceType);
@@ -1037,58 +1053,22 @@ public class JdtEnvironment {
     }
     checkArgument(typeBinding.isClass() || typeBinding.isInterface() || typeBinding.isEnum());
 
-    TypeDeclaration typeDeclaration = createDeclarationForType(typeBinding.getTypeDeclaration());
-
-    DeclaredTypeDescriptor enclosingTypeDescriptor =
-        createDeclaredTypeDescriptor(typeBinding.getDeclaringClass(), inNullMarkedScope);
-
     // Compute these even later
     typeDescriptor =
-        DeclaredTypeDescriptor.newBuilder()
-            .setTypeDeclaration(typeDeclaration)
-            .setEnclosingTypeDescriptor(
-                enclosingTypeDescriptor != null ? enclosingTypeDescriptor.toNonNullable() : null)
-            // Create the super types in the @NullMarked context of the type
-            .setSuperTypeDescriptorFactory(
-                () ->
-                    createDeclaredTypeDescriptor(
-                        typeBinding.getSuperclass(), typeDeclaration.isNullMarked()))
-            .setInterfaceTypeDescriptorsFactory(
-                () ->
-                    createTypeDescriptors(
-                        typeBinding.getInterfaces(),
-                        typeDeclaration.isNullMarked(),
-                        DeclaredTypeDescriptor.class))
-            .setTypeArgumentDescriptors(
-                getTypeArgumentTypeDescriptors(typeBinding, inNullMarkedScope))
-            .setDeclaredFieldDescriptorsFactory(
-                () -> createFieldDescriptorsOrderedById(typeBinding.getDeclaredFields()))
-            .setDeclaredMethodDescriptorsFactory(
-                () -> createMethodDescriptors(typeBinding.getDeclaredMethods()))
-            .setSingleAbstractMethodDescriptorFactory(() -> getFunctionInterfaceMethod(typeBinding))
-            .build();
+        createDeclarationForType(typeBinding.getTypeDeclaration())
+            .toDescriptor(getTypeArgumentTypeDescriptors(typeBinding, inNullMarkedScope));
     putTypeDescriptorInCache(inNullMarkedScope, typeBinding, typeDescriptor);
     return typeDescriptor;
   }
 
   @Nullable
   private MethodDescriptor getFunctionInterfaceMethod(ITypeBinding typeBinding) {
+    checkArgument(typeBinding == typeBinding.getTypeDeclaration());
     IMethodBinding functionalInterfaceMethod = typeBinding.getFunctionalInterfaceMethod();
     if (!typeBinding.isInterface() || functionalInterfaceMethod == null) {
       return null;
     }
-    // typeBinding.getFunctionalInterfaceMethod returns in some cases the method declaration
-    // instead of the method with the corresponding parameterization. Note: this is observed in
-    // the case when a type is parameterized with a wildcard, e.g. JsFunction<?>.
-    return createMethodDescriptor(
-        Arrays.stream(typeBinding.getDeclaredMethods())
-            .filter(
-                methodBinding ->
-                    methodBinding
-                        .getMethodDeclaration()
-                        .equals(functionalInterfaceMethod.getMethodDeclaration()))
-            .findFirst()
-            .orElse(functionalInterfaceMethod));
+    return createMethodDescriptor(functionalInterfaceMethod);
   }
 
   private DeclaredTypeDescriptor getCachedTypeDescriptor(
@@ -1122,11 +1102,6 @@ public class JdtEnvironment {
     throw new InternalCompilerError("Type binding %s not handled", typeBinding);
   }
 
-  private static String getJsName(final ITypeBinding typeBinding) {
-    checkArgument(!typeBinding.isPrimitive());
-    return JsInteropAnnotationUtils.getJsName(typeBinding);
-  }
-
   @Nullable
   private String getObjectiveCNamePrefix(ITypeBinding typeBinding) {
     checkArgument(!typeBinding.isPrimitive());
@@ -1136,17 +1111,6 @@ public class JdtEnvironment {
     return objectiveCNamePrefix != null || !isTopLevelType
         ? objectiveCNamePrefix
         : packageAnnotationsResolver.getObjectiveCNamePrefix(typeBinding.getPackage().getName());
-  }
-
-  @Nullable
-  private String getJsNamespace(ITypeBinding typeBinding) {
-    checkArgument(!typeBinding.isPrimitive());
-    String jsNamespace = JsInteropAnnotationUtils.getJsNamespace(typeBinding);
-    boolean isTopLevelType = typeBinding.getDeclaringClass() == null;
-
-    return jsNamespace != null || !isTopLevelType
-        ? jsNamespace
-        : packageAnnotationsResolver.getJsNameSpace(typeBinding.getPackage().getName());
   }
 
   @Nullable
@@ -1168,8 +1132,6 @@ public class JdtEnvironment {
     checkArgument(!typeBinding.isCapture());
 
     // Compute these first since they're reused in other calculations.
-    String packageName =
-        typeBinding.getPackage() == null ? null : typeBinding.getPackage().getName();
     boolean isAbstract = isAbstract(typeBinding);
     Kind kind = getKindFromTypeBinding(typeBinding);
     // TODO(b/341721484): Even though enums can not have the final modifier, turbine make them final
@@ -1195,8 +1157,6 @@ public class JdtEnvironment {
                 () ->
                     createTypeDescriptors(
                         typeBinding.getInterfaces(), isNullMarked, DeclaredTypeDescriptor.class))
-            .setUnparameterizedTypeDescriptorFactory(
-                () -> createDeclaredTypeDescriptor(typeBinding, isNullMarked))
             .setHasAbstractModifier(isAbstract)
             .setKind(kind)
             .setAnnotation(typeBinding.isAnnotation())
@@ -1215,14 +1175,14 @@ public class JdtEnvironment {
             .setNative(JsInteropUtils.isJsNativeType(typeBinding))
             .setAnonymous(typeBinding.isAnonymous())
             .setLocal(isLocal(typeBinding))
-            .setSimpleJsName(getJsName(typeBinding))
-            .setCustomizedJsNamespace(getJsNamespace(typeBinding))
+            .setSimpleJsName(JsInteropAnnotationUtils.getJsName(typeBinding))
+            .setCustomizedJsNamespace(JsInteropAnnotationUtils.getJsNamespace(typeBinding))
             .setObjectiveCNamePrefix(getObjectiveCNamePrefix(typeBinding))
             .setKtTypeInfo(KtInteropUtils.getKtTypeInfo(typeBinding))
             .setKtObjcInfo(KtInteropUtils.getKtObjcInfo(typeBinding))
             .setNullMarked(isNullMarked)
             .setOriginalSimpleSourceName(typeBinding.getName())
-            .setPackageName(packageName)
+            .setPackage(createPackageDeclaration(typeBinding.getPackage()))
             .setTypeParameterDescriptors(
                 getTypeArgumentTypeDescriptors(
                         typeBinding, /* inNullMarkedScope= */ isNullMarked, TypeVariable.class)
@@ -1232,6 +1192,7 @@ public class JdtEnvironment {
             .setVisibility(getVisibility(typeBinding))
             .setDeclaredMethodDescriptorsFactory(
                 () -> createMethodDescriptors(typeBinding.getDeclaredMethods()))
+            .setSingleAbstractMethodDescriptorFactory(() -> getFunctionInterfaceMethod(typeBinding))
             .setDeclaredFieldDescriptorsFactory(
                 () -> createFieldDescriptorsOrderedById(typeBinding.getDeclaredFields()))
             .setMemberTypeDeclarationsFactory(
@@ -1242,6 +1203,15 @@ public class JdtEnvironment {
             .build();
     cachedTypeDeclarationByTypeBinding.put(typeBinding, typeDeclaration);
     return typeDeclaration;
+  }
+
+  private PackageDeclaration createPackageDeclaration(IPackageBinding packageBinding) {
+    // Caching is left to PackageDeclaration.Builder since construction is trivial.
+    String packageName = packageBinding.getName();
+    return PackageDeclaration.newBuilder()
+        .setName(packageName)
+        .setCustomizedJsNamespace(packageAnnotationsResolver.getJsNameSpace(packageName))
+        .build();
   }
 
   private ImmutableList<MethodDescriptor> createMethodDescriptors(IMethodBinding[] methodBindings) {

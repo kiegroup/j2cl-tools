@@ -67,13 +67,13 @@ import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Type inference within a script node or a function body, using the data-flow analysis framework.
@@ -101,7 +101,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   private final ArrayDeque<OptChainInfo> optChainArrayDeque = new ArrayDeque<>();
 
   // Scopes that have had their unbound untyped vars inferred as undefined.
-  private final Set<TypedScope> inferredUnboundVars = new HashSet<>();
+  private final Set<TypedScope> inferredUnboundVars = new LinkedHashSet<>();
 
   // For convenience
   private final ObjectType unknownType;
@@ -1976,9 +1976,9 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   private @Nullable JSType getGoogModuleDependencyCallResultType(Node callNode) {
     String moduleId = callNode.getSecondChild().getString();
     Module module = compiler.getModuleMap().getClosureModule(moduleId);
-    // Only declared module ids.
+    // Fall back to the `?` type if the module is unknown to the compiler
     if (module == null) {
-      return null;
+      return unknownType;
     }
 
     ScopedName name = moduleImportResolver.getClosureNamespaceTypeFromCall(callNode);
@@ -1987,7 +1987,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
       TypedVar otherVar =
           otherModuleScope != null ? otherModuleScope.getSlot(name.getName()) : null;
       if (otherVar != null) {
-        return otherVar.getType();
+        return otherVar.getType() != null ? otherVar.getType() : unknownType;
       }
 
       if (otherModuleScope != null && module.metadata().moduleType() == ModuleType.GOOG_PROVIDE) {
@@ -1996,24 +1996,11 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
 
         // We validated that this is a valid "provided name" above so it is ok to look it up by
         // properties.
-        return getTypeThroughNamespace(otherModuleScope, moduleId);
+        return otherModuleScope.getTypeThroughNamespace(moduleId);
       }
     }
 
     return unknownType;
-  }
-
-  private JSType getTypeThroughNamespace(TypedScope globalScope, String moduleId) {
-    int split = moduleId.lastIndexOf('.');
-    if (split >= 0) {
-      String parentName = moduleId.substring(0, split);
-      String prop = moduleId.substring(split + 1);
-      return getTypeThroughNamespace(globalScope, parentName)
-          .assertObjectType()
-          .getPropertyType(prop);
-    } else {
-      return globalScope.getSlot(moduleId).getType();
-    }
   }
 
   private FlowScope tightenTypesAfterAssertions(FlowScope scope, Node callNode) {

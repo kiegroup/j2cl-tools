@@ -22,7 +22,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.MustBeClosed;
@@ -46,13 +45,12 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.Serializable;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An abstract compiler, to help remove the circular dependency of passes on JSCompiler.
@@ -81,7 +79,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   // Many of them are just accessors that should be passed to the
   // CompilerPass's constructor.
 
-  abstract java.util.function.Supplier<Node> getTypedAstDeserializer(SourceFile file);
+  abstract Supplier<Node> getTypedAstDeserializer(SourceFile file);
 
   /** Looks up an input (possibly an externs input) by input id. May return null. */
   @Override
@@ -93,7 +91,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   public abstract @Nullable Node getScriptNode(String filename);
 
   /** Gets the module graph. */
-  abstract @Nullable JSChunkGraph getModuleGraph();
+  abstract @Nullable JSChunkGraph getChunkGraph();
 
   /**
    * Gets the inputs in the order in which they are being processed. Only for use by {@code
@@ -128,13 +126,16 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   public abstract void setStringMap(VariableMap stringMap);
 
   /** Sets the css names found during compilation. */
-  public abstract void setCssNames(LinkedHashMap<String, Integer> newCssNames);
+  public abstract void setCssNames(Set<String> newCssNames);
 
   /** Sets the mapping for instrumentation parameter encoding. */
   public abstract void setInstrumentationMapping(VariableMap instrumentationMapping);
 
   /** Sets the id generator for cross-module motion. */
   public abstract void setIdGeneratorMap(String serializedIdMappings);
+
+  /** Gets whether any file needed to transpile any feature */
+  public abstract boolean getTranspiledFiles();
 
   /** Gets the id generator for cross-module motion. */
   public abstract IdGenerator getCrossModuleIdGenerator();
@@ -180,10 +181,10 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   abstract void clearTypedScopeCreator();
 
   /** Gets the top scope. */
-  public abstract TypedScope getTopScope();
+  public abstract @Nullable TypedScope getTopScope();
 
   /** Sets the top scope. */
-  abstract void setTopScope(TypedScope x);
+  abstract void setTopScope(@Nullable TypedScope x);
 
   /**
    * Returns a scope containing only externs and synthetic code or other code in the first script.
@@ -220,6 +221,21 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   abstract void reportFunctionDeleted(Node node);
 
   /**
+   * Used by `DisambiguateProperties` to record a one-line summary of the work it accomplished, if
+   * any.
+   *
+   * <p>This information will be included in the tracer mode output, if that is enabled.
+   */
+  public abstract void reportDisambiguatePropertiesSummary(Supplier<String> summarySupplier);
+
+  /**
+   * Used by `AmbiguateProperties` to record a one-line summary of the work it accomplished, if any.
+   *
+   * <p>This information will be included in the tracer mode output, if that is enabled.
+   */
+  public abstract void reportAmbiguatePropertiesSummary(Supplier<String> summarySupplier);
+
+  /**
    * Gets a suitable SCRIPT node to serve as a parent for code insertion. If {@code module} contains
    * any inputs, the returned node will be the SCRIPT node corresponding to its first input. If
    * {@code module} is empty, on the other hand, then the returned node will be the first SCRIPT
@@ -228,7 +244,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * @param module A module. If null, will return the first SCRIPT node of all modules.
    * @return A SCRIPT node (never null).
    */
-  abstract Node getNodeForCodeInsertion(@Nullable JSChunk module);
+  abstract Node getNodeForCodeInsertion(@Nullable JSChunk chunk);
 
   abstract TypeValidator getTypeValidator();
 
@@ -450,29 +466,43 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   abstract CompilerOptions getOptions();
 
   /**
-   * The set of features defined by the input language mode that have not (yet) been transpiled
-   * away.
+   * Returns the set of language features currently allowed to exist in the AST
    *
-   * <p>This is **not** the exact set of all features currently in the AST, but rather an improper
-   * super set. This set starts out as the set of features from the language input mode specified by
-   * the options, which is verified to be a super set of what appears in the input code (if the
-   * input code contains a feature outside the language input mode it is an error). As the compiler
-   * transpiles code any features that are transpiled away from the AST are removed from this set.
+   * <p>At the start of compilation, all features in the languageIn are allowed. At the end of
+   * compilation, only features in the languageOut should be allowed.
    *
-   * <p>The feature set is computed this way, rather than using the detected features in the AST, so
-   * that the set of passes that run is determined purely by input flags. Otherwise, introducing a
-   * previously unused feature in any of the transitive deps of compilation target could effect the
-   * build behaviour.
+   * <p>Transpilation passes should mark the transpiled features as "not allowed" to prevent future
+   * passes from accidentally introducing new uses of those features. For example, if transpiling
+   * away ES2017 features, the {@link RewriteAsyncFunctions} pass will mark async functions as no
+   * longer allowed.
    */
-  abstract FeatureSet getFeatureSet();
+  abstract FeatureSet getAllowableFeatures();
 
-  abstract void setFeatureSet(FeatureSet fs);
+  /**
+   * Sets the feature set allowed in the AST. See {@link #getAllowableFeatures()}
+   *
+   * <p>In most cases, callers of this method should only be shrinking the allowable feature set and
+   * not adding to it. One known exception is the ConvertChunksToESModules pass.
+   */
+  abstract void setAllowableFeatures(FeatureSet featureSet);
+
+  /** Marks feature as no longer allowed in the AST. See {@link #getAllowableFeatures()} */
+  abstract void markFeatureNotAllowed(FeatureSet.Feature feature);
+
+  /** Marks features as no longer allowed in the AST. See {@link #getAllowableFeatures()} */
+  abstract void markFeatureSetNotAllowed(FeatureSet featureSet);
 
   /**
    * @return a CompilerInput that can be modified to add additional extern definitions to the
    *     beginning of the externs AST
    */
   abstract CompilerInput getSynthesizedExternsInput();
+
+  /**
+   * Returns a CompilerInput that can be modified to add additional type summary definitions to the
+   * beginning of the externs AST (note that the externs AST includes type summary input).
+   */
+  abstract CompilerInput getSynthesizedTypeSummaryInput();
 
   /** Gets the last pass name set by setProgress. */
   abstract String getLastPassName();
@@ -495,6 +525,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    *     been injected, then null is returned.
    */
   abstract Node ensureLibraryInjected(String resourceName, boolean force);
+
+  abstract ImmutableList<String> getInjectedLibraries();
 
   /**
    * Sets the names of the properties defined in externs.
@@ -556,9 +588,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   public final AstFactory createAstFactory() {
     return hasTypeCheckingRun()
         ? (hasOptimizationColors()
-            ? AstFactory.createFactoryWithColors(getColorRegistry())
-            : AstFactory.createFactoryWithTypes(getTypeRegistry()))
-        : AstFactory.createFactoryWithoutTypes();
+            ? AstFactory.createFactoryWithColors(stage, getColorRegistry())
+            : AstFactory.createFactoryWithTypes(stage, getTypeRegistry()))
+        : AstFactory.createFactoryWithoutTypes(stage);
   }
 
   /**
@@ -566,7 +598,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * checking has already happened.
    */
   public final AstFactory createAstFactoryWithoutTypes() {
-    return AstFactory.createFactoryWithoutTypes();
+    return AstFactory.createFactoryWithoutTypes(stage);
   }
 
   /**
@@ -626,7 +658,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
     }
 
     Path dir = getOptions().getDebugLogDirectory();
-    Path relativeParts = Paths.get(firstNamePart, restNameParts);
+    Path relativeParts = Path.of(firstNamePart, restNameParts);
     Path file = dir.resolve(owner.getSimpleName()).resolve(relativeParts);
 
     // If a filter list for log file names was provided, only create a log file if any

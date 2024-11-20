@@ -107,9 +107,8 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
                 "  'browser': 'browser/foo.js'",
                 "};")));
 
-    assertThat(getLastCompiler().getModuleLoader().getPackageJsonMainEntries()).hasSize(1);
     assertThat(getLastCompiler().getModuleLoader().getPackageJsonMainEntries())
-        .containsEntry("/package.json", "/browser/foo.js");
+        .containsExactly("/package.json", "/browser/foo.js");
   }
 
   @Test
@@ -174,11 +173,12 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
 
     Map<String, String> packageJsonMainEntries =
         getLastCompiler().getModuleLoader().getPackageJsonMainEntries();
-    assertThat(packageJsonMainEntries).containsExactly(
-        "/package.json", "/foo/bar/baz.js",
-    
-        // Test that we have normalized the key, value is normalized by NodeModuleResolver
-        "/a/b.js", "/./c/d.js",
-        "/server.js", "/client.js");
+    assertThat(packageJsonMainEntries)
+        .containsExactly(
+            "/package.json", "/foo/bar/baz.js",
+
+            // Test that we have normalized the key, value is normalized by NodeModuleResolver
+            "/a/b.js", "/./c/d.js",
+            "/server.js", "/client.js");
   }
 }

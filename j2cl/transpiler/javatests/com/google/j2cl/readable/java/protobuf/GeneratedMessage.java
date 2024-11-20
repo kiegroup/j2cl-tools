@@ -15,6 +15,18 @@
  */
 package com.google.protobuf;
 
+import javaemul.internal.annotations.KtNative;
+import org.jspecify.annotations.NullMarked;
+
+@KtNative(name = "com.google.protobuf.GeneratedMessage")
+@NullMarked
 public class GeneratedMessage {
+  // Emulates Kotlin property
+  public final Parser<? extends GeneratedMessage> parserForType = null;
+
+  public Parser<? extends GeneratedMessage> getParserForType() {
+    throw new RuntimeException();
+  }
+
   public static class Builder {}
 }

@@ -6,6 +6,13 @@
 # Other integration tests will want to run transpiled output as JS and
 # should make use of j2cl_library macro.
 
+load(
+    "//build_defs:rules.bzl",
+    "j2wasm_application",
+    "j2wasm_library",
+)
+load("@rules_java//java:defs.bzl", "java_binary", "java_import", "java_library", "java_test")
+
 package(
     default_applicable_licenses = ["//:j2cl_license"],
     licenses = ["notice"],
@@ -138,12 +145,39 @@ java_test(
         ":libjre_native.jar",
         "//samples/box2d/src/main/kotlin/idiomatic:libbox2d_kt_library-j2cl-src.jar",
     ],
+    shard_count = 2,
     runtime_deps = [
         "//transpiler/java/com/google/j2cl/transpiler/frontend/kotlin",
     ],
     deps = [
         ":TranspilerTester",
         "//third_party:junit",
+    ],
+)
+
+j2wasm_library(
+    name = "sampleapp_lib",
+    srcs = ["SampleApp.java"],
+)
+
+j2wasm_application(
+    name = "sampleapp",
+    entry_points = ["com.google.j2cl.transpiler.SampleApp#main"],
+    deps = [":sampleapp_lib"],
+)
+
+java_test(
+    name = "WasmSourceMapTest",
+    srcs = ["WasmSourceMapTest.java"],
+    data = [
+        ":sampleapp_dev",
+    ],
+    tags = ["j2wasm"],
+    deps = [
+        "//third_party:jscomp",
+        "//third_party:junit",
+        "//third_party:runfiles",
+        "//third_party/java/truth",
     ],
 )
 

@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package gwtincompatible
 
@@ -39,10 +39,13 @@ open class Implementor: Interface.ClassWithAbstractMethod(), Interface, Interfac
   val a: Int = 4
  }
 
+ @ObjCName("J2ktGwtincompatibleImplementor_SomeEnum", exact = true)
  enum class SomeEnum {
+  @ObjCName("COMPATIBLE")
   COMPATIBLE {
    override fun method_pp_gwtincompatible() {}
   },
+  @ObjCName("INCOMPATIBLE")
   INCOMPATIBLE {
    override fun method_pp_gwtincompatible() {}
   };

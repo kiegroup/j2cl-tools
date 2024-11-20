@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,15 +13,20 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package protobuf
 
 import javaemul.lang.*
+import com.google.protobuf.GeneratedMessage
+import com.google.protobuf.Parser
+import kotlin.Int
 import kotlin.OptIn
 import kotlin.Suppress
 import kotlin.experimental.ExperimentalObjCName
 import kotlin.native.ObjCName
+import protobuf.MyEnum
 import protobuf.MyMessage
 
 @ObjCName("J2ktProtobufProtobuf", exact = true)
@@ -34,7 +38,12 @@ open class Protobuf {
   builder!!.testField
   val message: MyMessage? = builder!!.build()
   message!!.testField
+  val chainedMessage: MyMessage? = MyMessage.newBuilder().setTestField(1).setTestField(2).build()
   val defaultMessage: MyMessage? = MyMessage.getDefaultInstance()
   defaultMessage!!.testField
+  val parser: Parser<*>? = message!!.parserForType
+  val generatedMessageParser: Parser<GeneratedMessage>? = (message as GeneratedMessage?)!!.parserForType
+  val enumOne: MyEnum? = MyEnum.ONE
+  val enumOneNumber: Int = MyEnum.ONE.number
  }
 }

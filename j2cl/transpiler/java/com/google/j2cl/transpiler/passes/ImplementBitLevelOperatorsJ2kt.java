@@ -15,7 +15,6 @@
  */
 package com.google.j2cl.transpiler.passes;
 
-import com.google.common.collect.ImmutableList;
 import com.google.j2cl.transpiler.ast.AbstractRewriter;
 import com.google.j2cl.transpiler.ast.BinaryExpression;
 import com.google.j2cl.transpiler.ast.CompilationUnit;
@@ -98,12 +97,9 @@ public final class ImplementBitLevelOperatorsJ2kt extends NormalizationPass {
   }
 
   private static final DeclaredTypeDescriptor KOTLIN_BASIC_TYPE =
-      DeclaredTypeDescriptor.newBuilder()
-          .setTypeDeclaration(
-              TypeDeclaration.newBuilder()
-                  .setKind(Kind.CLASS)
-                  .setPackageName("j2kt")
-                  .setClassComponents(ImmutableList.of("BasicType"))
-                  .build())
-          .build();
+      TypeDeclaration.newBuilder()
+          .setKind(Kind.CLASS)
+          .setQualifiedSourceName("j2kt.BasicType")
+          .build()
+          .toDescriptor();
 }

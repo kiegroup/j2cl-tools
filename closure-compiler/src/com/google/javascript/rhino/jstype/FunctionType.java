@@ -55,7 +55,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EqualityChecker.EqMethod;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -63,7 +62,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This derived type provides extended information about a function, including its return type and
@@ -181,7 +180,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
     if (builder.typeOfThis != null) {
       this.typeOfThis = builder.typeOfThis;
     } else if (this instanceof NoResolvedType) {
-      /**
+      /*
        * TODO(b/112425334): Delete this special case if NO_RESOLVED_TYPE is deleted.
        *
        * <p>Despite being a subclass of `NoType`, `NoResolvedType` should behave more like `?`.
@@ -282,22 +281,26 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
    * annotation, if B's constructor is not explicitly annotated.
    */
   public final boolean makesStructs() {
-    if (!hasInstanceType()) {
+    if (!hasInstanceType() || this.propAccess == null) {
       return false;
     }
-    if (propAccess == PropAccess.STRUCT) {
-      return true;
+    switch (this.propAccess) {
+      case STRUCT:
+        return true;
+      case DICT:
+        return false;
+      case ANY_EXPLICIT:
+        // For anything EXPLICITLY marked as @unresticted do not look to the super type.
+        return false;
+      case ANY:
+        FunctionType superc = getSuperClassConstructor();
+        if (superc != null && superc.makesStructs()) {
+          setStruct();
+          return true;
+        }
+        return false;
     }
-    if (propAccess == PropAccess.ANY_EXPLICIT) {
-      // For anything EXPLICITLY marked as @unresticted do not look to the super type.
-      return false;
-    }
-    FunctionType superc = getSuperClassConstructor();
-    if (superc != null && superc.makesStructs()) {
-      setStruct();
-      return true;
-    }
-    return false;
+    throw new AssertionError();
   }
 
   /**
@@ -305,22 +308,26 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
    * annotation, if B's constructor is not explicitly annotated.
    */
   public final boolean makesDicts() {
-    if (!isConstructor()) {
+    if (!isConstructor() || this.propAccess == null) {
       return false;
     }
-    if (propAccess == PropAccess.DICT) {
-      return true;
+    switch (this.propAccess) {
+      case DICT:
+        return true;
+      case STRUCT:
+        return false;
+      case ANY_EXPLICIT:
+        // For anything EXPLICITLY marked as @unresticted do not look to the super type.
+        return false;
+      case ANY:
+        FunctionType superc = getSuperClassConstructor();
+        if (superc != null && superc.makesDicts()) {
+          setDict();
+          return true;
+        }
+        return false;
     }
-    if (propAccess == PropAccess.ANY_EXPLICIT) {
-      // For anything EXPLICITLY marked as @unresticted do not look to the super type.
-      return false;
-    }
-    FunctionType superc = getSuperClassConstructor();
-    if (superc != null && superc.makesDicts()) {
-      setDict();
-      return true;
-    }
-    return false;
+    throw new AssertionError();
   }
 
   public final void setStruct() {
@@ -584,7 +591,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   public final Collection<ObjectType> getAncestorInterfaces() {
-    Set<ObjectType> result = new HashSet<>();
+    Set<ObjectType> result = new LinkedHashSet<>();
     if (isConstructor()) {
       result.addAll((Collection<? extends ObjectType>) getImplementedInterfaces());
     } else {
@@ -913,9 +920,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   public final boolean hasEqualCallType(FunctionType that) {
-    return new EqualityChecker()
-        .setEqMethod(EqMethod.IDENTITY)
-        .check(this.call, that.call);
+    return new EqualityChecker().setEqMethod(EqMethod.IDENTITY).check(this.call, that.call);
   }
 
   /**
@@ -968,7 +973,6 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
     sb.appendNonNull(call.getReturnType());
 
     setPrettyPrint(true);
-    return;
   }
 
   private void appendArgString(TypeStringBuilder sb, Parameter p) {
@@ -1189,14 +1193,14 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   @Override
   public final Map<String, JSType> getPropertyTypeMap() {
     Map<String, JSType> propTypeMap = new LinkedHashMap<>();
-    updatePropertyTypeMap(this, propTypeMap, new HashSet<FunctionType>());
+    updatePropertyTypeMap(this, propTypeMap, new LinkedHashSet<FunctionType>());
     return propTypeMap;
   }
 
   // cache is added to prevent infinite recursion when retrieving
   // the super type: see testInterfaceExtendsLoop in TypeCheckTest.java
   private static void updatePropertyTypeMap(
-      FunctionType type, Map<String, JSType> propTypeMap, HashSet<FunctionType> cache) {
+      FunctionType type, Map<String, JSType> propTypeMap, LinkedHashSet<FunctionType> cache) {
     if (type == null) {
       return;
     }
@@ -1232,7 +1236,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
    * @return an array of all functions in the loop chain if a loop exists, otherwise returns null
    */
   public final List<FunctionType> checkExtendsLoop() {
-    return checkExtendsLoop(new HashSet<FunctionType>(), new ArrayList<FunctionType>());
+    return checkExtendsLoop(new LinkedHashSet<FunctionType>(), new ArrayList<FunctionType>());
   }
 
   private @Nullable List<FunctionType> checkExtendsLoop(
@@ -1310,7 +1314,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   public final ImmutableList<TemplateType> getConstructorOnlyTemplateParameters() {
     checkState(this.isConstructor(), this);
 
-    /**
+    /*
      * Structural constructor types (e.g `function(new:Foo<T>)`) cannot have template params of
      * their own.
      */
@@ -1543,6 +1547,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
       this.kind = kind;
       return this;
     }
+
     /** Make this a constructor. */
     public Builder forConstructor() {
       this.kind = Kind.CONSTRUCTOR;
@@ -1598,7 +1603,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
       switch (this.kind) {
         case CONSTRUCTOR:
         case INTERFACE:
-          /**
+          /*
            * These kinds have no implication on whether `returnsOwnInstanceType` is reasonable. This
            * configuration may be intended to synthesize an instance type. The return type and
            * instance type are independent.

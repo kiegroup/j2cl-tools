@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
 import com.google.javascript.jscomp.CheckConformance.Precondition;
@@ -40,6 +39,7 @@ import com.google.javascript.jscomp.CheckConformance.Rule;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.Requirement.Severity;
 import com.google.javascript.jscomp.Requirement.WhitelistEntry;
+import com.google.javascript.jscomp.base.LinkedIdentityHashSet;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -57,13 +57,14 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Standard conformance rules. See
@@ -76,7 +77,8 @@ public final class ConformanceRules {
 
   private static AllowList createTsAllowlist() {
     try {
-      return new AllowList(ImmutableList.of(), ImmutableList.of(".*\\.closure\\.js"));
+      return new AllowList(
+          ImmutableList.of(), ImmutableList.of(".*\\.closure\\.js", ".*\\.tsx\\.cl\\.js"));
     } catch (Throwable t) {
       throw new AssertionError(t);
     }
@@ -176,12 +178,15 @@ public final class ConformanceRules {
      * Returns true if the given path matches one of the prefixes or regexps, and false otherwise
      */
     boolean matches(String path) {
-      // If the path ends with .closure.js, it is probably a tsickle-generated file, and there may
-      // be entries in the allow list for the TypeScript path
+      // If the path ends with .closure.js or .tsx.cl.js, it is probably a tsickle-generated file,
+      // and there may be entries in the allow list for the TypeScript path
       String tsPath =
           path.endsWith(".closure.js")
               ? path.substring(0, path.length() - ".closure.js".length()) + ".ts"
-              : null;
+              // TSX
+              : (path.endsWith(".tsx.cl.js")
+                  ? path.substring(0, path.length() - ".cl.js".length())
+                  : null);
       if (prefixes != null) {
         for (String prefix : prefixes) {
           if (!path.isEmpty()
@@ -332,7 +337,7 @@ public final class ConformanceRules {
         }
       }
       String separator = (result.note.isEmpty()) ? "" : "\n";
-      JSError err = JSError.make(n, msg, message, separator, result.note);
+      JSError err = JSError.make(requirement, n, msg, message, separator, result.note);
 
       String path = NodeUtil.getSourceName(n);
       AllowList allowlist = path != null ? findAllowListForPath(path) : null;
@@ -587,17 +592,14 @@ public final class ConformanceRules {
     }
 
     private static final Precondition IS_CANDIDATE_NODE =
-        new Precondition() {
-          @Override
-          public boolean shouldCheck(Node n) {
-            switch (n.getToken()) {
-              case GETPROP:
-                return n.getFirstChild().isQualifiedName();
-              case NAME:
-                return !n.getString().isEmpty();
-              default:
-                return false;
-            }
+        (Node n) -> {
+          switch (n.getToken()) {
+            case GETPROP:
+              return n.getFirstChild().isQualifiedName();
+            case NAME:
+              return !n.getString().isEmpty();
+            default:
+              return false;
           }
         };
 
@@ -613,7 +615,7 @@ public final class ConformanceRules {
         return ConformanceResult.CONFORMANCE;
       }
 
-      /**
+      /*
        * Efficiently filter out nearly all candidates.
        *
        * <p>Ideally we could use a hashset containing the qualified names, but it turns out that
@@ -623,7 +625,7 @@ public final class ConformanceRules {
         return ConformanceResult.CONFORMANCE;
       }
 
-      /**
+      /*
        * Defer expensive infrequent checks.
        *
        * <p>These could be a precondition, but they don't usually need to be checked. Since they're
@@ -773,7 +775,7 @@ public final class ConformanceRules {
         return ConformanceResult.CONFORMANCE;
       }
 
-      /**
+      /*
        * Avoid type operations when possible.
        *
        * <p>checkTypes is almost always empty, and operations on unions can be expensive.
@@ -811,13 +813,15 @@ public final class ConformanceRules {
           || foundType.isTemplateType()
           || foundType.isEmptyType()
           || foundType.isAllType()
-          || foundType.equals(this.registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
+          || isLooseObject(foundType, this.registry)) {
         if (reportLooseTypeViolations) {
           return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
         }
       } else if (foundType.isSubtypeOf(checkType)) {
         return ConformanceResult.VIOLATION;
-      } else if (checkType.isSubtypeWithoutStructuralTyping(foundType)) {
+      } else if (checkType.isSubtypeWithoutStructuralTyping(foundType)
+          // TODO(b/350086590): remove this exclusion once the subtyping relation above is fixed.
+          && !isObjectTypedef(foundType)) {
         if (matchesPrototype(checkType, foundType)) {
           return ConformanceResult.VIOLATION;
         } else if (reportLooseTypeViolations) {
@@ -1052,7 +1056,26 @@ public final class ConformanceRules {
       return specName.substring(index + 1);
     }
 
-    private static @Nullable String inferStringValue(@Nullable Scope scope, Node node) {
+    private static boolean isAnnotatedAsConst(JSDocInfo jsdoc) {
+      return jsdoc != null && jsdoc.isConstant();
+    }
+
+    private static @Nullable String getValueFromGlobalName(
+        @Nullable Scope scope, GlobalNamespace gns, String qualifiedName) {
+      GlobalNamespace.Name gn = gns.getOwnSlot(qualifiedName);
+      if (gn == null
+          || gn.getGlobalSets() != 1
+          || gn.getTotalSets() != 1
+          || !isAnnotatedAsConst(gn.getJSDocInfo())) {
+        return null;
+      }
+
+      return inferStringValue(
+          scope, NodeUtil.getRValueOfLValue(gn.getDeclaration().getNode()), () -> gns);
+    }
+
+    private static @Nullable String inferStringValue(
+        @Nullable Scope scope, Node node, Supplier<GlobalNamespace> globalNamespaceSupplier) {
       if (node == null) {
         return null;
       }
@@ -1069,32 +1092,46 @@ public final class ConformanceRules {
           }
           String name = node.getString();
           Var var = scope.getVar(name);
-          if (var == null || !var.isConst()) {
+          if (var == null) {
+            return null;
+          }
+          if (!var.isConst() && !isAnnotatedAsConst(var.getJSDocInfo())) {
             return null;
           }
           Node initialValue = var.getInitialValue();
-          return inferStringValue(var.getScope(), initialValue);
+          return inferStringValue(var.getScope(), initialValue, globalNamespaceSupplier);
         case GETPROP:
           JSType type = node.getJSType();
-          if (type == null || !type.isEnumElementType()) {
-            // For simplicity, only support enums. The JS style guide requires enums to be
-            // effectively immutable and all enum items should be statically known.
-            // See go/js-style#features-objects-enums.
+          if (type == null) {
             return null;
           }
 
-          Node enumSource = type.toMaybeEnumElementType().getEnumType().getSource();
-          if (enumSource == null) {
-            return null;
+          // The JS style guide requires enums to be effectively immutable and all enum items should
+          // be statically known. See go/js-style#features-objects-enums.
+          if (type.isEnumElementType()) {
+            Node enumSource = type.toMaybeEnumElementType().getEnumType().getSource();
+            if (enumSource == null) {
+              return null;
+            }
+            if (!enumSource.isObjectLit() && !enumSource.isClassMembers()) {
+              return null;
+            }
+            return inferStringValue(
+                null,
+                NodeUtil.getFirstPropMatchingKey(enumSource, node.getString()),
+                globalNamespaceSupplier);
+          } else if (type.isString()) {
+            GlobalNamespace gns = globalNamespaceSupplier.get();
+            if (gns == null) {
+              return null;
+            }
+            return getValueFromGlobalName(scope, gns, node.getQualifiedName());
           }
-          if (!enumSource.isObjectLit() && !enumSource.isClassMembers()) {
-            return null;
-          }
-          return inferStringValue(
-              null, NodeUtil.getFirstPropMatchingKey(enumSource, node.getString()));
-        default:
           return null;
+        default:
+          // Do nothing
       }
+      return null;
     }
 
     private static boolean isXid(JSType type) {
@@ -1267,8 +1304,7 @@ public final class ConformanceRules {
       Node lhs = isCallInvocation ? n.getFirstFirstChild() : n.getFirstChild();
       if (methodClassType != null && lhs.getJSType() != null) {
         JSType targetType = lhs.getJSType().restrictByNotNullOrUndefined();
-        if (ConformanceUtil.isLooseType(targetType)
-            || targetType.equals(registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
+        if (ConformanceUtil.isLooseType(targetType) || isLooseObject(targetType, registry)) {
           if (reportLooseTypeViolations
               && !ConformanceUtil.validateCall(
                   compiler, n.getParent(), r.restrictedCallType, isCallInvocation)) {
@@ -1590,11 +1626,17 @@ public final class ConformanceRules {
 
   /** Banned unknown "this" types. */
   public static final class BanUnknownThis extends AbstractTypeRestrictionRule {
-    private final Set<Node> reports = Sets.newIdentityHashSet();
+    private final LinkedIdentityHashSet<Node> reports = new LinkedIdentityHashSet<>();
 
     public BanUnknownThis(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
+    }
+
+    @Override
+    protected boolean tsIsAllowlisted() {
+      // We expect TypeScript to already check it.
+      return true;
     }
 
     @Override
@@ -1650,6 +1692,63 @@ public final class ConformanceRules {
       ObjectType owner = ObjectType.cast(n.getFirstChild().getJSType());
       Property prop = owner != null ? owner.getSlot(n.getString()) : null;
       return prop != null && !prop.isTypeInferred();
+    }
+  }
+
+  /**
+   * Banned non-literal arguments passed to {@code goog.string.Const.from}. Possible calls to
+   * goog.string.Const in user code could look like:
+   *
+   * <pre>
+   * `goog.string.Const.from('foo');`
+   * `const alias = goog.string.Const.from; alias(foo);`
+   * `const {from} = goog.require('goog.string.Const'); from(foo);`
+   * `const alias = goog.require('goog.string.Const'); alias.from(foo);`
+   * </pre>
+   */
+  public static final class BanNonLiteralArgsToGoogStringConstFrom extends AbstractRule {
+
+    private static final QualifiedName GOOG_STRING_CONST_FROM =
+        QualifiedName.of("goog.string.Const.from");
+
+    public BanNonLiteralArgsToGoogStringConstFrom(
+        AbstractCompiler compiler, Requirement requirement) throws InvalidRequirementSpec {
+      super(compiler, requirement);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node node) {
+      if (node.isCall()) {
+        Node name = node.getFirstChild();
+        Node argument = name.getNext();
+        if (argument == null) {
+          return ConformanceResult.CONFORMANCE;
+        }
+
+        // If the name is a qualified name, it must be goog.string.Const.from or an alias of it.
+        if (name.isName()) {
+          Scope scope = t.getScope();
+          Var var = scope.getVar(name.getString());
+          if (var == null) {
+            return ConformanceResult.CONFORMANCE;
+          }
+          name = var.getInitialValue();
+          if (name == null) {
+            return ConformanceResult.CONFORMANCE;
+          }
+        }
+
+        if (GOOG_STRING_CONST_FROM.matches(name)) {
+          if (!isAllowed(argument)) {
+            return ConformanceResult.VIOLATION;
+          }
+        }
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private boolean isAllowed(Node argument) {
+      return argument.isStringLit() || (argument.isTemplateLit() && argument.hasOneChild());
     }
   }
 
@@ -1778,21 +1877,21 @@ public final class ConformanceRules {
       if (type.isUnionType()) {
         // unwrap union types which might contain unresolved type name
         // references for example {Foo|undefined}
+        ArrayList<String> nonConformingParts = null;
         for (JSType part : type.getUnionMembers()) {
           String nonConformingPart = getNonConformingPart(part);
           if (nonConformingPart != null) {
-            return nonConformingPart;
+            nonConformingParts =
+                nonConformingParts != null ? nonConformingParts : new ArrayList<>();
+            nonConformingParts.add(nonConformingPart);
           }
+        }
+        if (nonConformingParts != null) {
+          return Joiner.on('|').join(nonConformingParts);
         }
       } else if (type.isNoResolvedType()) {
         ObjectType noResolvedType = type.toObjectType();
-        // Whenever possible, return the 'reference name' of the NoResolvedType (i.e. the exact
-        // forward declared name). Some NoResolvedTypes do not have reference names because they
-        // were created as the product of an operation on NoResolvedTypes, e.g. consider
-        // 'noResolvedTypeA.getGreatestSubtype(noResolvedTypeB)'
-        return noResolvedType.getReferenceName() != null
-            ? noResolvedType.getReferenceName()
-            : "NoResolvedType";
+        return noResolvedType.getReferenceName();
       }
       return null;
     }
@@ -1913,17 +2012,9 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    private static final Precondition IS_SCRIPT_NODE =
-        new Precondition() {
-          @Override
-          public boolean shouldCheck(Node n) {
-            return n.isScript();
-          }
-        };
-
     @Override
     public final Precondition getPrecondition() {
-      return IS_SCRIPT_NODE;
+      return Node::isScript;
     }
   }
 
@@ -1956,17 +2047,9 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    private static final Precondition IS_SCRIPT_NODE =
-        new Precondition() {
-          @Override
-          public boolean shouldCheck(Node n) {
-            return n.isScript();
-          }
-        };
-
     @Override
     public final Precondition getPrecondition() {
-      return IS_SCRIPT_NODE;
+      return Node::isScript;
     }
   }
 
@@ -1987,7 +2070,7 @@ public final class ConformanceRules {
     public BanCreateElement(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
-      bannedTags = new HashSet<>();
+      bannedTags = new LinkedHashSet<>();
       for (String value : requirement.getValueList()) {
         bannedTags.add(Ascii.toLowerCase(value));
       }
@@ -2310,14 +2393,25 @@ public final class ConformanceRules {
             "data");
 
     private final ImmutableSet<String> bannedAtrrs;
+    private final Supplier<GlobalNamespace> globalNamespaceSupplier;
 
     public SecuritySensitiveAttributes() {
-      this.bannedAtrrs = ALL_BANNED_ATTRS;
+      this(ALL_BANNED_ATTRS, () -> null);
+    }
+
+    public SecuritySensitiveAttributes(Supplier<GlobalNamespace> globalNamespaceSupplier) {
+      this(ALL_BANNED_ATTRS, globalNamespaceSupplier);
     }
 
     public SecuritySensitiveAttributes(Collection<String> bannedAtrrs) {
+      this(bannedAtrrs, () -> null);
+    }
+
+    public SecuritySensitiveAttributes(
+        Collection<String> bannedAtrrs, Supplier<GlobalNamespace> globalNamespaceSupplier) {
       this.bannedAtrrs =
           bannedAtrrs.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(toImmutableSet());
+      this.globalNamespaceSupplier = globalNamespaceSupplier;
     }
 
     /**
@@ -2337,7 +2431,8 @@ public final class ConformanceRules {
      */
     public ConformanceResult checkConformanceForAttributeName(
         NodeTraversal traversal, Node attrName) {
-      String literalName = ConformanceUtil.inferStringValue(traversal.getScope(), attrName);
+      String literalName =
+          ConformanceUtil.inferStringValue(traversal.getScope(), attrName, globalNamespaceSupplier);
       if (literalName == null) {
         // xid() obfuscates attribute names, thus never clashing with security-sensitive attributes.
         return ConformanceUtil.isXid(attrName.getJSType())
@@ -2362,7 +2457,8 @@ public final class ConformanceRules {
      */
     public ConformanceResult checkConformanceForAttributeNameWithHighConfidence(
         NodeTraversal traversal, Node attrName) {
-      String literalName = ConformanceUtil.inferStringValue(traversal.getScope(), attrName);
+      String literalName =
+          ConformanceUtil.inferStringValue(traversal.getScope(), attrName, globalNamespaceSupplier);
       if (literalName == null) {
         return ConformanceResult.CONFORMANCE;
       }
@@ -2390,6 +2486,15 @@ public final class ConformanceRules {
     private static final ImmutableSet<String> BANNED_PROPERTIES =
         ImmutableSet.of(SET_ATTRIBUTE, SET_ATTRIBUTE_NS, SET_ATTRIBUTE_NODE, SET_ATTRIBUTE_NODE_NS);
 
+    private boolean performGlobalNamespaceAnalysis = true;
+    private GlobalNamespace globalNamespace;
+
+    /**
+     * The cap for script size, beyond which we give up performing global namespace analysis due to
+     * exccessive performance cost. The value is purely herustic and subject to future regulation.
+     */
+    private static final int GLOBAL_NAMESPACE_ANALYSIS_LIMIT = 10000;
+
     private final JSType elementType;
     private final SecuritySensitiveAttributes securitySensitiveAttributes;
     private final ConformanceResult defaultDecisionForUncertainCases;
@@ -2403,12 +2508,29 @@ public final class ConformanceRules {
     public BanElementSetAttribute(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
-      securitySensitiveAttributes = new SecuritySensitiveAttributes(requirement.getValueList());
+      securitySensitiveAttributes =
+          new SecuritySensitiveAttributes(requirement.getValueList(), this::getGlobalNamespace);
       defaultDecisionForUncertainCases =
           requirement.getReportLooseTypeViolations()
               ? ConformanceResult.VIOLATION
               : ConformanceResult.CONFORMANCE;
       elementType = compiler.getTypeRegistry().getGlobalType(ELEMENT_TYPE_NAME);
+    }
+
+    /**
+     * Build GlobalNamespace starting from the Root node of the input, excluding externs. Skip the
+     * build if the input AST is too large.
+     */
+    @Nullable GlobalNamespace getGlobalNamespace() {
+      if (performGlobalNamespaceAnalysis && globalNamespace == null) {
+        if (NodeUtil.countAstSizeUpToLimit(compiler.getJsRoot(), GLOBAL_NAMESPACE_ANALYSIS_LIMIT)
+            >= GLOBAL_NAMESPACE_ANALYSIS_LIMIT) {
+          performGlobalNamespaceAnalysis = false;
+        } else {
+          globalNamespace = new GlobalNamespace(compiler, compiler.getJsRoot());
+        }
+      }
+      return globalNamespace;
     }
 
     @Override
@@ -2481,7 +2603,7 @@ public final class ConformanceRules {
       if (type == null) {
         return Optional.absent();
       }
-      if (elementType != null && type.isSubtypeOf(elementType)) {
+      if (elementType != null && type.restrictByNotNullOrUndefined().isSubtypeOf(elementType)) {
         return Optional.of(propertyName);
       }
       return Optional.absent();
@@ -2496,7 +2618,8 @@ public final class ConformanceRules {
     private ConformanceResult checkConformanceOnGetElement(
         NodeTraversal traversal, Node getElementNode) {
       Node key = getElementNode.getSecondChild();
-      String keyName = ConformanceUtil.inferStringValue(traversal.getScope(), key);
+      String keyName =
+          ConformanceUtil.inferStringValue(traversal.getScope(), key, this::getGlobalNamespace);
       if (keyName != null) {
         if (securitySensitiveAttributes.contains(keyName.toLowerCase(Locale.ROOT))
             || (requirement.getReportLooseTypeViolations()
@@ -2543,6 +2666,7 @@ public final class ConformanceRules {
       if (objType == null || elementType == null) {
         return false;
       }
+      objType = objType.restrictByNotNullOrUndefined();
       // If the type of the object is not known to be a subtype of Element, the code is not
       // equivalent to setAttribute. Without this check, we will get overwhelmed by false
       // positives.
@@ -2713,7 +2837,7 @@ public final class ConformanceRules {
         return false;
       }
       JSType documentType = compiler.getTypeRegistry().getGlobalType("Document");
-      if (documentType == null || !type.isSubtypeOf(documentType)) {
+      if (documentType == null || !type.restrictByNotNullOrUndefined().isSubtypeOf(documentType)) {
         return false;
       }
       return true;
@@ -2745,5 +2869,23 @@ public final class ConformanceRules {
       Node parent = n.getParent();
       return parent != null && parent.isMemberFunctionDef() && parent.isStaticMember();
     }
+  }
+
+  private static boolean isLooseObject(JSType type, JSTypeRegistry registry) {
+    return type.equals(registry.getNativeType(JSTypeNative.OBJECT_TYPE));
+  }
+
+  /**
+   * Returns true if the given type is a typedef of a record.
+   *
+   * <p>Example: @typedef {{foo: string}}
+   *
+   * <p>This can behave differently from ordinary records as the resulting type will not have a
+   * constructor.
+   */
+  private static boolean isObjectTypedef(JSType type) {
+    // The JSCompiler models object literals as 'anonymous records'.
+    ObjectType objType = type.toMaybeObjectType();
+    return objType != null && objType.getConstructor() == null && type.isRecordType();
   }
 }

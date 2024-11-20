@@ -27,7 +27,7 @@ import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.rhino.Node;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,10 +49,8 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
     return 1;
   }
 
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
     enableNormalize(); // Required for `OptimizeCalls`.
     disableTypeCheck();
   }
@@ -64,6 +62,8 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewritePrototypeMethodsWithCorrectColors() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     String input =
         lines(
             "/** @constructor */",
@@ -235,7 +235,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
                 "c.m();",
                 "c.n();",
                 // this call should prevent devirtualizing m() but not n()
-                "use(C.prototype, $jscomp.reflectProperty('m', C.prototype));")),
+                "use(C.prototype, goog.reflect.objectProperty('m', C.prototype));")),
         expected(
             lines(
                 "var JSCompiler_StaticMethods_n = function(JSCompiler_StaticMethods_n$self) {};",
@@ -243,7 +243,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
                 "const c = new C();",
                 "c.m();",
                 "JSCompiler_StaticMethods_n(c);",
-                "use(C.prototype, $jscomp.reflectProperty('m', C.prototype));")));
+                "use(C.prototype, goog.reflect.objectProperty('m', C.prototype));")));
   }
 
   private void testNoRewriteIfDefinitionSiteBetween(String prefix, String suffix) {
@@ -262,6 +262,8 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testNoRewrite_ifDefinedIn_loopScope() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     testNoRewriteIfDefinitionSiteBetween("while (true) ", "");
   }
 
@@ -277,6 +279,8 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testNoRewrite_ifDefinedIn_arrowFunctionScope() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     testNoRewriteIfDefinitionSiteBetween("() => ", "");
   }
 
@@ -417,6 +421,8 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testNoRewrite_ifDefinedByArrow() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     testSame(
         lines(
             "function a(){};", //
@@ -678,6 +684,8 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testNoRewriteVarArgs() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     String source =
         lines(
             "function a(){}",
@@ -822,12 +830,15 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testNoRewriteNestedFunction() {
-    test(NoRewriteNestedFunctionTestInput.PREFIX +
-         NoRewriteNestedFunctionTestInput.INNER + "};" +
-         NoRewriteNestedFunctionTestInput.SUFFIX,
-         NoRewriteNestedFunctionTestInput.EXPECTED_PREFIX +
-         NoRewriteNestedFunctionTestInput.INNER + "};" +
-         NoRewriteNestedFunctionTestInput.EXPECTED_SUFFIX);
+    test(
+        NoRewriteNestedFunctionTestInput.PREFIX
+            + NoRewriteNestedFunctionTestInput.INNER
+            + "};"
+            + NoRewriteNestedFunctionTestInput.SUFFIX,
+        NoRewriteNestedFunctionTestInput.EXPECTED_PREFIX
+            + NoRewriteNestedFunctionTestInput.INNER
+            + "};"
+            + NoRewriteNestedFunctionTestInput.EXPECTED_SUFFIX);
   }
 
   @Test
@@ -1223,6 +1234,8 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testNoRewriteSet1() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     // Getters and setter require special handling.
     String source = "function a(){}; a.prototype = {set foo(a){}}; var o = new a; o.foo()";
     testSame(source);
@@ -1230,6 +1243,8 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testNoRewriteSet2() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     // Getters and setter require special handling.
     String source = "function a(){}; a.prototype = {set foo(a){}}; var o = new a; o.foo = 1";
     testSame(source);
@@ -1270,6 +1285,8 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewrite_nestedArrow_hasThisBoundCorrectly() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     test(
         srcs(
             lines(
@@ -1320,6 +1337,8 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testThisProperty() {
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     testSame(
         lines(
             "class Foo {", //
@@ -1405,7 +1424,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewriteSameModule1() {
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forStar()
             // m1
             .addChunk(semicolonJoin(ModuleTestInput.DEFINITION, ModuleTestInput.USE))
@@ -1414,7 +1433,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             .build();
 
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             // m1
             semicolonJoin(ModuleTestInput.REWRITTEN_DEFINITION, ModuleTestInput.REWRITTEN_USE),
@@ -1424,7 +1443,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewriteSameModule2() {
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forStar()
             // m1
             .addChunk("")
@@ -1433,7 +1452,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             .build();
 
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             // m1
             "",
@@ -1443,7 +1462,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewriteSameModule3() {
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forStar()
             // m1
             .addChunk(semicolonJoin(ModuleTestInput.USE, ModuleTestInput.DEFINITION))
@@ -1452,7 +1471,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             .build();
 
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             // m1
             semicolonJoin(ModuleTestInput.REWRITTEN_USE, ModuleTestInput.REWRITTEN_DEFINITION),
@@ -1462,7 +1481,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewrite_definitionModule_beforeUseModule() {
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forStar()
             // m1
             .addChunk(ModuleTestInput.DEFINITION)
@@ -1471,7 +1490,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             .build();
 
     test(
-        srcs(modules),
+        srcs(chunks),
         expected(
             // m1
             ModuleTestInput.REWRITTEN_DEFINITION,
@@ -1481,13 +1500,13 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testNoRewrite_definitionModule_afterUseModule() {
-    JSChunk[] modules =
+    JSChunk[] chunks =
         JSChunkGraphBuilder.forStar()
             .addChunk(ModuleTestInput.USE)
             .addChunk(ModuleTestInput.DEFINITION)
             .build();
 
-    testSame(srcs(modules));
+    testSame(srcs(chunks));
   }
 
   @Override

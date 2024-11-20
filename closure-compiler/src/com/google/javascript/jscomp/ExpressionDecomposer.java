@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.ContextualRenamer;
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -35,7 +34,8 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayDeque;
 import java.util.EnumSet;
-import org.jspecify.nullness.Nullable;
+import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Partially or fully decomposes an expression with respect to some sub-expression. Initially this
@@ -221,13 +221,19 @@ class ExpressionDecomposer {
           Node left = expressionParent.getFirstChild();
           switch (left.getToken()) {
             case ARRAY_PATTERN:
+              // e.g. backoff from exposing expression `getObj()` in `[getObj().propName] = ...` as
+              // the RHS must execute first
+            case OBJECT_PATTERN:
+              // e.g. backoff from exposing expression`getObj()` in `{a: getObj().propName} = ...`
+              // as the RHS must execute first
+              break;
             case GETELEM:
             case GETPROP:
               decomposeSubExpressions(left.getFirstChild(), null, state);
               break;
             default:
               throw new IllegalStateException(
-                  "Expected a property access or array pattern: " + left.toStringTree());
+                  "Expected a property access or destructuring pattern: " + left.toStringTree());
           }
         }
       } else if (expressionParent.isCall()
@@ -746,13 +752,19 @@ class ExpressionDecomposer {
     //   "a['b'].c" from "a['b'].c()"
     Node getVarNode = extractExpression(first, state.extractBeforeStatement);
     state.extractBeforeStatement = getVarNode;
+    final Node functionNameNode = getVarNode.getFirstChild().cloneNode();
+
+    if (call.getBooleanProp(Node.FREE_CALL)) {
+      // For a free call, we don't need to extract the receiver
+      call.getFirstChild().replaceWith(functionNameNode);
+      return;
+    }
 
     // Extracts the object reference to be used as "this". For example:
     //   "a['b']" from "a['b'].c"
     Node getExprNode = getVarNode.getFirstFirstChild();
     checkArgument(NodeUtil.isNormalGet(getExprNode), getExprNode);
     final Node origThisValue = getExprNode.getFirstChild();
-    final Node functionNameNode = getVarNode.getFirstChild().cloneNode();
     final Node receiverNode;
 
     if (origThisValue.isThis()) {
@@ -1190,11 +1202,14 @@ class ExpressionDecomposer {
       // constant function, as decomposing it may mess up InlineFunction's bookkeeping if it is
       // attempting to inline "fn".
       Node parent = tree.getParent();
-      if (NodeUtil.isObjectCallMethod(parent, "call")
-          && tree.isFirstChildOf(parent)
-          && (isTempConstantValueName(tree.getFirstChild())
-              || knownConstantFunctions.contains(tree.getFirstChild().getQualifiedName()))) {
-        return false;
+      if (NodeUtil.isObjectCallMethod(parent, "call") || parent.getBooleanProp(Node.FREE_CALL)) {
+        Node callee =
+            tree.isGetProp() && tree.getString().equals("call") ? tree.getFirstChild() : tree;
+        if (tree.isFirstChildOf(parent)
+            && (isTempConstantValueName(callee)
+                || knownConstantFunctions.contains(callee.getQualifiedName()))) {
+          return false;
+        }
       }
 
       if (enabledWorkarounds.contains(Workaround.BROKEN_IE11_LOCATION_ASSIGN)

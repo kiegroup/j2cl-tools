@@ -25,7 +25,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.rhino.Node;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Contains metadata around modules (or scripts) that is useful for checking imports / requires.
@@ -112,6 +112,10 @@ public final class ModuleMetadataMap {
       return moduleType() == ModuleType.GOOG_PROVIDE;
     }
 
+    public boolean hasLegacyGoogNamespaces() {
+      return isGoogProvide() || isLegacyGoogModule();
+    }
+
     public boolean isCommonJs() {
       return moduleType() == ModuleType.COMMON_JS;
     }
@@ -185,6 +189,15 @@ public final class ModuleMetadataMap {
     public abstract ImmutableMultiset<String> dynamicallyRequiredGoogNamespaces();
 
     /**
+     * Closure namespaces this file "maybe" require, i.e., arguments to
+     * goog.maybeRequireFrameworkInternalOnlyDoNotCallOrElse() calls.
+     *
+     * <p>This is a multiset as it does not warn on duplicate namespaces, but will still encapsulate
+     * that information with this multiset.
+     */
+    public abstract ImmutableMultiset<String> maybeRequiredGoogNamespaces();
+
+    /**
      * Closure namespaces this file weakly requires, i.e., arguments to goog.requireType calls.
      *
      * <p>This is a multiset as it does not warn on duplicate namespaces, but will still encapsulate
@@ -196,6 +209,14 @@ public final class ModuleMetadataMap {
     public abstract ImmutableMultiset<String> es6ImportSpecifiers();
 
     public abstract ImmutableList<ModuleMetadata> nestedModules();
+
+    /**
+     * Arguments to goog.readToggleInternalDoNotCallDirectly() calls.
+     *
+     * <p>This is a multiset as it does not warn on duplicate toggles, but will still encapsulate
+     * that information with this multiset.
+     */
+    public abstract ImmutableMultiset<String> readToggles();
 
     public abstract @Nullable ModulePath path();
 
@@ -233,11 +254,15 @@ public final class ModuleMetadataMap {
 
       public abstract ImmutableMultiset.Builder<String> dynamicallyRequiredGoogNamespacesBuilder();
 
+      public abstract ImmutableMultiset.Builder<String> maybeRequiredGoogNamespacesBuilder();
+
       public abstract ImmutableMultiset.Builder<String> weaklyRequiredGoogNamespacesBuilder();
 
       public abstract ImmutableMultiset.Builder<String> es6ImportSpecifiersBuilder();
 
       public abstract ImmutableList.Builder<ModuleMetadata> nestedModulesBuilder();
+
+      public abstract ImmutableMultiset.Builder<String> readTogglesBuilder();
 
       public abstract Builder path(@Nullable ModulePath value);
 

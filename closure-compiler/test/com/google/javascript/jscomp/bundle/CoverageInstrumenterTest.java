@@ -28,7 +28,6 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
 import com.google.javascript.jscomp.JSError;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,8 +46,8 @@ public final class CoverageInstrumenterTest {
   @Mock(answer = RETURNS_SMART_NULLS)
   CoverageInstrumenter.CompilerSupplier mockCompiler;
 
-  private static final Path FOO_JS = Paths.get("foo.js");
-  private static final Path SOURCE_JS = Paths.get("source.js");
+  private static final Path FOO_JS = Path.of("foo.js");
+  private static final Path SOURCE_JS = Path.of("source.js");
   private static final ImmutableList<JSError> NO_ERRORS = ImmutableList.of();
 
   @Before
@@ -92,7 +91,8 @@ public final class CoverageInstrumenterTest {
     CoverageInstrumenter.CompileResult result = compiler.compile(SOURCE_JS, "var x = 42;");
     String[] expected =
         new String[] {
-          "if(!self.window){self.window=self;self.window.top=self}",
+          "(function(self){if(!self.window){self.window=self;self.window.top=self}})(typeof"
+              + " self!==\"undefined\"?self:globalThis);",
           "var __jscov=window.top[\"__jscov\"]||",
           "(window.top[\"__jscov\"]={\"fileNames\":[],\"instrumentedLines\":[],\"executedLines\":[]});",
           "var JSCompiler_lcov_data_source_js=[];",

@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package j2kt
 
@@ -28,14 +28,14 @@ import kotlin.native.ObjCName
 
 @ObjCName("J2ktJ2ktLateInitTest2", exact = true)
 class LateInitTest2: TestCase() {
- internal lateinit var uninitialized_private_4: String
+ private lateinit var uninitialized: String
 
  override fun setUp() {
-  this.uninitialized_private_4 = "I have been initialized"
+  this.uninitialized = "I have been initialized"
  }
 
  @ObjCName("testLateInit2")
  fun testLateInit2() {
-  TestCase.assertEquals(this.uninitialized_private_4, "I have been initialized")
+  TestCase.assertEquals(this.uninitialized, "I have been initialized")
  }
 }

@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package j2kt
 
@@ -61,8 +61,7 @@ open class ObjCName {
  @JvmField
  internal var packagePrivateField_pp_j2kt: Int = 0
 
- @JvmField
- internal var privateField_private_2: Int = 0
+ private var privateField: Int = 0
 
  constructor()
 
@@ -88,8 +87,7 @@ open class ObjCName {
   @JvmField
   internal var packagePrivateStaticField_pp_j2kt: Int = 0
 
-  @JvmField
-  internal var privateStaticField_private_2: Int = 0
+  private var privateStaticField: Int = 0
 
   @JvmField
   @kotlin.native.ObjCName("objectField_")
@@ -542,9 +540,10 @@ open class ObjCName {
    return null as E
   }
 
-  override val size: Int get() {
-   return 0
-  }
+  override val size: Int
+   get() {
+    return 0
+   }
 
   @kotlin.native.ObjCName("J2ktNewObjCName_SubCollectionCompanion", exact = true)
   companion object {

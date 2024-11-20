@@ -5,9 +5,13 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
 >
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.kie.j2cl.tools.jakarta</groupId>
+    <parent>
+        <groupId>org.kie.j2cl.tools.jakarta</groupId>
+        <artifactId>parent</artifactId>
+        <version>0.5</version>
+    </parent>
     <artifactId>stdlib</artifactId>
-    <version>0.4</version>
+    <version>0.5</version>
     <packaging>jar</packaging>
 
     <name>GWT/J2CL compatible missed classes from stdlib</name>
@@ -65,8 +69,6 @@
 
         <!-- J2CL deps -->
         <com.google.jsinterop.base.version>1.0.0</com.google.jsinterop.base.version>
-        <gwt.nio.version>1.4</gwt.nio.version>
-        <elemental2.version>1.2.1</elemental2.version>
         <sonar.skip>true</sonar.skip>
     </properties>
 
@@ -87,12 +89,10 @@
         <dependency>
             <groupId>com.google.elemental2</groupId>
             <artifactId>elemental2-webstorage</artifactId>
-            <version>${elemental2.version}</version>
         </dependency>
         <dependency>
             <groupId>org.kie.j2cl.tools.nio</groupId>
             <artifactId>gwt-nio</artifactId>
-            <version>${gwt.nio.version}</version>
         </dependency>
     </dependencies>
 

@@ -55,7 +55,7 @@ import com.google.javascript.rhino.jstype.Property.OwnedProperty;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Object type.
@@ -410,17 +410,6 @@ public abstract class ObjectType extends JSType {
    */
   abstract boolean defineProperty(String propertyName, JSType type,
       boolean inferred, Node propertyNode);
-
-  /**
-   * Removes the declared or inferred property from this ObjectType.
-   *
-   * @param propertyName the property's name
-   * @return true if the property was removed successfully. False if the
-   *         property did not exist, or could not be removed.
-   */
-  public boolean removeProperty(String propertyName) {
-    return false;
-  }
 
   /**
    * Gets the node corresponding to the definition of the specified property. This could be the node

@@ -17,6 +17,7 @@ package com.google.j2cl.transpiler.passes;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.j2cl.transpiler.ast.AstUtils.isBoxableJsEnumType;
 
 import com.google.j2cl.transpiler.ast.AbstractRewriter;
 import com.google.j2cl.transpiler.ast.AstUtils;
@@ -53,6 +54,9 @@ public class NormalizeOverlayMembers extends NormalizationPass {
       if (!type.getDeclaration().hasOverlayImplementationType()) {
         continue;
       }
+      if (!AstUtils.isJsEnumBoxingSupported() && type.getDeclaration().isJsEnum()) {
+        continue;
+      }
       overlayTypes.add(createOverlayImplementationType(type));
     }
     compilationUnit.getTypes().addAll(overlayTypes);
@@ -61,8 +65,7 @@ public class NormalizeOverlayMembers extends NormalizationPass {
   private static Type createOverlayImplementationType(Type type) {
     TypeDeclaration overlayTypeDeclaration =
         type.getDeclaration().getOverlayImplementationTypeDeclaration();
-    DeclaredTypeDescriptor overlayTypeDescriptor =
-        overlayTypeDeclaration.toUnparameterizedTypeDescriptor();
+    DeclaredTypeDescriptor overlayTypeDescriptor = overlayTypeDeclaration.toDescriptor();
     Type overlayClass = new Type(type.getSourcePosition(), overlayTypeDeclaration);
 
     for (Member member : type.getMembers()) {
@@ -83,7 +86,7 @@ public class NormalizeOverlayMembers extends NormalizationPass {
       } else {
         InitializerBlock initializerBlock = (InitializerBlock) member;
         checkState(initializerBlock.isStatic());
-        overlayClass.addStaticInitializerBlock(initializerBlock.getBlock());
+        overlayClass.addStaticInitializerBlock(initializerBlock.getBody());
       }
     }
 
@@ -156,8 +159,12 @@ public class NormalizeOverlayMembers extends NormalizationPass {
   }
 
   private static boolean isOverlay(MemberDescriptor memberDescriptor) {
+    if (!AstUtils.isJsEnumBoxingSupported()
+        && memberDescriptor.getEnclosingTypeDescriptor().isJsEnum()) {
+      return false;
+    }
     return memberDescriptor.isJsOverlay()
-        || (AstUtils.isNonNativeJsEnum(memberDescriptor.getEnclosingTypeDescriptor())
+        || (isBoxableJsEnumType(memberDescriptor.getEnclosingTypeDescriptor())
             && !memberDescriptor.isEnumConstant());
   }
 }

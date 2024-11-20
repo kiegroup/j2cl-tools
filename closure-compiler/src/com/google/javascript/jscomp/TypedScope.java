@@ -29,7 +29,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * TypedScope contains information about variables and their types. Scopes can be nested; a scope
@@ -121,10 +121,11 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
   void validateCompletelyBuilt() {
     checkState(
         reservedNames.isEmpty(),
-        "Expected %s to have no reserved names, found: %s",
+        "Expected %s to have no reserved names, found: %s. This probably indicates a bug in"
+            + " TypedScopeCreator where it is failing to declare a variable.",
         this,
         reservedNames);
-    // let a (16-bit) VM garabage collect 64 bytes per TypedScope. (ImmutableSet.of() returns a
+    // let a (16-bit) VM garbage collect 64 bytes per TypedScope. (ImmutableSet.of() returns a
     // singleton)
     reservedNames = ImmutableSet.of();
   }
@@ -306,6 +307,22 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
       // Qualified names 'a.b.c' are declared in the same scope as 'a', never a child scope, which
       // is why calling `getOwnSlot` is sufficient.
       return rootVar.getScope().getOwnSlot(name);
+    }
+  }
+
+  final @Nullable JSType getTypeThroughNamespace(String moduleId) {
+    int split = moduleId.lastIndexOf('.');
+    if (split >= 0) {
+      String parentName = moduleId.substring(0, split);
+      String prop = moduleId.substring(split + 1);
+      JSType parentType = getTypeThroughNamespace(parentName);
+      if (parentType == null || parentType.toMaybeObjectType() == null) {
+        return null;
+      }
+      return parentType.assertObjectType().getPropertyType(prop);
+    } else {
+      TypedVar var = this.getSlot(moduleId);
+      return var != null ? var.getType() : null;
     }
   }
 

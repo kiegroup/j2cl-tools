@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package jsmethod
 
@@ -35,11 +35,13 @@ open class JsMethodExample {
  @JsMethod
  external open fun <T: ArrayList<String?>?> testMethod(): T
 
+ @ObjCName("J2ktJsmethodJsMethodExample_Base", exact = true)
  abstract class Base<T> internal constructor() {
   @JsMethod(name = "m")
   internal open fun m_pp_jsmethod(t: T) {}
  }
 
+ @ObjCName("J2ktJsmethodJsMethodExample_I", exact = true)
  fun interface I {
   @ObjCName("m")
   @JsMethod(name = "mString")
@@ -48,6 +50,7 @@ open class JsMethodExample {
   )
  }
 
+ @ObjCName("J2ktJsmethodJsMethodExample_Sub", exact = true)
  open class Sub internal constructor(): JsMethodExample.Base<String?>(), JsMethodExample.I {
   override fun m(s: String?) {}
 
@@ -56,6 +59,7 @@ open class JsMethodExample {
   }
  }
 
+ @ObjCName("J2ktJsmethodJsMethodExample_SubJsType", exact = true)
  @JsType
  open class SubJsType internal constructor(): JsMethodExample.Base<String?>() {
   @ObjCName("m")
@@ -67,12 +71,14 @@ open class JsMethodExample {
    this.m(arg0)
   }
 
+  @ObjCName("J2ktJsmethodJsMethodExample_SubJsTypeCompanion", exact = true)
   companion object {
    @JvmStatic
    internal fun n_pp_jsmethod() {}
   }
  }
 
+ @ObjCName("J2ktJsmethodJsMethodExample_SubGenericsJsType", exact = true)
  @JsType
  open class SubGenericsJsType<T> internal constructor(): JsMethodExample.Base<T>() {
   @ObjCName("m")
@@ -85,6 +91,7 @@ open class JsMethodExample {
   }
  }
 
+ @ObjCName("J2ktJsmethodJsMethodExample_SubJsTypeWithRenamedJsMethod", exact = true)
  @JsType
  open class SubJsTypeWithRenamedJsMethod internal constructor(): JsMethodExample.Base<String?>() {
   @ObjCName("m")
@@ -98,6 +105,7 @@ open class JsMethodExample {
   }
  }
 
+ @ObjCName("J2ktJsmethodJsMethodExample_InterfaceWithMethod", exact = true)
  interface InterfaceWithMethod {
   @ObjCName("m")
   fun m()
@@ -106,6 +114,7 @@ open class JsMethodExample {
   fun n()
  }
 
+ @ObjCName("J2ktJsmethodJsMethodExample_InterfaceExposingJsMethods", exact = true)
  fun interface InterfaceExposingJsMethods: JsMethodExample.InterfaceWithMethod {
   @JsMethod
   override fun m() {}
@@ -114,10 +123,12 @@ open class JsMethodExample {
   override fun n()
  }
 
+ @ObjCName("J2ktJsmethodJsMethodExample_SuperClassWithFinalMethod", exact = true)
  open class SuperClassWithFinalMethod internal constructor() {
   @ObjCName("n")
   fun n() {}
  }
 
+ @ObjCName("J2ktJsmethodJsMethodExample_ExposesOverrideableJsMethod", exact = true)
  open class ExposesOverrideableJsMethod internal constructor(): JsMethodExample.SuperClassWithFinalMethod(), JsMethodExample.InterfaceExposingJsMethods {}
 }

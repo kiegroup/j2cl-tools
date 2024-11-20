@@ -35,7 +35,9 @@ Returns:
     <artifact_id>_bundle.jar: The bundle JAR
 """
 
-_SNAPSHOT = "0.3-SNAPSHOT"
+load("@rules_java//java:defs.bzl", "java_common")
+
+_SNAPSHOT = "1.0-SNAPSHOT"
 
 def _sonatype_artifact_bundle(ctx):
     version = ctx.var.get("COMPILER_VERSION", _SNAPSHOT)

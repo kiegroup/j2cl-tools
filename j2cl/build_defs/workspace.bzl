@@ -58,7 +58,7 @@ def setup_j2cl_workspace(**kwargs):
     )
 
     jvm_maven_import_external(
-        name = "j2objc_annotations",
+        name = "com_google_j2objc_annotations",
         artifact = "com.google.j2objc:j2objc-annotations:1.3",
         server_urls = _MAVEN_CENTRAL_URLS,
         licenses = ["notice"],
@@ -196,6 +196,14 @@ def setup_j2cl_workspace(**kwargs):
         sha256 = "83ce07ec2058d8d629feb4e269216e286560b0e4587dea883f4e16b64ea51cad",
     )
 
+    jvm_maven_import_external(
+        name = "org_ow2_asm_asm",
+        artifact = "org.ow2.asm:asm:9.7",
+        server_urls = _MAVEN_CENTRAL_URLS,
+        artifact_sha256 = "adf46d5e34940bdf148ecdd26a9ee8eea94496a72034ff7141066b3eea5c4e9d",
+        licenses = ["notice"],
+    )
+
     kotlin_repositories(
         compiler_release = {
             "urls": [
@@ -222,4 +230,16 @@ def setup_j2cl_workspace(**kwargs):
     native.bind(
         name = "error_prone_annotations",
         actual = "@com_google_errorprone_error_prone_annotations",
+    )
+
+    # Required by protobuf_java_util
+    native.bind(
+        name = "jsr305",
+        actual = "@com_google_code_findbugs_jsr305",
+    )
+
+    # Required by protobuf_java_util
+    native.bind(
+        name = "j2objc_annotations",
+        actual = "@com_google_j2objc_annotations",
     )

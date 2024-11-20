@@ -30,7 +30,7 @@ import com.google.javascript.rhino.testing.NodeSubject;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1214,7 +1214,7 @@ public final class RenameVarsTest extends CompilerTestCase {
 
     @Override
     public void process(Node externs, Node root) {
-      Normalize normalize = new Normalize(compiler, false);
+      Normalize normalize = Normalize.createNormalizeForOptimizations(compiler);
       normalize.process(externs, root);
 
       wrappedPass.process(externs, root);

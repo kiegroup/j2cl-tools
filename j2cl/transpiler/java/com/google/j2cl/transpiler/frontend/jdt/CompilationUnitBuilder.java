@@ -24,8 +24,10 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.j2cl.common.FilePosition;
+import com.google.j2cl.common.Problems;
 import com.google.j2cl.common.SourcePosition;
 import com.google.j2cl.transpiler.ast.ArrayAccess;
 import com.google.j2cl.transpiler.ast.ArrayCreationReference;
@@ -93,6 +95,8 @@ import com.google.j2cl.transpiler.ast.VariableDeclarationExpression;
 import com.google.j2cl.transpiler.ast.VariableDeclarationFragment;
 import com.google.j2cl.transpiler.ast.WhileStatement;
 import com.google.j2cl.transpiler.frontend.common.AbstractCompilationUnitBuilder;
+import com.google.j2cl.transpiler.frontend.common.FrontendOptions;
+import com.google.j2cl.transpiler.frontend.common.PackageInfoCache;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -318,7 +322,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
     }
 
     private Method convert(MethodDeclaration methodDeclaration) {
-      boolean inNullMarkedScope = getCurrentType().getDeclaration().isNullMarked();
+      boolean inNullMarkedScope = inNullMarkedScope();
       List<Variable> parameters = new ArrayList<>();
       for (SingleVariableDeclaration parameter :
           JdtEnvironment.<SingleVariableDeclaration>asTypedList(methodDeclaration.parameters())) {
@@ -376,8 +380,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
       ArrayTypeDescriptor typeDescriptor =
           (ArrayTypeDescriptor)
               environment.createTypeDescriptor(
-                  expression.resolveTypeBinding(),
-                  getCurrentType().getDeclaration().isNullMarked());
+                  expression.resolveTypeBinding(), inNullMarkedScope());
       return NewArray.newBuilder()
           .setTypeDescriptor(typeDescriptor)
           .setDimensionExpressions(dimensionExpressions)
@@ -389,8 +392,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
       return new ArrayLiteral(
           (ArrayTypeDescriptor)
               environment.createTypeDescriptor(
-                  expression.resolveTypeBinding(),
-                  getCurrentType().getDeclaration().isNullMarked()),
+                  expression.resolveTypeBinding(), inNullMarkedScope()),
           convertExpressions(JdtEnvironment.asTypedList(expression.expressions())));
     }
 
@@ -404,8 +406,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
       // inferred from the expression.
       TypeDescriptor castTypeDescriptor =
           environment.createTypeDescriptor(
-              expression.getType().resolveBinding(),
-              getCurrentType().getDeclaration().isNullMarked());
+              expression.getType().resolveBinding(), inNullMarkedScope());
 
       Expression castExpression = convert(expression.getExpression());
 
@@ -583,8 +584,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
         org.eclipse.jdt.core.dom.ConditionalExpression conditionalExpression) {
       TypeDescriptor conditionalTypeDescriptor =
           environment.createTypeDescriptor(
-              conditionalExpression.resolveTypeBinding(),
-              getCurrentType().getDeclaration().isNullMarked());
+              conditionalExpression.resolveTypeBinding(), inNullMarkedScope());
       Expression condition = convert(conditionalExpression.getExpression());
       Expression trueExpression = convert(conditionalExpression.getThenExpression());
       Expression falseExpression = convert(conditionalExpression.getElseExpression());
@@ -798,8 +798,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
       return FunctionExpression.newBuilder()
           .setTypeDescriptor(
               environment.createTypeDescriptor(
-                  expression.resolveTypeBinding(),
-                  getCurrentType().getDeclaration().isNullMarked()))
+                  expression.resolveTypeBinding(), inNullMarkedScope()))
           .setJsAsync(functionalMethodDescriptor.isJsAsync())
           .setParameters(
               JdtEnvironment.<VariableDeclaration>asTypedList(expression.parameters()).stream()
@@ -850,8 +849,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
 
       SourcePosition sourcePosition = getSourcePosition(expression);
       TypeDescriptor expressionTypeDescriptor =
-          environment.createTypeDescriptor(
-              expression.resolveTypeBinding(), getCurrentType().getDeclaration().isNullMarked());
+          environment.createTypeDescriptor(expression.resolveTypeBinding(), inNullMarkedScope());
 
       // MethodDescriptor target of the method reference.
       MethodDescriptor referencedMethodDescriptor = resolveMethodReferenceTarget(expression);
@@ -905,8 +903,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
     private Expression convert(CreationReference expression) {
       ITypeBinding expressionTypeBinding = expression.getType().resolveBinding();
       TypeDescriptor expressionTypeDescriptor =
-          environment.createTypeDescriptor(
-              expressionTypeBinding, getCurrentType().getDeclaration().isNullMarked());
+          environment.createTypeDescriptor(expressionTypeBinding, inNullMarkedScope());
       MethodDescriptor functionalMethodDescriptor =
           environment.createMethodDescriptor(
               expression.resolveTypeBinding().getFunctionalInterfaceMethod());
@@ -949,8 +946,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
       ITypeBinding expressionTypeBinding = expression.resolveTypeBinding();
       return MethodReference.newBuilder()
           .setTypeDescriptor(
-              environment.createDeclaredTypeDescriptor(
-                  expressionTypeBinding, getCurrentType().getDeclaration().isNullMarked()))
+              environment.createDeclaredTypeDescriptor(expressionTypeBinding, inNullMarkedScope()))
           .setReferencedMethodDescriptor(
               environment.createMethodDescriptor(expression.resolveMethodBinding()))
           .setInterfaceMethodDescriptor(
@@ -1233,7 +1229,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
 
     private Variable convert(
         org.eclipse.jdt.core.dom.SingleVariableDeclaration variableDeclaration) {
-      boolean inNullMarkedScope = getCurrentType().getDeclaration().isNullMarked();
+      boolean inNullMarkedScope = inNullMarkedScope();
       Variable variable = createVariable(variableDeclaration, inNullMarkedScope);
       if (variableDeclaration.getType() instanceof org.eclipse.jdt.core.dom.UnionType) {
         // Union types are only relevant in multi catch variable declarations, which appear in the
@@ -1261,7 +1257,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
     }
 
     private SwitchStatement convert(org.eclipse.jdt.core.dom.SwitchStatement switchStatement) {
-      Expression switchExpression = convert(switchStatement.getExpression());
+      Expression expression = convert(switchStatement.getExpression());
 
       List<SwitchCase.Builder> caseBuilders = new ArrayList<>();
       for (org.eclipse.jdt.core.dom.Statement statement :
@@ -1276,7 +1272,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
 
       return SwitchStatement.newBuilder()
           .setSourcePosition(getSourcePosition(switchStatement))
-          .setSwitchExpression(switchExpression)
+          .setExpression(expression)
           .setCases(caseBuilders.stream().map(SwitchCase.Builder::build).collect(toImmutableList()))
           .build();
     }
@@ -1289,7 +1285,8 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
               // would represent negative values as unary expressions, e.g - <constant>. The Wasm
               // backend relies on switch case constant for switch on integral values to be
               // literals.
-              .setCaseExpression(convertAndFoldExpression(statement.getExpression()));
+              .setCaseExpressions(
+                  ImmutableList.of(convertAndFoldExpression(statement.getExpression())));
     }
 
     private SynchronizedStatement convert(
@@ -1372,7 +1369,7 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
 
     private VariableDeclarationFragment convert(
         org.eclipse.jdt.core.dom.VariableDeclarationFragment variableDeclarationFragment) {
-      boolean inNullMarkedScope = getCurrentType().getDeclaration().isNullMarked();
+      boolean inNullMarkedScope = inNullMarkedScope();
       Variable variable = createVariable(variableDeclarationFragment, inNullMarkedScope);
       return VariableDeclarationFragment.newBuilder()
           .setVariable(variable)
@@ -1417,6 +1414,10 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
 
       return new Type(getSourcePosition(sourcePositionNode), typeDeclaration);
     }
+
+    private boolean inNullMarkedScope() {
+      return getCurrentType().getDeclaration().isNullMarked();
+    }
   }
 
   private CompilationUnit buildCompilationUnit(
@@ -1425,15 +1426,23 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
     return converter.convert(sourceFilePath, compilationUnit);
   }
 
-  public static List<CompilationUnit> build(
-      CompilationUnitsAndTypeBindings compilationUnitsAndTypeBindings, JdtParser jdtParser) {
+  public static List<CompilationUnit> build(FrontendOptions options, Problems problems) {
+    PackageInfoCache.init(options.getClasspaths(), problems);
+    JdtParser jdtParser = new JdtParser(options.getClasspaths(), problems);
+    CompilationUnitsAndTypeBindings compilationUnitsAndTypeBindings =
+        jdtParser.parseFiles(
+            options.getSources(),
+            options.getGenerateKytheIndexingMetadata(),
+            options.getForbiddenAnnotations(),
+            TypeDescriptors.getWellKnownTypeNames());
+    problems.abortIfHasErrors();
+
     JdtEnvironment environment =
         new JdtEnvironment(
             PackageAnnotationsResolver.create(
                 compilationUnitsAndTypeBindings.getCompilationUnitsByFilePath().entrySet().stream()
                     .filter(e -> e.getKey().endsWith("package-info.java"))
-                    .map(Entry::getValue),
-                jdtParser));
+                    .map(Entry::getValue)));
 
     Map<String, org.eclipse.jdt.core.dom.CompilationUnit> jdtUnitsByFilePath =
         compilationUnitsAndTypeBindings.getCompilationUnitsByFilePath();
@@ -1441,9 +1450,11 @@ public class CompilationUnitBuilder extends AbstractCompilationUnitBuilder {
     CompilationUnitBuilder compilationUnitBuilder =
         new CompilationUnitBuilder(wellKnownTypeBindings, environment);
 
-    return jdtUnitsByFilePath.entrySet().stream()
-        .map(entry -> compilationUnitBuilder.buildCompilationUnit(entry.getKey(), entry.getValue()))
-        .collect(toImmutableList());
+    ImmutableList.Builder<CompilationUnit> compilationUnits = ImmutableList.builder();
+    for (var e : jdtUnitsByFilePath.entrySet()) {
+      compilationUnits.add(compilationUnitBuilder.buildCompilationUnit(e.getKey(), e.getValue()));
+    }
+    return compilationUnits.build();
   }
 
   private CompilationUnitBuilder(

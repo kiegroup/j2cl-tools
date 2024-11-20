@@ -26,10 +26,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class Es6RewriteBlockScopedFunctionDeclarationTest extends CompilerTestCase {
 
-  @Override
   @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public void customSetUp() throws Exception {
+    enableNormalize();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableTypeCheck();
     enableTypeInfoValidation();
@@ -81,8 +80,8 @@ public final class Es6RewriteBlockScopedFunctionDeclarationTest extends Compiler
             "function f() {",
             "  var x = 1;",
             "  if (a) {",
-            "    x();",
-            "    function x() { return x; }",
+            "    x1();",
+            "    function x1() { return x1; }",
             "  }",
             "  return x;",
             "}"),
@@ -90,8 +89,8 @@ public final class Es6RewriteBlockScopedFunctionDeclarationTest extends Compiler
             "function f() {",
             "  var x = 1;",
             "  if (a) {",
-            "    let x = function() { return x; };",
-            "    x();",
+            "    let x1 = function() { return x1; };",
+            "    x1();",
             "  }",
             "  return x;",
             "}"));
@@ -100,15 +99,10 @@ public final class Es6RewriteBlockScopedFunctionDeclarationTest extends Compiler
   @Test
   public void testFunctionInLoop() {
     test(
+        lines("for (var x of y) {", "  y();", "  function f() {", "    let z;", "  }", "}"),
         lines(
-            "for (var x of y) {",
-            "  y();",
-            "  function f() {",
-            "    let z;",
-            "  }",
-            "}"),
-        lines(
-            "for (var x of y) {",
+            "var x;",
+            "for (x of y) {",
             "  let f = function() {",
             "    let z;",
             "  };",

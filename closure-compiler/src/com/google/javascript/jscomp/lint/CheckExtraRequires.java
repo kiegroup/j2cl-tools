@@ -28,11 +28,11 @@ import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Walks the AST looking for usages of qualified names, and 'goog.require's of those names. Then,
@@ -43,12 +43,12 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
   private final AbstractCompiler compiler;
 
   // Keys are the local name of a required namespace. Values are the goog.require CALL node.
-  private final Map<String, Node> requires = new HashMap<>();
+  private final Map<String, Node> requires = new LinkedHashMap<>();
 
   // Adding an entry to usages indicates that the name (either a fully qualified or local name)
   // is used and can be required.  Note that since usages are name-based and not scoped, any usage
   // that shadows an unused require in that file will cause the extra require warning to be missed.
-  private final Set<String> usages = new HashSet<>();
+  private final Set<String> usages = new LinkedHashSet<>();
 
   /**
    * This is only relevant for the standalone CheckExtraRequires run. This is used to restrict the
@@ -60,7 +60,7 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
       DiagnosticType.disabled(
           "JSC_EXTRA_REQUIRE_WARNING", "extra require: ''{0}'' is never referenced in this file");
 
-  // TODO(b/130215517): This should eventually be removed and exceptions supressed
+  // TODO(b/130215517): This should eventually be removed and exceptions suppressed
   private static final ImmutableSet<String> DEFAULT_EXTRA_NAMESPACES =
       ImmutableSet.of(
           "goog.testing.asserts", "goog.testing.jsunit", "goog.testing.JsTdTestCaseAdapter");

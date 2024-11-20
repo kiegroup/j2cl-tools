@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -72,7 +72,6 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
     enableTypeCheck();
     enableRunTypeCheckAfterProcessing();
     enableTypeInfoValidation();
-    disableScriptFeatureValidation();
   }
 
   @Override

@@ -17,6 +17,10 @@
 
 package com.google.j2cl.transpiler.frontend.kotlin.lower
 
+import com.google.j2cl.transpiler.frontend.kotlin.ir.IntrinsicMethods
+import com.google.j2cl.transpiler.frontend.kotlin.ir.IrProviderFromPublicSignature
+import com.google.j2cl.transpiler.frontend.kotlin.ir.fromQualifiedBinaryName
+import java.lang.IllegalArgumentException
 import org.jetbrains.kotlin.backend.common.CompilationException
 import org.jetbrains.kotlin.backend.common.FileLoweringPass
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
@@ -36,29 +40,46 @@ import org.jetbrains.kotlin.backend.common.phaser.CompilerPhase
 import org.jetbrains.kotlin.backend.common.phaser.PhaseConfig
 import org.jetbrains.kotlin.backend.common.phaser.PhaseConfigurationService
 import org.jetbrains.kotlin.backend.common.phaser.PhaserState
+import org.jetbrains.kotlin.backend.common.serialization.signature.PublicIdSignatureComputer
 import org.jetbrains.kotlin.backend.common.wrapWithCompilationException
 import org.jetbrains.kotlin.backend.jvm.JvmBackendContext
 import org.jetbrains.kotlin.backend.jvm.JvmBackendExtension
 import org.jetbrains.kotlin.backend.jvm.JvmGeneratorExtensionsImpl
 import org.jetbrains.kotlin.backend.jvm.JvmIrDeserializerImpl
 import org.jetbrains.kotlin.backend.jvm.ir.constantValue
-import org.jetbrains.kotlin.backend.jvm.lower.JvmDefaultParameterInjector
 import org.jetbrains.kotlin.backend.jvm.lower.JvmInventNamesForLocalClasses
-import org.jetbrains.kotlin.backend.jvm.lower.JvmLateinitLowering
-import org.jetbrains.kotlin.backend.jvm.lower.JvmLocalClassPopupLowering
-import org.jetbrains.kotlin.backend.jvm.lower.JvmPropertiesLowering
-import org.jetbrains.kotlin.backend.jvm.lower.StaticInitializersLowering
+import org.jetbrains.kotlin.builtins.PrimitiveType
 import org.jetbrains.kotlin.codegen.state.GenerationState
+import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.fir.backend.DelicateDeclarationStorageApi
+import org.jetbrains.kotlin.fir.backend.Fir2IrComponents
+import org.jetbrains.kotlin.ir.IrBuiltIns
+import org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI
 import org.jetbrains.kotlin.ir.backend.js.lower.cleanup.CleanupLowering
 import org.jetbrains.kotlin.ir.backend.js.lower.inline.RemoveInlineDeclarationsWithReifiedTypeParametersLowering
+import org.jetbrains.kotlin.ir.backend.jvm.serialization.JvmIrMangler
+import org.jetbrains.kotlin.ir.backend.jvm.serialization.JvmIrMangler.isExported
+import org.jetbrains.kotlin.ir.declarations.IrDeclaration
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.linkage.IrProvider
+import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
+import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
+import org.jetbrains.kotlin.ir.symbols.IrEnumEntrySymbol
+import org.jetbrains.kotlin.ir.symbols.IrFieldSymbol
+import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
+import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
+import org.jetbrains.kotlin.ir.symbols.IrSymbol
+import org.jetbrains.kotlin.ir.symbols.IrTypeAliasSymbol
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.SymbolTable
+import org.jetbrains.kotlin.ir.util.fileOrNull
+import org.jetbrains.kotlin.ir.util.isStatic
 import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.StandardClassIds
+import org.jetbrains.kotlin.types.expressions.OperatorConventions
 
 /** The list of lowering passes to run in execution order. */
 private val loweringPassFactories: List<J2clLoweringPassFactory> = buildList {
@@ -105,6 +126,8 @@ private val loweringPassFactories: List<J2clLoweringPassFactory> = buildList {
   // Remove inline functions with reified type parameters as these functions cannot be called from
   // Java
   add(::RemoveInlineDeclarationsWithReifiedTypeParametersLowering)
+  // Replace `emptyArray()` calls with `arrayOf()` calls.
+  add(::EmptyArrayLowering)
   // Remove functions that contain unsigned varargs in the signature as a temporary workaround for
   // b/242573966.
   // TODO(b/242573966): Remove this when we can handle unsigned vararg types.
@@ -114,7 +137,6 @@ private val loweringPassFactories: List<J2clLoweringPassFactory> = buildList {
   // keeping the returned value and lower return statements inside the block to break statement.
   add(::ReturnableBlockLowering)
   // Optimize for loops on arrays and integer like progressions.
-
   add(::ForLoopsLowering)
   // Replace null varargs with empty array calls.
   add(::EmptyVarargLowering)
@@ -170,6 +192,9 @@ private val loweringPassFactories: List<J2clLoweringPassFactory> = buildList {
       replaceDefaultValuesWithStubs = true,
     )
   }
+  // TODO(b/377502016): Remove this pass once smart cast's bug is fixed.
+  // Cleanup IMPLICIT_CAST introduced by smart casts that cast a expression to a parent type.
+  add(::SmartCastCleaner)
   add(::BridgeLowering)
   // Transforms some cast/instanceof operations.
   add(::TypeOperatorLowering)
@@ -183,8 +208,12 @@ private val loweringPassFactories: List<J2clLoweringPassFactory> = buildList {
   add(::KotlinNothingValueCallsLowering)
   // Mange the names of functions that are shadowing those in super types.
   add(::MangleWellKnownShadowingFunctionsLowering)
+  // Implement intrinsic. Must run after function inlining.
+  add(::IntrinsicFunctionCallsLowering)
   // Removes enum super constructor calls and cleans up effectively empty constructors.
   add(::EnumClassConstructorLowering)
+  // Rewrites calls to KFunction.invoke() as FunctionN.invoke().
+  add(::RewriteKFunctionInvokeLowering)
 
   // BLOCK DECOMPOSITION
   // Transforms statement-like-expression nodes into pure-statement. This should be the last
@@ -201,6 +230,10 @@ private val loweringPassFactories: List<J2clLoweringPassFactory> = buildList {
   add(::CreateForLoopLowering)
   // Convert some `when` statements to a `switch` java-like statement.
   add(::CreateSwitchLowering)
+  // Ensures that any top-level referenced members from another compilation unit have an enclosing
+  // class. The inliner can introduce refernces to top-level members from another compilation unit
+  // that were not referenced before.
+  add(::ExternalPackageParentPatcherLowering)
   // Cleanup the unreachable code that exist after the statement-like-expression
   // transformation to make the IrTree valid.
   add(::CleanupLowering)
@@ -221,13 +254,27 @@ class LoweringPasses(
   private val compilerConfiguration: CompilerConfiguration,
 ) : IrGenerationExtension {
   lateinit var jvmBackendContext: JvmBackendContext
+  lateinit var intrinsics: IntrinsicMethods
 
   override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
     preloadWellKnownSymbols(pluginContext)
 
     jvmBackendContext =
       createJvmBackendContext(state, compilerConfiguration, moduleFragment, pluginContext)
-    val j2clBackendContext = J2clBackendContext(jvmBackendContext)
+    intrinsics = IntrinsicMethods(pluginContext.irBuiltIns)
+
+    val j2clBackendContext = J2clBackendContext(jvmBackendContext, intrinsics)
+
+    // The K2 frontend does not create a FileKt class  for referenced/ top-level members defined in
+    // another compilation unit. Instead, it attaches them to an IrPackageFragment.
+    // This lowering addresses this by creating the necessary file class and moving the top-level
+    // members into it. This is needed to ensure the serialized IR for top-level inline functions
+    // can be deserialized correctly. (The serialized IR being part of the metadata of the enclosing
+    // class after Kotlin/JVM compilation.)
+    // This pass must be executed before `FixOrphanNode` so that `FixOrphanNode` can properly
+    // navigate through the bodies of external top-level inline functions.
+    // TODO(b/374966022): Remove this early run of this pass when the new inliner is used.
+    ExternalPackageParentPatcherLowering(jvmBackendContext).lower(moduleFragment)
 
     // TODO(b/264284345): remove this pass when the bug is fixed.
     // Detect deserialized orphaned IR nodes due to b/264284345 and assign them a parent.
@@ -257,16 +304,37 @@ private fun IrModuleFragment.lower(
   }
 }
 
+@OptIn(UnsafeDuringIrConstructionAPI::class, ObsoleteDescriptorBasedAPI::class)
 private fun createJvmBackendContext(
   state: GenerationState,
   compilerConfiguration: CompilerConfiguration,
   moduleFragment: IrModuleFragment,
   pluginContext: IrPluginContext,
-) =
-  JvmBackendContext(
+): JvmBackendContext {
+  var symbolTable = pluginContext.symbolTable as SymbolTable
+  var irProviders = emptyList<IrProvider>()
+
+  // TODO(b/374966022): Remove this once we don't rely on IR serialization anymore for inlining.
+  if (compilerConfiguration.getBoolean(CommonConfigurationKeys.USE_FIR)) {
+    // K2 does not populate the symbolTable but it still is used by the IR deserializer to know if
+    // the symbols exists or
+    // need to be created. We will manually populate the SymbolTable.
+    symbolTable =
+      SymbolTable(symbolTable.signaturer, symbolTable.irFactory, symbolTable.nameProvider)
+    symbolTable.populate(pluginContext.irBuiltIns)
+    // During IR deserialization, unbound symbols are created for references to external
+    // declarations that haven't been loaded yet. In the K1 frontend, a stub IrProvider relied on
+    // the descriptor API to load these symbols. However, we cannot reuse this in K2 due to the
+    // removal of the descriptor API. Therefore, we utilize this custom IrProvider, which rely on
+    // the public signature of the nbound symbols and the IR plugin API to resolve IR nodes linked
+    // to the symbols.
+    irProviders = listOf(IrProviderFromPublicSignature(pluginContext))
+  }
+
+  return JvmBackendContext(
     state,
     moduleFragment.irBuiltins,
-    pluginContext.symbolTable as SymbolTable,
+    symbolTable,
     PhaseConfig(
       object : CompilerPhase<JvmBackendContext, Unit, Unit> {
         override fun invoke(
@@ -281,9 +349,88 @@ private fun createJvmBackendContext(
     JvmBackendExtension.Default,
     irSerializer = null,
     irDeserializer = JvmIrDeserializerImpl(),
-    irProviders = emptyList<IrProvider>(),
-    irPluginContext = null,
+    irProviders = irProviders,
+    irPluginContext = pluginContext,
   )
+}
+
+@OptIn(DelicateDeclarationStorageApi::class, UnsafeDuringIrConstructionAPI::class)
+private fun SymbolTable.populate(irBuiltIns: IrBuiltIns) {
+  val irSignaturer = PublicIdSignatureComputer(JvmIrMangler)
+
+  @Suppress("IMPLICIT_CAST_TO_ANY")
+  fun addSymbol(symbol: IrSymbol) {
+    if (!symbol.isBound) {
+      return
+    }
+    val declaration =
+      symbol.owner as? IrDeclaration
+        ?: throw IllegalArgumentException("Not an IrDeclaration $symbol")
+    if (!declaration.isExported(false)) {
+      // These declaration are declared in an anonymous or local context and cannot be referenced
+      // outside if this context.
+      return
+    }
+    val signature =
+      symbol.signature
+        ?: irSignaturer.inFile((declaration.fileOrNull)?.symbol) {
+          irSignaturer.computeSignature(declaration)
+        }
+    val unused =
+      when (symbol) {
+        is IrClassSymbol -> declareClassWithSignature(signature, symbol)
+        is IrTypeAliasSymbol -> declareTypeAliasIfNotExists(signature, { symbol }, { it.owner })
+        is IrEnumEntrySymbol -> declareEnumEntry(signature, { symbol }, { it.owner })
+        is IrSimpleFunctionSymbol -> declareSimpleFunctionWithSignature(signature, symbol)
+        is IrConstructorSymbol -> declareConstructorWithSignature(signature, symbol)
+        is IrPropertySymbol -> declarePropertyWithSignature(signature, symbol)
+        is IrFieldSymbol -> declareFieldWithSignature(signature, symbol)
+        else -> throw AssertionError("Unexpected symbol $symbol")
+      }
+  }
+
+  // collects all existing bound symbols in componentStorage.
+  val componentsStorage = irBuiltIns.anyClass.owner as Fir2IrComponents
+  componentsStorage.classifierStorage.forEachCachedDeclarationSymbol(::addSymbol)
+  componentsStorage.declarationStorage.forEachCachedDeclarationSymbol(::addSymbol)
+
+  // add the builtins so the IrDeserializer does not create new symbol for them.
+  with(irBuiltIns) {
+    // Add symbols of numeric conversion function (toInt, toDouble...) as they are used in
+    // checks in NumericConversionLowering.
+    fun getNumericConversionsFunctionSymbols(): List<IrSymbol> {
+      val symbols = arrayListOf<IrSymbol>()
+      for (type in PrimitiveType.NUMBER_TYPES) {
+        val typeClass = findClass(type.typeName)!!
+        for (name in OperatorConventions.NUMBER_CONVERSIONS) {
+          findBuiltInClassMemberFunctions(typeClass, name).singleOrNull()?.let { symbols.add(it) }
+        }
+      }
+      return symbols
+    }
+
+    buildList {
+        addAll(lessFunByOperandType.values)
+        addAll(lessOrEqualFunByOperandType.values)
+        addAll(greaterFunByOperandType.values)
+        addAll(greaterOrEqualFunByOperandType.values)
+        addAll(ieee754equalsFunByOperandType.values)
+        add(eqeqeqSymbol)
+        add(eqeqSymbol)
+        add(throwCceSymbol)
+        add(throwIseSymbol)
+        add(andandSymbol)
+        add(ororSymbol)
+        add(noWhenBranchMatchedExceptionSymbol)
+        add(illegalArgumentExceptionSymbol)
+        add(dataClassArrayMemberHashCodeSymbol)
+        add(dataClassArrayMemberToStringSymbol)
+        add(checkNotNullSymbol)
+        addAll(getNumericConversionsFunctionSymbols())
+      }
+      .forEach(::addSymbol)
+  }
+}
 
 /**
  * Preload symbols that are well-known to lowering passes that may not have been referenced by the
@@ -307,29 +454,30 @@ private fun preloadWellKnownSymbols(pluginContext: IrPluginContext) {
       StandardClassIds.CharRange,
       StandardClassIds.LongRange,
       StandardClassIds.IntRange,
-      ClassId.fromString("kotlin/ranges/UIntRange"),
-      ClassId.fromString("kotlin/ranges/ULongRange"),
-      ClassId.fromString("kotlin/ranges/CharProgression"),
-      ClassId.fromString("kotlin/ranges/IntProgression"),
-      ClassId.fromString("kotlin/ranges/LongProgression"),
-      ClassId.fromString("kotlin/ranges/UIntProgression"),
-      ClassId.fromString("kotlin/ranges/ULongProgression"),
-      ClassId.fromString("kotlin/ranges/UIntRange"),
+      ClassId.fromQualifiedBinaryName("kotlin.ranges.UIntRange"),
+      ClassId.fromQualifiedBinaryName("kotlin.ranges.ULongRange"),
+      ClassId.fromQualifiedBinaryName("kotlin.ranges.CharProgression"),
+      ClassId.fromQualifiedBinaryName("kotlin.ranges.IntProgression"),
+      ClassId.fromQualifiedBinaryName("kotlin.ranges.LongProgression"),
+      ClassId.fromQualifiedBinaryName("kotlin.ranges.UIntProgression"),
+      ClassId.fromQualifiedBinaryName("kotlin.ranges.ULongProgression"),
+      ClassId.fromQualifiedBinaryName("kotlin.ranges.UIntRange"),
 
       // Referenced by ArrayConstructorLowering.
-      ClassId.fromString("javaemul/internal/ArrayHelper"),
-      ClassId.fromString("kotlin/jvm/internal/BooleanArrayInitializer"),
-      ClassId.fromString("kotlin/jvm/internal/IntArrayInitializer"),
-      ClassId.fromString("kotlin/jvm/internal/LongArrayInitializer"),
-      ClassId.fromString("kotlin/jvm/internal/ShortArrayInitializer"),
-      ClassId.fromString("kotlin/jvm/internal/ByteArrayInitializer"),
-      ClassId.fromString("kotlin/jvm/internal/CharArrayInitializer"),
-      ClassId.fromString("kotlin/jvm/internal/DoubleArrayInitializer"),
-      ClassId.fromString("kotlin/jvm/internal/FloatArrayInitializer"),
-      ClassId.fromString("kotlin/jvm/internal/ArrayInitializer"),
+      ClassId.fromQualifiedBinaryName("javaemul.internal.ArrayHelper"),
+      ClassId.fromQualifiedBinaryName("kotlin.jvm.internal.BooleanArrayInitializer"),
+      ClassId.fromQualifiedBinaryName("kotlin.jvm.internal.IntArrayInitializer"),
+      ClassId.fromQualifiedBinaryName("kotlin.jvm.internal.LongArrayInitializer"),
+      ClassId.fromQualifiedBinaryName("kotlin.jvm.internal.ShortArrayInitializer"),
+      ClassId.fromQualifiedBinaryName("kotlin.jvm.internal.ByteArrayInitializer"),
+      ClassId.fromQualifiedBinaryName("kotlin.jvm.internal.CharArrayInitializer"),
+      ClassId.fromQualifiedBinaryName("kotlin.jvm.internal.DoubleArrayInitializer"),
+      ClassId.fromQualifiedBinaryName("kotlin.jvm.internal.FloatArrayInitializer"),
+      ClassId.fromQualifiedBinaryName("kotlin.jvm.internal.ArrayInitializer"),
     )
+
   for (classId in classesToPreload) {
-    pluginContext.referenceClass(classId)
+    checkNotNull(pluginContext.referenceClass(classId)) { "Class $classId not found." }
   }
 
   val functionsToPreload =
@@ -345,7 +493,13 @@ private fun preloadWellKnownSymbols(pluginContext: IrPluginContext) {
       FqName("kotlin.jvm.internal.toFloatArrayInitializer"),
       FqName("kotlin.jvm.internal.toArrayInitializer"),
     )
-  for (functionName in functionsToPreload) {
-    pluginContext.referenceFunctions(CallableId(functionName.parent(), functionName.shortName()))
+  for (function in functionsToPreload) {
+    check(
+      pluginContext
+        .referenceFunctions(CallableId(function.parent(), function.shortName()))
+        .isNotEmpty()
+    ) {
+      "Function $function not found."
+    }
   }
 }

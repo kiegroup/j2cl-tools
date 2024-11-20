@@ -40,10 +40,9 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
-import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.base.LinkedIdentityHashSet;
 import com.google.javascript.rhino.jstype.ContainsUpperBoundSuperTypeVisitor.Result;
-import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A type visitor that traverse through the referenced types of "forwaring types" to search for a
@@ -59,7 +58,7 @@ import org.jspecify.nullness.Nullable;
 final class ContainsUpperBoundSuperTypeVisitor extends Visitor.WithDefaultCase<Result> {
 
   private final JSType target;
-  private final Set<JSType> seen = Sets.newIdentityHashSet();
+  private final LinkedIdentityHashSet<JSType> seen = new LinkedIdentityHashSet<>();
 
   public ContainsUpperBoundSuperTypeVisitor(JSType target) {
     this.target = target;

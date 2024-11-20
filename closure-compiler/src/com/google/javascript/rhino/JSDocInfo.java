@@ -55,7 +55,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -65,7 +64,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Supplier;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * JSDoc information describing JavaScript code. JSDoc is represented as a unified object with
@@ -101,14 +100,15 @@ public class JSDocInfo implements Serializable {
     @SuppressWarnings("unchecked")
     @Nullable
         // cast to T is unsafe but guaranteed by builder
-        T get(JSDocInfo info) {
+        T
+        get(JSDocInfo info) {
       if ((info.propertyKeysBitset & mask) == 0) {
         return null;
       }
       return (T) info.getPropertyValueByIndex(Long.bitCount(info.propertyKeysBitset & (mask - 1)));
     }
 
-    T clone(T arg, @Nullable TypeTransform transform) {
+    T clone(T arg, @Nullable TypeTransform unusedTransform) {
       return arg;
     }
 
@@ -123,7 +123,7 @@ public class JSDocInfo implements Serializable {
       return left.equals(right);
     }
 
-    Iterable<JSTypeExpression> getTypeExpressions(T value) {
+    Iterable<JSTypeExpression> getTypeExpressions(T unusedValue) {
       return ImmutableList.of();
     }
 
@@ -333,6 +333,8 @@ public class JSDocInfo implements Serializable {
     ABSTRACT,
     PURE_OR_BREAK_MY_CODE,
     COLLAPSIBLE_OR_BREAK_MY_CODE,
+    NOCOVERAGE,
+    REQUIRE_INLINING,
 
     NG_INJECT,
     WIZ_ACTION,
@@ -341,6 +343,8 @@ public class JSDocInfo implements Serializable {
     CUSTOM_ELEMENT,
     MIXIN_CLASS,
     MIXIN_FUNCTION,
+    SASS_GENERATED_CSS_TS,
+    CLOSURE_UNAWARE_CODE,
 
     // `@provideGoog` only appears in base.js
     PROVIDE_GOOG,
@@ -833,6 +837,11 @@ public class JSDocInfo implements Serializable {
     return checkBit(Bit.EXTERNS);
   }
 
+  /** Returns whether the {@code @nocoverage} annotation is present on this {@link JSDocInfo}. */
+  public boolean isNoCoverage() {
+    return checkBit(Bit.NOCOVERAGE);
+  }
+
   /** Returns whether the {@code @typeSummary} annotation is present on this {@link JSDocInfo}. */
   public boolean isTypeSummary() {
     return checkBit(Bit.TYPE_SUMMARY);
@@ -856,6 +865,13 @@ public class JSDocInfo implements Serializable {
   /** Returns whether the {@code @noinline} annotation is present on this {@link JSDocInfo}. */
   public boolean isNoInline() {
     return checkBit(Bit.NOINLINE);
+  }
+
+  /**
+   * Returns whether the {@code @requireInlining} annotation is present on this {@link JSDocInfo}.
+   */
+  public boolean isRequireInlining() {
+    return checkBit(Bit.REQUIRE_INLINING);
   }
 
   /**
@@ -1219,6 +1235,15 @@ public class JSDocInfo implements Serializable {
   /** Returns whether JSDoc is annotated with {@code @mixinFunction} annotation. */
   public boolean isMixinFunction() {
     return checkBit(Bit.MIXIN_FUNCTION);
+  }
+
+  public boolean isSassGeneratedCssTs() {
+    return checkBit(Bit.SASS_GENERATED_CSS_TS);
+  }
+
+  /** Returns whether JSDoc is annotated with the {@code @closureUnawareCode} annotation. */
+  public boolean isClosureUnawareCode() {
+    return checkBit(Bit.CLOSURE_UNAWARE_CODE);
   }
 
   /** Gets the description specified by the {@code @license} annotation. */
@@ -1640,6 +1665,7 @@ public class JSDocInfo implements Serializable {
                       & (Bit.FILEOVERVIEW.mask
                           | Bit.EXTERNS.mask
                           | Bit.NOCOMPILE.mask
+                          | Bit.NOCOVERAGE.mask
                           | Bit.TYPE_SUMMARY.mask
                           | Bit.ENHANCED_NAMESPACE.mask))
                   != 0
@@ -1649,6 +1675,18 @@ public class JSDocInfo implements Serializable {
     /** Returns whether this builder recorded a description. */
     public boolean isDescriptionRecorded() {
       return props.get(DESCRIPTION) != null;
+    }
+
+    /** Returns whether the {@code @noinline} annotation is present on this {@link JSDocInfo}. */
+    public boolean isNoInline() {
+      return checkBit(Bit.NOINLINE);
+    }
+
+    /**
+     * Returns whether the {@code @requireInlining} annotation is present on this {@link JSDocInfo}.
+     */
+    public boolean isRequireInlining() {
+      return checkBit(Bit.REQUIRE_INLINING);
     }
 
     /**
@@ -2243,11 +2281,11 @@ public class JSDocInfo implements Serializable {
 
     public boolean addLicense(String license) {
       // The vast majority of JSDoc doesn't have @license so it make sense to be lazy about building
-      // the HashSet.
+      // the LinkedHashSet.
       if (licenseTexts == null) {
-        // The HashSet is only used to remove duplicates, it is never read beyond the add,
+        // The LinkedHashSet is only used to remove duplicates, it is never read beyond the add,
         // so LinkedHashSet is not required.
-        licenseTexts = new HashSet<>();
+        licenseTexts = new LinkedHashSet<>();
       }
 
       if (!licenseTexts.add(license)) {
@@ -2311,6 +2349,18 @@ public class JSDocInfo implements Serializable {
      */
     public boolean recordNoInline() {
       return populateBit(Bit.NOINLINE, true);
+    }
+
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isRequireInlining()} flag set to {@code true}.
+     *
+     * @return {@code true} if the requireInlining flag was recorded and {@code false} if it was
+     *     already recorded
+     */
+    @CanIgnoreReturnValue
+    public boolean recordRequireInlining() {
+      return populateBit(Bit.REQUIRE_INLINING, true);
     }
 
     /**
@@ -2514,6 +2564,15 @@ public class JSDocInfo implements Serializable {
 
     /**
      * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isNoCoverage()} flag set to {@code true}.
+     */
+    @CanIgnoreReturnValue
+    public boolean recordNoCoverage() {
+      return populateBit(Bit.NOCOVERAGE, true);
+    }
+
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
      * JSDocInfo#isTypeSummary()} flag set to {@code true}.
      */
     public boolean recordTypeSummary() {
@@ -2640,6 +2699,16 @@ public class JSDocInfo implements Serializable {
       return populateBit(Bit.MIXIN_FUNCTION, true);
     }
 
+    /** Returns whether current JSDoc is annotated with {@code @sassGeneratedCssTs}. */
+    public boolean isSassGeneratedCssTsRecorded() {
+      return checkBit(Bit.SASS_GENERATED_CSS_TS);
+    }
+
+    /** Records that this script was generated by Sass from a.css.ts file. */
+    public void recordSassGeneratedCssTs() {
+      populateBit(Bit.SASS_GENERATED_CSS_TS, true);
+    }
+
     /** Returns whether we should log the type of values passed to this function. */
     public boolean logTypeInCompiler() {
       return checkBit(Bit.LOG_TYPE_IN_COMPILER);
@@ -2648,6 +2717,16 @@ public class JSDocInfo implements Serializable {
     /** Records that the types of values passed to this method should be logged in the compiler. */
     public boolean recordLogTypeInCompiler() {
       return populateBit(Bit.LOG_TYPE_IN_COMPILER, true);
+    }
+
+    /** Returns whether JSDoc is annotated with the {@code @closureUnaware} annotation. */
+    public boolean isClosureUnawareCode() {
+      return checkBit(Bit.CLOSURE_UNAWARE_CODE);
+    }
+
+    /** Records that this JSDoc was annotated with the {@code @closureUnaware} annotation. */
+    public boolean recordClosureUnawareCode() {
+      return populateBit(Bit.CLOSURE_UNAWARE_CODE, true);
     }
 
     // TODO(sdh): this is a new method - consider removing it in favor of recordType?

@@ -18,25 +18,32 @@ package com.google.j2cl.transpiler.passes;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import com.google.j2cl.common.SourcePosition;
 import com.google.j2cl.transpiler.ast.AbstractRewriter;
+import com.google.j2cl.transpiler.ast.AbstractVisitor;
 import com.google.j2cl.transpiler.ast.Block;
+import com.google.j2cl.transpiler.ast.BreakOrContinueStatement;
 import com.google.j2cl.transpiler.ast.BreakStatement;
 import com.google.j2cl.transpiler.ast.CompilationUnit;
 import com.google.j2cl.transpiler.ast.ContinueStatement;
+import com.google.j2cl.transpiler.ast.DoWhileStatement;
 import com.google.j2cl.transpiler.ast.Expression;
+import com.google.j2cl.transpiler.ast.ExpressionStatement;
 import com.google.j2cl.transpiler.ast.IfStatement;
 import com.google.j2cl.transpiler.ast.Label;
 import com.google.j2cl.transpiler.ast.LabeledStatement;
 import com.google.j2cl.transpiler.ast.Node;
 import com.google.j2cl.transpiler.ast.NumberLiteral;
 import com.google.j2cl.transpiler.ast.PrimitiveTypeDescriptor;
+import com.google.j2cl.transpiler.ast.PrimitiveTypes;
 import com.google.j2cl.transpiler.ast.ReturnStatement;
 import com.google.j2cl.transpiler.ast.Statement;
 import com.google.j2cl.transpiler.ast.SwitchCase;
+import com.google.j2cl.transpiler.ast.SwitchExpression;
 import com.google.j2cl.transpiler.ast.SwitchStatement;
 import com.google.j2cl.transpiler.ast.ThrowStatement;
 import com.google.j2cl.transpiler.ast.TypeDescriptor;
@@ -93,22 +100,72 @@ public class NormalizeSwitchStatementsJ2kt extends NormalizationPass {
 
   @Override
   public void applyTo(CompilationUnit compilationUnit) {
-    // Normalize switch case types.
+    normalizeSwitchStatements(compilationUnit);
+    convertToSwitchExpression(compilationUnit);
+    removeTrailingBreaks(compilationUnit);
+  }
+
+  /** Normalizes switch statements to simplify the conversion to switch expressions . */
+  private static void normalizeSwitchStatements(CompilationUnit compilationUnit) {
     compilationUnit.accept(
-        new AbstractRewriter() {
+        new AbstractVisitor() {
           @Override
-          public Node rewriteSwitchStatement(SwitchStatement switchStatement) {
-            return ensureExhaustive(normalizeSwitchCaseTypes(switchStatement));
+          public void exitSwitchStatement(SwitchStatement switchStatement) {
+            normalizeSwitchCaseTypes(switchStatement);
+            ensureExhaustive(switchStatement);
           }
         });
+  }
 
+  /** Convert switch case expressions to be of the same type as switch expression. */
+  private static void normalizeSwitchCaseTypes(SwitchStatement switchStatement) {
+    TypeDescriptor targetTypeDescriptor = switchStatement.getExpression().getTypeDescriptor();
+    switchStatement
+        .getCases()
+        .forEach(switchCase -> convertSwitchCaseExpressionType(switchCase, targetTypeDescriptor));
+  }
+
+  private static void convertSwitchCaseExpressionType(
+      SwitchCase switchCase, TypeDescriptor targetTypeDescriptor) {
+    List<Expression> caseExpressions = switchCase.getCaseExpressions();
+    for (int i = 0; i < caseExpressions.size(); i++) {
+      Expression caseExpression = caseExpressions.get(i);
+
+      if (caseExpression instanceof NumberLiteral) {
+        NumberLiteral literal = (NumberLiteral) caseExpression;
+        caseExpressions.set(
+            i,
+            new NumberLiteral((PrimitiveTypeDescriptor) targetTypeDescriptor, literal.getValue()));
+      }
+    }
+  }
+
+  /** Adds the default case if missing. */
+  private static void ensureExhaustive(SwitchStatement switchStatement) {
+    if (switchStatement.getCases().stream().anyMatch(SwitchCase::isDefault)) {
+      return;
+    }
+
+    switchStatement.getCases().add(SwitchCase.newBuilder().build());
+  }
+
+  /**
+   * Converts switch statements to switch expressions adding necessary control flow to handle
+   * fallthrough cases.
+   */
+  private static void convertToSwitchExpression(CompilationUnit compilationUnit) {
     // Convert to cascading labeled blocks.
     compilationUnit.accept(
         new AbstractRewriter() {
           @Override
           public Node rewriteSwitchStatement(SwitchStatement switchStatement) {
             if (canConvertDirectlyToWhen(switchStatement)) {
-              return switchStatement;
+              return SwitchExpression.newBuilder()
+                  .setTypeDescriptor(PrimitiveTypes.VOID)
+                  .setExpression(switchStatement.getExpression())
+                  .setCases(switchStatement.getCases())
+                  .build()
+                  .makeStatement(switchStatement.getSourcePosition());
             }
 
             List<SwitchCaseWithLabel> switchCasesAndLabels =
@@ -118,7 +175,7 @@ public class NormalizeSwitchStatementsJ2kt extends NormalizationPass {
             Statement dispatchStatement =
                 createDispatchStatement(
                     switchLabel,
-                    switchStatement.getSwitchExpression(),
+                    switchStatement.getExpression(),
                     switchCasesAndLabels,
                     switchStatement.getSourcePosition());
 
@@ -155,7 +212,7 @@ public class NormalizeSwitchStatementsJ2kt extends NormalizationPass {
    */
   private static Statement createDispatchStatement(
       Label switchLabel,
-      Expression switchExpression,
+      Expression expression,
       List<SwitchCaseWithLabel> switchCasesWithLabels,
       SourcePosition sourcePosition) {
     ImmutableList<SwitchCase> cases =
@@ -172,19 +229,19 @@ public class NormalizeSwitchStatementsJ2kt extends NormalizationPass {
     // not have fallthroughs and can be arbitrarily reordered.
     cases =
         Streams.concat(
-                cases.stream().filter(it -> it.getCaseExpression() != null),
-                cases.stream().filter(it -> it.getCaseExpression() == null))
+                cases.stream().filter(Predicates.not(SwitchCase::isDefault)),
+                cases.stream().filter(SwitchCase::isDefault))
             .collect(toImmutableList());
 
-    Statement rewrittenSwitchStatement =
-        SwitchStatement.newBuilder()
-            .setSourcePosition(sourcePosition)
-            .setSwitchExpression(switchExpression)
+    Expression whenExpression =
+        SwitchExpression.newBuilder()
+            .setTypeDescriptor(PrimitiveTypes.VOID)
+            .setExpression(expression)
             .setCases(cases)
             .build();
 
     return Block.newBuilder()
-        .addStatement(rewrittenSwitchStatement)
+        .addStatement(whenExpression.makeStatement(sourcePosition))
         .addStatement(
             BreakStatement.newBuilder()
                 .setSourcePosition(sourcePosition)
@@ -246,36 +303,6 @@ public class NormalizeSwitchStatementsJ2kt extends NormalizationPass {
     return dispatchStatement;
   }
 
-  /** Convert switch case expressions to be of the same type as switch expression. */
-  private static SwitchStatement normalizeSwitchCaseTypes(SwitchStatement switchStatement) {
-    TypeDescriptor targetTypeDescriptor = switchStatement.getSwitchExpression().getTypeDescriptor();
-    return SwitchStatement.Builder.from(switchStatement)
-        .setCases(
-            switchStatement.getCases().stream()
-                .map(
-                    switchCase -> convertSwitchCaseExpressionType(switchCase, targetTypeDescriptor))
-                .collect(toImmutableList()))
-        .build();
-  }
-
-  private static SwitchCase convertSwitchCaseExpressionType(
-      SwitchCase switchCase, TypeDescriptor targetTypeDescriptor) {
-    Expression caseExpression = switchCase.getCaseExpression();
-    if (caseExpression == null) {
-      return switchCase;
-    }
-
-    if (!(caseExpression instanceof NumberLiteral)) {
-      return switchCase;
-    }
-
-    NumberLiteral literal = (NumberLiteral) caseExpression;
-    return SwitchCase.Builder.from(switchCase)
-        .setCaseExpression(
-            new NumberLiteral((PrimitiveTypeDescriptor) targetTypeDescriptor, literal.getValue()))
-        .build();
-  }
-
   /**
    * For a switch to be directly expressible as a when in Kotlin two conditions have to be met: the
    * default case needs to be the last one, and there should not be any fallthroughs except for
@@ -287,7 +314,7 @@ public class NormalizeSwitchStatementsJ2kt extends NormalizationPass {
     return casesExceptLast.stream()
         .allMatch(
             switchCase ->
-                switchCase.getCaseExpression() != null
+                !switchCase.isDefault()
                     && (switchCase.getStatements().isEmpty()
                         || breaksOutOfSwitchStatement(switchCase.getStatements())));
   }
@@ -333,14 +360,65 @@ public class NormalizeSwitchStatementsJ2kt extends NormalizationPass {
     return lastStatement != null && breaksOutOfSwitchStatement(lastStatement);
   }
 
-  private static SwitchStatement ensureExhaustive(SwitchStatement switchStatement) {
-    if (switchStatement.getCases().stream()
-        .anyMatch(switchCase -> switchCase.getCaseExpression() == null)) {
-      return switchStatement;
+  /** Removes breaks at the end that are equivalent to normal flow out. */
+  private static void removeTrailingBreaks(CompilationUnit compilationUnit) {
+    compilationUnit.accept(
+        new AbstractRewriter() {
+          @Override
+          public Node rewriteLabeledStatement(LabeledStatement labeledStatement) {
+            removeTrailingBreaks(labeledStatement.getStatement(), labeledStatement.getLabel());
+            return labeledStatement;
+          }
+        });
+  }
+
+  /**
+   * Removes trailing breaks or continues that target ether a block, an `if` statement or a `do { }
+   * while(false)` statement.
+   */
+  private static void removeTrailingBreaks(Statement body, Label label) {
+    if (body instanceof Block) {
+      removeTrailingBreaks(((Block) body).getStatements(), label);
+    }
+    if (body instanceof ExpressionStatement) {
+      ExpressionStatement expressionStatement = (ExpressionStatement) body;
+      if (expressionStatement.getExpression() instanceof SwitchExpression) {
+        SwitchExpression switchExpression = (SwitchExpression) expressionStatement.getExpression();
+        for (SwitchCase switchCase : switchExpression.getCases()) {
+          removeTrailingBreaks(switchCase.getStatements(), label);
+        }
+      }
     }
 
-    return SwitchStatement.Builder.from(switchStatement)
-        .addCases(SwitchCase.newBuilder().build())
-        .build();
+    if (body instanceof DoWhileStatement) {
+      if (((DoWhileStatement) body).getConditionExpression().isBooleanFalse()) {
+        removeTrailingBreaks(((DoWhileStatement) body).getBody(), label);
+      }
+    }
+
+    if (body instanceof IfStatement) {
+      IfStatement ifStatement = (IfStatement) body;
+      removeTrailingBreaks(ifStatement.getThenStatement(), label);
+      if (ifStatement.getElseStatement() != null) {
+        removeTrailingBreaks(ifStatement.getElseStatement(), label);
+      }
+    }
+  }
+
+  private static void removeTrailingBreaks(List<Statement> statements, Label label) {
+    int i = statements.size() - 1;
+    while (i >= 0) {
+      Statement lastStatement = statements.get(i);
+      // We can safely remove continue statements since we are only handling cases where continue
+      // statements target `do { continue; } while(false)`; and in these cases continue statements
+      // is equivalent to break statements.
+      if (lastStatement instanceof BreakOrContinueStatement
+          && ((BreakOrContinueStatement) lastStatement).getLabelReference().getTarget() == label) {
+        statements.remove(i--);
+      } else {
+        removeTrailingBreaks(lastStatement, label);
+        break;
+      }
+    }
   }
 }

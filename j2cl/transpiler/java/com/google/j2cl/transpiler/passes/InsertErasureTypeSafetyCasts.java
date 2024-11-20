@@ -149,7 +149,7 @@ public class InsertErasureTypeSafetyCasts extends NormalizationPass {
       }
 
       @Override
-      public Expression rewriteSwitchExpressionContext(Expression expression) {
+      public Expression rewriteSwitchSubjectContext(Expression expression) {
         return maybeInsertErasureTypeSafetyCast(expression);
       }
     };
@@ -190,7 +190,7 @@ public class InsertErasureTypeSafetyCasts extends NormalizationPass {
       return isUncheckedCast(expression)
           ? JsDocCastExpression.newBuilder()
               .setExpression(expression)
-              .setCastType(toTypeDescriptor)
+              .setCastTypeDescriptor(toTypeDescriptor)
               .build()
           : CastExpression.newBuilder()
               .setExpression(expression)

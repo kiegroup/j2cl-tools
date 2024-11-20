@@ -6,18 +6,18 @@ def load_j2cl_repo_deps():
     # TODO(b/211017789):Use old proto version until maven issue is fixed.
     http_archive(
         name = "com_google_protobuf",
-        strip_prefix = "protobuf-3.15.3",
-        sha256 = "b10bf4e2d1a7586f54e64a5d9e7837e5188fc75ae69e36f215eb01def4f9721b",
+        strip_prefix = "protobuf-3.19.0",
+        sha256 = "4a045294ec76cb6eae990a21adb5d8b3c78be486f1507faa601541d1ccefbd6b",
         urls = [
-            "https://github.com/protocolbuffers/protobuf/archive/v3.15.3.tar.gz",
+            "https://github.com/protocolbuffers/protobuf/archive/v3.19.0.tar.gz",
         ],
     )
 
     _github_repo(
         name = "io_bazel_rules_closure",
         repo = "bazelbuild/rules_closure",
-        tag = "26321bf918b16858f045d40e204482910e1dc649",
-        sha256 = "cfe04863c68bd807124bafb8eccfeac8c8ce48087270077bfd0684456df63f4d",
+        tag = "7dc462656229f37f0ab90bba3c82c9f6b8171ebf",
+        sha256 = "09965ff4236d678c81bcfb1a42502ba7e8feafa92be02ccf0d8d4eccc51379be",
     )
 
     # TODO(goktug): Consider moving to setup_j2cl_workspace after licences migration
@@ -59,8 +59,8 @@ def _load_binaryen():
     _github_repo(
         name="com_google_binaryen",
         repo = "WebAssembly/binaryen",
-        tag = "669bc06d0566041bfdbae97f87e60130945b557f",
-        sha256 = "d0ae6b5ab9e60534cda8eb372e4d6eb94a5c128fd829ad170556090f28fd7b60",
+        tag = "6645f0c05b8e9268f35742bb6b0a67e0a9c40795",
+        sha256 = "a3b0c6b4884cd147913088817f6e238e700394834a7cbd8610acd6b23bdd4860",
         patch_args = ["-p1"],
         build_file = "@com_google_j2cl//build_defs/internal_do_not_use/binaryen:BUILD.binaryen",
         patches = ["@com_google_j2cl//build_defs/internal_do_not_use/binaryen:generate_intrinsics.patch"],

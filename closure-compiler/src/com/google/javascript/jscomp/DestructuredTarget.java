@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Represents a single target inside a destructuring pattern, whether another pattern or a lhs
@@ -323,7 +323,9 @@ public final class DestructuredTarget {
 
     // e.g. get `number` from `!Iterable<number>`
     JSType templateTypeOfIterable =
-        patternType.getTemplateTypeMap().getResolvedTemplateType(registry.getIterableTemplate());
+        patternType
+            .getTemplateTypeMap()
+            .getResolvedTemplateType(registry.getIterableValueTemplate());
 
     if (isRest) {
       // return `!Array<number>`

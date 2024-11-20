@@ -8,7 +8,7 @@
     <parent>
         <groupId>org.kie.j2cl.tools.jakarta.jaxb</groupId>
         <artifactId>parent</artifactId>
-        <version>0.4</version>
+        <version>0.5</version>
     </parent>
 
     <artifactId>api</artifactId>

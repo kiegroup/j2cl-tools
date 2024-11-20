@@ -73,8 +73,40 @@
  ))
 )
 
-;;; Code for intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 [type definition]
-(type $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1.vtable (sub $java.lang.Object.vtable (struct
+;;; Code for intersectiontype.Getable.$LambdaAdaptor [type definition]
+(type $intersectiontype.Getable.$LambdaAdaptor.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_get__java_lang_Object (ref $function.m_get__java_lang_Object))
+ ))
+)
+(type $intersectiontype.Getable.$LambdaAdaptor (sub $java.lang.Object (struct
+ (field $vtable (ref $intersectiontype.Getable.$LambdaAdaptor.vtable))
+ (field $itable (ref $intersectiontype.Getable.$LambdaAdaptor.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
+;;; Code for intersectiontype.Setable.$LambdaAdaptor [type definition]
+(type $intersectiontype.Setable.$LambdaAdaptor.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_set__int__void (ref $function.m_set__int__void))
+ ))
+)
+(type $intersectiontype.Setable.$LambdaAdaptor (sub $java.lang.Object (struct
+ (field $vtable (ref $intersectiontype.Setable.$LambdaAdaptor.vtable))
+ (field $itable (ref $intersectiontype.Setable.$LambdaAdaptor.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
+;;; Code for intersectiontype.Cmp.$LambdaAdaptor [type definition]
+(type $intersectiontype.Cmp.$LambdaAdaptor.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
  (field $m_hashCode__int (ref $function.m_hashCode__int))
@@ -83,15 +115,15 @@
  (field $m_defaultM__int (ref $function.m_defaultM__int))
  ))
 )
-(type $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 (sub $java.lang.Object (struct
- (field $vtable (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1.vtable))
- (field $itable (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1.itable))
+(type $intersectiontype.Cmp.$LambdaAdaptor (sub $java.lang.Object (struct
+ (field $vtable (ref $intersectiontype.Cmp.$LambdaAdaptor.vtable))
+ (field $itable (ref $intersectiontype.Cmp.$LambdaAdaptor.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
 
-;;; Code for intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 [type definition]
-(type $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2.vtable (sub $java.lang.Object.vtable (struct
+;;; Code for intersectiontype.Cmp2.$LambdaAdaptor [type definition]
+(type $intersectiontype.Cmp2.$LambdaAdaptor.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
  (field $m_hashCode__int (ref $function.m_hashCode__int))
@@ -99,9 +131,9 @@
  (field $m_cmp__int__int (ref $function.m_cmp__int__int))
  ))
 )
-(type $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 (sub $java.lang.Object (struct
- (field $vtable (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2.vtable))
- (field $itable (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2.itable))
+(type $intersectiontype.Cmp2.$LambdaAdaptor (sub $java.lang.Object (struct
+ (field $vtable (ref $intersectiontype.Cmp2.$LambdaAdaptor.vtable))
+ (field $itable (ref $intersectiontype.Cmp2.$LambdaAdaptor.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
@@ -153,6 +185,39 @@
  ))
 )
 
+;;; Code for intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 [type definition]
+(type $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1.vtable (sub $intersectiontype.Cmp.$LambdaAdaptor.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_cmp__int (ref $function.m_cmp__int))
+ (field $m_defaultM__int (ref $function.m_defaultM__int))
+ ))
+)
+(type $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 (sub $intersectiontype.Cmp.$LambdaAdaptor (struct
+ (field $vtable (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1.vtable))
+ (field $itable (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
+;;; Code for intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 [type definition]
+(type $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2.vtable (sub $intersectiontype.Cmp2.$LambdaAdaptor.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_cmp__int__int (ref $function.m_cmp__int__int))
+ ))
+)
+(type $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 (sub $intersectiontype.Cmp2.$LambdaAdaptor (struct
+ (field $vtable (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2.vtable))
+ (field $itable (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
+
 ;;; Code for intersectiontype.Getable [imports]
 
 ;;; Code for intersectiontype.Setable [imports]
@@ -171,15 +236,23 @@
 
 ;;; Code for intersectiontype.IntersectionTypeTest [imports]
 
-;;; Code for intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 [imports]
+;;; Code for intersectiontype.Getable.$LambdaAdaptor [imports]
 
-;;; Code for intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 [imports]
+;;; Code for intersectiontype.Setable.$LambdaAdaptor [imports]
+
+;;; Code for intersectiontype.Cmp.$LambdaAdaptor [imports]
+
+;;; Code for intersectiontype.Cmp2.$LambdaAdaptor [imports]
 
 ;;; Code for intersectiontype.IntersectionTypeTest.MapEntry [imports]
 
 ;;; Code for intersectiontype.IntersectionTypeTest.A [imports]
 
 ;;; Code for intersectiontype.IntersectionTypeTest.SomeConcreteType [imports]
+
+;;; Code for intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 [imports]
+
+;;; Code for intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 [imports]
 
 ;;; Code for intersectiontype.Getable [static fields]
 (global $$class-initialized@intersectiontype.Getable (mut i32)
@@ -234,6 +307,38 @@
  (i32.const 0)
 )
 (global $$class@intersectiontype.IntersectionTypeTest (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for intersectiontype.Getable.$LambdaAdaptor [static fields]
+(global $$class-initialized@intersectiontype.Getable.$LambdaAdaptor (mut i32)
+ (i32.const 0)
+)
+(global $$class@intersectiontype.Getable.$LambdaAdaptor (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for intersectiontype.Setable.$LambdaAdaptor [static fields]
+(global $$class-initialized@intersectiontype.Setable.$LambdaAdaptor (mut i32)
+ (i32.const 0)
+)
+(global $$class@intersectiontype.Setable.$LambdaAdaptor (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for intersectiontype.Cmp.$LambdaAdaptor [static fields]
+(global $$class-initialized@intersectiontype.Cmp.$LambdaAdaptor (mut i32)
+ (i32.const 0)
+)
+(global $$class@intersectiontype.Cmp.$LambdaAdaptor (mut (ref null $java.lang.Class))
+ (ref.null $java.lang.Class)
+)
+
+;;; Code for intersectiontype.Cmp2.$LambdaAdaptor [static fields]
+(global $$class-initialized@intersectiontype.Cmp2.$LambdaAdaptor (mut i32)
+ (i32.const 0)
+)
+(global $$class@intersectiontype.Cmp2.$LambdaAdaptor (mut (ref null $java.lang.Class))
  (ref.null $java.lang.Class)
 )
 
@@ -327,18 +432,18 @@
 ;;; Code for intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 [vtable.init]
 (global $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1.vtable (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1.vtable)
  (struct.new $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1.vtable
-  (ref.func $$getClassImpl__java_lang_Class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1)
+  (ref.func $$getClassImpl__java_lang_Class@intersectiontype.Cmp.$LambdaAdaptor)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
   (ref.func $m_cmp__int@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1)
-  (ref.func $m_defaultM__int@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1)
+  (ref.func $m_defaultM__int@intersectiontype.Cmp.$LambdaAdaptor)
  )
 )
 (global $intersectiontype.Cmp.vtable@$intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 (ref $intersectiontype.Cmp.vtable)
  (struct.new $intersectiontype.Cmp.vtable
   (ref.func $m_cmp__int@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1)
-  (ref.func $m_defaultM__int@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1)
+  (ref.func $m_defaultM__int@intersectiontype.Cmp.$LambdaAdaptor)
  )
 )
 (global $intersectiontype.Serial.vtable@$intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 (ref $intersectiontype.Serial.vtable)
@@ -349,7 +454,7 @@
 ;;; Code for intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 [vtable.init]
 (global $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2.vtable (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2.vtable)
  (struct.new $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2.vtable
-  (ref.func $$getClassImpl__java_lang_Class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2)
+  (ref.func $$getClassImpl__java_lang_Class@intersectiontype.Cmp2.$LambdaAdaptor)
   (ref.func $m_equals__java_lang_Object__boolean@java.lang.Object)
   (ref.func $m_hashCode__int@java.lang.Object)
   (ref.func $m_toString__java_lang_String@java.lang.Object)
@@ -401,16 +506,16 @@
 
 ;;; void Getable.$clinit()
 (func $$clinit__void_<once>_@intersectiontype.Getable
- ;;@ intersectiontype/IntersectionTypeTest.java:18:10
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:18:10
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:18:10
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:18:10
   (if (global.get $$class-initialized@intersectiontype.Getable)
    (then
-    ;;@ intersectiontype/IntersectionTypeTest.java:18:10
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:18:10
     (return )
    )
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:18:10
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:18:10
   (global.set $$class-initialized@intersectiontype.Getable (i32.const 1))
  )
 )
@@ -433,16 +538,16 @@
 
 ;;; void Setable.$clinit()
 (func $$clinit__void_<once>_@intersectiontype.Setable
- ;;@ intersectiontype/IntersectionTypeTest.java:22:10
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:22:10
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:22:10
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:22:10
   (if (global.get $$class-initialized@intersectiontype.Setable)
    (then
-    ;;@ intersectiontype/IntersectionTypeTest.java:22:10
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:22:10
     (return )
    )
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:22:10
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:22:10
   (global.set $$class-initialized@intersectiontype.Setable (i32.const 1))
  )
 )
@@ -465,16 +570,16 @@
 
 ;;; void Serial.$clinit()
 (func $$clinit__void_<once>_@intersectiontype.Serial
- ;;@ intersectiontype/IntersectionTypeTest.java:26:10
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:26:10
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:26:10
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:26:10
   (if (global.get $$class-initialized@intersectiontype.Serial)
    (then
-    ;;@ intersectiontype/IntersectionTypeTest.java:26:10
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:26:10
     (return )
    )
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:26:10
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:26:10
   (global.set $$class-initialized@intersectiontype.Serial (i32.const 1))
  )
 )
@@ -499,9 +604,9 @@
 (func $m_defaultM__int@intersectiontype.Cmp
  (param $this (ref null $java.lang.Object))
  (result i32)
- ;;@ intersectiontype/IntersectionTypeTest.java:31:14
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:31:14
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:32:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:32:4
   (return (i32.const 1))
  )
 )
@@ -509,16 +614,16 @@
 
 ;;; void Cmp.$clinit()
 (func $$clinit__void_<once>_@intersectiontype.Cmp
- ;;@ intersectiontype/IntersectionTypeTest.java:28:10
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:28:10
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:28:10
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:28:10
   (if (global.get $$class-initialized@intersectiontype.Cmp)
    (then
-    ;;@ intersectiontype/IntersectionTypeTest.java:28:10
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:28:10
     (return )
    )
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:28:10
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:28:10
   (global.set $$class-initialized@intersectiontype.Cmp (i32.const 1))
  )
 )
@@ -541,16 +646,16 @@
 
 ;;; void Cmp2.$clinit()
 (func $$clinit__void_<once>_@intersectiontype.Cmp2
- ;;@ intersectiontype/IntersectionTypeTest.java:36:10
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:36:10
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:36:10
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:36:10
   (if (global.get $$class-initialized@intersectiontype.Cmp2)
    (then
-    ;;@ intersectiontype/IntersectionTypeTest.java:36:10
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:36:10
     (return )
    )
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:36:10
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:36:10
   (global.set $$class-initialized@intersectiontype.Cmp2 (i32.const 1))
  )
 )
@@ -573,16 +678,16 @@
 
 ;;; void EmptyA.$clinit()
 (func $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest.EmptyA
- ;;@ intersectiontype/IntersectionTypeTest.java:92:20
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:92:20
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:92:20
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:92:20
   (if (global.get $$class-initialized@intersectiontype.IntersectionTypeTest.EmptyA)
    (then
-    ;;@ intersectiontype/IntersectionTypeTest.java:92:20
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:92:20
     (return )
    )
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:92:20
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:92:20
   (global.set $$class-initialized@intersectiontype.IntersectionTypeTest.EmptyA (i32.const 1))
  )
 )
@@ -605,16 +710,16 @@
 
 ;;; void EmptyB.$clinit()
 (func $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest.EmptyB
- ;;@ intersectiontype/IntersectionTypeTest.java:94:20
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:94:20
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:94:20
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:94:20
   (if (global.get $$class-initialized@intersectiontype.IntersectionTypeTest.EmptyB)
    (then
-    ;;@ intersectiontype/IntersectionTypeTest.java:94:20
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:94:20
     (return )
    )
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:94:20
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:94:20
   (global.set $$class-initialized@intersectiontype.IntersectionTypeTest.EmptyB (i32.const 1))
  )
 )
@@ -638,16 +743,16 @@
 ;;; CmpImpl CmpImpl.$create()
 (func $$create__@intersectiontype.CmpImpl
  (result (ref null $intersectiontype.CmpImpl))
- ;;@ intersectiontype/IntersectionTypeTest.java:40:6
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:40:6
  (local $$instance (ref null $intersectiontype.CmpImpl))
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:40:6
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:40:6
   (call $$clinit__void_<once>_@intersectiontype.CmpImpl )
-  ;;@ intersectiontype/IntersectionTypeTest.java:40:6
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:40:6
   (local.set $$instance (struct.new $intersectiontype.CmpImpl (ref.as_non_null (global.get $intersectiontype.CmpImpl.vtable)) (ref.as_non_null (global.get $intersectiontype.CmpImpl.itable)) (i32.const 0)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:40:6
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:40:6
   (call $$ctor__void_$p_intersectiontype_CmpImpl@intersectiontype.CmpImpl (ref.as_non_null (local.get $$instance)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:40:6
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:40:6
   (return (local.get $$instance))
  )
 )
@@ -655,9 +760,9 @@
 ;;; void CmpImpl.$ctor()
 (func $$ctor__void_$p_intersectiontype_CmpImpl@intersectiontype.CmpImpl
  (param $this (ref null $intersectiontype.CmpImpl))
- ;;@ intersectiontype/IntersectionTypeTest.java:40:6
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:40:6
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:40:6
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:40:6
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -667,11 +772,11 @@
  (type $function.m_cmp__int)
  (param $this.untyped (ref $java.lang.Object))
  (result i32)
- ;;@ intersectiontype/IntersectionTypeTest.java:42:13
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:42:13
  (local $this (ref null $intersectiontype.CmpImpl))
  (local.set $this (ref.cast (ref $intersectiontype.CmpImpl) (local.get $this.untyped)))
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:43:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:43:4
   (return (i32.const 1))
  )
 )
@@ -682,11 +787,11 @@
  (type $function.m_defaultM__int)
  (param $this.untyped (ref $java.lang.Object))
  (result i32)
- ;;@ intersectiontype/IntersectionTypeTest.java:40:6
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:40:6
  (local $this (ref null $intersectiontype.CmpImpl))
  (local.set $this (ref.cast (ref $intersectiontype.CmpImpl) (local.get $this.untyped)))
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:40:6
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:40:6
   (return (call $m_defaultM__int@intersectiontype.Cmp (ref.as_non_null (local.get $this))))
  )
 )
@@ -694,20 +799,20 @@
 
 ;;; void CmpImpl.$clinit()
 (func $$clinit__void_<once>_@intersectiontype.CmpImpl
- ;;@ intersectiontype/IntersectionTypeTest.java:40:6
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:40:6
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:40:6
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:40:6
   (if (global.get $$class-initialized@intersectiontype.CmpImpl)
    (then
-    ;;@ intersectiontype/IntersectionTypeTest.java:40:6
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:40:6
     (return )
    )
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:40:6
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:40:6
   (global.set $$class-initialized@intersectiontype.CmpImpl (i32.const 1))
-  ;;@ intersectiontype/IntersectionTypeTest.java:40:6
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:40:6
   (call $$clinit__void_<once>_@java.lang.Object )
-  ;;@ intersectiontype/IntersectionTypeTest.java:40:6
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:40:6
   (call $$clinit__void_<once>_@intersectiontype.Cmp )
  )
 )
@@ -744,16 +849,16 @@
 ;;; IntersectionTypeTest<U> IntersectionTypeTest.$create()
 (func $$create__@intersectiontype.IntersectionTypeTest
  (result (ref null $intersectiontype.IntersectionTypeTest))
- ;;@ intersectiontype/IntersectionTypeTest.java:48:13
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:48:13
  (local $$instance (ref null $intersectiontype.IntersectionTypeTest))
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:48:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:48:13
   (call $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest )
-  ;;@ intersectiontype/IntersectionTypeTest.java:48:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:48:13
   (local.set $$instance (struct.new $intersectiontype.IntersectionTypeTest (ref.as_non_null (global.get $intersectiontype.IntersectionTypeTest.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:48:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:48:13
   (call $$ctor__void_$p_intersectiontype_IntersectionTypeTest@intersectiontype.IntersectionTypeTest (ref.as_non_null (local.get $$instance)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:48:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:48:13
   (return (local.get $$instance))
  )
 )
@@ -761,9 +866,9 @@
 ;;; void IntersectionTypeTest.$ctor()
 (func $$ctor__void_$p_intersectiontype_IntersectionTypeTest@intersectiontype.IntersectionTypeTest
  (param $this (ref null $intersectiontype.IntersectionTypeTest))
- ;;@ intersectiontype/IntersectionTypeTest.java:48:13
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:48:13
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:48:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:48:13
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -771,18 +876,18 @@
 ;;; void IntersectionTypeTest.getAndSet(T object)
 (func $m_getAndSet__intersectiontype_Getable__void@intersectiontype.IntersectionTypeTest
  (param $object (ref null $java.lang.Object))
- ;;@ intersectiontype/IntersectionTypeTest.java:49:54
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:49:54
  (local $$qualifier (ref null $java.lang.Object))
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:49:74
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:49:74
   (call $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest )
   (block
-   ;;@ intersectiontype/IntersectionTypeTest.java:50:4
+   ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:50:4
    (local.set $$qualifier (local.get $object))
-   ;;@ intersectiontype/IntersectionTypeTest.java:50:4
+   ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:50:4
    (call_ref $function.m_set__int__void (ref.as_non_null (local.get $$qualifier))(i32.const 1)(struct.get $intersectiontype.Setable.vtable $m_set__int__void (ref.cast (ref $intersectiontype.Setable.vtable) (call $get.itable.$intersectiontype.Setable (local.get $$qualifier)))))
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:51:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:51:4
   (drop (call_ref $function.m_get__java_lang_Object (ref.as_non_null (local.get $object))(struct.get $intersectiontype.Getable.vtable $m_get__java_lang_Object (ref.cast (ref $intersectiontype.Getable.vtable) (call $get.itable.$intersectiontype.Getable (local.get $object))))))
  )
 )
@@ -791,20 +896,20 @@
 (func $m_cast__java_lang_Object__intersectiontype_Getable@intersectiontype.IntersectionTypeTest
  (param $o (ref null $java.lang.Object))
  (result (ref null $java.lang.Object))
- ;;@ intersectiontype/IntersectionTypeTest.java:60:31
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:60:31
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:60:46
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:60:46
   (call $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest )
-  ;;@ intersectiontype/IntersectionTypeTest.java:63:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:63:4
   (if (ref.is_null (local.get $o))
    (then
     (block
-     ;;@ intersectiontype/IntersectionTypeTest.java:64:6
+     ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:64:6
      (return (local.get $o))
     )
    )
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:66:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:66:4
   (return (local.get $o))
  )
 )
@@ -813,11 +918,11 @@
 (func $m_cast1__java_lang_Object__intersectiontype_Getable@intersectiontype.IntersectionTypeTest
  (param $s (ref null $java.lang.Object))
  (result (ref null $java.lang.Object))
- ;;@ intersectiontype/IntersectionTypeTest.java:69:48
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:69:48
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:69:64
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:69:64
   (call $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest )
-  ;;@ intersectiontype/IntersectionTypeTest.java:70:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:70:4
   (return (local.get $s))
  )
 )
@@ -826,11 +931,11 @@
 (func $m_cast2__java_lang_Object__intersectiontype_Getable@intersectiontype.IntersectionTypeTest
  (param $s (ref null $java.lang.Object))
  (result (ref null $java.lang.Object))
- ;;@ intersectiontype/IntersectionTypeTest.java:73:43
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:73:43
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:73:59
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:73:59
   (call $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest )
-  ;;@ intersectiontype/IntersectionTypeTest.java:74:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:74:4
   (return (local.get $s))
  )
 )
@@ -841,11 +946,11 @@
  (param $this.untyped (ref $java.lang.Object))
  (param $s (ref null $java.lang.Object))
  (result (ref null $java.lang.Object))
- ;;@ intersectiontype/IntersectionTypeTest.java:77:16
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:77:16
  (local $this (ref null $intersectiontype.IntersectionTypeTest))
  (local.set $this (ref.cast (ref $intersectiontype.IntersectionTypeTest) (local.get $this.untyped)))
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:78:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:78:4
   (return (local.get $s))
  )
 )
@@ -854,11 +959,11 @@
 ;;; Cmp IntersectionTypeTest.method()
 (func $m_method__intersectiontype_Cmp@intersectiontype.IntersectionTypeTest
  (result (ref null $java.lang.Object))
- ;;@ intersectiontype/IntersectionTypeTest.java:81:20
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:81:20
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:81:29
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:81:29
   (call $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest )
-  ;;@ intersectiontype/IntersectionTypeTest.java:82:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:4
   (return (call $$create__@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 ))
  )
 )
@@ -866,11 +971,11 @@
 ;;; Cmp2 IntersectionTypeTest.method2()
 (func $m_method2__intersectiontype_Cmp2@intersectiontype.IntersectionTypeTest
  (result (ref null $java.lang.Object))
- ;;@ intersectiontype/IntersectionTypeTest.java:86:21
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:86:21
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:86:31
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:86:31
   (call $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest )
-  ;;@ intersectiontype/IntersectionTypeTest.java:87:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:87:4
   (return (call $$create__@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 ))
  )
 )
@@ -878,18 +983,18 @@
 ;;; void IntersectionTypeTest.testClosureAssignment(Object o)
 (func $m_testClosureAssignment__java_lang_Object__void@intersectiontype.IntersectionTypeTest
  (param $o (ref null $java.lang.Object))
- ;;@ intersectiontype/IntersectionTypeTest.java:96:21
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:96:21
  (local $e (ref null $intersectiontype.IntersectionTypeTest.A))
  (local $g (ref null $java.lang.Object))
  (local $s (ref null $java.lang.Object))
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:96:53
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:96:53
   (call $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest )
-  ;;@ intersectiontype/IntersectionTypeTest.java:97:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:97:4
   (local.set $e (ref.cast (ref null $intersectiontype.IntersectionTypeTest.A) (local.get $o)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:98:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:98:4
   (local.set $g (ref.cast (ref null $intersectiontype.IntersectionTypeTest.A) (local.get $o)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:99:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:99:4
   (local.set $s (ref.cast (ref null $intersectiontype.IntersectionTypeTest.A) (local.get $o)))
  )
 )
@@ -898,9 +1003,9 @@
 (func $m_get__java_lang_Object__java_lang_Object@intersectiontype.IntersectionTypeTest
  (param $t (ref null $java.lang.Object))
  (result (ref null $java.lang.Object))
- ;;@ intersectiontype/IntersectionTypeTest.java:102:23
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:102:23
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:103:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:103:4
   (return (local.get $t))
  )
 )
@@ -908,9 +1013,9 @@
 ;;; T IntersectionTypeTest.m()
 (func $m_m__intersectiontype_IntersectionTypeTest_A@intersectiontype.IntersectionTypeTest
  (result (ref null $intersectiontype.IntersectionTypeTest.A))
- ;;@ intersectiontype/IntersectionTypeTest.java:106:42
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:106:42
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:107:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:107:4
   (return (ref.cast (ref null $intersectiontype.IntersectionTypeTest.A) (call $m_get__java_lang_Object__java_lang_Object@intersectiontype.IntersectionTypeTest (call $$create__@java.lang.Object ))))
  )
 )
@@ -918,9 +1023,9 @@
 ;;; Getable<T> IntersectionTypeTest.n()
 (func $m_n__intersectiontype_Getable@intersectiontype.IntersectionTypeTest
  (result (ref null $java.lang.Object))
- ;;@ intersectiontype/IntersectionTypeTest.java:110:51
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:110:51
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:111:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:111:4
   (return (ref.null $java.lang.Object))
  )
 )
@@ -928,7 +1033,7 @@
 ;;; void IntersectionTypeTest.set(T t)
 (func $m_set__intersectiontype_IntersectionTypeTest_A__void@intersectiontype.IntersectionTypeTest
  (param $t (ref null $intersectiontype.IntersectionTypeTest.A))
- ;;@ intersectiontype/IntersectionTypeTest.java:114:45
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:114:45
  (block
  )
 )
@@ -937,19 +1042,19 @@
 (func $m_testMethodCall__void@intersectiontype.IntersectionTypeTest
  (type $function.m_testMethodCall__void)
  (param $this.untyped (ref $java.lang.Object))
- ;;@ intersectiontype/IntersectionTypeTest.java:116:14
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:116:14
  (local $o (ref null $java.lang.Object))
  (local $g (ref null $java.lang.Object))
  (local $this (ref null $intersectiontype.IntersectionTypeTest))
  (local.set $this (ref.cast (ref $intersectiontype.IntersectionTypeTest) (local.get $this.untyped)))
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:117:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:117:4
   (local.set $o (call $m_m__intersectiontype_IntersectionTypeTest_A@intersectiontype.IntersectionTypeTest ))
-  ;;@ intersectiontype/IntersectionTypeTest.java:118:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:118:4
   (call $m_set__intersectiontype_IntersectionTypeTest_A__void@intersectiontype.IntersectionTypeTest (ref.cast (ref null $intersectiontype.IntersectionTypeTest.A) (local.get $o)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:119:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:119:4
   (call $m_set__intersectiontype_IntersectionTypeTest_A__void@intersectiontype.IntersectionTypeTest (call $m_m__intersectiontype_IntersectionTypeTest_A@intersectiontype.IntersectionTypeTest ))
-  ;;@ intersectiontype/IntersectionTypeTest.java:120:4
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:120:4
   (local.set $g (call $m_n__intersectiontype_Getable@intersectiontype.IntersectionTypeTest ))
  )
 )
@@ -960,22 +1065,22 @@
  (type $function.m_testDefaultMethodCall__java_lang_Object__void)
  (param $this.untyped (ref $java.lang.Object))
  (param $o (ref null $java.lang.Object))
- ;;@ intersectiontype/IntersectionTypeTest.java:123:14
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:123:14
  (local $$qualifier (ref null $java.lang.Object))
  (local $$qualifier_1 (ref null $intersectiontype.CmpImpl))
  (local $this (ref null $intersectiontype.IntersectionTypeTest))
  (local.set $this (ref.cast (ref $intersectiontype.IntersectionTypeTest) (local.get $this.untyped)))
  (block
   (block
-   ;;@ intersectiontype/IntersectionTypeTest.java:124:4
+   ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:124:4
    (local.set $$qualifier (local.get $o))
-   ;;@ intersectiontype/IntersectionTypeTest.java:124:4
+   ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:124:4
    (drop (call_ref $function.m_defaultM__int (ref.as_non_null (local.get $$qualifier))(struct.get $intersectiontype.Cmp.vtable $m_defaultM__int (ref.cast (ref $intersectiontype.Cmp.vtable) (call $get.itable.$intersectiontype.Cmp (local.get $$qualifier))))))
   )
   (block
-   ;;@ intersectiontype/IntersectionTypeTest.java:125:4
+   ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:125:4
    (local.set $$qualifier_1 (ref.cast (ref null $intersectiontype.CmpImpl) (local.get $o)))
-   ;;@ intersectiontype/IntersectionTypeTest.java:125:4
+   ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:125:4
    (drop (call_ref $function.m_defaultM__int (ref.as_non_null (local.get $$qualifier_1))(struct.get $intersectiontype.CmpImpl.vtable $m_defaultM__int (struct.get $intersectiontype.CmpImpl $vtable(local.get $$qualifier_1)))))
   )
  )
@@ -985,20 +1090,20 @@
 ;;; void IntersectionTypeTest.callOnIntersetionTypes(T t)
 (func $m_callOnIntersetionTypes__intersectiontype_IntersectionTypeTest_SomeConcreteType__void@intersectiontype.IntersectionTypeTest
  (param $t (ref null $intersectiontype.IntersectionTypeTest.SomeConcreteType))
- ;;@ intersectiontype/IntersectionTypeTest.java:130:57
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:130:57
  (local $$qualifier (ref null $java.lang.Object))
  (local $$qualifier_1 (ref null $java.lang.Object))
  (block
   (block
-   ;;@ intersectiontype/IntersectionTypeTest.java:131:4
+   ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:131:4
    (local.set $$qualifier (local.get $t))
-   ;;@ intersectiontype/IntersectionTypeTest.java:131:4
+   ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:131:4
    (drop (call_ref $function.m_cmp__int (ref.as_non_null (local.get $$qualifier))(struct.get $intersectiontype.Cmp.vtable $m_cmp__int (ref.cast (ref $intersectiontype.Cmp.vtable) (call $get.itable.$intersectiontype.Cmp (local.get $$qualifier))))))
   )
   (block
-   ;;@ intersectiontype/IntersectionTypeTest.java:132:4
+   ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:132:4
    (local.set $$qualifier_1 (ref.cast (ref null $intersectiontype.IntersectionTypeTest.SomeConcreteType) (ref.null $java.lang.Object)))
-   ;;@ intersectiontype/IntersectionTypeTest.java:132:4
+   ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:132:4
    (drop (call_ref $function.m_cmp__int (ref.as_non_null (local.get $$qualifier_1))(struct.get $intersectiontype.Cmp.vtable $m_cmp__int (ref.cast (ref $intersectiontype.Cmp.vtable) (call $get.itable.$intersectiontype.Cmp (local.get $$qualifier_1))))))
   )
  )
@@ -1006,18 +1111,18 @@
 
 ;;; void IntersectionTypeTest.$clinit()
 (func $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest
- ;;@ intersectiontype/IntersectionTypeTest.java:48:13
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:48:13
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:48:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:48:13
   (if (global.get $$class-initialized@intersectiontype.IntersectionTypeTest)
    (then
-    ;;@ intersectiontype/IntersectionTypeTest.java:48:13
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:48:13
     (return )
    )
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:48:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:48:13
   (global.set $$class-initialized@intersectiontype.IntersectionTypeTest (i32.const 1))
-  ;;@ intersectiontype/IntersectionTypeTest.java:48:13
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:48:13
   (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
@@ -1049,201 +1154,250 @@
 )
 (elem declare func $$getClassImpl__java_lang_Class@intersectiontype.IntersectionTypeTest)
 
-;;; Code for intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 [methods]
+;;; Code for intersectiontype.Getable.$LambdaAdaptor [methods]
 
-;;; <anonymous> implements Cmp <anonymous> implements Cmp.$create()
-(func $$create__@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1
- (result (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1))
- ;;@ intersectiontype/IntersectionTypeTest.java:82:26
- (local $$instance (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1))
+;;; void $LambdaAdaptor.$ctor()
+(func $$ctor__void_$p_intersectiontype_Getable_$LambdaAdaptor@intersectiontype.Getable.$LambdaAdaptor
+ (param $this (ref null $intersectiontype.Getable.$LambdaAdaptor))
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:18:10
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:82:26
-  (call $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 )
-  ;;@ intersectiontype/IntersectionTypeTest.java:82:26
-  (local.set $$instance (struct.new $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 (ref.as_non_null (global.get $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1.vtable)) (ref.as_non_null (global.get $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1.itable)) (i32.const 0)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:82:26
-  (call $$ctor__void_$p_intersectiontype_IntersectionTypeTest_$LambdaImplementor$1@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 (ref.as_non_null (local.get $$instance)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:82:26
-  (return (local.get $$instance))
- )
-)
-
-;;; void <anonymous> implements Cmp.$ctor()
-(func $$ctor__void_$p_intersectiontype_IntersectionTypeTest_$LambdaImplementor$1@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1
- (param $this (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1))
- ;;@ intersectiontype/IntersectionTypeTest.java:82:26
- (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:82:26
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:18:10
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
 
-;;; int <anonymous> implements Cmp.cmp()
-(func $m_cmp__int@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1
- (type $function.m_cmp__int)
- (param $this.untyped (ref $java.lang.Object))
- (result i32)
- ;;@ intersectiontype/IntersectionTypeTest.java:82:26
- (local $this (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1))
- (local.set $this (ref.cast (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1) (local.get $this.untyped)))
+;;; void $LambdaAdaptor.$clinit()
+(func $$clinit__void_<once>_@intersectiontype.Getable.$LambdaAdaptor
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:18:10
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:82:32
-  (return (i32.const 1))
- )
-)
-(elem declare func $m_cmp__int@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1)
-
-;;; int <anonymous> implements Cmp.defaultM()
-(func $m_defaultM__int@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1
- (type $function.m_defaultM__int)
- (param $this.untyped (ref $java.lang.Object))
- (result i32)
- ;;@ intersectiontype/IntersectionTypeTest.java:82:26
- (local $this (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1))
- (local.set $this (ref.cast (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1) (local.get $this.untyped)))
- (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:82:26
-  (return (call $m_defaultM__int@intersectiontype.Cmp (ref.as_non_null (local.get $this))))
- )
-)
-(elem declare func $m_defaultM__int@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1)
-
-;;; void <anonymous> implements Cmp.$clinit()
-(func $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1
- ;;@ intersectiontype/IntersectionTypeTest.java:82:26
- (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:82:26
-  (if (global.get $$class-initialized@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1)
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:18:10
+  (if (global.get $$class-initialized@intersectiontype.Getable.$LambdaAdaptor)
    (then
-    ;;@ intersectiontype/IntersectionTypeTest.java:82:26
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:18:10
     (return )
    )
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:82:26
-  (global.set $$class-initialized@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 (i32.const 1))
-  ;;@ intersectiontype/IntersectionTypeTest.java:82:26
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:18:10
+  (global.set $$class-initialized@intersectiontype.Getable.$LambdaAdaptor (i32.const 1))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:18:10
   (call $$clinit__void_<once>_@java.lang.Object )
-  ;;@ intersectiontype/IntersectionTypeTest.java:82:26
+ )
+)
+
+;;; Class<T> $LambdaAdaptor.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.Getable.$LambdaAdaptor
+ (result (ref null $java.lang.Class))
+ (block
+  (if (i32.eqz (ref.is_null (global.get $$class@intersectiontype.Getable.$LambdaAdaptor)))
+   (then
+    (return (global.get $$class@intersectiontype.Getable.$LambdaAdaptor))
+   )
+  )
+  (global.set $$class@intersectiontype.Getable.$LambdaAdaptor (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|intersection...|__java_lang_String_<once>_@intersectiontype.Getable.$LambdaAdaptor )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@intersectiontype.Getable.$LambdaAdaptor))
+ )
+)
+
+;;; Class<?> $LambdaAdaptor.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@intersectiontype.Getable.$LambdaAdaptor
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $intersectiontype.Getable.$LambdaAdaptor))
+ (local.set $this (ref.cast (ref $intersectiontype.Getable.$LambdaAdaptor) (local.get $this.untyped)))
+ (block
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.Getable.$LambdaAdaptor ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@intersectiontype.Getable.$LambdaAdaptor)
+
+;;; Code for intersectiontype.Setable.$LambdaAdaptor [methods]
+
+;;; void $LambdaAdaptor.$ctor()
+(func $$ctor__void_$p_intersectiontype_Setable_$LambdaAdaptor@intersectiontype.Setable.$LambdaAdaptor
+ (param $this (ref null $intersectiontype.Setable.$LambdaAdaptor))
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:22:10
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:22:10
+  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; void $LambdaAdaptor.$clinit()
+(func $$clinit__void_<once>_@intersectiontype.Setable.$LambdaAdaptor
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:22:10
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:22:10
+  (if (global.get $$class-initialized@intersectiontype.Setable.$LambdaAdaptor)
+   (then
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:22:10
+    (return )
+   )
+  )
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:22:10
+  (global.set $$class-initialized@intersectiontype.Setable.$LambdaAdaptor (i32.const 1))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:22:10
+  (call $$clinit__void_<once>_@java.lang.Object )
+ )
+)
+
+;;; Class<T> $LambdaAdaptor.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.Setable.$LambdaAdaptor
+ (result (ref null $java.lang.Class))
+ (block
+  (if (i32.eqz (ref.is_null (global.get $$class@intersectiontype.Setable.$LambdaAdaptor)))
+   (then
+    (return (global.get $$class@intersectiontype.Setable.$LambdaAdaptor))
+   )
+  )
+  (global.set $$class@intersectiontype.Setable.$LambdaAdaptor (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|intersection...|__java_lang_String_<once>_@intersectiontype.Setable.$LambdaAdaptor )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@intersectiontype.Setable.$LambdaAdaptor))
+ )
+)
+
+;;; Class<?> $LambdaAdaptor.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@intersectiontype.Setable.$LambdaAdaptor
+ (type $function.$getClassImpl__java_lang_Class)
+ (param $this.untyped (ref $java.lang.Object))
+ (result (ref null $java.lang.Class))
+ (local $this (ref null $intersectiontype.Setable.$LambdaAdaptor))
+ (local.set $this (ref.cast (ref $intersectiontype.Setable.$LambdaAdaptor) (local.get $this.untyped)))
+ (block
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.Setable.$LambdaAdaptor ))
+ )
+)
+(elem declare func $$getClassImpl__java_lang_Class@intersectiontype.Setable.$LambdaAdaptor)
+
+;;; Code for intersectiontype.Cmp.$LambdaAdaptor [methods]
+
+;;; void $LambdaAdaptor.$ctor()
+(func $$ctor__void_$p_intersectiontype_Cmp_$LambdaAdaptor@intersectiontype.Cmp.$LambdaAdaptor
+ (param $this (ref null $intersectiontype.Cmp.$LambdaAdaptor))
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:28:10
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:28:10
+  (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; int $LambdaAdaptor.defaultM()
+(func $m_defaultM__int@intersectiontype.Cmp.$LambdaAdaptor
+ (type $function.m_defaultM__int)
+ (param $this.untyped (ref $java.lang.Object))
+ (result i32)
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:28:10
+ (local $this (ref null $intersectiontype.Cmp.$LambdaAdaptor))
+ (local.set $this (ref.cast (ref $intersectiontype.Cmp.$LambdaAdaptor) (local.get $this.untyped)))
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:28:10
+  (return (call $m_defaultM__int@intersectiontype.Cmp (ref.as_non_null (local.get $this))))
+ )
+)
+(elem declare func $m_defaultM__int@intersectiontype.Cmp.$LambdaAdaptor)
+
+;;; void $LambdaAdaptor.$clinit()
+(func $$clinit__void_<once>_@intersectiontype.Cmp.$LambdaAdaptor
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:28:10
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:28:10
+  (if (global.get $$class-initialized@intersectiontype.Cmp.$LambdaAdaptor)
+   (then
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:28:10
+    (return )
+   )
+  )
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:28:10
+  (global.set $$class-initialized@intersectiontype.Cmp.$LambdaAdaptor (i32.const 1))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:28:10
+  (call $$clinit__void_<once>_@java.lang.Object )
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:28:10
   (call $$clinit__void_<once>_@intersectiontype.Cmp )
  )
 )
 
-;;; Class<T> <anonymous> implements Cmp.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1
+;;; Class<T> $LambdaAdaptor.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.Cmp.$LambdaAdaptor
  (result (ref null $java.lang.Class))
  (block
-  (if (i32.eqz (ref.is_null (global.get $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1)))
+  (if (i32.eqz (ref.is_null (global.get $$class@intersectiontype.Cmp.$LambdaAdaptor)))
    (then
-    (return (global.get $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1))
+    (return (global.get $$class@intersectiontype.Cmp.$LambdaAdaptor))
    )
   )
-  (global.set $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|intersection...|__java_lang_String_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
-  (return (global.get $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1))
+  (global.set $$class@intersectiontype.Cmp.$LambdaAdaptor (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|intersection...|__java_lang_String_<once>_@intersectiontype.Cmp.$LambdaAdaptor )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@intersectiontype.Cmp.$LambdaAdaptor))
  )
 )
 
-;;; Class<?> <anonymous> implements Cmp.$getClassImpl()
-(func $$getClassImpl__java_lang_Class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1
+;;; Class<?> $LambdaAdaptor.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@intersectiontype.Cmp.$LambdaAdaptor
  (type $function.$getClassImpl__java_lang_Class)
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
- (local $this (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1))
- (local.set $this (ref.cast (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1) (local.get $this.untyped)))
+ (local $this (ref null $intersectiontype.Cmp.$LambdaAdaptor))
+ (local.set $this (ref.cast (ref $intersectiontype.Cmp.$LambdaAdaptor) (local.get $this.untyped)))
  (block
-  (return (call $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.Cmp.$LambdaAdaptor ))
  )
 )
-(elem declare func $$getClassImpl__java_lang_Class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1)
+(elem declare func $$getClassImpl__java_lang_Class@intersectiontype.Cmp.$LambdaAdaptor)
 
-;;; Code for intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 [methods]
+;;; Code for intersectiontype.Cmp2.$LambdaAdaptor [methods]
 
-;;; <anonymous> implements Cmp2 <anonymous> implements Cmp2.$create()
-(func $$create__@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2
- (result (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2))
- ;;@ intersectiontype/IntersectionTypeTest.java:87:27
- (local $$instance (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2))
+;;; void $LambdaAdaptor.$ctor()
+(func $$ctor__void_$p_intersectiontype_Cmp2_$LambdaAdaptor@intersectiontype.Cmp2.$LambdaAdaptor
+ (param $this (ref null $intersectiontype.Cmp2.$LambdaAdaptor))
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:36:10
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:87:27
-  (call $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 )
-  ;;@ intersectiontype/IntersectionTypeTest.java:87:27
-  (local.set $$instance (struct.new $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 (ref.as_non_null (global.get $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2.vtable)) (ref.as_non_null (global.get $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2.itable)) (i32.const 0)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:87:27
-  (call $$ctor__void_$p_intersectiontype_IntersectionTypeTest_$LambdaImplementor$2@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 (ref.as_non_null (local.get $$instance)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:87:27
-  (return (local.get $$instance))
- )
-)
-
-;;; void <anonymous> implements Cmp2.$ctor()
-(func $$ctor__void_$p_intersectiontype_IntersectionTypeTest_$LambdaImplementor$2@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2
- (param $this (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2))
- ;;@ intersectiontype/IntersectionTypeTest.java:87:27
- (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:87:27
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:36:10
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
 
-;;; int <anonymous> implements Cmp2.cmp(int a)
-(func $m_cmp__int__int@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2
- (type $function.m_cmp__int__int)
- (param $this.untyped (ref $java.lang.Object))
- (param $a i32)
- (result i32)
- ;;@ intersectiontype/IntersectionTypeTest.java:87:27
- (local $this (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2))
- (local.set $this (ref.cast (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2) (local.get $this.untyped)))
+;;; void $LambdaAdaptor.$clinit()
+(func $$clinit__void_<once>_@intersectiontype.Cmp2.$LambdaAdaptor
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:36:10
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:87:34
-  (return (i32.const 1))
- )
-)
-(elem declare func $m_cmp__int__int@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2)
-
-;;; void <anonymous> implements Cmp2.$clinit()
-(func $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2
- ;;@ intersectiontype/IntersectionTypeTest.java:87:27
- (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:87:27
-  (if (global.get $$class-initialized@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2)
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:36:10
+  (if (global.get $$class-initialized@intersectiontype.Cmp2.$LambdaAdaptor)
    (then
-    ;;@ intersectiontype/IntersectionTypeTest.java:87:27
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:36:10
     (return )
    )
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:87:27
-  (global.set $$class-initialized@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 (i32.const 1))
-  ;;@ intersectiontype/IntersectionTypeTest.java:87:27
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:36:10
+  (global.set $$class-initialized@intersectiontype.Cmp2.$LambdaAdaptor (i32.const 1))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:36:10
   (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
 
-;;; Class<T> <anonymous> implements Cmp2.$getClassMetadata()
-(func $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2
+;;; Class<T> $LambdaAdaptor.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.Cmp2.$LambdaAdaptor
  (result (ref null $java.lang.Class))
  (block
-  (if (i32.eqz (ref.is_null (global.get $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2)))
+  (if (i32.eqz (ref.is_null (global.get $$class@intersectiontype.Cmp2.$LambdaAdaptor)))
    (then
-    (return (global.get $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2))
+    (return (global.get $$class@intersectiontype.Cmp2.$LambdaAdaptor))
    )
   )
-  (global.set $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|intersection...|__java_lang_String_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
-  (return (global.get $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2))
+  (global.set $$class@intersectiontype.Cmp2.$LambdaAdaptor (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|intersection...|__java_lang_String_<once>_@intersectiontype.Cmp2.$LambdaAdaptor )(call $$getClassMetadata__java_lang_Class_<once>_@java.lang.Object )))
+  (return (global.get $$class@intersectiontype.Cmp2.$LambdaAdaptor))
  )
 )
 
-;;; Class<?> <anonymous> implements Cmp2.$getClassImpl()
-(func $$getClassImpl__java_lang_Class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2
+;;; Class<?> $LambdaAdaptor.$getClassImpl()
+(func $$getClassImpl__java_lang_Class@intersectiontype.Cmp2.$LambdaAdaptor
  (type $function.$getClassImpl__java_lang_Class)
  (param $this.untyped (ref $java.lang.Object))
  (result (ref null $java.lang.Class))
- (local $this (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2))
- (local.set $this (ref.cast (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2) (local.get $this.untyped)))
+ (local $this (ref null $intersectiontype.Cmp2.$LambdaAdaptor))
+ (local.set $this (ref.cast (ref $intersectiontype.Cmp2.$LambdaAdaptor) (local.get $this.untyped)))
  (block
-  (return (call $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 ))
+  (return (call $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.Cmp2.$LambdaAdaptor ))
  )
 )
-(elem declare func $$getClassImpl__java_lang_Class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2)
+(elem declare func $$getClassImpl__java_lang_Class@intersectiontype.Cmp2.$LambdaAdaptor)
 
 ;;; Code for intersectiontype.IntersectionTypeTest.MapEntry [methods]
 
@@ -1251,16 +1405,16 @@
 (func $$create__intersectiontype_IntersectionTypeTest@intersectiontype.IntersectionTypeTest.MapEntry
  (param $$outer_this (ref null $intersectiontype.IntersectionTypeTest))
  (result (ref null $intersectiontype.IntersectionTypeTest.MapEntry))
- ;;@ intersectiontype/IntersectionTypeTest.java:54:8
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:54:8
  (local $$instance (ref null $intersectiontype.IntersectionTypeTest.MapEntry))
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:54:8
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:54:8
   (call $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest.MapEntry )
-  ;;@ intersectiontype/IntersectionTypeTest.java:54:8
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:54:8
   (local.set $$instance (struct.new $intersectiontype.IntersectionTypeTest.MapEntry (ref.as_non_null (global.get $intersectiontype.IntersectionTypeTest.MapEntry.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (ref.null $intersectiontype.IntersectionTypeTest)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:54:8
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:54:8
   (call $$ctor__intersectiontype_IntersectionTypeTest__void_$p_intersectiontype_IntersectionTypeTest_MapEntry@intersectiontype.IntersectionTypeTest.MapEntry (ref.as_non_null (local.get $$instance))(local.get $$outer_this))
-  ;;@ intersectiontype/IntersectionTypeTest.java:54:8
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:54:8
   (return (local.get $$instance))
  )
 )
@@ -1269,11 +1423,11 @@
 (func $$ctor__intersectiontype_IntersectionTypeTest__void_$p_intersectiontype_IntersectionTypeTest_MapEntry@intersectiontype.IntersectionTypeTest.MapEntry
  (param $this (ref null $intersectiontype.IntersectionTypeTest.MapEntry))
  (param $$outer_this (ref null $intersectiontype.IntersectionTypeTest))
- ;;@ intersectiontype/IntersectionTypeTest.java:54:8
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:54:8
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:54:8
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:54:8
   (struct.set $intersectiontype.IntersectionTypeTest.MapEntry $$outer_this@intersectiontype.IntersectionTypeTest.MapEntry (local.get $this) (local.get $$outer_this))
-  ;;@ intersectiontype/IntersectionTypeTest.java:54:8
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:54:8
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
@@ -1284,11 +1438,11 @@
  (param $this.untyped (ref $java.lang.Object))
  (param $o (ref null $java.lang.Object))
  (result (ref null $java.lang.Object))
- ;;@ intersectiontype/IntersectionTypeTest.java:55:26
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:55:26
  (local $this (ref null $intersectiontype.IntersectionTypeTest.MapEntry))
  (local.set $this (ref.cast (ref $intersectiontype.IntersectionTypeTest.MapEntry) (local.get $this.untyped)))
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:56:6
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:56:6
   (return (local.get $o))
  )
 )
@@ -1296,18 +1450,18 @@
 
 ;;; void MapEntry.$clinit()
 (func $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest.MapEntry
- ;;@ intersectiontype/IntersectionTypeTest.java:54:8
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:54:8
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:54:8
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:54:8
   (if (global.get $$class-initialized@intersectiontype.IntersectionTypeTest.MapEntry)
    (then
-    ;;@ intersectiontype/IntersectionTypeTest.java:54:8
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:54:8
     (return )
    )
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:54:8
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:54:8
   (global.set $$class-initialized@intersectiontype.IntersectionTypeTest.MapEntry (i32.const 1))
-  ;;@ intersectiontype/IntersectionTypeTest.java:54:8
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:54:8
   (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
@@ -1344,14 +1498,14 @@
 ;;; A A.$create()
 (func $$create__@intersectiontype.IntersectionTypeTest.A
  (result (ref null $intersectiontype.IntersectionTypeTest.A))
- ;;@ intersectiontype/IntersectionTypeTest.java:90:23
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:90:23
  (local $$instance (ref null $intersectiontype.IntersectionTypeTest.A))
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:90:23
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:90:23
   (local.set $$instance (struct.new $intersectiontype.IntersectionTypeTest.A (ref.as_non_null (global.get $intersectiontype.IntersectionTypeTest.A.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:90:23
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:90:23
   (call $$ctor__void_$p_intersectiontype_IntersectionTypeTest_A@intersectiontype.IntersectionTypeTest.A (ref.as_non_null (local.get $$instance)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:90:23
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:90:23
   (return (local.get $$instance))
  )
 )
@@ -1359,27 +1513,27 @@
 ;;; void A.$ctor()
 (func $$ctor__void_$p_intersectiontype_IntersectionTypeTest_A@intersectiontype.IntersectionTypeTest.A
  (param $this (ref null $intersectiontype.IntersectionTypeTest.A))
- ;;@ intersectiontype/IntersectionTypeTest.java:90:23
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:90:23
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:90:23
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:90:23
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; void A.$clinit()
 (func $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest.A
- ;;@ intersectiontype/IntersectionTypeTest.java:90:23
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:90:23
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:90:23
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:90:23
   (if (global.get $$class-initialized@intersectiontype.IntersectionTypeTest.A)
    (then
-    ;;@ intersectiontype/IntersectionTypeTest.java:90:23
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:90:23
     (return )
    )
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:90:23
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:90:23
   (global.set $$class-initialized@intersectiontype.IntersectionTypeTest.A (i32.const 1))
-  ;;@ intersectiontype/IntersectionTypeTest.java:90:23
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:90:23
   (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
@@ -1416,14 +1570,14 @@
 ;;; SomeConcreteType SomeConcreteType.$create()
 (func $$create__@intersectiontype.IntersectionTypeTest.SomeConcreteType
  (result (ref null $intersectiontype.IntersectionTypeTest.SomeConcreteType))
- ;;@ intersectiontype/IntersectionTypeTest.java:128:23
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:128:23
  (local $$instance (ref null $intersectiontype.IntersectionTypeTest.SomeConcreteType))
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:128:23
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:128:23
   (local.set $$instance (struct.new $intersectiontype.IntersectionTypeTest.SomeConcreteType (ref.as_non_null (global.get $intersectiontype.IntersectionTypeTest.SomeConcreteType.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:128:23
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:128:23
   (call $$ctor__void_$p_intersectiontype_IntersectionTypeTest_SomeConcreteType@intersectiontype.IntersectionTypeTest.SomeConcreteType (ref.as_non_null (local.get $$instance)))
-  ;;@ intersectiontype/IntersectionTypeTest.java:128:23
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:128:23
   (return (local.get $$instance))
  )
 )
@@ -1431,27 +1585,27 @@
 ;;; void SomeConcreteType.$ctor()
 (func $$ctor__void_$p_intersectiontype_IntersectionTypeTest_SomeConcreteType@intersectiontype.IntersectionTypeTest.SomeConcreteType
  (param $this (ref null $intersectiontype.IntersectionTypeTest.SomeConcreteType))
- ;;@ intersectiontype/IntersectionTypeTest.java:128:23
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:128:23
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:128:23
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:128:23
   (call $$ctor__void_$p_java_lang_Object@java.lang.Object (ref.as_non_null (local.get $this)))
  )
 )
 
 ;;; void SomeConcreteType.$clinit()
 (func $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest.SomeConcreteType
- ;;@ intersectiontype/IntersectionTypeTest.java:128:23
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:128:23
  (block
-  ;;@ intersectiontype/IntersectionTypeTest.java:128:23
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:128:23
   (if (global.get $$class-initialized@intersectiontype.IntersectionTypeTest.SomeConcreteType)
    (then
-    ;;@ intersectiontype/IntersectionTypeTest.java:128:23
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:128:23
     (return )
    )
   )
-  ;;@ intersectiontype/IntersectionTypeTest.java:128:23
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:128:23
   (global.set $$class-initialized@intersectiontype.IntersectionTypeTest.SomeConcreteType (i32.const 1))
-  ;;@ intersectiontype/IntersectionTypeTest.java:128:23
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:128:23
   (call $$clinit__void_<once>_@java.lang.Object )
  )
 )
@@ -1482,3 +1636,158 @@
  )
 )
 (elem declare func $$getClassImpl__java_lang_Class@intersectiontype.IntersectionTypeTest.SomeConcreteType)
+
+;;; Code for intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 [methods]
+
+;;; <anonymous> implements Cmp <anonymous> implements Cmp.$create()
+(func $$create__@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1
+ (result (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1))
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:26
+ (local $$instance (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1))
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:26
+  (call $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 )
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:26
+  (local.set $$instance (struct.new $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 (ref.as_non_null (global.get $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1.vtable)) (ref.as_non_null (global.get $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1.itable)) (i32.const 0)))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:26
+  (call $$ctor__void_$p_intersectiontype_IntersectionTypeTest_$LambdaImplementor$1@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 (ref.as_non_null (local.get $$instance)))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:26
+  (return (local.get $$instance))
+ )
+)
+
+;;; void <anonymous> implements Cmp.$ctor()
+(func $$ctor__void_$p_intersectiontype_IntersectionTypeTest_$LambdaImplementor$1@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1
+ (param $this (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1))
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:26
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:26
+  (call $$ctor__void_$p_intersectiontype_Cmp_$LambdaAdaptor@intersectiontype.Cmp.$LambdaAdaptor (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; int <anonymous> implements Cmp.cmp()
+(func $m_cmp__int@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1
+ (type $function.m_cmp__int)
+ (param $this.untyped (ref $java.lang.Object))
+ (result i32)
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:26
+ (local $this (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1))
+ (local.set $this (ref.cast (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$1) (local.get $this.untyped)))
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:32
+  (return (i32.const 1))
+ )
+)
+(elem declare func $m_cmp__int@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1)
+
+;;; void <anonymous> implements Cmp.$clinit()
+(func $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:26
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:26
+  (if (global.get $$class-initialized@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1)
+   (then
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:26
+    (return )
+   )
+  )
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:26
+  (global.set $$class-initialized@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 (i32.const 1))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:26
+  (call $$clinit__void_<once>_@intersectiontype.Cmp.$LambdaAdaptor )
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:82:26
+  (call $$clinit__void_<once>_@intersectiontype.Cmp )
+ )
+)
+
+;;; Class<T> <anonymous> implements Cmp.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1
+ (result (ref null $java.lang.Class))
+ (block
+  (if (i32.eqz (ref.is_null (global.get $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1)))
+   (then
+    (return (global.get $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1))
+   )
+  )
+  (global.set $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|intersection...|__java_lang_String_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1 )(call $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.Cmp.$LambdaAdaptor )))
+  (return (global.get $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$1))
+ )
+)
+
+;;; Code for intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 [methods]
+
+;;; <anonymous> implements Cmp2 <anonymous> implements Cmp2.$create()
+(func $$create__@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2
+ (result (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2))
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:87:27
+ (local $$instance (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2))
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:87:27
+  (call $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 )
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:87:27
+  (local.set $$instance (struct.new $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 (ref.as_non_null (global.get $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2.vtable)) (ref.as_non_null (global.get $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2.itable)) (i32.const 0)))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:87:27
+  (call $$ctor__void_$p_intersectiontype_IntersectionTypeTest_$LambdaImplementor$2@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 (ref.as_non_null (local.get $$instance)))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:87:27
+  (return (local.get $$instance))
+ )
+)
+
+;;; void <anonymous> implements Cmp2.$ctor()
+(func $$ctor__void_$p_intersectiontype_IntersectionTypeTest_$LambdaImplementor$2@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2
+ (param $this (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2))
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:87:27
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:87:27
+  (call $$ctor__void_$p_intersectiontype_Cmp2_$LambdaAdaptor@intersectiontype.Cmp2.$LambdaAdaptor (ref.as_non_null (local.get $this)))
+ )
+)
+
+;;; int <anonymous> implements Cmp2.cmp(int a)
+(func $m_cmp__int__int@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2
+ (type $function.m_cmp__int__int)
+ (param $this.untyped (ref $java.lang.Object))
+ (param $a i32)
+ (result i32)
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:87:27
+ (local $this (ref null $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2))
+ (local.set $this (ref.cast (ref $intersectiontype.IntersectionTypeTest.$LambdaImplementor$2) (local.get $this.untyped)))
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:87:34
+  (return (i32.const 1))
+ )
+)
+(elem declare func $m_cmp__int__int@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2)
+
+;;; void <anonymous> implements Cmp2.$clinit()
+(func $$clinit__void_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2
+ ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:87:27
+ (block
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:87:27
+  (if (global.get $$class-initialized@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2)
+   (then
+    ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:87:27
+    (return )
+   )
+  )
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:87:27
+  (global.set $$class-initialized@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 (i32.const 1))
+  ;;@ transpiler/javatests/com/google/j2cl/readable/java/intersectiontype/readable-j2wasm.js/intersectiontype/IntersectionTypeTest.java:87:27
+  (call $$clinit__void_<once>_@intersectiontype.Cmp2.$LambdaAdaptor )
+ )
+)
+
+;;; Class<T> <anonymous> implements Cmp2.$getClassMetadata()
+(func $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2
+ (result (ref null $java.lang.Class))
+ (block
+  (if (i32.eqz (ref.is_null (global.get $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2)))
+   (then
+    (return (global.get $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2))
+   )
+  )
+  (global.set $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 (call $m_createForClass__java_lang_String__java_lang_Class__java_lang_Class@java.lang.Class (call $$getString_|intersection...|__java_lang_String_<once>_@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2 )(call $$getClassMetadata__java_lang_Class_<once>_@intersectiontype.Cmp2.$LambdaAdaptor )))
+  (return (global.get $$class@intersectiontype.IntersectionTypeTest.$LambdaImplementor$2))
+ )
+)

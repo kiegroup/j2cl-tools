@@ -28,22 +28,24 @@ import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
+import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Supplier;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Garbage collection for variable and function definitions. Basically performs a mark-and-sweep
@@ -108,7 +110,7 @@ class RemoveUnusedCode implements CompilerPass {
 
   private final LinkedHashMap<Var, VarInfo> varInfoMap = new LinkedHashMap<>();
 
-  private final Set<String> pinnedPropertyNames = new HashSet<>(IMPLICITLY_USED_PROPERTIES);
+  private final Set<String> pinnedPropertyNames = new LinkedHashSet<>(IMPLICITLY_USED_PROPERTIES);
 
   /** Stores Removable objects for each property name that is currently considered removable. */
   private final Multimap<String, Removable> removablesForPropertyNames = HashMultimap.create();
@@ -127,7 +129,7 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private final Multimap<String, PolyfillInfo> polyfills = HashMultimap.create();
 
-  private final Set<Node> guardedUsages = new HashSet<>();
+  private final Set<Node> guardedUsages = new LinkedHashSet<>();
 
   private final Polyfills polyfillsFromTable;
 
@@ -141,6 +143,7 @@ class RemoveUnusedCode implements CompilerPass {
 
   // Allocated & cleaned up by process()
   private @Nullable LogFile removalLog;
+  private @Nullable LogFile unremovableLog;
 
   RemoveUnusedCode(Builder builder) {
     this.compiler = builder.compiler;
@@ -341,11 +344,15 @@ class RemoveUnusedCode implements CompilerPass {
     pinnedPropertyNames.addAll(compiler.getExternProperties());
 
     try (LogFile removalLogFile =
-        compiler.createOrReopenIndexedLog(this.getClass(), "removals.log")) {
+            compiler.createOrReopenIndexedLog(this.getClass(), "removals.log");
+        LogFile keepLogFile =
+            compiler.createOrReopenIndexedLog(this.getClass(), "unremovable.log")) {
       removalLog = removalLogFile; // avoid passing the log file through a bunch of methods
+      unremovableLog = keepLogFile;
       traverseAndRemoveUnusedReferences(root);
     } finally {
       removalLog = null;
+      unremovableLog = null;
     }
   }
 
@@ -383,7 +390,7 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   private void removeIndependentlyRemovableProperties() {
-    for (String propName : removablesForPropertyNames.keys()) {
+    for (String propName : removablesForPropertyNames.keySet()) {
       removalLog.log(RemovalLogRecord.forProperty(propName));
       for (Removable removable : removablesForPropertyNames.get(propName)) {
         removable.remove(compiler);
@@ -419,7 +426,7 @@ class RemoveUnusedCode implements CompilerPass {
                     .buildFunctionDeclaration(n);
             varInfo.addRemovable(functionDeclaration);
             if (parent.isExport()) {
-              varInfo.setIsExplicitlyNotRemovable();
+              varInfo.setIsExplicitlyNotRemovable(() -> "exported class");
             }
           } else {
             traverseFunction(n, scope);
@@ -525,7 +532,9 @@ class RemoveUnusedCode implements CompilerPass {
           // class name() {}
           // handled at a higher level
           checkState(!((parent.isFunction() || parent.isClass()) && parent.getFirstChild() == n));
-          traverseNameNode(n, scope).setIsExplicitlyNotRemovable();
+          traverseNameNode(n, scope)
+              .setIsExplicitlyNotRemovable(
+                  () -> SimpleFormat.format("reference found: %s", n.getLocation()));
         }
         break;
 
@@ -598,7 +607,7 @@ class RemoveUnusedCode implements CompilerPass {
         varInfo.addRemovable(builder.buildUnusedReadReference(getProp, getProp));
       } else {
         // (objExpression).prototype.propName;
-        if (astAnalyzer.mayHaveSideEffects(objExpression)) {
+        if (mayHaveSideEffects(objExpression)) {
           traverseNode(objExpression, scope);
         } else {
           builder.addContinuation(new Continuation(objExpression, scope));
@@ -639,7 +648,7 @@ class RemoveUnusedCode implements CompilerPass {
         } else {
           // (someExpression).prototype.propName++
           Node toPreserve = null;
-          if (astAnalyzer.mayHaveSideEffects(exprObj)) {
+          if (mayHaveSideEffects(exprObj)) {
             toPreserve = exprObj;
             traverseNode(exprObj, scope);
           } else {
@@ -721,6 +730,24 @@ class RemoveUnusedCode implements CompilerPass {
       polyfills.put(info.key, info);
       // Only traverse the callee (to mark it as used).  The arguments may be traversed later.
       traverseNode(callNode.getFirstChild(), scope);
+    } else if (NodeUtil.isGoogWeakUsageCall(callNode)
+        && callNode.hasTwoChildren()
+        && callNode.getSecondChild().isName()) {
+      // goog.weakUsage() should have exactly one argument, and it should be either a name or a
+      // qualified name (this is checked in ProcessClosurePrimitives.java).
+      //
+      // If it is a qualified name, then we do not attempt to remove it at this time (see condition
+      // above). We rely on CollapseProperties to turn qualified names into simple names where
+      // possible.
+
+      // Mark this call as removable if the var is not otherwise referenced.
+      VarInfo varInfo = traverseNameNode(callNode.getSecondChild(), scope);
+      RemovableBuilder builder = new RemovableBuilder();
+      varInfo.addRemovable(builder.buildWeakUsageCall(callNode));
+
+      // We need to traverse the goog.weakUsage function itself (to mark it as used, in case our
+      // usage of it is not removed).
+      traverseNode(callNode.getFirstChild(), scope);
     } else {
       Node parent = callNode.getParent();
       String classVarName = null;
@@ -774,10 +801,11 @@ class RemoveUnusedCode implements CompilerPass {
     switch (n.getToken()) {
       case NAME:
         // Need to work correctly after CollapseProperties.
-        return n.getString().equals("$jscomp$polyfill") && n.getNext().isStringLit();
+        return (n.getString().equals("$jscomp$polyfill") || n.getString().equals("$jscomp$patch"))
+            && n.getNext().isStringLit();
       case GETPROP:
         // Need to work correctly without CollapseProperties.
-        return n.getString().equals("polyfill")
+        return (n.getString().equals("polyfill") || n.getString().equals("patch"))
             && n.getFirstChild().isName()
             && n.getFirstChild().getString().equals("$jscomp")
             && n.getNext().isStringLit();
@@ -803,7 +831,7 @@ class RemoveUnusedCode implements CompilerPass {
       // TODO(bradfordcsmith): Is it really necessary to traverse the callee
       // (aka. Object.defineProperties)?
       builder.addContinuation(new Continuation(callee, scope));
-      if (astAnalyzer.mayHaveSideEffects(propertyDefinitions)) {
+      if (mayHaveSideEffects(propertyDefinitions)) {
         traverseNode(propertyDefinitions, scope);
       } else {
         builder.addContinuation(new Continuation(propertyDefinitions, scope));
@@ -829,7 +857,7 @@ class RemoveUnusedCode implements CompilerPass {
         traverseNode(property.getOnlyChild(), scope);
       } else if (property.isStringKey()) {
         Node definition = property.getOnlyChild();
-        if (astAnalyzer.mayHaveSideEffects(definition)) {
+        if (mayHaveSideEffects(definition)) {
           traverseNode(definition, scope);
         } else {
           considerForIndependentRemoval(
@@ -893,7 +921,7 @@ class RemoveUnusedCode implements CompilerPass {
         traverseChildren(propertyNode, scope);
       } else {
         Node valueNode = propertyNode.getOnlyChild();
-        if (astAnalyzer.mayHaveSideEffects(valueNode)) {
+        if (mayHaveSideEffects(valueNode)) {
           // TODO(bradfordcsmith): Ideally we should preserve the side-effect without keeping the
           // property itself alive.
           traverseNode(valueNode, scope);
@@ -924,7 +952,7 @@ class RemoveUnusedCode implements CompilerPass {
     if (exceptionNameNode.isName()) {
       // exceptionNameNode can be an empty node if not using a binding in 2019.
       VarInfo exceptionVarInfo = traverseNameNode(exceptionNameNode, scope);
-      exceptionVarInfo.setIsExplicitlyNotRemovable();
+      exceptionVarInfo.setIsExplicitlyNotRemovable(() -> "catch variable");
     }
     traverseNode(block, scope);
   }
@@ -939,7 +967,7 @@ class RemoveUnusedCode implements CompilerPass {
       // using previously-declared loop variable. e.g.
       // `for (varName of collection) {}`
       VarInfo varInfo = traverseNameNode(iterationTarget, forScope);
-      varInfo.setIsExplicitlyNotRemovable();
+      varInfo.setIsExplicitlyNotRemovable(() -> "for-of or for-in loop variable");
     } else if (NodeUtil.isNameDeclaration(iterationTarget)) {
       // loop has const/var/let declaration
       Node declNode = iterationTarget.getOnlyChild();
@@ -961,7 +989,7 @@ class RemoveUnusedCode implements CompilerPass {
         // We can never remove the loop variable of a for-in or for-of loop, because it's
         // essential to loop syntax.
         VarInfo varInfo = traverseNameNode(declNode, forScope);
-        varInfo.setIsExplicitlyNotRemovable();
+        varInfo.setIsExplicitlyNotRemovable(() -> "for-of or for-in loop variable");
       }
     } else {
       // using some general LHS value e.g.
@@ -1001,10 +1029,11 @@ class RemoveUnusedCode implements CompilerPass {
         VarInfo varInfo = traverseNameNode(nameNode, scope);
         if (valueNode == null) {
           varInfo.addRemovable(new RemovableBuilder().buildVanillaForNameDeclaration(nameNode));
-        } else if (astAnalyzer.mayHaveSideEffects(valueNode)) {
+        } else if (mayHaveSideEffects(valueNode)) {
           // TODO(bradfordcsmith): Actually allow for removing the variable while keeping the
           // valueNode for its side-effects.
-          varInfo.setIsExplicitlyNotRemovable();
+          varInfo.setIsExplicitlyNotRemovable(
+              () -> "for-loop variable initialization has side-effects");
           traverseNode(valueNode, scope);
         } else {
           VanillaForNameDeclaration vanillaForNameDeclaration =
@@ -1030,7 +1059,7 @@ class RemoveUnusedCode implements CompilerPass {
       if (valueNode == null) {
         varInfo.addRemovable(builder.buildNameDeclarationStatement(declarationStatement));
       } else {
-        if (astAnalyzer.mayHaveSideEffects(valueNode)) {
+        if (mayHaveSideEffects(valueNode)) {
           traverseNode(valueNode, scope);
         } else {
           builder.addContinuation(new Continuation(valueNode, scope));
@@ -1067,7 +1096,7 @@ class RemoveUnusedCode implements CompilerPass {
         // varName.prototype[someExpression] = someValue
         VarInfo varInfo = traverseNameNode(varNameNode, scope);
         RemovableBuilder builder = new RemovableBuilder();
-        if (astAnalyzer.mayHaveSideEffects(getElemKey)) {
+        if (mayHaveSideEffects(getElemKey)) {
           traverseNode(getElemKey, scope);
         } else {
           builder.addContinuation(new Continuation(getElemKey, scope));
@@ -1110,7 +1139,7 @@ class RemoveUnusedCode implements CompilerPass {
           varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, lhs, varInfo));
         } else {
           // (someExpression).prototype.propertyName = someValue
-          if (astAnalyzer.mayHaveSideEffects(objExpression)) {
+          if (mayHaveSideEffects(objExpression)) {
             traverseNode(objExpression, scope);
           } else {
             builder.addContinuation(new Continuation(objExpression, scope));
@@ -1135,8 +1164,7 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   private void traverseRemovableAssignValue(Node valueNode, RemovableBuilder builder, Scope scope) {
-    if (astAnalyzer.mayHaveSideEffects(valueNode)
-        || NodeUtil.isExpressionResultUsed(valueNode.getParent())) {
+    if (mayHaveSideEffects(valueNode) || NodeUtil.isExpressionResultUsed(valueNode.getParent())) {
       traverseNode(valueNode, scope);
     } else {
       builder.addContinuation(new Continuation(valueNode, scope));
@@ -1230,7 +1258,7 @@ class RemoveUnusedCode implements CompilerPass {
     RemovableBuilder builder =
         new RemovableBuilder().addContinuation(new Continuation(root, scope));
 
-    if (astAnalyzer.mayHaveSideEffects(root)) {
+    if (mayHaveSideEffects(root)) {
       // If anywhere in the assignment subtree has side-effects, it means that even if the target is
       // removable the subtree is not.
       traverseNode(root, scope);
@@ -1277,18 +1305,18 @@ class RemoveUnusedCode implements CompilerPass {
     VarInfo varInfo = traverseNameNode(classNameNode, scope);
     if (classNode.getParent().isExport()) {
       // Cannot remove an exported class.
-      varInfo.setIsExplicitlyNotRemovable();
+      varInfo.setIsExplicitlyNotRemovable(() -> "exported class");
       traverseNode(baseClassExpression, scope);
       // Use traverseChildren() here, because we should not consider any properties on the exported
       // class to be removable.
       traverseChildren(classBodyNode, classScope);
-    } else if (astAnalyzer.mayHaveSideEffects(baseClassExpression)) {
+    } else if (mayHaveSideEffects(baseClassExpression)) {
       // TODO(bradfordcsmith): implement removal without losing side-effects for this case
-      varInfo.setIsExplicitlyNotRemovable();
+      varInfo.setIsExplicitlyNotRemovable(() -> "base class expression has side-effects");
       traverseNode(baseClassExpression, scope);
       traverseClassMembers(classBodyNode, classScope);
-    } else if (astAnalyzer.mayHaveSideEffects(classBodyNode)) {
-      varInfo.setIsExplicitlyNotRemovable();
+    } else if (mayHaveSideEffects(classBodyNode)) {
+      varInfo.setIsExplicitlyNotRemovable(() -> "class body has side-effects");
       traverseNode(baseClassExpression, scope);
       traverseClassMembers(classBodyNode, classScope);
     } else {
@@ -1346,11 +1374,15 @@ class RemoveUnusedCode implements CompilerPass {
           // remove any part of the field. The proper behavior of class C { x = alert(); }
           // would be to remove x, leaving class C { constructor() { alert(); } }
           // but currently we aren't removing anything.
-          if (!member.hasChildren() || !astAnalyzer.mayHaveSideEffects(member.getFirstChild())) {
+          if (!member.hasChildren() || !mayHaveSideEffects(member.getFirstChild())) {
             considerForIndependentRemoval(
                 new RemovableBuilder()
                     .addContinuation(new Continuation(member, scope))
                     .buildClassOrPrototypeNamedProperty(member));
+          }
+          // TODO: b/354704593 - remove the entire class when it is not referenced
+          if (member.isStaticMember() && member.getFirstChild() != null) {
+            traverseChildren(member, scope);
           }
           break;
 
@@ -1566,7 +1598,7 @@ class RemoveUnusedCode implements CompilerPass {
       Node argNode = lastArg;
       if (lastArg.isDefaultValue()) {
         argNode = lastArg.getFirstChild();
-        if (astAnalyzer.mayHaveSideEffects(lastArg.getLastChild())) {
+        if (mayHaveSideEffects(lastArg.getLastChild())) {
           break;
         }
       }
@@ -1620,7 +1652,8 @@ class RemoveUnusedCode implements CompilerPass {
           continue;
         }
 
-        getVarInfo(getVarForNameNode(lValue, functionScope)).setIsExplicitlyNotRemovable();
+        getVarInfo(getVarForNameNode(lValue, functionScope))
+            .setIsExplicitlyNotRemovable(() -> "parameter in function using arguments");
       }
       // `arguments` is never removable.
       return canonicalUnremovableVarInfo;
@@ -1661,10 +1694,13 @@ class RemoveUnusedCode implements CompilerPass {
     checkNotNull(var);
     boolean isGlobal = var.isGlobal();
     if (var.isExtern()) {
+      unremovableLog.log(() -> SimpleFormat.format("%s: extern", var.getName()));
       return canonicalUnremovableVarInfo;
     } else if (codingConvention.isExported(var.getName(), /* local= */ !isGlobal)) {
+      unremovableLog.log(() -> SimpleFormat.format("%s: exported by convention", var.getName()));
       return canonicalUnremovableVarInfo;
     } else if (var.isArguments()) {
+      // No point in logging that we cannot remove "arguments"
       return canonicalUnremovableVarInfo;
     } else {
       VarInfo varInfo = varInfoMap.get(var);
@@ -1677,9 +1713,9 @@ class RemoveUnusedCode implements CompilerPass {
         // varInfo needs to track what value is assigned to it for the purpose of correctly allowing
         // or preventing removal of properties set on it.
         if (!removeGlobals && isGlobal) {
-          varInfo.setIsExplicitlyNotRemovable();
+          varInfo.setIsExplicitlyNotRemovable(() -> "not removing globals");
         } else if (!removeLocalVars && !isGlobal) {
-          varInfo.setIsExplicitlyNotRemovable();
+          varInfo.setIsExplicitlyNotRemovable(() -> "not removing locals");
         }
         varInfoMap.put(var, varInfo);
       }
@@ -1851,8 +1887,7 @@ class RemoveUnusedCode implements CompilerPass {
      * @return the Node representing the local value that is being assigned or `null` if the value
      *     is non-local or cannot be determined.
      */
-    @Nullable
-    Node getLocalAssignedValue() {
+    @Nullable Node getLocalAssignedValue() {
       return null;
     }
 
@@ -2020,6 +2055,10 @@ class RemoveUnusedCode implements CompilerPass {
     public Removable buildInstanceofName(Node instanceofNode) {
       return new InstanceofName(this, instanceofNode);
     }
+
+    public Removable buildWeakUsageCall(Node weakUsageCall) {
+      return new WeakUsageCall(this, weakUsageCall);
+    }
   }
 
   /** Represents a read reference whose value is not used. */
@@ -2044,7 +2083,7 @@ class RemoveUnusedCode implements CompilerPass {
           checkState(isDotPrototypeDotProperty(referenceNode), referenceNode);
           // objExpression.prototype.propertyName
           Node objExpression = referenceNode.getFirstFirstChild();
-          if (astAnalyzer.mayHaveSideEffects(objExpression)) {
+          if (mayHaveSideEffects(objExpression)) {
             replaceNodeWith(referenceNode, objExpression.detach());
           } else {
             removeExpressionCompletely(referenceNode);
@@ -2079,7 +2118,7 @@ class RemoveUnusedCode implements CompilerPass {
       if (!alreadyRemoved(instanceofNode)) {
         Node lhs = instanceofNode.getFirstChild();
         Node falseNode = IR.falseNode().srcref(instanceofNode);
-        if (astAnalyzer.mayHaveSideEffects(lhs)) {
+        if (mayHaveSideEffects(lhs)) {
           replaceNodeWith(instanceofNode, IR.comma(lhs.detach(), falseNode).srcref(instanceofNode));
         } else {
           replaceNodeWith(instanceofNode, falseNode);
@@ -2097,6 +2136,34 @@ class RemoveUnusedCode implements CompilerPass {
     @Override
     public String toString() {
       return "InstanceofName:" + instanceofNode;
+    }
+  }
+
+  /**
+   * Represents `goog.weakUsage(varName)`.
+   *
+   * <p>If `varName` is removed, this expression can be replaced with `undefined`.
+   */
+  private class WeakUsageCall extends Removable {
+    final Node weakCallNode;
+
+    WeakUsageCall(RemovableBuilder builder, Node weakCallNode) {
+      super(/* targetNode= */ null, builder);
+      checkArgument(weakCallNode.isCall(), weakCallNode);
+      this.weakCallNode = weakCallNode;
+    }
+
+    @Override
+    void removeInternal(AbstractCompiler compiler) {
+      if (!alreadyRemoved(weakCallNode)) {
+        Node undefinedNode = NodeUtil.newUndefinedNode(weakCallNode);
+        replaceNodeWith(weakCallNode, undefinedNode);
+      }
+    }
+
+    @Override
+    public String toString() {
+      return "weakUsageCall:" + weakCallNode;
     }
   }
 
@@ -2271,13 +2338,18 @@ class RemoveUnusedCode implements CompilerPass {
     }
   }
 
-  /** A call to $jscomp.polyfill that can be removed if it is no longer referenced. */
+  /**
+   * A call to $jscomp.polyfill or $jscomp.patch that can be removed if it is no longer referenced.
+   */
   private class Polyfill extends Removable {
     final Node polyfillNode;
+    // Whether this is a call to $jscomp.patch
+    final boolean isPatch;
 
     Polyfill(RemovableBuilder builder, Node polyfillNode) {
       super(/* targetNode= */ null, builder);
       this.polyfillNode = polyfillNode;
+      this.isPatch = polyfillNode.getFirstFirstChild().getString().contains("patch");
     }
 
     @Override
@@ -2287,7 +2359,7 @@ class RemoveUnusedCode implements CompilerPass {
 
     @Override
     public String toString() {
-      return "Polyfill:" + polyfillNode;
+      return (isPatch ? "Patch:" : "Polyfill:") + polyfillNode;
     }
   }
 
@@ -2454,7 +2526,7 @@ class RemoveUnusedCode implements CompilerPass {
     void removeInternal(AbstractCompiler compiler) {
       Node nameNode = declarationStatement.getOnlyChild();
       Node valueNode = nameNode.getFirstChild();
-      if (valueNode != null && astAnalyzer.mayHaveSideEffects(valueNode)) {
+      if (valueNode != null && mayHaveSideEffects(valueNode)) {
         compiler.reportChangeToEnclosingScope(declarationStatement);
         valueNode.detach();
         declarationStatement.replaceWith(IR.exprResult(valueNode).srcref(valueNode));
@@ -2511,7 +2583,10 @@ class RemoveUnusedCode implements CompilerPass {
   private static Node maybeUnwrapQnameOrDefaultValueNode(Node targetNode, Node valueNode) {
     if (valueNode.isOr() && targetNode.isQualifiedName()) {
       final Node lhsOfOr = checkNotNull(valueNode.getFirstChild());
-      if (lhsOfOr.isEquivalentTo(targetNode)) {
+      if (lhsOfOr.matchesQualifiedName(targetNode)) {
+        // We use `matchesQualifiedName` rather than `isEquivalentTo` to properly handle the
+        // variable declaration case where the assigned value is a child of the name we want to
+        // match.
         return valueNode.getLastChild();
       }
     }
@@ -2649,9 +2724,8 @@ class RemoveUnusedCode implements CompilerPass {
       Node lhs = assignNode.getFirstChild();
       Node rhs = assignNode.getSecondChild();
       boolean mustPreserveRhs =
-          astAnalyzer.mayHaveSideEffects(rhs) || NodeUtil.isExpressionResultUsed(assignNode);
-      boolean mustPreserveGetElmExpr =
-          lhs.isGetElem() && astAnalyzer.mayHaveSideEffects(lhs.getLastChild());
+          mayHaveSideEffects(rhs) || NodeUtil.isExpressionResultUsed(assignNode);
+      boolean mustPreserveGetElmExpr = lhs.isGetElem() && mayHaveSideEffects(lhs.getLastChild());
 
       if (mustPreserveRhs && mustPreserveGetElmExpr) {
         Node replacement = IR.comma(lhs.getLastChild().detach(), rhs.detach()).srcref(assignNode);
@@ -2669,6 +2743,15 @@ class RemoveUnusedCode implements CompilerPass {
     public String toString() {
       return "Assign:" + assignNode;
     }
+  }
+
+  private boolean mayHaveSideEffects(Node node) {
+    // check for @pureOrBreakMyCode on call expressions.
+    JSDocInfo jsDocInfo = node.isCall() ? node.getJSDocInfo() : null;
+    if (jsDocInfo != null && jsDocInfo.isPureOrBreakMyCode()) {
+      return false;
+    }
+    return astAnalyzer.mayHaveSideEffects(node);
   }
 
   /** Represents `(someObjectExpression).prototype.propertyName = someValue`. */
@@ -2699,8 +2782,8 @@ class RemoveUnusedCode implements CompilerPass {
       checkState(objDotPrototype.getString().equals("prototype"), objDotPrototype);
 
       boolean mustPreserveRhs =
-          astAnalyzer.mayHaveSideEffects(rhs) || NodeUtil.isExpressionResultUsed(assignNode);
-      boolean mustPreserveObjExpression = astAnalyzer.mayHaveSideEffects(objExpression);
+          mayHaveSideEffects(rhs) || NodeUtil.isExpressionResultUsed(assignNode);
+      boolean mustPreserveObjExpression = mayHaveSideEffects(objExpression);
 
       if (mustPreserveRhs && mustPreserveObjExpression) {
         Node replacement = IR.comma(objExpression.detach(), rhs.detach()).srcref(assignNode);
@@ -2752,7 +2835,7 @@ class RemoveUnusedCode implements CompilerPass {
         arg.detach();
         // If this is a class defining call, the arguments are well defined and verified so they are
         // always safe to drop.
-        if (!classDefiningCall && astAnalyzer.mayHaveSideEffects(arg)) {
+        if (!classDefiningCall && mayHaveSideEffects(arg)) {
           if (replacement == null) {
             replacement = arg;
           } else {
@@ -2844,7 +2927,7 @@ class RemoveUnusedCode implements CompilerPass {
      * all of the `Removable` objects associated with this variable and either apply their
      * continuations or consider them for independent removal.
      */
-    void setIsExplicitlyNotRemovable();
+    void setIsExplicitlyNotRemovable(Supplier<String> reasonSupplier);
 
     /**
      * Record that at least one value assigned to the variable is non-local (comes from or escapes
@@ -2883,7 +2966,7 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     @Override
-    public void setIsExplicitlyNotRemovable() {
+    public void setIsExplicitlyNotRemovable(Supplier<String> reasonSupplier) {
       // nothing to do
     }
 
@@ -2909,6 +2992,7 @@ class RemoveUnusedCode implements CompilerPass {
   /** Tracks the removable code and other state related to variables we may be able to remove. */
   private final class RealVarInfo implements VarInfo {
     final String varName;
+
     /**
      * Objects that represent variable declarations, assignments, or class setup calls that can be
      * removed.
@@ -2967,7 +3051,8 @@ class RemoveUnusedCode implements CompilerPass {
         requiresLocalLiteralValueForRemoval = true;
       }
       if (hasNonLocalOrNonLiteralValue && requiresLocalLiteralValueForRemoval) {
-        setIsExplicitlyNotRemovable();
+        setIsExplicitlyNotRemovable(
+            () -> "hasNonLocalOrNonLiteralValue && requiresLocalLiteralValueForRemoval");
       }
 
       if (isEntirelyRemovable) {
@@ -2984,9 +3069,10 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     @Override
-    public void setIsExplicitlyNotRemovable() {
+    public void setIsExplicitlyNotRemovable(Supplier<String> reasonSupplier) {
       if (isEntirelyRemovable) {
         isEntirelyRemovable = false;
+        unremovableLog.log(SimpleFormat.format("%s: %s", varName, reasonSupplier.get()));
         for (Removable r : removables) {
           considerForIndependentRemoval(r);
         }
@@ -3048,10 +3134,10 @@ class RemoveUnusedCode implements CompilerPass {
    * whose names are stores as strings passed as the first argument to {@code $jscomp.polyfill}.
    * Each definition falls into one of three categories: (1) global names, such as {@code Map} or
    * {@code Promise}; (2) static properties, such as {@code Array.from} or {@code Reflect.get},
-   * which must always have exactly two name components; or (3) prototype properties, such as {@code
-   * String.prototype.repeat} or {@code Promise.prototype.finally}, which must always have exactly
-   * three name components. The definition can be removed once it is found that there are no
-   * references to it.
+   * which must always have exactly two name components (TODO(bradfordcsmith): is this assumption
+   * required?); or (3) prototype properties, such as {@code String.prototype.repeat} or {@code
+   * Promise.prototype.finally}, which must always have exactly three name components. The
+   * definition can be removed once it is found that there are no references to it.
    *
    * <p>References are ignored if they are "guarded". This allows removing, e.g, the Promise
    * polyfill if it is only referenced in `if (typeof Promise === 'function') { use(Promise); }`.
@@ -3089,8 +3175,10 @@ class RemoveUnusedCode implements CompilerPass {
   private abstract class PolyfillInfo {
     /** The {@link Polyfill} instance corresponding to the polyfill's definition. */
     final Polyfill removable;
+
     /** The rightmost component of the polyfill's qualified name (does not contain a dot). */
     final String key;
+
     /** Whether the polyfill is unreferenced and this can be removed safely. */
     boolean isRemovable = true;
 
@@ -3105,7 +3193,7 @@ class RemoveUnusedCode implements CompilerPass {
      * polyfill as referenced and therefore not removable.
      */
     void considerPossibleReference(Node n) {
-      if (isRemovable && !guardedUsages.contains(n)) {
+      if (isRemovable && (removable.isPatch || !guardedUsages.contains(n))) {
         considerPossibleReferenceInternal(n);
         if (!isRemovable) {
           removable.applyContinuations();

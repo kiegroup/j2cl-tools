@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
 import static java.util.Arrays.stream;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.math.Stats;
 import com.google.j2cl.common.SourcePosition;
@@ -209,7 +210,7 @@ final class StatementTranspiler {
       }
 
       private void renderSwitchDispatchTable(SwitchStatement switchStatement) {
-        if (isPrimitiveOrJsEnum(switchStatement.getSwitchExpression().getTypeDescriptor())) {
+        if (isPrimitiveOrJsEnum(switchStatement.getExpression().getTypeDescriptor())) {
           Stats stats =
               Stats.of(
                   switchStatement.getCases().stream()
@@ -322,7 +323,7 @@ final class StatementTranspiler {
         builder.newLine();
         builder.append("(br_table ");
         stream(slots).forEach(slot -> builder.append(slot + " "));
-        emitBranchIndexExpression(switchStatement.getSwitchExpression(), offset);
+        emitBranchIndexExpression(switchStatement.getExpression(), offset);
         builder.append(")");
         builder.closeParens();
       }
@@ -356,8 +357,7 @@ final class StatementTranspiler {
           // If the condition for this case is met, jump to the start of the case, i.e. jump out
           // of all of the previous enclosing blocks.
           Expression condition =
-              createCaseCondition(
-                  switchCase.getCaseExpression(), switchStatement.getSwitchExpression());
+              createCaseCondition(switchCase.getCaseExpression(), switchStatement.getExpression());
           renderConditionalBranch(switchStatement.getSourcePosition(), condition, casePosition);
         }
 
@@ -370,15 +370,14 @@ final class StatementTranspiler {
 
       /** Creates the condition to compare the switch expression with the case expression. */
       private Expression createCaseCondition(
-          Expression switchCaseExpression, Expression switchExpression) {
+          Expression switchCaseExpression, Expression expression) {
         if (TypeDescriptors.isJavaLangString(switchCaseExpression.getTypeDescriptor())) {
           // Strings are compared using equals.
-          return RuntimeMethods.createStringEqualsMethodCall(
-              switchCaseExpression, switchExpression);
+          return RuntimeMethods.createStringEqualsMethodCall(switchCaseExpression, expression);
         }
 
         checkState(switchCaseExpression.getTypeDescriptor().isPrimitive());
-        return switchExpression.infixEquals(switchCaseExpression);
+        return expression.infixEquals(switchCaseExpression);
       }
 
       @Override
@@ -397,10 +396,9 @@ final class StatementTranspiler {
         builder.emitWithMapping(
             throwStatement.getSourcePosition(),
             () -> {
+              builder.append("(throw $exception.event ");
               renderExpression(throwStatement.getExpression());
-              // Since throw in JS invisible, adding unreachable keeps the Wasm invariants.
-              builder.newLine();
-              builder.append("(unreachable)");
+              builder.append(")");
             });
         return false;
       }
@@ -578,18 +576,20 @@ final class StatementTranspiler {
     }
 
     if (!(statement instanceof Block)) {
-      renderSourceMappingComment(statement.getSourcePosition(), builder);
+      renderSourceMappingComment(
+          environment.getSourceMappingPathPrefix(), statement.getSourcePosition(), builder);
     }
     statement.accept(new SourceTransformer());
   }
 
   public static void renderSourceMappingComment(
-      SourcePosition sourcePosition, SourceBuilder builder) {
+      String sourceMappingPathPrefix, SourcePosition sourcePosition, SourceBuilder builder) {
     if (sourcePosition != SourcePosition.NONE) {
       builder.newLine();
       builder.append(
           String.format(
-              ";;@ %s:%d:%d",
+              ";;@ %s%s:%d:%d",
+              Strings.nullToEmpty(sourceMappingPathPrefix),
               sourcePosition.getPackageRelativePath(),
               // Lines and column are zero based, but DevTools expects lines to be 1-based and
               // columns to be zero based.

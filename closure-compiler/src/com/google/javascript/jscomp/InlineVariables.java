@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
@@ -26,10 +27,10 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.ReferenceCollector.Behavior;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Using the infrastructure provided by {@link ReferenceCollector}, identify variables that are used
@@ -211,7 +212,8 @@ class InlineVariables implements CompilerPass {
      * <p>This is necessary in order for aliases of those variables to determine whether they may be
      * inlined.
      */
-    final HashMap<Var, InlineVarAnalysis> currentScopeHandledVarAnalysesMap = new HashMap<>();
+    final LinkedHashMap<Var, InlineVarAnalysis> currentScopeHandledVarAnalysesMap =
+        new LinkedHashMap<>();
 
     /**
      * Records alias variables that are waiting for the original variables to be handled.
@@ -374,6 +376,16 @@ class InlineVariables implements CompilerPass {
         }
       }
 
+      private final InitiallyUnknown<Boolean> isReferencedWeakly = new InitiallyUnknown<>();
+
+      private boolean isReferencedWeakly() {
+        if (isReferencedWeakly.isKnown()) {
+          return isReferencedWeakly.getKnownValue();
+        } else {
+          return isReferencedWeakly.setKnownValueOnce(referenceInfo.isReferencedWeakly());
+        }
+      }
+
       private final InitiallyUnknown<Boolean> isWellDefinedAssignedOnce = new InitiallyUnknown<>();
 
       /**
@@ -440,7 +452,7 @@ class InlineVariables implements CompilerPass {
 
       @Override
       public InlineVarAnalysis analyze() {
-        if (hasNoInlineAnnotation(v)) {
+        if (hasNoInlineAnnotation(v) || isReferencedWeakly()) {
           return getNegativeInlineVarAnalysis();
         }
         final Reference initialization = getInitialization();
@@ -772,6 +784,14 @@ class InlineVariables implements CompilerPass {
       // Check for function declarations before the value is moved in the AST.
       boolean isFunctionDeclaration = NodeUtil.isFunctionDeclaration(value);
       if (isFunctionDeclaration) {
+        // We're inlining this function declaration because there was only one reference to it,
+        // probably the rhs of an assignment statement. Since we're eliminating the only
+        // reference, we can get rid of it. See b/277538101.
+        Node funcName = value.getFirstChild();
+        checkNotNull(funcName);
+        checkState(funcName.isName());
+        funcName.setString("");
+
         // In addition to changing the containing scope, inlining function declarations also changes
         // the function name scope from the containing scope to the inner scope.
         compiler.reportChangeToChangeScope(value);
@@ -795,7 +815,7 @@ class InlineVariables implements CompilerPass {
         if (r.getNode() == v.getNameNode()) {
           removeDeclaration(r);
         } else if (r.isSimpleAssignmentToName()) {
-          /**
+          /*
            * This is the initialization.
            *
            * <p>Replace the entire assignment with just the value, and use the original value node

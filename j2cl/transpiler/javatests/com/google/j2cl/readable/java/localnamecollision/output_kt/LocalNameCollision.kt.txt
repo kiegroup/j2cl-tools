@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package localnamecollision
 
@@ -70,7 +70,9 @@ open class LocalNameCollision {
  }
 }
 
+@ObjCName("J2ktLocalnamecollisionA", exact = true)
 open class A internal constructor() {
+ @ObjCName("J2ktLocalnamecollisionACompanion", exact = true)
  companion object {
   @JvmField
   internal var A_pp_localnamecollision: localnamecollision.A? = null
@@ -87,5 +89,6 @@ open class A internal constructor() {
   }
  }
 
+ @ObjCName("J2ktLocalnamecollisionA_B", exact = true)
  open class B internal constructor() {}
 }

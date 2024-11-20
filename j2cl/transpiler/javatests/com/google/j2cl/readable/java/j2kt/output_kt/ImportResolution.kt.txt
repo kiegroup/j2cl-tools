@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package j2kt
 
@@ -26,6 +26,7 @@ import kotlin.native.ObjCName
 
 @ObjCName("J2ktJ2ktImportResolution", exact = true)
 open class ImportResolution {
+ @ObjCName("J2ktJ2ktImportResolution_Parent", exact = true)
  open class Parent internal constructor() {
   internal open fun testJavaLang_pp_j2kt(string: kotlin.String?) {
    string!!.java_trim()
@@ -35,6 +36,7 @@ open class ImportResolution {
    string!!.local_pp_j2kt()
   }
 
+  @ObjCName("J2ktJ2ktImportResolution_Parent_String", exact = true)
   open inner class String internal constructor() {
    internal open fun local_pp_j2kt() {}
 
@@ -48,6 +50,7 @@ open class ImportResolution {
   }
  }
 
+ @ObjCName("J2ktJ2ktImportResolution_Child", exact = true)
  open class Child internal constructor(): ImportResolution.Parent() {
   override fun testJavaLang_pp_j2kt(string: kotlin.String?) {
    string!!.java_trim()
@@ -58,6 +61,7 @@ open class ImportResolution {
   }
  }
 
+ @ObjCName("J2ktJ2ktImportResolution_GrandChild", exact = true)
  open class GrandChild internal constructor(): ImportResolution.Child() {
   override fun testJavaLang_pp_j2kt(string: kotlin.String?) {
    string!!.java_trim()

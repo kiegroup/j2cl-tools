@@ -61,8 +61,9 @@ enum JsdocTag {
   JSDOC_COLLAPSIBLE_OR_BREAK_MY_CODE = 25;
 
   // Used by unit tests
-  JSDOC_FILEOVERVIEW = 26;  // Used to specially mark the base.js file.
+  JSDOC_FILEOVERVIEW = 26;
 
+  // Used to specially mark the base.js file.
   JSDOC_PROVIDE_GOOG = 31;
 
   // Used to identify type summary (i.js) files.
@@ -70,4 +71,17 @@ enum JsdocTag {
 
   // Use by goog.provide rewriting
   JSDOC_PROVIDE_ALREADY_PROVIDED = 33;
+
+  // Used to identify Sass generated css (.css.closure.js) files.
+  JSDOC_SASS_GENERATED_CSS_TS = 34;
+
+  // Used to suppress warnings by ReportUntranspilableFeatures pass in stage2
+  JSDOC_SUPPRESS_UNTRANSPILABLE_FEATURES = 36;
+
+  // Used by CoverageInstrumentationCallback
+  JSDOC_NO_COVERAGE = 37;
+
+  // Used to require function inlining to enable other optimizations,
+  // especially constant folding of object literals.
+  JSDOC_REQUIRE_INLINING = 38;
 }

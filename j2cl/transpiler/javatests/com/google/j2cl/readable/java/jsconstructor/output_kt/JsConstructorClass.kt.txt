@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package jsconstructor
 
@@ -203,5 +203,37 @@ open class JsConstructorClass {
   ): super(`object`)
 
   constructor(): this(Any())
+ }
+
+ @ObjCName("J2ktJsconstructorJsConstructorClass_JsConstructorClassWithExplicitConstructor", exact = true)
+ open inner class JsConstructorClassWithExplicitConstructor @JsConstructor constructor(i: Int) {}
+
+ @ObjCName("J2ktJsconstructorJsConstructorClass_JsConstructorSubclass", exact = true)
+ open inner class JsConstructorSubclass @JsConstructor constructor(): JsConstructorClass.JsConstructorClassWithExplicitConstructor(1) {
+  init {
+   var i: Int = 0
+   SWITCH@ do {
+    CASE@ do {
+     CASE_1@ do {
+      do {
+       when (0) {
+        0 -> {
+         break
+        }
+        1 -> {
+         break@CASE_1
+        }
+        else -> {
+         break@CASE
+        }
+       }
+       break@SWITCH
+      } while (false)
+      i = 0
+     } while (false)
+     i = 2
+    } while (false)
+   } while (false)
+  }
  }
 }

@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package parameterassignments
 
@@ -52,7 +52,7 @@ open class Main {
 
  internal open fun testObjectVarargs_pp_parameterassignments(o: Any?, vararg oa: Any?) {
   var oa_1: Array<Any?>? = oa as Array<Any?>?
-  oa_1 = (arrayOf<Any?>(o, oa_1!![0]) as Array<*>?) as Array<Any?>?
+  oa_1 = arrayOf<Any?>(o, oa_1!![0])
  }
 
  internal open fun testPrimitiveVarargs_pp_parameterassignments(i: Int, vararg ia: Int) {
@@ -78,6 +78,7 @@ open class Main {
   os_1!![0] = os_1!![1]
  }
 
+ @ObjCName("J2ktParameterassignmentsMain_Fn", exact = true)
  fun interface Fn {
   @ObjCName("test")
   fun test(
@@ -86,6 +87,7 @@ open class Main {
   ): Int
  }
 
+ @ObjCName("J2ktParameterassignmentsMain_FnPrimitiveVarargs", exact = true)
  fun interface FnPrimitiveVarargs {
   @ObjCName("test")
   fun test(
@@ -94,6 +96,7 @@ open class Main {
   )
  }
 
+ @ObjCName("J2ktParameterassignmentsMain_FnObjectVarargs", exact = true)
  fun interface FnObjectVarargs {
   @ObjCName("test")
   fun test(

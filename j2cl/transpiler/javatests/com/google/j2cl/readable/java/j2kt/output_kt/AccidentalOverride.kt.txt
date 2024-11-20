@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package j2kt
 
@@ -26,11 +26,13 @@ import kotlin.native.ObjCName
 
 @ObjCName("J2ktJ2ktAccidentalOverride", exact = true)
 open class AccidentalOverride {
+ @ObjCName("J2ktJ2ktAccidentalOverride_SuperClass", exact = true)
  abstract inner class SuperClass internal constructor() {
   @ObjCName("accidentalOverride")
   open fun accidentalOverride() {}
  }
 
+ @ObjCName("J2ktJ2ktAccidentalOverride_Interface", exact = true)
  interface Interface {
   @ObjCName("accidentalOverride")
   fun accidentalOverride() {}
@@ -39,23 +41,27 @@ open class AccidentalOverride {
   fun abstractAccidentalOverride() {}
  }
 
+ @ObjCName("J2ktJ2ktAccidentalOverride_TestImplicitOverride", exact = true)
  open inner class TestImplicitOverride internal constructor(): AccidentalOverride.SuperClass(), AccidentalOverride.Interface {
   override fun accidentalOverride() {
    super<AccidentalOverride.SuperClass>.accidentalOverride()
   }
  }
 
+ @ObjCName("J2ktJ2ktAccidentalOverride_TestExplicitOverride", exact = true)
  open inner class TestExplicitOverride internal constructor(): AccidentalOverride.SuperClass(), AccidentalOverride.Interface {
   override fun accidentalOverride() {
    super<AccidentalOverride.SuperClass>.accidentalOverride()
   }
  }
 
+ @ObjCName("J2ktJ2ktAccidentalOverride_SubClass", exact = true)
  abstract inner class SubClass internal constructor(): AccidentalOverride.SuperClass() {
   @ObjCName("abstractAccidentalOverride")
   abstract fun abstractAccidentalOverride()
  }
 
+ @ObjCName("J2ktJ2ktAccidentalOverride_TestImplicitOverrideInAbstractClass", exact = true)
  abstract inner class TestImplicitOverrideInAbstractClass internal constructor(): AccidentalOverride.SubClass(), AccidentalOverride.Interface {
   abstract override fun abstractAccidentalOverride()
 
@@ -64,6 +70,7 @@ open class AccidentalOverride {
   }
  }
 
+ @ObjCName("J2ktJ2ktAccidentalOverride_TestExplicitOverrideInAbstractClass", exact = true)
  abstract inner class TestExplicitOverrideInAbstractClass internal constructor(): AccidentalOverride.SubClass(), AccidentalOverride.Interface {
   override fun accidentalOverride() {
    super<AccidentalOverride.SubClass>.accidentalOverride()

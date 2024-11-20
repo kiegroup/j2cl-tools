@@ -26,12 +26,12 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Replaces `goog.provide` calls and removes goog.{require,requireType,forwardDeclare} calls.
@@ -68,14 +68,14 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
   private final List<Node> requiresToBeRemoved = new ArrayList<>();
   // Whether this instance has already rewritten goog.provides, which can only happen once
   private boolean hasRewritingOccurred = false;
-  private final Set<Node> forwardDeclaresToRemove = new HashSet<>();
+  private final Set<Node> forwardDeclaresToRemove = new LinkedHashSet<>();
   private final AstFactory astFactory;
 
   ProcessClosureProvidesAndRequires(
       AbstractCompiler compiler,
       boolean preserveGoogProvidesAndRequires) {
     this.compiler = compiler;
-    this.chunkGraph = compiler.getModuleGraph();
+    this.chunkGraph = compiler.getChunkGraph();
     this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
     this.astFactory = compiler.createAstFactory();
   }
@@ -401,20 +401,20 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
    * @param node The EXPR of the provide call.
    * @param module The current module.
    */
-  private void registerAnyProvidedPrefixes(String ns, Node node, JSChunk module) {
+  private void registerAnyProvidedPrefixes(String ns, Node node, JSChunk chunk) {
     int pos = ns.indexOf('.');
     while (pos != -1) {
       String prefixNs = ns.substring(0, pos);
       pos = ns.indexOf('.', pos + 1);
       if (providedNames.containsKey(prefixNs)) {
-        providedNames.get(prefixNs).addProvide(node, module, /* explicit= */ false, chunkGraph);
+        providedNames.get(prefixNs).addProvide(node, chunk, /* explicit= */ false, chunkGraph);
       } else {
         providedNames.put(
             prefixNs,
             new ProvidedNameBuilder()
                 .setNamespace(prefixNs)
                 .setNode(node)
-                .setChunk(module)
+                .setChunk(chunk)
                 .setExplicit(false)
                 .build());
       }
@@ -632,7 +632,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
      * <p>This pass gives preference to declarations. If no declaration exists, records a reference
      * to an assignment so it can be repurposed later into a declaration.
      */
-    private void addDefinition(Node node, JSChunk module, JSChunkGraph chunkGraph) {
+    private void addDefinition(Node node, JSChunk chunk, JSChunkGraph chunkGraph) {
       Preconditions.checkArgument(
           node.isExprResult() // assign
               || node.isFunction()
@@ -640,7 +640,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
       checkArgument(explicitNode != node);
       if ((candidateDefinition == null) || !node.isExprResult()) {
         candidateDefinition = node;
-        updateMinimumChunk(module, chunkGraph);
+        updateMinimumChunk(chunk, chunkGraph);
       }
     }
 

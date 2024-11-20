@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -49,7 +50,7 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, transpiledFeatures);
   }
 
   @Override
@@ -61,19 +62,29 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
 
   // TODO(lharker): break up this method
   private void visitForOf(Node node) {
+    // `var v` or `let v` or v any valid lhs
     Node variable = node.removeFirstChild();
     Node iterable = node.removeFirstChild();
     Node body = node.removeFirstChild();
-
     JSDocInfo varJSDocInfo = variable.getJSDocInfo();
+    // `$jscomp$iter$0`
     Node iterName =
         astFactory.createName(
             ITER_BASE + compiler.getUniqueNameIdSupplier().get(), type(StandardColors.ITERATOR_ID));
     iterName.makeNonIndexable();
+    // `$jscomp$iter$0.next()`
     Node getNext =
         astFactory.createCallWithUnknownType(
             astFactory.createGetPropWithUnknownType(iterName.cloneTree(), "next"));
-    String iteratorResultName = ITER_RESULT;
+    // generate a unique iterator result name for every for-of loop getting rewritten to avoid
+    // conflicts
+    String iteratorResultName =
+        ITER_RESULT
+            + compiler
+                .getUniqueIdSupplier()
+                .getUniqueId(compiler.getInput(NodeUtil.getEnclosingScript(node).getInputId()))
+            + "$";
+
     if (NodeUtil.isNameDeclaration(variable)) {
       iteratorResultName += variable.getFirstChild().getString();
     } else if (variable.isName()) {
@@ -82,22 +93,29 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
       // give arbitrary lhs expressions an arbitrary name
       iteratorResultName += namer.generateNextName();
     }
+    // `$jscomp$key$extraName`
     Node iterResult = astFactory.createNameWithUnknownType(iteratorResultName);
     iterResult.makeNonIndexable();
-
-    Node call = astFactory.createJSCompMakeIteratorCall(iterable, this.namespace);
-    Node init = IR.var(iterName.cloneTree().setColor(iterName.getColor()), call);
-    Node initIterResult = iterResult.cloneTree();
-    initIterResult.addChildToFront(getNext.cloneTree());
-    init.addChildToBack(initIterResult);
-
+    // `$jscomp.makeIterator(iterable)`
+    Node callMakeIterator =
+        astFactory
+            .createJSCompMakeIteratorCall(iterable, this.namespace)
+            .srcrefTreeIfMissing(iterable);
+    // `var $jscomp$iter$0 = $jscomp.makeIterator(iterable)`
+    Node initIter = IR.var(iterName, callMakeIterator).srcrefTreeIfMissing(iterable);
+    // var $jscomp$key$extraName = $jscomp$iter$0.next();
+    Node initIterResult =
+        IR.var(iterResult.cloneTree(), getNext.cloneTree()).srcrefTreeIfMissing(iterable);
+    // !$jscomp$key$extraName.done
     Node cond =
         astFactory.createNot(
             astFactory.createGetProp(iterResult.cloneTree(), "done", type(StandardColors.BOOLEAN)));
+    // $jscomp$key$extraName = $jscomp$iter$0.next()
     Node incr = astFactory.createAssign(iterResult.cloneTree(), getNext.cloneTree());
 
     Node declarationOrAssign;
     if (!NodeUtil.isNameDeclaration(variable)) {
+      // e.g. `for(a.b of []) {}`
       declarationOrAssign =
           astFactory.createAssign(
               variable.cloneTree().setJSDocInfo(null),
@@ -105,23 +123,36 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
       declarationOrAssign.setJSDocInfo(varJSDocInfo);
       declarationOrAssign = IR.exprResult(declarationOrAssign);
     } else {
+      // `for(let a of []) {}` or `for(const a of []) {}`
       AstFactory.Type type = type(variable.getFirstChild());
       Token declarationType = variable.getToken(); // i.e. VAR, CONST, or LET.
+      checkState(
+          !declarationType.equals(Token.VAR),
+          "var initializers must've gotten moved out of the loop during normalize");
       declarationOrAssign =
-          new Node(
+          astFactory.createSingleNameDeclaration(
               declarationType,
-              astFactory
-                  .createName(variable.getFirstChild().getString(), type)
-                  .srcref(variable.getFirstChild()));
-      declarationOrAssign
-          .getFirstChild()
-          .addChildToBack(astFactory.createGetProp(iterResult.cloneTree(), "value", type));
+              variable.getFirstChild().getString(),
+              astFactory.createGetProp(iterResult.cloneTree(), "value", type));
+      if (variable.getFirstChild().getBooleanProp(Node.IS_CONSTANT_NAME)) {
+        // if the original name was const, then the new name should be too
+        // e.g. `for(let CID of []) {}` where `CID` was originally marked constant by coding
+        // convention
+        declarationOrAssign.getFirstChild().putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      }
       declarationOrAssign.setJSDocInfo(varJSDocInfo);
     }
     Node newBody = IR.block(declarationOrAssign, body).srcref(body);
-    Node newFor = IR.forNode(init, cond, incr, newBody);
-    newFor.srcrefTreeIfMissing(node);
+    Node empty = astFactory.createEmpty();
+    Node newFor = IR.forNode(empty, cond, incr, newBody).srcrefTreeIfMissing(node);
     node.replaceWith(newFor);
+    // Check if the for loop has a parent that is a label i.e. `loop 1: for(...of .. .)`
+    Node insertionPoint = newFor;
+    while (insertionPoint.getParent().isLabel()) {
+      insertionPoint = insertionPoint.getParent();
+    }
+    initIter.insertBefore(insertionPoint);
+    initIterResult.insertAfter(initIter);
     compiler.reportChangeToEnclosingScope(newFor);
   }
 }

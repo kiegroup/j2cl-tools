@@ -59,7 +59,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 
 /**
@@ -151,6 +151,9 @@ public abstract class CompilerTestCase {
    */
   private boolean normalizeEnabled;
 
+  /** If Normalize is enabled, then run it on the expected output also before comparing. */
+  private boolean normalizeExpectedOutputEnabled;
+
   private boolean polymerPass;
 
   /** Whether ES module rewriting runs before the pass being tested. */
@@ -215,9 +218,6 @@ public abstract class CompilerTestCase {
    */
   private boolean typeInfoValidationEnabled;
 
-  /** Whether we should verify that all type annotations are present on override methods. */
-  private boolean checkMissingOverrideTypes;
-
   /**
    * Whether we should verify that for every SCRIPT node, all features present in its AST are also
    * present in its FeatureSet property.
@@ -264,33 +264,33 @@ public abstract class CompilerTestCase {
           "function String(arg) {}",
           "/**",
           " * @record",
-          " * @template VALUE",
+          " * @template TYield",
           " */",
           "function IIterableResult() {};",
           "/** @type {boolean} */",
           "IIterableResult.prototype.done;",
-          "/** @type {VALUE} */",
+          "/** @type {TYield} */",
           "IIterableResult.prototype.value;",
           "/**",
           " * @interface",
-          " * @template VALUE",
+          " * @template T, TReturn, TNext",
           " */",
           "function Iterable() {}",
           "/**",
           " * @interface",
-          " * @template VALUE, UNUSED_RETURN_T, UNUSED_NEXT_T",
+          " * @template T, TReturn, TNext",
           " */",
           "function Iterator() {}",
           "/**",
-          " * @param {VALUE=} value",
-          " * @return {!IIterableResult<VALUE>}",
+          " * @param {T=} value",
+          " * @return {!IIterableResult<T>}",
           " */",
           "Iterator.prototype.next;",
           "/**",
           " * @interface",
           " * @extends {Iterator<T, ?, *>}",
-          " * @extends {Iterable<T>}",
-          " * @template T",
+          " * @extends {Iterable<T, ?, *>}",
+          " * @template T, TReturn, TNext",
           " */",
           "function IteratorIterable() {}",
           "/**",
@@ -491,20 +491,20 @@ public abstract class CompilerTestCase {
           "function Symbol(opt_description) {}",
           "/** @const {!symbol} */ Symbol.iterator;",
           "/**",
-          " * @return {!Iterator<VALUE>}",
+          " * @return {!Iterator<T, ?, *>}",
           " * @suppress {externsValidation}",
           " */",
           "Iterable.prototype[Symbol.iterator] = function() {};",
           "/** @type {number} */ var NaN;",
           "/**",
           " * @interface",
-          " * @extends {IteratorIterable<VALUE>}",
-          " * @template VALUE, UNUSED_RETURN_T, UNUSED_NEXT_T",
+          " * @extends {IteratorIterable<T, ?, *>}",
+          " * @template T, TReturn, TNext",
           " */",
           "function Generator() {}",
           "/**",
           " * @param {?=} opt_value",
-          " * @return {!IIterableResult<VALUE>}",
+          " * @return {!IIterableResult<T>}",
           " * @override",
           " */",
           "Generator.prototype.next = function(opt_value) {};",
@@ -616,6 +616,28 @@ public abstract class CompilerTestCase {
           " * @extends {Array<string>}",
           " */",
           "function ITemplateArray() {}",
+          "/**",
+          " * @interface",
+          " * @extends {Iterable<K|V>}",
+          " * @template K, V",
+          " */",
+          "function ReadonlyMap() {}",
+          "/**",
+          " * @return {!IteratorIterable<K|V>}",
+          " */",
+          "ReadonlyMap.prototype.entries = function() {};",
+          "/**",
+          " * @constructor @struct",
+          " * @param {?Iterable<!Array<K|V>>|!Array<!Array<K|V>>=} opt_iterable",
+          " * @implements {ReadonlyMap<K, V>}",
+          " * @template K, V",
+          " */",
+          "function Map(opt_iterable) {}",
+          "/**",
+          " * @override",
+          " * @return {!IteratorIterable<K|V>}",
+          " */",
+          "Map.prototype.entries = function() {};",
           lines(
               "/**",
               " * @param {string} progId",
@@ -660,7 +682,6 @@ public abstract class CompilerTestCase {
     this.allowSourcelessWarnings = false;
     this.astValidationEnabled = true;
     this.typeInfoValidationEnabled = false;
-    this.checkMissingOverrideTypes = false;
     this.scriptFeatureValidationEnabled = true;
     this.checkAccessControls = false;
     this.checkAstChangeMarking = true;
@@ -679,6 +700,7 @@ public abstract class CompilerTestCase {
     this.browserFeaturesetYear = null;
     this.multistageCompilation = false;
     this.normalizeEnabled = false;
+    this.normalizeExpectedOutputEnabled = false;
     this.parseTypeInfo = false;
     this.polymerPass = false;
     this.processCommonJsModules = false;
@@ -703,6 +725,13 @@ public abstract class CompilerTestCase {
    * @return The pass to test
    */
   protected abstract CompilerPass getProcessor(Compiler compiler);
+
+  /** Enable debug logging for this test run */
+  private boolean debugLoggingEnabled = false;
+
+  public void enableDebugLogging(boolean debugLoggingEnabled) {
+    this.debugLoggingEnabled = debugLoggingEnabled;
+  }
 
   /**
    * Gets the compiler options to use for this test. Use getProcessor to determine what passes
@@ -735,12 +764,11 @@ public abstract class CompilerTestCase {
       options.setWarningLevel(
           new DiagnosticGroup(ignoredWarnings.toArray(new DiagnosticType[0])), CheckLevel.OFF);
     }
-    if (checkMissingOverrideTypes) {
-      options.setCheckMissingOverrideTypes(true);
-    }
     options.setCodingConvention(getCodingConvention());
     options.setPolymerVersion(1);
-    CompilerTestCaseUtils.setDebugLogDirectoryOn(options);
+    if (debugLoggingEnabled) {
+      CompilerTestCaseUtils.setDebugLogDirectoryOn(options);
+    }
 
     return options;
   }
@@ -908,8 +936,6 @@ public abstract class CompilerTestCase {
   protected final void enableMultistageCompilation() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     multistageCompilation = true;
-    // passes in stage 2 never have accesses to a script's feature set.
-    scriptFeatureValidationEnabled = false;
   }
 
   /** Run using singlestage compilation. */
@@ -983,7 +1009,36 @@ public abstract class CompilerTestCase {
     this.enableMultistageCompilation();
   }
 
-  /** Perform AST transpilation before running the test pass. */
+  /**
+   * If normalization is enabled for test inputs, then also run normalization on the expected
+   * outputs.
+   *
+   * <p>Enabling this can cause the results of test failures to be confusing, since the expected
+   * output written in the test case is modified before it is compared with the test results. So,
+   * you should avoid using this when you can. However, there are some ways that Normalization
+   * modifies the AST (e.g. adding properties to nodes) that cannot be represented in input JS
+   * source text but will affect whether the AST comparison succeeds. This option is intended to
+   * allow Normalization to make those changes on the expected output code.
+   *
+   * @see #enableNormalize
+   */
+  protected final void enableNormalizeExpectedOutput() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    checkState(this.normalizeEnabled, "Enabled normalize on output, but not input.");
+    this.normalizeExpectedOutputEnabled = true;
+  }
+
+  /**
+   * Perform AST transpilation before running the test pass and also on the expected output.
+   *
+   * <p>This also has the side effect of forcing normalization of the expected output if you also
+   * enable normalization.
+   *
+   * <p>Although this method is not deprecated, it is only used in a few very special cases. The
+   * test behavior this creates can be confusing, especially since it modifies the expected output,
+   * so that diffs will not necessarily reflect the expected output text written directly into the
+   * test cases. Adding new usages of this is probably a bad idea.
+   */
   protected final void enableTranspile() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     transpileEnabled = true;
@@ -1070,12 +1125,6 @@ public abstract class CompilerTestCase {
   protected final void disableTypeInfoValidation() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     typeInfoValidationEnabled = false;
-  }
-
-  /** Enable fixing missing override types */
-  protected final void enableFixMissingOverrideTypes() {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    checkMissingOverrideTypes = true;
   }
 
   /** Enable validating script featuresets after each run of the pass. */
@@ -1305,7 +1354,7 @@ public abstract class CompilerTestCase {
       options.setCheckTypes(parseTypeInfo || this.typeCheckEnabled);
       compiler.init(externs.externs, ((FlatSources) inputs).sources, options);
     } else {
-      compiler.initModules(externs.externs, ((ModuleSources) inputs).modules, getOptions());
+      compiler.initChunks(externs.externs, ((ChunkSources) inputs).chunks, getOptions());
     }
     return compiler;
   }
@@ -1447,8 +1496,7 @@ public abstract class CompilerTestCase {
 
         if (polymerPass && i == 0) {
           recentChange.reset();
-          new PolymerPass(compiler, 1, PolymerExportPolicy.LEGACY, false)
-              .process(externsRoot, mainRoot);
+          new PolymerPass(compiler).process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
@@ -1479,11 +1527,10 @@ public abstract class CompilerTestCase {
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
-        if (transpileEnabled && i == 0) {
-          recentChange.reset();
-          transpileToEs5(compiler, externsRoot, mainRoot);
-          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
-        } else if (rewriteEsModulesEnabled && i == 0) {
+        if ((rewriteEsModulesEnabled || transpileEnabled) && i == 0) {
+          // If we're transpiling down to ES5, then that includes ES module transpilation,
+          // but that pass isn't part of transpileToEs5(), because it happens earlier in
+          // the compilation process than most transpilation passes.
           recentChange.reset();
           rewriteEsModules(compiler, externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
@@ -1539,7 +1586,8 @@ public abstract class CompilerTestCase {
           } else if (replaceTypesWithColors) {
             recentChange.reset();
             new RemoveCastNodes(compiler).process(externsRoot, mainRoot);
-            new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
+            new ConvertTypesToColors(
+                    compiler, SerializationOptions.builder().setIncludeDebugInfo(true).build())
                 .process(externsRoot, mainRoot);
 
             compiler.setLifeCycleStage(AbstractCompiler.LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC);
@@ -1562,8 +1610,12 @@ public abstract class CompilerTestCase {
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
-        // Only run the normalize pass once, if asked.
-        if (normalizeEnabled && i == 0) {
+        if (transpileEnabled && i == 0) {
+          recentChange.reset();
+          transpileToEs5(compiler, externsRoot, mainRoot);
+          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
+        } else if (normalizeEnabled && i == 0) {
+          // An explicit normalize pass is necessary since it wasn't done as part of transpilation.
           normalizeActualCode(compiler, externsRoot, mainRoot);
         }
 
@@ -1691,9 +1743,9 @@ public abstract class CompilerTestCase {
 
       // Generally, externs should not be changed by the compiler passes.
       if (externsChange && !allowExternsChanges) {
-        assertNode(externsRootClone)
+        assertNode(externsRoot)
             .usingSerializer(createPrettyPrinter(compiler))
-            .isEqualTo(externsRoot);
+            .isEqualTo(externsRootClone);
       }
 
       if (checkAstChangeMarking) {
@@ -1762,7 +1814,9 @@ public abstract class CompilerTestCase {
       // (Closure primitive rewrites, etc) runs before the Normalize pass,
       // so this can't be force on everywhere.
       if (normalizeEnabled) {
-        new Normalize(compiler, true)
+        Normalize.builder(compiler)
+            .assertOnChange(true)
+            .build()
             .process(normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
 
         assertNode(normalizeCheckMainRootClone)
@@ -1813,9 +1867,7 @@ public abstract class CompilerTestCase {
     }
   }
 
-  private static void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
-    rewriteEsModules(compiler, externsRoot, codeRoot);
-
+  private void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
     CompilerOptions options = compiler.getOptions();
     PassListBuilder factories = new PassListBuilder(options);
 
@@ -1823,7 +1875,21 @@ public abstract class CompilerTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     TranspilationPasses.addTranspilationRuntimeLibraries(factories);
     TranspilationPasses.addRewritePolyfillPass(factories);
-    TranspilationPasses.addEarlyOptimizationTranspilationPasses(factories, options);
+    // Transpilation requires normalization.
+    factories.maybeAdd(
+        PassFactory.builder()
+            .setName(PassNames.NORMALIZE)
+            .setInternalFactory(abstractCompiler -> Normalize.builder(abstractCompiler).build())
+            .build());
+    TranspilationPasses.addTranspilationPasses(factories, options);
+    // We need to put back the original variable names where possible once transpilation is
+    // complete. This matches the behavior in DefaultPassConfig. See comments there for further
+    // explanation.
+    factories.maybeAdd(
+        PassFactory.builder()
+            .setName("invertContextualRenaming")
+            .setInternalFactory(MakeDeclaredNamesUnique::getContextualRenameInverter)
+            .build());
     for (PassFactory factory : factories.build()) {
       factory.create(compiler).process(externsRoot, codeRoot);
     }
@@ -1850,7 +1916,7 @@ public abstract class CompilerTestCase {
   }
 
   private static void normalizeActualCode(Compiler compiler, Node externsRoot, Node mainRoot) {
-    Normalize normalize = new Normalize(compiler, false);
+    Normalize normalize = Normalize.createNormalizeForOptimizations(compiler);
     normalize.process(externsRoot, mainRoot);
   }
 
@@ -1894,6 +1960,11 @@ public abstract class CompilerTestCase {
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();
 
+    // Normalize CAST nodes from the expected AST if asked.
+    if (replaceTypesWithColors || multistageCompilation) {
+      new RemoveCastNodes(compiler).process(externsRoot, mainRoot);
+    }
+
     if (closurePassEnabled && closurePassEnabledForExpected && !compiler.hasErrors()) {
       new GatherModuleMetadata(compiler, false, ResolutionMode.BROWSER)
           .process(externsRoot, mainRoot);
@@ -1906,23 +1977,20 @@ public abstract class CompilerTestCase {
       ScopedAliases.builder(compiler).build().process(externsRoot, mainRoot);
     }
 
-    if (transpileEnabled && !compiler.hasErrors()) {
-      transpileToEs5(compiler, externsRoot, mainRoot);
-    }
-
     if (rewriteClosureProvides && closurePassEnabledForExpected && !compiler.hasErrors()) {
       new ProcessClosureProvidesAndRequires(compiler, false).process(externsRoot, mainRoot);
     }
 
-    // Normalize CAST nodes from the expected AST if asked.
-    if (replaceTypesWithColors || multistageCompilation) {
-      new RemoveCastNodes(compiler).process(externsRoot, mainRoot);
-    }
-
-    // Only run the normalize pass, if asked.
-    if (normalizeEnabled && !compiler.hasErrors()) {
-      Normalize normalize = new Normalize(compiler, false);
-      normalize.process(externsRoot, mainRoot);
+    if (transpileEnabled && !compiler.hasErrors()) {
+      rewriteEsModules(compiler, externsRoot, mainRoot);
+      // TODO(bradfordcsmith): Notice that transpileToEs5() will perform normalization, if that
+      // is enabled, without checking normalizeExpectedOutputEnabled.
+      // This behavior is documented in enableTranspile(), which is used only in a very few
+      // special cases.
+      transpileToEs5(compiler, externsRoot, mainRoot);
+    } else if (normalizeEnabled && normalizeExpectedOutputEnabled && !compiler.hasErrors()) {
+      // An explicit normalize pass is necessary since it wasn't done as part of transpilation.
+      normalizeActualCode(compiler, externsRoot, mainRoot);
     }
     return mainRoot;
   }
@@ -1938,7 +2006,7 @@ public abstract class CompilerTestCase {
     if (inputs instanceof FlatSources) {
       compiler.init(externs.externs, ((FlatSources) inputs).sources, options);
     } else {
-      compiler.initModules(externs.externs, ((ModuleSources) inputs).modules, getOptions());
+      compiler.initChunks(externs.externs, ((ChunkSources) inputs).chunks, getOptions());
     }
     testExternChangesInternal(compiler, expectedExtern, warnings);
   }
@@ -2018,7 +2086,7 @@ public abstract class CompilerTestCase {
 
   protected Compiler createCompiler() {
     Compiler compiler = new Compiler();
-    compiler.setFeatureSet(acceptedLanguage.toFeatureSet());
+    compiler.setAllowableFeatures(acceptedLanguage.toFeatureSet());
     if (!webpackModulesById.isEmpty()) {
       compiler.initWebpackMap(ImmutableMap.copyOf(webpackModulesById));
     }
@@ -2108,7 +2176,7 @@ public abstract class CompilerTestCase {
   }
 
   protected static Sources srcs(JSChunk... modules) {
-    return new ModuleSources(modules);
+    return new ChunkSources(modules);
   }
 
   protected static Expected expected(String srcText) {
@@ -2127,10 +2195,10 @@ public abstract class CompilerTestCase {
     return new Expected(Arrays.asList(files));
   }
 
-  protected static Expected expected(JSChunk[] modules) {
+  protected static Expected expected(JSChunk[] chunks) {
     List<String> expectedSrcs = new ArrayList<>();
-    for (JSChunk module : modules) {
-      for (CompilerInput input : module.getInputs()) {
+    for (JSChunk chunk : chunks) {
+      for (CompilerInput input : chunk.getInputs()) {
         try {
           expectedSrcs.add(input.getSourceFile().getCode());
         } catch (IOException e) {
@@ -2225,9 +2293,9 @@ public abstract class CompilerTestCase {
   private static Expected fromSources(Sources srcs) {
     if (srcs instanceof FlatSources) {
       return expected(((FlatSources) srcs).sources);
-    } else if (srcs instanceof ModuleSources) {
-      ModuleSources modules = ((ModuleSources) srcs);
-      return expected(modules.modules.toArray(new JSChunk[0]));
+    } else if (srcs instanceof ChunkSources) {
+      ChunkSources modules = ((ChunkSources) srcs);
+      return expected(modules.chunks.toArray(new JSChunk[0]));
     } else {
       throw new IllegalStateException("unexpected");
     }
@@ -2255,6 +2323,7 @@ public abstract class CompilerTestCase {
       this.expected = files;
     }
   }
+
   // TODO(sdh): make a shorter function to get this - e.g. same(), expectSame(), sameOutput() ?
   // TODO(sdh): also make an ignoreOutput() and noOutput() ?
   private static final Expected EXPECTED_SAME = new Expected(null);
@@ -2269,11 +2338,11 @@ public abstract class CompilerTestCase {
     }
   }
 
-  protected static final class ModuleSources extends Sources {
-    final ImmutableList<JSChunk> modules;
+  protected static final class ChunkSources extends Sources {
+    final ImmutableList<JSChunk> chunks;
 
-    ModuleSources(JSChunk[] modules) {
-      this.modules = ImmutableList.copyOf(modules);
+    ChunkSources(JSChunk[] chunks) {
+      this.chunks = ImmutableList.copyOf(chunks);
     }
   }
 

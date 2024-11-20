@@ -5,7 +5,7 @@
 
   <groupId>org.kie.j2cl.tools.processors</groupId>
   <artifactId>entrypoint-tests</artifactId>
-  <version>0.7.0</version>
+  <version>0.8.0</version>
   <packaging>pom</packaging>
 
   <name>GWT3 Processors Entry Point Tests</name>

@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package j2kt
 
@@ -33,6 +33,7 @@ open class InnerClassInsideAnonymousClassInitProblem {
  companion object {
   @JvmField
   internal val obj_pp_j2kt: Any = object : Any() {
+   @ObjCName("J2ktJ2ktInnerClassInsideAnonymousClassInitProblem__1_InnerClassWithSingleConstructor", exact = true)
    open inner class InnerClassWithSingleConstructor constructor(i: Int) {
     @JvmField
     internal val i_pp_j2kt: Int
@@ -41,9 +42,10 @@ open class InnerClassInsideAnonymousClassInitProblem {
      this.i_pp_j2kt = i
     }
 
-    internal open val property_pp_j2kt: Int get() {
-     return this.i_pp_j2kt
-    }
+    internal open val property_pp_j2kt: Int
+     get() {
+      return this.i_pp_j2kt
+     }
    }
   }
  }

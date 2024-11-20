@@ -113,25 +113,6 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testMarkForParenthesizeProperty() {
-    // Since we're building the AST by hand, there won't be any types on it.
-    typeInfoValidationMode = TypeInfoValidation.NONE;
-
-    Node n = IR.string("a");
-    n.setMarkForParenthesize(true);
-    setTestSourceLocationForTree(n);
-    expectValid(n, Check.EXPRESSION);
-
-    n.setToken(Token.STRING_KEY); // A string key cannot be parenthesized
-    // We have to put the STRING_KEY into an object and give it a child, so we have an
-    // expression to validate that is valid other than the bad parenthesized property.
-    Node objNode = IR.objectlit(n);
-    n.addChildToFront(IR.number(0));
-    objNode.srcrefTree(n);
-    expectInvalid(objNode, Check.EXPRESSION, "non-expression is parenthesized");
-  }
-
-  @Test
   public void testValidGetPropAndGetElem() {
     valid(
         lines(
@@ -1509,14 +1490,6 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testFeatureValidation_trailingCommaInParamList() {
-    testFeatureValidation("function f(a, b, c, ) {}", Feature.TRAILING_COMMA_IN_PARAM_LIST);
-    testFeatureValidation("f(a, b, c, )", Feature.TRAILING_COMMA_IN_PARAM_LIST);
-    testFeatureValidation("x?.f(a, b, c, )", Feature.TRAILING_COMMA_IN_PARAM_LIST);
-    testFeatureValidation("new C(a, b, c, )", Feature.TRAILING_COMMA_IN_PARAM_LIST);
-  }
-
-  @Test
   public void testValidFeatureInScript() {
     // Since we're building the AST by hand, there won't be any types on it.
     typeInfoValidationMode = TypeInfoValidation.NONE;
@@ -1534,6 +1507,16 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     n.putProp(Node.FEATURE_SET, FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS));
     expectValid(n, Check.SCRIPT);
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT3); // resets compiler's allowable featureSet
+    expectInvalid(n, Check.SCRIPT);
+    // violation reported from {@code validateFeature} call of LET because
+    // `!allowbleFeatures.has(feature)`
+    assertThat(lastCheckViolationMessages).contains("AST should not contain let declaration");
+    // violation reported from {@code validateScript} call because script's `FEATURE_SET` is not
+    // a subset of compiler's allowable featureSet.
+    assertThat(lastCheckViolationMessages)
+        .contains("SCRIPT node contains these unallowable features:[let declaration]");
   }
 
   @Test

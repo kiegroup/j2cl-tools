@@ -99,6 +99,9 @@ public abstract class AbstractBuildMojo extends AbstractCacheMojo {
     @Parameter(defaultValue = "org.kie.j2cl.tools:junit-runtime:zip:jszip:" + Versions.J2CL_VERSION, required = true)
     protected String runtimeJsZip;
 
+    @Parameter(defaultValue = "org.jspecify:jspecify:0.3.0", required = true)
+    protected String jspecify;
+
     // optional, if not specified, we'll use the defaults
     @Parameter
     protected List<DependencyReplacement> dependencyReplacements;
@@ -110,8 +113,8 @@ public abstract class AbstractBuildMojo extends AbstractCacheMojo {
     private boolean incrementalEnabled;
 
     private List<DependencyReplacement> defaultDependencyReplacements = Arrays.asList(
-            new DependencyReplacement("com.google.jsinterop:base", "com.vertispan.jsinterop:base:" + Versions.VERTISPAN_JSINTEROP_BASE_VERSION),
-            new DependencyReplacement("org.realityforge.com.google.jsinterop:base", "com.vertispan.jsinterop:base:" + Versions.VERTISPAN_JSINTEROP_BASE_VERSION),
+            new DependencyReplacement("com.google.jsinterop:base", "org.kie.j2cl.tools.jsinterop:base:" + Versions.VERTISPAN_JSINTEROP_BASE_VERSION),
+            new DependencyReplacement("org.realityforge.com.google.jsinterop:base", "org.kie.j2cl.tools.jsinterop:base:" + Versions.VERTISPAN_JSINTEROP_BASE_VERSION),
             new DependencyReplacement("com.google.gwt:gwt-user", null),
             new DependencyReplacement("com.google.gwt:gwt-dev", null),
             new DependencyReplacement("com.google.gwt:gwt-servlet", null)

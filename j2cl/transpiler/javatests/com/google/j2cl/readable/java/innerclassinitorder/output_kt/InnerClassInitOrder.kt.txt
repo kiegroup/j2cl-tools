@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package innerclassinitorder
 
@@ -70,14 +70,14 @@ open class InnerClassInitOrder {
 
  @ObjCName("testInnerClassCtors")
  open fun testInnerClassCtors() {
-  val p1: InnerClassInitOrder.P1<*>? = InnerClassInitOrder.P1<Any?>() as InnerClassInitOrder.P1<*>?
-  assert(1 == (p1 as InnerClassInitOrder.P1<Any?>?)!!.value_pp_innerclassinitorder)
+  val p1: InnerClassInitOrder.P1<*>? = InnerClassInitOrder.P1<Any?>()
+  assert(1 == p1!!.value_pp_innerclassinitorder)
   assert(2 == InnerClassInitOrder.P1<Any?>(2).value_pp_innerclassinitorder)
-  val p2: InnerClassInitOrder.P1<*>.P2<*>? = (p1 as InnerClassInitOrder.P1<Any?>?)!!.P2<Any?>() as InnerClassInitOrder.P1<*>.P2<*>?
-  assert(1 == (p2 as InnerClassInitOrder.P1<*>.P2<Any?>?)!!.value_pp_innerclassinitorder)
-  assert(2 == ((p1 as InnerClassInitOrder.P1<Any?>?)!!.P2<Any?>(2) as InnerClassInitOrder.P1</* capture of */ *>.P2<Any?>).value_pp_innerclassinitorder)
-  assert(1 == ((p2 as InnerClassInitOrder.P1<*>.P2<Any?>?)!!.P3<Any?>() as InnerClassInitOrder.P1<*>.P2</* capture of */ *>.P3<Any?>).value_pp_innerclassinitorder)
-  assert(2 == ((p2 as InnerClassInitOrder.P1<*>.P2<Any?>?)!!.P3<Any?>(2) as InnerClassInitOrder.P1<*>.P2</* capture of */ *>.P3<Any?>).value_pp_innerclassinitorder)
+  val p2: InnerClassInitOrder.P1<*>.P2<*>? = p1!!.P2<Any?>() as InnerClassInitOrder.P1<Any?>.P2<Any?>?
+  assert(1 == p2!!.value_pp_innerclassinitorder)
+  assert(2 == p1!!.P2<Any?>(2).value_pp_innerclassinitorder)
+  assert(1 == p2!!.P3<Any?>().value_pp_innerclassinitorder)
+  assert(2 == p2!!.P3<Any?>(2).value_pp_innerclassinitorder)
  }
 
  @ObjCName("testInnerClassInitialization")
@@ -115,15 +115,13 @@ open class InnerClassInitOrder {
   assert(this.number == 1156)
  }
 
- @JvmField
- internal val outer_private_2: InnerClassInitOrder.Outer? = InnerClassInitOrder.Outer(1)
+ private val outer: InnerClassInitOrder.Outer? = InnerClassInitOrder.Outer(1)
 
- @JvmField
- internal val outerIsSuper_private_2: InnerClassInitOrder.Outer.OuterIsSuper? = this.outer_private_2!!.OuterIsSuper(2)
+ private val outerIsSuper: InnerClassInitOrder.Outer.OuterIsSuper? = this.outer!!.OuterIsSuper(2)
 
  @ObjCName("testOuterIsNotSuper")
  open fun testOuterIsNotSuper() {
-  val x: InnerClassInitOrder.Outer.OuterIsNotSuper? = this.outerIsSuper_private_2!!.OuterIsNotSuper()
+  val x: InnerClassInitOrder.Outer.OuterIsNotSuper? = this.outerIsSuper!!.OuterIsNotSuper()
   assert(2 == x!!.getValue())
  }
 
@@ -147,19 +145,19 @@ open class InnerClassInitOrder {
 
  @ObjCName("testSuperDispatch")
  open fun testSuperDispatch() {
-  assert(1 == this.outerIsSuper_private_2!!.checkDispatchFromSub1())
-  assert(1 == this.outerIsSuper_private_2!!.checkDispatchFromSub2())
+  assert(1 == this.outerIsSuper!!.checkDispatchFromSub1())
+  assert(1 == this.outerIsSuper!!.checkDispatchFromSub2())
  }
 
  @ObjCName("testUnqualifiedAlloc")
  open fun testUnqualifiedAlloc() {
-  val x: InnerClassInitOrder.Outer.OuterIsNotSuper? = this.outerIsSuper_private_2!!.unqualifiedAlloc()
+  val x: InnerClassInitOrder.Outer.OuterIsNotSuper? = this.outerIsSuper!!.unqualifiedAlloc()
   assert(2 == x!!.getValue())
  }
 
  @ObjCName("testUnqualifiedSuperCall")
  open fun testUnqualifiedSuperCall() {
-  val x: InnerClassInitOrder.Outer.TestUnqualifiedSuperCall? = this.outerIsSuper_private_2!!.TestUnqualifiedSuperCall()
+  val x: InnerClassInitOrder.Outer.TestUnqualifiedSuperCall? = this.outerIsSuper!!.TestUnqualifiedSuperCall()
   assert(2 == x!!.getValue())
  }
 
@@ -196,12 +194,14 @@ open class InnerClassInitOrder {
   }
  }
 
+ @ObjCName("J2ktInnerclassinitorderInnerClassInitOrder_OuterRefFromSuperCtorBase", exact = true)
  open class OuterRefFromSuperCtorBase {
   internal constructor(o: Any?) {
    o!!.hashCode()
   }
  }
 
+ @ObjCName("J2ktInnerclassinitorderInnerClassInitOrder_OuterRefFromSuperCtorCall", exact = true)
  open inner class OuterRefFromSuperCtorCall constructor(): InnerClassInitOrder.OuterRefFromSuperCtorBase(object : Any() {
   override fun hashCode(): Int {
    this@InnerClassInitOrder.number = this@InnerClassInitOrder.number + 100
@@ -209,6 +209,7 @@ open class InnerClassInitOrder {
   }
  }) {}
 
+ @ObjCName("J2ktInnerclassinitorderInnerClassInitOrder_OuterRefFromThisCtorCall", exact = true)
  open inner class OuterRefFromThisCtorCall: InnerClassInitOrder.OuterRefFromSuperCtorBase {
   constructor(
    @ObjCName("Id") `object`: Any?
@@ -222,6 +223,7 @@ open class InnerClassInitOrder {
   })
  }
 
+ @ObjCName("J2ktInnerclassinitorderInnerClassInitOrder_InnerClass", exact = true)
  open inner class InnerClass internal constructor() {
   init {
    this.callInner_pp_innerclassinitorder()
@@ -242,6 +244,7 @@ open class InnerClassInitOrder {
   }
  }
 
+ @ObjCName("J2ktInnerclassinitorderInnerClassInitOrder_P1", exact = true)
  open class P1<T1> {
   @JvmField
   internal val value_pp_innerclassinitorder: Int
@@ -252,11 +255,13 @@ open class InnerClassInitOrder {
    this.value_pp_innerclassinitorder = i
   }
 
+  @ObjCName("J2ktInnerclassinitorderInnerClassInitOrder_P1_P2", exact = true)
   open inner class P2<T2>: InnerClassInitOrder.P1<T1> {
    internal constructor(): this(1)
 
    internal constructor(i: Int): super(i)
 
+   @ObjCName("J2ktInnerclassinitorderInnerClassInitOrder_P1_P2_P3", exact = true)
    open inner class P3<T3>: InnerClassInitOrder.P1<T1>.P2<T2> {
     internal constructor(): this(1)
 
@@ -265,14 +270,17 @@ open class InnerClassInitOrder {
   }
  }
 
+ @ObjCName("J2ktInnerclassinitorderInnerClassInitOrder_ESOuter", exact = true)
  open class ESOuter internal constructor() {
   @ObjCName("newESInner")
   open fun newESInner(): InnerClassInitOrder.ESOuter.ESInner? {
    return ESInner()
   }
 
+  @ObjCName("J2ktInnerclassinitorderInnerClassInitOrder_ESOuter_ESInner", exact = true)
   open inner class ESInner {
    @JvmField
+   @ObjCName("value_")
    var value: Int = 0
 
    constructor() {
@@ -287,20 +295,24 @@ open class InnerClassInitOrder {
   }
  }
 
+ @ObjCName("J2ktInnerclassinitorderInnerClassInitOrder_ESInnerSubclass", exact = true)
  open class ESInnerSubclass: InnerClassInitOrder.ESOuter.ESInner {
   internal constructor(outer: InnerClassInitOrder.ESOuter?)
 
   internal constructor(value: Int, outer: InnerClassInitOrder.ESOuter?): super(value)
  }
 
+ @ObjCName("J2ktInnerclassinitorderInnerClassInitOrder_ESWGOuter", exact = true)
  open class ESWGOuter<T> internal constructor() {
   @ObjCName("newESWGInner")
   open fun newESWGInner(): InnerClassInitOrder.ESWGOuter<T>.ESWGInner? {
    return ESWGInner()
   }
 
+  @ObjCName("J2ktInnerclassinitorderInnerClassInitOrder_ESWGOuter_ESWGInner", exact = true)
   open inner class ESWGInner {
    @JvmField
+   @ObjCName("value_")
    var value: Int = 0
 
    constructor() {
@@ -315,6 +327,7 @@ open class InnerClassInitOrder {
   }
  }
 
+ @ObjCName("J2ktInnerclassinitorderInnerClassInitOrder_ESWGInnerSubclass", exact = true)
  open class ESWGInnerSubclass: InnerClassInitOrder.ESWGOuter<String?>.ESWGInner {
   internal constructor(outer: InnerClassInitOrder.ESWGOuter<String?>?)
 

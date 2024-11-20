@@ -176,3 +176,43 @@ class Consumer<T> {
 
 // Needs a specializing bridge from accept(String) to super.accept(Object).
 class StringConsumerImpl extends Consumer<String> implements StringConsumer {}
+
+// Repro for b/357041082
+abstract class SpecializingReturnAbstractClass {
+  public abstract Object foo();
+}
+
+interface SpecializingReturnInterface {
+  String foo();
+}
+
+abstract class SpecializingReturnAbstractSubclass extends SpecializingReturnAbstractClass
+    implements SpecializingReturnInterface {
+  // foo(Object) should be a bridge method.
+}
+
+// Repro for b/357043910
+interface InterfaceWithDefaultMethod {
+  default Object foo() {
+    return "A";
+  }
+}
+
+interface InterfaceOverridingDefaultMethod extends InterfaceWithDefaultMethod {
+  String foo();
+}
+
+abstract class DoesNotInheritDefaultMethod1
+    implements InterfaceWithDefaultMethod, InterfaceOverridingDefaultMethod {}
+
+abstract class DoesNotInheritDefaultMethod2
+    implements InterfaceOverridingDefaultMethod, InterfaceWithDefaultMethod {}
+
+class PackagePrivateBridgeSuper<T, U> {
+  <S extends T, R extends PackagePrivateBridgeSuper<S, R>> void m(R r, S s, T t, U u) {}
+}
+
+final class PackagePrivateBridge<V, W> extends PackagePrivateBridgeSuper<V, W> {
+  @Override
+  public <S extends V, R extends PackagePrivateBridgeSuper<S, R>> void m(R r, S s, V v, W w) {}
+}

@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package booleanoperations
 
@@ -50,14 +50,14 @@ open class BooleanOperations {
   r = r.xor(rs)
   r = r.and(rs)
   r = r.or(rs)
-  BooleanOperations.acceptBoolean_private_2(ls == rs)
-  BooleanOperations.acceptBoolean_private_2(ls != rs)
-  BooleanOperations.acceptBoolean_private_2(ls.xor(rs))
-  BooleanOperations.acceptBoolean_private_2(ls.and(rs))
-  BooleanOperations.acceptBoolean_private_2(ls.or(rs))
-  BooleanOperations.acceptBoolean_private_2(ls && rs)
-  BooleanOperations.acceptBoolean_private_2(ls || rs)
-  BooleanOperations.acceptBoolean_private_2(run {
+  BooleanOperations.acceptBoolean(ls == rs)
+  BooleanOperations.acceptBoolean(ls != rs)
+  BooleanOperations.acceptBoolean(ls.xor(rs))
+  BooleanOperations.acceptBoolean(ls.and(rs))
+  BooleanOperations.acceptBoolean(ls.or(rs))
+  BooleanOperations.acceptBoolean(ls && rs)
+  BooleanOperations.acceptBoolean(ls || rs)
+  BooleanOperations.acceptBoolean(run {
    ls = rs
    ls
   })
@@ -98,6 +98,7 @@ open class BooleanOperations {
    @JvmField
    internal var b_pp_booleanoperations: Boolean = false
 
+   @ObjCName("J2ktBooleanoperationsBooleanOperations__1Outer_Inner", exact = true)
    open inner class Inner internal constructor() {
     init {
      this@Outer.b_pp_booleanoperations = this@Outer.b_pp_booleanoperations.or(true)
@@ -116,6 +117,6 @@ open class BooleanOperations {
  @ObjCName("J2ktBooleanoperationsBooleanOperationsCompanion", exact = true)
  companion object {
   @JvmStatic
-  internal fun acceptBoolean_private_2(b: Boolean) {}
+  private fun acceptBoolean(b: Boolean) {}
  }
 }

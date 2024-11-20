@@ -36,6 +36,8 @@ public final class InlineVariablesTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
+    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
+    enableNormalizeExpectedOutput();
     disableCompareJsDoc();
     // NOTE: We are not enabling var checks here, so it is OK to use undeclared variables in
     // these tests. They will be treated as if they were externs.
@@ -340,7 +342,49 @@ public final class InlineVariablesTest extends CompilerTestCase {
                 .addChunk("var a = 2;")
                 .addChunk("var b = a;")
                 .build()),
+        // Note that there's nothing ensuring "var a = 2;" will be loaded before "var b = a;", but
+        // if it's not, this code would be broken uncompiled and we'd get an "a is not defined"
+        // error, so the compiler inlines anyway.
         expected("", "var b = 2;"));
+  }
+
+  @Test
+  public void testInliningAcrossSiblingChunk_assignmentChunkIsFirst() {
+    test(
+        srcs(
+            JSChunkGraphBuilder.forTree()
+                .addChunk("var a;") // root chunk
+                // Two child chunks that both depend on the root chunk. Neither is guaranteed
+                // to be loaded, and if both load the order is not guaranteed.
+                .addChunk("a = true;")
+                .addChunk("function foo() { if (a) console.log('test'); } foo();")
+                .build()),
+        // The expected code has the correct behavior. The compiler doesn't know whether `a = true;`
+        // will execute before the second child chunk or not.
+        expected(
+            "var a;",
+            // root
+            "a = true;", // child 1
+            "(function() { if (a) console.log('test'); })();")); // child 2
+  }
+
+  @Test
+  public void testInliningAcrossSiblingChunk_useChunkIsFirst() {
+    test(
+        srcs(
+            JSChunkGraphBuilder.forTree()
+                .addChunk("var a;") // root chunk
+                // Two child chunks that both depend on the root chunk. Neither is guaranteed
+                // to be loaded, and if both load the order is not guaranteed.
+                .addChunk("function foo() { if (a) console.log('test'); } foo();")
+                .addChunk("a = true;")
+                .build()),
+        // the expected code has the correct behavior. The compiler doesn't know whether `a = true;`
+        // will execute before the first child chunk or not.
+        expected(
+            "var a;", // root
+            "(function() { if (a) console.log('test'); })();", // child 1
+            "a = true;")); // child 2
   }
 
   @Test
@@ -603,7 +647,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
             "", //
             "var x = a;",
             "", // declaration removed
-            "(function cow(){ a++; })();",
+            "(function(){ a++; })();",
             "", // unused `z` removed
             ""));
     test(
@@ -1464,7 +1508,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
             ""),
         lines(
             "", //
-            "var y = function f(x) {};",
+            "var y = function(x) {};",
             "g();",
             "y();y();",
             ""));
@@ -1500,7 +1544,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
             ""),
         lines(
             "", //
-            "var y; y = function f(x) {};",
+            "var y; y = function(x) {};",
             "g();",
             "y();y();",
             ""));
@@ -1675,7 +1719,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
             "};"),
         lines(
             "(/** @constructor */",
-            "function C() {}).prototype.m = function() {",
+            "function() {}).prototype.m = function() {",
             "  if (true) {",
             "    alert(this);",
             "  }",
@@ -1781,7 +1825,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
 
   @Test
   public void testInlineNamedFunction() {
-    test("function f() {} f();", "(function f(){})()");
+    test("function f() {} f();", "(function(){})()");
   }
 
   @Test
@@ -2197,7 +2241,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
         lines(
             "", //
             "function f(x) {",
-            "  x; const g = 2;",
+            "  x;",
             "  {3;}",
             "}"));
   }
@@ -2268,7 +2312,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
             "}",
             "var output = myTag`My name is ${name} ${3}`;"),
         lines(
-            "var output = function myTag(strings, nameExp, numExp) {",
+            "var output = function(strings, nameExp, numExp) {",
             "  var modStr;",
             "  if (numExp > 2) {",
             "    modStr = nameExp + 'Bar'",
@@ -2312,9 +2356,13 @@ public final class InlineVariablesTest extends CompilerTestCase {
             "var x = a;",
             "x; x;"),
         lines(
-            "", //
-            "var [a, b, c] = [1, 2, 3]",
-            "a; a;"));
+            "var a;", //
+            "var b;",
+            "var c;",
+            "[a, b, c] = [1, 2, 3]",
+            "var x = a;", // we fail to inline a into x because normalization adds stub declaration
+            // for a. But that's an acceptable compromise.
+            "x; x;"));
 
     testSame("var x = 1; ({[0]: x} = {});");
   }
@@ -2333,9 +2381,24 @@ public final class InlineVariablesTest extends CompilerTestCase {
 
     String[] expected = {
       "", //
-      "use(function f() {});"
+      "use(function() {});"
     };
 
     test(srcs(srcs), expected(expected));
+  }
+
+  @Test
+  public void testFunctionVarInliningElidesFunctionName() {
+    // When there's only one reference to a function name (e.g. in the rhs of an assignment), we
+    // should elide that function name.
+    test(
+        "function notRecursive(x) { return 4 }; exports.y = notRecursive;",
+        ";exports.y = function(x) { return 4; }");
+
+    // In this case, the function is recursive, so there's more than one reference, we should keep
+    // the name.
+    testSame(
+        "function factorial(x) { if (x == 1) return 1; return x + factorial(x - 1); };"
+            + "exports.x = factorial;");
   }
 }

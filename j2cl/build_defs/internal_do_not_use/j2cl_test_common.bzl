@@ -171,6 +171,7 @@ def j2cl_test_common(
         compile = 0,
         platform = "CLOSURE",
         optimize_wasm = False,
+        use_magic_string_imports = False,
         wasm_defs = {},
         browsers = None,
         extra_defs = [],
@@ -254,8 +255,8 @@ def j2cl_test_common(
             deps = [":%s_testlib" % name],
             tags = tags,
             optimize = optimize_wasm,
+            use_magic_string_imports = use_magic_string_imports,
             defines = wasm_defs,
-            exec_properties = kwargs.get("exec_properties") or {},
         )
 
         deps = [
@@ -282,9 +283,7 @@ def j2cl_test_common(
         "//testing/web/js/browser_services:console_poster.js",
     ]
 
-    if compile:
-        defs.append("--define=goog.ENABLE_DEBUG_LOADER=true")
-    else:
+    if not compile:
         # enforce bundled mode since the debug loader is disabled
         jvm_flags.append("-Djsrunner.net.useJsBundles=true")
 

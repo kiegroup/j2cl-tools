@@ -24,6 +24,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
@@ -44,7 +45,7 @@ import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Creates AST nodes and subtrees.
@@ -62,6 +63,13 @@ import org.jspecify.nullness.Nullable;
  * property 'x' on receiver color 'obj'". This is why many methods accept a StaticScope instead of a
  * Scope: you may pass in a {@link GlobalNamespace} or similar object which contains fully qualified
  * names, to look up colors for an entire property chain.
+ *
+ * <p>IMPORTANT: The methods in this class should never set source reference information. It is the
+ * responsibility of the client code to set the correct source reference information. If we were to
+ * make guesses here, that would lead to client code that sometimes does and sometimes doesn't set
+ * the source reference and force the reader of that code to determine whether the default guess we
+ * have here is really correct or not. It's better to have the decision made explicitly in the
+ * client code.
  *
  * <p>TODO(b/193800507): delete the methods in this class that only work for JSTypes but not colors.
  */
@@ -87,38 +95,43 @@ final class AstFactory {
   }
 
   private final TypeMode typeMode;
+  private final LifeCycleStage lifeCycleStage;
 
-  private AstFactory(JSTypeRegistry registry) {
+  private AstFactory(LifeCycleStage lifeCycleStage, JSTypeRegistry registry) {
+    this.lifeCycleStage = lifeCycleStage;
     this.registry = registry;
     this.colorRegistry = null;
     this.unknownType = getNativeType(JSTypeNative.UNKNOWN_TYPE);
     this.typeMode = TypeMode.JSTYPE;
   }
 
-  private AstFactory() {
+  private AstFactory(LifeCycleStage lifeCycleStage) {
+    this.lifeCycleStage = lifeCycleStage;
     this.registry = null;
     this.colorRegistry = null;
     this.unknownType = null;
     this.typeMode = TypeMode.NONE;
   }
 
-  private AstFactory(ColorRegistry colorRegistry) {
+  private AstFactory(LifeCycleStage lifeCycleStage, ColorRegistry colorRegistry) {
+    this.lifeCycleStage = lifeCycleStage;
     this.registry = null;
     this.colorRegistry = colorRegistry;
     this.unknownType = null;
     this.typeMode = TypeMode.COLOR;
   }
 
-  static AstFactory createFactoryWithoutTypes() {
-    return new AstFactory();
+  static AstFactory createFactoryWithoutTypes(LifeCycleStage lifeCycleStage) {
+    return new AstFactory(lifeCycleStage);
   }
 
-  static AstFactory createFactoryWithTypes(JSTypeRegistry registry) {
-    return new AstFactory(registry);
+  static AstFactory createFactoryWithTypes(LifeCycleStage lifeCycleStage, JSTypeRegistry registry) {
+    return new AstFactory(lifeCycleStage, registry);
   }
 
-  static AstFactory createFactoryWithColors(ColorRegistry colorRegistry) {
-    return new AstFactory(colorRegistry);
+  static AstFactory createFactoryWithColors(
+      LifeCycleStage lifeCycleStage, ColorRegistry colorRegistry) {
+    return new AstFactory(lifeCycleStage, colorRegistry);
   }
 
   /** Does this class instance add types to the nodes it creates? */
@@ -143,6 +156,7 @@ final class AstFactory {
    * AstFactory} to create new nodes.
    */
   Node exprResult(Node expr) {
+    // TODO(bradfordcsmith): This method should not be calling .srcref()
     return IR.exprResult(expr).srcref(expr);
   }
 
@@ -288,7 +302,7 @@ final class AstFactory {
    * @param value value to yield
    */
   Node createYield(Type type, Node value) {
-    Node result = IR.yield(value);
+    Node result = IR.yieldNode(value);
     this.setJSTypeOrColor(type, result);
     return result;
   }
@@ -443,9 +457,20 @@ final class AstFactory {
    * classes but not generic functions annotated @this.
    */
   Node createThisAliasReferenceForEs6Class(String aliasName, Node functionNode) {
-    final Node result = IR.name(aliasName);
-    setJSTypeOrColor(getTypeOfThisForEs6Class(functionNode), result);
-    return result;
+    return createName(aliasName, getTypeOfThisForEs6Class(functionNode));
+  }
+
+  Node createSingleNameDeclaration(Token tokenType, String name, Node value) {
+    switch (tokenType) {
+      case LET:
+        return createSingleLetNameDeclaration(name, value);
+      case VAR:
+        return createSingleVarNameDeclaration(name, value);
+      case CONST:
+        return createSingleConstNameDeclaration(name, value);
+      default:
+        throw new UnsupportedOperationException("Unexpeted token type: " + tokenType);
+    }
   }
 
   /**
@@ -499,7 +524,8 @@ final class AstFactory {
    * <p>e.g. `const variableName = value;`
    */
   Node createSingleConstNameDeclaration(String variableName, Node value) {
-    return IR.constNode(createName(variableName, type(value.getJSType(), value.getColor())), value);
+    Node nameNode = createConstantName(variableName, type(value.getJSType(), value.getColor()));
+    return IR.constNode(nameNode, value);
   }
 
   /**
@@ -540,28 +566,97 @@ final class AstFactory {
     return createSingleConstNameDeclaration(aliasName, createArgumentsReference());
   }
 
+  /**
+   * Creates a name node with the provided type information.
+   *
+   * <p>NOTE: You should use {@link #createName(StaticScope, String)} when creating a new name node
+   * that references an existing variable. That version will look up the declaration of the variable
+   * and ensure this reference to it is correct by adding type information and / or any other
+   * necessary data.
+   *
+   * <p>If you are creating a reference to a variable that won't be visible in the current scope
+   * (e.g. because you are creating a new variable), you can use this method. However, if you've
+   * just created the variable declaration, you could also just clone the {@code NAME} node from it
+   * to create the new reference.
+   *
+   * <p>This method assumes that if the AST is normalized and the name starts with "$jscomp", then
+   * it must be a constant name.
+   */
   Node createName(String name, Type type) {
     Node result = IR.name(name);
     setJSTypeOrColor(type, result);
+    if (lifeCycleStage.isNormalized() && name.startsWith("$jscomp")) {
+      // $jscomp will always be a constant and needs to be marked that way to satisfy
+      // the normalization invariants.
+      // TODO: b/322009741 - Stop depending on lifeCycleStage.isNormalized() and "$jscomp" prefix to
+      // decide constness. The callers must explicitly use `createConstantName` is they need a NAME
+      // node that's set with IS_CONSTANT_NAME prop.
+      result.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    }
     return result;
   }
 
-  Node createName(StaticScope scope, String name) {
+  /** Use this when you know you need to create a constant name for const declarations */
+  Node createConstantName(String name, Type type) {
     Node result = IR.name(name);
-    switch (this.typeMode) {
-      case JSTYPE:
-        JSType definitionType = getVarDefinitionNode(scope, name).getJSType();
-        // TODO(b/149843534): crash instead of defaulting to unknown
-        result.setJSType(definitionType != null ? definitionType : unknownType);
-        break;
-      case COLOR:
-        Color definitionColor = getVarDefinitionNode(scope, name).getColor();
-        // TODO(b/149843534): crash instead of defaulting to unknown
-        result.setColor(definitionColor != null ? definitionColor : StandardColors.UNKNOWN);
-        break;
-      case NONE:
-        break;
+    setJSTypeOrColor(type, result);
+    if (lifeCycleStage.isNormalized()) {
+      // TODO: b/322009741 - Stop depending on lifeCycleStage.isNormalized() to decide constness
+      result.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }
+    return result;
+  }
+
+  Node createName(@Nullable StaticScope scope, String name) {
+    final Node result = IR.name(name);
+
+    if (lifeCycleStage.isNormalized() || !typeMode.equals(TypeMode.NONE)) {
+      // We need a scope to maintain normalization and / or propagate type information
+      checkNotNull(
+          scope,
+          "A scope is required [lifeCycleStage: %s, typeMode: %s]",
+          lifeCycleStage,
+          typeMode);
+      final StaticSlot var = scope.getSlot(name);
+      if (var == null) {
+        // TODO(bradfordcsmith): Why is this special exception needed?
+        // There are a few cases where `$jscomp` isn't found in the code (implying that runtime
+        // library injection somehow didn't happen), but we do perform transpilations which require
+        // it to exist. Can we fix that?
+        // This only happens when type checking is not being done.
+        checkState(
+            name.equals("$jscomp") && typeMode.equals(TypeMode.NONE),
+            "Missing var %s in scope %s",
+            name,
+            scope);
+      } else {
+        final StaticRef declaration =
+            checkNotNull(
+                var.getDeclaration(), "Cannot find type for var with missing declaration %s", var);
+        final Node varDefinitionNode =
+            checkNotNull(declaration.getNode(), "Missing node for declaration %s", declaration);
+
+        // Normalization requires that all references to a constant variable have this property.
+        if (varDefinitionNode.getBooleanProp(Node.IS_CONSTANT_NAME)) {
+          result.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+        }
+        switch (typeMode) {
+          case JSTYPE:
+            JSType definitionType = varDefinitionNode.getJSType();
+            // TODO(b/149843534): crash instead of defaulting to unknown
+            result.setJSType(definitionType != null ? definitionType : unknownType);
+            break;
+          case COLOR:
+            Color definitionColor = varDefinitionNode.getColor();
+            // TODO(b/149843534): crash instead of defaulting to unknown
+            result.setColor(definitionColor != null ? definitionColor : StandardColors.UNKNOWN);
+            break;
+          case NONE:
+            break;
+        }
+      }
+    }
+
     return result;
   }
 
@@ -759,6 +854,42 @@ final class AstFactory {
     return result;
   }
 
+  Node createStartOptChainGetprop(Node receiver, String propertyName, Type type) {
+    Node result = IR.startOptChainGetprop(receiver, propertyName);
+    setJSTypeOrColor(type, result);
+    return result;
+  }
+
+  Node createContinueOptChainGetprop(Node receiver, String propertyName, Type type) {
+    Node result = IR.continueOptChainGetprop(receiver, propertyName);
+    setJSTypeOrColor(type, result);
+    return result;
+  }
+
+  Node createStartOptChainGetelem(Node receiver, Node elem, Type type) {
+    Node result = IR.startOptChainGetelem(receiver, elem);
+    setJSTypeOrColor(type, result);
+    return result;
+  }
+
+  Node createContinueOptChainGetelem(Node receiver, Node elem, Type type) {
+    Node result = IR.continueOptChainGetelem(receiver, elem);
+    setJSTypeOrColor(type, result);
+    return result;
+  }
+
+  Node createStartOptChainCall(Node receiver, Type type, Node... args) {
+    Node result = IR.startOptChainCall(receiver, args);
+    setJSTypeOrColor(type, result);
+    return result;
+  }
+
+  Node createContinueOptChainCall(Node receiver, Type type, Node... args) {
+    Node result = IR.continueOptChainCall(receiver, args);
+    setJSTypeOrColor(type, result);
+    return result;
+  }
+
   Node createGetElem(Node receiver, Node key) {
     Node result = IR.getelem(receiver, key);
     // TODO(bradfordcsmith): When receiver is an Array<T> or an Object<K, V>, use the template
@@ -890,6 +1021,18 @@ final class AstFactory {
   Node createLessThan(Node left, Node right) {
     Node result = IR.lt(left, right);
     setJSTypeOrColor(type(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN), result);
+    return result;
+  }
+
+  Node createBitwiseAnd(Node left, Node right) {
+    Node result = IR.bitwiseAnd(left, right);
+    setJSTypeOrColor(type(JSTypeNative.NUMBER_TYPE, StandardColors.NUMBER), result);
+    return result;
+  }
+
+  Node createRightShift(Node left, Node right) {
+    Node result = IR.rightShift(left, right);
+    setJSTypeOrColor(type(JSTypeNative.NUMBER_TYPE, StandardColors.NUMBER), result);
     return result;
   }
 
@@ -1195,7 +1338,7 @@ final class AstFactory {
             iterable
                 .getJSType()
                 .getTemplateTypeMap()
-                .getResolvedTemplateType(registry.getIterableTemplate());
+                .getResolvedTemplateType(registry.getIterableValueTemplate());
         JSType makeIteratorType = makeIteratorName.getJSType();
         // e.g. replace
         //   function(Iterable<T>): Iterator<T>
@@ -1214,7 +1357,9 @@ final class AstFactory {
       default:
         throw new AssertionError();
     }
-    return createCall(makeIteratorName, type, iterable);
+    Node call = createCall(makeIteratorName, type, iterable);
+    call.putBooleanProp(Node.FREE_CALL, true);
+    return call;
   }
 
   Node createJscompArrayFromIteratorCall(Node iterator, StaticScope scope) {
@@ -1249,7 +1394,9 @@ final class AstFactory {
       default:
         throw new AssertionError();
     }
-    return createCall(makeIteratorName, resultType, iterator);
+    Node call = createCall(makeIteratorName, resultType, iterator);
+    call.putBooleanProp(Node.FREE_CALL, true);
+    return call;
   }
 
   Node createJscompArrayFromIterableCall(Node iterable, StaticScope scope) {
@@ -1266,7 +1413,7 @@ final class AstFactory {
             iterable
                 .getJSType()
                 .getTemplateTypeMap()
-                .getResolvedTemplateType(registry.getIterableTemplate());
+                .getResolvedTemplateType(registry.getIterableValueTemplate());
         JSType makeIterableType = makeIterableName.getJSType();
         // e.g. replace
         //   function(Iterable<T>): Array<T>
@@ -1286,7 +1433,9 @@ final class AstFactory {
       default:
         throw new AssertionError();
     }
-    return createCall(makeIterableName, resultType, iterable);
+    Node call = createCall(makeIterableName, resultType, iterable);
+    call.putBooleanProp(Node.FREE_CALL, true);
+    return call;
   }
 
   /**
@@ -1331,7 +1480,9 @@ final class AstFactory {
       default:
         throw new AssertionError();
     }
-    return createCall(makeIteratorAsyncName, resultType, iterable);
+    Node call = createCall(makeIteratorAsyncName, resultType, iterable);
+    call.putBooleanProp(Node.FREE_CALL, true);
+    return call;
   }
 
   private JSType replaceTemplate(JSType templatedType, ImmutableList<JSType> templateTypes) {
@@ -1399,22 +1550,16 @@ final class AstFactory {
     } else if (isAddingColors()) {
       resultType = type(colorRegistry.get(StandardColors.PROMISE_ID));
     }
-    return createCall(jscompDotAsyncExecutePromiseGeneratorFunction, resultType, generatorFunction);
+    Node call =
+        createCall(jscompDotAsyncExecutePromiseGeneratorFunction, resultType, generatorFunction);
+    call.putBooleanProp(Node.FREE_CALL, true);
+    return call;
   }
 
   private JSType getNativeType(JSTypeNative nativeType) {
     checkNotNull(registry, "registry is null");
     return checkNotNull(
         registry.getNativeType(nativeType), "native type not found: %s", nativeType);
-  }
-
-  private Node getVarDefinitionNode(StaticScope scope, String name) {
-    StaticSlot var = checkNotNull(scope.getSlot(name), "Missing var %s in scope %s", name, scope);
-
-    StaticRef declaration =
-        checkNotNull(
-            var.getDeclaration(), "Cannot find type for var with missing declaration %s", var);
-    return checkNotNull(declaration.getNode(), "Missing node for declaration %s", declaration);
   }
 
   private JSType getJsTypeForProperty(Node receiver, String propertyName) {
@@ -1476,12 +1621,16 @@ final class AstFactory {
 
     @Override
     public JSType getJSType(JSTypeRegistry registry) {
-      return checkNotNull(this.n.getJSType(), n);
+      JSType jstype = this.n.getJSType();
+      // TODO(b/149843534): crash instead of defaulting to unknown
+      return jstype != null ? jstype : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
 
     @Override
     public Color getColor(ColorRegistry registry) {
-      return checkNotNull(this.n.getColor(), n);
+      Color color = this.n.getColor();
+      // TODO(b/149843534): crash instead of defaulting to unknown
+      return color != null ? color : StandardColors.UNKNOWN;
     }
   }
 

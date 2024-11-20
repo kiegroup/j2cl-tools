@@ -75,7 +75,7 @@ public class ImplementInstanceOfs extends NormalizationPass {
               type.getTypeDescriptor(),
               // TODO(b/79389970): remove cast after b/79389970 is handled in Closure.
               JsDocCastExpression.newBuilder()
-                  .setCastType(TypeDescriptors.get().nativeFunction)
+                  .setCastTypeDescriptor(TypeDescriptors.get().nativeFunction)
                   .setExpression(new JavaScriptConstructorReference(type.getDeclaration()))
                   .build()));
     } else {
@@ -153,8 +153,7 @@ public class ImplementInstanceOfs extends NormalizationPass {
     // instance instanceof Type.
     return InstanceOfExpression.newBuilder()
         .setExpression(instance.createReference())
-        .setTestTypeDescriptor(
-            type.getUnderlyingTypeDeclaration().toUnparameterizedTypeDescriptor())
+        .setTestTypeDescriptor(type.getUnderlyingTypeDeclaration().toDescriptor())
         .build();
   }
 
@@ -195,7 +194,7 @@ public class ImplementInstanceOfs extends NormalizationPass {
     return RuntimeMethods.createEnumsMethodCall(
         "isInstanceOf",
         instance.createReference(),
-        typeDeclaration.toUnparameterizedTypeDescriptor().getMetadataConstructorReference());
+        typeDeclaration.toDescriptor().getMetadataConstructorReference());
   }
 
   /**

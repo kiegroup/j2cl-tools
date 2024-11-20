@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * RenameProperties renames properties (including methods) of all JavaScript
@@ -95,12 +95,12 @@ class RenameProperties implements CompilerPass {
   private static final Comparator<Property> FREQUENCY_COMPARATOR =
       (Property p1, Property p2) -> {
 
-        /** First a frequently used names would always be picked first. */
+        /* First a frequently used names would always be picked first. */
         if (p1.numOccurrences != p2.numOccurrences) {
           return p2.numOccurrences - p1.numOccurrences;
         }
 
-        /** Finally, for determinism, we compare them based on the old name. */
+        /* Finally, for determinism, we compare them based on the old name. */
         return p1.oldName.compareTo(p2.oldName);
       };
 
@@ -149,7 +149,7 @@ class RenameProperties implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new ProcessProperties());
 
     Set<String> reservedNames =
-        Sets.newHashSetWithExpectedSize(externedNames.size() + quotedNames.size());
+        Sets.newLinkedHashSetWithExpectedSize(externedNames.size() + quotedNames.size());
     reservedNames.addAll(externedNames);
     reservedNames.addAll(quotedNames);
 

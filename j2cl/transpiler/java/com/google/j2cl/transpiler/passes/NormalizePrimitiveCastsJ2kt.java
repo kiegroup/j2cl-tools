@@ -21,7 +21,6 @@ import static com.google.j2cl.transpiler.ast.TypeDescriptors.isPrimitiveChar;
 import static com.google.j2cl.transpiler.ast.TypeDescriptors.isPrimitiveFloatOrDouble;
 import static com.google.j2cl.transpiler.ast.TypeDescriptors.isPrimitiveInt;
 
-import com.google.common.collect.ImmutableList;
 import com.google.j2cl.transpiler.ast.AbstractRewriter;
 import com.google.j2cl.transpiler.ast.CastExpression;
 import com.google.j2cl.transpiler.ast.CompilationUnit;
@@ -89,14 +88,11 @@ public class NormalizePrimitiveCastsJ2kt extends NormalizationPass {
   }
 
   private static final DeclaredTypeDescriptor KOTLIN_BASIC_TYPE =
-      DeclaredTypeDescriptor.newBuilder()
-          .setTypeDeclaration(
-              TypeDeclaration.newBuilder()
-                  .setKind(Kind.CLASS)
-                  .setPackageName("j2kt")
-                  .setClassComponents(ImmutableList.of("BasicType"))
-                  .build())
-          .build();
+      TypeDeclaration.newBuilder()
+          .setKind(Kind.CLASS)
+          .setQualifiedSourceName("j2kt.BasicType")
+          .build()
+          .toDescriptor();
 
   private static Expression convertCharCode(Expression expression) {
     FieldDescriptor castToFieldDescriptor =

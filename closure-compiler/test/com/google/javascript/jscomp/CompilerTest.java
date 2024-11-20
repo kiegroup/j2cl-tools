@@ -51,6 +51,7 @@ import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -66,7 +67,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -145,6 +146,27 @@ public final class CompilerTest {
     compiler.init(externs, ImmutableList.<SourceFile>of(), options);
     compiler.parseInputs();
     assertThat(compiler.toSource()).isEqualTo("/** @externs */ function alert(x){};");
+  }
+
+  @Test
+  public void testClosureUnawareCodeMarks() {
+    ImmutableList<SourceFile> thirdPartyCode =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "closure_unaware_code.js",
+                "/** @fileoverview @closureUnaware */ function alert(x) {}"));
+    CompilerOptions options = new CompilerOptions();
+    options.setPreserveTypeAnnotations(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    Compiler compiler = new Compiler();
+    compiler.init(ImmutableList.<SourceFile>of(), thirdPartyCode, options);
+    compiler.parseInputs();
+    assertThat(compiler.toSource()).isEqualTo("/** @closureUnaware */ function alert(x){};");
+    assertThat(compiler.getJsRoot().getChildCount()).isEqualTo(1);
+    StaticSourceFile staticSourceFile =
+        compiler.getJsRoot().getChildAtIndex(0).getStaticSourceFile();
+    assertThat(staticSourceFile.getName()).isEqualTo("closure_unaware_code.js");
+    assertThat(staticSourceFile.isClosureUnawareCode()).isTrue();
   }
 
   @Test
@@ -535,14 +557,14 @@ public final class CompilerTest {
 
   @Test
   public void testRebuildInputsFromModule() {
-    ImmutableList<JSChunk> modules = ImmutableList.of(new JSChunk("m1"), new JSChunk("m2"));
-    modules.get(0).add(SourceFile.fromCode("in1", ""));
-    modules.get(1).add(SourceFile.fromCode("in2", ""));
+    ImmutableList<JSChunk> chunks = ImmutableList.of(new JSChunk("m1"), new JSChunk("m2"));
+    chunks.get(0).add(SourceFile.fromCode("in1", ""));
+    chunks.get(1).add(SourceFile.fromCode("in2", ""));
 
     Compiler compiler = new Compiler();
-    compiler.initModules(ImmutableList.<SourceFile>of(), modules, new CompilerOptions());
+    compiler.initChunks(ImmutableList.<SourceFile>of(), chunks, new CompilerOptions());
 
-    modules.get(1).add(SourceFile.fromCode("in3", ""));
+    chunks.get(1).add(SourceFile.fromCode("in3", ""));
     assertThat(compiler.getInput(new InputId("in3"))).isNull();
     compiler.rebuildInputsFromModules();
     assertThat(compiler.getInput(new InputId("in3"))).isNotNull();
@@ -1553,7 +1575,7 @@ public final class CompilerTest {
     compiler.parse();
     compiler.check();
     final CompilerInput onlyInputBeforeSave =
-        getOnlyElement(compiler.getModuleGraph().getAllInputs());
+        getOnlyElement(compiler.getChunkGraph().getAllInputs());
     // this is the special name used for a single fill file when there are no inputs
     assertThat(onlyInputBeforeSave.getName()).isEqualTo("$strong$$fillFile");
 
@@ -1565,7 +1587,7 @@ public final class CompilerTest {
 
     // The fillFile is still listed as the only input
     final CompilerInput onlyInputAfterRestore =
-        getOnlyElement(compiler.getModuleGraph().getAllInputs());
+        getOnlyElement(compiler.getChunkGraph().getAllInputs());
     assertThat(onlyInputAfterRestore.getName()).isEqualTo("$strong$$fillFile");
   }
 
@@ -1587,53 +1609,6 @@ public final class CompilerTest {
     compiler.saveState(outputStream);
     outputStream.close();
     return outputStream.toByteArray();
-  }
-
-  @Test
-  public void testCheckSaveRestoreRecoverableJsAst() throws Exception {
-    Compiler compiler = new Compiler(new TestErrorManager());
-
-    CompilerOptions options = new CompilerOptions();
-    options.setAssumeForwardDeclaredForMissingTypes(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setCheckTypes(true);
-    options.setStrictModeInput(true);
-    options.setEmitUseStrict(true);
-    options.setPreserveDetailedSourceInfo(true);
-    options.setCheckTypes(true);
-
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    ImmutableList<SourceFile> externs =
-        ImmutableList.of(
-            SourceFile.fromCode(
-                "externs.js",
-                Joiner.on('\n').join("", "var console = {};", " console.log = function() {};")));
-    JSChunk m = new JSChunk("m");
-    SourceFile inputSourceFile =
-        SourceFile.fromCode(
-            "input.js",
-            Joiner.on('\n').join("", "function f() { return 2; }", "console.log(f());"));
-    JsAst realAst = new JsAst(inputSourceFile);
-    m.add(new CompilerInput(new RecoverableJsAst(realAst, /* reportParseErrors = */ true)));
-    compiler.initModules(externs, ImmutableList.of(m), options);
-
-    compiler.parse();
-    compiler.check();
-
-    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    compiler.saveState(byteArrayOutputStream);
-    byteArrayOutputStream.close();
-
-    compiler = new Compiler(new TestErrorManager());
-    m = new JSChunk("m");
-    m.add(new CompilerInput(new RecoverableJsAst(realAst, /* reportParseErrors = */ true)));
-    compiler.initModules(externs, ImmutableList.of(m), options);
-    restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
-
-    compiler.performTranspilationAndOptimizations();
-    String source = compiler.toSource();
-    assertThat(source).isEqualTo("'use strict';console.log(2);");
   }
 
   @Test
@@ -2565,10 +2540,10 @@ public final class CompilerTest {
     compiler.check();
     compiler.performTranspilationAndOptimizations();
 
-    assertThat(compiler.getModuleGraph().getChunkCount()).isEqualTo(2);
-    assertThat(Iterables.get(compiler.getModuleGraph().getAllChunks(), 0).getName())
+    assertThat(compiler.getChunkGraph().getChunkCount()).isEqualTo(2);
+    assertThat(Iterables.get(compiler.getChunkGraph().getAllChunks(), 0).getName())
         .isEqualTo(JSChunk.STRONG_CHUNK_NAME);
-    assertThat(Iterables.get(compiler.getModuleGraph().getAllChunks(), 1).getName())
+    assertThat(Iterables.get(compiler.getChunkGraph().getAllChunks(), 1).getName())
         .isEqualTo(JSChunk.WEAK_CHUNK_NAME);
 
     assertThat(compiler.toSource()).isEqualTo("var a={};a.b={};var d={};");
@@ -2588,7 +2563,7 @@ public final class CompilerTest {
 
     Compiler compiler = new Compiler();
 
-    compiler.initModules(ImmutableList.of(), ImmutableList.of(m1, m2), options);
+    compiler.initChunks(ImmutableList.of(), ImmutableList.of(m1, m2), options);
 
     compiler.parse();
     compiler.check();
@@ -2605,15 +2580,15 @@ public final class CompilerTest {
       restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
 
       // restoring state creates new JSModule objects. the old ones are stale.
-      m1 = compiler.getModuleGraph().getChunkByName("m1");
-      m2 = compiler.getModuleGraph().getChunkByName("m2");
+      m1 = compiler.getChunkGraph().getChunkByName("m1");
+      m2 = compiler.getChunkGraph().getChunkByName("m2");
     }
 
     compiler.performTranspilationAndOptimizations();
 
-    assertThat(compiler.getModuleGraph().getChunkCount()).isEqualTo(3);
+    assertThat(compiler.getChunkGraph().getChunkCount()).isEqualTo(3);
 
-    JSChunk weakModule = compiler.getModuleGraph().getChunkByName("$weak$");
+    JSChunk weakModule = compiler.getChunkGraph().getChunkByName("$weak$");
     ScriptNodeLicensesOnlyTracker lt = new ScriptNodeLicensesOnlyTracker(compiler);
     assertThat(weakModule).isNotNull();
 
@@ -2687,15 +2662,15 @@ public final class CompilerTest {
 
     Compiler compiler = new Compiler();
 
-    compiler.initModules(ImmutableList.of(), ImmutableList.of(strong, weak), options);
+    compiler.initChunks(ImmutableList.of(), ImmutableList.of(strong, weak), options);
 
     compiler.parse();
     compiler.check();
     compiler.performTranspilationAndOptimizations();
 
-    assertThat(compiler.getModuleGraph().getChunkCount()).isEqualTo(2);
-    assertThat(Iterables.get(compiler.getModuleGraph().getAllChunks(), 0).getName()).isEqualTo("m");
-    assertThat(Iterables.get(compiler.getModuleGraph().getAllChunks(), 1).getName())
+    assertThat(compiler.getChunkGraph().getChunkCount()).isEqualTo(2);
+    assertThat(Iterables.get(compiler.getChunkGraph().getAllChunks(), 0).getName()).isEqualTo("m");
+    assertThat(Iterables.get(compiler.getChunkGraph().getAllChunks(), 1).getName())
         .isEqualTo(JSChunk.WEAK_CHUNK_NAME);
 
     assertThat(compiler.toSource()).isEqualTo("var a={};");
@@ -2718,8 +2693,7 @@ public final class CompilerTest {
     RuntimeException e =
         assertThrows(
             RuntimeException.class,
-            () ->
-                compiler.initModules(ImmutableList.of(), ImmutableList.of(strong, weak), options));
+            () -> compiler.initChunks(ImmutableList.of(), ImmutableList.of(strong, weak), options));
     assertThat(e)
         .hasMessageThat()
         .contains("Found these strong sources in the weak chunk:\n  weak_but_actually_strong.js");
@@ -2741,8 +2715,7 @@ public final class CompilerTest {
     RuntimeException e =
         assertThrows(
             RuntimeException.class,
-            () ->
-                compiler.initModules(ImmutableList.of(), ImmutableList.of(strong, weak), options));
+            () -> compiler.initChunks(ImmutableList.of(), ImmutableList.of(strong, weak), options));
     assertThat(e)
         .hasMessageThat()
         .contains(
@@ -2763,8 +2736,7 @@ public final class CompilerTest {
     RuntimeException e =
         assertThrows(
             RuntimeException.class,
-            () ->
-                compiler.initModules(ImmutableList.of(), ImmutableList.of(m1, m2, weak), options));
+            () -> compiler.initChunks(ImmutableList.of(), ImmutableList.of(m1, m2, weak), options));
     assertThat(e)
         .hasMessageThat()
         .isEqualTo("A weak chunk already exists but it does not depend on every other chunk.");
@@ -3160,8 +3132,6 @@ public final class CompilerTest {
           var unused = compiler.getTypedAstDeserializer(file2);
         });
 
-    compiler.parse();
-
     Node script = compiler.getRoot().getSecondChild().getFirstChild();
     assertThat(script.getStaticSourceFile()).isSameInstanceAs(file1);
   }
@@ -3174,12 +3144,16 @@ public final class CompilerTest {
     Compiler compiler = new Compiler();
     CompilerOptions compilerOptions = new CompilerOptions();
     compiler.initOptions(compilerOptions);
-    // When
-    compiler.initWithTypedAstFilesystem(
-        ImmutableList.of(), ImmutableList.of(file), compilerOptions, typedAstListStream);
 
-    // Then
-    Exception e = assertThrows(Exception.class, compiler::parse);
+    Exception e =
+        assertThrows(
+            Exception.class,
+            () ->
+                compiler.initWithTypedAstFilesystem(
+                    ImmutableList.of(),
+                    ImmutableList.of(file),
+                    compilerOptions,
+                    typedAstListStream));
     assertThat(e).hasMessageThat().containsMatch("missing .* test.js");
   }
 
@@ -3227,7 +3201,6 @@ public final class CompilerTest {
     // When
     compiler.initWithTypedAstFilesystem(
         ImmutableList.of(), ImmutableList.of(file), compilerOptions, typedAstListStream);
-    compiler.parse();
 
     // Then
     Node script = compiler.getRoot().getSecondChild().getFirstChild();
@@ -3317,7 +3290,7 @@ public final class CompilerTest {
   @Test
   public void testTypedAstFilesystem_doesNotParseWeakFileTypedAstContents() {
     // Given
-    SourceFile weakFile = SourceFile.fromCode("weak.js", "0", SourceFile.SourceKind.WEAK);
+    SourceFile weakFile = SourceFile.fromCode("weak.js", "0", SourceKind.WEAK);
     SourceFile strongFile = SourceFile.fromCode("strong.js", "1");
     Compiler compiler = new Compiler();
     CompilerOptions compilerOptions = new CompilerOptions();
@@ -3372,17 +3345,16 @@ public final class CompilerTest {
         ImmutableList.of(weakFile, strongFile),
         compilerOptions,
         typedAstListStream);
-    compiler.parse();
     Node weakScript =
         compiler
-            .getModuleGraph()
+            .getChunkGraph()
             .getChunkByName(JSChunk.WEAK_CHUNK_NAME)
             .getInputs()
             .get(0)
             .getAstRoot(compiler);
     Node strongScript =
         compiler
-            .getModuleGraph()
+            .getChunkGraph()
             .getChunkByName(JSChunk.STRONG_CHUNK_NAME)
             .getInputs()
             .get(0)
@@ -3398,7 +3370,7 @@ public final class CompilerTest {
   @Test
   public void testTypedAstFilesystemWithModules_doesNotParseWeakFileTypedAstContents() {
     // Given
-    SourceFile weakFile = SourceFile.fromCode("weak.js", "0", SourceFile.SourceKind.WEAK);
+    SourceFile weakFile = SourceFile.fromCode("weak.js", "0", SourceKind.WEAK);
     SourceFile strongFile = SourceFile.fromCode("strong.js", "1");
     Compiler compiler = new Compiler();
     CompilerOptions compilerOptions = new CompilerOptions();
@@ -3453,7 +3425,7 @@ public final class CompilerTest {
             TypedAst.List.newBuilder().addTypedAsts(typedAst).build().toByteArray());
 
     // When
-    compiler.initModulesWithTypedAstFilesystem(
+    compiler.initChunksWithTypedAstFilesystem(
         ImmutableList.of(),
         ImmutableList.of(strongChunk, weakChunk),
         compilerOptions,

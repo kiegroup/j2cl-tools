@@ -52,7 +52,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -62,7 +61,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -370,7 +369,8 @@ public final class CommandLineRunnerTest {
 
     // An exit code of -1 indicates that the command line options were bad
     assertThat(exitCodes).containsExactly(-1);
-    assertThat(errReader.toString()).contains("Unknown diagnostic group: 'unknownDiagnosticGroup'");
+    assertThat(errReader.toString(UTF_8))
+        .contains("Unknown diagnostic group: 'unknownDiagnosticGroup'");
   }
 
   @Test
@@ -941,7 +941,7 @@ public final class CommandLineRunnerTest {
             + "}",
         "function f(b) {"
             + " var a;"
-            + " return ((a=b.id) && (a=parseInt(a.substr(1)))) && 0<a;"
+            + " return ((a=b.id) && (a=parseInt(a.substr(1)))) && a>0;"
             + "}");
   }
 
@@ -956,9 +956,8 @@ public final class CommandLineRunnerTest {
   public void testIssue504() {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
     test(
-        "void function() { alert('hi'); }();",
-        "alert('hi');void 0",
-        CheckSideEffects.USELESS_CODE_ERROR);
+        "void function() { alert('hi'); }();", //
+        "alert('hi');");
   }
 
   @Test
@@ -1361,6 +1360,40 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
+  public void testOnlyClosureDependenciesOneEntryPoint_pruneAllowNoEntryPoints() {
+    args.add("--dependency_mode=PRUNE_ALLOW_NO_ENTRY_POINTS");
+    args.add("--entry_point=goog:beer");
+    test(
+        new String[] {
+          "goog.require('beer'); var beerRequired = 1;",
+          "goog.provide('beer');\ngoog.require('hops');\nvar beerProvided = 1;",
+          "goog.provide('hops'); var hopsProvided = 1;",
+          "goog.provide('scotch'); var scotchProvided = 1;",
+          "goog.require('scotch');\nvar includeFileWithoutProvides = 1;",
+          "/** This is base.js @provideGoog */ var COMPILED = false;",
+        },
+        new String[] {
+          "var COMPILED = !1;",
+          "var hops = {}, hopsProvided = 1;",
+          "var beer = {}, beerProvided = 1;"
+        });
+  }
+
+  @Test
+  public void testPruneAllowNoEntryPoints_noEntryPointsPrunesEverything() {
+    args.add("--dependency_mode=PRUNE_ALLOW_NO_ENTRY_POINTS");
+    test(
+        new String[] {
+          "goog.require('beer'); var beerRequired = 1;",
+          "goog.provide('beer');\ngoog.require('hops');\nvar beerProvided = 1;",
+          "goog.provide('hops'); var hopsProvided = 1;",
+          "goog.provide('scotch'); var scotchProvided = 1;",
+          "goog.require('scotch');\nvar includeFileWithoutProvides = 1;",
+        },
+        new String[] {});
+  }
+
+  @Test
   public void testSourceMapExpansion1() {
     args.add("--js_output_file");
     args.add("/path/to/out.js");
@@ -1388,7 +1421,7 @@ public final class CommandLineRunnerTest {
     testSame(new String[] {"var x = 3;", "var y = 5;"});
     assertThat(
             lastCommandLineRunner.expandSourceMapPath(
-                lastCompiler.getOptions(), lastCompiler.getModuleGraph().getRootChunk()))
+                lastCompiler.getOptions(), lastCompiler.getChunkGraph().getRootChunk()))
         .isEqualTo("foo_m0.js.map");
   }
 
@@ -1673,7 +1706,7 @@ public final class CommandLineRunnerTest {
   public void testSymlink() throws IOException {
     FlagEntry<JsSourceType> jsFile1 = createJsFile("test1", "var a;");
     Path symlink1 = Files.createTempDir().toPath().resolve("symlink1");
-    Path jscompTempDir = Paths.get(jsFile1.getValue()).getParent();
+    Path jscompTempDir = Path.of(jsFile1.getValue()).getParent();
     java.nio.file.Files.createSymbolicLink(symlink1, jscompTempDir);
     compileFiles("var a;", new FlagEntry<>(JsSourceType.JS, symlink1.toString()));
   }
@@ -1700,9 +1733,9 @@ public final class CommandLineRunnerTest {
 
     StringBuilder builder = new StringBuilder();
     ScriptNodeLicensesOnlyTracker licenseTracker = new ScriptNodeLicensesOnlyTracker(lastCompiler);
-    JSChunk module = lastCompiler.getModuleGraph().getRootChunk();
-    String filename = lastCommandLineRunner.getModuleOutputFileName(module);
-    lastCommandLineRunner.writeModuleOutput(filename, builder, licenseTracker, module);
+    JSChunk chunk = lastCompiler.getChunkGraph().getRootChunk();
+    String filename = lastCommandLineRunner.getChunkOutputFileName(chunk);
+    lastCommandLineRunner.writeModuleOutput(filename, builder, licenseTracker, chunk);
     assertThat(builder.toString()).isEqualTo("var x=3; // m0.js\n");
   }
 
@@ -1714,9 +1747,9 @@ public final class CommandLineRunnerTest {
 
     StringBuilder builder = new StringBuilder();
     ScriptNodeLicensesOnlyTracker licenseTracker = new ScriptNodeLicensesOnlyTracker(lastCompiler);
-    JSChunk module = lastCompiler.getModuleGraph().getRootChunk();
-    String filename = lastCommandLineRunner.getModuleOutputFileName(module);
-    lastCommandLineRunner.writeModuleOutput(filename, builder, licenseTracker, module);
+    JSChunk chunk = lastCompiler.getChunkGraph().getRootChunk();
+    String filename = lastCommandLineRunner.getChunkOutputFileName(chunk);
+    lastCommandLineRunner.writeModuleOutput(filename, builder, licenseTracker, chunk);
     assertThat(builder.toString()).isEqualTo("var x=3;\n//# SourceMappingUrl=m0.js.map\n");
   }
 
@@ -1759,8 +1792,8 @@ public final class CommandLineRunnerTest {
     testSame(new String[] {"var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
 
     StringBuilder builder = new StringBuilder();
-    lastCommandLineRunner.printModuleGraphManifestOrBundleTo(
-        lastCompiler.getModuleGraph(), builder, true, null);
+    lastCommandLineRunner.printChunkGraphManifestOrBundleTo(
+        lastCompiler.getChunkGraph(), builder, true, null);
     assertThat(builder.toString())
         .isEqualTo(
             Joiner.on('\n')
@@ -1787,8 +1820,8 @@ public final class CommandLineRunnerTest {
     testSame(new String[] {"var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
 
     StringBuilder builder = new StringBuilder();
-    lastCommandLineRunner.printModuleGraphManifestOrBundleTo(
-        lastCompiler.getModuleGraph(), builder, true, null);
+    lastCommandLineRunner.printChunkGraphManifestOrBundleTo(
+        lastCompiler.getChunkGraph(), builder, true, null);
     assertThat(builder.toString())
         .isEqualTo(
             Joiner.on('\n')
@@ -1810,12 +1843,12 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
-  public void testOutputModuleGraphJson() throws Exception {
+  public void testOutputChunkGraphJson() throws Exception {
     useModules = ModulePattern.STAR;
     testSame(new String[] {"var x = 3;", "var y = 5;", "var z = 7;", "var a = 9;"});
 
     StringBuilder builder = new StringBuilder();
-    lastCommandLineRunner.printModuleGraphJsonTo(builder);
+    lastCommandLineRunner.printChunkGraphJsonTo(builder);
     assertThat(builder.toString()).contains("transitive-dependencies");
   }
 
@@ -2062,7 +2095,7 @@ public final class CommandLineRunnerTest {
     setFilename(0, "foo/bar.js");
     String expected = "var module$foo$bar={default:{}};module$foo$bar.default.test=1;";
     test("exports.test = 1", expected);
-    assertThat(outReader.toString()).isEqualTo(expected + "\n");
+    assertThat(outReader.toString(UTF_8)).isEqualTo(expected + "\n");
   }
 
   @Test
@@ -2073,7 +2106,7 @@ public final class CommandLineRunnerTest {
     setFilename(0, "foo/bar.js");
     test("exports.test = 1", "var module$foo$bar={default: {}}; module$foo$bar.default.test = 1;");
     // With modules=auto no direct output is created.
-    assertThat(outReader.toString()).isEmpty();
+    assertThat(outReader.toString(UTF_8)).isEmpty();
   }
 
   @Test
@@ -2748,7 +2781,8 @@ public final class CommandLineRunnerTest {
     test(
         "function foo(){ const answerToAll = 42; }",
         lines(
-            "self.window||(self.window=self,self.window.top=self);var __jscov=window.top.__jscov||",
+            "(function(a){a.window||(a.window=a,a.window.top=a)})(typeof"
+                + " self!==\"undefined\"?self:globalThis);var __jscov=window.top.__jscov||",
             "(window.top.__jscov={fileNames:[],instrumentedLines:[],executedLines:[]}),",
             "JSCompiler_lcov_data_input0=[];",
             "__jscov.executedLines.push(JSCompiler_lcov_data_input0);",
@@ -2764,7 +2798,8 @@ public final class CommandLineRunnerTest {
     test(
         "function foo(){ const answerToAll = 42; }",
         lines(
-            "self.window||(self.window=self,self.window.top=self);",
+            "(function(a){a.window||(a.window=a,a.window.top=a)})(typeof"
+                + " self!==\"undefined\"?self:globalThis);",
             "var __jscov=window.top.__jscov||(window.top.__jscov= ",
             "{fileNames:[],branchPresent:[],branchesInLine:[],branchesTaken:[]}); ",
             "function foo(){}"));
@@ -2923,31 +2958,55 @@ public final class CommandLineRunnerTest {
         "let Foo; const x = `${Foo}`;",
         lines(
             "var $jscomp=$jscomp||{};$jscomp.scope={};",
-            "$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a;};",
-            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};",
+            "$jscomp.createTemplateTagFirstArg=function(a){",
+            "  return $jscomp.createTemplateTagFirstArgWithRaw(a,a)",
+            "};",
+            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){",
+            "  a.raw=b;",
+            "  Object.freeze && (Object.freeze(a), Object.freeze(b));",
+            "  return a",
+            "}",
             "var Foo,x=\"\"+Foo"));
 
     test(
         "const x = `\\${Foo}`;",
         lines(
             "var $jscomp=$jscomp||{};$jscomp.scope={};",
-            "$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a;};",
-            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};",
+            "$jscomp.createTemplateTagFirstArg=function(a){",
+            "  return $jscomp.createTemplateTagFirstArgWithRaw(a,a)",
+            "};",
+            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){",
+            "  a.raw=b;",
+            "  Object.freeze && (Object.freeze(a), Object.freeze(b));",
+            "  return a",
+            "}",
             "var x=\"${Foo}\""));
 
     test(
         "let Foo; const x = `${Foo}\\${Foo}`;",
         lines(
             "var $jscomp=$jscomp||{};$jscomp.scope={};",
-            "$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a;};",
-            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};",
+            "$jscomp.createTemplateTagFirstArg=function(a){",
+            "  return $jscomp.createTemplateTagFirstArgWithRaw(a,a)",
+            "};",
+            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){",
+            "  a.raw=b;",
+            "  Object.freeze && (Object.freeze(a), Object.freeze(b));",
+            "  return a",
+            "}",
             "var Foo,x=Foo+\"${Foo}\""));
     test(
         "let Foo; const x = `\\${Foo}${Foo}`;",
         lines(
             "var $jscomp=$jscomp||{};$jscomp.scope={};",
-            "$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a;};",
-            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};",
+            "$jscomp.createTemplateTagFirstArg=function(a){",
+            "  return $jscomp.createTemplateTagFirstArgWithRaw(a,a)",
+            "};",
+            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){",
+            "  a.raw=b;",
+            "  Object.freeze && (Object.freeze(a), Object.freeze(b));",
+            "  return a",
+            "}",
             "var Foo,x=\"${Foo}\"+Foo"));
   }
 
@@ -3089,6 +3148,72 @@ public final class CommandLineRunnerTest {
     args.add("--assume_no_prototype_method_enumeration=true");
     testSame("");
     assertThat(lastCompiler.getOptions().crossChunkCodeMotionNoStubMethods).isTrue();
+  }
+
+  @Test
+  public void testParamModification1() {
+    args.add("--compilation_level=ADVANCED");
+    test(
+        "function substr (value, begin, end) {"
+            + "  return value.slice(begin, end)"
+            + "}"
+            + "window.bug = function (s, i) {"
+            + "  return substr(s, i, i = 5);"
+            + "}",
+        "window.a=function(b,c){return b.slice(c,5);};");
+  }
+
+  @Test
+  public void testParamModification2() {
+    args.add("--compilation_level=ADVANCED");
+    test(
+        "function substr (value, begin, end) {"
+            + "  return value.slice(begin, end)"
+            + "}"
+            + "window.bug = function (s, i) {"
+            + "  return substr(s, i, (s='',i=5));"
+            + "}",
+        "window.a=function(b,c){return b.slice(c,5)}");
+  }
+
+  @Test
+  public void testParamModification3() {
+    args.add("--compilation_level=SIMPLE");
+    test(
+        "function substr (value, begin, end) {"
+            + "  return value.slice(begin, end)"
+            + "}"
+            + "window.bug = function (s, i) {"
+            + "  return substr(s, i, (s='',i=5));"
+            + "}",
+        "function substr(a,b,c){return a.slice(b,c)} window.bug=function(a,b){return"
+            + " substr(a,b,5)}");
+  }
+
+  @Test
+  public void testParamModification4() {
+    args.add("--compilation_level=ADVANCED");
+    test(
+        "function substr (value, begin, end, a, b, c) {"
+            + "  return value.slice(begin, end, a, b, c)"
+            + "}"
+            + "window.bug = function (s, i) {"
+            + "  return substr(s, i, i=5, i, i=7, i);"
+            + "}",
+        "window.a=function(c,b){var d=b,e=b=5,f=b,g=b=7;return c.slice(d,e,f,g,b)}");
+  }
+
+  @Test
+  public void testParamModification5() {
+    args.add("--compilation_level=ADVANCED");
+    test(
+        "function substr (value, begin, end) {"
+            + "  return value.slice(begin, end)"
+            + "}"
+            + "window.bug = function (a, b, c) {"
+            + "  return substr(a, b+1, b=c);"
+            + "}",
+        "window.a=function(b,c,d){return b.slice(c+1,d)}");
   }
 
   /* Helper functions */

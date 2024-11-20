@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package jsnullable
 
@@ -28,31 +28,23 @@ import kotlin.Suppress
 import kotlin.arrayOf
 import kotlin.collections.MutableList
 import kotlin.experimental.ExperimentalObjCName
-import kotlin.jvm.JvmField
 import kotlin.native.ObjCName
 
 @ObjCName("J2ktJsnullableMain", exact = true)
 open class Main {
- @JvmField
- internal var f1_private_2: String = "Hello"
+ private var f1: String = "Hello"
 
- @JvmField
- internal var f2_private_2: String? = null
+ private var f2: String? = null
 
- @JvmField
- internal var f4_private_2: MutableList<String> = ArrayList<String>()
+ private var f4: MutableList<String> = ArrayList<String>()
 
- @JvmField
- internal var f5_private_2: MutableList<String>? = ArrayList<String>()
+ private var f5: MutableList<String>? = ArrayList<String>()
 
- @JvmField
- internal var f6_private_2: MutableList<String?> = ArrayList<String?>()
+ private var f6: MutableList<String?> = ArrayList<String?>()
 
- @JvmField
- internal var f9_private_2: Array<String?> = arrayOf<String?>()
+ private var f9: Array<String?> = arrayOf<String?>()
 
- @JvmField
- internal var f10_private_2: Array<String>? = arrayOf<String>()
+ private var f10: Array<String>? = arrayOf<String>()
 
- internal fun <T: Any> m_private_2(t: T, nullableT: T?) {}
+ private fun <T: Any> m(t: T, nullableT: T?) {}
 }

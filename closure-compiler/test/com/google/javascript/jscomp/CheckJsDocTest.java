@@ -28,6 +28,7 @@ import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_MSG_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_SUPPRESS;
 
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -35,6 +36,15 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link CheckJSDoc}. */
 @RunWith(JUnit4.class)
 public final class CheckJsDocTest extends CompilerTestCase {
+
+  private JsDocParsing jsdocParsingMode;
+
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+    this.jsdocParsingMode = JsDocParsing.INCLUDE_DESCRIPTIONS_WITH_WHITESPACE;
+  }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
@@ -45,7 +55,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.MISPLACED_SUPPRESS, CheckLevel.WARNING);
-    options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_DESCRIPTIONS_WITH_WHITESPACE);
+    options.setParseJsDocDocumentation(jsdocParsingMode);
     options.setPreserveDetailedSourceInfo(true);
     return options;
   }
@@ -110,6 +120,52 @@ public final class CheckJsDocTest extends CompilerTestCase {
     // to the names within the pattern.
     testWarning("var /** !Array<number> */ [x, y] = someArr;", CheckJSDoc.MISPLACED_ANNOTATION);
     testWarning("var /** {x: number} */ {x} = someObj;", CheckJSDoc.MISPLACED_ANNOTATION);
+  }
+
+  @Test
+  public void testFieldMisplacedAnnotation() {
+    testWarning(
+        lines(
+            "class Foo {", //
+            "  /** @nocollapse */",
+            "  x = 5;",
+            "}"),
+        CheckJSDoc.MISPLACED_ANNOTATION);
+  }
+
+  @Test
+  public void testStaticFieldNoCollapse() {
+    testSame(
+        lines(
+            "class Bar {", //
+            "  /** @nocollapse */",
+            "  static y = 1",
+            "}"));
+  }
+
+  @Test
+  public void testThisPropertyMisplacedAnnotation() {
+    testWarning(
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    /** @nocollapse */",
+            "    this.x = 4;",
+            "  }",
+            "}"),
+        CheckJSDoc.MISPLACED_ANNOTATION);
+  }
+
+  @Test
+  public void testThisInFunctionMisplacedAnnotation() {
+    testWarning(
+        lines(
+            "/** @constructor */", //
+            "function Bar() {",
+            " /** @nocollapse */",
+            " this.x = 4;",
+            "}"),
+        CheckJSDoc.MISPLACED_ANNOTATION);
   }
 
   @Test
@@ -238,6 +294,13 @@ public final class CheckJsDocTest extends CompilerTestCase {
             "const Foo = function() {};",
             "/** @abstract */",
             "Foo.prototype.something = function() {}"));
+    testSame(
+        lines(
+            "/** @constructor */",
+            "const Foo = function() {",
+            "  /** @abstract @return {string} */",
+            "  this.something;",
+            "};"));
   }
 
   @Test
@@ -1203,5 +1266,42 @@ public final class CheckJsDocTest extends CompilerTestCase {
   @Test
   public void testPublicClassComputedField_typeDefError() {
     testWarning("class C { /** @typedef {number} */ [x] = 2;}", MISPLACED_ANNOTATION);
+  }
+
+  @Test
+  public void testMangleClosureModuleExportsContentsTypes() {
+    // disable parsing anything besides types; otherwise this test case fails because the
+    // "sourceComment"s from the actual/expected JSDocInfo do not match
+    jsdocParsingMode = JsDocParsing.TYPES_ONLY;
+
+    test(
+        "/** @type {!module$exports$foo$bar} */ let x;",
+        "/** @type {!UnrecognizedType_module$exports$foo$bar} */ let x;");
+    test(
+        srcs(
+            "goog.module('foo.bar'); exports = class {};",
+            "/** @type {!module$exports$foo$bar} */ let x;"),
+        expected(
+            "goog.module('foo.bar'); exports = class {};",
+            "/** @type {!UnrecognizedType_module$exports$foo$bar} */ let x;"));
+    test(
+        "/** @type {!module$exports$foo$bar.A.B} */ let x;",
+        "/** @type {!UnrecognizedType_module$exports$foo$bar.A.B} */ let x;");
+    test(
+        "/** @type {!module$contents$foo$bar_local} */ let x;",
+        "/** @type {!UnrecognizedType_module$contents$foo$bar_local} */ let x;");
+    test(
+        "/** @type {!Array<module$exports$foo$bar>} */ let x;",
+        "/** @type {!Array<UnrecognizedType_module$exports$foo$bar>} */ let x;");
+  }
+
+  @Test
+  public void testNameDeclarationAndAssignForAbstractClass() {
+    testSame(lines("/** @abstract */", "let A = A_1 = class A {}"));
+  }
+
+  @Test
+  public void testNameDeclarationAndAssignForTemplatedClass() {
+    testSame(lines("/** @template T */", "let A = A_1 = class A {}"));
   }
 }

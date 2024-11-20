@@ -2,6 +2,8 @@
 #   This package contains frontend common code that is agnostic of the actual frontend used.
 load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
+load("@rules_java//java:defs.bzl", "java_library")
+
 package(
     default_applicable_licenses = ["//:j2cl_license"],
     default_visibility = [
@@ -15,6 +17,7 @@ java_library(
     name = "common",
     srcs = glob(["*.java"]),
     deps = [
+        "//third_party:asm",
         "//third_party:auto_value",
         "//third_party:guava",
         "//third_party:j2objc_annotations",

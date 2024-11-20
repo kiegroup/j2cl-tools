@@ -73,6 +73,13 @@ message Requirement {
     // If you build automation to remove unused entries, you can use this flag
     // to enable/disable it.
     optional bool automatically_prune = 6;
+
+    // Only use this if you have a very good reason. This suppresses a finding
+    // from generated conformance results when it passes and therefore prevents
+    // downstream tooling from inspecting the finding.
+    optional bool
+        do_not_record_violations_in_summary_because_this_is_gencode_and_always_safe =
+            7 [deprecated = true];
   }
 
   // DEPRECATED: Use allowlist_entry instead.
@@ -250,7 +257,7 @@ message Requirement {
     // Currently treated the same as WARNING.
     UNSPECIFIED = 0;
     // Allows the build to continue. Can be turned into an error by setting the
-    // jscomp_error=conformanceConfig flag.
+    // jscomp_error=conformanceViolations flag.
     WARNING = 1;
     // The build fails if we are confident this is an error.
     // This causes an error even on possible violations, e.g. when the type

@@ -134,5 +134,3 @@ javadoc_library(
         "//jre/java:javaemul_internal_annotations",
     ],
 )
-
-

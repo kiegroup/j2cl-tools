@@ -9,8 +9,8 @@ let $LambdaAdaptor = goog.forwardDeclare('jsbridgeaccidentaloverride.OtherInterf
  */
 class OtherInterface {
  /** @abstract @nodts @return {number} */
- m_fun__int__int(/** number */ a) {}
- /** @nodts @return {OtherInterface} */
+ m_f__int__int(/** number */ a) {}
+ /** @nodts @return {!OtherInterface} */
  static $adapt(/** ?function(number):number */ fn) {
   OtherInterface.$clinit();
   return new $LambdaAdaptor(fn);

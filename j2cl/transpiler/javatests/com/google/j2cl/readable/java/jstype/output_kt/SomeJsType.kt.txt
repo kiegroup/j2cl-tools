@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package jstype
 
@@ -38,8 +38,7 @@ open class SomeJsType<T> {
  @ObjCName("publicField_")
  var publicField: Int = 0
 
- @JvmField
- internal var privateField_private_2: Int = 0
+ private var privateField: Int = 0
 
  @JvmField
  internal var packageField_pp_jstype: Int = 0
@@ -52,7 +51,7 @@ open class SomeJsType<T> {
  @ObjCName("publicMethod")
  open fun publicMethod() {}
 
- internal fun privateMethod_private_2() {}
+ private fun privateMethod() {}
 
  internal open fun packageMethod_pp_jstype() {}
 
@@ -62,22 +61,24 @@ open class SomeJsType<T> {
 
  @ObjCName("useFieldsAndMethods")
  open fun useFieldsAndMethods() {
-  val value: Int = this.publicField + this.privateField_private_2 + this.packageField_pp_jstype + this.protectedField
+  val value: Int = this.publicField + this.privateField + this.packageField_pp_jstype + this.protectedField
   this.publicMethod()
-  this.privateMethod_private_2()
+  this.privateMethod()
   this.packageMethod_pp_jstype()
   this.protectedMethod()
  }
 
- internal fun testStarAndWildCard_private_2(s: SomeJsType.Star?, w: SomeJsType.Wildcard?): SomeJsType.Wildcard? {
+ private fun testStarAndWildCard(s: SomeJsType.Star?, w: SomeJsType.Wildcard?): SomeJsType.Wildcard? {
   val `object`: Any? = Any()
   val star: SomeJsType.Star? = Double.valueOf(3.0) as SomeJsType.Star
   return star as SomeJsType.Wildcard?
  }
 
+ @ObjCName("J2ktJstypeSomeJsType_Star", exact = true)
  @JsType(name = "*", namespace = JsPackage.GLOBAL, isNative = true)
  interface Star {}
 
+ @ObjCName("J2ktJstypeSomeJsType_Wildcard", exact = true)
  @JsType(name = "?", namespace = JsPackage.GLOBAL, isNative = true)
  interface Wildcard {}
 }

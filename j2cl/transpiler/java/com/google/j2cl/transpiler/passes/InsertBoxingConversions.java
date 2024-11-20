@@ -15,7 +15,8 @@
  */
 package com.google.j2cl.transpiler.passes;
 
-import com.google.j2cl.transpiler.ast.AstUtils;
+import static com.google.j2cl.transpiler.ast.AstUtils.isBoxableJsEnumType;
+
 import com.google.j2cl.transpiler.ast.CastExpression;
 import com.google.j2cl.transpiler.ast.CompilationUnit;
 import com.google.j2cl.transpiler.ast.Expression;
@@ -26,7 +27,6 @@ import com.google.j2cl.transpiler.ast.NumberLiteral;
 import com.google.j2cl.transpiler.ast.PrimitiveTypeDescriptor;
 import com.google.j2cl.transpiler.ast.TypeDescriptor;
 import com.google.j2cl.transpiler.ast.TypeDescriptors;
-import com.google.j2cl.transpiler.ast.TypeVariable;
 
 /**
  * Inserts a boxing operation when a primitive type is being put into a reference type slot in
@@ -103,8 +103,7 @@ public class InsertBoxingConversions extends NormalizationPass {
       // could be assigned back to a variable of type T; therefore the result type should be
       // preserved.
       boolean insertCast =
-          toTypeDescriptor instanceof TypeVariable
-              && !((TypeVariable) toTypeDescriptor).isWildcardOrCapture();
+          toTypeDescriptor.isTypeVariable() && !toTypeDescriptor.isWildcardOrCapture();
       return insertCast
           ? CastExpression.newBuilder()
               .setExpression(boxedExpression)
@@ -121,7 +120,7 @@ public class InsertBoxingConversions extends NormalizationPass {
         && (areBooleanAndDoubleBoxed
             || !TypeDescriptors.isPrimitiveBooleanOrDouble(fromTypeDescriptor))
         // Boxing/unboxing for JsEnum is done in another pass.
-        && !AstUtils.isNonNativeJsEnum(toTypeDescriptor);
+        && !isBoxableJsEnumType(toTypeDescriptor);
   }
 
   private static Expression maybeNarrowNumberLiteral(

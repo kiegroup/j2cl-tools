@@ -23,11 +23,43 @@
 
 
 /**
- * @interface
- * @extends {EventTarget}
+ * @constructor
+ * @implements {EventTarget}
  * @see https://dom.spec.whatwg.org/#interface-AbortSignal
  */
 function AbortSignal() {}
+
+/** @override */
+AbortSignal.prototype.addEventListener = function(
+    type, listener, opt_options) {};
+
+/** @override */
+AbortSignal.prototype.removeEventListener = function(
+    type, listener, opt_options) {};
+
+/** @override */
+AbortSignal.prototype.dispatchEvent = function(evt) {};
+
+/**
+ * @param {*=} reason
+ * @return {!AbortSignal}
+ * @see https://dom.spec.whatwg.org/#dom-abortsignal-abort
+ */
+AbortSignal.abort = function(reason) {};
+
+/**
+ * @param {number} milliseconds
+ * @return {!AbortSignal}
+ * @see https://dom.spec.whatwg.org/#dom-abortsignal-timeout
+ */
+AbortSignal.timeout = function(milliseconds) {};
+
+/**
+ * @param {!Iterable} signals
+ * @return {!AbortSignal}
+ * @see https://dom.spec.whatwg.org/#dom-abortsignal-any
+ */
+AbortSignal.any = function(signals) {};
 
 /** @type {boolean} */
 AbortSignal.prototype.aborted;
@@ -35,7 +67,11 @@ AbortSignal.prototype.aborted;
 /** @type {?function(!Event)} */
 AbortSignal.prototype.onabort;
 
+/** @type {*} */
+AbortSignal.prototype.reason;
 
+/** @return {void} */
+AbortSignal.prototype.throwIfAborted = function() {};
 
 /**
  * @constructor
@@ -46,5 +82,8 @@ function AbortController() {}
 /** @const {!AbortSignal} */
 AbortController.prototype.signal;
 
-/** @return {void} */
-AbortController.prototype.abort = function() {};
+/**
+ * @param {*=} reason
+ * @return {void}
+ */
+AbortController.prototype.abort = function(reason) {};

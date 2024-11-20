@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -206,8 +206,7 @@ public final class ChangeVerifierTest {
 
     verifier.checkRecordedChanges(mainScript);
 
-    mainScript.addChildToFront(
-        IR.function(IR.name("A"), IR.paramList(), IR.block()));
+    mainScript.addChildToFront(IR.function(IR.name("A"), IR.paramList(), IR.block()));
     compiler.reportChangeToChangeScope(mainScript);
 
     IllegalStateException e =

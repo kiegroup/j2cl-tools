@@ -21,6 +21,7 @@ import com.google.j2cl.common.SourceUtils;
 import com.google.turbine.binder.ClassPathBinder;
 import com.google.turbine.diag.TurbineError;
 import com.google.turbine.main.Main;
+import com.google.turbine.options.LanguageVersion;
 import com.google.turbine.options.TurbineOptions;
 import com.vertispan.j2cl.build.task.*;
 
@@ -94,6 +95,8 @@ public class TurbineTask extends TaskFactory {
                                 .setSources(ImmutableList.copyOf(sources))
                                 .setOutput(output.toString())
                                 .setClassPath(ImmutableList.copyOf(deps))
+                                .setLanguageVersion(LanguageVersion.fromJavacopts(
+                                                ImmutableList.of("-source", "11", "-target", "11", "--release", "11")))
                                 //TODO https://github.com/Vertispan/j2clmavenplugin/issues/181
                                 //.setReducedClasspathMode(TurbineOptions.ReducedClasspathMode.JAVABUILDER_REDUCED)
                                 .build());
@@ -115,10 +118,7 @@ public class TurbineTask extends TaskFactory {
                     zipEntry = zis.getNextEntry();
                     continue;
                 }
-                boolean isDirectory = false;
-                if (zipEntry.getName().endsWith(File.separator)) {
-                    isDirectory = true;
-                }
+                boolean isDirectory = zipEntry.getName().endsWith(File.separator);
                 Path newPath = target.resolve(zipEntry.getName());
                 if (isDirectory) {
                     Files.createDirectories(newPath);

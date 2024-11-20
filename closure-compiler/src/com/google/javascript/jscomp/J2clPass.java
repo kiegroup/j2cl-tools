@@ -15,15 +15,15 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.FunctionInjector.Reference;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /** A normalization pass to inline some J2CL calls to enable other optimizations. */
 public class J2clPass implements CompilerPass {
@@ -43,14 +43,19 @@ public class J2clPass implements CompilerPass {
     }
 
     /*
-     * Inlines Arrays.$create(), Arrays.$init(), Arrays.$instanceIsOfType(), Arrays.$castTo() and
-     * Casts.$to() so that all references to $isInstance() functions will be fully qualified to work
-     * with collapse properties.
+     * Inline functions in Arrays that take references to static $isInstance() functions. This
+     * ensures that the references will be fully qualified to work with collapse properties.
      */
     inlineFunctionsInFile(
         root,
         "Arrays.impl.java.js",
-        ImmutableSet.of("$create", "$init", "$instanceIsOfType", "$castTo", "$stampType"),
+        ImmutableSet.of(
+            "$create",
+            "$createWithInitializer",
+            "$init",
+            "$instanceIsOfType",
+            "$castTo",
+            "$stampType"),
         InliningMode.DIRECT);
     inlineFunctionsInFile(root, "Casts.impl.java.js", ImmutableSet.of("$to"), InliningMode.DIRECT);
 
@@ -96,7 +101,7 @@ public class J2clPass implements CompilerPass {
     private final String classFileName;
     private final Set<String> fnNamesToInline;
     private final InliningMode inliningMode;
-    private final Map<String, Node> fnsToInlineByQualifiedName = new HashMap<>();
+    private final Map<String, Node> fnsToInlineByQualifiedName = new LinkedHashMap<>();
     private final FunctionInjector injector;
     private final Node root;
 

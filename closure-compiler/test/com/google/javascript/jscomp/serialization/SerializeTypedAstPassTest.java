@@ -38,12 +38,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -69,11 +68,13 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     enableTypeCheck();
     this.typesToForwardDeclare = ImmutableSet.of();
     enableSourceInformationAnnotator();
+    enableDebugLogging(true);
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new SerializeTypedAstPass(compiler, astConsumer, SerializationOptions.SKIP_DEBUG_INFO);
+    return new SerializeTypedAstPass(
+        compiler, astConsumer, SerializationOptions.builder().setIncludeDebugInfo(false).build());
   }
 
   @Override
@@ -568,7 +569,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   private ImmutableList<Path> debugLogFiles() {
     try {
       Path dir =
-          Paths.get(
+          Path.of(
               this.getLastCompiler().getOptions().getDebugLogDirectory().toString(),
               SerializeTypesToPointers.class.getSimpleName());
 

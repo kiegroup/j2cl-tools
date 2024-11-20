@@ -30,14 +30,14 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * RenameVars renames all the variables names into short names, to reduce code
@@ -60,7 +60,7 @@ final class RenameVars implements CompilerPass {
   private final ArrayList<Node> localNameNodes = new ArrayList<>();
 
   /** Mapping of original names for change detection */
-  private final Map<Node, String> originalNameByNode = new HashMap<>();
+  private final Map<Node, String> originalNameByNode = new LinkedHashMap<>();
 
   /**
    * Maps a name node to its pseudo name, null if we are not generating so there will be no overhead
@@ -75,7 +75,7 @@ final class RenameVars implements CompilerPass {
   private final Set<String> reservedNames;
 
   /** The renaming map */
-  private final Map<String, String> renameMap = new HashMap<>();
+  private final Map<String, String> renameMap = new LinkedHashMap<>();
 
   /** The previously used rename map. */
   private final VariableMap prevUsedRenameMap;
@@ -88,7 +88,7 @@ final class RenameVars implements CompilerPass {
 
   // Logic for bleeding functions, where the name leaks into the outer
   // scope on IE but not on other browsers.
-  private final Set<Var> localBleedingFunctions = new HashSet<>();
+  private final Set<Var> localBleedingFunctions = new LinkedHashSet<>();
   private final ListMultimap<Scope, Var> localBleedingFunctionsPerScope =
       ArrayListMultimap.create();
 
@@ -119,8 +119,7 @@ final class RenameVars implements CompilerPass {
   }
 
   /** Maps an old name to a new name assignment */
-  private final Map<String, Assignment> assignments =
-      new HashMap<>();
+  private final Map<String, Assignment> assignments = new LinkedHashMap<>();
 
   /** Whether renaming should apply to local variables only. */
   private final boolean localRenamingOnly;
@@ -155,7 +154,7 @@ final class RenameVars implements CompilerPass {
     this.prefix = nullToEmpty(prefix);
     this.localRenamingOnly = localRenamingOnly;
     if (generatePseudoNames) {
-      this.pseudoNameMap = new HashMap<>();
+      this.pseudoNameMap = new LinkedHashMap<>();
     } else {
       this.pseudoNameMap = null;
     }
@@ -163,9 +162,9 @@ final class RenameVars implements CompilerPass {
     this.reservedCharacters = reservedCharacters;
     this.preferStableNames = preferStableNames;
     if (reservedNames == null) {
-      this.reservedNames = new HashSet<>();
+      this.reservedNames = new LinkedHashSet<>();
     } else {
-      this.reservedNames = new HashSet<>(reservedNames);
+      this.reservedNames = new LinkedHashSet<>(reservedNames);
     }
     this.nameGenerator = nameGenerator;
   }
@@ -293,21 +292,17 @@ final class RenameVars implements CompilerPass {
   }
 
   /**
-   * Sorts Assignment objects by their count, breaking ties by their order of
-   * occurrence in the source to ensure a deterministic total ordering.
+   * Sorts Assignment objects by their count, breaking ties by their order of occurrence in the
+   * source to ensure a deterministic total ordering.
    */
-  private static final Comparator<Assignment> FREQUENCY_COMPARATOR =
-      new Comparator<Assignment>() {
-    @Override
-    public int compare(Assignment a1, Assignment a2) {
-      if (a1.count != a2.count) {
-        return a2.count - a1.count;
-      }
-      // Break a tie using the order in which the variable first appears in
-      // the source.
-      return ORDER_OF_OCCURRENCE_COMPARATOR.compare(a1, a2);
+  private static int frequencyComparator(Assignment a1, Assignment a2) {
+    if (a1.count != a2.count) {
+      return a2.count - a1.count;
     }
-  };
+    // Break a tie using the order in which the variable first appears in
+    // the source.
+    return ORDER_OF_OCCURRENCE_COMPARATOR.compare(a1, a2);
+  }
 
   /** Sorts Assignment objects by the order the variable name first appears in the source. */
   private static final Comparator<Assignment> ORDER_OF_OCCURRENCE_COMPARATOR =
@@ -326,7 +321,7 @@ final class RenameVars implements CompilerPass {
     reservedNames.addAll(externNames);
 
     // Rename vars, sorted by frequency of occurrence to minimize code size.
-    SortedSet<Assignment> varsByFrequency = new TreeSet<>(FREQUENCY_COMPARATOR);
+    SortedSet<Assignment> varsByFrequency = new TreeSet<>(RenameVars::frequencyComparator);
     varsByFrequency.addAll(assignments.values());
 
     // First try to reuse names from an earlier compilation.

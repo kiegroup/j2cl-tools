@@ -35,7 +35,6 @@ import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Streams;
 import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -68,7 +67,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** NodeUtil contains generally useful AST utilities. */
 public final class NodeUtil {
@@ -95,7 +94,12 @@ public final class NodeUtil {
 
   private static final QualifiedName GOOG_REQUIRE_TYPE = QualifiedName.of("goog.requireType");
 
+  private static final QualifiedName GOOG_FORWARD_DECLARE = QualifiedName.of("goog.forwardDeclare");
+
   private static final QualifiedName GOOG_REQUIRE_DYNAMIC = QualifiedName.of("goog.requireDynamic");
+
+  private static final QualifiedName GOOG_WEAK_USAGE = QualifiedName.of("goog.weakUsage");
+  private static final QualifiedName GOOG_WEAK_USAGE_MANGLED = QualifiedName.of("goog$weakUsage");
 
   // Utility class; do not instantiate.
   private NodeUtil() {}
@@ -346,6 +350,23 @@ public final class NodeUtil {
    * @return The value of a node as a Number, or null if it cannot be converted.
    */
   static @Nullable Double getNumberValue(Node n) {
+    return doGetNumberValue(n, /* numberConversions= */ true);
+  }
+
+  /**
+   * Gets the value of a node as a Number, or null if it isn't a number. This method is similar to
+   * `typeof v == "number" ? v : null` as it does not perform any automatic conversions.
+   *
+   * <p>IMPORTANT: This method does not consider whether {@code n} may have side effects.
+   *
+   * @param n The node.
+   * @return The value of a node as a Number, or null if it cannot be converted.
+   */
+  static @Nullable Double getNumberValueNoConversions(Node n) {
+    return doGetNumberValue(n, /* numberConversions= */ false);
+  }
+
+  private static @Nullable Double doGetNumberValue(Node n, boolean numberConversions) {
     switch (n.getToken()) {
       case NUMBER:
         return n.getDouble();
@@ -372,17 +393,18 @@ public final class NodeUtil {
         }
 
       case POS:
-        return getNumberValue(n.getOnlyChild());
+        // unary plus triggers numeric conversions
+        return doGetNumberValue(n.getOnlyChild(), /* numberConversions= */ true);
 
       case NEG:
         {
-          Double val = getNumberValue(n.getOnlyChild());
+          Double val = doGetNumberValue(n.getOnlyChild(), /* numberConversions= */ true);
           return (val == null) ? null : -val;
         }
 
       case BITNOT:
         {
-          Double val = getNumberValue(n.getOnlyChild());
+          Double val = doGetNumberValue(n.getOnlyChild(), /* numberConversions= */ true);
           return (val == null) ? null : (double) ~ecmascriptToInt32(val);
         }
 
@@ -390,6 +412,9 @@ public final class NodeUtil {
       case NOT:
       case NULL:
       case TRUE:
+        if (!numberConversions) {
+          return null;
+        }
         switch (getBooleanValue(n)) {
           case TRUE:
             return 1.0;
@@ -401,6 +426,9 @@ public final class NodeUtil {
         throw new AssertionError();
 
       case TEMPLATELIT:
+        if (!numberConversions) {
+          return null;
+        }
         String string = getStringValue(n);
         if (string == null) {
           return null;
@@ -408,10 +436,16 @@ public final class NodeUtil {
         return getStringNumberValue(string);
 
       case STRINGLIT:
+        if (!numberConversions) {
+          return null;
+        }
         return getStringNumberValue(n.getString());
 
       case ARRAYLIT:
       case OBJECTLIT:
+        if (!numberConversions) {
+          return null;
+        }
         String value = getStringValue(n);
         return value != null ? getStringNumberValue(value) : null;
       default:
@@ -917,6 +951,26 @@ public final class NodeUtil {
       default:
         return isImmutableValue(n);
     }
+  }
+
+  /**
+   * Returns the node within the given function body at which something can be inserted such that
+   * it's after all inner function declarations in that function body. We want this because
+   * normalization expects all inner function declarations to be hoisted. If there's not good
+   * insertion point (e.g. the function is empty or only contains inner function declarations),
+   * return null.
+   */
+  static Node getInsertionPointAfterAllInnerFunctionDeclarations(Node functionBody) {
+    checkState(functionBody.getParent().isFunction());
+    Node current = functionBody.getFirstChild();
+
+    // Do not insert the let declaration before any hoisted function declarations in this function
+    // body as those function declarations are hoisted by normalization. We must maintain
+    // normalization.
+    while (current != null && NodeUtil.isFunctionDeclaration(current)) {
+      current = current.getNext();
+    }
+    return current;
   }
 
   /**
@@ -1786,11 +1840,12 @@ public final class NodeUtil {
   /**
    * Returns true if the operator is associative. e.g. (a * b) * c = a * (b * c) Note: "+" is not
    * associative because it is also the concatenation for strings. e.g. "a" + (1 + 2) is not "a" + 1
-   * + 2
+   * + 2. Multilication is not associative because it can include floating point numbers. </pre>
+   *
+   * e.g. 1e-300 * 1e300 * 1e9 does not equal 1e-300 * (1e300 * 1e9). </pre>
    */
   static boolean isAssociative(Token type) {
     switch (type) {
-      case MUL:
       case AND:
       case OR:
       case COALESCE:
@@ -2449,6 +2504,10 @@ public final class NodeUtil {
   static boolean createsBlockScope(Node n) {
     switch (n.getToken()) {
       case BLOCK:
+        if (n.isSyntheticBlock()) {
+          // Don't create block scope for synthetic blocks.
+          return false;
+        }
         Node parent = n.getParent();
         // Don't create block scope for switch cases or catch blocks.
         return parent != null && !isSwitchCase(parent) && !parent.isCatch();
@@ -2822,7 +2881,10 @@ public final class NodeUtil {
    * present.
    */
   public static Node getCallTargetResolvingIndirectCalls(Node call) {
-    checkArgument(call.isCall() || call.isNew(), "must be call or new expression, got %s", call);
+    checkArgument(
+        call.isCall() || call.isNew() || call.isTaggedTemplateLit(),
+        "must be call, new or tagged-template-literal expression, got %s",
+        call);
     Node target = call.getFirstChild();
     if (target.isComma() && target.getSecondChild().isQualifiedName()) {
       return target.getSecondChild();
@@ -3042,9 +3104,7 @@ public final class NodeUtil {
     return n.isClass() && (!isNamedClass(n) || !isDeclarationParent(n.getParent()));
   }
 
-  /**
-   * @return Whether the node is both a function expression and the function is named.
-   */
+  /** Returns whether the node is both a class expression and the class is named. */
   static boolean isNamedClassExpression(Node n) {
     return NodeUtil.isClassExpression(n) && n.getFirstChild().isName();
   }
@@ -3745,6 +3805,10 @@ public final class NodeUtil {
    * Then adds a new VAR node at the top of the current scope that redeclares them, if necessary.
    */
   static void redeclareVarsInsideBranch(Node branch) {
+    if (!canContainHoistedVarsDecls(branch)) {
+      return;
+    }
+
     Collection<Node> vars = getVarsDeclaredInBranch(branch);
     if (vars.isEmpty()) {
       return;
@@ -3756,6 +3820,25 @@ public final class NodeUtil {
       copyNameAnnotations(nameNode, var.getFirstChild());
       parent.addChildToFront(var);
     }
+  }
+
+  static boolean canContainHoistedVarsDecls(Node n) {
+    if (NodeUtil.isStatement(n)) {
+      switch (n.getToken()) {
+        case EXPR_RESULT:
+        case RETURN:
+        case THROW:
+        case BREAK:
+        case CONTINUE:
+        case EMPTY:
+        case DEBUGGER:
+          return false;
+        default:
+          // assume anything else can
+          break;
+      }
+    }
+    return true;
   }
 
   /** Copy any annotations that follow a named value. */
@@ -4130,9 +4213,9 @@ public final class NodeUtil {
    */
   public static void visitLhsNodesInNode(Node assigningParent, Consumer<Node> consumer) {
     checkArgument(
-        isNameDeclaration(assigningParent)
-            || assigningParent.isParamList()
-            || isAssignmentOp(assigningParent)
+        isNameDeclaration(assigningParent) // e.g. `var [a,b,c];`
+            || assigningParent.isParamList() // e.g. `function foo([a,b,c]) {}`
+            || isAssignmentOp(assigningParent) // e.g. `[a,b,c] = [4,5,6]`
             || assigningParent.isCatch()
             || assigningParent.isDestructuringLhs()
             || assigningParent.isDefaultValue()
@@ -4141,6 +4224,14 @@ public final class NodeUtil {
             || isEnhancedFor(assigningParent),
         assigningParent);
     getLhsNodesHelper(assigningParent, consumer);
+  }
+
+  /** Retrieves lhs nodes declared or assigned in a given destructuring pattern node. */
+  public static void visitLhsNodesInDestructuringPattern(
+      Node destructuringPattern, Consumer<Node> consumer) {
+    checkArgument(
+        destructuringPattern.isDestructuringPattern(), "Must be a destructuring pattern node.");
+    getLhsNodesHelper(destructuringPattern, consumer);
   }
 
   /** Returns {@code true} if the node is a definition with Object.defineProperties */
@@ -4371,6 +4462,8 @@ public final class NodeUtil {
    */
   static Node newVarNode(Node lhs, Node value) {
     if (lhs.isDestructuringPattern()) {
+      // TODO(b/314005766): Ensure that destructuring declarations are generated as normalized (i.e
+      // individual names get their own stub declarations)
       checkNotNull(value);
       return IR.var(new Node(Token.DESTRUCTURING_LHS, lhs, value).srcref(lhs)).srcref(lhs);
     } else {
@@ -5120,7 +5213,73 @@ public final class NodeUtil {
     return jsdocNode == null ? null : jsdocNode.getJSDocInfo();
   }
 
+  /**
+   * Find the best JSDocInfo node for the given node. This version is stricter than {@code
+   * getBestJSDocInfoNode} in that it only accepts a node that is either a lhs "let, const, var"
+   * name node, or a RHS class/function, or a class/function declaration, or an export.
+   *
+   * @throws IllegalStateException if any other input node token is provided.
+   */
+  public static @Nullable Node getBestJsDocInfoNodeStrict(Node n) {
+    boolean isDeclaredName = n.isName() && NodeUtil.isNameDeclaration(n.getParent());
+    if (isDeclaredName) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    boolean isDeclaredClass = NodeUtil.isClassDeclaration(n);
+    if (isDeclaredClass) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    boolean isDeclaredFunction = NodeUtil.isFunctionDeclaration(n);
+    if (isDeclaredFunction) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    boolean isRhsClass = isRhsClass(n);
+    if (isRhsClass) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    boolean isRhsFunction = isRhsFunction(n);
+    if (isRhsFunction) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    boolean isRhsClassName = n.isName() && isRhsClass(n.getParent());
+    if (isRhsClassName) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    boolean isRhsFunctionName = n.isName() && isRhsFunction(n.getParent());
+    if (isRhsFunctionName) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    boolean isExport = n.isExport();
+    if (isExport) {
+      return getBestJsDocInfoNodeInternal(n);
+    }
+    throw new IllegalStateException("Not allowed to get JSDocInfo node for node: " + n);
+  }
+
+  // e.g. `class A` in `/** some */ var x = class A {};`
+  private static boolean isRhsClass(Node n) {
+    return NodeUtil.isNamedClassExpression(n)
+        && (n.getParent().isName() || n.getParent().isAssign());
+  }
+
+  // e.g. `function A` in `/** some */ var x = function A() {};`
+  private static boolean isRhsFunction(Node n) {
+    return NodeUtil.isNamedFunctionExpression(n)
+        && (n.getParent().isName() || n.getParent().isAssign());
+  }
+
+  /**
+   * Find the best JSDocInfo node for the given node.
+   *
+   * @deprecated because we want to control the input node tokens accepted by this function. Use
+   *     {@code getBestJSDocInfoNodeStrict} instead.
+   */
+  @Deprecated
   public static @Nullable Node getBestJSDocInfoNode(Node n) {
+    return getBestJsDocInfoNodeInternal(n);
+  }
+
+  private static @Nullable Node getBestJsDocInfoNodeInternal(Node n) {
     if (n.isExprResult()) {
       return getBestJSDocInfoNode(n.getFirstChild());
     }
@@ -5208,8 +5367,23 @@ public final class NodeUtil {
       case CONST:
         return n.getLastChild();
       case OBJECTLIT:
+        checkState(
+            n.isStringKey()
+                || n.isComputedProp()
+                || n.isMemberFunctionDef()
+                || n.isGetterDef()
+                || n.isSetterDef(),
+            n);
+        return n.getLastChild();
       case CLASS_MEMBERS:
-        return n.getOnlyChild();
+        checkState(
+            n.isMemberFunctionDef()
+                || n.isMemberFieldDef()
+                || n.isComputedFieldDef()
+                || n.isGetterDef()
+                || n.isSetterDef(),
+            n);
+        return n.getLastChild();
       case FUNCTION:
       case CLASS:
         return parent;
@@ -5514,6 +5688,14 @@ public final class NodeUtil {
     return false;
   }
 
+  static boolean isGoogForwardDeclareCall(Node call) {
+    if (call.isCall()) {
+      Node target = call.getFirstChild();
+      return GOOG_FORWARD_DECLARE.matches(target);
+    }
+    return false;
+  }
+
   static boolean isGoogRequireDynamicCall(Node call) {
     if (call.isCall()) {
       Node target = call.getFirstChild();
@@ -5522,8 +5704,29 @@ public final class NodeUtil {
     return false;
   }
 
+  static boolean isGoogWeakUsageCall(Node call) {
+    if (call.isCall()) {
+      Node target = call.getFirstChild();
+      return GOOG_WEAK_USAGE.matches(target) || GOOG_WEAK_USAGE_MANGLED.matches(target);
+    }
+    return false;
+  }
+
   static boolean isModuleScopeRoot(Node n) {
     return n.isModuleBody() || isBundledGoogModuleScopeRoot(n);
+  }
+
+  /** Whether the given node is referencing the `exports` object in some goog.module */
+  static boolean isGoogModuleExportsReference(Scope scope, Node possibleName) {
+    if (!possibleName.isName() || !possibleName.getString().equals("exports")) {
+      return false;
+    }
+    Var var = scope.getVar(possibleName.getString());
+    Node scopeRoot = var != null ? var.getScopeRoot() : null;
+    return scopeRoot != null
+        && (scopeRoot.isModuleBody()
+            || (scopeRoot.isFunction()
+                && isBundledGoogModuleScopeRoot(getFunctionBody(scopeRoot))));
   }
 
   private static final QualifiedName GOOG_LOADMODULE = QualifiedName.of("goog.loadModule");
@@ -5963,7 +6166,105 @@ public final class NodeUtil {
             ? currentFeatures.with(feature)
             : FeatureSet.BARE_MINIMUM.with(feature);
     scriptNode.putProp(Node.FEATURE_SET, newFeatures);
-    compiler.setFeatureSet(compiler.getFeatureSet().with(feature));
+    if (feature != Feature.MODULES) {
+      // Except MODULES (which can get reintroduced later in ConvertChunksToEsModules pass),
+      // prohibit passes from reintroducing any feature that already got transpiled.
+      checkState(
+          compiler.getAllowableFeatures().contains(feature),
+          "Cannot add feature: %s. It is not supported in the output language, and either 1) its"
+              + " corresponding transpilation pass has already run or 2) transpilation of this"
+              + " feature is unsupported entirely",
+          feature);
+    } else {
+      compiler.setAllowableFeatures(compiler.getAllowableFeatures().with(feature));
+    }
+  }
+
+  /**
+   * Removes the given feature from the SCRIPT node's FeatureSet property.
+   *
+   * <p>Removing a feature from a single script does not mean that it's removed from all scripts.
+   * Hence this method does not remove it from the compiler's featureSet. The caller must remove it
+   * from the compiler's featureSet if it's calling this method for each script.
+   */
+  private static void removeFeatureFromScript(Node scriptNode, Feature feature) {
+    FeatureSet currentFeatures = getFeatureSetOfScript(scriptNode);
+    if (currentFeatures != null) {
+      currentFeatures = currentFeatures.without(feature);
+    }
+    scriptNode.putProp(Node.FEATURE_SET, currentFeatures);
+  }
+
+  /**
+   * Removes the given featureSet from the SCRIPT node's FeatureSet property.
+   *
+   * <p>Removing a feature from a single script does not mean that it's removed from all scripts.
+   * Hence this method does not remove it from the compiler's featureSet. The caller must remove it
+   * from the compiler's featureSet using {@code AbstractCompiler.markFeatureSetNotAllowed} or
+   * {@code AbstractCompiler.markFeatureNotAllowed} if it's calling this method for each script.
+   */
+  static void removeFeaturesFromScript(Node scriptNode, FeatureSet featureSet) {
+    FeatureSet currentFeatures = getFeatureSetOfScript(scriptNode);
+    if (currentFeatures != null) {
+      currentFeatures = currentFeatures.without(featureSet);
+      scriptNode.putProp(Node.FEATURE_SET, currentFeatures);
+    }
+  }
+
+  /**
+   * Removes the given feature from the FEATURE_SET prop of all SCRIPT nodes under root.
+   *
+   * <p>Also updates the compiler's FeatureSet.
+   */
+  static void removeFeatureFromAllScripts(Node root, Feature feature, AbstractCompiler compiler) {
+    checkArgument(root.isRoot(), root);
+    for (Node childNode = root.getFirstChild();
+        childNode != null;
+        childNode = childNode.getNext()) {
+      checkState(childNode.isScript());
+      NodeUtil.removeFeatureFromScript(childNode, feature);
+    }
+    compiler.markFeatureNotAllowed(feature);
+  }
+
+  /**
+   * Removes the given feature from the FEATURE_SET prop of all SCRIPT nodes under root.
+   *
+   * <p>Also updates the compiler's FeatureSet.
+   */
+  static void removeFeaturesFromAllScripts(
+      Node root, FeatureSet featureSet, AbstractCompiler compiler) {
+    checkArgument(root.isRoot(), root);
+    for (Node childNode = root.getFirstChild();
+        childNode != null;
+        childNode = childNode.getNext()) {
+      checkState(childNode.isScript());
+      NodeUtil.removeFeaturesFromScript(childNode, featureSet);
+    }
+    compiler.markFeatureSetNotAllowed(featureSet);
+  }
+
+  /** Adds the given feature to the FEATURE_SET prop of all scripts under externs and root. */
+  static void addFeatureToAllScripts(Node root, Feature feature, AbstractCompiler compiler) {
+    checkArgument(root.isRoot(), root);
+    for (Node childNode = root.getFirstChild();
+        childNode != null;
+        childNode = childNode.getNext()) {
+      checkState(childNode.isScript());
+      NodeUtil.addFeatureToScript(childNode, feature, compiler);
+    }
+  }
+
+  /**
+   * Adds the given features to a SCRIPT node's FeatureSet property.
+   *
+   * <p>Also updates the compiler's FeatureSet.
+   */
+  static void addFeaturesToScript(Node scriptNode, FeatureSet features, AbstractCompiler compiler) {
+    checkState(scriptNode.isScript(), scriptNode);
+    for (Feature feature : features.getFeatures()) {
+      addFeatureToScript(scriptNode, feature, compiler);
+    }
   }
 
   /** Calls {@code cb} with all NAMEs declared in a PARAM_LIST or destructuring pattern. */
@@ -5978,39 +6279,65 @@ public final class NodeUtil {
 
     public abstract @Nullable String property(); // Non-null for destructuring requires.
 
-    static GoogRequire fromNamespace(String namespace) {
-      return new AutoValue_NodeUtil_GoogRequire(namespace, /* property= */ null);
+    public abstract boolean isStrongRequire(); // True for goog.require, false for goog.requireType
+
+    static GoogRequire fromNamespace(String namespace, boolean isStrongRequire) {
+      return new AutoValue_NodeUtil_GoogRequire(namespace, /* property= */ null, isStrongRequire);
     }
 
-    static GoogRequire fromNamespaceAndProperty(String namespace, String property) {
-      return new AutoValue_NodeUtil_GoogRequire(namespace, property);
+    static GoogRequire fromNamespaceAndProperty(
+        String namespace, String property, boolean isStrongRequire) {
+      return new AutoValue_NodeUtil_GoogRequire(namespace, property, isStrongRequire);
     }
   }
 
   public static @Nullable GoogRequire getGoogRequireInfo(String name, Scope scope) {
     Var var = scope.getVar(name);
-    if (var == null || !var.getScopeRoot().isModuleBody() || var.getNameNode() == null) {
+    if (var == null) {
       return null;
     }
-    Node nameNode = var.getNameNode();
+    return getGoogRequireInfo(var);
+  }
+
+  public static @Nullable GoogRequire getGoogRequireInfo(Var var) {
+    checkNotNull(var);
+    if (!var.getScopeRoot().isModuleBody() || var.getNameNode() == null) {
+      return null;
+    }
+
+    return getGoogRequireInfo(var.getNameNode());
+  }
+
+  public static @Nullable GoogRequire getGoogRequireInfo(Node nameNode) {
+    // IMPORT_STAR is not part of a GoogRequire call.
+    if (nameNode.isImportStar()) {
+      return null;
+    }
+    checkState(nameNode.isName(), "unexpected node type: %s", nameNode);
 
     if (NodeUtil.isNameDeclaration(nameNode.getParent())) {
       Node requireCall = nameNode.getFirstChild();
-      if (requireCall == null
-          || !(isGoogRequireCall(requireCall) || isGoogRequireTypeCall(requireCall))) {
+      if (requireCall == null) {
+        return null;
+      }
+      boolean isStrongRequire = isGoogRequireCall(requireCall);
+      if (!(isStrongRequire || isGoogRequireTypeCall(requireCall))) {
         return null;
       }
       String namespace = requireCall.getSecondChild().getString();
-      return GoogRequire.fromNamespace(namespace);
+      return GoogRequire.fromNamespace(namespace, isStrongRequire);
     } else if (nameNode.getParent().isStringKey() && nameNode.getGrandparent().isObjectPattern()) {
       Node requireCall = nameNode.getGrandparent().getNext();
-      if (requireCall == null
-          || !(isGoogRequireCall(requireCall) || isGoogRequireTypeCall(requireCall))) {
+      if (requireCall == null) {
+        return null;
+      }
+      boolean isStrongRequire = isGoogRequireCall(requireCall);
+      if (!(isStrongRequire || isGoogRequireTypeCall(requireCall))) {
         return null;
       }
       String property = nameNode.getParent().getString();
       String namespace = requireCall.getSecondChild().getString();
-      return GoogRequire.fromNamespaceAndProperty(namespace, property);
+      return GoogRequire.fromNamespaceAndProperty(namespace, property, isStrongRequire);
     }
     return null;
   }

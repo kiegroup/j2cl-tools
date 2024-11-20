@@ -36,9 +36,9 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Checks all goog.requires, goog.module.gets, goog.forwardDeclares, and goog.requireTypes in all
@@ -220,8 +220,8 @@ final class CheckClosureImports implements CompilerPass {
   CheckClosureImports(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
     this.compiler = compiler;
     this.checker = new Checker(compiler, moduleMetadataMap);
-    this.namespacesSeen = new HashSet<>();
-    this.chunkGraph = compiler.getModuleGraph();
+    this.namespacesSeen = new LinkedHashSet<>();
+    this.chunkGraph = compiler.getChunkGraph();
   }
 
   @Override

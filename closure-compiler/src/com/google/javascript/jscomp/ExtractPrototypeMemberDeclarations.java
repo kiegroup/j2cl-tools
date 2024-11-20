@@ -22,10 +22,10 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * When there are multiple prototype member declarations to the same class, use a temp variable to
@@ -178,13 +178,13 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       compiler.reportChangeToEnclosingScope(var);
     }
     // Go through all extraction instances and extract each of them.
-    for (Map.Entry<JSChunk, ExtractionInstanceInfo> entry : info.instancesByModule.entrySet()) {
+    for (Map.Entry<JSChunk, ExtractionInstanceInfo> entry : info.instancesByChunk.entrySet()) {
       String alias = PROTOTYPE_ALIAS;
       if (pattern == Pattern.USE_CHUNK_TEMP) {
         // Rather than a truly global variable, use a unique variable per output chunk.
         // This prevents RescopeGlobalSymbolNames from converting these references to
         // namespace properties which reduces the benefit of the alias.
-        if (info.shouldExtractModule(entry.getKey())) {
+        if (info.shouldExtractChunk(entry.getKey())) {
           Node injectionPoint = compiler.getNodeForCodeInsertion(entry.getKey());
           alias = PROTOTYPE_ALIAS + entry.getKey().getIndex();
           Node var = NodeUtil.newVarNode(alias, null).srcrefTreeIfMissing(injectionPoint);
@@ -276,7 +276,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
   /** Collects all the possible extraction instances in a node traversal. */
   private class GatherExtractionInfo extends AbstractShallowCallback {
-    private final Map<JSChunk, ExtractionInstanceInfo> instancesByModule = new HashMap<>();
+    private final Map<JSChunk, ExtractionInstanceInfo> instancesByChunk = new LinkedHashMap<>();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -299,9 +299,9 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
         // Only add it to our work list if the extraction at this instance makes the code smaller.
         if (instance.isFavorable()) {
-          instancesByModule.computeIfAbsent(
+          instancesByChunk.computeIfAbsent(
               t.getChunk(), (JSChunk k) -> new ExtractionInstanceInfo());
-          ExtractionInstanceInfo instanceInfo = instancesByModule.get(t.getChunk());
+          ExtractionInstanceInfo instanceInfo = instancesByChunk.get(t.getChunk());
           instanceInfo.instances.add(instance);
           instanceInfo.totalDelta += instance.delta;
         }
@@ -314,7 +314,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
      */
     private boolean shouldExtractGlobal() {
       int allModulesDelta = 0;
-      for (ExtractionInstanceInfo instanceInfo : instancesByModule.values()) {
+      for (ExtractionInstanceInfo instanceInfo : instancesByChunk.values()) {
         allModulesDelta += instanceInfo.totalDelta;
       }
       return allModulesDelta + pattern.globalOverhead < 0;
@@ -324,8 +324,8 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
      * @return {@code true} if the sum of all the extraction instance gain outweighs the overhead of
      *     the temp variable declaration.
      */
-    private boolean shouldExtractModule(JSChunk module) {
-      ExtractionInstanceInfo instanceInfo = instancesByModule.get(module);
+    private boolean shouldExtractChunk(JSChunk chunk) {
+      ExtractionInstanceInfo instanceInfo = instancesByChunk.get(chunk);
       if (instanceInfo == null) {
         return false;
       }

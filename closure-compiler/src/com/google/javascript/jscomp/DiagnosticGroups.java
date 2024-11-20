@@ -56,7 +56,7 @@ import com.google.javascript.jscomp.lint.CheckUnusedPrivateProperties;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.lint.CheckVar;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /** Named groups of DiagnosticTypes exposed by Compiler. */
@@ -64,11 +64,15 @@ public class DiagnosticGroups {
   static final DiagnosticType UNUSED = DiagnosticType.warning("JSC_UNUSED", "{0}");
 
   public static final ImmutableSet<String> wildcardExcludedGroups =
-      ImmutableSet.of("reportUnknownTypes", "analyzerChecks", "missingSourcesWarnings");
+      ImmutableSet.of(
+          "reportUnknownTypes",
+          "analyzerChecks",
+          "missingSourcesWarnings",
+          "closureUnawareCodeAnnotationPresent");
 
   public DiagnosticGroups() {}
 
-  private static final Map<String, DiagnosticGroup> groupsByName = new HashMap<>();
+  private static final Map<String, DiagnosticGroup> groupsByName = new LinkedHashMap<>();
 
   static DiagnosticGroup registerDeprecatedGroup(String name) {
     return registerGroup(name, new DiagnosticGroup(name, UNUSED));
@@ -169,8 +173,7 @@ public class DiagnosticGroups {
   // right now because we don't have any language output level higher than ES5.
   public static final DiagnosticGroup UNSTRANSPILABLE_FEATURES =
       DiagnosticGroups.registerGroup(
-          "untranspilableFeatures",
-          MarkUntranspilableFeaturesAsRemoved.UNTRANSPILABLE_FEATURE_PRESENT);
+          "untranspilableFeatures", ReportUntranspilableFeatures.UNTRANSPILABLE_FEATURE_PRESENT);
 
   public static final DiagnosticGroup FEATURES_NOT_SUPPORTED_BY_PASS =
       DiagnosticGroups.registerDeprecatedGroup("featuresNotSupportedByPass");
@@ -301,6 +304,10 @@ public class DiagnosticGroups {
           FunctionTypeBuilder.ALL_DIAGNOSTICS,
           DiagnosticGroups.GLOBAL_THIS);
 
+  public static final DiagnosticGroup ES5_INHERITANCE_DIAGNOSTIC_GROUP =
+      DiagnosticGroups.registerGroup(
+          "checkEs5InheritanceCorrectnessConditions", TypeCheck.ES5_INHERITANCE_DIAGNOSTIC_GROUP);
+
   public static final DiagnosticGroup CHECK_PROTOTYPAL_TYPES =
       DiagnosticGroups.registerGroup(
           "checkPrototypalTypes",
@@ -419,6 +426,14 @@ public class DiagnosticGroups {
           CheckMissingRequires.MISSING_REQUIRE_TYPE,
           CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE);
 
+  public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
+      DiagnosticGroups.registerGroup(
+          "strictMissingRequire",
+          CheckMissingRequires.INCORRECT_NAMESPACE_ALIAS_REQUIRE,
+          CheckMissingRequires.INCORRECT_NAMESPACE_ALIAS_REQUIRE_TYPE,
+          CheckMissingRequires.INDIRECT_NAMESPACE_REF_REQUIRE,
+          CheckMissingRequires.INDIRECT_NAMESPACE_REF_REQUIRE_TYPE);
+
   /**
    * A set of diagnostics expected when parsing and type checking partial programs. Useful for clutz
    * (tool that extracts TypeScript definitions from JS code).
@@ -429,15 +444,12 @@ public class DiagnosticGroups {
           REPORT_UNKNOWN_TYPES,
           UNDEFINED_VARIABLES,
           MISSING_PROVIDE,
-          DiagnosticGroup.forType(FunctionTypeBuilder.RESOLVED_TAG_EMPTY),
           DiagnosticGroup.forType(MISSING_MODULE_OR_PROVIDE),
           MISSING_PROPERTIES,
           // triggered by typedefs with missing types
           DUPLICATE_VARS,
           // caused by a define depending on another define that's missing
-          DiagnosticGroup.forType(ProcessDefines.INVALID_DEFINE_VALUE),
-          // ES Module imports of files not reachable from this partial program.
-          DiagnosticGroup.forType(ModuleLoader.LOAD_WARNING));
+          DiagnosticGroup.forType(ProcessDefines.INVALID_DEFINE_VALUE));
 
   public static final DiagnosticGroup STRICT_REQUIRES =
       DiagnosticGroups.registerDeprecatedGroup("legacyGoogScopeRequire");
@@ -608,7 +620,8 @@ public class DiagnosticGroups {
               ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION,
               ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE,
               RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,
-              RhinoErrorReporter.UNNECESSARY_ESCAPE));
+              RhinoErrorReporter.UNNECESSARY_ESCAPE,
+              RhinoErrorReporter.STRING_CONTINUATION));
 
   public static final DiagnosticGroup STRICT_MODULE_CHECKS =
       DiagnosticGroups.registerGroup(
@@ -636,6 +649,10 @@ public class DiagnosticGroups {
           CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR,
           INVALID_CLOSURE_CALL_SCOPE_ERROR,
           INVALID_GET_CALL_SCOPE);
+
+  public static final DiagnosticGroup CLOSURE_CLASS_CHECKS =
+      DiagnosticGroups.registerGroup(
+          "closureClassChecks", ProcessClosurePrimitives.POSSIBLE_BASE_CLASS_ERROR);
 
   // This group exists so that tests can check for these warnings. It is intentionally not
   // named so that it is is not suppressible via the command line or in code.
@@ -682,8 +699,10 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerUnsuppressibleGroup(
           ProcessDefines.INVALID_DEFINE_VALUE, ProcessDefines.INVALID_DEFINE_TYPE);
 
-  public static final DiagnosticGroup INVALID_CONST_PARAM =
-      DiagnosticGroups.registerUnsuppressibleGroup(ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+  public static final DiagnosticGroup INVALID_CLOSURE_UNAWARE_ANNOTATED_CODE =
+      DiagnosticGroups.registerUnsuppressibleGroup(
+          ManageClosureUnawareCode.UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_PRESERVE,
+          ManageClosureUnawareCode.UNEXPECTED_JSCOMPILER_CLOSURE_UNAWARE_CODE);
 
   public static final DiagnosticGroup CANNOT_TRANSPILE_FEATURE =
       DiagnosticGroups.registerUnsuppressibleGroup(
@@ -707,6 +726,15 @@ public class DiagnosticGroups {
   // given error is from parsing.
   public static final DiagnosticGroup PARSING =
       DiagnosticGroup.forType(RhinoErrorReporter.PARSE_ERROR);
+
+  public static final DiagnosticGroup CLOSURE_UNAWARE_CODE_ANNOTATION_PRESENT =
+      DiagnosticGroups.registerGroup( // undocumented
+          // Deliberately undocumented and unsuppressable per-file, but this should be OK because
+          // the diagnostics are disabled by default.
+          // They can be enabled by explicitly enabling them using
+          // `--jscomp_error=closureUnawareCodeAnnotationPresent`.
+          "closureUnawareCodeAnnotationPresent",
+          RhinoErrorReporter.CLOSURE_UNAWARE_ANNOTATION_PRESENT);
 
   // For internal use only, so there are no constants for these groups.
   static {

@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,17 +13,20 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package jsfunction
 
 import javaemul.lang.*
 import jsinterop.annotations.JsFunction
 import kotlin.Any
+import kotlin.Array
 import kotlin.Int
 import kotlin.OptIn
 import kotlin.String
 import kotlin.Suppress
+import kotlin.arrayOf
 import kotlin.experimental.ExperimentalObjCName
 import kotlin.native.ObjCName
 
@@ -68,13 +70,43 @@ open class JsFunctionOptimization {
     }
    }
   }
+  val f /* ___EMPTY___? */ = object : JsFunctionOptimization.F {
+   override fun m(s: String?): String? {
+    return ""
+   }
+  }
+  val array: Array<Any?>? = arrayOf<Any?>(object : JsFunctionOptimization.F {
+   override fun m(s: String?): String? {
+    return ""
+   }
+  })
+  Holder(object : JsFunctionOptimization.F {
+   override fun m(s: String?): String? {
+    return ""
+   }
+  })
+  Holder(1, object : JsFunctionOptimization.F {
+   override fun m(s: String?): String? {
+    return ""
+   }
+  })
  }
 
+ @ObjCName("J2ktJsfunctionJsFunctionOptimization_F", exact = true)
  @JsFunction
  fun interface F {
   @ObjCName("m")
   fun m(
    @ObjCName("withNSString") s: String?
   ): String?
+ }
+
+ @ObjCName("J2ktJsfunctionJsFunctionOptimization_Holder", exact = true)
+ open inner class Holder<T> {
+  internal constructor(value: T)
+
+  internal constructor(i: Int, vararg value: T) {
+   val value_1: Array<T>? = value as Array<T>?
+  }
  }
 }

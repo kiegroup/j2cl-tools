@@ -1,6 +1,7 @@
 # Description:
 #   This package contains frontend that uses Eclispe/JDT to parse, typecheck and resolve Java code.
 
+load("@rules_java//java:defs.bzl", "java_library")
 load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 package(

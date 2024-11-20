@@ -667,12 +667,11 @@ public enum CompilationParam {
   OPTIMIZE_ARGUMENTS_ARRAY(ParamGroup.OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setOptimizeArgumentsArray(value);
     }
 
     @Override
     public boolean isApplied(CompilerOptions options) {
-      return options.optimizeArgumentsArray;
+      return false;
     }
   },
 
@@ -692,13 +691,11 @@ public enum CompilationParam {
   /** Removes code that will never execute */
   REMOVE_DEAD_CODE(ParamGroup.OPTIMIZATION) {
     @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setRemoveDeadCode(value);
-    }
+    public void apply(CompilerOptions options, boolean value) {}
 
     @Override
     public boolean isApplied(CompilerOptions options) {
-      return options.removeDeadCode;
+      return false;
     }
   },
 

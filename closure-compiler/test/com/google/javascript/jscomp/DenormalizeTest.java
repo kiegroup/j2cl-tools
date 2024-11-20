@@ -23,7 +23,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author johnlenz@google.com (John Lenz) */
+/**
+ * @author johnlenz@google.com (John Lenz)
+ */
 @RunWith(JUnit4.class)
 public final class DenormalizeTest extends CompilerTestCase {
 
@@ -171,7 +173,7 @@ public final class DenormalizeTest extends CompilerTestCase {
 
     test(
         "var [a, b] = [1, 2]; for (; a < 2; a = b++) foo();",
-        "for (var [a, b] = [1, 2]; a < 2; a = b++) foo();");
+        "var a; var b; for ([a, b] = [1, 2]; a < 2; a = b++) foo();");
   }
 
   @Test
@@ -262,7 +264,6 @@ public final class DenormalizeTest extends CompilerTestCase {
 
   @Test
   public void testLogicalAssignShorthand() {
-    disableScriptFeatureValidation();
     test("x || (x = 1);", "x ||= 1;");
     test("x && (x = 1);", "x &&= 1;");
     test("x ?? (x = 1);", "x ??= 1;");

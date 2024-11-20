@@ -60,7 +60,7 @@ public class Type extends Node implements HasSourcePosition, HasJsNameInfo, HasR
    * declaration.
    */
   public DeclaredTypeDescriptor getTypeDescriptor() {
-    return getDeclaration().toUnparameterizedTypeDescriptor();
+    return getDeclaration().toDescriptor();
   }
 
   public boolean containsMethod(String mangledName) {
@@ -136,6 +136,10 @@ public class Type extends Node implements HasSourcePosition, HasJsNameInfo, HasR
     types.add(type);
   }
 
+  public void addTypes(List<Type> types) {
+    types.forEach(this::addType);
+  }
+
   public List<Member> getMembers() {
     return members;
   }
@@ -183,7 +187,7 @@ public class Type extends Node implements HasSourcePosition, HasJsNameInfo, HasR
   public void addInstanceInitializerBlock(Block instanceInitializer) {
     members.add(
         InitializerBlock.newBuilder()
-            .setBlock(instanceInitializer)
+            .setBody(instanceInitializer)
             .setSourcePosition(instanceInitializer.getSourcePosition())
             .setDescriptor(getTypeDescriptor().getInitMethodDescriptor())
             .build());
@@ -192,7 +196,7 @@ public class Type extends Node implements HasSourcePosition, HasJsNameInfo, HasR
   public void addStaticInitializerBlock(Block staticInitializer) {
     members.add(
         InitializerBlock.newBuilder()
-            .setBlock(staticInitializer)
+            .setBody(staticInitializer)
             .setSourcePosition(staticInitializer.getSourcePosition())
             .setDescriptor(getTypeDescriptor().getClinitMethodDescriptor())
             .build());
@@ -202,7 +206,7 @@ public class Type extends Node implements HasSourcePosition, HasJsNameInfo, HasR
     members.add(
         index,
         InitializerBlock.newBuilder()
-            .setBlock(staticInitializer)
+            .setBody(staticInitializer)
             .setSourcePosition(staticInitializer.getSourcePosition())
             .setDescriptor(getTypeDescriptor().getClinitMethodDescriptor())
             .build());

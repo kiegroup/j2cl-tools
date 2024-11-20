@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package unimplementedbridgemethod
 
@@ -27,12 +27,14 @@ import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.JvmStatic
 import kotlin.native.ObjCName
 
+@ObjCName("J2ktUnimplementedbridgemethodI", exact = true)
 fun interface I<T> {
  @ObjCName("foo")
  fun foo(
   @ObjCName("withId") t: T
  ): Int
 
+ @ObjCName("J2ktUnimplementedbridgemethodICompanion", exact = true)
  companion object {
   @JvmStatic
   @ObjCName("staticFoo")
@@ -42,8 +44,10 @@ fun interface I<T> {
  }
 }
 
+@ObjCName("J2ktUnimplementedbridgemethodJ", exact = true)
 fun interface J: I<String?> {}
 
+@ObjCName("J2ktUnimplementedbridgemethodBar", exact = true)
 abstract class Bar internal constructor(): J {}
 
 @ObjCName("J2ktUnimplementedbridgemethodFoo", exact = true)

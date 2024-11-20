@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.rhino.Node;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Annotates nodes with information from their original input file before the compiler performs work
@@ -63,7 +63,7 @@ public final class SourceInformationAnnotator extends NodeTraversal.AbstractPost
 
     // Annotate the original name.
     if (isStringNodeRequiringOriginalName(n)) {
-      setOriginalName(n, n.getString());
+      setOriginalName(n, n);
       return;
     }
 
@@ -100,6 +100,14 @@ public final class SourceInformationAnnotator extends NodeTraversal.AbstractPost
   private static void setOriginalName(Node n, String name) {
     if (!name.isEmpty() && n.getOriginalName() == null) {
       n.setOriginalName(name);
+    }
+  }
+
+  // Set the original name from the "getString" of the supplied node.
+  // This avoids having to check for if the string is interned.
+  private static void setOriginalName(Node n, Node name) {
+    if (!name.getString().isEmpty() && n.getOriginalName() == null) {
+      n.setOriginalNameFromName(name);
     }
   }
 }

@@ -48,11 +48,11 @@ import static com.google.javascript.rhino.jstype.JSTypeIterations.anyTypeMatches
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.jstype.JSType.MatchStatus;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Represents the computation of a single supertype-subtype relationship.
@@ -84,7 +84,7 @@ final class SubtypeChecker {
   private Boolean isUsingStructuralTyping;
   private SubtypingMode subtypingMode;
 
-  private HashMap<CacheKey, MatchStatus> subtypeCache;
+  private LinkedHashMap<CacheKey, MatchStatus> subtypeCache;
 
   private boolean hasRun = false;
   private int recursionDepth = 0;
@@ -144,7 +144,7 @@ final class SubtypeChecker {
     // Wait to instantiate/use the cache until we have some hint that there may be recursion.
     if (this.recursionDepth > POTENTIALLY_CYCLIC_RECURSION_DEPTH) {
       if (this.subtypeCache == null) {
-        this.subtypeCache = new HashMap<>();
+        this.subtypeCache = new LinkedHashMap<>();
       }
     }
 
@@ -227,7 +227,7 @@ final class SubtypeChecker {
       return true;
     }
 
-    /**
+    /*
      * Unwrap proxy types.
      *
      * <p>Only named types are unwrapped because other subclasses of `ProxyObjectType` should not be
@@ -263,9 +263,19 @@ final class SubtypeChecker {
   private boolean isObjectSubtypeHelper(ObjectType subtype, ObjectType supertype) {
     TemplateTypeMap subtypeParams = subtype.getTemplateTypeMap();
     TemplateTypeMap supertypeParams = supertype.getTemplateTypeMap();
+    boolean subAndSuperAreSameBaseType = false;
+    if (subtype.isTemplatizedType() && supertype.isTemplatizedType()) {
+      TemplatizedType templatizedSubType = subtype.toMaybeTemplatizedType();
+      TemplatizedType templatizedSuperType = supertype.toMaybeTemplatizedType();
+      ObjectType superTypeReferencedType = templatizedSuperType.getReferencedType();
+      ObjectType subTypeReferencedType = templatizedSubType.getReferencedType();
+      if (subTypeReferencedType.equals(superTypeReferencedType)) {
+        subAndSuperAreSameBaseType = true;
+      }
+    }
     boolean bivarantMatch = false;
 
-    /**
+    /*
      * Array and Object are exempt from template type invariance.
      *
      * <p>They also have to be checked first because the `Object` index key acts like an operator;
@@ -284,8 +294,10 @@ final class SubtypeChecker {
       bivarantMatch = true;
     }
 
-    if (this.isUsingStructuralTyping && supertype.isStructuralType()) {
-      /**
+    if (!subAndSuperAreSameBaseType
+        && this.isUsingStructuralTyping
+        && supertype.isStructuralType()) {
+      /*
        * Do this before considering templatization in general.
        *
        * <p>If the super type is a structural type, then we can't safely unwrap any templatized
@@ -293,8 +305,8 @@ final class SubtypeChecker {
        */
       return this.isStructuralSubtypeHelper(
           subtype, supertype, PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL);
-    } else if (supertype.isRecordType()) {
-      /**
+    } else if (!subAndSuperAreSameBaseType && supertype.isRecordType()) {
+      /*
        * Anonymous record types are always considered structurally when supertypes.
        *
        * <p>Structural typing is the only kind of typing they support. However, we limit to the case
@@ -304,7 +316,7 @@ final class SubtypeChecker {
           subtype, supertype, PropertyOptionality.ALL_PROPS_ARE_REQUIRED);
     }
 
-    /**
+    /*
      * Wait to check template types until after structural checks.
      *
      * <p>It's possible for a subtructural type to satisfy the shape defined by a template
@@ -534,7 +546,7 @@ final class SubtypeChecker {
   }
 
   private boolean isProxyObjectSubtype(ProxyObjectType subtype, JSType supertype) {
-    /**
+    /*
      * Don't check the cache here.
      *
      * <p>If we do, we get false positives for recursion because proxy types are equal to their
@@ -566,7 +578,7 @@ final class SubtypeChecker {
     TemplateTypeMap submap = subtype.getTemplateTypeMap();
     TemplateTypeMap supermap = supertype.getTemplateTypeMap();
 
-    /**
+    /*
      * We only need to iterate the keys of the supermap.
      *
      * <p>A submap may have additional entries not present in the supermap, so long as it also has
@@ -652,16 +664,16 @@ final class SubtypeChecker {
         return unwrapped.registry.getAsyncIteratorValueTemplate();
 
       case "Iterable":
-        return unwrapped.registry.getIterableTemplate();
+        return unwrapped.registry.getIterableValueTemplate();
 
       case "IteratorIterable":
-        return unwrapped.registry.getIteratorIterableTemplateKey();
+        return unwrapped.registry.getIteratorIterableValueTemplate();
 
       case "IIterableResult":
-        return unwrapped.registry.getIIterableResultTemplateKey();
+        return unwrapped.registry.getIIterableResultValueTemplate();
 
       case "AsyncIterable":
-        return unwrapped.registry.getAsyncIterableTemplate();
+        return unwrapped.registry.getAsyncIterableValueTemplate();
 
       default:
         // All other types are either invariant or bivariant
@@ -729,7 +741,7 @@ final class SubtypeChecker {
     COVARIANT,
     CONTRAVARIANT,
     BIVARIANT,
-    INVARIANT;
+    INVARIANT
   }
 
   private static final class CacheKey {
@@ -751,7 +763,7 @@ final class SubtypeChecker {
         return true;
       }
 
-      /**
+      /*
        * The vast majority of cases will have already returned by now, since equality isn't even
        * checked unless the hash code matches, and in most cases there's only one instance of any
        * equivalent JSType floating around. The remainder only occurs for cyclic (or otherwise

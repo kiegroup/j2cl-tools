@@ -37,7 +37,7 @@ public class InsertJsFunctionImplementationConversionCasts extends Normalization
               @Override
               public Expression rewriteTypeConversionContext(
                   TypeDescriptor inferredTypeDescriptor,
-                  TypeDescriptor actualTypeDescriptor,
+                  TypeDescriptor declaredTypeDescriptor,
                   Expression expression) {
                 if (expression instanceof NullLiteral) {
                   // No need to add extra casts to a null literal.
@@ -49,7 +49,7 @@ public class InsertJsFunctionImplementationConversionCasts extends Normalization
                     || (inferredTypeDescriptor.isJsFunctionImplementation()
                         && expression.getTypeDescriptor().isJsFunctionInterface())) {
                   return JsDocCastExpression.newBuilder()
-                      .setCastType(inferredTypeDescriptor)
+                      .setCastTypeDescriptor(inferredTypeDescriptor)
                       .setExpression(expression)
                       .build();
                 }

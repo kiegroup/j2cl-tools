@@ -3,6 +3,7 @@
 # JVM async testing support should be placed under Guava or Xplat.
 
 load("//build_defs:rules.bzl", "j2cl_library")
+load("@rules_java//java:defs.bzl", "java_library")
 load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 package(

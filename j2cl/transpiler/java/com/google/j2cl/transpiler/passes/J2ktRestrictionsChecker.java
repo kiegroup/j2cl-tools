@@ -15,6 +15,8 @@
  */
 package com.google.j2cl.transpiler.passes;
 
+import static com.google.j2cl.transpiler.ast.TypeDescriptors.isPrimitiveVoid;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.j2cl.common.Problems;
@@ -44,6 +46,7 @@ public final class J2ktRestrictionsChecker {
           public boolean enterMethod(Method method) {
             checkNotGenericConstructor(method);
             checkReferencedTypeVisibilities(method);
+            checkKtProperty(method);
             return true;
           }
 
@@ -55,6 +58,7 @@ public final class J2ktRestrictionsChecker {
 
           @Override
           public boolean enterType(Type type) {
+            checkNullMarked(type);
             checkSuperTypeVisibilities(type);
             checkInterfaceTypeVisibilities(type);
             return true;
@@ -90,6 +94,53 @@ public final class J2ktRestrictionsChecker {
                     referencedTypeDescriptor.getReadableDescription(),
                     getDescription(referencedVisibility));
               }
+            }
+          }
+
+          private void checkKtProperty(Method method) {
+            MethodDescriptor methodDescriptor = method.getDescriptor();
+            if (!methodDescriptor.isKtProperty()) {
+              return;
+            }
+
+            if (methodDescriptor.isConstructor()) {
+              problems.error(
+                  method.getSourcePosition(),
+                  "Constructor '%s' can not be '@KtProperty'.",
+                  method.getReadableDescription());
+            }
+
+            if (!methodDescriptor.getParameterDescriptors().isEmpty()) {
+              problems.error(
+                  method.getSourcePosition(),
+                  "Method '%s' can not be '@KtProperty', as it has non-empty parameters.",
+                  method.getReadableDescription());
+            }
+
+            if (isPrimitiveVoid(methodDescriptor.getReturnTypeDescriptor())) {
+              problems.error(
+                  method.getSourcePosition(),
+                  "Method '%s' can not be '@KtProperty', as it has void return type.",
+                  method.getReadableDescription());
+            }
+          }
+
+          private void checkNullMarked(Type type) {
+            // Don't check for NullMarked in our own integration and readable tests where this is
+            // often intentionally omitted.
+            if (isFromJ2clReadableOrIntegrationTest(type)) {
+              return;
+            }
+            // Allow tolerance of some types not being null marked:
+            //   - Annotations are not propagated by J2KT anyway.
+            //   - Enums
+            if (!type.getDeclaration().isNullMarked()
+                && !type.getDeclaration().isAnnotation()
+                && !type.isEnum()) {
+              problems.warning(
+                  type.getSourcePosition(),
+                  "Type '%s' must be directly or indirectly @NullMarked.",
+                  type.getDeclaration().getQualifiedSourceName());
             }
           }
 
@@ -210,5 +261,12 @@ public final class J2ktRestrictionsChecker {
     }
 
     return Visibility.PUBLIC;
+  }
+
+  private static boolean isFromJ2clReadableOrIntegrationTest(Type type) {
+    String sourceFilePath = type.getSourcePosition().getFilePath();
+    return sourceFilePath != null
+        && (sourceFilePath.contains("javatests/com/google/j2cl/integration")
+            || sourceFilePath.contains("javatests/com/google/j2cl/readable"));
   }
 }

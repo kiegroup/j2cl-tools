@@ -42,7 +42,7 @@ WebAssembly.Module = function(bytes) {};
 WebAssembly.Instance = function(moduleObject, importObject) {};
 
 /**
- * @typedef {{initial:number, maximum:(number|undefined)}}
+ * @typedef {{initial:number, maximum:(number|undefined), shared:(boolean|undefined)}}
  */
 var MemoryDescriptor;
 
@@ -99,6 +99,11 @@ WebAssemblyTagOptions.prototype.parameters;
  * @param {!WebAssemblyTagOptions} type
  */
 WebAssembly.Tag = function(type) {};
+
+/**
+ * @type {!WebAssembly.Tag}
+ */
+WebAssembly.JSTag;
 
 /**
  * @record

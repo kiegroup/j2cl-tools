@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package bridgejsmethod
 
@@ -29,7 +29,6 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.Suppress
 import kotlin.experimental.ExperimentalObjCName
-import kotlin.jvm.JvmField
 import kotlin.jvm.JvmStatic
 import kotlin.native.ObjCName
 
@@ -152,35 +151,40 @@ open class Main {
   override fun fun_pp_bridgejsmethod(string: String?, l1: L1) {}
  }
 
+ @ObjCName("J2ktBridgejsmethodMain_M", exact = true)
  fun interface M {
   @ObjCName("getB")
   fun getB(): Main.B?
  }
 
+ @ObjCName("J2ktBridgejsmethodMain_N", exact = true)
  @JsType
  abstract inner class N internal constructor(): Main.M {
   abstract override fun getB(): Main.B?
  }
 
+ @ObjCName("J2ktBridgejsmethodMain_O", exact = true)
  open inner class O internal constructor(): Main.N() {
-  @JvmField
-  internal var b_private_3: Main.B? = null
+  private var b: Main.B? = null
 
   override fun getB(): Main.B? {
-   return this.b_private_3
+   return this.b
   }
  }
 
+ @ObjCName("J2ktBridgejsmethodMain_P", exact = true)
  fun interface P {
   @ObjCName("getKey")
   fun getKey(): String?
  }
 
+ @ObjCName("J2ktBridgejsmethodMain_Q", exact = true)
  @JsType
  abstract inner class Q internal constructor(): Main.P {
   abstract override fun getKey(): String?
  }
 
+ @ObjCName("J2ktBridgejsmethodMain_R", exact = true)
  @JsType
  abstract inner class R internal constructor(): Main.Q() {
   override fun getKey(): String? {
@@ -188,8 +192,10 @@ open class Main {
   }
  }
 
+ @ObjCName("J2ktBridgejsmethodMain_S", exact = true)
  open inner class S internal constructor(): Main.R() {}
 
+ @ObjCName("J2ktBridgejsmethodMain_GrandParent", exact = true)
  open inner class GrandParent<T> internal constructor() {
   @ObjCName("jsMethod")
   @JsMethod
@@ -203,20 +209,24 @@ open class Main {
   ) {}
  }
 
+ @ObjCName("J2ktBridgejsmethodMain_Parent", exact = true)
  open inner class Parent<T: Main.Parent<*>?> internal constructor(): Main.GrandParent<T>() {
   override fun jsMethod(t: T) {}
 
   override fun method(t: T) {}
  }
 
+ @ObjCName("J2ktBridgejsmethodMain_ChildWithoutOverrides", exact = true)
  open inner class ChildWithoutOverrides internal constructor(): Main.Parent<Main.ChildWithoutOverrides?>() {}
 
+ @ObjCName("J2ktBridgejsmethodMain_ChildWithOverrides", exact = true)
  open inner class ChildWithOverrides<T: Main.ChildWithOverrides<T>?> internal constructor(): Main.Parent<T>() {
   override fun jsMethod(t: T) {}
 
   override fun method(t: T) {}
  }
 
+ @ObjCName("J2ktBridgejsmethodMain_ChildWithRenamedOverride", exact = true)
  open inner class ChildWithRenamedOverride internal constructor(): Main.GrandParent<Main.ChildWithRenamedOverride?>() {
   @JsMethod(name = "renamedJsMethod")
   override fun jsMethod(t: Main.ChildWithRenamedOverride?) {}

@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package typeannotations
 
@@ -29,10 +29,13 @@ import kotlin.jvm.JvmStatic
 import kotlin.native.ObjCName
 import typeannotations.ParametricType
 
+@ObjCName("J2ktTypeannotationsAbstractType", exact = true)
 abstract class AbstractType internal constructor(): ParametricType<AbstractType?> {}
 
+@ObjCName("J2ktTypeannotationsAbstractTypeNonNull", exact = true)
 abstract class AbstractTypeNonNull internal constructor(): ParametricType<AbstractType> {}
 
+@ObjCName("J2ktTypeannotationsParent", exact = true)
 open class Parent internal constructor() {
  @ObjCName("m")
  open fun m(
@@ -51,8 +54,10 @@ open class Parent internal constructor() {
  }
 }
 
+@ObjCName("J2ktTypeannotationsChildWithNullableParent", exact = true)
 open class ChildWithNullableParent internal constructor(): Parent(), ParametricType<Parent?> {}
 
+@ObjCName("J2ktTypeannotationsChildWithNonNullableParent", exact = true)
 open class ChildWithNonNullableParent internal constructor(): Parent(), ParametricType<Parent> {}
 
 @ObjCName("J2ktTypeannotationsTypeAnnotations", exact = true)

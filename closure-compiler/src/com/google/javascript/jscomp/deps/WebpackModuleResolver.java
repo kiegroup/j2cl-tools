@@ -22,10 +22,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.ErrorHandler;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModuleResolverFactory;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Resolution algorithm for Webpack. Modules are located by a map of numeric ids to module paths.
@@ -52,7 +52,7 @@ public class WebpackModuleResolver extends NodeModuleResolver {
         ImmutableList<String> moduleRootPaths,
         ErrorHandler errorHandler,
         PathEscaper pathEscaper) {
-      Map<String, String> normalizedPathsById = new HashMap<>();
+      Map<String, String> normalizedPathsById = new LinkedHashMap<>();
       for (Entry<String, String> moduleEntry : lookupMap.entrySet()) {
         String canonicalizedPath =
             ModuleLoader.normalize(pathEscaper.escape(moduleEntry.getValue()), moduleRootPaths);

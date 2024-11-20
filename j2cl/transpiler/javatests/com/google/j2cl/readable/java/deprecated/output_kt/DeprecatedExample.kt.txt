@@ -3,7 +3,6 @@
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
- "REPEATED_BOUND",
  "SENSELESS_COMPARISON",
  "UNCHECKED_CAST",
  "UNNECESSARY_LATEINIT",
@@ -14,7 +13,8 @@
  "UNUSED_VARIABLE",
  "USELESS_CAST",
  "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
- "VARIABLE_WITH_REDUNDANT_INITIALIZER")
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
 
 package deprecated
 
@@ -56,6 +56,7 @@ open class DeprecatedExample {
   ) {}
  }
 
+ @ObjCName("J2ktDeprecatedDeprecatedExample_DeprecatedInterface", exact = true)
  @JsType
  fun interface DeprecatedInterface {
   @ObjCName("doAThing")
@@ -64,6 +65,7 @@ open class DeprecatedExample {
   )
  }
 
+ @ObjCName("J2ktDeprecatedDeprecatedExample_DeprecatedJsFunction", exact = true)
  @JsFunction
  fun interface DeprecatedJsFunction {
   @ObjCName("doAThing")
@@ -72,13 +74,17 @@ open class DeprecatedExample {
   )
  }
 
+ @ObjCName("J2ktDeprecatedDeprecatedExample_DeprecatedEnum", exact = true)
  @JsType
  enum class DeprecatedEnum {
+  @ObjCName("A_VALUE")
   A_VALUE;
  }
 
+ @ObjCName("J2ktDeprecatedDeprecatedExample_DeprecatedJsEnum", exact = true)
  @JsEnum
  enum class DeprecatedJsEnum {
+  @ObjCName("A_VALUE")
   A_VALUE;
  }
 }

@@ -17,6 +17,7 @@
 
 package com.google.j2cl.transpiler.frontend.kotlin
 
+import com.google.common.collect.ImmutableList
 import com.google.j2cl.common.SourcePosition
 import com.google.j2cl.transpiler.ast.ArrayAccess
 import com.google.j2cl.transpiler.ast.ArrayLength
@@ -81,9 +82,9 @@ import com.google.j2cl.transpiler.ast.VariableDeclarationExpression
 import com.google.j2cl.transpiler.ast.VariableDeclarationFragment
 import com.google.j2cl.transpiler.ast.WhileStatement
 import com.google.j2cl.transpiler.frontend.common.AbstractCompilationUnitBuilder
+import com.google.j2cl.transpiler.frontend.kotlin.ir.IntrinsicMethods
 import com.google.j2cl.transpiler.frontend.kotlin.ir.findFunctionByName
 import com.google.j2cl.transpiler.frontend.kotlin.ir.getArguments
-import com.google.j2cl.transpiler.frontend.kotlin.ir.getFunctionExpression
 import com.google.j2cl.transpiler.frontend.kotlin.ir.getNameSourcePosition
 import com.google.j2cl.transpiler.frontend.kotlin.ir.getParameters
 import com.google.j2cl.transpiler.frontend.kotlin.ir.getSourcePosition
@@ -97,6 +98,7 @@ import com.google.j2cl.transpiler.frontend.kotlin.ir.isUnitInstanceReference
 import com.google.j2cl.transpiler.frontend.kotlin.ir.javaName
 import com.google.j2cl.transpiler.frontend.kotlin.ir.resolveLabel
 import com.google.j2cl.transpiler.frontend.kotlin.ir.typeSubstitutionMap
+import com.google.j2cl.transpiler.frontend.kotlin.ir.unfoldExpression
 import com.google.j2cl.transpiler.frontend.kotlin.lower.IrForInLoop
 import com.google.j2cl.transpiler.frontend.kotlin.lower.IrForLoop
 import com.google.j2cl.transpiler.frontend.kotlin.lower.IrSwitch
@@ -174,7 +176,6 @@ import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.impl.makeTypeProjection
 import org.jetbrains.kotlin.ir.types.isNullable
 import org.jetbrains.kotlin.ir.types.isPrimitiveType
-import org.jetbrains.kotlin.ir.types.isUnit
 import org.jetbrains.kotlin.ir.types.makeNotNull
 import org.jetbrains.kotlin.ir.types.makeNullable
 import org.jetbrains.kotlin.ir.types.typeWithArguments
@@ -340,7 +341,7 @@ class CompilationUnitBuilder(
     irAnonymousInitializer: IrAnonymousInitializer
   ): InitializerBlock =
     InitializerBlock.newBuilder()
-      .setBlock(convertBody(irAnonymousInitializer.body))
+      .setBody(convertBody(irAnonymousInitializer.body))
       .setDescriptor(
         environment
           .getDeclaredTypeDescriptor(irAnonymousInitializer.parentAsClass.defaultType)
@@ -495,19 +496,13 @@ class CompilationUnitBuilder(
       .build()
 
   private fun convertReturnStatement(irReturn: IrReturn): Statement {
-    val returnTarget = (irReturn.returnTargetSymbol as? IrFunctionSymbol)?.owner
+    val returnTarget = (irReturn.returnTargetSymbol as IrFunctionSymbol).owner
     val value =
       // If the method return type should be represented as a void, omit the return value of Unit.
-      if (
-        irReturn.value.type.isUnit() &&
-          returnTarget != null &&
-          returnTarget.hasVoidReturn &&
-          !returnTarget.isMultifileBridge()
-      ) {
-        // Ensure we only see a Unit.INSTANCE reference, or a variable reference. The latter is
-        // likely the result of block decomposition (ex. a tmp variable), but regardless, reading a
-        // variable is a pure operation and safe to omit.
-        check(irReturn.value.isUnitInstanceReference || irReturn.value is IrGetValue) {
+      // (Except muti-file bridge methods which are not lowered and it is not safe to drop their
+      // return value.)
+      if (returnTarget.hasVoidReturn && !returnTarget.isMultifileBridge()) {
+        check(irReturn.value.isUnitInstanceReference) {
           "Methods with a void return type should have been lowered to only return Unit.INSTANCE"
         }
         null
@@ -560,7 +555,7 @@ class CompilationUnitBuilder(
 
   private fun convertSwitchCase(irSwitch: IrSwitch) =
     SwitchStatement.newBuilder()
-      .setSwitchExpression(convertExpression(irSwitch.switchExpression))
+      .setExpression(convertExpression(irSwitch.expression))
       .setSourcePosition(getSourcePosition(irSwitch))
       .setCases(irSwitch.cases.map { convertCaseStatement(it) })
       .build()
@@ -572,7 +567,10 @@ class CompilationUnitBuilder(
     }
 
     return SwitchCase.newBuilder()
-      .setCaseExpression(irSwitchCase.caseExpression?.let { convertExpression(it) })
+      .setCaseExpressions(
+        irSwitchCase.caseExpression?.let { ImmutableList.of(convertExpression(it)) }
+          ?: ImmutableList.of()
+      )
       .setStatements(statements)
       .build()
   }
@@ -684,7 +682,6 @@ class CompilationUnitBuilder(
       irCall.isArraySetCall -> convertArraySetCall(irCall)
       irCall.isArrayOfCall -> convertArrayOfCall(irCall)
       irCall.isArrayOfNullCall -> createNewArray(irCall)
-      irCall.isArrayIteratorCall -> convertArrayIteratorCall(irCall)
       irCall.isIsArrayOfCall -> convertIsArrayOfCall(irCall)
       irCall.isDataClassArrayMemberHashCode -> convertDataClassArrayMemberCall(irCall, "hashCode")
       irCall.isDataClassArrayMemberToString -> convertDataClassArrayMemberCall(irCall, "toString")
@@ -697,7 +694,6 @@ class CompilationUnitBuilder(
       irCall.isKClassJavaObjectTypePropertyReference ->
         convertKClassJavaPropertyReference(irCall, wrapPrimitives = true)
       irCall.isRangeToCall -> convertRangeToCall(irCall)
-      irCall.isRangeUntilCall -> convertRangeUntilCall(irCall)
       irCall.isBinaryOperation -> convertBinaryOperation(irCall)
       irCall.isPrefixOperation -> convertPrefixOperation(irCall)
       irCall.isEqualsOperator -> convertEqualsOperator(irCall)
@@ -821,26 +817,6 @@ class CompilationUnitBuilder(
     return convertExpression(irCall.getArguments()[0])
   }
 
-  private fun convertArrayIteratorCall(irCall: IrCall): Expression {
-    require(irCall.valueArgumentsCount == 0) { "invalid number of arguments" }
-    val isPrimitive = irCall.dispatchReceiver!!.type.isPrimitiveArray()
-    val qualifier = convertQualifier(irCall)!!
-    val qualifierTypeDescriptor =
-      qualifier.typeDescriptor.toRawTypeDescriptor() as ArrayTypeDescriptor
-    val methodDescriptor =
-      environment.getWellKnowMethodDescriptor(
-        "kotlin.jvm.internal.iterator",
-        if (isPrimitive) qualifierTypeDescriptor else TypeDescriptors.get().javaLangObjectArray,
-      )
-
-    // Rewrite a call in the form of `arr.iterator()` into `iterator(arr)`,  in particular the
-    // qualifier is being moved to be the first argument.
-    return MethodCall.Builder.from(methodDescriptor)
-      .setArguments(convertQualifier(irCall))
-      .setSourcePosition(getSourcePosition(irCall))
-      .build()
-  }
-
   private fun convertIsArrayOfCall(irCall: IrCall): Expression =
     // Transforms `array.isArrayOf<String>()` to `array instanceof String[]`
     InstanceOfExpression.newBuilder()
@@ -893,25 +869,6 @@ class CompilationUnitBuilder(
           convertExpression(checkNotNull(irCall.getValueArgument(0))),
         )
       )
-      .build()
-  }
-
-  private fun convertRangeUntilCall(irCall: IrCall): Expression {
-    require(irCall.valueArgumentsCount == 1) { "invalid number of arguments" }
-    val qualifier = checkNotNull(convertQualifier(irCall))
-    val valueArgumentExpression = convertExpression(checkNotNull(irCall.getValueArgument(0)))
-    val methodDescriptor =
-      environment.getWellKnowMethodDescriptor(
-        "kotlin.ranges.until",
-        // We need to pass the dispatch receiver as the first argument because it's an extension
-        // function.
-        qualifier.typeDescriptor,
-        valueArgumentExpression.typeDescriptor,
-      )
-
-    return MethodCall.Builder.from(methodDescriptor)
-      .setArguments(qualifier, valueArgumentExpression)
-      .setSourcePosition(getSourcePosition(irCall))
       .build()
   }
 
@@ -1281,7 +1238,7 @@ class CompilationUnitBuilder(
           // the cast can not be replaced by a JsDocCastExpression.
           JsDocCastExpression.newBuilder()
             .setExpression(expression)
-            .setCastType(testTypeDescriptor)
+            .setCastTypeDescriptor(testTypeDescriptor)
             .build()
         } else {
           CastExpression.newBuilder()
@@ -1336,7 +1293,7 @@ class CompilationUnitBuilder(
   }
 
   private fun convertSamConversion(irTypeOperatorCall: IrTypeOperatorCall): Expression {
-    val expression = irTypeOperatorCall.argument
+    val expression = irTypeOperatorCall.unfoldExpression()
     val functionalTypeDescriptor = environment.getDeclaredTypeDescriptor(irTypeOperatorCall.type)
     return when (expression) {
       is IrFunctionReference -> createFunctionExpression(functionalTypeDescriptor, expression)
@@ -1347,13 +1304,10 @@ class CompilationUnitBuilder(
           convertQualifier(expression),
           expression.getter,
         )
+      is IrFunctionExpression -> createFunctionExpression(functionalTypeDescriptor, expression)
       else ->
-        // TODO(b/225955286): Implement conversion functionality from things that are not
-        // lambdas.
-        createFunctionExpression(
-          functionalTypeDescriptor,
-          irTypeOperatorCall.getFunctionExpression(),
-        )
+        // TODO(b/225955286): Implement conversion functionality from things that are not lambdas.
+        throw IllegalStateException("Unsupported SAM conversion ${irTypeOperatorCall.dump()}")
     }
   }
 
@@ -1724,9 +1678,6 @@ class CompilationUnitBuilder(
   private val IrCall.isIsArrayOfCall: Boolean
     get() = intrinsicMethods.isIsArrayOf(this)
 
-  private val IrCall.isArrayIteratorCall: Boolean
-    get() = intrinsicMethods.isArrayIterator(this)
-
   private val IrCall.isDataClassArrayMemberToString: Boolean
     get() = intrinsicMethods.isDataClassArrayMemberToString(this)
 
@@ -1738,9 +1689,6 @@ class CompilationUnitBuilder(
 
   private val IrCall.isRangeToCall: Boolean
     get() = intrinsicMethods.isRangeTo(this)
-
-  private val IrCall.isRangeUntilCall: Boolean
-    get() = intrinsicMethods.isRangeUntil(this)
 
   private val IrCall.isEqualsOperator: Boolean
     get() = intrinsicMethods.isEqualsOperator(this)

@@ -302,7 +302,8 @@ public class TestMojo extends AbstractBuildMojo {
                 getFileWithMavenCoords(jreJar),
                 getFileWithMavenCoords(internalAnnotationsJar),
                 getFileWithMavenCoords(jsinteropAnnotationsJar),
-                getFileWithMavenCoords("com.vertispan.jsinterop:base:" + Versions.VERTISPAN_JSINTEROP_BASE_VERSION),//TODO stop hardcoding this when goog releases a "base" which actually works on both platforms
+                getFileWithMavenCoords(jspecify),
+                getFileWithMavenCoords("org.kie.j2cl.tools.jsinterop:base:" + Versions.VERTISPAN_JSINTEROP_BASE_VERSION),//TODO stop hardcoding this when goog releases a "base" which actually works on both platforms
                 getFileWithMavenCoords("org.kie.j2cl.tools:junit-processor:" + Versions.J2CL_VERSION),
                 getFileWithMavenCoords(runtime),
                 getFileWithMavenCoords(junitAnnotations)

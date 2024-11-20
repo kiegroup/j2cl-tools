@@ -148,28 +148,28 @@ Symbol.unscopables;
 
 /**
  * @record
- * @template VALUE
+ * @template TYield
  */
 function IIterableResult() {};
 
 /** @type {boolean} */
 IIterableResult.prototype.done;
 
-/** @type {VALUE} */
+/** @type {TYield} */
 IIterableResult.prototype.value;
 
 
 
 /**
  * @interface
- * @template VALUE
+ * @template T, TReturn, TNext
  */
 function Iterable() {}
 
 // TODO(johnlenz): remove the suppression when the compiler understands
 // "symbol" natively
 /**
- * @return {!Iterator<VALUE, ?, *>}
+ * @return {!Iterator<T, ?, *>}
  * @suppress {externsValidation}
  */
 Iterable.prototype[Symbol.iterator] = function() {};
@@ -177,17 +177,17 @@ Iterable.prototype[Symbol.iterator] = function() {};
 
 
 /**
- * TODO(b/142881197): UNUSED_RETURN_T and UNUSED_NEXT_T are not yet used for
- * anything. https://github.com/google/closure-compiler/issues/3489
+ * TODO(b/142881197): TReturn and TNext are not yet used for anything.
+ * https://github.com/google/closure-compiler/issues/3489
  * @interface
- * @template VALUE, UNUSED_RETURN_T, UNUSED_NEXT_T
+ * @template T, TReturn, TNext
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/The_Iterator_protocol
  */
 function Iterator() {}
 
 /**
  * @param {?=} opt_value
- * @return {!IIterableResult<VALUE>}
+ * @return {!IIterableResult<T>}
  */
 Iterator.prototype.next = function(opt_value) {};
 
@@ -197,8 +197,8 @@ Iterator.prototype.next = function(opt_value) {};
  *
  * @interface
  * @extends {Iterator<T, ?, *>}
- * @extends {Iterable<T>}
- * @template T
+ * @extends {Iterable<T, ?, *>}
+ * @template T, TReturn, TNext
  */
 function IteratorIterable() {}
 
@@ -725,7 +725,7 @@ ReadonlyArray.prototype.reduceRight = function(callback, opt_initialValue) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !ReadonlyArray<T>): ?} callback
+ * @param {?function(this:S, T, number, !ReadonlyArray<T>): *} callback
  * @param {S=} opt_thisobj
  * @return {boolean}
  * @this {IArrayLike<T>|string}
@@ -736,7 +736,7 @@ ReadonlyArray.prototype.every = function(callback, opt_thisobj) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !ReadonlyArray<T>): ?} callback
+ * @param {?function(this:S, T, number, !ReadonlyArray<T>): *} callback
  * @param {S=} opt_thisobj
  * @return {!Array<T>}
  * @this {IArrayLike<T>|string}
@@ -793,7 +793,7 @@ ReadonlyArray.prototype.map = function(callback, opt_thisobj) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !ReadonlyArray<T>): ?} callback
+ * @param {?function(this:S, T, number, !ReadonlyArray<T>): *} callback
  * @param {S=} opt_thisobj
  * @return {boolean}
  * @this {IArrayLike<T>|string}
@@ -1009,7 +1009,7 @@ Array.prototype.reduceRight = function(callback, opt_initialValue) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array<T>): ?} callback
+ * @param {?function(this:S, T, number, !Array<T>): *} callback
  * @param {S=} opt_thisobj
  * @return {boolean}
  * @this {IArrayLike<T>|string}
@@ -1021,7 +1021,7 @@ Array.prototype.every = function(callback, opt_thisobj) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array<T>): ?} callback
+ * @param {?function(this:S, T, number, !Array<T>): *} callback
  * @param {S=} opt_thisobj
  * @return {!Array<T>}
  * @this {IArrayLike<T>|string}
@@ -1083,7 +1083,7 @@ Array.prototype.map = function(callback, opt_thisobj) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array<T>): ?} callback
+ * @param {?function(this:S, T, number, !Array<T>): *} callback
  * @param {S=} opt_thisobj
  * @return {boolean}
  * @this {IArrayLike<T>|string}
@@ -1172,7 +1172,7 @@ Number.prototype.toExponential = function(opt_fractionDigits) {};
 
 /**
  * @this {Number|number}
- * @param {*=} opt_digits
+ * @param {number=} opt_digits
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toFixed
@@ -2134,7 +2134,7 @@ String.prototype.localeCompare = function(compareString, locales, options) {};
  *
  * @this {String|string}
  * @param {*} regexp
- * @return {Array<string>} This should really return an Array with a few
+ * @return {RegExpResult} This should really return an Array with a few
  *     special properties, but we do not have a good way to model this in
  *     our type system. Also see Regexp.prototype.exec.
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match

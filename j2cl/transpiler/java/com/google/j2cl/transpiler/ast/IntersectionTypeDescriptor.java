@@ -91,15 +91,6 @@ public abstract class IntersectionTypeDescriptor extends TypeDescriptor {
   }
 
   @Override
-  @Memoized
-  public IntersectionTypeDescriptor toUnparameterizedTypeDescriptor() {
-    return newBuilder()
-        .setIntersectionTypeDescriptors(
-            TypeDescriptors.toUnparameterizedTypeDescriptors(getIntersectionTypeDescriptors()))
-        .build();
-  }
-
-  @Override
   public boolean isAssignableTo(TypeDescriptor that) {
     return getIntersectionTypeDescriptors()
         .stream()
@@ -156,7 +147,7 @@ public abstract class IntersectionTypeDescriptor extends TypeDescriptor {
     return IntersectionTypeDescriptor.newBuilder()
         .setIntersectionTypeDescriptors(
             getIntersectionTypeDescriptors().stream()
-                .map(TypeDescriptor::toNullable)
+                .map(TypeDescriptor::toNonNullable)
                 .collect(toImmutableList()))
         .build();
   }

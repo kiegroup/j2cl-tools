@@ -48,7 +48,7 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.Collections;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An object type which uses composition to delegate all calls.
@@ -303,11 +303,6 @@ public class ProxyObjectType extends ObjectType {
   boolean defineProperty(String propertyName, JSType type, boolean inferred, Node propertyNode) {
     return referencedObjType == null
         || referencedObjType.defineProperty(propertyName, type, inferred, propertyNode);
-  }
-
-  @Override
-  public final boolean removeProperty(String name) {
-    return referencedObjType == null ? false : referencedObjType.removeProperty(name);
   }
 
   @Override

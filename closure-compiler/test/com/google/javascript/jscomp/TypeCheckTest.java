@@ -47,7 +47,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -404,13 +404,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testDontCrashOnRecursiveTemplateReference() {
     newTest()
-        .addExterns(
-            "/**",
-            " * @constructor @struct",
-            " * @implements {Iterable<!Array<KEY|VAL>>}",
-            " * @template KEY, VAL",
-            " */",
-            "function Map(opt_iterable) {}")
         .addSource(
             "/** @constructor @implements {Iterable<VALUE>} @template VALUE */",
             "function Foo() {",
@@ -4269,7 +4262,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addDiagnostic(
             lines(
                 "Can only iterate over a (non-null) Iterable type",
-                "found   : (Iterable<number>|null)",
+                "found   : (Iterable<number,?,?>|null)",
                 "required: Iterable"))
         .includeDefaultExterns()
         .run();
@@ -4378,6 +4371,54 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource(
             "/** @const {!ReadonlyArray<string|number>|!Array<boolean>} */ const a = [];"
+                + "/** @const {!undefined} */ const b = a[0];")
+        .includeDefaultExterns()
+        .addDiagnostic(
+            DiagnosticType.error(
+                "JSC_TYPE_MISMATCH",
+                "initializing variable\n"
+                    + "found   : (boolean|number|string)\n"
+                    + "required: None at [testcode] line 1 : 114"))
+        .run();
+  }
+
+  @Test
+  public void testReadonlyArrayUnionIndexAccessStringElem() {
+    newTest()
+        .addSource(
+            "/** @const {!ReadonlyArray<string>|!ReadonlyArray<string>} */ const a = [];"
+                + "/** @const {!null} */ const b = a[0];")
+        .includeDefaultExterns()
+        .addDiagnostic(
+            DiagnosticType.error(
+                "JSC_TYPE_MISMATCH",
+                "initializing variable\n"
+                    + "found   : string\n"
+                    + "required: None at [testcode] line 1 : 114"))
+        .run();
+  }
+
+  @Test
+  public void testReadonlyArrayUnionIndexAccessOverlappingElem() {
+    newTest()
+        .addSource(
+            "/** @const {!ReadonlyArray<string|undefined>|!ReadonlyArray<string>} */ const a = [];"
+                + "/** @const {!undefined} */ const b = a[0];")
+        .includeDefaultExterns()
+        .addDiagnostic(
+            DiagnosticType.error(
+                "JSC_TYPE_MISMATCH",
+                "initializing variable\n"
+                    + "found   : (string|undefined)\n"
+                    + "required: None at [testcode] line 1 : 114"))
+        .run();
+  }
+
+  @Test
+  public void testReadonlyArrayUnionIndexAccessDisjointElem() {
+    newTest()
+        .addSource(
+            "/** @const {!ReadonlyArray<string|number>|!ReadonlyArray<boolean>} */ const a = [];"
                 + "/** @const {!undefined} */ const b = a[0];")
         .includeDefaultExterns()
         .addDiagnostic(
@@ -7877,6 +7918,67 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testDictEs5ClassCannotExtendStruct() {
+    newTest()
+        .addSource(
+            lines(
+                "/** @struct @constructor*/",
+                "function StructParent() {}",
+                "/** @constructor @dict @extends {StructParent} */",
+                "function DictChild() {}",
+                "DictChild.prototype['prop'] = function() {};"))
+        .addDiagnostic("@dict class DictChild cannot extend @struct class StructParent")
+        .run();
+  }
+
+  @Test
+  public void testDictEs6ClassCannotExtendStruct() {
+    newTest()
+        .addSource(
+            lines(
+                "class StructParent {}",
+                "/** @dict */",
+                "class DictChild extends StructParent {",
+                "  ['prop']() {}",
+                "}"))
+        .addDiagnostic("@dict class DictChild cannot extend @struct class StructParent")
+        .run();
+  }
+
+  @Test
+  public void testStructEs6ClassCannotExtendDict() {
+    newTest()
+        .addSource(
+            lines(
+                "/** @dict */",
+                "class DictParent {}",
+                "/** @struct */",
+                "class StructChild extends DictParent {",
+                "  ['prop']() {}",
+                "}"))
+        .addDiagnostic("@struct class StructChild cannot extend @dict class DictParent")
+        .addDiagnostic("Cannot do '[]' access on a struct")
+        .run();
+  }
+
+  @Test
+  public void testStructEs6ClassCanExtendDict_transitive() {
+    newTest()
+        .addSource(
+            lines(
+                "/** @dict */",
+                "class DictParent {}",
+                "/** @unrestricted */",
+                "class UnannotatedMiddleClass extends DictParent {}",
+                "/** @struct */",
+                "class StructChild extends UnannotatedMiddleClass {",
+                "  ['prop']() {}",
+                "}"))
+        .addDiagnostic("Cannot do '[]' access on a struct")
+        .run();
+  }
+
+  @Test
   public void testGetelemStruct1() {
     newTest()
         .addSource(
@@ -8867,7 +8969,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testHigherOrderFunctions3() {
     newTest()
         .addSource("/** @type {function(this:Array):Date} */var f; new f")
-        .addDiagnostic("cannot instantiate non-constructor")
+        .addDiagnostic(
+            "cannot instantiate non-constructor, found type: function(this:Array): (Date|null)")
         .run();
   }
 
@@ -8875,7 +8978,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testHigherOrderFunctions4() {
     newTest()
         .addSource("/** @type {function(this:Array, ...number):Date} */var f; new f")
-        .addDiagnostic("cannot instantiate non-constructor")
+        .addDiagnostic(
+            "cannot instantiate non-constructor, found type: function(this:Array, ...number):"
+                + " (Date|null)")
         .run();
   }
 
@@ -9192,7 +9297,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {string} */ var notTypeName;",
             "/** @const */ var alias = notTypeName;",
             "/** @type {alias} */ var x;")
-        .addDiagnostic("Bad type annotation. Unknown type alias")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type alias",
+                "It's possible that 'alias' refers to a value, not a type."))
         .run();
   }
 
@@ -11478,14 +11586,21 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNew1() {
-    newTest().addSource("new 4").addDiagnostic(TypeCheck.NOT_A_CONSTRUCTOR).run();
+    newTest()
+        .addSource("new 4")
+        .addDiagnostic("cannot instantiate non-constructor, found type: number")
+        .run();
+    newTest()
+        .addSource("new 4")
+        .addDiagnostic("cannot instantiate non-constructor, found type: number")
+        .run();
   }
 
   @Test
   public void testNew2() {
     newTest()
         .addSource("var Math = {}; new Math()")
-        .addDiagnostic(TypeCheck.NOT_A_CONSTRUCTOR)
+        .addDiagnostic("cannot instantiate non-constructor, found type: {}")
         .run();
   }
 
@@ -11503,7 +11618,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testNew5() {
     newTest()
         .addSource("function A(){}; new A();")
-        .addDiagnostic(TypeCheck.NOT_A_CONSTRUCTOR)
+        .addDiagnostic("cannot instantiate non-constructor, found type: function(): undefined")
         .run();
   }
 
@@ -11572,7 +11687,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + "  var c2 = function(){};"
                 + "  c1.prototype = new c2;"
                 + "}")
-        .addDiagnostic(TypeCheck.NOT_A_CONSTRUCTOR)
+        .addDiagnostic("cannot instantiate non-constructor, found type: function(): undefined")
         .run();
   }
 
@@ -11640,7 +11755,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testNew17() {
     newTest()
         .addSource("var goog = {}; goog.x = 3; new goog.x")
-        .addDiagnostic("cannot instantiate non-constructor")
+        .addDiagnostic("cannot instantiate non-constructor, found type: number")
         .run();
   }
 
@@ -12364,7 +12479,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testCast9() {
     newTest()
         .addSource("var foo = {};" + "function f() { return /** @type {foo} */ (new Object()); }")
-        .addDiagnostic("Bad type annotation. Unknown type foo")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type foo",
+                "It's possible that 'foo' refers to a value, not a type."))
         .run();
   }
 
@@ -12374,7 +12492,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource(
             "var foo = function() {};"
                 + "function f() { return /** @type {foo} */ (new Object()); }")
-        .addDiagnostic("Bad type annotation. Unknown type foo")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type foo",
+                "It's possible that 'foo' refers to a value, not a type."))
         .run();
   }
 
@@ -12384,7 +12505,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource(
             "var goog = {}; goog.foo = {};"
                 + "function f() { return /** @type {goog.foo} */ (new Object()); }")
-        .addDiagnostic("Bad type annotation. Unknown type goog.foo")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type goog.foo",
+                "It's possible that 'goog.foo' refers to a value, not a type."))
         .run();
   }
 
@@ -12394,7 +12518,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource(
             "var goog = {}; goog.foo = function() {};"
                 + "function f() { return /** @type {goog.foo} */ (new Object()); }")
-        .addDiagnostic("Bad type annotation. Unknown type goog.foo")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type goog.foo",
+                "It's possible that 'goog.foo' refers to a value, not a type."))
         .run();
   }
 
@@ -13857,7 +13984,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var goog = {};\n"
                 + "/** @constructor\n @extends {goog.Missing} */function Sub() {};"
                 + "/** @override */Sub.prototype.foo = function() {};")
-        .addDiagnostic("Bad type annotation. Unknown type goog.Missing")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type goog.Missing",
+                "It's possible that 'goog.Missing' refers to a value, not a type."))
         .run();
   }
 
@@ -13869,7 +13999,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "goog.Super = function() {};",
             "/** @constructor\n @extends {goog.Super} */function Sub() {};",
             "/** @override */ Sub.prototype.foo = function() {};"),
-        "Bad type annotation. Unknown type goog.Missing");
+        lines(
+            "Bad type annotation. Unknown type goog.Missing",
+            "It's possible that 'goog.Missing' refers to a value, not a type."));
   }
 
   @Test
@@ -14834,7 +14966,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testInterfaceInstantiation() {
     newTest()
         .addSource("/** @interface */var f = function(){}; new f")
-        .addDiagnostic("cannot instantiate non-constructor")
+        .addDiagnostic("cannot instantiate non-constructor, found type: (typeof f)")
         .run();
   }
 
@@ -16861,7 +16993,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
     assertThat(compiler.getWarningCount()).isEqualTo(1);
     assertThat(compiler.getWarnings().get(0).getDescription())
-        .isEqualTo("cannot instantiate non-constructor");
+        .isEqualTo("cannot instantiate non-constructor, found type: function(): undefined");
   }
 
   @Test
@@ -20699,7 +20831,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testFilterNoResolvedType() {
+  public void testNoResolvedTypeAndGreatestSubtypeInference() {
     testClosureTypes(
         lines(
             "goog.forwardDeclare('Foo');",
@@ -20716,10 +20848,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  }",
             "  var /** number */ z = y;",
             "}"),
-        // Tests that the type of y is (NoResolvedType|null) and not (Foo|null)
         lines(
             "initializing variable", //
-            "found   : (NoResolvedType|null)",
+            "found   : (Foo|null)",
             "required: number"));
   }
 
@@ -21373,7 +21504,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource(
             "/** @const */", //
             "var o = new Symbol();")
-        .addDiagnostic("cannot instantiate non-constructor")
+        .addDiagnostic("cannot instantiate non-constructor, found type: (typeof Symbol)")
         .includeDefaultExterns()
         .run();
   }
@@ -21541,7 +21672,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             MIXIN_DEFINITIONS,
             "var MyElementWithToggle = addToggle(MyElement);",
             "/** @type {MyElementWithToggle} */ var x = 123;")
-        .addDiagnostic("Bad type annotation. Unknown type MyElementWithToggle")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type MyElementWithToggle",
+                "It's possible that 'MyElementWithToggle' refers to a value, not a type."))
         .run();
   }
 
@@ -22521,7 +22655,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  'y.A': function() {},",
             "};",
             "var /** x.y.A */ a;")
-        .addDiagnostic("Bad type annotation. Unknown type x.y.A")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type x.y.A",
+                "It's possible that 'x.y.A' refers to a value, not a type."))
         .run();
   }
 
@@ -23058,6 +23195,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testValueUsedAsType() {
+    newTest()
+        .addSource("/** @type {?} */ var Foo = 'Foo';", "/** @type {!Foo} */ var foo = 'foo';")
+        .addDiagnostic(
+            lines(
+                "Bad type annotation. Unknown type Foo",
+                "It's possible that 'Foo' refers to a value, not a type."))
+        .run();
+  }
+
+  @Test
   public void testBangOperatorOnForwardReferencedType() {
     newTest()
         .addSource(
@@ -23361,6 +23509,57 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource("const /** number */ num = [][Symbol.iterator];")
         .addDiagnostic(TypeValidator.TYPE_MISMATCH_WARNING)
         .run();
+  }
+
+  @Test
+  public void testGoogRequireDynamic_missingSources() {
+    // regression test for case that used to throw an exception
+    newTest()
+        .addSource(
+            "class Test {",
+            " /**",
+            "  * @return {!Object}",
+            "  *",
+            "  * @suppress {missingSourcesWarnings} reference to dynamically loaded",
+            "  * namespace.",
+            "  * @suppress {checkTypes}",
+            "  */",
+            "testGoogRequireDynamicStubbedAndWithLoadedModule() {",
+            "   goog.setImportHandlerInternalDoNotCallOrElse(() => Promise.resolve(null));",
+            "   goog.setUncompiledChunkIdHandlerInternalDoNotCallOrElse(s => s);",
+            "",
+            "   goog.loadModule('goog.module(\"a.loaded.module\"); exports.foo = 12;');",
+            "",
+            "   return goog.requireDynamic('a.loaded.module')",
+            "       .then(({foo}) => assertEquals(foo, 12));",
+            " } }")
+        .run();
+  }
+
+  @Test
+  public void testClassMultipleExtends_fromClosureJs() {
+    // Tests a workaround for b/325489639
+    // This is a hacky fix for a Closure type system vs. TypeScript compatibility problem:
+    // TypeScript allows extending classes, while Closure does not. This results in tsickle
+    // sometimes outputting classes with multiple @extends clauses. The Closure type system doesn't
+    // support this, but does allow suppressing it via checkTypes in .closure.js files, and then
+    // treats the resulting subtype as "unknown" as not to mislead type-based optimizations into
+    // thinking it can handle this type.
+    newTest()
+        .addSource(
+            "/** @fileoverview @suppress {checkTypes} */",
+            "class Foo {}",
+            "class Bar {}",
+            "/**",
+            " * @extends {Foo}",
+            " * @extends {Bar}",
+            " */",
+            "class FooBar {}")
+        .usingSourceNameExtension(".closure.js")
+        .run();
+
+    FunctionType fooBar = compiler.getTopScope().getVar("FooBar").getType().assertFunctionType();
+    assertThat(fooBar.isAmbiguousConstructor()).isTrue();
   }
 
   private void testClosureTypes(String js, @Nullable String description) {

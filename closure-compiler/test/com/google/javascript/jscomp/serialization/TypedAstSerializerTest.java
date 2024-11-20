@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -114,7 +114,11 @@ public class TypedAstSerializerTest extends CompilerTestCase {
 
       final TypedAstSerializer typedAstSerializer =
           new TypedAstSerializer(
-              compiler, SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS);
+              compiler,
+              SerializationOptions.builder()
+                  .setIncludeDebugInfo(true)
+                  .setRunValidation(true)
+                  .build());
       testResult = typedAstSerializer.serializeRoots(externs, root);
     };
   }

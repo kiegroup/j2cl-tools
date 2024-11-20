@@ -65,7 +65,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This class implements the root of the intermediate representation.
@@ -173,8 +173,6 @@ public class Node {
     FEATURE_SET,
     // Indicates a TypeScript abstract method or class, for use in Migrants
     IS_TYPESCRIPT_ABSTRACT,
-    // Indicates that a SCRIPT represents a transpiled file
-    TRANSPILED,
     // For passes that work only on deleted funs.
     DELETED,
     // Indicates that the node is an alias or a name from goog.require'd module or ES6
@@ -205,11 +203,7 @@ public class Node {
     // Only present in the "synthetic externs file". Builds initialized using a
     // "TypedAST filesystem" will delete any such declarations present in a different compilation
     // shard
-    SYNTHESIZED_UNFULFILLED_NAME_DECLARATION,
-    // Marks a function for eager compile by wrapping with (). This has potential performance
-    // benefits when focused on critical functions but needs to be sparingly applied, since too many
-    // functions eager compiled will lead to performance regressions.
-    MARK_FOR_PARENTHESIZE
+    SYNTHESIZED_UNFULFILLED_NAME_DECLARATION
   }
 
   // Avoid cloning "values" repeatedly in hot code, we save it off now.
@@ -264,17 +258,6 @@ public class Node {
     return getBooleanProp(Prop.IS_PARENTHESIZED);
   }
 
-  /** Sets whether this node is should be parenthesized in output. */
-  public final void setMarkForParenthesize(boolean value) {
-    checkState(IR.mayBeExpression(this));
-    putBooleanProp(Prop.MARK_FOR_PARENTHESIZE, value);
-  }
-
-  /** Check whether node should be parenthesized in output. */
-  public final boolean getMarkForParenthesize() {
-    return getBooleanProp(Prop.MARK_FOR_PARENTHESIZE);
-  }
-
   // TODO(sdh): Get rid of these by using accessor methods instead.
   // These export instances of a private type, which is awkward but a side effect is that it
   // prevents anyone from introducing problemmatic uses of the general-purpose accessors.
@@ -303,7 +286,6 @@ public class Node {
   public static final Prop GOOG_MODULE = Prop.GOOG_MODULE;
   public static final Prop FEATURE_SET = Prop.FEATURE_SET;
   public static final Prop IS_TYPESCRIPT_ABSTRACT = Prop.IS_TYPESCRIPT_ABSTRACT;
-  public static final Prop TRANSPILED = Prop.TRANSPILED;
   public static final Prop MODULE_ALIAS = Prop.MODULE_ALIAS;
   public static final Prop MODULE_EXPORT = Prop.MODULE_EXPORT;
   public static final Prop IS_SHORTHAND_PROPERTY = Prop.IS_SHORTHAND_PROPERTY;
@@ -1012,7 +994,6 @@ public class Node {
       // this method was created to cover the checks previously done there.
       switch (prop) {
         case IS_PARENTHESIZED:
-        case MARK_FOR_PARENTHESIZE:
           if (!IR.mayBeExpression(this)) {
             violationMessageConsumer.accept("non-expression is parenthesized");
           }
@@ -1050,7 +1031,11 @@ public class Node {
         case SYNTHESIZED_UNFULFILLED_NAME_DECLARATION:
           // note: we could relax this restriction if VarCheck needed to generate other forms of
           // synthetic externs
-          if (!isVar() || !hasOneChild() || !getFirstChild().isName()) {
+          if (!isVar()) {
+            // TODO: this check used to also try and validate that the synthetic externs VAR's had
+            // names, but this doesn't work during deserialization because the name is a child node
+            // that we haven't even seen yet when we are validating properties.
+            // || !hasOneChild() || !getFirstChild().isName()) {
             violationMessageConsumer.accept(
                 "Expected all synthetic unfulfilled declarations to be `var <name>`");
           }
@@ -1262,7 +1247,7 @@ public class Node {
         // NOTE: errorMessage will never be null, but just passing `false` to `checkState()`
         // triggers warning messages from some code analysis tools.
         errorMessage ->
-            checkState(errorMessage != null, "deserialize error: %s: %s", errorMessage, this));
+            checkState(errorMessage == null, "deserialize error: %s: %s", errorMessage, this));
   }
 
   /** Sets the syntactical type specified on this node. */
@@ -1563,7 +1548,8 @@ public class Node {
   private transient @Nullable Node next; // next sibling, a linked list
   private transient @Nullable Node previous; // previous sibling, a circular linked list
   private transient @Nullable Node first; // first element of a linked list of children
-    private transient @Nullable  Node parent;
+  private transient @Nullable Node parent;
+
   // We get the last child as first.previous. But last.next is null, not first.
 
   /**
@@ -1636,7 +1622,7 @@ public class Node {
   }
 
   /** Returns the Id of the CompilerInput associated with this Node. */
-   public @Nullable  InputId getInputId() {
+  public @Nullable InputId getInputId() {
     return ((InputId) this.getProp(Prop.INPUT_ID));
   }
 
@@ -1660,6 +1646,11 @@ public class Node {
     this.originalName = (s == null) ? null : RhinoStringPool.addOrGet(s);
   }
 
+  // Copy the original
+  public final void setOriginalNameFromName(Node name) {
+    this.originalName = name.getString();
+  }
+
   /** Whether this node should be indexed by static analysis / code indexing tools. */
   public final boolean isIndexable() {
     return !this.getBooleanProp(Prop.NON_INDEXABLE);
@@ -1679,6 +1670,18 @@ public class Node {
   public final boolean isFromExterns() {
     StaticSourceFile file = getStaticSourceFile();
     return file == null ? false : file.isExtern();
+  }
+
+  /**
+   * Indicates that this node is for source that was written without any understanding of the
+   * compiler's various type-checking or optimization limitations, and should be optimized very
+   * cautiously by the compiler.
+   *
+   * <p>This attribute is per source file, not per node / subset of an source file's AST.
+   */
+  public final boolean isClosureUnawareCode() {
+    StaticSourceFile file = getStaticSourceFile();
+    return file != null && file.isClosureUnawareCode();
   }
 
   public final int getLength() {
@@ -1806,7 +1809,7 @@ public class Node {
    * @see Node#children()
    */
   private static final class SiblingNodeIterator implements Iterator<Node> {
-      private @Nullable  Node current;
+    private @Nullable Node current;
 
     SiblingNodeIterator(Node start) {
       this.current = start;
@@ -1844,7 +1847,7 @@ public class Node {
     this.propListHead = propListHead;
   }
 
-   public final @Nullable  Node getParent() {
+  public final @Nullable Node getParent() {
     return parent;
   }
 
@@ -1852,7 +1855,7 @@ public class Node {
     return parent != null;
   }
 
-   public final @Nullable  Node getGrandparent() {
+  public final @Nullable Node getGrandparent() {
     return parent == null ? null : parent.parent;
   }
 
@@ -1861,7 +1864,7 @@ public class Node {
    *
    * @param level 0 = this, 1 = the parent, etc.
    */
-   public final @Nullable  Node getAncestor(int level) {
+  public final @Nullable Node getAncestor(int level) {
     checkArgument(level >= 0);
     Node node = this;
     while (node != null && level-- > 0) {
@@ -1901,7 +1904,7 @@ public class Node {
 
   /** Iterator to go up the ancestor tree. */
   public static final class AncestorIterable implements Iterable<Node> {
-      private @Nullable  Node cur;
+    private @Nullable Node cur;
 
     /**
      * @param cur The node to start.
@@ -2163,7 +2166,7 @@ public class Node {
    * @return a null if this is not a qualified name, or a dot-separated string of the name and
    *     properties.
    */
-   public final @Nullable  String getQualifiedName() {
+  public final @Nullable String getQualifiedName() {
     switch (token) {
       case NAME:
         String name = getString();
@@ -2180,7 +2183,7 @@ public class Node {
     }
   }
 
-   public final @Nullable  QualifiedName getQualifiedNameObject() {
+  public final @Nullable QualifiedName getQualifiedNameObject() {
     return isQualifiedName() ? new QualifiedName.NodeQname(this) : null;
   }
 
@@ -2191,7 +2194,7 @@ public class Node {
    * @return {@code null} if this is not a qualified name or a StringBuilder if it is a complex
    *     qualified name.
    */
-   private @Nullable  StringBuilder getQualifiedNameForGetProp(int reserve) {
+  private @Nullable StringBuilder getQualifiedNameForGetProp(int reserve) {
     String propName = this.getString();
     reserve += 1 + propName.length(); // +1 for the '.'
     StringBuilder builder;
@@ -2222,7 +2225,8 @@ public class Node {
    *     properties.
    * @deprecated "original name" is poorly defined. See #getOriginalName
    */
-  @Deprecated public final @Nullable  String getOriginalQualifiedName() {
+  @Deprecated
+  public final @Nullable String getOriginalQualifiedName() {
     if (token == Token.NAME) {
       String name = getOriginalName();
       if (name == null) {
@@ -2514,7 +2518,7 @@ public class Node {
    * Returns the compiler inferred type on this node. Not to be confused with {@link
    * #getDeclaredTypeExpression()} which returns the syntactically specified type.
    */
-   public final @Nullable  JSType getJSType() {
+  public final @Nullable JSType getJSType() {
     return (this.jstypeOrColor instanceof JSType) ? (JSType) this.jstypeOrColor : null;
   }
 
@@ -2533,7 +2537,7 @@ public class Node {
    * Returns the compiled inferred type on this node. Not to be confused with {@link
    * #getDeclaredTypeExpression()} which returns the syntactically specified type.
    */
-   public final @Nullable  Color getColor() {
+  public final @Nullable Color getColor() {
     return (this.jstypeOrColor instanceof Color) ? (Color) this.jstypeOrColor : null;
   }
 
@@ -2554,7 +2558,7 @@ public class Node {
    *
    * @return the information or {@code null} if no JSDoc is attached to this node
    */
-   public final @Nullable  JSDocInfo getJSDocInfo() {
+  public final @Nullable JSDocInfo getJSDocInfo() {
     return (JSDocInfo) getProp(Prop.JSDOC_INFO);
   }
 

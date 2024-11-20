@@ -26,10 +26,10 @@ import com.google.javascript.rhino.Node;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.TextFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.jspecify.nullness.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Provides a framework for checking code against a set of user configured conformance rules. The
@@ -106,7 +106,9 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
     }
   }
 
-  /** @param configs The rules to check. */
+  /**
+   * @param configs The rules to check.
+   */
   CheckConformance(AbstractCompiler compiler, ImmutableList<ConformanceConfig> configs) {
     this.compiler = compiler;
     // Initialize the map of functions to inspect for renaming candidates.
@@ -122,17 +124,21 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
 
   @Override
   public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    // Don't inspect extern files
-    return !n.isScript() || isScriptOfInterest(t.getInput().getSourceFile());
+    // Don't inspect extern files, *.tsmes.closure.js, weak sources, or closureUnaware code.
+    return !n.isScript()
+        || (isScriptOfInterest(t.getInput().getSourceFile())
+            && !t.getSourceName().endsWith("tsmes.closure.js"));
   }
 
   private boolean isScriptOfInterest(SourceFile sf) {
-    return !sf.isWeak() && !sf.isExtern();
+    return !sf.isWeak()
+        && !sf.isExtern()
+        && !sf.isClosureUnawareCode();
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    /**
+    /*
      * Use counted loops and backward iteration for performance.
      *
      * <p>These loops are run a huge number of times. The overhead of enhanced-for loops and even
@@ -183,7 +189,7 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
   static List<Requirement> mergeRequirements(
       AbstractCompiler compiler, List<ConformanceConfig> configs) {
     List<Requirement.Builder> builders = new ArrayList<>();
-    Map<String, Requirement.Builder> extendable = new HashMap<>();
+    Map<String, Requirement.Builder> extendable = new LinkedHashMap<>();
     for (ConformanceConfig config : configs) {
       for (Requirement requirement : config.getRequirementList()) {
         Requirement.Builder builder = requirement.toBuilder();
