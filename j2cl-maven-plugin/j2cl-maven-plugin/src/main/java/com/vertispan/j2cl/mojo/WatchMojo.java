@@ -46,6 +46,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
@@ -150,12 +151,6 @@ public class WatchMojo extends AbstractBuildMojo {
     @Deprecated
     @Parameter(defaultValue = "SORT_ONLY")
     protected String dependencyMode;
-
-    /**
-     * Arguments to pass to annotation processors, in the form of key-value pairs.
-     */
-    @Parameter
-    protected Map<String, String> annotationProcessorsArgs = new TreeMap<>();
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {

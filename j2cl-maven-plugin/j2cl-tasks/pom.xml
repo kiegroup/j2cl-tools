@@ -20,12 +20,6 @@
             <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>transpiler</artifactId>
             <version>${j2cl.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.javascript</groupId>
-                    <artifactId>closure-compiler-unshaded</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.kie.j2cl.tools</groupId>

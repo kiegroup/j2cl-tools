@@ -249,7 +249,7 @@
       </dependency>
 
       <dependency>
-        <groupId>com.google.javascript</groupId>
+        <groupId>org.kie.j2cl.tools</groupId>
         <artifactId>closure-compiler-unshaded</artifactId>
         <version>v20241106-1</version>
         <exclusions>

@@ -26,6 +26,40 @@
   <name>Closure Compiler Unshaded</name>
   <version>v20241106-1</version>
 
+  <issueManagement>
+    <system>GitHub Issues</system>
+    <url>http://github.com/vertispan/closure-compiler/issues</url>
+  </issueManagement>
+
+  <developers>
+    <developer>
+      <id>closure-compiler-authors</id>
+      <name>Closure Compiler Authors</name>
+      <email>closure-compiler-discuss@googlegroups.com</email>
+    </developer>
+    <developer>
+      <name>Colin Alworth</name>
+      <email>colin@vertispan.com</email>
+      <organization>Vertispan LLC</organization>
+      <organizationUrl>https://www.vertispan.com/</organizationUrl>
+    </developer>
+  </developers>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <url>http://github.com/google/closure-compiler</url>
+    <connection>scm:git:git://github.com/google/closure-compiler.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/google/closure-compiler.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
   <url>https://developers.google.com/closure/compiler/</url>
   <description>
     Closure Compiler is a JavaScript optimizing compiler. It parses your
@@ -164,57 +198,44 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>${maven.release.plugin}</version>
-        <configuration>
-          <localCheckout>true</localCheckout>
-          <pushChanges>false</pushChanges>
-          <mavenExecutorId>forked-path</mavenExecutorId>
-          <arguments>-Dgpg.passphrase=${gpg.passphrase}</arguments>
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.apache.maven.scm</groupId>
-            <artifactId>maven-scm-provider-gitexe</artifactId>
-            <version>${maven.scm.provider.gitexe}</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${maven.javadoc.plugin}</version>
-        <configuration>
-          <failOnError>false</failOnError>
-        </configuration>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>javadoc-jar</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <classifier>javadoc</classifier>
+            </configuration>
+          </execution>
+          <execution>
+            <id>sources-jar</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <classifier>sources</classifier>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
 
   <profiles>
+    <!-- release profile to create sources, javadoc, and sign all artifacts before uploading -->
     <profile>
       <id>release</id>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <configuration>
-              <failOnError>false</failOnError>
-            </configuration>
-            <executions>
-              <execution>
-                <id>attach-javadocs</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.6</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>

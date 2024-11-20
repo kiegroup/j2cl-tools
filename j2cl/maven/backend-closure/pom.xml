@@ -58,7 +58,7 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.javascript</groupId>
+            <groupId>org.kie.j2cl.tools</groupId>
             <artifactId>closure-compiler-unshaded</artifactId>
         </dependency>
         <dependency>
