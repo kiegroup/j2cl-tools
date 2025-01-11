@@ -5,7 +5,7 @@
 
     <groupId>org.kie.j2cl.tools.processors</groupId>
     <artifactId>translation-default</artifactId>
-    <version>0.8.0</version>
+    <version>0.8.1</version>
     <packaging>jar</packaging>
 
     <name>GWT3 Processors translation test EN</name>
