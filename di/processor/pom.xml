@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.kie.j2cl.tools.di</groupId>
     <artifactId>parent</artifactId>
-    <version>0.8</version>
+    <version>0.8.1</version>
   </parent>
 
   <artifactId>processor</artifactId>
