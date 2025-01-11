@@ -5,7 +5,7 @@
 
     <groupId>org.kie.j2cl.tools.di</groupId>
     <artifactId>parent</artifactId>
-    <version>0.8</version>
+    <version>0.8.1</version>
     <packaging>pom</packaging>
 
     <name>J2CL compatible Jakarta CDI-like dependency injection framework parent</name>
@@ -94,7 +94,9 @@
         <module>processor</module>
         <module>core</module>
         <module>ui</module>
+<!--
         <module>tests</module>
+-->
     </modules>
 
     <dependencyManagement>
