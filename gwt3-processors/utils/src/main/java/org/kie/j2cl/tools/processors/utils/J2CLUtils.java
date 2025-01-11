@@ -383,6 +383,10 @@ public class J2CLUtils {
       return null;
     }
 
+    if (typeMirror.getKind().isPrimitive()) {
+      return PrimitiveTypes.get(MoreTypes.asPrimitiveType(typeMirror).toString());
+    }
+
     if (typeMirror.getKind() == TypeKind.VOID) {
       return PrimitiveTypes.VOID;
     }
