@@ -94,9 +94,7 @@
         <module>processor</module>
         <module>core</module>
         <module>ui</module>
-<!--
         <module>tests</module>
--->
     </modules>
 
     <dependencyManagement>
