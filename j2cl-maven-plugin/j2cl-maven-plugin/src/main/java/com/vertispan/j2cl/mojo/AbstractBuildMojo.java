@@ -149,7 +149,13 @@ public abstract class AbstractBuildMojo extends AbstractCacheMojo {
 
     private static String key(Artifact artifact) {
         // this is roughly DefaultArtifact.toString, minus scope, since we don't care what the scope is for the purposes of building projects
-        String key = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getBaseVersion();
+        // For SNAPSHOTs, use the resolved version (timestamped) to distinguish different builds, otherwise use base version
+        String version = artifact.getBaseVersion();
+        if (artifact.isSnapshot() && artifact.getVersion() != null && !artifact.getVersion().equals(version)) {
+            // Use resolved timestamped version for unique SNAPSHOT identification
+            version = artifact.getVersion();
+        }
+        String key = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + version;
         if (artifact.getClassifier() != null) {
             key += ":" + artifact.getClassifier();
         }
@@ -412,7 +418,16 @@ public abstract class AbstractBuildMojo extends AbstractCacheMojo {
         request.setRemoteRepositories(null);
 
         // A type will confuse maven here, since it will incorrectly treat it as packaging
-        Artifact deTypedDependency = new org.apache.maven.artifact.DefaultArtifact(mavenDependency.getGroupId(), mavenDependency.getArtifactId(), mavenDependency.getVersionRange(), mavenDependency.getScope(), "jar", mavenDependency.getClassifier(), mavenDependency.getArtifactHandler());
+        // For SNAPSHOTs, use the resolved version instead of version range to avoid null versions
+        Artifact deTypedDependency;
+        if (mavenDependency.isSnapshot() && mavenDependency.getVersion() != null) {
+            // Use resolved timestamped version for SNAPSHOTs to avoid null version issues
+            String resolvedVersion = mavenDependency.getVersion();
+            deTypedDependency = new org.apache.maven.artifact.DefaultArtifact(mavenDependency.getGroupId(), mavenDependency.getArtifactId(), resolvedVersion, mavenDependency.getScope(), "jar", mavenDependency.getClassifier(), mavenDependency.getArtifactHandler());
+        } else {
+            // For non-SNAPSHOTs, use version range.
+            deTypedDependency = new org.apache.maven.artifact.DefaultArtifact(mavenDependency.getGroupId(), mavenDependency.getArtifactId(), mavenDependency.getVersionRange(), mavenDependency.getScope(), "jar", mavenDependency.getClassifier(), mavenDependency.getArtifactHandler());
+        }
         p = projectBuilder.build(deTypedDependency, true, request).getProject();
 
         // at this point, we know that the dependency is not in the reactor, but may not have the artifact, so
