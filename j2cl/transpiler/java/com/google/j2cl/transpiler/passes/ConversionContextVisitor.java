@@ -19,6 +19,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.j2cl.transpiler.ast.AstUtils.isBoxableJsEnumType;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.j2cl.common.SourcePosition;
 import com.google.j2cl.transpiler.ast.AbstractRewriter;
 import com.google.j2cl.transpiler.ast.ArrayAccess;
@@ -35,6 +36,7 @@ import com.google.j2cl.transpiler.ast.CastExpression;
 import com.google.j2cl.transpiler.ast.ConditionalExpression;
 import com.google.j2cl.transpiler.ast.ContinueStatement;
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
+import com.google.j2cl.transpiler.ast.EmbeddedStatement;
 import com.google.j2cl.transpiler.ast.Expression;
 import com.google.j2cl.transpiler.ast.ExpressionStatement;
 import com.google.j2cl.transpiler.ast.ExpressionWithComment;
@@ -46,13 +48,14 @@ import com.google.j2cl.transpiler.ast.HasSourcePosition;
 import com.google.j2cl.transpiler.ast.IfStatement;
 import com.google.j2cl.transpiler.ast.InstanceOfExpression;
 import com.google.j2cl.transpiler.ast.Invocation;
-import com.google.j2cl.transpiler.ast.JavaScriptConstructorReference;
+import com.google.j2cl.transpiler.ast.JsConstructorReference;
 import com.google.j2cl.transpiler.ast.JsDocCastExpression;
 import com.google.j2cl.transpiler.ast.JsDocExpression;
 import com.google.j2cl.transpiler.ast.JsForInStatement;
 import com.google.j2cl.transpiler.ast.LabeledStatement;
 import com.google.j2cl.transpiler.ast.Literal;
 import com.google.j2cl.transpiler.ast.LocalClassDeclarationStatement;
+import com.google.j2cl.transpiler.ast.LocalFunctionDeclarationStatement;
 import com.google.j2cl.transpiler.ast.LoopStatement;
 import com.google.j2cl.transpiler.ast.MemberDescriptor;
 import com.google.j2cl.transpiler.ast.MemberReference;
@@ -67,6 +70,7 @@ import com.google.j2cl.transpiler.ast.PostfixOperator;
 import com.google.j2cl.transpiler.ast.PrefixExpression;
 import com.google.j2cl.transpiler.ast.ReturnStatement;
 import com.google.j2cl.transpiler.ast.Statement;
+import com.google.j2cl.transpiler.ast.SwitchConstruct;
 import com.google.j2cl.transpiler.ast.SwitchExpression;
 import com.google.j2cl.transpiler.ast.SwitchStatement;
 import com.google.j2cl.transpiler.ast.SynchronizedStatement;
@@ -82,6 +86,7 @@ import com.google.j2cl.transpiler.ast.VariableReference;
 import com.google.j2cl.transpiler.ast.YieldStatement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -96,16 +101,20 @@ public final class ConversionContextVisitor extends AbstractRewriter {
   protected abstract static class ContextRewriter {
 
     /** Returns the closest meaningful source position from an enclosing node. */
-    public SourcePosition getSourcePosition() {
+    public final SourcePosition getSourcePosition() {
       HasSourcePosition hasSourcePosition =
           (HasSourcePosition)
               visitor.getParent(
                   p ->
-                      p instanceof HasSourcePosition
-                          && ((HasSourcePosition) p).getSourcePosition() != SourcePosition.NONE);
+                      p instanceof HasSourcePosition hs
+                          && hs.getSourcePosition() != SourcePosition.NONE);
       return hasSourcePosition != null
           ? hasSourcePosition.getSourcePosition()
           : SourcePosition.NONE;
+    }
+
+    public final Stream<Object> getParents() {
+      return visitor.getParents();
     }
 
     /**
@@ -216,6 +225,19 @@ public final class ConversionContextVisitor extends AbstractRewriter {
           argument);
     }
 
+    /**
+     * An {@code argument} that is passed to a method as the array containing the vararg arguments.
+     */
+    protected Expression rewriteVarargsParameterContext(
+        ParameterDescriptor inferredParameterDescriptor,
+        ParameterDescriptor declaredParameterDescriptor,
+        Expression argument) {
+      // The varargs argument has special handling to mimic directly passing the varargs arguments
+      // as any other argument. The behavior can be overridden by overriding this method.
+      return visitor.rewriteVarargsArgument(
+          inferredParameterDescriptor, declaredParameterDescriptor, argument);
+    }
+
     /** An {@code expression} that is used as a string. */
     protected Expression rewriteStringContext(Expression expression) {
       return expression;
@@ -284,6 +306,14 @@ public final class ConversionContextVisitor extends AbstractRewriter {
 
   @Override
   public ArrayLiteral rewriteArrayLiteral(ArrayLiteral arrayLiteral) {
+    if (getParent() instanceof Invocation invocation) {
+      if (arrayLiteral == Iterables.getLast(invocation.getArguments(), null)
+          && invocation.getTarget().isVarargs()) {
+        // The expressions in the array literals encapsulating the vararg parameters are handled
+        // as invocation parameters so they are skipped here.
+        return arrayLiteral;
+      }
+    }
     // assignment context
     ArrayTypeDescriptor typeDescriptor = arrayLiteral.getTypeDescriptor();
     ImmutableList<Expression> valueExpressions =
@@ -298,7 +328,10 @@ public final class ConversionContextVisitor extends AbstractRewriter {
       return arrayLiteral;
     }
 
-    return new ArrayLiteral(typeDescriptor, valueExpressions);
+    return ArrayLiteral.newBuilder()
+        .setTypeDescriptor(typeDescriptor)
+        .setValueExpressions(valueExpressions)
+        .build();
   }
 
   @Override
@@ -536,10 +569,11 @@ public final class ConversionContextVisitor extends AbstractRewriter {
     //      any rewriting themselves (MultiExpression, ExpressionWithComment, VariableDeclarations)
 
     if (expression instanceof Literal // literals
-        || expression instanceof JavaScriptConstructorReference
+        || expression instanceof JsConstructorReference
         // expressions that needs only subexpressions to be handled
         || expression instanceof MultiExpression
         || expression instanceof ExpressionWithComment
+        || expression instanceof EmbeddedStatement
         || expression instanceof FunctionExpression
         || expression instanceof VariableDeclarationExpression
         || expression instanceof JsDocExpression
@@ -697,7 +731,7 @@ public final class ConversionContextVisitor extends AbstractRewriter {
     // assignment context
     Expression expression =
         rewriteTypeConversionContextWithoutDeclaration(
-            getEnclosingSwitchExpression().getTypeDescriptor(), yieldStatement.getExpression());
+            getYieldTargetExpression().getTypeDescriptor(), yieldStatement.getExpression());
 
     if (expression == yieldStatement.getExpression()) {
       return yieldStatement;
@@ -716,7 +750,8 @@ public final class ConversionContextVisitor extends AbstractRewriter {
         || statement instanceof FieldDeclarationStatement
         || statement instanceof TryStatement
         || statement instanceof LabeledStatement
-        || statement instanceof LocalClassDeclarationStatement) {
+        || statement instanceof LocalClassDeclarationStatement
+        || statement instanceof LocalFunctionDeclarationStatement) {
       // These statements do not need rewriting.
       return statement;
     }
@@ -725,28 +760,23 @@ public final class ConversionContextVisitor extends AbstractRewriter {
 
   @Override
   public SwitchExpression rewriteSwitchExpression(SwitchExpression switchExpression) {
-
-    Expression expression =
-        contextRewriter.rewriteSwitchSubjectContext(switchExpression.getExpression());
-
-    if (expression == switchExpression.getExpression()) {
-      return switchExpression;
-    }
-
-    return SwitchExpression.Builder.from(switchExpression).setExpression(expression).build();
+    return rewriteSwitchConstruct(switchExpression);
   }
 
   @Override
   public SwitchStatement rewriteSwitchStatement(SwitchStatement switchStatement) {
+    return rewriteSwitchConstruct(switchStatement);
+  }
 
+  private <T extends SwitchConstruct<T>> T rewriteSwitchConstruct(T switchConstruct) {
     Expression expression =
-        contextRewriter.rewriteSwitchSubjectContext(switchStatement.getExpression());
+        contextRewriter.rewriteSwitchSubjectContext(switchConstruct.getExpression());
 
-    if (expression == switchStatement.getExpression()) {
-      return switchStatement;
+    if (expression == switchConstruct.getExpression()) {
+      return switchConstruct;
     }
 
-    return SwitchStatement.Builder.from(switchStatement).setExpression(expression).build();
+    return switchConstruct.toBuilder().setExpression(expression).build();
   }
 
   @Override
@@ -801,8 +831,9 @@ public final class ConversionContextVisitor extends AbstractRewriter {
     return (MethodLike) getParent(MethodLike.class::isInstance);
   }
 
-  private SwitchExpression getEnclosingSwitchExpression() {
-    return (SwitchExpression) getParent(SwitchExpression.class::isInstance);
+  private Expression getYieldTargetExpression() {
+    return (Expression)
+        getParent(o -> o instanceof SwitchExpression || o instanceof EmbeddedStatement);
   }
 
   private Expression rewriteTypeConversionContextWithoutDeclaration(
@@ -824,10 +855,57 @@ public final class ConversionContextVisitor extends AbstractRewriter {
       ParameterDescriptor inferredParameterDescriptor = inferredParameterDescriptors.get(argIndex);
       ParameterDescriptor declaredParameterDescriptor = declaredParameterDescriptors.get(argIndex);
       Expression argumentExpression = argumentExpressions.get(argIndex);
+
       newArgumentExpressions.add(
-          contextRewriter.rewriteMethodInvocationContext(
-              inferredParameterDescriptor, declaredParameterDescriptor, argumentExpression));
+          declaredParameterDescriptor.isVarargs()
+              // Handle vararg parameters that at this point are inside vararg literals by
+              // delegating explicitly to an overrideable handler.
+              ? contextRewriter.rewriteVarargsParameterContext(
+                  inferredParameterDescriptor, declaredParameterDescriptor, argumentExpression)
+              : contextRewriter.rewriteMethodInvocationContext(
+                  inferredParameterDescriptor, declaredParameterDescriptor, argumentExpression));
     }
     return newArgumentExpressions;
+  }
+
+  /** Implements the rewriting of varargs arguments. */
+  private Expression rewriteVarargsArgument(
+      ParameterDescriptor inferredParameterDescriptor,
+      ParameterDescriptor declaredParameterDescriptor,
+      Expression expression) {
+    if (!(expression instanceof ArrayLiteral arrayLiteral)) {
+      // The vararg was passed directly as an array, not as separate arguments. Process it as one
+      // argument.
+      return contextRewriter.rewriteMethodInvocationContext(
+          inferredParameterDescriptor, declaredParameterDescriptor, expression);
+    }
+
+    return arrayLiteral.toBuilder()
+        .setValueExpressions(
+            arrayLiteral.getValueExpressions().stream()
+                .map(
+                    // Process each element of the array literal the same way a single argument is
+                    // processed argument.
+                    e ->
+                        contextRewriter.rewriteMethodInvocationContext(
+                            toComponentParameterDescriptor(inferredParameterDescriptor),
+                            toComponentParameterDescriptor(declaredParameterDescriptor),
+                            e))
+                .collect(toImmutableList()))
+        .build();
+  }
+
+  /**
+   * Converts the varargs ParameterDescriptor into the equivalent ParameterDescriptor for each
+   * individual argument.
+   */
+  private static ParameterDescriptor toComponentParameterDescriptor(
+      ParameterDescriptor parameterDescriptor) {
+    return parameterDescriptor.toBuilder()
+        .setVarargs(false)
+        .setTypeDescriptor(
+            ((ArrayTypeDescriptor) parameterDescriptor.getTypeDescriptor())
+                .getComponentTypeDescriptor())
+        .build();
   }
 }

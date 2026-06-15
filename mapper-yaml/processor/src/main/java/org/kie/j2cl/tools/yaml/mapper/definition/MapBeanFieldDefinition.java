@@ -28,10 +28,19 @@ import org.kie.j2cl.tools.yaml.mapper.api.internal.ser.map.MapYAMLSerializer;
 import org.kie.j2cl.tools.yaml.mapper.context.GenerationContext;
 import org.kie.j2cl.tools.yaml.mapper.exception.GenerationException;
 
+/** @author Dmitrii Tikhomirov Created by treblereel 4/1/20 */
 public class MapBeanFieldDefinition extends FieldDefinition {
+
+  private TypeMirror STRING_TYPE;
 
   protected MapBeanFieldDefinition(TypeMirror property, GenerationContext context) {
     super(property, context);
+    STRING_TYPE =
+        context
+            .getProcessingEnv()
+            .getElementUtils()
+            .getTypeElement(String.class.getCanonicalName())
+            .asType();
   }
 
   @Override
@@ -43,10 +52,6 @@ public class MapBeanFieldDefinition extends FieldDefinition {
     }
     return new MethodCallExpr(
             new NameExpr(MapYAMLDeserializer.class.getCanonicalName()), "newInstance")
-        .addArgument(
-            propertyDefinitionFactory
-                .getFieldDefinition(declaredType.getTypeArguments().get(0))
-                .getFieldDeserializer(field, cu))
         .addArgument(
             propertyDefinitionFactory
                 .getFieldDefinition(declaredType.getTypeArguments().get(1))
@@ -63,16 +68,36 @@ public class MapBeanFieldDefinition extends FieldDefinition {
               + field.getProperty().toString()
               + "]");
     }
+
+    if (!context
+        .getProcessingEnv()
+        .getTypeUtils()
+        .isSameType(declaredType.getTypeArguments().get(0), STRING_TYPE)) {
+      throw new GenerationException(
+          "Only Maps with String keys are supported for YAML serialization. Problematic type: "
+              + declaredType.getTypeArguments().get(0).toString()
+              + " at "
+              + field.getBean());
+    }
+
+    if (context.getTypeUtils().isObject(declaredType.getTypeArguments().get(1))) {
+      throw new GenerationException(
+          "Map with Object values are not supported for YAML serialization. Problematic type: "
+              + declaredType.getTypeArguments().get(1).toString()
+              + " at "
+              + field.getBean());
+    }
+
+    PropertyDefinition valuePropertyDefinition =
+        new PropertyDefinition(
+            MoreTypes.asElement(declaredType.getTypeArguments().get(1)), context);
+
     return new MethodCallExpr(
             new NameExpr(MapYAMLSerializer.class.getCanonicalName()), "newInstance")
         .addArgument(
             propertyDefinitionFactory
-                .getFieldDefinition(declaredType.getTypeArguments().get(0))
-                .getFieldSerializer(null, cu))
-        .addArgument(
-            propertyDefinitionFactory
                 .getFieldDefinition(declaredType.getTypeArguments().get(1))
-                .getFieldSerializer(null, cu))
+                .getFieldSerializer(valuePropertyDefinition, cu))
         .addArgument(new StringLiteralExpr(field.getPropertyName()));
   }
 

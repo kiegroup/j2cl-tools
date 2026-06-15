@@ -5,12 +5,12 @@
 
 package com.google.j2cl.transpiler.frontend.kotlin.lower
 
-import com.google.j2cl.transpiler.frontend.kotlin.ir.isStubbedPrimitiveIteratorClass
 import org.jetbrains.kotlin.backend.common.ClassLoweringPass
 import org.jetbrains.kotlin.backend.common.lower.createIrBuilder
 import org.jetbrains.kotlin.backend.jvm.JvmBackendContext
 import org.jetbrains.kotlin.backend.jvm.caches.StubsForCollectionClass
 import org.jetbrains.kotlin.backend.jvm.ir.isJvmInterface
+import org.jetbrains.kotlin.backend.jvm.overridesWithoutStubs
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.builders.declarations.buildFun
 import org.jetbrains.kotlin.ir.builders.declarations.buildValueParameter
@@ -53,7 +53,7 @@ internal class CollectionStubMethodLowering(val context: JvmBackendContext) : Cl
   private data class NameAndArity(
     val name: Name,
     val typeParametersCount: Int,
-    val valueParametersCount: Int
+    val valueParametersCount: Int,
   )
 
   private val IrSimpleFunction.nameAndArity
@@ -63,20 +63,6 @@ internal class CollectionStubMethodLowering(val context: JvmBackendContext) : Cl
     if (irClass.isInterface) {
       return
     }
-
-    // MODIFIED BY GOOGLE
-    // Don't add stubs to primitive iterator classes as the only one we would add is remove(), which
-    // is already a default method on base Iterator interface. This also avoids conflicts between
-    // doppelgänger types as the primitive iterators are both a builtin type and a real type. By
-    // keeping the shape of the types identical sidestep any issues.
-    // TODO(b/254656877): Remove this workaround when we better handle the duplicated types.
-    if (
-      irClass.symbol in context.ir.symbols.primitiveIteratorsByType.values ||
-        irClass.isStubbedPrimitiveIteratorClass()
-    ) {
-      return
-    }
-    // END OF MODIFICATIONS
 
     val methodStubsToGenerate = generateRelevantStubMethods(irClass)
     if (methodStubsToGenerate.isEmpty()) return
@@ -103,7 +89,7 @@ internal class CollectionStubMethodLowering(val context: JvmBackendContext) : Cl
           // However, we still need to keep track of the original overrides
           // so that special built-in signature mapping doesn't confuse it with a method
           // that actually requires signature patching.
-          context.recordOverridesWithoutStubs(it)
+          it.overridesWithoutStubs = it.overriddenSymbols.toList()
           it.overriddenSymbols += stub.overriddenSymbols
         }
         // We don't add a throwing stub if it's effectively overridden by an existing function.
@@ -180,7 +166,7 @@ internal class CollectionStubMethodLowering(val context: JvmBackendContext) : Cl
   private fun createRemoveAtStub(
     removeAtStub: IrSimpleFunction,
     stubReturnType: IrType,
-    stubOrigin: IrDeclarationOrigin
+    stubOrigin: IrDeclarationOrigin,
   ): IrSimpleFunction {
     return context.irFactory
       .buildFun {
@@ -210,7 +196,7 @@ internal class CollectionStubMethodLowering(val context: JvmBackendContext) : Cl
   private fun createStubMethod(
     function: IrSimpleFunction,
     irClass: IrClass,
-    substitutionMap: Map<IrTypeParameterSymbol, IrType>
+    substitutionMap: Map<IrTypeParameterSymbol, IrType>,
   ): IrSimpleFunction {
     return context.irFactory
       .buildFun {
@@ -248,7 +234,7 @@ internal class CollectionStubMethodLowering(val context: JvmBackendContext) : Cl
 
   private fun isEffectivelyOverriddenBy(
     superFun: IrSimpleFunction,
-    overridingFun: IrSimpleFunction
+    overridingFun: IrSimpleFunction,
   ): Boolean {
     // Function 'f0' is overridden by function 'f1' if all the following conditions are met,
     // assuming type parameter Ti of 'f1' is "equal" to type parameter Si of 'f0':
@@ -280,20 +266,20 @@ internal class CollectionStubMethodLowering(val context: JvmBackendContext) : Cl
 
   private fun createTypeCheckerState(
     overrideFun: IrSimpleFunction,
-    parentFun: IrSimpleFunction
+    parentFun: IrSimpleFunction,
   ): TypeCheckerState =
     createIrTypeCheckerState(
       IrTypeSystemContextWithAdditionalAxioms(
         context.typeSystem,
         overrideFun.typeParameters,
-        parentFun.typeParameters
+        parentFun.typeParameters,
       )
     )
 
   private fun areTypeParametersEquivalent(
     overrideFun: IrSimpleFunction,
     parentFun: IrSimpleFunction,
-    typeChecker: TypeCheckerState
+    typeChecker: TypeCheckerState,
   ): Boolean =
     overrideFun.typeParameters.zip(parentFun.typeParameters).all { (typeParameter1, typeParameter2)
       ->
@@ -305,7 +291,7 @@ internal class CollectionStubMethodLowering(val context: JvmBackendContext) : Cl
   private fun areValueParametersEquivalent(
     overrideFun: IrSimpleFunction,
     parentFun: IrSimpleFunction,
-    typeChecker: TypeCheckerState
+    typeChecker: TypeCheckerState,
   ): Boolean =
     overrideFun.valueParameters.zip(parentFun.valueParameters).all {
       (valueParameter1, valueParameter2) ->
@@ -315,25 +301,24 @@ internal class CollectionStubMethodLowering(val context: JvmBackendContext) : Cl
   internal fun isReturnTypeOverrideCompliant(
     overrideFun: IrSimpleFunction,
     parentFun: IrSimpleFunction,
-    typeChecker: TypeCheckerState
+    typeChecker: TypeCheckerState,
   ): Boolean =
     AbstractTypeChecker.isSubtypeOf(typeChecker, overrideFun.returnType, parentFun.returnType)
 
   // Copy value parameter with type substitution
   private fun IrValueParameter.copyWithSubstitution(
     target: IrSimpleFunction,
-    substitutionMap: Map<IrTypeParameterSymbol, IrType>
+    substitutionMap: Map<IrTypeParameterSymbol, IrType>,
   ): IrValueParameter = copyWithCustomTypeSubstitution(target) { it.substitute(substitutionMap) }
 
   private fun IrValueParameter.copyWithCustomTypeSubstitution(
     target: IrSimpleFunction,
-    substituteType: (IrType) -> IrType
+    substituteType: (IrType) -> IrType,
   ): IrValueParameter {
     val parameter = this
     return buildValueParameter(target) {
       origin = IrDeclarationOrigin.IR_BUILTINS_STUB
       name = parameter.name
-      index = parameter.index
       type = substituteType(parameter.type)
       varargElementType = parameter.varargElementType?.let { substituteType(it) }
       isCrossInline = parameter.isCrossinline
@@ -348,7 +333,7 @@ internal class CollectionStubMethodLowering(val context: JvmBackendContext) : Cl
   private fun computeSubstitutionMap(
     readOnlyClass: IrClass,
     mutableClass: IrClass,
-    targetClass: IrClass
+    targetClass: IrClass,
   ): Map<IrTypeParameterSymbol, IrType> {
     // We find the most specific type for the immutable collection class from the inheritance chain
     // of target class
@@ -406,7 +391,7 @@ internal class CollectionStubMethodLowering(val context: JvmBackendContext) : Cl
   private class FilteredStubsForCollectionClass(
     override val readOnlyClass: IrClassSymbol,
     override val mutableClass: IrClassSymbol,
-    override val candidatesForStubs: Collection<IrSimpleFunction>
+    override val candidatesForStubs: Collection<IrSimpleFunction>,
   ) : StubsForCollectionClass
 
   private fun computeStubsForSuperClass(superClass: IrClass): List<StubsForCollectionClass> {

@@ -20,9 +20,7 @@ package com.google.j2cl.transpiler.frontend.common;
 /** Constants common to all frontends. */
 public final class FrontendConstants {
 
-  /** Annotations names. */
   public static final String JS_CONSTRUCTOR_ANNOTATION_NAME = "jsinterop.annotations.JsConstructor";
-
   public static final String JS_ASYNC_ANNOTATION_NAME = "jsinterop.annotations.JsAsync";
   public static final String JS_ENUM_ANNOTATION_NAME = "jsinterop.annotations.JsEnum";
   public static final String JS_FUNCTION_ANNOTATION_NAME = "jsinterop.annotations.JsFunction";
@@ -33,27 +31,23 @@ public final class FrontendConstants {
   public static final String JS_PACKAGE_ANNOTATION_NAME = "jsinterop.annotations.JsPackage";
   public static final String JS_PROPERTY_ANNOTATION_NAME = "jsinterop.annotations.JsProperty";
   public static final String JS_TYPE_ANNOTATION_NAME = "jsinterop.annotations.JsType";
-  public static final String KT_DISABLED_ANNOTATION_NAME =
+
+  public static final String J2KT_DISABLED_ANNOTATION_NAME =
       "javaemul.internal.annotations.KtDisabled";
-  public static final String KT_IN_ANNOTATION_NAME = "javaemul.internal.annotations.KtIn";
-  public static final String KT_NAME_ANNOTATION_NAME = "javaemul.internal.annotations.KtName";
-  public static final String KT_NATIVE_ANNOTATION_NAME = "javaemul.internal.annotations.KtNative";
-  public static final String KT_OBJECTIVE_C_NAME = "com.google.j2objc.annotations.ObjectiveCName";
-  public static final String KT_OUT_ANNOTATION_NAME = "javaemul.internal.annotations.KtOut";
-  public static final String KT_PROPERTY_ANNOTATION_NAME =
+  public static final String J2KT_IN_ANNOTATION_NAME = "javaemul.internal.annotations.KtIn";
+  public static final String J2KT_NAME_ANNOTATION_NAME = "javaemul.internal.annotations.KtName";
+  public static final String J2KT_NATIVE_ANNOTATION_NAME = "javaemul.internal.annotations.KtNative";
+  public static final String J2KT_OBJECTIVE_C_ANNOTATION_NAME =
+      "com.google.j2objc.annotations.ObjectiveCName";
+  public static final String J2KT_OUT_ANNOTATION_NAME = "javaemul.internal.annotations.KtOut";
+  public static final String J2KT_PROPERTY_ANNOTATION_NAME =
       "javaemul.internal.annotations.KtProperty";
-  public static final String KT_THROWS_ANNOTATION_NAME = "com.google.j2kt.annotations.Throws";
+  public static final String J2KT_THROWS_ANNOTATION_NAME = "com.google.j2kt.annotations.Throws";
+  public static final String J2KT_PUBLIC_NATIVE_ANNOTATION_NAME =
+      "com.google.j2kt.annotations.KtNative";
+
+  public static final String NULL_MARKED_ANNOTATION_NAME = "org.jspecify.annotations.NullMarked";
   public static final String SUPPRESS_WARNINGS_ANNOTATION_NAME = "java.lang.SuppressWarnings";
-  public static final String DO_NOT_AUTOBOX_ANNOTATION_NAME =
-      "javaemul.internal.annotations.DoNotAutobox";
-
-  public static final String UNCHECKED_CAST_ANNOTATION_NAME =
-      "javaemul.internal.annotations.UncheckedCast";
-
-  public static final String HAS_NO_SIDE_EFFECTS_ANNOTATION_NAME =
-      "javaemul.internal.annotations.HasNoSideEffects";
-
-  public static final String WASM_ANNOTATION_NAME = "javaemul.internal.annotations.Wasm";
 
   private FrontendConstants() {}
 }

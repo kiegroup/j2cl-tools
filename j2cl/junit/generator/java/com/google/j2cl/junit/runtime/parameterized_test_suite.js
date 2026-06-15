@@ -15,10 +15,6 @@
 goog.module('com.google.j2cl.junit.parameterizedTestSuite');
 goog.setTestOnly();
 
-const TestCase = goog.require('goog.testing.TestCase');
-const testSuite = goog.require('goog.testing.testSuite');
-const {assert} = goog.require('goog.asserts');
-
 /** @record */
 class TestCaseWrapper {
   setUpPage() {}
@@ -58,22 +54,14 @@ class TestCaseWrapper {
   getParam(index, testCaseIndex) {}
 }
 
-/**
- * A drop-in replacement for goog.testing.testSuite that supports parameterized
- * tests
- * @param {!TestCaseWrapper} javaWrapper
- * @param {{order: (!TestCase.Order|undefined)}=} options
- */
-function parameterizedTestSuite(javaWrapper, options) {
-  testSuite(parameterizedTestHelper(javaWrapper), options);
-}
 
 /**
- * Takes a javaWrapper object to create a nested testing object.
+ * Expands the javaWrapper for a parameterized test into a nested test object
+ * that can be consumed as a test suite.
  * @param {!TestCaseWrapper} javaWrapper
  * @return {!Object} the nested testing object
  */
-function parameterizedTestHelper(javaWrapper) {
+function expandParameterized(javaWrapper) {
   let currTestNumber = 0;
   // Using quotes on method names here since export_test_functions doesn't
   // handle function declaration in object literals.
@@ -100,6 +88,9 @@ function parameterizedTestHelper(javaWrapper) {
         currTestNumber = 0;
       }
     },
+    'toString': function() {
+      return javaWrapper.toString();
+    },
   };
 
   const jsUnitAdapter = /** @type {!Object<!Function>} */ (javaWrapper);
@@ -108,7 +99,8 @@ function parameterizedTestHelper(javaWrapper) {
           .filter(eachProperty => eachProperty.startsWith('test'));
   const data = assert(javaWrapper.getData());
   for (let i = 0; i < data.length; i++) {
-    generatedSuite[`testGroup${i}`] = createTestCases(i, javaWrapper, methods);
+    const testCases = createTestCases(i, javaWrapper, methods);
+    generatedSuite[testCases.toString()] = testCases;
   }
 
   return generatedSuite;
@@ -126,6 +118,9 @@ function /** !Object */ createTestCases(
     },
     tearDown() {
       return javaWrapper.tearDown();
+    },
+    toString() {
+      return `testGroup${currentIndex}`;
     },
   };
 
@@ -155,4 +150,17 @@ function /** string */ getName(
   return `test${method}[${convertedName}]`;
 }
 
-exports = {parameterizedTestSuite};
+/**
+ * @template T
+ * @param {T} condition The condition to check.
+ * @return {T} The value of the condition.
+ * @closurePrimitive {asserts.truthy}
+ */
+function assert(condition) {
+  if (!condition) {
+    throw new Error("Assertion failed");
+  }
+  return condition;
+}
+
+exports = {expandParameterized};

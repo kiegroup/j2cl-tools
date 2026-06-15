@@ -8,6 +8,7 @@ let $Arrays = goog.forwardDeclare('vmbootstrap.Arrays$impl');
 let $Enums = goog.forwardDeclare('vmbootstrap.Enums$impl');
 
 /**
+ * @final
  * @extends {Enum<Color>}
  */
 class Color extends Enum {
@@ -31,7 +32,7 @@ class Color extends Enum {
  static valueOf(/** string */ name) {
   Color.$clinit();
   if ($Equality.$same(Color.f_namesToValuesMap__jstypeenum_Color_, null)) {
-   Color.f_namesToValuesMap__jstypeenum_Color_ = /**@type {Map<?string, !Color>}*/ ($Enums.createMapFromValues(Color.values()));
+   Color.f_namesToValuesMap__jstypeenum_Color_ = (/**@type {Map<?string, !Color>}*/ ($Enums.createMapFromValues(Color.values())));
   }
   return /**@type {Color}*/ ($Enums.getValueFromNameAndMap(name, Color.f_namesToValuesMap__jstypeenum_Color_));
  }

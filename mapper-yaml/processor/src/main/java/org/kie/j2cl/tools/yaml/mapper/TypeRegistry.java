@@ -55,7 +55,6 @@ import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -111,7 +110,6 @@ import org.kie.j2cl.tools.yaml.mapper.api.internal.deser.collection.StackYAMLDes
 import org.kie.j2cl.tools.yaml.mapper.api.internal.deser.collection.TreeSetYAMLDeserializer;
 import org.kie.j2cl.tools.yaml.mapper.api.internal.deser.collection.VectorYAMLDeserializer;
 import org.kie.j2cl.tools.yaml.mapper.api.internal.deser.map.AbstractMapYAMLDeserializer;
-import org.kie.j2cl.tools.yaml.mapper.api.internal.deser.map.EnumMapYAMLDeserializer;
 import org.kie.j2cl.tools.yaml.mapper.api.internal.deser.map.HashMapYAMLDeserializer;
 import org.kie.j2cl.tools.yaml.mapper.api.internal.deser.map.IdentityHashMapYAMLDeserializer;
 import org.kie.j2cl.tools.yaml.mapper.api.internal.deser.map.LinkedHashMapYAMLDeserializer;
@@ -458,12 +456,6 @@ public final class TypeRegistry {
         .register(simpleTypes);
 
     MAPPER
-        .forType(EnumMap.class)
-        .serializer(MapYAMLSerializer.class)
-        .deserializer(EnumMapYAMLDeserializer.class)
-        .register(simpleTypes);
-
-    MAPPER
         .forType(HashMap.class)
         .serializer(MapYAMLSerializer.class)
         .deserializer(HashMapYAMLDeserializer.class)
@@ -582,7 +574,6 @@ public final class TypeRegistry {
   private void initMapsDeserializersMappers() {
     mapDeserializers.put(Map.class.getName(), MapYAMLDeserializer.class);
     mapDeserializers.put(AbstractMap.class.getName(), AbstractMapYAMLDeserializer.class);
-    mapDeserializers.put(EnumMap.class.getName(), EnumMapYAMLDeserializer.class);
     mapDeserializers.put(HashMap.class.getName(), HashMapYAMLDeserializer.class);
     mapDeserializers.put(IdentityHashMap.class.getName(), IdentityHashMapYAMLDeserializer.class);
     mapDeserializers.put(LinkedHashMap.class.getName(), LinkedHashMapYAMLDeserializer.class);
@@ -753,7 +744,8 @@ public final class TypeRegistry {
    * @return a {@link TypeElement} object.
    */
   public TypeElement getSerializer(TypeMirror typeMirror) {
-    return getSerializer(typeMirror.toString());
+    String fqcn = context.getTypeUtils().stringifyTypeWithPackage(typeMirror);
+    return getSerializer(fqcn);
   }
 
   public TypeElement getSerializer(String typeName) {
@@ -787,7 +779,8 @@ public final class TypeRegistry {
    * @return a {@link TypeElement} object.
    */
   public TypeElement getDeserializer(TypeMirror typeMirror) {
-    return getDeserializer(typeMirror.toString());
+    String fqcn = context.getTypeUtils().stringifyTypeWithPackage(typeMirror);
+    return getDeserializer(fqcn);
   }
 
   public TypeElement getDeserializer(String typeName) {

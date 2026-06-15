@@ -21,12 +21,7 @@ import com.google.j2cl.jre.testing.J2ktIncompatible;
 import junit.framework.TestCase;
 
 /** Unit tests for the GWT emulation of java.lang.Throwable class. */
-public class ThrowableTest extends GWTTestCase {
-
-  @Override
-  public String getModuleName() {
-    return "com.google.gwt.emultest.EmulSuite";
-  }
+public class ThrowableTest extends TestCase {
 
   @J2ktIncompatible // Currently unsupported
   public static void testStackTrace() {

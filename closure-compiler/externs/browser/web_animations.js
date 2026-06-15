@@ -32,9 +32,11 @@
 Element.prototype.animate = function(frames, options) {};
 
 /**
+ * @param {GetAnimationsOptions=} options
  * @return {!Array<!Animation>}
+ * @see https://www.w3.org/TR/web-animations/#dom-animatable-getanimations
  */
-Element.prototype.getAnimations = function() {};
+Element.prototype.getAnimations = function(options) {};
 
 /**
  * @return {!Array<!Animation>}
@@ -47,6 +49,32 @@ Document.prototype.getAnimations = function() {};
  * @see https://www.w3.org/TR/web-animations/#dom-documentorshadowroot-getanimations
  */
 ShadowRoot.prototype.getAnimations = function() {};
+
+/**
+ * @record
+ * @extends {EventInit}
+ */
+function AnimationPlaybackEventInit() {};
+
+/** @type {?(CSSNumericValue|number)} */
+AnimationPlaybackEventInit.prototype.currentTime;
+
+/** @type {?CSSNumericValue|number} */
+AnimationPlaybackEventInit.prototype.timelineTime;
+
+/**
+ * @constructor
+ * @param {string} type
+ * @param {!AnimationPlaybackEventInit=} eventInitDict
+ * @extends {Event}
+ */
+function AnimationPlaybackEvent(type, eventInitDict) {};
+
+/** @type {?CSSNumericValue|number} */
+AnimationPlaybackEvent.prototype.currentTime;
+
+/** @type {?CSSNumericValue|number} */
+AnimationPlaybackEvent.prototype.timelineTime;
 
 /**
  * @constructor
@@ -93,7 +121,18 @@ Animation.prototype.play = function() {};
 /**
  * @return {undefined}
  */
+Animation.prototype.persist = function() {};
+
+/**
+ * @return {undefined}
+ */
 Animation.prototype.reverse = function() {};
+
+/**
+ * @param {number} playbackRate
+ * @return {undefined}
+ */
+Animation.prototype.updatePlaybackRate = function(playbackRate) {};
 
 /** @type {number} */
 Animation.prototype.currentTime;
@@ -113,6 +152,12 @@ Animation.prototype.oncancel;
 /** @type {?function(!Event)} */
 Animation.prototype.onfinish;
 
+/** @type {?function(!Event)} */
+Animation.prototype.onremove;
+
+/** @type {boolean} */
+Animation.prototype.pending;
+
 /** @type {number} */
 Animation.prototype.playbackRate;
 
@@ -121,6 +166,9 @@ Animation.prototype.playState;
 
 /** @type {!Promise<void>} */
 Animation.prototype.ready;
+
+/** @type {string} */
+Animation.prototype.replaceState;
 
 /** @type {number} */
 Animation.prototype.startTime;
@@ -165,7 +213,13 @@ AnimationEffect.prototype.timing;
 var KeyframeEffectReadOnly = function(target, frames, options) {};
 
 /** @override */
+KeyframeEffectReadOnly.prototype.getTiming = function() {};
+
+/** @override */
 KeyframeEffectReadOnly.prototype.getComputedTiming = function() {};
+
+/** @override */
+KeyframeEffectReadOnly.prototype.updateTiming = function(timing) {};
 
 /** @override */
 KeyframeEffectReadOnly.prototype.timing;
@@ -357,12 +411,19 @@ var AnimationTimeline = function() {};
 /** @type {?number} */
 AnimationTimeline.prototype.currentTime;
 
+/**
+ * @typedef {{
+ *   originTime: (number|undefined)
+ * }}
+ */
+var DocumentTimelineOptions;
 
 /**
  * @constructor
+ * @param {!DocumentTimelineOptions=} options
  * @implements {AnimationTimeline}
  */
-var DocumentTimeline = function() {};
+var DocumentTimeline = function(options) {};
 
 /** @override */
 DocumentTimeline.prototype.currentTime;
@@ -413,7 +474,13 @@ DocumentTimeline.prototype.getAnimations = function() {};
 var SequenceEffect = function(children, timing) {};
 
 /** @override */
+SequenceEffect.prototype.getTiming = function() {};
+
+/** @override */
 SequenceEffect.prototype.getComputedTiming = function() {};
+
+/** @override */
+SequenceEffect.prototype.updateTiming = function(timing) {};
 
 /** @override */
 SequenceEffect.prototype.timing;
@@ -431,10 +498,26 @@ SequenceEffect.prototype.children;
 var GroupEffect = function(children, timing) {};
 
 /** @override */
+GroupEffect.prototype.getTiming = function() {};
+
+/** @override */
 GroupEffect.prototype.getComputedTiming = function() {};
+
+/** @override */
+GroupEffect.prototype.updateTiming = function(timing) {};
 
 /** @override */
 GroupEffect.prototype.timing;
 
 /** @type {!Array<!AnimationEffect>} */
 GroupEffect.prototype.children;
+
+
+/**
+ * @record
+ * @see https://www.w3.org/TR/web-animations/#dom-animatable-getanimations
+ */
+var GetAnimationsOptions = function() {};
+
+/** @type {(undefined|boolean)} */
+GetAnimationsOptions.prototype.subtree;

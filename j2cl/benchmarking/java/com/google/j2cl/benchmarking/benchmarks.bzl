@@ -10,11 +10,12 @@ load(
 )
 load("//build_defs:rules.bzl", "j2cl_application", "j2wasm_application")
 load("//build_defs/internal_do_not_use:j2cl_util.bzl", "get_java_package")
-load("@io_bazel_rules_closure//closure:defs.bzl", "closure_js_library")
+load("//transpiler/java/com/google/j2cl/common/bazel:jvm_flags.bzl", "JVM_FLAGS")
+load("@rules_closure//closure:defs.bzl", "closure_js_library")
 
 _BENCHMARK_LIST_RULE_NAME = "benchmark_list"
 
-def benchmark(name, deps = []):
+def benchmark(name, deps = [], data = [], jvm_only = False, perfgate_test_tags = []):
     """Defines a benchmark that can be run on the jvw, web and wasm.
 
     Args:
@@ -39,7 +40,9 @@ def benchmark(name, deps = []):
             "%s.java" % name,
             create_launcher(name, benchmark_java_package),
         ],
+        data = data,
         deps = deps,
+        jvm_only = jvm_only,
     )
 
     # JVM Benchmark
@@ -49,14 +52,21 @@ def benchmark(name, deps = []):
     )
     java_binary(
         name = "%s_local" % name,
-        runtime_deps = [":%s_lib" % name],
+        testonly = 1,
         main_class = "%s.%sLauncher" % (benchmark_java_package, name),
+        use_launcher = False,
+        runtime_deps = [":%s_lib" % name],
+        jvm_flags = JVM_FLAGS,
     )
+
+    if jvm_only:
+        return
 
     # J2CL benchmark
     closure_js_library(
         name = "%s-j2cl_glue" % name,
         srcs = [create_j2cl_glue(name, benchmark_java_package)],
+        testonly = 1,
         deps = [
             ":%s_lib-j2cl" % name,
         ],
@@ -64,12 +74,13 @@ def benchmark(name, deps = []):
 
     j2cl_application(
         name = "%s_j2cl_entry" % name,
+        testonly = 1,
         deps = [":%s-j2cl_glue" % name],
         jre_checks_check_level = "MINIMAL",
         entry_points = ["%s_launcher" % name],
     )
 
-    _d8_benchmark(
+    _jsvm_benchmark(
         name = "%s_local-j2cl" % name,
         data = [":%s_j2cl_entry.js" % name],
         tags = ["j2cl"],
@@ -78,6 +89,7 @@ def benchmark(name, deps = []):
     # J2WASM Benchmark
     j2wasm_application(
         name = "%s_j2wasm_binary" % name,
+        testonly = 1,
         deps = [":%s_lib-j2wasm" % name],
         entry_points = [
             "%s.%sLauncher#execute" % (benchmark_java_package, name),
@@ -91,6 +103,7 @@ def benchmark(name, deps = []):
     closure_js_library(
         name = "%s_j2wasm_glue" % name,
         srcs = [create_j2wasm_glue(name, wasm_url, wasm_module_name)],
+        testonly = 1,
         lenient = True,
         deps = [
             ":%s_j2wasm_binary" % name,
@@ -98,11 +111,12 @@ def benchmark(name, deps = []):
     )
     j2cl_application(
         name = "%s_j2wasm_entry" % name,
+        testonly = 1,
         deps = [":%s_j2wasm_glue" % name],
         entry_points = ["%s_launcher" % name],
     )
 
-    _d8_benchmark(
+    _jsvm_benchmark(
         name = "%s_local-j2wasm" % name,
         data = [
             ":%s_j2wasm_entry.js" % name,
@@ -127,11 +141,15 @@ def gen_benchmark_suite(name):
         ],
     )
 
-def _d8_benchmark(name, data, tags):
+def _jsvm_benchmark(name, data, tags):
+    _jsvm_benchmark_impl(name + "-v8", "v8 --expose-gc --experimental-wasm-custom-descriptors", data, tags)
+    _jsvm_benchmark_impl(name + "-sm", "sm -f", data, tags)
+
+def _jsvm_benchmark_impl(name, cmd, data, tags):
     native.genrule(
         name = "gen_%s_sh" % name,
         cmd = "echo cd $$(dirname $(location %s)) '&&' " % data[0] +
-              "v8 --expose-gc --experimental-wasm-imported-strings --turboshaft-future" +
+              cmd +
               " $$(basename $(location %s)) > $@" % data[0] +
               " -e \\''const results = JSON.parse(execute())'\\'" +
               " -e \\''console.log(results.reduce((a, b) => a + b) / results.length)'\\' ",

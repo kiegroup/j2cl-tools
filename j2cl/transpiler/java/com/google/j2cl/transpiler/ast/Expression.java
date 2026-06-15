@@ -35,6 +35,10 @@ public abstract class Expression extends Node implements Cloneable<Expression> {
     return getTypeDescriptor();
   }
 
+  public boolean isAlwaysNull() {
+    return false;
+  }
+
   /**
    * Returns true if the expression can be evaluated multiple times and always results in the same
    * value.
@@ -306,7 +310,9 @@ public abstract class Expression extends Node implements Cloneable<Expression> {
     LOGICAL_AND(7, Expression.Associativity.LEFT),
     LOGICAL_OR(6, Expression.Associativity.LEFT),
     CONDITIONAL(4, Expression.Associativity.RIGHT),
-    ASSIGNMENT(3, Expression.Associativity.RIGHT);
+    ASSIGNMENT(3, Expression.Associativity.RIGHT),
+    COMMA(2, Associativity.LEFT),
+    LOWEST(1, Associativity.NONE);
 
     Precedence(int value, Expression.Associativity associativity) {
       this.value = value;

@@ -1,0 +1,13 @@
+module(
+    name = "j2cl_samples_helloworld",
+)
+
+bazel_dep(
+    name = "j2cl",
+    version = "20250630",
+)
+
+bazel_dep(
+    name = "rules_closure",
+    version = "0.15.0",
+)

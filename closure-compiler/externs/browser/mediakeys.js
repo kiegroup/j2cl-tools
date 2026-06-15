@@ -110,6 +110,18 @@ MediaKeys.prototype.createSession = function(opt_sessionType) {};
  */
 MediaKeys.prototype.setServerCertificate = function(serverCertificate) {};
 
+/**
+ * @typedef {{
+ *   minHdcpVersion: (string|undefined)
+ * }}
+ */
+var MediaKeyPolicy;
+
+/**
+ * @param {!MediaKeyPolicy=} policy
+ * @return {!Promise<string>}
+ */
+MediaKeys.prototype.getStatusForPolicy = function(policy) {};
 
 
 /**
@@ -233,6 +245,9 @@ MediaKeySession.prototype.removeEventListener = function(
 
 /** @override */
 MediaKeySession.prototype.dispatchEvent = function(evt) {};
+
+/** @type {?function(!Event)} */
+MediaKeySession.prototype.onkeystatuseschange;
 
 /**
  * @record

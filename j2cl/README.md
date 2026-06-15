@@ -1,44 +1,7 @@
-# [J2CL](http://j2cl.io)  &middot; [![Build Status](https://github.com/google/j2cl/actions/workflows/ci.yaml/badge.svg)](https://github.com/google/j2cl/actions/workflows/ci.yaml)
+# [J2CL](http://j2cl.io) &middot; ![Latest Release](https://img.shields.io/github/v/release/google/j2cl) &middot; [![Build Status](https://github.com/google/j2cl/actions/workflows/ci.yaml/badge.svg)](https://github.com/google/j2cl/actions/workflows/ci.yaml)
 
 Seamless Java in JavaScript applications that tightly optimizes with
 [Closure Compiler](https://github.com/google/closure-compiler)
-
-
----
-
-This is Vertispan LLC's fork of J2CL, which includes a few changes from Google's
-original repository including
-
-* Create Maven pom.xml files to use and distribute J2CL without using Bazel.
-* Make some internal APIs public, to more easily build a Maven plugin with the
-  same flexibility as the Bazel rules.
-* Allow more than one J2CL test suite to be built in a single compile.
-* Modify Bazel wiring to allow GWT 2's GWTTestCase to be usable outside J2CL
-  itself.
-* Modify Bazel wiring to build Javadocs
-* Temporary: default the test processor to assume platform=CLOSURE
-
-There is now a relatively-recent tagged version of J2CL in Google's own repository,
-the current latest release from Vertispan is based on that instead of an arbitrary
-commit. We don't know if tagged releases will continue - so far, they have not, so
-we may return to our own release pattern, see below. But for the moment, we are
-appending a build number to the end of the upstream tag, currently `v20230718-1`.
-
-As these changes alter J2CL's own public API, we are currently versioning releases
-and snapshots as 0.x.y-<hash> releases, to indicate first that this has not yet
-reached a 1.0 build, second that each time the `x` increments some API has likely
-changed and downstream users should pay attention to what might have been modified,
-and third to point at the upstream `<hash>` commit sha from the https://github.com/google/j2cl
-repository to see where our own changes were applied. The `y` exists only to make
-it clear what order the releases were in - two release with different `y` versions
-could be packaging changes (if the commit hash is the same) or could be
-api-compatible with each other but still worth an update.
-
-The release process is to rebase this set of commits, then update the version in
-the poms appropriately. When a release is pushed to Maven central, a tag will
-be pushed to our git repository with a matching version. Snapshot builds on the
-`rebased_master` branch will use `-SNAPSHOT` instead of a commit hash, and will be
-force pushed as the commits are rebased and updated.
 
 ---
 J2CL is a powerful, simple and lightweight transpiler from Java to Closure style
@@ -74,6 +37,7 @@ Guides
 - [JsInterop Cookbook](docs/jsinterop-by-example.md)
 - [J2CL Best Practices](docs/best-practices.md)
 - [Emulation Limitations](docs/limitations.md)
+- [Data Types and Semantics](docs/semantics.md)
 - [Bazel Tutorial](https://docs.bazel.build/versions/master/tutorial/java.html)
 - [Bazel Best Practices](https://docs.bazel.build/versions/master/best-practices.html)
 

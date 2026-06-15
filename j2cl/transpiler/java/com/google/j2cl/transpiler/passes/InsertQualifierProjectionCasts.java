@@ -72,7 +72,7 @@ import com.google.j2cl.transpiler.ast.UnionTypeDescriptor;
  * }
  * }</pre>
  */
-public final class InsertQualifierProjectionCasts extends NormalizationPass {
+public final class InsertQualifierProjectionCasts extends AbstractJ2ktNormalizationPass {
   @Override
   public void applyTo(CompilationUnit compilationUnit) {
     // TODO(b/362477320): Consider switching to ConversionContextVisitor, once
@@ -99,6 +99,12 @@ public final class InsertQualifierProjectionCasts extends NormalizationPass {
               return expression;
             }
 
+            debug(
+                getSourcePosition(this),
+                "Inserting qualifier projection cast from %s to %s",
+                getDescription(typeDescriptor),
+                getDescription(projectedTypeDescriptor));
+
             return CastExpression.newBuilder()
                 .setExpression(expression)
                 .setCastTypeDescriptor(projectedTypeDescriptor)
@@ -111,11 +117,10 @@ public final class InsertQualifierProjectionCasts extends NormalizationPass {
             }
 
             Expression leftOperand = binaryExpression.getLeftOperand();
-            if (!(leftOperand instanceof FieldAccess)) {
+            if (!(leftOperand instanceof FieldAccess fieldAccess)) {
               return binaryExpression;
             }
 
-            FieldAccess fieldAccess = (FieldAccess) leftOperand;
             Expression qualifier = fieldAccess.getQualifier();
             if (qualifier == null) {
               return binaryExpression;
@@ -153,14 +158,23 @@ public final class InsertQualifierProjectionCasts extends NormalizationPass {
 
   private static TypeDescriptor projectTypeArgumentsUpperBound(
       TypeDescriptor typeDescriptor, ImmutableSet<TypeVariable> currentTypeParameters) {
-    if (typeDescriptor instanceof DeclaredTypeDescriptor) {
-      DeclaredTypeDescriptor declaredTypeDescriptor = (DeclaredTypeDescriptor) typeDescriptor;
+    if (typeDescriptor instanceof DeclaredTypeDescriptor declaredTypeDescriptor) {
       return declaredTypeDescriptor.withTypeArguments(
           declaredTypeDescriptor.getTypeArgumentDescriptors().stream()
-              .map(typeArgument -> projectUpperBound(typeArgument, currentTypeParameters))
+              .map(
+                  typeArgument -> {
+                    TypeDescriptor td = projectUpperBound(typeArgument, currentTypeParameters);
+                    // If after projecting all wildcard type arguments to their upperbounds we
+                    // obtain back the declaration, it means that it is a recursive declaration.
+                    // Recursive types like `Enum<T>` would be first projected to `Enum<Enum<T>>`,
+                    // and after detecting recursion would be converted to `Enum<Enum<?>>`.
+                    return td.toNullable()
+                            .equals(declaredTypeDescriptor.getTypeDeclaration().toDescriptor())
+                        ? typeDescriptor
+                        : td;
+                  })
               .collect(toImmutableList()));
-    } else if (typeDescriptor instanceof TypeVariable) {
-      TypeVariable typeVariable = (TypeVariable) typeDescriptor;
+    } else if (typeDescriptor instanceof TypeVariable typeVariable) {
       if (typeVariable.getLowerBoundTypeDescriptor() == null) {
         return projectTypeArgumentsUpperBound(
             typeVariable.getUpperBoundTypeDescriptor(), currentTypeParameters);
@@ -172,8 +186,7 @@ public final class InsertQualifierProjectionCasts extends NormalizationPass {
 
   private static TypeDescriptor projectUpperBound(
       TypeDescriptor typeDescriptor, ImmutableSet<TypeVariable> currentTypeParameters) {
-    if (typeDescriptor instanceof TypeVariable) {
-      TypeVariable typeVariable = (TypeVariable) typeDescriptor;
+    if (typeDescriptor instanceof TypeVariable typeVariable) {
       if (typeVariable.isWildcardOrCapture()
           && typeVariable.getLowerBoundTypeDescriptor() == null) {
         return projectFreeTypeVariables(
@@ -196,8 +209,7 @@ public final class InsertQualifierProjectionCasts extends NormalizationPass {
   private static ImmutableSet<TypeVariable> getCurrentTypeParameters(
       MemberDescriptor memberDescriptor) {
     ImmutableSet.Builder<TypeVariable> builder = ImmutableSet.builder();
-    if (memberDescriptor instanceof MethodDescriptor) {
-      MethodDescriptor methodDescriptor = (MethodDescriptor) memberDescriptor;
+    if (memberDescriptor instanceof MethodDescriptor methodDescriptor) {
       builder.addAll(methodDescriptor.getTypeParameterTypeDescriptors());
     }
 
@@ -220,16 +232,12 @@ public final class InsertQualifierProjectionCasts extends NormalizationPass {
       TypeDescriptor typeDescriptor, ImmutableSet<TypeVariable> seen) {
     if (typeDescriptor instanceof PrimitiveTypeDescriptor) {
       return false;
-    } else if (typeDescriptor instanceof ArrayTypeDescriptor) {
-      ArrayTypeDescriptor arrayTypeDescriptor = (ArrayTypeDescriptor) typeDescriptor;
-      return containsCaptureWithoutLowerBound(
-          arrayTypeDescriptor.getComponentTypeDescriptor(), seen);
-    } else if (typeDescriptor instanceof DeclaredTypeDescriptor) {
-      DeclaredTypeDescriptor declaredTypeDescriptor = (DeclaredTypeDescriptor) typeDescriptor;
-      return declaredTypeDescriptor.getTypeArgumentDescriptors().stream()
+    } else if (typeDescriptor instanceof ArrayTypeDescriptor descriptor) {
+      return containsCaptureWithoutLowerBound(descriptor.getComponentTypeDescriptor(), seen);
+    } else if (typeDescriptor instanceof DeclaredTypeDescriptor descriptor) {
+      return descriptor.getTypeArgumentDescriptors().stream()
           .anyMatch(it -> containsCaptureWithoutLowerBound(it, seen));
-    } else if (typeDescriptor instanceof TypeVariable) {
-      TypeVariable typeVariable = (TypeVariable) typeDescriptor;
+    } else if (typeDescriptor instanceof TypeVariable typeVariable) {
       if (seen.contains(typeVariable)) {
         return false;
       }
@@ -248,14 +256,12 @@ public final class InsertQualifierProjectionCasts extends NormalizationPass {
       TypeDescriptor lowerBound = typeVariable.getLowerBoundTypeDescriptor();
       return containsCaptureWithoutLowerBound(upperBound, newSeen)
           || (lowerBound != null && containsCaptureWithoutLowerBound(lowerBound, newSeen));
-    } else if (typeDescriptor instanceof IntersectionTypeDescriptor) {
-      return ((IntersectionTypeDescriptor) typeDescriptor)
-          .getIntersectionTypeDescriptors().stream()
-              .anyMatch(it -> containsCaptureWithoutLowerBound(it, seen));
-    } else if (typeDescriptor instanceof UnionTypeDescriptor) {
-      return ((UnionTypeDescriptor) typeDescriptor)
-          .getUnionTypeDescriptors().stream()
-              .anyMatch(it -> containsCaptureWithoutLowerBound(it, seen));
+    } else if (typeDescriptor instanceof IntersectionTypeDescriptor descriptor) {
+      return descriptor.getIntersectionTypeDescriptors().stream()
+          .anyMatch(it -> containsCaptureWithoutLowerBound(it, seen));
+    } else if (typeDescriptor instanceof UnionTypeDescriptor descriptor) {
+      return descriptor.getUnionTypeDescriptors().stream()
+          .anyMatch(it -> containsCaptureWithoutLowerBound(it, seen));
     } else {
       throw new AssertionError("Unknown type descriptor: " + typeDescriptor.getClass());
     }

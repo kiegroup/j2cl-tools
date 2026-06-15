@@ -30,9 +30,11 @@ import com.google.j2cl.transpiler.ast.FieldAccess;
 import com.google.j2cl.transpiler.ast.ForEachStatement;
 import com.google.j2cl.transpiler.ast.FunctionExpression;
 import com.google.j2cl.transpiler.ast.InitializerBlock;
-import com.google.j2cl.transpiler.ast.JavaScriptConstructorReference;
+import com.google.j2cl.transpiler.ast.InstanceOfExpression;
+import com.google.j2cl.transpiler.ast.JsConstructorReference;
 import com.google.j2cl.transpiler.ast.JsForInStatement;
 import com.google.j2cl.transpiler.ast.LabeledStatement;
+import com.google.j2cl.transpiler.ast.LocalFunctionDeclarationStatement;
 import com.google.j2cl.transpiler.ast.LoopStatement;
 import com.google.j2cl.transpiler.ast.Member;
 import com.google.j2cl.transpiler.ast.MemberDescriptor;
@@ -100,6 +102,21 @@ public class VerifyNormalizedUnits extends NormalizationPass {
                     || getCurrentType().isAbstract()
                     || getCurrentType().isInterface());
             checkState(method.getParameters().stream().allMatch(Variable::isParameter));
+          }
+
+          @Override
+          public void exitLocalFunctionDeclarationStatement(
+              LocalFunctionDeclarationStatement localFunctionDeclarationStatement) {
+            // Local functions are converted to variable assignments to a function expression.
+            throw new IllegalStateException();
+          }
+
+          @Override
+          public void exitMemberDescriptor(MemberDescriptor memberDescriptor) {
+            if (memberDescriptor.isLocalFunction()) {
+              // Local functions are converted to variable assignments to a function expression.
+              throw new IllegalStateException();
+            }
           }
 
           @Override
@@ -211,6 +228,11 @@ public class VerifyNormalizedUnits extends NormalizationPass {
           }
 
           @Override
+          public void exitInstanceOfExpression(InstanceOfExpression instanceOfExpression) {
+            checkState(instanceOfExpression.getPatternVariable() == null);
+          }
+
+          @Override
           public void exitNewArray(NewArray newArray) {
             if (verifyForWasm) {
               checkState(
@@ -303,8 +325,10 @@ public class VerifyNormalizedUnits extends NormalizationPass {
 
           @Override
           public void exitYieldStatement(YieldStatement yieldStatement) {
-            // Yield statements are expected to be normalized away.
-            throw new IllegalStateException();
+            if (!verifyForWasm) {
+              // Yield statements are expected to be normalized away.
+              throw new IllegalStateException();
+            }
           }
 
           @Override
@@ -349,7 +373,7 @@ public class VerifyNormalizedUnits extends NormalizationPass {
     } else {
       checkState(
           !memberReference.getTarget().isStatic()
-              || memberReference.getQualifier() instanceof JavaScriptConstructorReference);
+              || memberReference.getQualifier() instanceof JsConstructorReference);
     }
   }
 }

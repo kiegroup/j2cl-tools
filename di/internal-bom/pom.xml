@@ -6,7 +6,7 @@
 
     <groupId>org.kie.j2cl.tools.di</groupId>
     <artifactId>internal-bom</artifactId>
-    <version>0.8</version>
+    <version>0.9</version>
     <packaging>pom</packaging>
 
     <name>J2CL compatible Jakarta CDI-like dependency injection framework Internal BOM</name>
@@ -42,8 +42,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
 
         <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
         <maven.source.plugin.version>3.0.1</maven.source.plugin.version>
@@ -58,35 +58,42 @@
         <maven.formatter.plugin.version>2.17.0</maven.formatter.plugin.version>
         <maven.license.plugin.version>3.0</maven.license.plugin.version>
         <maven.javadoc.plugin.version>3.2.0</maven.javadoc.plugin.version>
+        <maven.central.publishing.plugin>0.9.0</maven.central.publishing.plugin>
 
-        <apache.commons.commons-text.version>1.6</apache.commons.commons-text.version>
-        <apache.commons.commons-lang3.version>3.11</apache.commons.commons-lang3.version>
-        <apache.commons.io.version>2.8.0</apache.commons.io.version>
+        <apache.commons.commons-text.version>1.14.0</apache.commons.commons-text.version>
+        <apache.commons.commons-lang3.version>3.19.0</apache.commons.commons-lang3.version>
+        <apache.commons.io.version>2.20.0</apache.commons.io.version>
 
         <jsoup.version>1.11.3</jsoup.version>
         <javax.inject.version>1</javax.inject.version>
         <freemarker.version>2.3.30</freemarker.version>
         <lesscss.version>1.10</lesscss.version>
-        <google.jsinterop.annotations.version>2.0.0</google.jsinterop.annotations.version>
         <google.guava.version>28.1-jre</google.guava.version>
-        <classgraph.classgraph.version>4.8.156</classgraph.classgraph.version>
-        <org.kie.j2cl.tools.processors.version>0.8.0</org.kie.j2cl.tools.processors.version>
-        <org.kie.j2cl.tools.jakarta.version>0.5</org.kie.j2cl.tools.jakarta.version>
+        <classgraph.classgraph.version>4.8.181</classgraph.classgraph.version>
+        <org.kie.j2cl.tools.processors.version>0.9</org.kie.j2cl.tools.processors.version>
 
+        <gwt.jakarta.version>0.7</gwt.jakarta.version>
+        <j2cl.platform.version>20251001-1</j2cl.platform.version>
         <javaparser.core.version>3.25.5</javaparser.core.version>
-        <elemental2.version>1.2.3</elemental2.version>
         <auto.common.version>1.2.2</auto.common.version>
         <auto.service.version>1.1.1</auto.service.version>
         <mockito.core.version>4.6.1</mockito.core.version>
-        <junit.version>4.13.1</junit.version>
+        <junit.version>4.13.2</junit.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.kie.j2cl.tools.jakarta</groupId>
+                <groupId>org.treblereel.gwt.jakarta</groupId>
                 <artifactId>bom</artifactId>
-                <version>${org.kie.j2cl.tools.jakarta.version}</version>
+                <version>${gwt.jakarta.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.treblereel.j2cl.platform</groupId>
+                <artifactId>bom</artifactId>
+                <version>${j2cl.platform.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -95,16 +102,6 @@
                 <artifactId>javax.inject</artifactId>
                 <version>${javax.inject.version}</version>
                 <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.google.jsinterop</groupId>
-                <artifactId>jsinterop-annotations</artifactId>
-                <version>${google.jsinterop.annotations.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.elemental2</groupId>
-                <artifactId>elemental2-dom</artifactId>
-                <version>${elemental2.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.auto</groupId>
@@ -202,8 +199,31 @@
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${maven.gpg.plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -213,14 +233,6 @@
                                 </goals>
                             </execution>
                         </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-deploy-plugin</artifactId>
-                        <version>${maven.deploy.plugin.version}</version>
-                        <configuration>
-                            <skip>false</skip>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -244,13 +256,8 @@
         <repository>
             <id>jboss-public-repository-group</id>
             <name>JBoss Public Repository Group</name>
-            <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
+            <url>https://repository.jboss.org/nexus/repository/releases/</url>
         </repository>
-        <snapshotRepository>
-            <id>jboss-snapshots-repository</id>
-            <name>JBoss Snapshot Repository</name>
-            <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
-        </snapshotRepository>
     </distributionManagement>
 
 </project>

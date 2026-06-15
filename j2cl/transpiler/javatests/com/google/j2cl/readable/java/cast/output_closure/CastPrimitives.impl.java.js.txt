@@ -37,7 +37,7 @@ class CastPrimitives extends j_l_Object {
  /** @nodts */
  m_testPrimitiveCasts__void() {
   let b = 1;
-  let c = 1 /* '\u0001' */;
+  let c = 1;
   let s = 1;
   let i = 1;
   let l = $Long.fromInt(1);
@@ -97,12 +97,12 @@ class CastPrimitives extends j_l_Object {
  m_testReferenceToPrimitive__void() {
   let o = j_l_Object.$create__();
   let bool = Boolean.m_booleanValue__java_lang_Boolean__boolean(/**@type {boolean}*/ ($Casts.$to(o, Boolean)));
-  let b = /**@type {!Byte}*/ ($Casts.$to(o, Byte)).m_byteValue__byte();
-  let c = /**@type {!Character}*/ ($Casts.$to(o, Character)).m_charValue__char();
-  let s = /**@type {!Short}*/ ($Casts.$to(o, Short)).m_shortValue__short();
-  let i = /**@type {!Integer}*/ ($Casts.$to(o, Integer)).m_intValue__int();
-  let l = /**@type {!Long}*/ ($Casts.$to(o, Long)).m_longValue__long();
-  let f = /**@type {!Float}*/ ($Casts.$to(o, Float)).m_floatValue__float();
+  let b = (/**@type {!Byte}*/ ($Casts.$to(o, Byte))).m_byteValue__byte();
+  let c = (/**@type {!Character}*/ ($Casts.$to(o, Character))).m_charValue__char();
+  let s = (/**@type {!Short}*/ ($Casts.$to(o, Short))).m_shortValue__short();
+  let i = (/**@type {!Integer}*/ ($Casts.$to(o, Integer))).intValue();
+  let l = (/**@type {!Long}*/ ($Casts.$to(o, Long))).m_longValue__long();
+  let f = (/**@type {!Float}*/ ($Casts.$to(o, Float))).m_floatValue__float();
   let d = Double.m_doubleValue__java_lang_Double__double(/**@type {number}*/ ($Casts.$to(o, Double)));
  }
  /** @nodts */
@@ -162,7 +162,7 @@ class CastPrimitives extends j_l_Object {
  /** @nodts */
  m_testImplicitArgumentCasts__void() {
   let b = 127;
-  let c = 65535 /* '\uFFFF' */;
+  let c = 65535;
   let s = 32767;
   let i = 2147483647;
   let l = $Long.fromBits(-1, 2147483647) /* 9223372036854775807 */;
@@ -186,7 +186,7 @@ class CastPrimitives extends j_l_Object {
  /** @nodts */
  m_testImplicitArrayIndexCasts__arrayOf_byte__void(/** Array<number> */ array) {
   let b = 127;
-  let c = 65535 /* '\uFFFF' */;
+  let c = 65535;
   let s = 32767;
   let i = 2147483647;
   let /** number */ result;
@@ -220,7 +220,7 @@ class CastPrimitives extends j_l_Object {
  /** @nodts */
  m_testImplicitLongAssignmentCasts__void() {
   let fbyte = 11;
-  let fchar = 12 /* '\u000C' */;
+  let fchar = 12;
   let fshort = 13;
   let fint = 14;
   let flong = $Long.fromInt(15);

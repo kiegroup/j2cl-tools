@@ -32,7 +32,7 @@ public class Collections {
     collection.contains(Collections.<T>generic());
     collection.remove(Collections.<T>generic());
     collection.containsAll(Collections.<T>genericCollection());
-    collection.addAll(Collections.<T>genericCollection());
+    collection.addAll(Collections.genericCollection());
     collection.removeAll(Collections.<T>genericCollection());
     collection.retainAll(Collections.<T>genericCollection());
 
@@ -74,6 +74,7 @@ public class Collections {
   }
 
   public static <T extends @Nullable Object> void testList_generic(List<T> list) {
+    list.addAll(0, Collections.genericCollection());
     list.indexOf(Collections.<T>generic());
     list.lastIndexOf(Collections.<T>generic());
 
@@ -82,6 +83,7 @@ public class Collections {
   }
 
   public static void testList_parameterized(List<String> list) {
+    list.addAll(0, collectionOfString());
     list.indexOf(string());
     list.lastIndexOf(string());
 
@@ -90,6 +92,7 @@ public class Collections {
   }
 
   public static void testList_specialized(ListOfString list) {
+    list.addAll(0, collectionOfString());
     list.indexOf(string());
     list.lastIndexOf(string());
 
@@ -152,7 +155,7 @@ public class Collections {
   public static class CustomCollection<T extends @Nullable Object> extends AbstractCollection<T> {
     @Override
     public Iterator<T> iterator() {
-      return null;
+      throw new RuntimeException();
     }
 
     @Override
@@ -173,6 +176,12 @@ public class Collections {
     }
 
     @Override
+    public boolean addAll(Collection<? extends T> c) {
+      c = convertCollection(c);
+      return super.addAll(c);
+    }
+
+    @Override
     public boolean containsAll(Collection<?> c) {
       c = convertCollection(c);
       return super.containsAll(c);
@@ -189,17 +198,38 @@ public class Collections {
       c = convertCollection(c);
       return super.retainAll(c);
     }
+
+    @Override
+    public @Nullable Object[] toArray() {
+      return super.toArray();
+    }
+
+    @Override
+    public <T1 extends @Nullable Object> T1[] toArray(T1[] a) {
+      return super.toArray(a);
+    }
+  }
+
+  public static class CustomCollectionDisambiguatingOverrides<T extends @Nullable Object>
+      extends CustomCollection<T> implements Collection<T> {
+    // Test that J2KT inserts disambiguating overrides.
   }
 
   public static class CustomList<T extends @Nullable Object> extends AbstractList<T> {
     @Override
     public T get(int index) {
-      return null;
+      throw new IndexOutOfBoundsException();
     }
 
     @Override
     public int size() {
       return 0;
+    }
+
+    @Override
+    public boolean addAll(int index, Collection<? extends T> c) {
+      c = convertCollection(c);
+      return super.addAll(index, c);
     }
 
     @Override
@@ -212,6 +242,16 @@ public class Collections {
     public int lastIndexOf(@Nullable Object o) {
       o = convert(o);
       return super.lastIndexOf(o);
+    }
+
+    @Override
+    public @Nullable Object[] toArray() {
+      return super.toArray();
+    }
+
+    @Override
+    public <T1 extends @Nullable Object> T1[] toArray(T1[] a) {
+      return super.toArray(a);
     }
   }
 
@@ -235,7 +275,7 @@ public class Collections {
     }
 
     @Override
-    public V remove(@Nullable Object key) {
+    public @Nullable V remove(@Nullable Object key) {
       key = convert(key);
       return super.remove(key);
     }
@@ -248,7 +288,7 @@ public class Collections {
     }
 
     @Override
-    public V get(@Nullable Object key) {
+    public @Nullable V get(@Nullable Object key) {
       key = convert(key);
       return super.get(key);
     }
@@ -261,7 +301,22 @@ public class Collections {
 
     @Override
     public void putAll(Map<? extends K, ? extends V> m) {
+      m = convertMap(m);
       super.putAll(m);
+    }
+  }
+
+  public abstract static class CustomMapDisambiguatingOverrides<
+          K extends @Nullable Object, V extends @Nullable Object>
+      extends CustomMap<K, V> implements Map<K, V> {
+    // Test that J2KT inserts disambiguating overrides.
+  }
+
+  public static class CustomMapReturnTypes<K extends @Nullable Object, V extends @Nullable Object>
+      extends CustomMap<K, V> {
+    @Override
+    public @Nullable V getOrDefault(@Nullable Object key, @Nullable V defaultValue) {
+      return defaultValue;
     }
   }
 
@@ -303,7 +358,7 @@ public class Collections {
     }
 
     @Override
-    public String remove(@Nullable Object key) {
+    public @Nullable String remove(@Nullable Object key) {
       key = convert(key);
       return super.remove(key);
     }
@@ -316,7 +371,7 @@ public class Collections {
     }
 
     @Override
-    public String get(@Nullable Object key) {
+    public @Nullable String get(@Nullable Object key) {
       key = convert(key);
       return super.get(key);
     }
@@ -328,12 +383,40 @@ public class Collections {
     }
   }
 
-  private static @Nullable Object convert(@Nullable Object object) {
+  public abstract static class AbstractCollectionWithToArrayOverride<E extends @Nullable Object>
+      implements Collection<E> {
+
+    @Override
+    public @Nullable Object[] toArray() {
+      return new Object[0];
+    }
+
+    @Override
+    public <T extends @Nullable Object> T[] toArray(T[] a) {
+      return a;
+    }
+  }
+
+  public interface CollectionInterfaceWithToArrayOverride<E extends @Nullable Object>
+      extends List<E> {
+    @Override
+    @Nullable Object[] toArray();
+
+    @Override
+    <T extends @Nullable Object> T[] toArray(T[] a);
+  }
+
+  private static <T extends @Nullable Object> T convert(T object) {
     return object;
   }
 
-  private static Collection<?> convertCollection(Collection<?> c) {
+  private static <T extends @Nullable Object> Collection<T> convertCollection(Collection<T> c) {
     return c;
+  }
+
+  private static <K extends @Nullable Object, V extends @Nullable Object> Map<K, V> convertMap(
+      Map<K, V> m) {
+    return m;
   }
 
   private static <T extends @Nullable Object> T generic() {

@@ -1,5 +1,4 @@
 // Generated from "abstractmethodoverridedefault/AbstractMethodOverrideDefault.java"
-@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -19,38 +18,26 @@
 package abstractmethodoverridedefault
 
 import javaemul.lang.*
-import kotlin.OptIn
 import kotlin.Suppress
-import kotlin.experimental.ExperimentalObjCName
-import kotlin.native.ObjCName
 
-@ObjCName("J2ktAbstractmethodoverridedefaultAbstractMethodOverrideDefault", exact = true)
 open class AbstractMethodOverrideDefault {
- @ObjCName("J2ktAbstractmethodoverridedefaultAbstractMethodOverrideDefault_I", exact = true)
  fun interface I {
-  @ObjCName("foo")
   fun foo()
 
-  @ObjCName("bar")
   fun bar() {}
  }
 
- @ObjCName("J2ktAbstractmethodoverridedefaultAbstractMethodOverrideDefault_J", exact = true)
  fun interface J {
-  @ObjCName("foo")
   fun foo() {}
 
-  @ObjCName("bar")
   fun bar()
  }
 
- @ObjCName("J2ktAbstractmethodoverridedefaultAbstractMethodOverrideDefault_A", exact = true)
- abstract class A internal constructor(): AbstractMethodOverrideDefault.I {
+ abstract class A internal constructor(): I {
   abstract override fun foo()
  }
 
- @ObjCName("J2ktAbstractmethodoverridedefaultAbstractMethodOverrideDefault_B", exact = true)
- abstract class B internal constructor(): AbstractMethodOverrideDefault.A(), AbstractMethodOverrideDefault.J {
+ abstract class B internal constructor(): A(), J {
   override fun bar() {
    if (false) {
     this.bar()
@@ -60,12 +47,11 @@ open class AbstractMethodOverrideDefault {
   abstract override fun foo()
  }
 
- @ObjCName("J2ktAbstractmethodoverridedefaultAbstractMethodOverrideDefault_C", exact = true)
- open class C internal constructor(): AbstractMethodOverrideDefault.A() {
+ open class C internal constructor(): A() {
   override fun foo() {}
 
   override fun bar() {
-   super<AbstractMethodOverrideDefault.A>.bar()
+   super<A>.bar()
   }
  }
 }

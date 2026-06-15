@@ -11,6 +11,7 @@ let $Casts = goog.forwardDeclare('vmbootstrap.Casts$impl');
 let $Enums = goog.forwardDeclare('vmbootstrap.Enums$impl');
 
 /**
+ * @final
  * @extends {Enum<Enum3>}
  */
 class Enum3 extends Enum {
@@ -34,7 +35,7 @@ class Enum3 extends Enum {
  static m_valueOf__java_lang_String__enums_Enum3(/** string */ name) {
   Enum3.$clinit();
   if ($Equality.$same(Enum3.f_namesToValuesMap__enums_Enum3_, null)) {
-   Enum3.f_namesToValuesMap__enums_Enum3_ = /**@type {Map<?string, !Enum3>}*/ ($Enums.createMapFromValues(Enum3.m_values__arrayOf_enums_Enum3()));
+   Enum3.f_namesToValuesMap__enums_Enum3_ = (/**@type {Map<?string, !Enum3>}*/ ($Enums.createMapFromValues(Enum3.m_values__arrayOf_enums_Enum3())));
   }
   return /**@type {Enum3}*/ ($Enums.getValueFromNameAndMap(name, Enum3.f_namesToValuesMap__enums_Enum3_));
  }
@@ -52,10 +53,10 @@ class Enum3 extends Enum {
   Enum3.$clinit = () =>{};
   Enum3.$loadModules();
   Enum.$clinit();
-  Enum3.$static_VALUE1__enums_Enum3 = Enum3.$create__java_lang_String__int__java_util_function_Function($Util.$makeEnumName('VALUE1'), Enum3.$ordinal_VALUE1__enums_Enum3, j_u_function_Function.$adapt((v) =>{
+  Enum3.$static_VALUE1__enums_Enum3 = Enum3.$create__java_lang_String__int__java_util_function_Function($Util.$makeEnumName('VALUE1'), Enum3.$ordinal_VALUE1__enums_Enum3, j_u_function_Function.$adapt(/**  @return {Integer}*/ ((/** Integer */ v) =>{
    let v_1 = /**@type {Integer}*/ ($Casts.$to(v, Integer));
-   return Integer.m_valueOf__int__java_lang_Integer(1 + v_1.m_intValue__int() | 0);
-  }));
+   return Integer.valueOf(1 + v_1.intValue() | 0);
+  })));
  }
  /** @nodts @return {boolean} */
  static $isInstance(/** ? */ instance) {

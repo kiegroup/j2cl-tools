@@ -63,6 +63,7 @@ public final class JsDocInfoParser {
 
   private static final String TSICKLE_MISSING_TYPE_PLACEHOLDER =
       "JsDocInfoParser_TsickleMode_MissingSupertypePlaceholder";
+  private static final String TS_TYPE_PLACEHOLDER = "JsDocInfoParser_tsType_PlaceHolder";
 
   private final JsDocTokenStream stream;
   private final JSDocInfo.Builder jsdocBuilder;
@@ -131,6 +132,7 @@ public final class JsDocInfoParser {
       ImmutableSet.of("unique", "consistent", "stable", "mapped", "xid");
   private static final ImmutableSet<String> primitiveTypes =
       ImmutableSet.of("number", "string", "boolean", "symbol");
+  private final boolean onlyParseLicenseJsDoc;
 
   private @Nullable String licenseText;
 
@@ -168,6 +170,8 @@ public final class JsDocInfoParser {
     TSICKLE // make some extra allowances for tsickle-generated JSDoc
   }
 
+  private final boolean recordTsType;
+
   public JsDocInfoParser(
       JsDocTokenStream stream,
       String comment,
@@ -187,11 +191,14 @@ public final class JsDocInfoParser {
       this.jsdocBuilder.recordOriginalCommentString(comment);
       this.jsdocBuilder.recordOriginalCommentPosition(commentPosition);
     }
+    this.recordTsType = config.jsDocParsingMode().shouldParseDescriptions();
     this.annotations = config.annotations();
     this.suppressionNames = config.suppressionNames();
     this.closurePrimitiveNames = config.closurePrimitiveNames();
     this.preserveWhitespace = config.jsDocParsingMode().shouldPreserveWhitespace();
     this.jsDocSourceKind = jsDocSourceKind;
+    this.onlyParseLicenseJsDoc =
+        config.jsDocParsingMode() == Config.JsDocParsing.LICENSE_COMMENTS_ONLY;
 
     this.errorReporter = errorReporter;
     this.templateNode = templateNode == null ? IR.script() : templateNode;
@@ -397,6 +404,12 @@ public final class JsDocInfoParser {
 
     String annotationName = stream.getString();
     Annotation annotation = annotations.get(annotationName);
+
+    if (this.onlyParseLicenseJsDoc
+        && !(annotation == Annotation.LICENSE || annotation == Annotation.PRESERVE)) {
+      return next();
+    }
+
     if (annotation == null || annotationName.isEmpty()) {
       addParserWarning(Msg.BAD_JSDOC_TAG, annotationName);
     } else {
@@ -520,7 +533,11 @@ public final class JsDocInfoParser {
 
             String tsType = tsTypeInfo.string;
 
-            jsdocBuilder.recordTsType(tsType);
+            if (recordTsType) {
+              jsdocBuilder.recordTsType(tsType);
+            } else {
+              jsdocBuilder.recordTsType(TS_TYPE_PLACEHOLDER);
+            }
             token = tsTypeInfo.token;
             return token;
           }
@@ -674,12 +691,6 @@ public final class JsDocInfoParser {
           token = eatUntilEOLIfNotAnnotation(token);
           return token;
 
-        case HIDDEN:
-          if (!jsdocBuilder.recordHiddenness()) {
-            addParserWarning(Msg.JSDOC_HIDDEN);
-          }
-          return eatUntilEOLIfNotAnnotation();
-
         case LENDS:
           skipEOLs();
 
@@ -777,9 +788,6 @@ public final class JsDocInfoParser {
           if (!jsdocBuilder.recordPureOrBreakMyCode()) {
             addParserWarning(Msg.JSDOC_PUREORBREAKMYCODE);
           }
-          return eatUntilEOLIfNotAnnotation();
-
-        case NOT_IMPLEMENTED:
           return eatUntilEOLIfNotAnnotation();
 
         case INHERIT_DOC:
@@ -1088,11 +1096,18 @@ public final class JsDocInfoParser {
         case LOG_TYPE_IN_COMPILER:
           var unused = jsdocBuilder.recordLogTypeInCompiler();
           return eatUntilEOLIfNotAnnotation();
+        case NOT_IMPLEMENTED:
         case JSX:
         case JSX_FRAGMENT:
         case SOY_MODULE:
         case SOY_TEMPLATE:
         case WIZ_ANALYZER:
+        case MAY_HAVE_EXTRA_EDGE:
+          return eatUntilEOLIfNotAnnotation();
+        case USED_VIA_DOT_CONSTRUCTOR:
+          if (!jsdocBuilder.recordUsedViaDotConstructor()) {
+            addParserWarning(Msg.JSDOC_USEDVIADOTCONSTRUCTOR);
+          }
           return eatUntilEOLIfNotAnnotation();
         case WIZACTION:
           if (!jsdocBuilder.recordWizaction()) {
@@ -1665,64 +1680,27 @@ public final class JsDocInfoParser {
 
   /** Converts a JSDoc token to its string representation. */
   private String toString(JsDocToken token) {
-    switch (token) {
-      case ANNOTATION:
-        return "@" + stream.getString();
-
-      case BANG:
-        return "!";
-
-      case COMMA:
-        return ",";
-
-      case COLON:
-        return ":";
-
-      case RIGHT_ANGLE:
-        return ">";
-
-      case LEFT_SQUARE:
-        return "[";
-
-      case LEFT_CURLY:
-        return "{";
-
-      case LEFT_PAREN:
-        return "(";
-
-      case LEFT_ANGLE:
-        return "<";
-
-      case QMARK:
-        return "?";
-
-      case PIPE:
-        return "|";
-
-      case RIGHT_SQUARE:
-        return "]";
-
-      case RIGHT_CURLY:
-        return "}";
-
-      case RIGHT_PAREN:
-        return ")";
-
-      case STAR:
-        return "*";
-
-      case ITER_REST:
-        return "...";
-
-      case EQUALS:
-        return "=";
-
-      case STRING:
-        return stream.getString();
-
-      default:
-        throw new IllegalStateException(token.toString());
-    }
+    return switch (token) {
+      case ANNOTATION -> "@" + stream.getString();
+      case BANG -> "!";
+      case COMMA -> ",";
+      case COLON -> ":";
+      case RIGHT_ANGLE -> ">";
+      case LEFT_SQUARE -> "[";
+      case LEFT_CURLY -> "{";
+      case LEFT_PAREN -> "(";
+      case LEFT_ANGLE -> "<";
+      case QMARK -> "?";
+      case PIPE -> "|";
+      case RIGHT_SQUARE -> "]";
+      case RIGHT_CURLY -> "}";
+      case RIGHT_PAREN -> ")";
+      case STAR -> "*";
+      case ITER_REST -> "...";
+      case EQUALS -> "=";
+      case STRING -> stream.getString();
+      default -> throw new IllegalStateException(token.toString());
+    };
   }
 
   /**
@@ -2245,19 +2223,18 @@ public final class JsDocInfoParser {
       return parseUnionType(next());
     } else if (token == JsDocToken.STRING) {
       String string = stream.getString();
-      switch (string) {
-        case "function":
+      return switch (string) {
+        case "function" -> {
           skipEOLs();
-          return parseFunctionType(next());
-        case "null":
-        case "undefined":
-          return newStringNode(string);
-        case "typeof":
+          yield parseFunctionType(next());
+        }
+        case "null", "undefined" -> newStringNode(string);
+        case "typeof" -> {
           skipEOLs();
-          return parseTypeofType(next());
-        default:
-          return parseTypeName(token);
-      }
+          yield parseTypeofType(next());
+        }
+        default -> parseTypeName(token);
+      };
     }
 
     restoreLookAhead(token);

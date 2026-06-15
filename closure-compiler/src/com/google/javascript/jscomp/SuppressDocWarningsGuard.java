@@ -59,16 +59,8 @@ class SuppressDocWarningsGuard extends WarningsGuard {
         new DiagnosticGroup(
             DiagnosticGroups.MISSING_PROPERTIES, DiagnosticGroups.STRICT_MISSING_PROPERTIES));
 
-    // Hack: Allow "@suppress {missingRequire}" to mean
-    // "@suppress {strictMissingRequire}".
-    // TODO(johnlenz): Delete this when it is enabled with missingRequire
-    builder.put(
-        "missingRequire",
-        new DiagnosticGroup(
-            DiagnosticGroups.MISSING_REQUIRE, DiagnosticGroups.STRICT_MISSING_REQUIRE));
-
     // Hack: Allow "@suppress {checkTypes}" to include
-    // "strictMissingProperties".
+    // "strictCheckTypes".
     // TODO(johnlenz): Delete this when it is enabled with missingProperties
     builder.put(
         "checkTypes",
@@ -79,7 +71,7 @@ class SuppressDocWarningsGuard extends WarningsGuard {
 
   @Override
   public @Nullable CheckLevel level(JSError error) {
-    Node node = error.getNode();
+    Node node = error.node();
     if (node == null) {
       node = getScriptNodeBySourceName(error);
     }
@@ -155,11 +147,11 @@ class SuppressDocWarningsGuard extends WarningsGuard {
   }
 
   private final @Nullable Node getScriptNodeBySourceName(JSError error) {
-    if (error.getSourceName() == null) {
+    if (error.sourceName() == null) {
       return null;
     }
 
-    Node scriptNode = this.compiler.getScriptNode(error.getSourceName());
+    Node scriptNode = this.compiler.getScriptNode(error.sourceName());
     if (scriptNode == null) {
       return null;
     }

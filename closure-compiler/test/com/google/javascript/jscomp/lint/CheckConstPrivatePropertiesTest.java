@@ -81,10 +81,11 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
   @Test
   public void testConstructorPropUnmodified_nonQnameClass() {
     testSame(
-        lines(
-            "const obj = {};",
-            "/** @constructor */ obj['ctor'] = function () {};",
-            "/** @private */ obj['ctor'].prop = 1;"));
+        """
+        const obj = {};
+        /** @constructor */ obj['ctor'] = function () {};
+        /** @private */ obj['ctor'].prop = 1;
+        """);
   }
 
   @Test
@@ -94,8 +95,10 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
         MISSING_CONST_PROPERTY);
     testSame("/** @constructor */ function C() { /** @private */ this.foo = 1; this.foo = 2; } ");
     testSame(
-        "/** @constructor */ function C() { /** @private */ this.foo = 1; } "
-            + "C.prototype.bar = function() { this.foo = 2; }");
+        """
+        /** @constructor */ function C() { /** @private */ this.foo = 1; }
+        C.prototype.bar = function() { this.foo = 2; }
+        """);
   }
 
   @Test
@@ -106,8 +109,10 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     testSame(
         "/** @constructor */ function C() { /** @private */ this.foo = 1; delete this.foo; } ");
     testSame(
-        "/** @constructor */ function C() { /** @private */ this.foo = 1; } "
-            + "C.prototype.bar = function() { delete this.foo; }");
+        """
+        /** @constructor */ function C() { /** @private */ this.foo = 1; }
+        C.prototype.bar = function() { delete this.foo; }
+        """);
   }
 
   @Test
@@ -121,8 +126,10 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
         "/** @constructor */ function C() { /** @private */ this.foo = [1]; this.foo[0] = 2; } ",
         MISSING_CONST_PROPERTY);
     testWarning(
-        "/** @constructor */ function C() { /** @private */ this.foo = [1]; } "
-            + "C.prototype.bar = function() { this.foo[0] = 2; }",
+        """
+        /** @constructor */ function C() { /** @private */ this.foo = [1]; }
+        C.prototype.bar = function() { this.foo[0] = 2; }
+        """,
         MISSING_CONST_PROPERTY);
   }
 
@@ -134,8 +141,10 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     testSame(
         "/** @constructor */ function C() { /** @private */ this['foo'] = 1; this['foo'] = 2; } ");
     testSame(
-        "/** @constructor */ function C() { /** @private */ this['foo'] = 1; } "
-            + "C.prototype.bar = function() { this['foo'] = 2; }");
+        """
+        /** @constructor */ function C() { /** @private */ this['foo'] = 1; }
+        C.prototype.bar = function() { this['foo'] = 2; }
+        """);
   }
 
   @Test
@@ -149,8 +158,10 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
         "/** @constructor */ function C() { /** @private */ this['f'] = [1]; this['f'][0] = 2; } ",
         MISSING_CONST_PROPERTY);
     testWarning(
-        "/** @constructor */ function C() { /** @private */ this['foo'] = [1]; } "
-            + "C.prototype.bar = function() { this['foo'][0] = 2; }",
+        """
+        /** @constructor */ function C() { /** @private */ this['foo'] = [1]; }
+        C.prototype.bar = function() { this['foo'][0] = 2; }
+        """,
         MISSING_CONST_PROPERTY);
   }
 
@@ -159,21 +170,24 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     testSame(
         "/** @constructor */ function C() { /** @private */ this.foo = 1; this['foo'] = 2; } ");
     testSame(
-        "/** @constructor */ function C() { /** @private */ this['foo'] = 1; } "
-            + "C.prototype.bar = function() { this.foo = 2; }");
+        """
+        /** @constructor */ function C() { /** @private */ this['foo'] = 1; }
+        C.prototype.bar = function() { this.foo = 2; }
+        """);
   }
 
   @Test
   public void testConstructorPropModified_lambda() {
     testSame(
-        lines(
-            "/** @constructor */",
-            "function C() {",
-            "  /** @private */",
-            "  this.foo_ = 2;",
-            "",
-            "  (() => { this.foo_ = 1; })();",
-            "}"));
+        """
+        /** @constructor */
+        function C() {
+          /** @private */
+          this.foo_ = 2;
+
+          (() => { this.foo_ = 1; })();
+        }
+        """);
   }
 
   @Test
@@ -192,15 +206,16 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
   @Test
   public void testClassPropModified_lambda() {
     testSame(
-        lines(
-            "class C { ",
-            "  constructor() { ",
-            "    /** @private */",
-            "    this.foo_ = 2;",
-            "",
-            "    (() => { this.foo_ = 1; })();",
-            "  }",
-            "}"));
+        """
+        class C {
+          constructor() {
+            /** @private */
+            this.foo_ = 2;
+
+            (() => { this.foo_ = 1; })();
+          }
+        }
+        """);
   }
 
   @Test
@@ -262,8 +277,10 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
   public void testPrototype_Property() {
     testSame("/** @constructor */ function C() {} /** @private */ C.prototype.prop = 1;");
     testSame(
-        "/** @constructor */ function C() {} /** @private */ C.prototype.prop = 1; "
-            + "C.prototype.prop = 2;");
+        """
+        /** @constructor */ function C() {} /** @private */ C.prototype.prop = 1;
+        C.prototype.prop = 2;
+        """);
   }
 
   @Test
@@ -280,14 +297,15 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     // In the repro below, there was a spurious warning that Foo.SOME_PROP was an effectively
     // constant private property, and the JSDoc "/** @private {number} */" should be @const.
     testNoWarning(
-        lines(
-            "class Foo {}",
-            "class C {",
-            "  constructor() {",
-            "    /** @private {number} */",
-            "    this.nonConstProp_ = Foo.SOME_PROP;",
-            "    this.nonConstProp_ = 4;", // change this.nonConstProp_ to avoid a warning
-            "  }",
-            "}"));
+        """
+        class Foo {}
+        class C {
+          constructor() {
+            /** @private {number} */
+            this.nonConstProp_ = Foo.SOME_PROP;
+            this.nonConstProp_ = 4; // change this.nonConstProp_ to avoid a warning
+          }
+        }
+        """);
   }
 }

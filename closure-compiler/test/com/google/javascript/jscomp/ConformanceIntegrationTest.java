@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.TextFormat;
@@ -44,7 +43,7 @@ public class ConformanceIntegrationTest {
 
     assertThat(compiler.getErrors()).isEmpty();
     assertThat(compiler.getWarnings()).hasSize(1);
-    assertThat(compiler.getWarnings().get(0).getType())
+    assertThat(compiler.getWarnings().get(0).type())
         .isEqualTo(CheckConformance.CONFORMANCE_VIOLATION);
   }
 
@@ -57,18 +56,18 @@ public class ConformanceIntegrationTest {
 
     assertThat(compiler.getErrors()).isEmpty();
     assertThat(compiler.getWarnings()).hasSize(1);
-    assertThat(compiler.getWarnings().get(0).getType())
+    assertThat(compiler.getWarnings().get(0).type())
         .isEqualTo(CheckConformance.CONFORMANCE_VIOLATION);
   }
 
   private static final String DEFAULT_CONFORMANCE =
-      lines(
-          "requirement: {",
-          "  type: BANNED_NAME",
-          "  value: 'bannedName'",
-          "   error_message: 'bannedName is not allowed'",
-          "}",
-          "");
+      """
+      requirement: {
+        type: BANNED_NAME
+        value: 'bannedName'
+         error_message: 'bannedName is not allowed'
+      }
+      """;
 
   private static CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();

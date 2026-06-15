@@ -38,6 +38,8 @@ public interface BackendOptions {
 
   ImmutableList<EntryPointPattern> getWasmEntryPointPatterns();
 
+  boolean getEnableWasmCustomDescriptors();
+
   boolean getOptimizeAutoValue();
 
   boolean getEmitReadableLibraryInfo();
@@ -50,4 +52,6 @@ public interface BackendOptions {
   boolean getGenerateKytheIndexingMetadata();
 
   boolean isNullMarkedSupported();
+
+  String getObjCNamePrefix();
 }

@@ -1,5 +1,4 @@
 // Generated from "trycatch/TryCatch.java"
-@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -24,18 +23,14 @@ import java.lang.ClassCastException
 import javaemul.internal.Exceptions
 import kotlin.Exception
 import kotlin.NullPointerException
-import kotlin.OptIn
 import kotlin.RuntimeException
+import kotlin.String
 import kotlin.Suppress
 import kotlin.Throwable
 import kotlin.assert
-import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.Throws
-import kotlin.native.ObjCName
 
-@ObjCName("J2ktTrycatchTryCatch", exact = true)
 open class TryCatch {
- @ObjCName("testMultiCatch")
  open fun testMultiCatch() {
   try {
    throw ClassCastException()
@@ -49,7 +44,6 @@ open class TryCatch {
   }
  }
 
- @ObjCName("testEmptyThrowableCatch")
  @Throws(Throwable::class)
  open fun testEmptyThrowableCatch() {
   try {
@@ -60,7 +54,6 @@ open class TryCatch {
   } catch (e_1: Exception) {} catch (e_2: Throwable) {}
  }
 
- @ObjCName("testEmptyThrowableRethrow")
  @Throws(Throwable::class)
  open fun testEmptyThrowableRethrow() {
   try {
@@ -70,22 +63,20 @@ open class TryCatch {
   }
  }
 
- @ObjCName("testFinally")
  open fun testFinally() {
   try {
    assert(true)
   } finally {}
  }
 
- @ObjCName("testTryWithResource")
  open fun testTryWithResource() {
   try {
    var ___primaryExc: Throwable? = null
-   var thing: TryCatch.ClosableThing? = null
-   var thing2: TryCatch.ClosableThing? = null
+   var thing: ClosableThing? = null
+   var thing2: ClosableThing? = null
    try {
-    thing = TryCatch.ClosableThing()
-    thing2 = TryCatch.ClosableThing()
+    thing = ClosableThing()
+    thing2 = ClosableThing()
     throw java.lang.Exception()
    } catch (___exceptionFromTry: Throwable) {
     ___primaryExc = ___exceptionFromTry
@@ -98,14 +89,13 @@ open class TryCatch {
   } catch (e: Exception) {}
  }
 
- @ObjCName("testTryWithResourceJava9")
  open fun testTryWithResourceJava9() {
-  val thing: TryCatch.ClosableThing? = TryCatch.ClosableThing()
-  val thing2: TryCatch.ClosableThing? = TryCatch.ClosableThing()
+  val thing: ClosableThing = ClosableThing()
+  val thing2: ClosableThing = ClosableThing()
   try {
    var ___primaryExc: Throwable? = null
-   var ___resource: TryCatch.ClosableThing? = null
-   var ___resource_1: TryCatch.ClosableThing? = null
+   var ___resource: ClosableThing? = null
+   var ___resource_1: ClosableThing? = null
    try {
     ___resource = thing
     ___resource_1 = thing2
@@ -121,11 +111,10 @@ open class TryCatch {
   } catch (e: Exception) {}
  }
 
- @ObjCName("testTryWithResouceOnStaticField")
  open fun testTryWithResouceOnStaticField() {
   try {
    var ___primaryExc: Throwable? = null
-   var ___resource: TryCatch.ClosableThing? = null
+   var ___resource: ClosableThing? = null
    try {
     ___resource = TryCatch.closableThing
     throw java.lang.Exception()
@@ -139,7 +128,6 @@ open class TryCatch {
   } catch (e: Exception) {}
  }
 
- @ObjCName("testNestedTryCatch")
  open fun testNestedTryCatch() {
   try {
    throw java.lang.Exception()
@@ -150,17 +138,17 @@ open class TryCatch {
   }
  }
 
- @ObjCName("testThrowGenerics")
  @Throws(Throwable::class)
  open fun testThrowGenerics() {
-  throw this.getT<Exception?>(java.lang.Exception())!!
+  throw this.getT<Exception?>(
+   java.lang.Exception(),
+  )!!
  }
 
  private fun <T> getT(t: T): T {
   return t
  }
 
- @ObjCName("testThrowBoundGenerics")
  @Throws(Throwable::class)
  open fun testThrowBoundGenerics() {
   throw this.getThrowable<Throwable?>()!!
@@ -170,21 +158,34 @@ open class TryCatch {
   return null as T
  }
 
- @ObjCName("testThrowsParameterized")
  @Throws(Throwable::class)
- open fun <T: Throwable?> testThrowsParameterized(
-  @ObjCName("withJavaLangThrowable") throwable: T
- ) {
+ open fun <T: Throwable?> testThrowsParameterized(throwable: T) {
   throw throwable!!
  }
 
- @ObjCName("J2ktTrycatchTryCatchCompanion", exact = true)
- companion object {
-  private val closableThing: TryCatch.ClosableThing? = TryCatch.ClosableThing()
+ open fun testMultiCatchParameterizedException() {
+  try {
+   throw Exception1()
+  } catch (e: TryCatch.Exception2) {
+   e.f("")
+  } catch (e: TryCatch.Exception1) {
+   e.f("")
+  }
  }
 
- @ObjCName("J2ktTrycatchTryCatch_ClosableThing", exact = true)
+ companion object {
+  private val closableThing: ClosableThing? = ClosableThing()
+ }
+
  open class ClosableThing internal constructor(): AutoCloseable {
   override fun close() {}
  }
+
+ interface GenericInterface<T> {
+  fun f(t: T) {}
+ }
+
+ open inner class Exception1 internal constructor(): java.lang.RuntimeException(), GenericInterface<String?>
+
+ open inner class Exception2 internal constructor(): java.lang.RuntimeException(), GenericInterface<String?>
 }

@@ -150,7 +150,7 @@ public class ImplementLambdaExpressionsViaJsFunctionAdaptor extends Normalizatio
       return false;
     }
 
-    if (typeDescriptor.isNative() && !typeDescriptor.isAnnotatedWithFunctionalInterface()) {
+    if (typeDescriptor.isNative() && !isAnnotatedWithFunctionalInterface(typeDescriptor)) {
       // A native contract might be defined with a single method and an interface but that doesn't
       // guarantee that its JavaScript definition is an interface nor that it has single method. So
       // J2CL cannot generate lambda adaptor blindly in such cases as these well end up being
@@ -163,6 +163,15 @@ public class ImplementLambdaExpressionsViaJsFunctionAdaptor extends Normalizatio
     }
 
     return typeDescriptor.isFunctionalInterface();
+  }
+
+  /**
+   * Returns {@code true} if the declaration (not type annotation) of the specified type is
+   * annotated with {@code @FunctionalInterface}.
+   */
+  private static boolean isAnnotatedWithFunctionalInterface(TypeDescriptor typeDescriptor) {
+    return typeDescriptor instanceof DeclaredTypeDescriptor descriptor
+        && descriptor.getTypeDeclaration().hasAnnotation("java.lang.FunctionalInterface");
   }
 
   /** Adds the $adapt method to the functional interface. */
@@ -247,7 +256,7 @@ public class ImplementLambdaExpressionsViaJsFunctionAdaptor extends Normalizatio
     // an the declaration version of the type descriptor since the creation of the adaptor is driven
     // from the declaration of the functional interface and not from a usage.
     // In the cases where the adaptor is not shared and driven from a usage (e.g. intersection
-    // types) the adaptor class could either use the paramterization found in the usage
+    // types) the adaptor class could either use the parametrization found in the usage
     // or use the more general parameterization from the declaration (e.g. if it is an intersection
     // that should come from the declarations of all types in the intersection).
     // The choice made here is to have the more general adaptor and that results in an inference

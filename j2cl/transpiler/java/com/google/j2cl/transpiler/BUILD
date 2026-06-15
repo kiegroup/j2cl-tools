@@ -1,10 +1,11 @@
 load("@rules_java//java:defs.bzl", "java_binary", "java_library")
+load(":compiler_java_binary.bzl", "compiler_java_binary")
+load("@google_bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 package(
     default_applicable_licenses = ["//:j2cl_license"],
     licenses = ["notice"],
 )
-load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 java_library(
     name = "transpiler_lib",
@@ -24,6 +25,7 @@ java_library(
         "//transpiler/java/com/google/j2cl/transpiler/passes",
     ],
 )
+
 javadoc_library(
     name = "transpiler_lib-javadoc",
     srcs = [
@@ -31,9 +33,18 @@ javadoc_library(
         "J2clTranspilerOptions.java",
     ],
     deps = [
-        ":transpiler_lib",
+        "//third_party:auto_value",
+        "//third_party:guava",
+        "//third_party:jsr305_annotations",
+        "//transpiler/java/com/google/j2cl/common",
+        "//transpiler/java/com/google/j2cl/transpiler/ast",
+        "//transpiler/java/com/google/j2cl/transpiler/backend",
+        "//transpiler/java/com/google/j2cl/transpiler/frontend",
+        "//transpiler/java/com/google/j2cl/transpiler/frontend/common",
+        "//transpiler/java/com/google/j2cl/transpiler/passes",
     ],
 )
+
 
 java_library(
     name = "commandlinerunner_lib",
@@ -54,9 +65,9 @@ java_binary(
     name = "J2clCommandLineRunner",
     jvm_flags = [
         "-XX:+TieredCompilation",
-        "-Dj2cl.deterministicTimestamps=true",
     ],
     main_class = "com.google.j2cl.transpiler.J2clCommandLineRunner",
+    use_launcher = False,
     runtime_deps = [":commandlinerunner_lib"],
 )
 
@@ -113,47 +124,30 @@ java_library(
     ],
 )
 
-JVM_FLAGS = [
-    "-XX:+TieredCompilation",
-    "-Xss3M",
-    # Disable bytecode verification to save from class-loading time.
-    "-Xverify:none",
-    "-Dj2cl.deterministicTimestamps=true",
-]
-
-java_binary(
+compiler_java_binary(
     name = "BazelJ2clBuilder",
-    jvm_flags = JVM_FLAGS,
     main_class = "com.google.j2cl.transpiler.BazelJ2clBuilder",
-    visibility = ["//build_defs/internal_do_not_use:__pkg__"],
     runtime_deps = [":bazelbuilder_lib"],
 )
 
-java_binary(
+compiler_java_binary(
     name = "BazelJ2wasmExportGenerator",
-    jvm_flags = JVM_FLAGS,
     main_class = "com.google.j2cl.transpiler.BazelJ2wasmExportsGenerator",
-    visibility = ["//build_defs/internal_do_not_use:__pkg__"],
     runtime_deps = [":bazelwasmexportgenerator_lib"],
 )
 
-java_binary(
+compiler_java_binary(
     name = "BazelJ2wasmBundler",
-    jvm_flags = JVM_FLAGS,
+    extra_jvm_flags = [
+        # TODO(b/404243318): Remove this flag once a better solution is found.
+        # Limit the heap size to 11GB to avoid OOMs.
+        "-Xmx10g",
+    ],
     main_class = "com.google.j2cl.transpiler.BazelJ2wasmBundler",
-    visibility = ["//build_defs/internal_do_not_use:__pkg__"],
     runtime_deps = [":bazelj2wasmbundler_lib"],
 )
 
-# J2CL binary with Kotlin compiler dependency.
-# TODO(b/217287994): Remove after a regular dependency is allowed.
-java_binary(
-    name = "BazelJ2clBuilderWithKotlinSupport",
-    jvm_flags = JVM_FLAGS,
-    main_class = "com.google.j2cl.transpiler.BazelJ2clBuilder",
-    visibility = ["//build_defs/internal_do_not_use:__pkg__"],
-    runtime_deps = [
-        ":bazelbuilder_lib",
-        "//transpiler/java/com/google/j2cl/transpiler/frontend/kotlin",
-    ],
+config_setting(
+    name = "profiling_disabled",
+    flag_values = {"//:profiling_filter": "<disabled>"},
 )

@@ -17,6 +17,12 @@
 )
 
 ;;; Code for interfacejsbridge.MyJsInterface.$LambdaAdaptor [type definition]
+(type $interfacejsbridge.MyJsInterface.$LambdaAdaptor (sub $java.lang.Object (struct
+ (field $vtable (ref $interfacejsbridge.MyJsInterface.$LambdaAdaptor.vtable))
+ (field $itable (ref $interfacejsbridge.MyJsInterface.$LambdaAdaptor.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $interfacejsbridge.MyJsInterface.$LambdaAdaptor.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -25,14 +31,14 @@
  (field $m_foo__int__int (ref $function.m_foo__int__int))
  ))
 )
-(type $interfacejsbridge.MyJsInterface.$LambdaAdaptor (sub $java.lang.Object (struct
- (field $vtable (ref $interfacejsbridge.MyJsInterface.$LambdaAdaptor.vtable))
- (field $itable (ref $interfacejsbridge.MyJsInterface.$LambdaAdaptor.itable))
+
+;;; Code for interfacejsbridge.MyInterface.$LambdaAdaptor [type definition]
+(type $interfacejsbridge.MyInterface.$LambdaAdaptor (sub $java.lang.Object (struct
+ (field $vtable (ref $interfacejsbridge.MyInterface.$LambdaAdaptor.vtable))
+ (field $itable (ref $interfacejsbridge.MyInterface.$LambdaAdaptor.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for interfacejsbridge.MyInterface.$LambdaAdaptor [type definition]
 (type $interfacejsbridge.MyInterface.$LambdaAdaptor.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -41,14 +47,14 @@
  (field $m_foo__int__int (ref $function.m_foo__int__int))
  ))
 )
-(type $interfacejsbridge.MyInterface.$LambdaAdaptor (sub $java.lang.Object (struct
- (field $vtable (ref $interfacejsbridge.MyInterface.$LambdaAdaptor.vtable))
- (field $itable (ref $interfacejsbridge.MyInterface.$LambdaAdaptor.itable))
+
+;;; Code for interfacejsbridge.Main [type definition]
+(type $interfacejsbridge.Main (sub $java.lang.Object (struct
+ (field $vtable (ref $interfacejsbridge.Main.vtable))
+ (field $itable (ref $itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for interfacejsbridge.Main [type definition]
 (type $interfacejsbridge.Main.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -57,14 +63,14 @@
  (field $m_test__void (ref $function.m_test__void))
  ))
 )
-(type $interfacejsbridge.Main (sub $java.lang.Object (struct
- (field $vtable (ref $interfacejsbridge.Main.vtable))
- (field $itable (ref $itable))
+
+;;; Code for interfacejsbridge.InterfaceImpl [type definition]
+(type $interfacejsbridge.InterfaceImpl (sub $java.lang.Object (struct
+ (field $vtable (ref $interfacejsbridge.InterfaceImpl.vtable))
+ (field $itable (ref $interfacejsbridge.InterfaceImpl.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for interfacejsbridge.InterfaceImpl [type definition]
 (type $interfacejsbridge.InterfaceImpl.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -73,26 +79,20 @@
  (field $m_foo__int__int (ref $function.m_foo__int__int))
  ))
 )
-(type $interfacejsbridge.InterfaceImpl (sub $java.lang.Object (struct
- (field $vtable (ref $interfacejsbridge.InterfaceImpl.vtable))
- (field $itable (ref $interfacejsbridge.InterfaceImpl.itable))
+
+;;; Code for interfacejsbridge.SubInterface.$LambdaAdaptor [type definition]
+(type $interfacejsbridge.SubInterface.$LambdaAdaptor (sub $java.lang.Object (struct
+ (field $vtable (ref $interfacejsbridge.SubInterface.$LambdaAdaptor.vtable))
+ (field $itable (ref $interfacejsbridge.SubInterface.$LambdaAdaptor.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for interfacejsbridge.SubInterface.$LambdaAdaptor [type definition]
 (type $interfacejsbridge.SubInterface.$LambdaAdaptor.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
  (field $m_hashCode__int (ref $function.m_hashCode__int))
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  (field $m_foo__int__int (ref $function.m_foo__int__int))
- ))
-)
-(type $interfacejsbridge.SubInterface.$LambdaAdaptor (sub $java.lang.Object (struct
- (field $vtable (ref $interfacejsbridge.SubInterface.$LambdaAdaptor.vtable))
- (field $itable (ref $interfacejsbridge.SubInterface.$LambdaAdaptor.itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
 
@@ -430,7 +430,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/interfacejsbridge/readable-j2wasm.js/interfacejsbridge/Main.java:18:13
   (call $$clinit__void_<once>_@interfacejsbridge.Main )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/interfacejsbridge/readable-j2wasm.js/interfacejsbridge/Main.java:18:13
-  (local.set $$instance (struct.new $interfacejsbridge.Main (ref.as_non_null (global.get $interfacejsbridge.Main.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $interfacejsbridge.Main (global.get $interfacejsbridge.Main.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/interfacejsbridge/readable-j2wasm.js/interfacejsbridge/Main.java:18:13
   (call $$ctor__void_$p_interfacejsbridge_Main@interfacejsbridge.Main (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/interfacejsbridge/readable-j2wasm.js/interfacejsbridge/Main.java:18:13
@@ -536,7 +536,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/interfacejsbridge/readable-j2wasm.js/interfacejsbridge/InterfaceImpl.java:34:13
   (call $$clinit__void_<once>_@interfacejsbridge.InterfaceImpl )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/interfacejsbridge/readable-j2wasm.js/interfacejsbridge/InterfaceImpl.java:34:13
-  (local.set $$instance (struct.new $interfacejsbridge.InterfaceImpl (ref.as_non_null (global.get $interfacejsbridge.InterfaceImpl.vtable)) (ref.as_non_null (global.get $interfacejsbridge.InterfaceImpl.itable)) (i32.const 0)))
+  (local.set $$instance (struct.new $interfacejsbridge.InterfaceImpl (global.get $interfacejsbridge.InterfaceImpl.vtable) (global.get $interfacejsbridge.InterfaceImpl.itable) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/interfacejsbridge/readable-j2wasm.js/interfacejsbridge/InterfaceImpl.java:34:13
   (call $$ctor__void_$p_interfacejsbridge_InterfaceImpl@interfacejsbridge.InterfaceImpl (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/interfacejsbridge/readable-j2wasm.js/interfacejsbridge/InterfaceImpl.java:34:13

@@ -179,14 +179,6 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
 
     if (builder.typeOfThis != null) {
       this.typeOfThis = builder.typeOfThis;
-    } else if (this instanceof NoResolvedType) {
-      /*
-       * TODO(b/112425334): Delete this special case if NO_RESOLVED_TYPE is deleted.
-       *
-       * <p>Despite being a subclass of `NoType`, `NoResolvedType` should behave more like `?`.
-       * There's no reason to believe its properties are of its own type.
-       */
-      this.typeOfThis = this.registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     } else {
       switch (kind) {
         case CONSTRUCTOR:
@@ -414,8 +406,8 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   @Override
-  public final Property getSlot(String name) {
-    if ("prototype".equals(name)) {
+  public final Property getSlot(Property.Key name) {
+    if (name.matches("prototype")) {
       // Lazy initialization of the prototype field.
       getPrototype();
       return prototypeSlot;
@@ -649,14 +641,14 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   @Override
-  public final JSType getPropertyType(String name) {
+  public final JSType getPropertyType(Property.Key name) {
     if (!hasOwnProperty(name)) {
       // Define the "call", "apply", and "bind" functions lazily.
-      boolean isCall = "call".equals(name);
-      boolean isBind = "bind".equals(name);
+      boolean isCall = name.matches("call");
+      boolean isBind = name.matches("bind");
       if (isCall || isBind) {
         defineDeclaredProperty(name, getCallOrBindSignature(isCall), source);
-      } else if ("apply".equals(name)) {
+      } else if (name.matches("apply")) {
         // Define the "apply" function lazily.
         FunctionParamBuilder builder = new FunctionParamBuilder(registry);
 
@@ -756,8 +748,8 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   @Override
-  boolean defineProperty(String name, JSType type, boolean inferred, Node propertyNode) {
-    if ("prototype".equals(name)) {
+  boolean defineProperty(Property.Key name, JSType type, boolean inferred, Node propertyNode) {
+    if (name.matches("prototype")) {
       ObjectType objType = type.toObjectType();
       if (objType != null) {
         if (prototypeSlot != null && objType.equals(prototypeSlot.getType())) {
@@ -905,18 +897,17 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   @Override
   int recursionUnsafeHashCode() {
     int hc = kind.hashCode();
-    switch (kind) {
-      case CONSTRUCTOR:
-      case INTERFACE:
-        return 31 * hc + System.identityHashCode(this); // constructors use identity semantics
-      case ORDINARY:
+    return switch (kind) {
+      // constructors use identity semantics
+      case CONSTRUCTOR, INTERFACE -> 31 * hc + System.identityHashCode(this);
+      case ORDINARY -> {
         hc = 31 * hc + typeOfThis.hashCode();
         hc = 31 * hc + call.hashCode();
         hc = 31 * hc + Objects.hashCode(getClosurePrimitive());
-        return hc;
-      default:
-        throw new AssertionError();
-    }
+        yield hc;
+      }
+      default -> throw new AssertionError();
+    };
   }
 
   public final boolean hasEqualCallType(FunctionType that) {

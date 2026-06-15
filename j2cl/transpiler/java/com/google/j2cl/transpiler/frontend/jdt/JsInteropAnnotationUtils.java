@@ -15,7 +15,6 @@
  */
 package com.google.j2cl.transpiler.frontend.jdt;
 
-import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.DO_NOT_AUTOBOX_ANNOTATION_NAME;
 import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.JS_ASYNC_ANNOTATION_NAME;
 import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.JS_CONSTRUCTOR_ANNOTATION_NAME;
 import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.JS_ENUM_ANNOTATION_NAME;
@@ -27,11 +26,10 @@ import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.JS_OV
 import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.JS_PACKAGE_ANNOTATION_NAME;
 import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.JS_PROPERTY_ANNOTATION_NAME;
 import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.JS_TYPE_ANNOTATION_NAME;
-import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.SUPPRESS_WARNINGS_ANNOTATION_NAME;
 import static com.google.j2cl.transpiler.frontend.jdt.JdtAnnotationUtils.getAnnotationBinding;
-import static java.util.Arrays.stream;
 
 import java.util.Optional;
+import javax.annotation.Nullable;
 import org.eclipse.jdt.core.dom.IAnnotationBinding;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
@@ -42,66 +40,65 @@ import org.eclipse.jdt.core.dom.PackageDeclaration;
 public class JsInteropAnnotationUtils {
   private JsInteropAnnotationUtils() {}
 
+  @Nullable
   public static IAnnotationBinding getJsAsyncAnnotation(IBinding methodBinding) {
-    return JdtAnnotationUtils.findAnnotationBindingByName(
-        methodBinding.getAnnotations(), JS_ASYNC_ANNOTATION_NAME);
+    return JdtAnnotationUtils.findAnnotationBindingByName(methodBinding, JS_ASYNC_ANNOTATION_NAME);
   }
 
+  @Nullable
   public static IAnnotationBinding getJsConstructorAnnotation(IMethodBinding methodBinding) {
     return JdtAnnotationUtils.findAnnotationBindingByName(
-        methodBinding.getAnnotations(), JS_CONSTRUCTOR_ANNOTATION_NAME);
+        methodBinding, JS_CONSTRUCTOR_ANNOTATION_NAME);
   }
 
+  @Nullable
   public static IAnnotationBinding getJsEnumAnnotation(ITypeBinding typeBinding) {
-    return JdtAnnotationUtils.findAnnotationBindingByName(
-        typeBinding.getAnnotations(), JS_ENUM_ANNOTATION_NAME);
+    return JdtAnnotationUtils.findAnnotationBindingByName(typeBinding, JS_ENUM_ANNOTATION_NAME);
   }
 
+  @Nullable
   public static IAnnotationBinding getJsFunctionAnnotation(ITypeBinding typeBinding) {
-    return JdtAnnotationUtils.findAnnotationBindingByName(
-        typeBinding.getAnnotations(), JS_FUNCTION_ANNOTATION_NAME);
+    return JdtAnnotationUtils.findAnnotationBindingByName(typeBinding, JS_FUNCTION_ANNOTATION_NAME);
   }
 
+  @Nullable
   public static IAnnotationBinding getJsIgnoreAnnotation(IBinding methodBinding) {
-    return JdtAnnotationUtils.findAnnotationBindingByName(
-        methodBinding.getAnnotations(), JS_IGNORE_ANNOTATION_NAME);
+    return JdtAnnotationUtils.findAnnotationBindingByName(methodBinding, JS_IGNORE_ANNOTATION_NAME);
   }
 
+  @Nullable
   public static IAnnotationBinding getJsTypeAnnotation(ITypeBinding typeBinding) {
-    return JdtAnnotationUtils.findAnnotationBindingByName(
-        typeBinding.getAnnotations(), JS_TYPE_ANNOTATION_NAME);
+    return JdtAnnotationUtils.findAnnotationBindingByName(typeBinding, JS_TYPE_ANNOTATION_NAME);
   }
 
+  @Nullable
   public static IAnnotationBinding getJsMethodAnnotation(IMethodBinding methodBinding) {
-    return JdtAnnotationUtils.findAnnotationBindingByName(
-        methodBinding.getAnnotations(), JS_METHOD_ANNOTATION_NAME);
+    return JdtAnnotationUtils.findAnnotationBindingByName(methodBinding, JS_METHOD_ANNOTATION_NAME);
   }
 
+  @Nullable
   public static IAnnotationBinding getJsPropertyAnnotation(IBinding methodBinding) {
     return JdtAnnotationUtils.findAnnotationBindingByName(
-        methodBinding.getAnnotations(), JS_PROPERTY_ANNOTATION_NAME);
+        methodBinding, JS_PROPERTY_ANNOTATION_NAME);
   }
 
+  @Nullable
   public static IAnnotationBinding getJsOptionalAnnotation(
       IMethodBinding methodBinding, int parameterIndex) {
     return JdtAnnotationUtils.findAnnotationBindingByName(
         methodBinding.getParameterAnnotations(parameterIndex), JS_OPTIONAL_ANNOTATION_NAME);
   }
 
-  public static IAnnotationBinding getDoNotAutoboxAnnotation(
-      IMethodBinding methodBinding, int parameterIndex) {
-    return JdtAnnotationUtils.findAnnotationBindingByName(
-        methodBinding.getParameterAnnotations(parameterIndex), DO_NOT_AUTOBOX_ANNOTATION_NAME);
-  }
-
+  @Nullable
   public static IAnnotationBinding getJsOverlayAnnotation(IBinding methodBinding) {
     return JdtAnnotationUtils.findAnnotationBindingByName(
-        methodBinding.getAnnotations(), JS_OVERLAY_ANNOTATION_NAME);
+        methodBinding, JS_OVERLAY_ANNOTATION_NAME);
   }
 
+  @Nullable
   public static IAnnotationBinding getJsPackageAnnotation(ITypeBinding packageBinding) {
     return JdtAnnotationUtils.findAnnotationBindingByName(
-        packageBinding.getAnnotations(), JS_PACKAGE_ANNOTATION_NAME);
+        packageBinding, JS_PACKAGE_ANNOTATION_NAME);
   }
 
   public static boolean isJsPackageAnnotation(IAnnotationBinding annotation) {
@@ -114,17 +111,6 @@ public class JsInteropAnnotationUtils {
 
   private static boolean isJsNative(IAnnotationBinding annotationBinding) {
     return JdtAnnotationUtils.getBooleanAttribute(annotationBinding, "isNative", false);
-  }
-
-  public static boolean isUnusableByJsSuppressed(IBinding binding) {
-    IAnnotationBinding suppressWarningsBinding =
-        JdtAnnotationUtils.findAnnotationBindingByName(
-            binding.getAnnotations(), SUPPRESS_WARNINGS_ANNOTATION_NAME);
-    if (suppressWarningsBinding == null) {
-      return false;
-    }
-    Object[] suppressions = JdtAnnotationUtils.getArrayAttribute(suppressWarningsBinding, "value");
-    return stream(suppressions).anyMatch("unusable-by-js"::equals);
   }
 
   public static String getJsNamespace(PackageDeclaration packageDeclaration) {
@@ -150,6 +136,7 @@ public class JsInteropAnnotationUtils {
     return JdtAnnotationUtils.getStringAttribute(annotationBinding, "name");
   }
 
+  @Nullable
   private static IAnnotationBinding getJsTypeOrJsEnumAnnotation(ITypeBinding typeBinding) {
     return Optional.ofNullable(getJsTypeAnnotation(typeBinding))
         .orElse(getJsEnumAnnotation(typeBinding));

@@ -22,13 +22,14 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
+import static java.util.Objects.requireNonNull;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
 import com.google.common.truth.extensions.proto.ProtoSubject;
+import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import java.util.ArrayList;
@@ -105,8 +106,8 @@ public class ColorSerializerTest {
             .addType(subTypeColor.getExpectedTypeProto())
             .addDisambiguationEdges(
                 SubtypingEdge.newBuilder()
-                    .setSubtype(subTypeColor.getExpectedTypePointer())
-                    .setSupertype(superTypeColor.getExpectedTypePointer())
+                    .setSubtype(subTypeColor.expectedTypePointer())
+                    .setSupertype(superTypeColor.expectedTypePointer())
                     .build())
             // empty DebugInfo
             .setDebugInfo(TypePool.DebugInfo.getDefaultInstance())
@@ -143,8 +144,8 @@ public class ColorSerializerTest {
             .addType(superTypeColor.getExpectedTypeProto())
             .addDisambiguationEdges(
                 SubtypingEdge.newBuilder()
-                    .setSubtype(subTypeColor.getExpectedTypePointer())
-                    .setSupertype(superTypeColor.getExpectedTypePointer())
+                    .setSubtype(subTypeColor.expectedTypePointer())
+                    .setSupertype(superTypeColor.expectedTypePointer())
                     .build())
             // DebugInfo is present but empty.
             .setDebugInfo(TypePool.DebugInfo.getDefaultInstance())
@@ -255,18 +256,18 @@ public class ColorSerializerTest {
             .addType(childClassPrototypeTestColor.getExpectedTypeProto())
             .addDisambiguationEdges(
                 SubtypingEdge.newBuilder()
-                    .setSubtype(childClassConstructorTestColor.getExpectedTypePointer())
-                    .setSupertype(baseClassConstructorTestColor.getExpectedTypePointer())
+                    .setSubtype(childClassConstructorTestColor.expectedTypePointer())
+                    .setSupertype(baseClassConstructorTestColor.expectedTypePointer())
                     .build())
             .addDisambiguationEdges(
                 SubtypingEdge.newBuilder()
-                    .setSubtype(childClassInstanceTestColor.getExpectedTypePointer())
-                    .setSupertype(baseClassInstanceTestColor.getExpectedTypePointer())
+                    .setSubtype(childClassInstanceTestColor.expectedTypePointer())
+                    .setSupertype(baseClassInstanceTestColor.expectedTypePointer())
                     .build())
             .addDisambiguationEdges(
                 SubtypingEdge.newBuilder()
-                    .setSubtype(childClassPrototypeTestColor.getExpectedTypePointer())
-                    .setSupertype(baseClassPrototypeTestColor.getExpectedTypePointer())
+                    .setSubtype(childClassPrototypeTestColor.expectedTypePointer())
+                    .setSupertype(baseClassPrototypeTestColor.expectedTypePointer())
                     .build())
             // DebugInfo is present but empty.
             .setDebugInfo(TypePool.DebugInfo.getDefaultInstance())
@@ -391,11 +392,11 @@ public class ColorSerializerTest {
             .addPooledString(droppedPropertyName)
             .addColor(testColor)
             .generateTypePool()
-            .getTypePool();
+            .typePool();
 
     final List<Integer> ownPropertyList =
         actualTypePool.getType(0).getObject().getOwnPropertyList();
-    assertThat(ownPropertyList).containsExactly(keptPropertyName.getPoolOffset());
+    assertThat(ownPropertyList).containsExactly(keptPropertyName.poolOffset());
   }
 
   @Test
@@ -480,14 +481,23 @@ public class ColorSerializerTest {
   /**
    * Represents a string that is stored in a StringPool, recording both its value and its offset.
    */
-  @AutoValue
-  abstract static class PooledString {
-    public abstract String getValue();
+  record PooledString(String value, int poolOffset) {
+    PooledString {
+      requireNonNull(value, "value");
+    }
 
-    public abstract int getPoolOffset();
+    @InlineMe(replacement = "this.value()")
+    public String getValue() {
+      return value();
+    }
+
+    @InlineMe(replacement = "this.poolOffset()")
+    public int getPoolOffset() {
+      return poolOffset();
+    }
 
     static PooledString create(String value, int poolOffset) {
-      return new AutoValue_ColorSerializerTest_PooledString(value, poolOffset);
+      return new PooledString(value, poolOffset);
     }
   }
 
@@ -555,11 +565,11 @@ public class ColorSerializerTest {
               .setConstructor(isConstructor)
               .setClosureAssert(isClosureAssert)
               .setInstanceColors(
-                  instanceTestColors.stream().map(TestColor::getColor).collect(toImmutableSet()))
+                  instanceTestColors.stream().map(TestColor::color).collect(toImmutableSet()))
               .setPrototypes(
-                  prototypeTestColors.stream().map(TestColor::getColor).collect(toImmutableSet()))
+                  prototypeTestColors.stream().map(TestColor::color).collect(toImmutableSet()))
               .setOwnProperties(
-                  ownProperties.stream().map(PooledString::getValue).collect(toImmutableSet()));
+                  ownProperties.stream().map(PooledString::value).collect(toImmutableSet()));
       final Integer typePointer = TypePointers.untrimOffset(trimmedPoolOffset);
       final TypeProto.Builder typeProtoBuilder = TypeProto.newBuilder();
       final ObjectTypeProto.Builder objectTypeProtoBuilder = typeProtoBuilder.getObjectBuilder();
@@ -571,14 +581,14 @@ public class ColorSerializerTest {
           .setClosureAssert(isClosureAssert)
           .addAllInstanceType(
               instanceTestColors.stream()
-                  .map(TestColor::getExpectedTypePointer)
+                  .map(TestColor::expectedTypePointer)
                   .collect(Collectors.toList()))
           .addAllPrototype(
               prototypeTestColors.stream()
-                  .map(TestColor::getExpectedTypePointer)
+                  .map(TestColor::expectedTypePointer)
                   .collect(Collectors.toList()))
           .addAllOwnProperty(
-              ownProperties.stream().map(PooledString::getPoolOffset).collect(Collectors.toList()));
+              ownProperties.stream().map(PooledString::poolOffset).collect(Collectors.toList()));
       return TestColor.create(colorBuilder.build(), typeProtoBuilder.build(), typePointer);
     }
   }
@@ -602,14 +612,14 @@ public class ColorSerializerTest {
     TestColor build() {
       checkState(trimmedPoolOffset >= 0, "call setTrimmedPoolOffset() first");
       final ImmutableSet<Color> memberColors =
-          memberTestColors.stream().map(TestColor::getColor).collect(toImmutableSet());
+          memberTestColors.stream().map(TestColor::color).collect(toImmutableSet());
       Color color = Color.createUnion(memberColors);
 
       final Integer typePointer = TypePointers.untrimOffset(trimmedPoolOffset);
 
       final List<Integer> memberTypePoiners =
           memberTestColors.stream()
-              .map(TestColor::getExpectedTypePointer)
+              .map(TestColor::expectedTypePointer)
               .collect(Collectors.toList());
       final TypeProto.Builder typeProtoBuilder = TypeProto.newBuilder();
       typeProtoBuilder.getUnionBuilder().addAllUnionMember(memberTypePoiners);
@@ -624,55 +634,78 @@ public class ColorSerializerTest {
     return TestColor.create(axiomaticColor, null, poolOffset);
   }
 
-  /** Represents a Color that has been or will be added to the ColorSerializer. */
-  @AutoValue
-  abstract static class TestColor {
-    // The Color that will be added to the ColorSerializer.
-    public abstract Color getColor();
+  /**
+   * Represents a Color that has been or will be added to the ColorSerializer.
+   *
+   * @param nullableExpectedTypeProto The TypeProto we expect ColorSerializer to create for this
+   *     Color.
+   *     <p>For an axiomatic color this will return `null`, since those are never stored into a
+   *     `TypeProto`. Generally test code should call `getExpectedTypeProto()` instead in order to
+   *     get an exception if an attempt is made to serialize an axiomatic color.
+   */
+  record TestColor(
+      Color color, @Nullable TypeProto nullableExpectedTypeProto, int expectedTypePointer) {
+    TestColor {
+      requireNonNull(color, "color");
+    }
 
-    /**
-     * The TypeProto we expect ColorSerializer to create for this Color.
-     *
-     * <p>For an axiomatic color this will return `null`, since those are never stored into a
-     * `TypeProto`. Generally test code should call `getExpectedTypeProto()` instead in order to get
-     * an exception if an attempt is made to serialize an axiomatic color.
-     */
-    public abstract @Nullable TypeProto getNullableExpectedTypeProto();
+    @InlineMe(replacement = "this.color()")
+    public Color getColor() {
+      return color();
+    }
+
+    @InlineMe(replacement = "this.nullableExpectedTypeProto()")
+    public @Nullable TypeProto getNullableExpectedTypeProto() {
+      return nullableExpectedTypeProto();
+    }
+
+    @InlineMe(replacement = "this.expectedTypePointer()")
+    public int getExpectedTypePointer() {
+      return expectedTypePointer();
+    }
+
+    // The Color that will be added to the ColorSerializer.
 
     // The Integer we expect ColorSerializer to create for this Color.
-    public abstract int getExpectedTypePointer();
 
     public TypeProto getExpectedTypeProto() {
-      return checkNotNull(getNullableExpectedTypeProto());
+      return checkNotNull(nullableExpectedTypeProto());
     }
 
     static TestColor create(
         Color color, @Nullable TypeProto expectedTypeProto, int nullableExpectedTypePointer) {
-      return new AutoValue_ColorSerializerTest_TestColor(
-          color, expectedTypeProto, nullableExpectedTypePointer);
+      return new TestColor(color, expectedTypeProto, nullableExpectedTypePointer);
     }
   }
 
   /**
    * Represents a color/type mismatch both as it would appear in a ColorRegistry and in a TypePool.
    */
-  @AutoValue
-  abstract static class TestMismatch {
-    public abstract String getLocationString();
+  record TestMismatch(String locationString, ImmutableList<TestColor> testColors) {
+    TestMismatch {
+      requireNonNull(locationString, "locationString");
+      requireNonNull(testColors, "testColors");
+    }
 
-    public abstract ImmutableList<TestColor> getTestColors();
+    @InlineMe(replacement = "this.locationString()")
+    public String getLocationString() {
+      return locationString();
+    }
+
+    @InlineMe(replacement = "this.testColors()")
+    public ImmutableList<TestColor> getTestColors() {
+      return testColors();
+    }
 
     public List<Color> getColors() {
-      return getTestColors().stream().map(TestColor::getColor).collect(Collectors.toList());
+      return testColors().stream().map(TestColor::color).collect(Collectors.toList());
     }
 
     public TypePool.DebugInfo.Mismatch getExpectedMismatch() {
       final List<Integer> involvedColorTypePointers =
-          getTestColors().stream()
-              .map(TestColor::getExpectedTypePointer)
-              .collect(Collectors.toList());
+          testColors().stream().map(TestColor::expectedTypePointer).collect(Collectors.toList());
       return TypePool.DebugInfo.Mismatch.newBuilder()
-          .setSourceRef(getLocationString())
+          .setSourceRef(locationString())
           .addAllInvolvedColor(involvedColorTypePointers)
           .build();
     }
@@ -683,8 +716,7 @@ public class ColorSerializerTest {
      *     order
      */
     static TestMismatch create(String locationString, TestColor... testColors) {
-      return new AutoValue_ColorSerializerTest_TestMismatch(
-          locationString, ImmutableList.copyOf(testColors));
+      return new TestMismatch(locationString, ImmutableList.copyOf(testColors));
     }
   }
 
@@ -732,9 +764,9 @@ public class ColorSerializerTest {
 
     /** Be prepared to respond to a request for this string. */
     Tester addPooledString(PooledString pooledString) {
-      final String string = pooledString.getValue();
+      final String string = pooledString.value();
       checkState(!stringToPoolOffsetMap.containsKey(string), "duplicate string added: %s", string);
-      stringToPoolOffsetMap.put(string, pooledString.getPoolOffset());
+      stringToPoolOffsetMap.put(string, pooledString.poolOffset());
       return this;
     }
 
@@ -744,11 +776,11 @@ public class ColorSerializerTest {
     }
 
     Tester linkSubColorToSuperColor(TestColor subColor, TestColor superColor) {
-      return linkSubColorToSuperColor(subColor.getColor(), superColor.getColor());
+      return linkSubColorToSuperColor(subColor.color(), superColor.color());
     }
 
     Tester addMismatch(TestMismatch testMismatch) {
-      final String locationString = testMismatch.getLocationString();
+      final String locationString = testMismatch.locationString();
       for (Color color : testMismatch.getColors()) {
         colorToMismatchLocationStringsMap.put(color, locationString);
       }
@@ -756,8 +788,8 @@ public class ColorSerializerTest {
     }
 
     Tester addColor(TestColor testColor) {
-      final Integer typePointer = colorSerializer.addColor(testColor.getColor());
-      assertThat(typePointer).isEqualTo(testColor.getExpectedTypePointer());
+      final Integer typePointer = colorSerializer.addColor(testColor.color());
+      assertThat(typePointer).isEqualTo(testColor.expectedTypePointer());
       return this;
     }
 
@@ -768,10 +800,10 @@ public class ColorSerializerTest {
     Tester addColors(List<TestColor> testColorList) {
       checkNotNull(colorSerializer, "call init() first");
       final List<Color> colors =
-          testColorList.stream().map(TestColor::getColor).collect(Collectors.toList());
+          testColorList.stream().map(TestColor::color).collect(Collectors.toList());
       final ImmutableList<Integer> typePointers = colorSerializer.addColors(colors);
       for (int i = 0; i < testColorList.size(); ++i) {
-        assertThat(typePointers.get(i)).isEqualTo(testColorList.get(i).getExpectedTypePointer());
+        assertThat(typePointers.get(i)).isEqualTo(testColorList.get(i).expectedTypePointer());
       }
       return this;
     }
@@ -787,16 +819,22 @@ public class ColorSerializerTest {
   }
 
   /** The result of Tester::generateTypePool() */
-  @AutoValue
-  abstract static class GenerateTypePoolTestResult {
-    public abstract TypePool getTypePool();
+  record GenerateTypePoolTestResult(TypePool typePool) {
+    GenerateTypePoolTestResult {
+      requireNonNull(typePool, "typePool");
+    }
+
+    @InlineMe(replacement = "this.typePool()")
+    public TypePool getTypePool() {
+      return typePool();
+    }
 
     ProtoSubject assertThatTypePool() {
-      return assertThat(getTypePool());
+      return assertThat(typePool());
     }
 
     static GenerateTypePoolTestResult create(TypePool typePool) {
-      return new AutoValue_ColorSerializerTest_GenerateTypePoolTestResult(typePool);
+      return new GenerateTypePoolTestResult(typePool);
     }
   }
 }

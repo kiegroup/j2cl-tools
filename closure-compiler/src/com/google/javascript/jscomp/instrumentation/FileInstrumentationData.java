@@ -16,10 +16,8 @@
 
 package com.google.javascript.jscomp.instrumentation;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.primitives.UnsignedBytes;
 import com.google.javascript.rhino.Node;
 import java.util.BitSet;
 import java.util.LinkedHashMap;
@@ -29,7 +27,6 @@ import java.util.Map;
  * Holds instrumentation details related to a file, namely, the filename, the array name used in
  * instrumentation, and the lines which were instrumented (in encoded form).
  */
-@GwtIncompatible("com.google.common.primitives.UnsignedBytes")
 class FileInstrumentationData {
   private final BitSet instrumentedBits; // Instrumented lines, a bit per line
   private final String arrayName;
@@ -64,8 +61,7 @@ class FileInstrumentationData {
 
     @Override
     public boolean equals(Object object) {
-      if (object instanceof BranchIndexPair) {
-        BranchIndexPair that = (BranchIndexPair) object;
+      if (object instanceof BranchIndexPair that) {
         return this.getLine() == that.getLine() && this.getBranch() == that.getBranch();
       }
       return false;
@@ -157,7 +153,7 @@ class FileInstrumentationData {
     // Build the hex string.
     for (byte byteEntry : bitSet.toByteArray()) {
       // Java bytes are signed, but we want the value as if it were unsigned.
-      int value = UnsignedBytes.toInt(byteEntry);
+      int value = Byte.toUnsignedInt(byteEntry);
       String hexString = Integer.toHexString(value);
 
       // Pad string to be two characters (if it isn't already).

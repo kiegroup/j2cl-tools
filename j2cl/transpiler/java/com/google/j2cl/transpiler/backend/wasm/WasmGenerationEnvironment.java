@@ -29,18 +29,20 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.j2cl.transpiler.ast.Annotation;
 import com.google.j2cl.transpiler.ast.ArrayLiteral;
 import com.google.j2cl.transpiler.ast.ArrayTypeDescriptor;
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
 import com.google.j2cl.transpiler.ast.Field;
 import com.google.j2cl.transpiler.ast.FieldDescriptor;
+import com.google.j2cl.transpiler.ast.HasAnnotations;
 import com.google.j2cl.transpiler.ast.HasName;
 import com.google.j2cl.transpiler.ast.Library;
 import com.google.j2cl.transpiler.ast.Method;
 import com.google.j2cl.transpiler.ast.MethodDescriptor;
-import com.google.j2cl.transpiler.ast.NameDeclaration;
 import com.google.j2cl.transpiler.ast.PrimitiveTypeDescriptor;
 import com.google.j2cl.transpiler.ast.PrimitiveTypes;
+import com.google.j2cl.transpiler.ast.StringLiteral;
 import com.google.j2cl.transpiler.ast.Type;
 import com.google.j2cl.transpiler.ast.TypeDeclaration;
 import com.google.j2cl.transpiler.ast.TypeDescriptor;
@@ -138,9 +140,11 @@ public class WasmGenerationEnvironment {
   String getWasmTypeName(TypeDescriptor typeDescriptor) {
     typeDescriptor = typeDescriptor.toRawTypeDescriptor();
 
-    if (typeDescriptor instanceof DeclaredTypeDescriptor
-        && ((DeclaredTypeDescriptor) typeDescriptor).getTypeDeclaration().getWasmInfo() != null) {
-      return ((DeclaredTypeDescriptor) typeDescriptor).getTypeDeclaration().getWasmInfo();
+    if (typeDescriptor instanceof DeclaredTypeDescriptor declaredTypeDescriptor) {
+      String nativeWasmTypeName = getWasmInfo(declaredTypeDescriptor.getTypeDeclaration());
+      if (nativeWasmTypeName != null) {
+        return nativeWasmTypeName;
+      }
     }
 
     if (typeDescriptor.isNative()) {
@@ -166,6 +170,16 @@ public class WasmGenerationEnvironment {
     return getTypeSignature(typeDescriptor);
   }
 
+  /** Returns the user-provided info for the given node as specified in the @Wasm annotation. */
+  @Nullable
+  static String getWasmInfo(HasAnnotations node) {
+    Annotation wasm = node.getAnnotation("javaemul.internal.annotations.Wasm");
+    if (wasm == null) {
+      return null;
+    }
+    return ((StringLiteral) wasm.getValues().get("value")).getValue();
+  }
+
   public String getTypeSignature(TypeDeclaration typeDeclaration) {
     return getTypeSignature(typeDeclaration.toDescriptor());
   }
@@ -175,8 +189,8 @@ public class WasmGenerationEnvironment {
       return "$" + typeDescriptor.getReadableDescription();
     }
     typeDescriptor = typeDescriptor.toRawTypeDescriptor();
-    if (typeDescriptor instanceof DeclaredTypeDescriptor) {
-      return "$" + ((DeclaredTypeDescriptor) typeDescriptor).getQualifiedSourceName();
+    if (typeDescriptor instanceof DeclaredTypeDescriptor declaredTypeDescriptor) {
+      return "$" + declaredTypeDescriptor.getQualifiedSourceName();
     }
 
     throw new AssertionError("Unexpected type: " + typeDescriptor.getReadableDescription());
@@ -284,7 +298,7 @@ public class WasmGenerationEnvironment {
 
   private final Map<HasName, String> nameByDeclaration = new HashMap<>();
 
-  String getDeclarationName(NameDeclaration declaration) {
+  String getDeclarationName(HasName declaration) {
     return "$" + checkNotNull(nameByDeclaration.get(declaration));
   }
 
@@ -386,21 +400,36 @@ public class WasmGenerationEnvironment {
     return sourceMappingPathPrefix;
   }
 
+  boolean isCustomDescriptorsEnabled() {
+    return enableCustomDescriptors;
+  }
+
   private final boolean isModular;
   private final Library library;
   private final JsImportsGenerator.Imports jsImports;
   private final ItableAllocator<TypeDeclaration> itableAllocator;
   private final String sourceMappingPathPrefix;
+  private final boolean enableCustomDescriptors;
 
   WasmGenerationEnvironment(Library library, Imports jsImports) {
-    this(library, jsImports, /* sourceMappingPathPrefix= */ null, /* isModular= */ false);
+    this(
+        library,
+        jsImports,
+        /* sourceMappingPathPrefix= */ null,
+        /* enableCustomDescriptors= */ false,
+        /* isModular= */ false);
   }
 
   WasmGenerationEnvironment(
-      Library library, Imports jsImports, String sourceMappingPathPrefix, boolean isModular) {
+      Library library,
+      Imports jsImports,
+      String sourceMappingPathPrefix,
+      boolean enableCustomDescriptors,
+      boolean isModular) {
     this.isModular = isModular;
     this.library = library;
     this.sourceMappingPathPrefix = sourceMappingPathPrefix;
+    this.enableCustomDescriptors = enableCustomDescriptors;
 
     // Resolve variable names into unique wasm identifiers.
     library
@@ -438,6 +467,7 @@ public class WasmGenerationEnvironment {
     this.jsImports = jsImports;
   }
 
+  @Nullable
   private ItableAllocator<TypeDeclaration> createItableAllocator(Library library) {
     if (isModular) {
       // Itable allocation happens in the bundler for modular compilation.

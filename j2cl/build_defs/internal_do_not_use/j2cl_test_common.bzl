@@ -171,7 +171,6 @@ def j2cl_test_common(
         compile = 0,
         platform = "CLOSURE",
         optimize_wasm = False,
-        use_magic_string_imports = False,
         wasm_defs = {},
         browsers = None,
         extra_defs = [],
@@ -215,7 +214,7 @@ def j2cl_test_common(
             testonly = 1,
             # Safe here as this is for tests only and there are no downstream users.
             experimental_enable_jspecify_support_do_not_enable_without_jspecify_static_checking_or_you_might_cause_an_outage = 1,
-            tags = tags,
+            tags = tags + ["ide-test-intermediate"],
             **j2cl_parameters
         )
 
@@ -224,7 +223,7 @@ def j2cl_test_common(
             name = generated_suite_name,
             test_class = test_class,
             deps = [":%s_testlib" % name],
-            tags = tags,
+            tags = tags + ["ide-test-intermediate"],
         )
 
         deps = [
@@ -234,9 +233,7 @@ def j2cl_test_common(
             # in jsunit_test if user provided only in bootstrap_files).
             ":%s_testlib" % name,
             ":%s_lib" % generated_suite_name,
-            Label("//build_defs/internal_do_not_use:closure_testsuite"),
-            Label("//build_defs/internal_do_not_use:closure_testcase"),
-            Label("//build_defs/internal_do_not_use:internal_parametrized_test_suite"),
+            Label("//build_defs/internal_do_not_use:internal_j2cl_test_suite"),
         ]
 
     elif platform == "WASM":
@@ -244,7 +241,7 @@ def j2cl_test_common(
             name = "%s_testlib" % name,
             exports = exports,
             testonly = 1,
-            tags = tags,
+            tags = tags + ["ide-test-intermediate"],
             **j2cl_parameters
         )
 
@@ -253,15 +250,14 @@ def j2cl_test_common(
             name = generated_suite_name,
             test_class = test_class,
             deps = [":%s_testlib" % name],
-            tags = tags,
+            tags = tags + ["ide-test-intermediate"],
             optimize = optimize_wasm,
-            use_magic_string_imports = use_magic_string_imports,
             defines = wasm_defs,
         )
 
         deps = [
             ":%s_dep" % generated_suite_name,
-            Label("//build_defs/internal_do_not_use:closure_testsuite"),
+            Label("//build_defs/internal_do_not_use:internal_j2cl_test_suite"),
             Label("//build_defs/internal_do_not_use:closure_testcase"),
         ]
 
@@ -300,7 +296,7 @@ def j2cl_test_common(
         deps = deps,
         browsers = browsers,
         data = data,
-        tags = tags,
+        tags = tags + ["ide-test-intermediate"],
         flaky = flaky,
         test_class = test_class,
         **jsunit_parameters

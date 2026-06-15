@@ -1,15 +1,15 @@
 ;;; Code for jstypeswithconstructor.JsTypesWithConstructor [type definition]
+(type $jstypeswithconstructor.JsTypesWithConstructor (sub $java.lang.Object (struct
+ (field $vtable (ref $jstypeswithconstructor.JsTypesWithConstructor.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $jstypeswithconstructor.JsTypesWithConstructor.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
  (field $m_hashCode__int (ref $function.m_hashCode__int))
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
- ))
-)
-(type $jstypeswithconstructor.JsTypesWithConstructor (sub $java.lang.Object (struct
- (field $vtable (ref $jstypeswithconstructor.JsTypesWithConstructor.vtable))
- (field $itable (ref $itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
 
@@ -44,7 +44,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/jstypeswithconstructor/readable-j2wasm.js/jstypeswithconstructor/JsTypesWithConstructor.java:27:9
   (call $$clinit__void_<once>_@jstypeswithconstructor.JsTypesWithConstructor )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/jstypeswithconstructor/readable-j2wasm.js/jstypeswithconstructor/JsTypesWithConstructor.java:27:9
-  (local.set $$instance (struct.new $jstypeswithconstructor.JsTypesWithConstructor (ref.as_non_null (global.get $jstypeswithconstructor.JsTypesWithConstructor.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $jstypeswithconstructor.JsTypesWithConstructor (global.get $jstypeswithconstructor.JsTypesWithConstructor.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/jstypeswithconstructor/readable-j2wasm.js/jstypeswithconstructor/JsTypesWithConstructor.java:27:9
   (call $$ctor__void_$p_jstypeswithconstructor_JsTypesWithConstructor@jstypeswithconstructor.JsTypesWithConstructor (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/jstypeswithconstructor/readable-j2wasm.js/jstypeswithconstructor/JsTypesWithConstructor.java:27:9

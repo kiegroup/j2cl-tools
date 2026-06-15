@@ -18,13 +18,13 @@ j2kt_jvm_generate_unit_test(
 
 """
 
-load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
+load("@rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
 load("@bazel_tools//tools/build_defs/kotlin/native:rules.bzl", "kt_apple_test_library")
 load(":generate_test_input.bzl", "generate_test_input")
 load(":j2kt_library.bzl", "j2kt_jvm_library", "j2kt_native_library")
 
 # buildifier: disable=function-docstring-args
-def j2kt_generate_unit_test(name, test_class, deps, platform = "J2KT-JVM", tags = []):
+def j2kt_generate_unit_test(name, test_class, deps, platform = "J2KT-JVM", tags = [], exec_properties = {}):
     """Macro for generating kotlin version of test adapter for kt_jvm test
     """
 
@@ -38,7 +38,11 @@ def j2kt_generate_unit_test(name, test_class, deps, platform = "J2KT-JVM", tags 
                 "//build_defs/internal_do_not_use:internal_junit_annotations-j2kt-jvm",
             ],
             exports = deps,
-            javacopts = ["-AtestPlatform=J2KT-JVM"],
+            javacopts = [
+                "-AtestPlatform=J2KT-JVM",
+                # Disable error prone checks since this is a generated code.
+                "-Xep:PackageLocation:OFF",
+            ],
             testonly = 1,
             tags = tags,
         )
@@ -51,9 +55,14 @@ def j2kt_generate_unit_test(name, test_class, deps, platform = "J2KT-JVM", tags 
                 "//build_defs/internal_do_not_use:internal_junit_annotations-j2kt-native",
             ],
             exports = deps,
-            javacopts = ["-AtestPlatform=J2KT-NATIVE"],
+            javacopts = [
+                "-AtestPlatform=J2KT-NATIVE",
+                # Disable error prone checks since this is a generated code.
+                "-Xep:PackageLocation:OFF",
+            ],
             testonly = 1,
-            tags = tags,
+            tags = tags + ["ide-test-intermediate"],
+            exec_properties = exec_properties,
         )
 
     # The Java annotation processor on the above target generates kotlin srcs code as resource
@@ -83,13 +92,14 @@ def j2kt_generate_unit_test(name, test_class, deps, platform = "J2KT-JVM", tags 
         kt_apple_test_library(
             name = name,
             srcs = [":" + name + "_transpile_gen"],
-            features = ["kotlin_native.multi_action_framework"],
             target_compatible_with = ["//third_party/bazel_platforms/os:ios"],
             deps = [
                 ":" + name + "_lib",
                 "//build_defs/internal_do_not_use:internal_junit_runtime-j2kt-native",
             ],
-            tags = tags,
+            tags = tags + ["ide-test-intermediate"],
+            gen_by_xplat = True,
+            exec_properties = exec_properties,
         )
 
 def _extract_kotlin_srcjar(ctx):

@@ -30,9 +30,9 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
-import org.kie.j2cl.tools.yaml.mapper.api.annotation.YAMLMapper;
-import org.kie.j2cl.tools.yaml.mapper.api.annotation.YamlTypeDeserializer;
-import org.kie.j2cl.tools.yaml.mapper.api.annotation.YamlTypeSerializer;
+import javax.lang.model.type.MirroredTypesException;
+import javax.lang.model.type.TypeMirror;
+import org.kie.j2cl.tools.yaml.mapper.api.annotation.*;
 import org.kie.j2cl.tools.yaml.mapper.context.GenerationContext;
 import org.kie.j2cl.tools.yaml.mapper.logger.PrintWriterTreeLogger;
 import org.kie.j2cl.tools.yaml.mapper.logger.TreeLogger;
@@ -59,27 +59,84 @@ public class ApplicationProcessor extends AbstractProcessor {
           .map(MoreElements::asType)
           .forEach(beans::add);
 
+      roundEnvironment.getElementsAnnotatedWith(YamlMappers.class).stream()
+          .flatMap(e -> Arrays.stream(e.getAnnotationsByType(YamlMappers.class)))
+          .forEach(
+              clazz -> {
+                try {
+                  clazz.value();
+                } catch (MirroredTypesException mte) {
+                  for (TypeMirror typeMirror : mte.getTypeMirrors()) {
+                    beans.add(MoreTypes.asTypeElement(typeMirror));
+                  }
+                }
+              });
+
       logger.setMaxDetail(TreeLogger.Type.INFO);
       long started = System.currentTimeMillis();
 
-      addCustomDeserializers(
-          roundEnvironment.getElementsAnnotatedWith(YamlTypeSerializer.class).stream()
-              .filter(e -> e instanceof TypeElement)
-              .map(MoreElements::asType),
-          context);
-
-      addCustomSerializers(
-          roundEnvironment.getElementsAnnotatedWith(YamlTypeDeserializer.class).stream()
-              .filter(e -> e instanceof TypeElement)
-              .map(MoreElements::asType),
-          context);
-
+      processCustomSerializers(roundEnvironment, context);
       new BeanProcessor(context, logger, beans).process();
       logger.log(
           TreeLogger.Type.INFO,
           "YAML ser/deser generated in " + (System.currentTimeMillis() - started) + " ms");
     }
     return false;
+  }
+
+  private void processCustomSerializers(
+      RoundEnvironment roundEnvironment, GenerationContext context) {
+    addCustomDeserializers(
+        roundEnvironment.getElementsAnnotatedWith(YamlTypeSerializer.class).stream()
+            .filter(e -> e instanceof TypeElement)
+            .map(MoreElements::asType),
+        context);
+
+    addCustomSerializers(
+        roundEnvironment.getElementsAnnotatedWith(YamlTypeDeserializer.class).stream()
+            .filter(e -> e instanceof TypeElement)
+            .map(MoreElements::asType),
+        context);
+
+    addCustomSerializersFor(
+        roundEnvironment.getElementsAnnotatedWith(YamlTypeSerializerFor.class).stream()
+            .filter(e -> e instanceof TypeElement)
+            .map(MoreElements::asType),
+        context);
+
+    addCustomDeserializersFor(
+        roundEnvironment.getElementsAnnotatedWith(YamlTypeDeserializerFor.class).stream()
+            .filter(e -> e instanceof TypeElement)
+            .map(MoreElements::asType),
+        context);
+  }
+
+  private void addCustomDeserializersFor(Stream<TypeElement> elms, GenerationContext context) {
+    elms.forEach(
+        serializer ->
+            context
+                .getTypeUtils()
+                .getClassValueFromAnnotation(serializer, YamlTypeDeserializerFor.class, "value")
+                .ifPresent(
+                    type ->
+                        context
+                            .getTypeRegistry()
+                            .registerDeserializer(type.toString(), serializer)));
+  }
+
+  private void addCustomSerializersFor(Stream<TypeElement> elms, GenerationContext context) {
+    elms.forEach(
+        serializer ->
+            context
+                .getTypeUtils()
+                .getClassValueFromAnnotation(serializer, YamlTypeSerializerFor.class, "value")
+                .ifPresent(
+                    type -> {
+                      context.getTypeRegistry().registerSerializer(type.toString(), serializer);
+                      logger.log(
+                          TreeLogger.Type.INFO,
+                          "Registered custom serializer for type: " + type.toString());
+                    }));
   }
 
   private void addCustomDeserializers(Stream<TypeElement> elements, GenerationContext context) {

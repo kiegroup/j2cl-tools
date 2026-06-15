@@ -19,6 +19,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.google.auto.common.MoreTypes;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
@@ -51,11 +52,19 @@ public class IterableBeanFieldDefinition extends FieldDefinition {
       MoreTypes.asDeclared(bean)
           .getTypeArguments()
           .forEach(
-              param ->
+              param -> {
+                if (context.getTypeRegistry().containsDeserializer(param)) {
+                  method.addArgument(
+                      new ObjectCreationExpr()
+                          .setType(
+                              context.getTypeRegistry().getCustomDeserializer(param).toString()));
+                } else {
                   method.addArgument(
                       propertyDefinitionFactory
                           .getFieldDefinition(param)
-                          .getFieldDeserializer(field, cu)));
+                          .getFieldDeserializer(field, cu));
+                }
+              });
     }
     return method;
   }
@@ -69,14 +78,21 @@ public class IterableBeanFieldDefinition extends FieldDefinition {
 
     MethodCallExpr method =
         new MethodCallExpr(new NameExpr(serializer.getQualifiedName().toString()), "newInstance");
-    if (field.hasYamlTypeSerializer()) {
+    if (field.hasYamlTypeSerializer()
+        || context.getTypeRegistry().containsSerializer(field.getBean())) {
       method.addArgument(
           field.getFieldYamlTypeSerializerCreationExpr(
               field.getProperty().getAnnotation(YamlTypeSerializer.class)));
     } else {
       for (TypeMirror param : MoreTypes.asDeclared(getBean()).getTypeArguments()) {
-        method.addArgument(
-            propertyDefinitionFactory.getFieldDefinition(param).getFieldSerializer(field, cu));
+        if (context.getTypeRegistry().containsSerializer(param)) {
+          method.addArgument(
+              new ObjectCreationExpr()
+                  .setType(context.getTypeRegistry().getCustomSerializer(param).toString()));
+        } else {
+          method.addArgument(
+              propertyDefinitionFactory.getFieldDefinition(param).getFieldSerializer(field, cu));
+        }
       }
     }
     return method;

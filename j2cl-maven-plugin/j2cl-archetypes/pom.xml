@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.kie.j2cl.tools</groupId>
     <artifactId>j2cl-tools</artifactId>
-    <version>0.23.2</version>
+    <version>0.23.6</version>
   </parent>
   <groupId>org.kie.j2cl.tools.archetypes</groupId>
   <artifactId>j2cl-archetypes-parent</artifactId>
@@ -16,8 +16,8 @@
   <description>Maven project archetypes for using J2CL</description>
 
   <properties>
-    <maven.compiler.target>11</maven.compiler.target>
-    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+    <maven.compiler.source>21</maven.compiler.source>
   </properties>
 
   <build>

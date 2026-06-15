@@ -24,7 +24,6 @@ import com.google.common.reflect.ClassPath.ClassInfo;
 import com.google.j2cl.common.EntryPointPattern;
 import com.google.j2cl.common.OutputUtils;
 import com.google.j2cl.common.OutputUtils.Output;
-import com.google.j2cl.common.Problems;
 import com.google.j2cl.common.Problems.FatalError;
 import com.google.j2cl.common.bazel.BazelWorker;
 import com.google.j2cl.transpiler.ast.Method;
@@ -70,28 +69,29 @@ final class BazelJ2wasmExportsGenerator extends BazelWorker {
   private static final Splitter PATH_SPLITTER = Splitter.on(File.pathSeparatorChar);
 
   @Override
-  protected void run(Problems problems) {
+  protected void run() {
     try (Output out = OutputUtils.initOutput(this.output, problems)) {
       ImmutableList<EntryPointPattern> entryPointPatterns =
           this.wasmEntryPoints.stream().map(EntryPointPattern::from).collect(toImmutableList());
       List<String> binaryNames =
           getBinaryNamesOfClassesWithExports(
-              PATH_SPLITTER.split(this.classPath), entryPointPatterns, problems);
+              PATH_SPLITTER.split(this.classPath), entryPointPatterns);
       List<String> classPathEntries =
           Splitter.on(File.pathSeparatorChar).splitToList(this.classPath);
 
       // Create a parser just to resolve binary names, with no sources to parse.
       // TODO(b/294284380): Make this independent of the frontend.
-      JdtParser parser = new JdtParser(classPathEntries, problems);
+      JdtParser parser = new JdtParser(problems);
       Set<String> wellKnownTypeNames = TypeDescriptors.getWellKnownTypeNames();
       binaryNames.addAll(wellKnownTypeNames);
       var bindings =
-          parser.resolveBindings(binaryNames).stream()
+          parser.resolveBindings(classPathEntries, binaryNames).stream()
               // Methods in annotations can not be exported, and additionally the bindings might
               // not be complete and cannot be fully resolved to descriptors.
               .filter(not(ITypeBinding::isAnnotation))
               .collect(toImmutableList());
-      var environment = new JdtEnvironment(parser, wellKnownTypeNames);
+      // TODO(b/392756608): Avoid triggering another read of classpath for well-known types.
+      var environment = new JdtEnvironment(parser, classPathEntries, wellKnownTypeNames);
 
       var typeDescriptors = environment.createDescriptorsFromBindings(bindings);
 
@@ -108,10 +108,8 @@ final class BazelJ2wasmExportsGenerator extends BazelWorker {
     }
   }
 
-  private static List<String> getBinaryNamesOfClassesWithExports(
-      Iterable<String> classPathEntries,
-      List<EntryPointPattern> wasmEntryPoints,
-      Problems problems) {
+  private List<String> getBinaryNamesOfClassesWithExports(
+      Iterable<String> classPathEntries, List<EntryPointPattern> wasmEntryPoints) {
 
     List<URL> classPathUrls = new ArrayList<>();
     List<String> binaryClassNames = new ArrayList<>();
@@ -119,7 +117,7 @@ final class BazelJ2wasmExportsGenerator extends BazelWorker {
       try {
         classPathUrls.add(new File(classPathEntry).toURI().toURL());
       } catch (MalformedURLException e) {
-        problems.fatal(FatalError.CANNOT_OPEN_FILE, e.toString());
+        problems.fatal(FatalError.CANNOT_OPEN_FILE, e.getMessage());
       }
     }
 

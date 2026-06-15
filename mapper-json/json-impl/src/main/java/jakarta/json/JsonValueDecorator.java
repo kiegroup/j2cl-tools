@@ -22,7 +22,6 @@ import jakarta.json.stream.gwt.JsonValueImpl;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import jsinterop.base.Js;
-import org.kie.j2cl.tools.utils.GwtIncompatible;
 
 public class JsonValueDecorator {
 

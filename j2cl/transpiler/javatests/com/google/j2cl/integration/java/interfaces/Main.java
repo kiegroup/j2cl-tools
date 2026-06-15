@@ -20,16 +20,19 @@ import static com.google.j2cl.integration.testing.Asserts.assertFalse;
 import static com.google.j2cl.integration.testing.Asserts.assertTrue;
 import static com.google.j2cl.integration.testing.TestUtils.isJvm;
 
+import com.google.j2objc.annotations.ObjectiveCName;
 import interfaces.package1.ChildInPackage1;
 import interfaces.package1.ClassInPackage1WithPackagePrivateMethod;
 import interfaces.package1.InterfaceInPackage1;
 import java.util.Iterator;
 import jsinterop.annotations.JsNonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /** Test basic interface functionality. */
 @SuppressWarnings("StaticQualifiedUsingExpression")
+@NullMarked
 public class Main {
-
   public static void main(String... args) {
     testInterfaceDispatch();
     testInterfaceWithFields();
@@ -82,14 +85,14 @@ public class Main {
   public static final int ANOTHER_STRING_LIST_ADD = 4;
   public static final int ANOTHER_LIST_INTERFACE_ADD = 5;
 
-  interface Collection<T> {
+  interface Collection<T extends @Nullable Object> {
     default int add(T elem) {
       assertTrue(this instanceof Collection);
       return COLLECTION_ADD;
     }
   }
 
-  interface List<T> extends Collection<T> {
+  interface List<T extends @Nullable Object> extends Collection<T> {
     @Override
     default int add(T elem) {
       assertTrue(this instanceof List);
@@ -101,7 +104,7 @@ public class Main {
     }
   }
 
-  abstract static class AbstractCollection<T> implements Collection<T> {
+  abstract static class AbstractCollection<T extends @Nullable Object> implements Collection<T> {
     @Override
     public int add(T elem) {
       assertTrue(this instanceof AbstractCollection);
@@ -109,59 +112,65 @@ public class Main {
     }
   }
 
-  static class ACollection<T> implements Collection<T> {}
+  static class ACollection<T extends @Nullable Object> implements Collection<T> {}
 
-  abstract static class AbstractList<T> extends AbstractCollection<T> implements List<T> {}
+  abstract static class AbstractList<T extends @Nullable Object> extends AbstractCollection<T>
+      implements List<T> {}
 
-  static class AConcreteList<T> extends AbstractList<T> {}
+  static class AConcreteList<T extends @Nullable Object> extends AbstractList<T> {}
 
-  static class SomeOtherCollection<T> implements Collection<T> {}
+  static class SomeOtherCollection<T extends @Nullable Object> implements Collection<T> {}
 
-  static class SomeOtherList<T> extends SomeOtherCollection<T> implements List<T> {}
+  static class SomeOtherList<T extends @Nullable Object> extends SomeOtherCollection<T>
+      implements List<T> {}
 
   // Should inherit List.add  even though the interface is not directly declared.
-  static class YetAnotherList<T> extends SomeOtherList<T> implements Collection<T> {}
+  static class YetAnotherList<T extends @Nullable Object> extends SomeOtherList<T>
+      implements Collection<T> {}
 
-  static class StringList implements List<String> {}
+  static class StringList implements List<@Nullable String> {}
 
-  static class YetAnotherStringList extends YetAnotherList<String> {}
+  static class YetAnotherStringList extends YetAnotherList<@Nullable String> {}
 
-  static class AnotherStringList implements List<String> {
+  static class AnotherStringList implements List<@Nullable String> {
     @Override
-    public int add(String elem) {
+    public int add(@Nullable String elem) {
       return ANOTHER_STRING_LIST_ADD;
     }
   }
 
-  interface AnotherListInterface<T> {
+  interface AnotherListInterface<T extends @Nullable Object> {
     default int add(T elem) {
       assertTrue(this instanceof AnotherListInterface);
       return ANOTHER_LIST_INTERFACE_ADD;
     }
   }
 
-  static class AnotherCollection<T> implements List<T>, AnotherListInterface<T> {
+  static class AnotherCollection<T extends @Nullable Object>
+      implements List<T>, AnotherListInterface<T> {
     @Override
     public int add(T elem) {
       return AnotherListInterface.super.add(elem);
     }
   }
 
-  abstract static class AbstractCollectionWithDefaults<T> implements Collection<T> {}
+  abstract static class AbstractCollectionWithDefaults<T extends @Nullable Object>
+      implements Collection<T> {}
 
-  static final class FinalCollection<T> extends AbstractCollectionWithDefaults<T> {}
+  static final class FinalCollection<T extends @Nullable Object>
+      extends AbstractCollectionWithDefaults<T> {}
 
   private static void testDefaultMethods() {
-    assertTrue(new ACollection<Object>().add(null) == COLLECTION_ADD);
-    assertTrue(new AConcreteList<Object>().add(null) == ABSTRACT_COLLECTION_ADD);
-    assertTrue(new SomeOtherCollection<Object>().add(null) == COLLECTION_ADD);
-    assertTrue(new SomeOtherList<Object>().add(null) == LIST_ADD);
-    assertTrue(new YetAnotherList<Object>().add(null) == LIST_ADD);
+    assertTrue(new ACollection<@Nullable Object>().add(null) == COLLECTION_ADD);
+    assertTrue(new AConcreteList<@Nullable Object>().add(null) == ABSTRACT_COLLECTION_ADD);
+    assertTrue(new SomeOtherCollection<@Nullable Object>().add(null) == COLLECTION_ADD);
+    assertTrue(new SomeOtherList<@Nullable Object>().add(null) == LIST_ADD);
+    assertTrue(new YetAnotherList<@Nullable Object>().add(null) == LIST_ADD);
     assertTrue(new StringList().add(null) == LIST_ADD);
     assertTrue(new YetAnotherStringList().add(null) == LIST_ADD);
     assertTrue(new AnotherStringList().add(null) == ANOTHER_STRING_LIST_ADD);
-    assertTrue(new AnotherCollection<Object>().add(null) == ANOTHER_LIST_INTERFACE_ADD);
-    assertTrue(new FinalCollection<Object>().add(null) == COLLECTION_ADD);
+    assertTrue(new AnotherCollection<@Nullable Object>().add(null) == ANOTHER_LIST_INTERFACE_ADD);
+    assertTrue(new FinalCollection<@Nullable Object>().add(null) == COLLECTION_ADD);
   }
 
   private static void testStaticMethods() {
@@ -239,7 +248,10 @@ public class Main {
   interface DiamondLeft<T extends DiamondLeft<T>> {
     String NAME = "DiamondLeft";
 
-    default String name(T t) {
+    // TODO(b/425618126): Explicit annotation is necessary to overcome problem with @ObjCName
+    //  annotation and diamond types.
+    @ObjectiveCName("nameWith:")
+    default String name(@Nullable T t) {
       return NAME;
     }
   }
@@ -247,7 +259,10 @@ public class Main {
   interface DiamondRight<T extends DiamondRight<T>> {
     String NAME = "DiamondRight";
 
-    default String name(T t) {
+    // TODO(b/425618126): Explicit annotation is necessary to overcome problem with @ObjCName
+    //  annotation and diamond types.
+    @ObjectiveCName("nameWith:")
+    default String name(@Nullable T t) {
       return NAME;
     }
   }
@@ -256,7 +271,7 @@ public class Main {
     String NAME = "Bottom";
 
     @Override
-    default String name(T t) {
+    default String name(@Nullable T t) {
       return NAME;
     }
   }
@@ -270,7 +285,7 @@ public class Main {
     static String NAME = "C";
 
     @Override
-    public String name(C c) {
+    public String name(@Nullable C c) {
       return NAME;
     }
   }
@@ -296,16 +311,16 @@ public class Main {
     assertEquals(C.NAME, c.name(null));
   }
 
-  abstract static class NullableIterator<E> implements Iterator<E> {}
+  abstract static class NullableIterator<E extends @Nullable Object> implements Iterator<E> {}
 
   private static void testCallWithDifferentNullMarking() {
-    NullableIterator<String> x =
+    NullableIterator<@Nullable String> x =
         new NullableIterator<>() {
           public boolean hasNext() {
             return false;
           }
 
-          public String next() {
+          public @Nullable String next() {
             return null;
           }
         };

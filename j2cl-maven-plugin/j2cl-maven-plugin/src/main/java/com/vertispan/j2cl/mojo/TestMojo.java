@@ -303,7 +303,7 @@ public class TestMojo extends AbstractBuildMojo {
                 getFileWithMavenCoords(internalAnnotationsJar),
                 getFileWithMavenCoords(jsinteropAnnotationsJar),
                 getFileWithMavenCoords(jspecify),
-                getFileWithMavenCoords("org.kie.j2cl.tools.jsinterop:base:" + Versions.VERTISPAN_JSINTEROP_BASE_VERSION),//TODO stop hardcoding this when goog releases a "base" which actually works on both platforms
+                getFileWithMavenCoords("org.kie.j2cl.tools.jsinterop:jsinterop-base:" + Versions.VERTISPAN_JSINTEROP_BASE_VERSION),//TODO stop hardcoding this when goog releases a "base" which actually works on both platforms
                 getFileWithMavenCoords("org.kie.j2cl.tools:junit-processor:" + Versions.J2CL_VERSION),
                 getFileWithMavenCoords(runtime),
                 getFileWithMavenCoords(junitAnnotations)
@@ -311,9 +311,9 @@ public class TestMojo extends AbstractBuildMojo {
 
         List<Artifact> extraJsZips = Arrays.asList(
                 getMavenArtifactWithCoords(testJsZip),
+                getMavenArtifactWithCoords(bootstrapJsZip),
                 getMavenArtifactWithCoords(jreJsZip),
-                getMavenArtifactWithCoords(runtimeJsZip),
-                getMavenArtifactWithCoords(bootstrapJsZip)
+                getMavenArtifactWithCoords(runtimeJsZip)
         );
 
         Xpp3DomConfigValueProvider config = new Xpp3DomConfigValueProvider(merge((Xpp3Dom) plugin.getConfiguration(), mojoExecution.getConfiguration()), expressionEvaluator, repoSession, repositories, repoSystem, extraClasspath, getLog());

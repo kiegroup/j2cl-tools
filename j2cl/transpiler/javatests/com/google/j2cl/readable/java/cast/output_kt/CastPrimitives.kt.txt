@@ -1,5 +1,4 @@
 // Generated from "cast/CastPrimitives.java"
-@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -28,19 +27,14 @@ import kotlin.Double
 import kotlin.Float
 import kotlin.Int
 import kotlin.Long
-import kotlin.OptIn
 import kotlin.Short
 import kotlin.Suppress
-import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.JvmStatic
-import kotlin.native.ObjCName
 
-@ObjCName("J2ktCastCastPrimitives", exact = true)
 open class CastPrimitives {
- @ObjCName("testPrimitiveCasts")
  open fun testPrimitiveCasts() {
   var b: Byte = 1.toByte()
-  var c: Char = '\u0001'
+  var c: Char = 1.toChar()
   var s: Short = 1.toShort()
   var i: Int = 1
   var l: Long = 1L
@@ -97,9 +91,8 @@ open class CastPrimitives {
   d = d
  }
 
- @ObjCName("testReferenceToPrimitive")
  open fun testReferenceToPrimitive() {
-  val o: Any? = Any()
+  val o: Any = Any()
   val bool: Boolean = o as Boolean
   val b: Byte = o as Byte
   val c: Char = o as Char
@@ -110,7 +103,6 @@ open class CastPrimitives {
   val d: Double = o as Double
  }
 
- @ObjCName("testLiteralToPrimitive")
  open fun testLiteralToPrimitive() {
   var b: Byte = 0.toByte()
   var c: Char = '\u0000'
@@ -156,9 +148,10 @@ open class CastPrimitives {
   d = 'a'.code.toDouble()
  }
 
- @ObjCName("testUnboxAndWiden")
  open fun testUnboxAndWiden() {
-  val boxedByte: Byte? = java.lang.Byte.valueOf(0.toByte())
+  val boxedByte: Byte? = java.lang.Byte.valueOf(
+   0.toByte(),
+  )
   val s: Short = boxedByte!!.toByte().toShort()
   val i: Int = boxedByte!!.toByte().toInt()
   val l: Long = boxedByte!!.toByte().toLong()
@@ -166,37 +159,61 @@ open class CastPrimitives {
   val d: Double = boxedByte!!.toByte().toDouble()
  }
 
- @ObjCName("testImplicitArgumentCasts")
  open fun testImplicitArgumentCasts() {
   val b: Byte = 127.toByte()
-  val c: Char = '\uFFFF'
+  val c: Char = 65535.toChar()
   val s: Short = 32767.toShort()
   val i: Int = 2147483647
   val l: Long = 9223372036854775807L
   val f: Float = 3.4028235E38f
   val d: Double = 1.7976931348623157E308
-  CastPrimitives.getShort(b.toShort())
-  CastPrimitives.getInt(b.toInt())
-  CastPrimitives.getLong(b.toLong())
-  CastPrimitives.getFloat(b.toFloat())
-  CastPrimitives.getDouble(b.toDouble())
-  CastPrimitives.getFloat(l.toFloat())
-  CastPrimitives.getDouble(l.toDouble())
-  CastPrimitives.getDouble(f.toDouble())
-  CastPrimitives.IntValueHolder(b.toInt())
-  CastPrimitives.IntValueHolder(c.code)
-  CastPrimitives.IntValueHolder(s.toInt())
-  CastPrimitives.LongValueHolder(b.toLong())
-  CastPrimitives.LongValueHolder(c.code.toLong())
-  CastPrimitives.LongValueHolder(i.toLong())
+  CastPrimitives.getShort(
+   b.toShort(),
+  )
+  CastPrimitives.getInt(
+   b.toInt(),
+  )
+  CastPrimitives.getLong(
+   b.toLong(),
+  )
+  CastPrimitives.getFloat(
+   b.toFloat(),
+  )
+  CastPrimitives.getDouble(
+   b.toDouble(),
+  )
+  CastPrimitives.getFloat(
+   l.toFloat(),
+  )
+  CastPrimitives.getDouble(
+   l.toDouble(),
+  )
+  CastPrimitives.getDouble(
+   f.toDouble(),
+  )
+  IntValueHolder(
+   b.toInt(),
+  )
+  IntValueHolder(
+   c.code,
+  )
+  IntValueHolder(
+   s.toInt(),
+  )
+  LongValueHolder(
+   b.toLong(),
+  )
+  LongValueHolder(
+   c.code.toLong(),
+  )
+  LongValueHolder(
+   i.toLong(),
+  )
  }
 
- @ObjCName("testImplicitArrayIndexCasts")
- open fun testImplicitArrayIndexCasts(
-  @ObjCName("withByteArray") array: ByteArray?
- ) {
+ open fun testImplicitArrayIndexCasts(array: ByteArray?) {
   val b: Byte = 127.toByte()
-  val c: Char = '\uFFFF'
+  val c: Char = 65535.toChar()
   val s: Short = 32767.toShort()
   val i: Int = 2147483647
   var result: Byte = 0.toByte()
@@ -205,13 +222,12 @@ open class CastPrimitives {
   result = array!![s.toInt()]
   result = array!![i]
   result = array!![1]
-  result = array!!['a'.code]
+  result = array!![97]
  }
 
- @ObjCName("testImplicitLongAssignmentCasts")
  open fun testImplicitLongAssignmentCasts() {
   val fbyte: Byte = 11.toByte()
-  val fchar: Char = '\u000C'
+  val fchar: Char = 12.toChar()
   val fshort: Short = 13.toShort()
   val fint: Int = 14
   val flong: Long = 15L
@@ -230,12 +246,15 @@ open class CastPrimitives {
   tlong = flong.shr(fint)
   tlong = flong + fshort.toLong()
   tlong = flong + flong
-  tlong = flong.shl(tlong.toInt())
-  tlong = tlong.shl(flong.toInt())
+  tlong = flong.shl(
+   tlong.toInt(),
+  )
+  tlong = tlong.shl(
+   flong.toInt(),
+  )
   tlong = (0 + 1).toLong() + 2L
  }
 
- @ObjCName("J2ktCastCastPrimitivesCompanion", exact = true)
  companion object {
   @JvmStatic
   private fun getShort(value: Short): Short {
@@ -263,12 +282,10 @@ open class CastPrimitives {
   }
  }
 
- @ObjCName("J2ktCastCastPrimitives_IntValueHolder", exact = true)
  open class IntValueHolder {
   internal constructor(value: Int)
  }
 
- @ObjCName("J2ktCastCastPrimitives_LongValueHolder", exact = true)
  open class LongValueHolder {
   internal constructor(value: Long)
  }

@@ -50,13 +50,14 @@ public final class RuntimeLibraryTypedAstInjectionTest extends CompilerTestCase 
     test(
         srcs("Object;"),
         expected(
-            lines(
-                "/** @const */ var $jscomp = $jscomp || {};", //
-                "/** @const */ $jscomp.scope = {};",
-                "$jscomp.owns = function(obj, prop) {",
-                "  return Object.prototype.hasOwnProperty.call(obj, prop);",
-                "};",
-                "Object;")));
+            """
+            /** @const */ var $jscomp = $jscomp || {};
+            /** @const */ $jscomp.scope = {};
+            $jscomp.owns = function(obj, prop) {
+              return Object.prototype.hasOwnProperty.call(obj, prop);
+            };
+            Object;
+            """));
 
     ImmutableList<Node> objectNameNodes =
         findNodesNamed(this.getLastCompiler().getRoot(), "Object");
@@ -81,13 +82,14 @@ public final class RuntimeLibraryTypedAstInjectionTest extends CompilerTestCase 
     test(
         srcs("Object;"),
         expected(
-            lines(
-                "/** @const */ var $jscomp = $jscomp || {};", //
-                "/** @const */ $jscomp.scope = {};",
-                "$jscomp.owns = function(obj, prop) {",
-                "  return Object.prototype.hasOwnProperty.call(obj, prop);",
-                "};",
-                "Object;")));
+            """
+            /** @const */ var $jscomp = $jscomp || {};
+            /** @const */ $jscomp.scope = {};
+            $jscomp.owns = function(obj, prop) {
+              return Object.prototype.hasOwnProperty.call(obj, prop);
+            };
+            Object;
+            """));
 
     ImmutableList<Node> objectNameNodes =
         findNodesNamed(this.getLastCompiler().getRoot(), "Object");
@@ -113,10 +115,10 @@ public final class RuntimeLibraryTypedAstInjectionTest extends CompilerTestCase 
 
     ImmutableList<Node> objectNameNodes =
         findNodesNamed(this.getLastCompiler().getRoot(), "globalThis");
-    assertThat(objectNameNodes).hasSize(3);
+    assertThat(objectNameNodes).hasSize(4);
 
     Node injectedGlobalThisNode = objectNameNodes.get(0);
-    Node sourceGlobalThisNode = objectNameNodes.get(2);
+    Node sourceGlobalThisNode = objectNameNodes.get(3);
 
     assertThat(injectedGlobalThisNode.getSourceFileName()).contains("util/global");
     assertThat(sourceGlobalThisNode.getSourceFileName()).contains("testcode");

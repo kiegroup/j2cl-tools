@@ -212,8 +212,8 @@ final class EqualityChecker {
     }
 
     // TODO(nickreid): Delete `ArrowType` as not a type, or add `toMaybeArrow`.
-    if (left instanceof ArrowType && right instanceof ArrowType) {
-      return this.areArrowEqual((ArrowType) left, (ArrowType) right);
+    if (left instanceof ArrowType leftArrow && right instanceof ArrowType rightArrow) {
+      return this.areArrowEqual(leftArrow, rightArrow);
     }
 
     if (!this.areTypeMapEqual(left.getTemplateTypeMap(), right.getTemplateTypeMap())) {
@@ -235,7 +235,10 @@ final class EqualityChecker {
         // TODO(b/140763807): this is not valid across scopes pre-resolution.
         String nameOfleft = checkNotNull(leftUnwrapped.getReferenceName());
         String nameOfright = checkNotNull(rightUnwrapped.getReferenceName());
-        return Objects.equals(nameOfleft, nameOfright);
+        String googModuleIdOfLeft = getGoogModuleId(leftUnwrapped);
+        String googModuleIdOfRight = getGoogModuleId(rightUnwrapped);
+        return Objects.equals(nameOfleft, nameOfright)
+            && Objects.equals(googModuleIdOfLeft, googModuleIdOfRight);
       }
     }
 
@@ -244,11 +247,11 @@ final class EqualityChecker {
      *
      * <p>Remember that `TemplateType` has identity semantics and shouldn't be unwrapped.
      */
-    if (left instanceof ProxyObjectType && !(left instanceof TemplateType)) {
-      return this.areEqualCaching(((ProxyObjectType) left).getReferencedTypeInternal(), right);
+    if (left instanceof ProxyObjectType proxyObjectType && !(left instanceof TemplateType)) {
+      return this.areEqualCaching(proxyObjectType.getReferencedTypeInternal(), right);
     }
-    if (right instanceof ProxyObjectType && !(right instanceof TemplateType)) {
-      return this.areEqualCaching(left, ((ProxyObjectType) right).getReferencedTypeInternal());
+    if (right instanceof ProxyObjectType proxyObjectType && !(right instanceof TemplateType)) {
+      return this.areEqualCaching(left, proxyObjectType.getReferencedTypeInternal());
     }
 
     // Relies on the fact right for the base {@link JSType}, only one
@@ -286,6 +289,16 @@ final class EqualityChecker {
     return true;
   }
 
+  private static @Nullable String getGoogModuleId(ObjectType type) {
+    if (type instanceof FunctionType functionType) {
+      return functionType.getGoogModuleId();
+    }
+    if (type.getConstructor() != null) {
+      return type.getConstructor().getGoogModuleId();
+    }
+    return null;
+  }
+
   /**
    * Two function types are equal if their signatures match. Since they don't have signatures, two
    * interfaces are equal if their names match.
@@ -300,18 +313,16 @@ final class EqualityChecker {
       return false;
     }
 
-    switch (left.getKind()) {
-      case CONSTRUCTOR:
-      case INTERFACE:
-        // constructors and interfaces use identity semantics, which we checked for above.
-        return false;
-      case ORDINARY:
-        return this.areEqualCaching(left.getTypeOfThis(), right.getTypeOfThis())
-            && this.areEqualCaching(left.getInternalArrowType(), right.getInternalArrowType())
-            && Objects.equals(left.getClosurePrimitive(), right.getClosurePrimitive());
-      default:
-        throw new AssertionError();
-    }
+    return switch (left.getKind()) {
+      case CONSTRUCTOR, INTERFACE ->
+          // constructors and interfaces use identity semantics, which we checked for above.
+          false;
+      case ORDINARY ->
+          this.areEqualCaching(left.getTypeOfThis(), right.getTypeOfThis())
+              && this.areEqualCaching(left.getInternalArrowType(), right.getInternalArrowType())
+              && Objects.equals(left.getClosurePrimitive(), right.getClosurePrimitive());
+      default -> throw new AssertionError();
+    };
   }
 
   private boolean areArrowEqual(ArrowType left, ArrowType right) {

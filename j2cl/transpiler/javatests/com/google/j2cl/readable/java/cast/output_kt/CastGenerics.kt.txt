@@ -1,5 +1,4 @@
 // Generated from "cast/CastGenerics.java"
-@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -25,15 +24,11 @@ import kotlin.Enum
 import kotlin.Error
 import kotlin.Int
 import kotlin.Number
-import kotlin.OptIn
 import kotlin.String
 import kotlin.Suppress
-import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.JvmField
 import kotlin.jvm.JvmStatic
-import kotlin.native.ObjCName
 
-@ObjCName("J2ktCastCastGenerics", exact = true)
 open class CastGenerics<T, E: Number?> {
  @JvmField
  internal var field_pp_cast: T? = null
@@ -42,25 +37,26 @@ open class CastGenerics<T, E: Number?> {
   return null as T
  }
 
- @ObjCName("testCastToTypeVariable")
  open fun testCastToTypeVariable() {
-  val o: Any? = Int(1)
+  val o: Any = Int(1)
   val e: E? = o as E?
   val t: T? = o as T?
   val es: Array<E>? = o as Array<E>?
   val ts: Array<T>? = o as Array<T>?
  }
 
- @ObjCName("testCastToMethodTypeVariable")
  open fun <S, V: Enum<V>> testCastToMethodTypeVariable() {
-  val o: Any? = Int(1)
+  val o: Any = Int(1)
   val s: S? = o as S?
   var c: Any? = o as CastGenerics<S, Number?>?
   c = o as Array<S>?
   c = o as V?
  }
 
- @ObjCName("outerGenericMethod")
+ open fun testCastToRawToGeneric(foo: Foo<Any?>?): Foo<String?>? {
+  return foo as Foo<String?>?
+ }
+
  open fun <TT: Enum<*>> outerGenericMethod() {
   open class Nested<SS> internal constructor() {
    private fun nestedGenericMethod(o: Any?) {
@@ -69,115 +65,99 @@ open class CastGenerics<T, E: Number?> {
   }
  }
 
- @ObjCName("method")
- open fun <EE> method(
-  @ObjCName("withId") o: Any?
- ): EE where EE: CastGenerics.Empty1?, EE: CastGenerics.Empty2<EE>? {
-  if (o is CastGenerics.Empty1) {
-   return o as EE? as EE
+ open fun <EE> method(o: Any?): EE where EE: Empty1?, EE: Empty2<EE>? {
+  if (o is Empty1) {
+   return o as EE
   }
   return null as EE
  }
 
- @ObjCName("J2ktCastCastGenericsCompanion", exact = true)
  companion object {
   @JvmStatic
-  @ObjCName("testErasureCast")
-  fun <T_1, U: T_1> testErasureCast() where T_1: CastGenerics.A?, T_1: CastGenerics.B? {
+  fun <T_1, U: T_1> testErasureCast() where T_1: A?, T_1: B? {
    var str: String? = CastGenerics<String?, Number?>().field_pp_cast
    str = CastGenerics<String?, Number?>().method_pp_cast()
-   val containerT: CastGenerics.Container<T_1>? = null
+   val containerT: Container<T_1>? = null
    containerT!!.get_pp_cast()!!.mA()
    containerT!!.get_pp_cast()!!.mB()
-   val containerU: CastGenerics.Container<U>? = null
+   val containerU: Container<U>? = null
    containerU!!.get_pp_cast()!!.mA()
    containerU!!.get_pp_cast()!!.mB()
-   val containerArrT: CastGenerics.Container<Array<T_1>?>? = null
+   val containerArrT: Container<Array<T_1>?>? = null
    val arrT: Array<T_1>? = containerArrT!!.get_pp_cast()
    arrT!![0]!!.mA()
    arrT!![0]!!.mB()
-   var arrA: Array<CastGenerics.A?>? = containerArrT!!.get_pp_cast() as Array<CastGenerics.A?>?
-   var arrB: Array<CastGenerics.B?>? = containerArrT!!.get_pp_cast() as Array<CastGenerics.B?>?
-   val containerArrU: CastGenerics.Container<Array<U>?>? = null
+   var arrA: Array<A?>? = containerArrT!!.get_pp_cast() as Array<A?>?
+   var arrB: Array<B?>? = containerArrT!!.get_pp_cast() as Array<B?>?
+   val containerArrU: Container<Array<U>?>? = null
    val arrU: Array<U>? = containerArrU!!.get_pp_cast()
    arrU!![0]!!.mA()
    arrU!![0]!!.mB()
-   arrA = containerArrU!!.get_pp_cast() as Array<CastGenerics.A?>?
-   arrB = containerArrU!!.get_pp_cast() as Array<CastGenerics.B?>?
-   val containerBase: CastGenerics.Container<CastGenerics.BaseImplementor?>? = null
+   arrA = containerArrU!!.get_pp_cast() as Array<A?>?
+   arrB = containerArrU!!.get_pp_cast() as Array<B?>?
+   val containerBase: Container<BaseImplementor?>? = null
    containerBase!!.get_pp_cast()!!.mA()
    containerBase!!.get_pp_cast()!!.mB()
-   val containerImplementor: CastGenerics.Container<CastGenerics.Implementor?>? = null
+   val containerImplementor: Container<Implementor?>? = null
    containerImplementor!!.get_pp_cast()!!.mA()
    containerImplementor!!.get_pp_cast()!!.mB()
-   val strictlyA: CastGenerics.Container<CastGenerics.A?>? = null
+   val strictlyA: Container<A?>? = null
    var oA: Any? = strictlyA!!.get_pp_cast()
-   var a: CastGenerics.A? = strictlyA!!.get_pp_cast()
-   val extendsA: CastGenerics.Container<out CastGenerics.A?>? = null
+   var a: A? = strictlyA!!.get_pp_cast()
+   val extendsA: Container<out A?>? = null
    oA = extendsA!!.get_pp_cast()
    a = extendsA!!.get_pp_cast()
-   val superA: CastGenerics.Container<in CastGenerics.A?>? = null
+   val superA: Container<in A?>? = null
    oA = superA!!.get_pp_cast()
-   val strictlyString: CastGenerics.Container<String?>? = null
+   val strictlyString: Container<String?>? = null
    str = strictlyString!!.get_pp_cast()
-   val extendsString: CastGenerics.Container<out String?>? = null
+   val extendsString: Container<out String?>? = null
    str = extendsString!!.get_pp_cast()
-   val superString: CastGenerics.Container<in String?>? = null
+   val superString: Container<in String?>? = null
    oA = superString!!.get_pp_cast()
   }
 
   @JvmStatic
-  @ObjCName("testErasureCastInNullMarkedCode")
   fun testErasureCastInNullMarkedCode() {
-   val container: CastGenerics.NullMarkedContainer<out String>? = CastGenerics.NullMarkedContainer<String>("abc")
-   val s: String? = container!!.get_pp_cast()
+   val container: NullMarkedContainer<out String> = NullMarkedContainer<String>("abc")
+   val s: String? = container.get_pp_cast()
   }
 
   @JvmStatic
-  @ObjCName("testCastToParamterizedType")
   fun testCastToParamterizedType() {
-   val o: Any? = Int(1)
+   val o: Any = Int(1)
    var cc: CastGenerics<Error?, Number?>? = o as CastGenerics<Error?, Number?>?
    cc = o as CastGenerics<Error?, Number?>?
   }
 
   @JvmStatic
-  @ObjCName("doSomething")
-  fun <T_1> doSomething(): CastGenerics.Foo<T_1>? {
-   return object : CastGenerics.Foo<T_1>() {}
+  fun <T_1> doSomething(): Foo<T_1>? {
+   return object : Foo<T_1>() {}
   }
  }
 
- @ObjCName("J2ktCastCastGenerics_A", exact = true)
  fun interface A {
-  @ObjCName("mA")
   fun mA()
  }
 
- @ObjCName("J2ktCastCastGenerics_B", exact = true)
  fun interface B {
-  @ObjCName("mB")
   fun mB()
  }
 
- @ObjCName("J2ktCastCastGenerics_BaseImplementor", exact = true)
- abstract class BaseImplementor internal constructor(): CastGenerics.A, CastGenerics.B {}
+ abstract class BaseImplementor internal constructor(): A, B
 
- @ObjCName("J2ktCastCastGenerics_Implementor", exact = true)
- open class Implementor internal constructor(): CastGenerics.BaseImplementor() {
+ open class Implementor internal constructor(): BaseImplementor() {
   override fun mA() {}
 
   override fun mB() {}
  }
 
- @ObjCName("J2ktCastCastGenerics_Container", exact = true)
  open class Container<T> internal constructor() {
   internal open fun get_pp_cast(): T {
    return null as T
   }
  }
 
- @ObjCName("J2ktCastCastGenerics_NullMarkedContainer", exact = true)
  open class NullMarkedContainer<T: Any> {
   private var value: T
 
@@ -190,12 +170,9 @@ open class CastGenerics<T, E: Number?> {
   }
  }
 
- @ObjCName("J2ktCastCastGenerics_Empty1", exact = true)
- interface Empty1 {}
+ interface Empty1
 
- @ObjCName("J2ktCastCastGenerics_Empty2", exact = true)
- interface Empty2<TT> {}
+ interface Empty2<TT>
 
- @ObjCName("J2ktCastCastGenerics_Foo", exact = true)
- open class Foo<V> {}
+ open class Foo<V>
 }

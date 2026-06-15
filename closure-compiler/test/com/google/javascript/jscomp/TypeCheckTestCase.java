@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIPTION_EQUALITY;
@@ -30,12 +29,14 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.jscomp.AstValidator.TypeInfoValidation;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,14 +44,10 @@ import org.junit.Before;
 
 public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
-  private boolean reportUnknownTypes = false;
-  private boolean runClosurePass = false;
-
   @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    this.reportUnknownTypes = false;
     // Enable missing override checks that are disabled by default.
     compiler.getOptions().setWarningLevel(DiagnosticGroups.MISSING_OVERRIDE, CheckLevel.WARNING);
     compiler
@@ -61,20 +58,6 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
         .setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.WARNING);
   }
 
-  protected void disableStrictMissingPropertyChecks() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
-  }
-
-  protected void enableReportUnknownTypes() {
-    this.reportUnknownTypes = true;
-  }
-
-  protected void enableRunClosurePass() {
-    this.runClosurePass = true;
-  }
-
   protected static ObjectType getInstanceType(Node js1Node) {
     JSType type = js1Node.getFirstChild().getJSType();
     assertThat(type).isNotNull();
@@ -82,21 +65,6 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     FunctionType functionType = (FunctionType) type;
     assertThat(functionType.isConstructor()).isTrue();
     return functionType.getInstanceType();
-  }
-
-  protected double getTypedPercent(String js) {
-    return getTypedPercentWithExterns("", js);
-  }
-
-  protected double getTypedPercentWithExterns(String externs, String js) {
-    Node jsRoot = IR.root(compiler.parseTestCode(js));
-
-    Node externsRoot = IR.root(compiler.parseTestCode(externs));
-    IR.root(externsRoot, jsRoot);
-
-    TypeCheck t = makeTypeCheck();
-    t.processForTesting(externsRoot, jsRoot);
-    return t.getTypedPercent();
   }
 
   protected void checkObjectType(ObjectType objectType, String propertyName, JSType expectedType) {
@@ -115,69 +83,109 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
         objectType.getPropertyType(propertyName));
   }
 
-  final TypeTestBuilder newTest() {
-    return new TypeTestBuilder();
+  /**
+   * Creates a new {@link TypeTestBuilder} based on the instance state in this class.
+   *
+   * @deprecated prefer to statically import {@link TypeTestBuilder.newTest}, to make tests more
+   *     hermetic.
+   */
+  @Deprecated
+  final TypeTestBuilder newTestLegacy() {
+    return new TypeTestBuilder(compiler);
   }
 
   @CheckReturnValue
-  public final class TypeTestBuilder {
-    private String source;
-    private String externs;
-    private String sourceNameExtension = "";
+  public static final class TypeTestBuilder {
+    private final List<SourceFile> sources = new ArrayList<>();
+    private final List<String> externs = new ArrayList<>();
     private boolean includeDefaultExterns = false;
     private final ArrayList<DiagnosticType> diagnosticTypes = new ArrayList<>();
     private final ArrayList<String> diagnosticDescriptions = new ArrayList<>();
     private boolean diagnosticsAreErrors = false;
+    private boolean reportUnknownTypes = false;
+    private final ArrayList<DiagnosticGroup> suppress = new ArrayList<>();
+    private boolean hasRun = false;
+    private final Compiler compiler;
 
-    private TypeTestBuilder() {}
+    static TypeTestBuilder newTest() {
+      Compiler compiler = new Compiler();
+      CompilerOptions options = defaultOptions();
+      // Enable missing override checks that are disabled by default.
+      options.setWarningLevel(DiagnosticGroups.MISSING_OVERRIDE, CheckLevel.WARNING);
+      options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
+      options.setWarningLevel(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.WARNING);
+      compiler.initOptions(options);
 
-    public TypeTestBuilder addSource(String... x) {
-      checkState(this.source == null, "Can only have one source right now.");
-      this.source = lines(x);
-      return this;
+      compiler.markFeatureNotAllowed(Feature.MODULES);
+      return new TypeTestBuilder(compiler);
     }
 
-    public TypeTestBuilder addExterns(String... x) {
-      checkState(this.externs == null, "Can only have one externs right now.");
-      this.externs = lines(x);
+    private TypeTestBuilder(Compiler compiler) {
+      this.compiler = compiler;
+    }
+
+    @CanIgnoreReturnValue
+    public TypeTestBuilder addSource(String code) {
+      return addSource("testcode" + sources.size(), code);
+    }
+
+    @CanIgnoreReturnValue
+    public TypeTestBuilder addSource(String filename, String code) {
+      this.sources.add(SourceFile.fromCode(filename, code));
       return this;
     }
 
     @CanIgnoreReturnValue
-    public TypeTestBuilder usingSourceNameExtension(String extension) {
-      this.sourceNameExtension = extension;
+    public TypeTestBuilder addExterns(String externs) {
+      this.externs.add(externs);
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TypeTestBuilder includeDefaultExterns() {
       this.includeDefaultExterns = true;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TypeTestBuilder diagnosticsAreErrors() {
       this.diagnosticsAreErrors = true;
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public TypeTestBuilder enableReportUnknownTypes() {
+      this.reportUnknownTypes = true;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public TypeTestBuilder suppress(DiagnosticGroup group) {
+      this.suppress.add(group);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
     public TypeTestBuilder addDiagnostic(DiagnosticType x) {
       this.diagnosticTypes.add(x);
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TypeTestBuilder addDiagnostic(String x) {
-      this.diagnosticDescriptions.add(x);
+      this.diagnosticDescriptions.add(x.trim());
       return this;
     }
 
     public void run() {
-      checkState(
-          this.diagnosticTypes.isEmpty() || this.diagnosticDescriptions.isEmpty(),
-          "Cannot expect both diagnostic types and diagnostic descriptions");
-      checkState(this.source != null, "Must provide source");
+      checkState(!this.sources.isEmpty(), "Must provide a source");
+      checkState(!this.hasRun, "Cannot run the same test twice");
+      this.hasRun = true;
+      if (this.includeDefaultExterns) {
+        this.externs.add(0, DEFAULT_EXTERNS);
+      }
 
-      String allExterns =
-          String.join(
-              "\n", this.includeDefaultExterns ? DEFAULT_EXTERNS : "", nullToEmpty(this.externs));
+      String allExterns = String.join("\n", this.externs);
 
       final List<Object> diagnostics;
       final Correspondence<JSError, Object> correspondence;
@@ -188,8 +196,11 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
         diagnostics = castAny(this.diagnosticDescriptions);
         correspondence = castAny(DESCRIPTION_EQUALITY);
       }
+      for (DiagnosticGroup suppress : this.suppress) {
+        compiler.getOptions().setWarningLevel(suppress, CheckLevel.OFF);
+      }
 
-      parseAndTypeCheckWithScope(allExterns, this.source, sourceNameExtension);
+      parseAndTypeCheckWithScope(compiler, allExterns, this.sources, reportUnknownTypes);
 
       final ImmutableList<JSError> assertedErrors;
       final ImmutableList<JSError> emptyErrors;
@@ -242,10 +253,19 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
   @CanIgnoreReturnValue
   protected TypeCheckResult parseAndTypeCheckWithScope(
       String externs, String js, String sourceNameExtension) {
-    compiler.getOptions().setClosurePass(runClosurePass);
+    return parseAndTypeCheckWithScope(
+        compiler,
+        externs,
+        ImmutableList.of(SourceFile.fromCode("[testcode]" + sourceNameExtension, js)),
+        false);
+  }
+
+  @CanIgnoreReturnValue
+  protected static TypeCheckResult parseAndTypeCheckWithScope(
+      Compiler compiler, String externs, List<SourceFile> sources, boolean reportUnknownTypes) {
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
-        ImmutableList.of(SourceFile.fromCode("[testcode]" + sourceNameExtension, js)),
+        sources,
         compiler.getOptions());
     compiler.parse();
 
@@ -257,7 +277,10 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
     assertWithMessage("Regarding errors:").that(compiler.getErrors()).isEmpty();
 
-    TypedScope s = makeTypeCheck().processForTesting(externsNode, jsNode);
+    TypedScope s =
+        makeTypeCheck(compiler, compiler.getTypeRegistry())
+            .reportUnknownTypes(reportUnknownTypes)
+            .processForTesting(externsNode, jsNode);
 
     new AstValidator(compiler)
         .setTypeValidationMode(TypeInfoValidation.JSTYPE)
@@ -290,8 +313,11 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
   }
 
   protected TypeCheck makeTypeCheck() {
-    return new TypeCheck(compiler, new SemanticReverseAbstractInterpreter(registry), registry)
-        .reportUnknownTypes(reportUnknownTypes);
+    return makeTypeCheck(compiler, registry);
+  }
+
+  protected static TypeCheck makeTypeCheck(Compiler compiler, JSTypeRegistry registry) {
+    return new TypeCheck(compiler, new SemanticReverseAbstractInterpreter(registry), registry);
   }
 
   protected String suppressMissingProperty(String... props) {

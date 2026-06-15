@@ -16,9 +16,9 @@ package com.google.j2cl.transpiler;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.j2cl.common.SourceUtils.checkSourceFiles;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.j2cl.common.CommandLineTool;
 import com.google.j2cl.common.OutputUtils;
 import com.google.j2cl.common.OutputUtils.Output;
@@ -28,9 +28,12 @@ import com.google.j2cl.common.SourceUtils.FileInfo;
 import com.google.j2cl.transpiler.backend.Backend;
 import com.google.j2cl.transpiler.frontend.Frontend;
 import java.io.File;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +65,12 @@ public final class J2clCommandLineRunner extends CommandLineTool {
       metaVar = "<path>",
       usage = "Directory or zip into which to place compiled output.")
   Path output = Paths.get(".");
+
+  @Option(
+      name = "-libraryinfooutput",
+      metaVar = "<path>",
+      usage = "Specifies the file into which to place the call graph.")
+  Path libraryInfoOutput;
 
   @Option(name = "-optimizeautovalue", usage = "Enables optimizations of AutoValue types.")
   boolean optimizeAutoValue = true;
@@ -107,6 +116,13 @@ public final class J2clCommandLineRunner extends CommandLineTool {
       hidden = true)
   boolean enableJSpecifySupport = false;
 
+  @Option(
+      name = "-javacOptions",
+      metaVar = "<option>",
+      usage = "Options to pass to Javac.",
+      hidden = true)
+  List<String> javacOptions = new ArrayList<>();
+
   @Option(name = "-kotlincOptions", hidden = true)
   List<String> kotlincOptions = new ArrayList<>();
 
@@ -119,18 +135,33 @@ public final class J2clCommandLineRunner extends CommandLineTool {
   @Option(name = "-defineForWasm", handler = MapOptionHandler.class, hidden = true)
   Map<String, String> definesForWasm = new HashMap<>();
 
+  @Option(name = "-objCNamePrefix", hidden = true)
+  String objCNamePrefix = "J2kt";
+
   private J2clCommandLineRunner() {
     super("j2cl");
   }
 
+  @VisibleForTesting
+  J2clCommandLineRunner(Problems problems) {
+    super("j2cl", problems);
+  }
+
+  @VisibleForTesting
+  void executeForTesting(Collection<String> args) {
+    var unused = super.execute(args, System.out);
+  }
+
   @Override
-  protected void run(Problems problems) {
+  protected void run() {
+    problems.abortIfCancelled();
     try (Output out = OutputUtils.initOutput(this.output, problems)) {
-      J2clTranspiler.transpile(createOptions(out, problems), problems);
+      problems.abortIfCancelled();
+      J2clTranspiler.transpile(createOptions(out), problems);
     }
   }
 
-  private J2clTranspilerOptions createOptions(Output output, Problems problems) {
+  private J2clTranspilerOptions createOptions(Output output) {
     checkSourceFiles(problems, files, ".java", ".srcjar", ".jar", ".kt");
 
     if (this.readableSourceMaps && this.generateKytheIndexingMetadata) {
@@ -140,7 +171,9 @@ public final class J2clCommandLineRunner extends CommandLineTool {
     }
 
     ImmutableList<FileInfo> allSources =
-        SourceUtils.getAllSources(this.files, problems).collect(toImmutableList());
+        SourceUtils.getAllSources(this.files.stream(), tempDir.resolve("_source_jars"), problems)
+            .collect(toImmutableList());
+    problems.abortIfCancelled();
 
     ImmutableList<FileInfo> allJavaSources =
         allSources.stream()
@@ -156,25 +189,34 @@ public final class J2clCommandLineRunner extends CommandLineTool {
           "Transpilation of Java and Kotlin files together is not supported yet.");
     }
 
+    ImmutableList<FileInfo> allNativeSources =
+        SourceUtils.getAllSources(
+                getPathEntries(this.nativeSourcePath).stream(),
+                tempDir.resolve("_naitve_sources"),
+                problems)
+            .filter(p -> p.sourcePath().endsWith(".native.js"))
+            .collect(toImmutableList());
+    problems.abortIfCancelled();
+
     return J2clTranspilerOptions.newBuilder()
         .setSources(allKotlinSources.isEmpty() ? allJavaSources : allKotlinSources)
-        .setNativeSources(
-            SourceUtils.getAllSources(getPathEntries(this.nativeSourcePath), problems)
-                .filter(p -> p.sourcePath().endsWith(".native.js"))
-                .collect(toImmutableList()))
+        .setNativeSources(allNativeSources)
         .setClasspaths(getPathEntries(this.classPath))
         .setOutput(output)
-        .setEmitReadableSourceMap(this.readableSourceMaps)
+        .setLibraryInfoOutput(this.libraryInfoOutput)
         .setEmitReadableLibraryInfo(false)
+        .setEmitReadableSourceMap(this.readableSourceMaps)
         .setOptimizeAutoValue(this.optimizeAutoValue)
         .setGenerateKytheIndexingMetadata(this.generateKytheIndexingMetadata)
         .setFrontend(this.frontEnd)
-        .setNullMarkedSupported(this.enableJSpecifySupport)
-        .setKotlincOptions(ImmutableList.copyOf(kotlincOptions))
         .setBackend(this.backend)
-        .setWasmEntryPointStrings(ImmutableList.copyOf(wasmEntryPoints))
-        .setDefinesForWasm(ImmutableMap.copyOf(definesForWasm))
-        .setForbiddenAnnotations(ImmutableList.copyOf(forbiddenAnnotations))
+        .setWasmEntryPointStrings(wasmEntryPoints)
+        .setDefinesForWasm(definesForWasm)
+        .setNullMarkedSupported(this.enableJSpecifySupport)
+        .setJavacOptions(javacOptions)
+        .setKotlincOptions(kotlincOptions)
+        .setForbiddenAnnotations(forbiddenAnnotations)
+        .setObjCNamePrefix("J2kt")
         .build(problems);
   }
 
@@ -188,16 +230,17 @@ public final class J2clCommandLineRunner extends CommandLineTool {
     return entries;
   }
 
-  // Exists for testing, should be removed when tests stop using flags.
-  static Problems runForTest(String[] args) {
-    return new J2clCommandLineRunner().processRequest(args);
-  }
-
-  public static int run(String[] args) {
-    return new J2clCommandLineRunner().execute(args);
+  /**
+   * Entry point to programmatically run the transpiler.
+   *
+   * <p>Note: J2CL has no static state, but rather uses thread local variables. Because of this, the
+   * compiler should be invoked on a different thread each time called from the same process.
+   */
+  public static int run(Collection<String> args, PrintStream stdErr) {
+    return new J2clCommandLineRunner().execute(args, stdErr);
   }
 
   public static void main(String[] args) {
-    System.exit(run(args));
+    System.exit(run(Arrays.asList(args), System.err));
   }
 }

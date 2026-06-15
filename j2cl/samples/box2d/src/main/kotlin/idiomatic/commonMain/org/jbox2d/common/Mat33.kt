@@ -40,9 +40,9 @@ class Mat33 : Serializable {
   }
 
   constructor(argCol1: Vec3, argCol2: Vec3, argCol3: Vec3) {
-    ex = argCol1.clone()
-    ey = argCol2.clone()
-    ez = argCol3.clone()
+    ex = argCol1.copy()
+    ey = argCol2.copy()
+    ez = argCol3.copy()
   }
 
   fun setZero() {
@@ -54,9 +54,6 @@ class Mat33 : Serializable {
   /**
    * Solve A * x = b, where b is a column vector. This is more efficient than computing the inverse
    * in one-shot cases.
-   *
-   * @param b
-   * @return
    */
   fun solve22(b: Vec2): Vec2 {
     val x = Vec2()
@@ -67,15 +64,10 @@ class Mat33 : Serializable {
   /**
    * Solve A * x = b, where b is a column vector. This is more efficient than computing the inverse
    * in one-shot cases.
-   *
-   * @param b
-   * @return
    */
   fun solve22ToOut(b: Vec2, out: Vec2) {
-    val a11 = ex.x
-    val a12 = ey.x
-    val a21 = ex.y
-    val a22 = ey.y
+    val (a11, a21) = ex
+    val (a12, a22) = ey
     var det = a11 * a22 - a12 * a21
     if (det != 0.0f) {
       det = 1.0f / det
@@ -88,9 +80,6 @@ class Mat33 : Serializable {
   /**
    * Solve A * x = b, where b is a column vector. This is more efficient than computing the inverse
    * in one-shot cases.
-   *
-   * @param b
-   * @return
    */
   fun solve33(b: Vec3): Vec3 {
     val x = Vec3()
@@ -101,34 +90,28 @@ class Mat33 : Serializable {
   /**
    * Solve A * x = b, where b is a column vector. This is more efficient than computing the inverse
    * in one-shot cases.
-   *
-   * @param b
-   * @param out the result
    */
   fun solve33ToOut(b: Vec3, out: Vec3) {
-    // assert is not supported in KMP.
-    // assert(b !== out)
+    assert(b !== out)
     Vec3.crossToOutUnsafe(ey, ez, out)
-    var det = Vec3.dot(ex, out)
+    var det = ex dot out
     if (det != 0.0f) {
       det = 1.0f / det
     }
     Vec3.crossToOutUnsafe(ey, ez, out)
-    val x = det * Vec3.dot(b, out)
+    val x = det * (b dot out)
     Vec3.crossToOutUnsafe(b, ez, out)
-    val y = det * Vec3.dot(ex, out)
+    val y = det * (ex dot out)
     Vec3.crossToOutUnsafe(ey, b, out)
-    val z = det * Vec3.dot(ex, out)
+    val z = det * (ex dot out)
     out.x = x
     out.y = y
     out.z = z
   }
 
   fun getInverse22(M: Mat33) {
-    val a = ex.x
-    val b = ey.x
-    val c = ex.y
-    val d = ey.y
+    val (a, c) = ex
+    val (b, d) = ey
     var det = a * d - b * c
     if (det != 0.0f) {
       det = 1.0f / det
@@ -153,12 +136,9 @@ class Mat33 : Serializable {
     if (det != 0.0f) {
       det = 1.0f / det
     }
-    val a11 = ex.x
-    val a12 = ey.x
-    val a13 = ez.x
-    val a22 = ey.y
-    val a23 = ez.y
-    val a33 = ez.z
+    val (a11) = ex
+    val (a12, a22) = ey
+    val (a13, a23, a33) = ez
     M.ex.x = det * (a22 * a33 - a23 * a23)
     M.ex.y = det * (a13 * a23 - a12 * a33)
     M.ex.z = det * (a12 * a23 - a13 * a22)
@@ -180,14 +160,7 @@ class Mat33 : Serializable {
   }
 
   override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-    if (other == null) return false
-    if (this::class != other::class) return false
-    if (other !is Mat33) return false
-    if (ex != other.ex) return false
-    if (ey != other.ey) return false
-    if (ez != other.ez) return false
-    return true
+    return equalsOther(other) { ex == it.ex && ey == it.ey && ez == it.ez }
   }
 
   companion object {
@@ -198,7 +171,7 @@ class Mat33 : Serializable {
       Vec3(
         v.x * A.ex.x + v.y * A.ey.x + v.z + A.ez.x,
         v.x * A.ex.y + v.y * A.ey.y + (v.z * A.ez.y),
-        v.x * A.ex.z + v.y * A.ey.z + v.z * A.ez.z
+        v.x * A.ex.z + v.y * A.ey.z + v.z * A.ez.z,
       )
 
     fun mul22(A: Mat33, v: Vec2): Vec2 =
@@ -211,8 +184,7 @@ class Mat33 : Serializable {
     }
 
     fun mul22ToOutUnsafe(A: Mat33, v: Vec2, out: Vec2) {
-      // assert is not supported in KMP.
-      // assert(v !== out)
+      assert(v !== out)
       out.y = A.ex.y * v.x + A.ey.y * v.y
       out.x = A.ex.x * v.x + A.ey.x * v.y
     }
@@ -226,8 +198,7 @@ class Mat33 : Serializable {
     }
 
     fun mulToOutUnsafe(A: Mat33, v: Vec3, out: Vec3) {
-      // assert is not supported in KMP.
-      // assert(out !== v)
+      assert(out !== v)
       out.x = v.x * A.ex.x + v.y * A.ey.x + v.z * A.ez.x
       out.y = v.x * A.ex.y + v.y * A.ey.y + v.z * A.ez.y
       out.z = v.x * A.ex.z + v.y * A.ey.z + v.z * A.ez.z

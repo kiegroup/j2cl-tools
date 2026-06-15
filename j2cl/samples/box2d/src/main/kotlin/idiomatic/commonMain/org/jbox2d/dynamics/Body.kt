@@ -24,6 +24,7 @@ package org.jbox2d.dynamics
 
 import org.jbox2d.collision.shapes.MassData
 import org.jbox2d.collision.shapes.Shape
+import org.jbox2d.common.Flags
 import org.jbox2d.common.MathUtils
 import org.jbox2d.common.Rot
 import org.jbox2d.common.Sweep
@@ -41,7 +42,15 @@ class Body(bd: BodyDef, world: World) {
   var type: BodyType = bd.type
     private set
 
-  var flags: Int = 0
+  var flags =
+    Flags(
+      if (bd.bullet) BULLET_FLAG else 0,
+      if (bd.fixedRotation) FIXED_ROTATION_FLAG else 0,
+      if (bd.allowSleep) AUTO_SLEEP_FLAG else 0,
+      if (bd.awake) AWAKE_FLAG else 0,
+      if (bd.active) ACTIVE_FLAG else 0,
+    )
+
   var islandIndex = 0
   /** The body origin transform. */
   val xf =
@@ -66,7 +75,7 @@ class Body(bd: BodyDef, world: World) {
       if (type == BodyType.STATIC) {
         return
       }
-      if (Vec2.dot(value, value) > 0.0f) {
+      if (value dot value > 0.0f) {
         setAwake(true)
       }
       field.set(value)
@@ -102,8 +111,8 @@ class Body(bd: BodyDef, world: World) {
 
   var contactList: ContactEdge? = null
 
-  var mass = 0f
-  var invMass = 0f
+  var mass = if (type == BodyType.DYNAMIC) 1f else 0f
+  var invMass = if (type == BodyType.DYNAMIC) 1f else 0f
 
   // Rotational inertia about the center of mass.
   var I: Float = 0.0f
@@ -130,19 +139,19 @@ class Body(bd: BodyDef, world: World) {
     get() = sweep.localCenter
 
   val isAwake: Boolean
-    get() = (flags and AWAKE_FLAG) == AWAKE_FLAG
+    get() = AWAKE_FLAG in flags
 
   val isSleepingAllowed: Boolean
-    get() = (flags and AUTO_SLEEP_FLAG) == AUTO_SLEEP_FLAG
+    get() = AUTO_SLEEP_FLAG in flags
 
   val isBullet: Boolean
-    get() = flags and BULLET_FLAG == BULLET_FLAG
+    get() = BULLET_FLAG in flags
 
   val isActive: Boolean
-    get() = (flags and ACTIVE_FLAG) == ACTIVE_FLAG
+    get() = ACTIVE_FLAG in flags
 
   val isFixedRotation: Boolean
-    get() = flags and Body.FIXED_ROTATION_FLAG == Body.FIXED_ROTATION_FLAG
+    get() = FIXED_ROTATION_FLAG in flags
 
   private val fixDef = FixtureDef()
   private val pmd = MassData()
@@ -150,43 +159,19 @@ class Body(bd: BodyDef, world: World) {
   private val pxf = Transform()
 
   init {
-    // assert is not supported in KMP.
-    /* assert(bd.position.isValid)
+    assert(bd.position.isValid)
     assert(bd.linearVelocity.isValid)
     assert(bd.gravityScale >= 0.0f)
     assert(bd.angularDamping >= 0.0f)
-    assert(bd.linearDamping >= 0.0f) */
-    if (bd.bullet) {
-      flags = flags or BULLET_FLAG
-    }
-    if (bd.fixedRotation) {
-      flags = flags or FIXED_ROTATION_FLAG
-    }
-    if (bd.allowSleep) {
-      flags = flags or AUTO_SLEEP_FLAG
-    }
-    if (bd.awake) {
-      flags = flags or AWAKE_FLAG
-    }
-    if (bd.active) {
-      flags = flags or ACTIVE_FLAG
-    }
-
-    if (type == BodyType.DYNAMIC) {
-      mass = 1f
-      invMass = 1f
-    } else {
-      mass = 0f
-      invMass = 0f
-    }
+    assert(bd.linearDamping >= 0.0f)
   }
 
   fun setType(newType: BodyType) {
-    // assert is not supported in KMP.
-    // assert(world.isLocked == false)
+    assert(!world.isLocked)
     if (world.isLocked) {
       return
     }
+
     if (type == newType) {
       return
     }
@@ -230,18 +215,19 @@ class Body(bd: BodyDef, world: World) {
    * density is non-zero, this function automatically updates the mass of the body. Contacts are not
    * created until the next time step.
    *
+   * This function is locked during callbacks.
+   *
    * @param def the fixture definition.
-   * @warning This function is locked during callbacks.
    */
   fun createFixture(def: FixtureDef): Fixture? {
-    // assert is not supported in KMP.
-    // assert(world.isLocked == false)
+    assert(!world.isLocked)
     if (world.isLocked) {
       return null
     }
+
     val fixture = Fixture()
     fixture.create(this, def)
-    if (flags and ACTIVE_FLAG == ACTIVE_FLAG) {
+    if (ACTIVE_FLAG in flags) {
       val broadPhase = world.contactManager.broadPhase
       fixture.createProxies(broadPhase, this.xf)
     }
@@ -257,7 +243,7 @@ class Body(bd: BodyDef, world: World) {
 
     // Let the world know we have a new fixture. This will cause new contacts
     // to be created at the beginning of the next time step.
-    world.flags = world.flags or World.Companion.NEW_FIXTURE
+    world.flags += World.NEW_FIXTURE
     return fixture
   }
 
@@ -266,9 +252,10 @@ class Body(bd: BodyDef, world: World) {
    * FixtureDef if you need to set parameters like friction, restitution, user data, or filtering.
    * If the density is non-zero, this function automatically updates the mass of the body.
    *
+   * This function is locked during callbacks.
+   *
    * @param shape the shape to be cloned.
    * @param density the shape density (set to zero for static bodies).
-   * @warning This function is locked during callbacks.
    */
   fun createFixture(shape: Shape, density: Float): Fixture? {
     fixDef.shape = shape
@@ -282,35 +269,33 @@ class Body(bd: BodyDef, world: World) {
    * is dynamic and the fixture has positive density. All fixtures attached to a body are implicitly
    * destroyed when the body is destroyed.
    *
+   * This function is locked during callbacks.
+   *
    * @param fixture the fixture to be removed.
-   * @warning This function is locked during callbacks.
    */
   fun destroyFixture(fixture: Fixture?) {
     var tempFixture = fixture
-    // assert is not supported in KMP.
-    // assert(world.isLocked == false)
+    assert(!world.isLocked)
     if (world.isLocked) {
       return
     }
-    // assert is not supported in KMP.
-    // assert(fixture.m_body === this)
-    // assert(m_fixtureCount > 0)
+
+    assert(fixture!!.body === this)
+    assert(fixtureCount > 0)
     var node = fixtureList
     var last: Fixture? = null // java change
-    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE") var found = false
+    var found = false
     while (node != null) {
       if (node == tempFixture) {
         @Suppress("UNUSED_VALUE")
         node = tempFixture.next
-        @Suppress("UNUSED_VALUE")
         found = true
         break
       }
       last = node
       node = node.next
     }
-    // assert is not supported in KMP.
-    // assert(found)
+    assert(found)
 
     // java change, remove it from the list
     if (last == null) {
@@ -332,7 +317,7 @@ class Body(bd: BodyDef, world: World) {
         world.contactManager.destroy(c)
       }
     }
-    if (flags and ACTIVE_FLAG == ACTIVE_FLAG) {
+    if (ACTIVE_FLAG in flags) {
       val broadPhase = world.contactManager.broadPhase
       tempFixture.destroyProxies(broadPhase)
     }
@@ -355,11 +340,11 @@ class Body(bd: BodyDef, world: World) {
    * @param angle the world rotation in radians.
    */
   fun setTransform(position: Vec2, angle: Float) {
-    // assert is not supported in KMP.
-    // assert(world.isLocked == false)
+    assert(!world.isLocked)
     if (world.isLocked) {
       return
     }
+
     xf.q.set(angle)
     xf.p.set(position)
 
@@ -513,11 +498,11 @@ class Body(bd: BodyDef, world: World) {
    */
   fun setMassData(massData: MassData) {
     // TODO_ERIN adjust linear velocity and torque to account for movement of center.
-    // assert is not supported in KMP.
-    // assert(world.isLocked == false)
+    assert(!world.isLocked)
     if (world.isLocked) {
       return
     }
+
     if (type != BodyType.DYNAMIC) {
       return
     }
@@ -529,10 +514,9 @@ class Body(bd: BodyDef, world: World) {
       mass = 1f
     }
     invMass = 1.0f / mass
-    if (massData.I > 0.0f && flags and FIXED_ROTATION_FLAG == 0) {
-      I = massData.I - mass * Vec2.dot(massData.center, massData.center)
-      // assert is not supported in KMP.
-      // assert(m_I > 0.0f)
+    if (massData.I > 0.0f && FIXED_ROTATION_FLAG !in flags) {
+      I = massData.I - mass * (massData.center dot massData.center)
+      assert(I > 0.0f)
       invI = 1.0f / I
     }
     val oldCenter = world.pool.popVec2()
@@ -573,8 +557,7 @@ class Body(bd: BodyDef, world: World) {
       sweep.a0 = sweep.a
       return
     }
-    // assert is not supported in KMP.
-    // assert(type == BodyType.DYNAMIC)
+    assert(type == BodyType.DYNAMIC)
 
     // Accumulate mass over all fixtures.
     val localCenter = world.pool.popVec2()
@@ -605,11 +588,10 @@ class Body(bd: BodyDef, world: World) {
       mass = 1.0f
       invMass = 1.0f
     }
-    if (I > 0.0f && (flags and FIXED_ROTATION_FLAG) == 0) {
+    if (I > 0.0f && FIXED_ROTATION_FLAG !in flags) {
       // Center the inertia about the center of mass.
-      I -= mass * Vec2.dot(localCenter, localCenter)
-      // assert is not supported in KMP.
-      // assert(m_I > 0.0f)
+      I -= mass * (localCenter dot localCenter)
+      assert(I > 0.0f)
       invI = 1.0f / I
     } else {
       I = 0.0f
@@ -720,24 +702,13 @@ class Body(bd: BodyDef, world: World) {
 
   /** Should this body be treated like a bullet for continuous collision detection? */
   fun setBullent(flag: Boolean) {
-    flags =
-      if (flag) {
-        flags or BULLET_FLAG
-      } else {
-        flags and BULLET_FLAG.inv()
-      }
+    flags = flags.setOrRemove(BULLET_FLAG, flag)
   }
 
-  /**
-   * You can disable sleeping on this body. If you disable sleeping, the body will be woken.
-   *
-   * @param flag
-   */
+  /** You can disable sleeping on this body. If you disable sleeping, the body will be woken. */
   fun setSleepingAllowed(flag: Boolean) {
-    if (flag) {
-      flags = flags or AUTO_SLEEP_FLAG
-    } else {
-      flags = flags and AUTO_SLEEP_FLAG.inv()
+    flags = flags.setOrRemove(AUTO_SLEEP_FLAG, flag)
+    if (!flag) {
       setAwake(true)
     }
   }
@@ -746,16 +717,15 @@ class Body(bd: BodyDef, world: World) {
    * Set the sleep state of the body. A sleeping body has very low CPU cost.
    *
    * @param flag set to true to put body to sleep, false to wake it.
-   * @param flag
    */
   fun setAwake(flag: Boolean) {
     if (flag) {
-      if (flags and AWAKE_FLAG == 0) {
-        flags = flags or AWAKE_FLAG
+      if (AWAKE_FLAG !in flags) {
+        flags += AWAKE_FLAG
         userData = 0.0f
       }
     } else {
-      flags = flags and AWAKE_FLAG.inv()
+      flags -= AWAKE_FLAG
       userData = 0.0f
       linearVelocity.setZero()
       angularVelocity = 0.0f
@@ -773,17 +743,14 @@ class Body(bd: BodyDef, world: World) {
    * and will not participate in collisions, ray-casts, or queries. Joints connected to an inactive
    * body are implicitly inactive. An inactive body is still owned by a World object and remains in
    * the body list.
-   *
-   * @param flag
    */
   fun setIsActive(flag: Boolean) {
-    // assert is not supported in KMP.
-    // assert(world.isLocked == false)
+    assert(world.isLocked == false)
     if (flag == isActive) {
       return
     }
     if (flag) {
-      flags = flags or ACTIVE_FLAG
+      flags += ACTIVE_FLAG
 
       // Create all proxies.
       val broadPhase = world.contactManager.broadPhase
@@ -795,7 +762,7 @@ class Body(bd: BodyDef, world: World) {
 
       // Contacts are created the next time step.
     } else {
-      flags = flags and ACTIVE_FLAG.inv()
+      flags -= ACTIVE_FLAG
 
       // Destroy all proxies.
       val broadPhase = world.contactManager.broadPhase
@@ -816,18 +783,9 @@ class Body(bd: BodyDef, world: World) {
     }
   }
 
-  /**
-   * Set this body to have fixed rotation. This causes the mass to be reset.
-   *
-   * @param flag
-   */
+  /** Set this body to have fixed rotation. This causes the mass to be reset. */
   fun setFixedRotation(flag: Boolean) {
-    flags =
-      if (flag) {
-        flags or FIXED_ROTATION_FLAG
-      } else {
-        flags and FIXED_ROTATION_FLAG.inv()
-      }
+    flags = flags.setOrRemove(FIXED_ROTATION_FLAG, flag)
     resetMassData()
   }
 
@@ -869,9 +827,6 @@ class Body(bd: BodyDef, world: World) {
   /**
    * This is used to prevent connected bodies from colliding. It may lie, depending on the
    * collideConnected flag.
-   *
-   * @param other
-   * @return
    */
   fun shouldCollide(other: Body): Boolean {
     // At least one body should be dynamic.

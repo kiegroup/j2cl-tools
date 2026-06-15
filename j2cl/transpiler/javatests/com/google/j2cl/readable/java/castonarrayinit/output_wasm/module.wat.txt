@@ -1,4 +1,10 @@
 ;;; Code for castonarrayinit.CastOnArrayInit [type definition]
+(type $castonarrayinit.CastOnArrayInit (sub $java.lang.Object (struct
+ (field $vtable (ref $castonarrayinit.CastOnArrayInit.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $castonarrayinit.CastOnArrayInit.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -6,25 +12,19 @@
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  ))
 )
-(type $castonarrayinit.CastOnArrayInit (sub $java.lang.Object (struct
- (field $vtable (ref $castonarrayinit.CastOnArrayInit.vtable))
+
+;;; Code for castonarrayinit.CastOnArrayInit.Foo [type definition]
+(type $castonarrayinit.CastOnArrayInit.Foo (sub $java.lang.Object (struct
+ (field $vtable (ref $castonarrayinit.CastOnArrayInit.Foo.vtable))
  (field $itable (ref $itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for castonarrayinit.CastOnArrayInit.Foo [type definition]
 (type $castonarrayinit.CastOnArrayInit.Foo.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
  (field $m_hashCode__int (ref $function.m_hashCode__int))
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
- ))
-)
-(type $castonarrayinit.CastOnArrayInit.Foo (sub $java.lang.Object (struct
- (field $vtable (ref $castonarrayinit.CastOnArrayInit.Foo.vtable))
- (field $itable (ref $itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
 
@@ -79,7 +79,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/castonarrayinit/readable-j2wasm.js/castonarrayinit/CastOnArrayInit.java:18:13
   (call $$clinit__void_<once>_@castonarrayinit.CastOnArrayInit )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/castonarrayinit/readable-j2wasm.js/castonarrayinit/CastOnArrayInit.java:18:13
-  (local.set $$instance (struct.new $castonarrayinit.CastOnArrayInit (ref.as_non_null (global.get $castonarrayinit.CastOnArrayInit.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $castonarrayinit.CastOnArrayInit (global.get $castonarrayinit.CastOnArrayInit.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/castonarrayinit/readable-j2wasm.js/castonarrayinit/CastOnArrayInit.java:18:13
   (call $$ctor__void_$p_castonarrayinit_CastOnArrayInit@castonarrayinit.CastOnArrayInit (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/castonarrayinit/readable-j2wasm.js/castonarrayinit/CastOnArrayInit.java:18:13
@@ -190,7 +190,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/castonarrayinit/readable-j2wasm.js/castonarrayinit/CastOnArrayInit.java:19:22
   (call $$clinit__void_<once>_@castonarrayinit.CastOnArrayInit.Foo )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/castonarrayinit/readable-j2wasm.js/castonarrayinit/CastOnArrayInit.java:19:22
-  (local.set $$instance (struct.new $castonarrayinit.CastOnArrayInit.Foo (ref.as_non_null (global.get $castonarrayinit.CastOnArrayInit.Foo.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $castonarrayinit.CastOnArrayInit.Foo (global.get $castonarrayinit.CastOnArrayInit.Foo.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/castonarrayinit/readable-j2wasm.js/castonarrayinit/CastOnArrayInit.java:19:22
   (call $$ctor__void_$p_castonarrayinit_CastOnArrayInit_Foo@castonarrayinit.CastOnArrayInit.Foo (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/castonarrayinit/readable-j2wasm.js/castonarrayinit/CastOnArrayInit.java:19:22

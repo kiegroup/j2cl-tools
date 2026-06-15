@@ -37,6 +37,30 @@ var goog = goog || {};
 
 
 /**
+ * Reference to the global object.
+ * https://www.ecma-international.org/ecma-262/9.0/index.html#sec-global-object
+ *
+ * More info on this implementation here:
+ * https://docs.google.com/document/d/1NAeW4Wk7I7FV0Y2tcUFvQdGMc89k2vdgSXInw8_nvCI/edit
+ *
+ * @const
+ * @suppress {undefinedVars} self won't be referenced unless `this` is falsy.
+ * @type {!Global}
+ * @deprecated Use `globalThis` directly; this version will be deleted.
+ */
+goog.global =
+    // Check `this` first for backwards compatibility.
+    // Valid unless running as an ES module or in a function wrapper called
+    //   without setting `this` properly.
+    // Note that base.js can't usefully be imported as an ES module, but it may
+    // be compiled into bundles that are loadable as ES modules.
+    this ||
+    // https://developer.mozilla.org/en-US/docs/Web/API/Window/self
+    // For in-page browser environments and workers.
+    self;
+
+
+/**
  * A hook for overriding the define values in uncompiled or compiled mode.
  *
  * The values must be number, boolean or string literals or the compiler will
@@ -57,7 +81,7 @@ var goog = goog || {};
  *
  * @type {!Object<string, (string|number|boolean)>|null|undefined}
  */
-globalThis.CLOSURE_DEFINES;
+goog.global.CLOSURE_DEFINES;
 
 
 /**
@@ -72,12 +96,12 @@ globalThis.CLOSURE_DEFINES;
  *     controls whether object should overwrite the implicitly constructed
  *     namespace or be merged into it. Defaults to false.
  * @param {?Object=} objectToExportTo The object to add the path to; if this
- *     field is not specified, its value defaults to `globalThis`.
+ *     field is not specified, its value defaults to `goog.global`.
  * @private
  */
 goog.exportPath_ = function(name, object, overwriteImplicit, objectToExportTo) {
   var parts = name.split('.');
-  var cur = objectToExportTo || globalThis;
+  var cur = objectToExportTo || goog.global;
 
   // Internet Explorer exhibits strange behavior when throwing errors from
   // methods externed in this manner.  See the testExportSymbolExceptions in
@@ -129,7 +153,7 @@ goog.exportPath_ = function(name, object, overwriteImplicit, objectToExportTo) {
 goog.define = function(name, defaultValue) {
   var value = defaultValue;
   if (!COMPILED) {
-    var defines = globalThis.CLOSURE_DEFINES;
+    var defines = goog.global.CLOSURE_DEFINES;
     if (defines &&
         // Anti DOM-clobbering runtime check (b/37736576).
         /** @type {?} */ (defines).nodeType === undefined &&
@@ -203,6 +227,12 @@ goog.DEBUG = goog.define('goog.DEBUG', true);
  */
 goog.LOCALE = goog.define('goog.LOCALE', 'en');  // default to en
 
+/**
+ * @define {boolean} Whether code that calls {@link goog.setTestOnly} should
+ *     be disallowed in the compilation unit.
+ */
+goog.DISALLOW_TEST_ONLY_CODE =
+    goog.define('goog.DISALLOW_TEST_ONLY_CODE', COMPILED && !goog.DEBUG);
 
 /**
  * Defines a global namespace in Closure.
@@ -260,7 +290,7 @@ goog.constructNamespace_ = function(name, object, overwriteImplicit) {
 
     var namespace = name;
     while ((namespace = namespace.substring(0, namespace.lastIndexOf('.')))) {
-      if (goog.getObjectByName_(namespace)) {
+      if (goog.getObjectByName(namespace)) {
         break;
       }
       goog.implicitNamespaces_[namespace] = true;
@@ -368,7 +398,7 @@ goog.module.getInternal_ = function(name) {
     if (name in goog.loadedModules_) {
       return goog.loadedModules_[name];
     } else if (!goog.implicitNamespaces_[name]) {
-      var ns = goog.getObjectByName_(name);
+      var ns = goog.getObjectByName(name);
       return ns != null ? ns : null;
     }
   }
@@ -414,6 +444,43 @@ goog.module.declareLegacyNamespace = function() {
   goog.moduleLoaderState_.declareLegacyNamespace = true;
 };
 
+/**
+ * Associates an ES6 module with a Closure module ID so that is available via
+ * goog.require. The associated ID acts like a goog.module ID - it does not
+ * create any global names, it is merely available via goog.require /
+ * goog.module.get / goog.forwardDeclare / goog.requireType. goog.require and
+ * goog.module.get will return the entire module as if it was import *'d. This
+ * allows Closure files to reference ES6 modules for the sake of migration.
+ *
+ * @param {string} namespace
+ * @suppress {missingProvide}
+ */
+goog.declareModuleId = function(namespace) {
+  if (!COMPILED) {
+    throw new Error('goog.declareModuleId is not supported in uncompiled mode');
+  }
+};
+
+/**
+ * Marks that the current file should only be used for testing, and never for
+ * live code in production.
+ *
+ * In the case of unit tests, the message may optionally be an exact namespace
+ * for the test (e.g. 'goog.stringTest'). The linter will then ignore the extra
+ * provide (if not explicitly defined in the code).
+ *
+ * @param {string=} opt_message Optional message to add to the error that's
+ *     raised when used in production code.
+ */
+goog.setTestOnly = function(opt_message) {
+  if (goog.DISALLOW_TEST_ONLY_CODE) {
+    opt_message = opt_message || '';
+    throw new Error(
+        'Importing test-only code into non-debug environment' +
+        (opt_message ? ': ' + opt_message : '.'));
+  }
+};
+
 
 /**
  * Forward declares a symbol. This is an indication to the compiler that the
@@ -449,7 +516,7 @@ if (!COMPILED) {
   goog.isProvided_ = function(name) {
     return (name in goog.loadedModules_) ||
         (!goog.implicitNamespaces_[name] &&
-         goog.getObjectByName_(name) != null);
+         goog.getObjectByName(name) != null);
   };
 
   /**
@@ -477,13 +544,13 @@ if (!COMPILED) {
  *
  * @param {string} name The fully qualified name.
  * @param {!Object=} opt_obj The object within which to look; default is
- *     globalThis.
+ *     goog.global.
  * @return {?} The value (object or primitive) or, if not found, null.
- * @private
+ * @deprecated Prefer non-reflective access.
  */
-goog.getObjectByName_ = function(name, opt_obj) {
+goog.getObjectByName = function(name, opt_obj) {
   var parts = name.split('.');
-  var cur = opt_obj || globalThis;
+  var cur = opt_obj || goog.global;
   for (var i = 0; i < parts.length; i++) {
     cur = cur[parts[i]];
     if (cur == null) {
@@ -643,7 +710,7 @@ goog.cssNameMappingStyle_;
  *
  * @type {(function(string):string)|undefined}
  */
-globalThis.CLOSURE_CSS_NAME_MAP_FN;
+goog.global.CLOSURE_CSS_NAME_MAP_FN;
 
 
 /**
@@ -715,8 +782,8 @@ goog.getCssName = function(className, opt_modifier) {
 
   // The special CLOSURE_CSS_NAME_MAP_FN allows users to specify further
   // processing of the class name.
-  if (globalThis.CLOSURE_CSS_NAME_MAP_FN) {
-    return globalThis.CLOSURE_CSS_NAME_MAP_FN(result);
+  if (goog.global.CLOSURE_CSS_NAME_MAP_FN) {
+    return goog.global.CLOSURE_CSS_NAME_MAP_FN(result);
   }
 
   return result;
@@ -764,12 +831,12 @@ goog.setCssNameMapping = function(mapping, opt_style) {
  * A hook for overriding the CSS name mapping.
  * @type {!Object<string, string>|undefined}
  */
-globalThis.CLOSURE_CSS_NAME_MAPPING;
+goog.global.CLOSURE_CSS_NAME_MAPPING;
 
-if (!COMPILED && globalThis.CLOSURE_CSS_NAME_MAPPING) {
+if (!COMPILED && goog.global.CLOSURE_CSS_NAME_MAPPING) {
   // This does not call goog.setCssNameMapping() because the JSCompiler
   // requires that goog.setCssNameMapping() be called with an object literal.
-  goog.cssNameMapping_ = globalThis.CLOSURE_CSS_NAME_MAPPING;
+  goog.cssNameMapping_ = goog.global.CLOSURE_CSS_NAME_MAPPING;
 }
 
 
@@ -924,7 +991,7 @@ goog.getMsgWithFallback = function(a, b) {
  * @param {string} publicPath Unobfuscated name to export.
  * @param {*} object Object the name should point to.
  * @param {?Object=} objectToExportTo The object to add the path to; default
- *     is globalThis.
+ *     is goog.global.
  */
 goog.exportSymbol = function(publicPath, object, objectToExportTo) {
   goog.exportPath_(

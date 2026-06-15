@@ -20,11 +20,10 @@ import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor
 import com.google.j2cl.transpiler.ast.IntersectionTypeDescriptor
 import com.google.j2cl.transpiler.ast.KtVariance
 import com.google.j2cl.transpiler.ast.MethodDescriptor
-import com.google.j2cl.transpiler.ast.NullabilityAnnotation
+import com.google.j2cl.transpiler.ast.NullabilityAnnotation.NOT_NULLABLE
 import com.google.j2cl.transpiler.ast.PrimitiveTypeDescriptor
 import com.google.j2cl.transpiler.ast.TypeDescriptor
 import com.google.j2cl.transpiler.ast.TypeDescriptors
-import com.google.j2cl.transpiler.ast.TypeDescriptors.isJavaLangVoid
 import com.google.j2cl.transpiler.ast.TypeVariable
 import com.google.j2cl.transpiler.ast.UnionTypeDescriptor
 import com.google.j2cl.transpiler.backend.kotlin.common.runIf
@@ -111,9 +110,7 @@ internal fun TypeDescriptor.makeNonNull(): TypeDescriptor =
           // for wildcards and captures should also be done by `toNonNullable()`. The only
           // kotlin output specific piece is the handling of `*`.
           if (hasNullableBounds) {
-            TypeVariable.Builder.from(this)
-              .setNullabilityAnnotation(NullabilityAnnotation.NOT_NULLABLE)
-              .build()
+            TypeVariable.Builder.from(this).setNullabilityAnnotation(NOT_NULLABLE).build()
           } else {
             withoutNullabilityAnnotations()
           }
@@ -173,9 +170,6 @@ internal val TypeVariable.hasAmpersandAny: Boolean
 internal val TypeDescriptor.variableHasAmpersandAny: Boolean
   get() = this is TypeVariable && hasAmpersandAny
 
-internal val TypeDescriptor.withImplicitNullability
-  get() = runIf(isJavaLangVoid(this)) { toNullable() }
-
 internal val arrayComponentTypeParameter: TypeVariable
   get() =
     TypeVariable.newBuilder()
@@ -183,3 +177,22 @@ internal val arrayComponentTypeParameter: TypeVariable
       .setUpperBoundTypeDescriptorFactory { _ -> nullableAnyTypeDescriptor }
       .setUniqueKey("kotlin.Array:T")
       .build()
+
+/** Returns upper bound type descriptor with nullability annotation of this type variable. */
+internal val TypeVariable.normalizedUpperBoundTypeDescriptor: TypeDescriptor
+  get() = upperBoundTypeDescriptor.withNullabilityAnnotation(nullabilityAnnotation)
+
+internal val TypeDescriptor.withoutRedundantNullabilityAnnotation: TypeDescriptor
+  get() =
+    when (this) {
+      is TypeVariable ->
+        runIf(
+          nullabilityAnnotation == NOT_NULLABLE && !upperBoundTypeDescriptor.canBeNullableAsBound
+        ) {
+          withoutNullabilityAnnotations()
+        }
+      else -> this
+    }
+
+internal val TypeDescriptor.isProtobuf: Boolean
+  get() = this is DeclaredTypeDescriptor && typeDeclaration.isProtobuf

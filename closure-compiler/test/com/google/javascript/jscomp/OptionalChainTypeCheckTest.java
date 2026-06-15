@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
+import static com.google.javascript.jscomp.TypeCheckTestCase.TypeTestBuilder.newTest;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
@@ -82,14 +82,19 @@ public class OptionalChainTypeCheckTest {
     String objType = testCase.forObjType().get();
     String expr = testCase.withExpr();
     String expectType = testCase.assignedTo().get();
-    return lines(
-        "/** @type {(" + objType + ")} */ var a;",
-        "/** @type {(" + expectType + ")} */ var x;",
-        "x = " + expr + ";");
+    return String.format(
+        """
+        /** @type {(%s)} */
+        var a;
+        /** @type {(%s)} */
+        var x;
+        x = %s;
+        """,
+        objType, expectType, expr);
   }
 
   @RunWith(Parameterized.class)
-  public static final class OptChainGetElemTests extends TypeCheckTestCase {
+  public static final class OptChainGetElemTests {
     @Parameter public OptChainTestCase testCase;
 
     /**
@@ -165,17 +170,23 @@ public class OptionalChainTypeCheckTest {
               .forObjType("Array<number>")
               .withExpr("a?.[0];")
               .assignedTo("string")
-              .mustReport(lines("assignment", "found   : (number|undefined)", "required: string"))
+              .mustReport(
+                  """
+                  assignment
+                  found   : (number|undefined)
+                  required: string
+                  """)
               .build(),
           OptChainTestCase.builder()
               .forObjType("Array<?number>")
               .withExpr("a?.[0];")
               .assignedTo("number|undefined")
               .mustReport(
-                  lines(
-                      "assignment",
-                      "found   : (null|number|undefined)",
-                      "required: (number|undefined)"))
+                  """
+                  assignment
+                  found   : (null|number|undefined)
+                  required: (number|undefined)
+                  """)
               .build(),
           OptChainTestCase.builder()
               .forObjType("null")
@@ -211,25 +222,23 @@ public class OptionalChainTypeCheckTest {
               .withExpr("a[b];")
               .assignedTo("?")
               .mustReport(
-                  lines(
-                      "only arrays or objects can be accessed",
-                      "found   : null",
-                      "required: Object"))
+                  """
+                  only arrays or objects can be accessed
+                  found   : null
+                  required: Object
+                  """)
               .build(),
           OptChainTestCase.builder()
               .forObjType("null")
               .withExpr("a.b?.[c];")
               .assignedTo("?")
               .mustReport(
-                  lines("No properties on this expression", "found   : null", "required: Object"))
+                  """
+                  No properties on this expression
+                  found   : null
+                  required: Object
+                  """)
               .build());
-    }
-
-    @Override
-    protected CompilerOptions getDefaultOptions() {
-      CompilerOptions options = super.getDefaultOptions();
-      options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
-      return options;
     }
 
     @Test
@@ -244,7 +253,7 @@ public class OptionalChainTypeCheckTest {
   }
 
   @RunWith(Parameterized.class)
-  public static final class OptChainGetPropTests extends TypeCheckTestCase {
+  public static final class OptChainGetPropTests {
     @Parameter public OptChainTestCase testCase;
 
     @Parameters
@@ -289,15 +298,23 @@ public class OptionalChainTypeCheckTest {
               .forObjType("{b:number}")
               .withExpr("a?.b;")
               .assignedTo("string")
-              .mustReport(lines("assignment", "found   : number", "required: string"))
+              .mustReport(
+                  """
+                  assignment
+                  found   : number
+                  required: string
+                  """)
               .build(),
           OptChainTestCase.builder()
               .forObjType("?{b:number}")
               .withExpr("a?.b;")
               .assignedTo("undefined|string")
               .mustReport(
-                  lines(
-                      "assignment", "found   : (number|undefined)", "required: (string|undefined)"))
+                  """
+                  assignment
+                  found   : (number|undefined)
+                  required: (string|undefined)
+                  """)
               .build(),
 
           // normal GETPROP
@@ -306,15 +323,12 @@ public class OptionalChainTypeCheckTest {
               .withExpr("a.alert();")
               .assignedTo("?")
               .mustReport(
-                  lines("No properties on this expression", "found   : null", "required: Object"))
+                  """
+                  No properties on this expression
+                  found   : null
+                  required: Object
+                  """)
               .build());
-    }
-
-    @Override
-    protected CompilerOptions getDefaultOptions() {
-      CompilerOptions options = super.getDefaultOptions();
-      options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
-      return options;
     }
 
     @Test
@@ -346,24 +360,22 @@ public class OptionalChainTypeCheckTest {
               .build());
     }
 
-    @Override
-    protected CompilerOptions getDefaultOptions() {
-      CompilerOptions options = super.getDefaultOptions();
-      options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
-      return options;
-    }
-
     @Test
     public void testOptChainGetProp_accessOnDict1() {
       newTest()
           .addSource(
-              "/**",
-              " * @constructor",
-              " * @dict",
-              " */",
-              "function Dict1(){ this['prop'] = 123; }",
-              "/** @param{Dict1} x */",
-              "function takesDict(x) {return " + testCase.withExpr() + " }")
+              """
+              /**
+               * @constructor
+               * @dict
+               */
+              function Dict1(){ this['prop'] = 123; }
+              /** @param{Dict1} x */
+              function takesDict(x) {
+                return WITH_EXPR
+              }
+              """
+                  .replace("WITH_EXPR", testCase.withExpr()))
           .addDiagnostic(testCase.mustReport().get())
           .run();
     }
@@ -372,20 +384,23 @@ public class OptionalChainTypeCheckTest {
     public void testOptChainGetPropDict2() {
       newTest()
           .addSource(
-              "/**",
-              " * @constructor",
-              " * @dict",
-              " */",
-              "function Dict1(){ this['prop'] = 123; }",
-              "/**",
-              " * @constructor",
-              " * @extends {Dict1}",
-              " */",
-              "function Dict1kid(){ this['prop'] = 123; }",
-              "/** @param{Dict1kid} x */",
-              "function takesDict(x) { return ",
-              testCase.withExpr(),
-              " }")
+              """
+              /**
+               * @constructor
+               * @dict
+               */
+              function Dict1(){ this['prop'] = 123; }
+              /**
+               * @constructor
+               * @extends {Dict1}
+               */
+              function Dict1kid(){ this['prop'] = 123; }
+              /** @param{Dict1kid} x */
+              function takesDict(x) {
+                return WITH_EXPR
+               }
+              """
+                  .replace("WITH_EXPR", testCase.withExpr()))
           .addDiagnostic(testCase.mustReport().get())
           .run();
     }
@@ -394,17 +409,20 @@ public class OptionalChainTypeCheckTest {
     public void testOptChainGetPropDict_accessingDictOrNonDict() {
       newTest()
           .addSource(
-              "/**",
-              " * @constructor",
-              " * @dict",
-              " */",
-              "function Dict1() { this['prop'] = 123; }",
-              "/** @constructor */",
-              "function NonDict() { this.prop = 321; }",
-              "/** @param{(NonDict|Dict1)} x */",
-              "function takesDict(x) { return ",
-              testCase.withExpr(),
-              "}")
+              """
+              /**
+               * @constructor
+               * @dict
+               */
+              function Dict1() { this['prop'] = 123; }
+              /** @constructor */
+              function NonDict() { this.prop = 321; }
+              /** @param{(NonDict|Dict1)} x */
+              function takesDict(x) {
+                return WITH_EXPR
+              }
+              """
+                  .replace("WITH_EXPR", testCase.withExpr()))
           .addDiagnostic(testCase.mustReport().get())
           .run();
     }
@@ -413,27 +431,30 @@ public class OptionalChainTypeCheckTest {
     public void testOptChainGetProp_accessingDictOrStruct() {
       newTest()
           .addSource(
-              "/**",
-              " * @constructor",
-              " * @dict",
-              " */",
-              "function Dict1() { this['prop'] = 123; }",
-              "/**",
-              " * @constructor",
-              " * @struct",
-              " */",
-              "function Struct1() { this.prop = 123; }",
-              "/** @param{(Struct1|Dict1)} x */",
-              "function takesNothing(x) { return ",
-              testCase.withExpr(),
-              "}")
+              """
+              /**
+               * @constructor
+               * @dict
+               */
+              function Dict1() { this['prop'] = 123; }
+              /**
+               * @constructor
+               * @struct
+               */
+              function Struct1() { this.prop = 123; }
+              /** @param{(Struct1|Dict1)} x */
+              function takesNothing(x) {
+                return WITH_EXPR
+              }
+              """
+                  .replace("WITH_EXPR", testCase.withExpr()))
           .addDiagnostic(testCase.mustReport().get())
           .run();
     }
   }
 
   @RunWith(Parameterized.class)
-  public static final class OptChainCallTests extends TypeCheckTestCase {
+  public static final class OptChainCallTests {
 
     @Parameter public OptChainTestCase testCase;
 
@@ -476,13 +497,23 @@ public class OptionalChainTypeCheckTest {
               .withPropReturnType("string")
               .withExpr("a?.prop()")
               .assignedTo("number")
-              .mustReport(lines("assignment", "found   : string", "required: number"))
+              .mustReport(
+                  """
+                  assignment
+                  found   : string
+                  required: number
+                  """)
               .build(),
           OptChainTestCase.builder()
               .withPropReturnType("?string")
               .withExpr("a?.prop()")
               .assignedTo("string")
-              .mustReport(lines("assignment", "found   : (null|string)", "required: string"))
+              .mustReport(
+                  """
+                  assignment
+                  found   : (null|string)
+                  required: string
+                  """)
               .build(),
 
           // non-optional tests
@@ -502,13 +533,23 @@ public class OptionalChainTypeCheckTest {
               .withPropReturnType("string")
               .withExpr("a.prop()")
               .assignedTo("number")
-              .mustReport(lines("assignment", "found   : string", "required: number"))
+              .mustReport(
+                  """
+                  assignment
+                  found   : string
+                  required: number
+                  """)
               .build(),
           OptChainTestCase.builder()
               .withPropReturnType("?string")
               .withExpr("a.prop()")
               .assignedTo("string")
-              .mustReport(lines("assignment", "found   : (null|string)", "required: string"))
+              .mustReport(
+                  """
+                  assignment
+                  found   : (null|string)
+                  required: string
+                  """)
               .build(),
 
           // We don't report an error when a null or undefined type is called as a function
@@ -529,13 +570,6 @@ public class OptionalChainTypeCheckTest {
       return js.toString();
     }
 
-    @Override
-    protected CompilerOptions getDefaultOptions() {
-      CompilerOptions options = super.getDefaultOptions();
-      options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
-      return options;
-    }
-
     @Test
     public void testOptChainCallExpressions() {
       String js = createOptChainCallTestString(testCase);
@@ -549,12 +583,6 @@ public class OptionalChainTypeCheckTest {
 
   @RunWith(JUnit4.class)
   public static final class OptChainTestsNonParameterized extends TypeCheckTestCase {
-    @Override
-    protected CompilerOptions getDefaultOptions() {
-      CompilerOptions options = super.getDefaultOptions();
-      options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
-      return options;
-    }
 
     // Confirms that OPTCHAIN_GETELEM nodes are inferred as unknown type
     @Test
@@ -578,16 +606,18 @@ public class OptionalChainTypeCheckTest {
     public void testOptChainGetElemOnStruct1() {
       newTest()
           .addSource(
-              "/**",
-              " * @constructor",
-              " * @struct",
-              " */",
-              "function AStruct(){ this.b = 123; }",
-              "/** @param{AStruct} x */",
-              "function takesStruct(x) {",
-              "  var a = x;",
-              "  return a?.[b];",
-              "}")
+              """
+              /**
+               * @constructor
+               * @struct
+               */
+              function AStruct(){ this.b = 123; }
+              /** @param{AStruct} x */
+              function takesStruct(x) {
+                var a = x;
+                return a?.[b];
+              }
+              """)
           .addDiagnostic("Cannot do '[]' access on a struct")
           .run();
     }
@@ -596,19 +626,22 @@ public class OptionalChainTypeCheckTest {
     public void testOptChainGetElemOnStruct2() {
       newTest()
           .addSource(
-              "/**",
-              " * @constructor",
-              " * @struct",
-              " */",
-              "function Struct1(){ this.b = 123; }",
-              "/**",
-              " * @constructor",
-              " * @extends {Struct1}",
-              " */",
-              "function Struct1kid(){ this.b = 123; }",
-              "/** @param{Struct1kid} a */",
-              "function takesStruct2(a) { return a?.[b];",
-              " }")
+              """
+              /**
+               * @constructor
+               * @struct
+               */
+              function Struct1(){ this.b = 123; }
+              /**
+               * @constructor
+               * @extends {Struct1}
+               */
+              function Struct1kid(){ this.b = 123; }
+              /** @param{Struct1kid} a */
+              function takesStruct2(a) {
+                return a?.[b];
+              }
+              """)
           .addDiagnostic("Cannot do '[]' access on a struct")
           .run();
     }
@@ -618,7 +651,11 @@ public class OptionalChainTypeCheckTest {
       newTest()
           .addSource("/** @return {void}*/function foo(){foo().bar;}")
           .addDiagnostic(
-              lines("No properties on this expression", "found   : undefined", "required: Object"))
+              """
+              No properties on this expression
+              found   : undefined
+              required: Object
+              """)
           .run();
     }
 
@@ -632,18 +669,27 @@ public class OptionalChainTypeCheckTest {
     public void testOptChainGetProp_propAccessedAfterObjectInitialized() {
       newTest()
           .addSource(
-              "/** @constructor */ ",
-              "function Foo() { /** @type {?Object} */ this.x = null; }",
-              "Foo.prototype.initX = function() { this.x = {foo: 1}; };",
-              "Foo.prototype.bar = function() {",
-              "  if (this.x == null) { this.initX(); alert(this.x?.foo); }",
-              "};")
+              """
+              /** @constructor */
+              function Foo() { /** @type {?Object} */ this.x = null; }
+              Foo.prototype.initX = function() { this.x = {foo: 1}; };
+              Foo.prototype.bar = function() {
+                if (this.x == null) { this.initX(); alert(this.x?.foo); }
+              };
+              """)
           .run();
     }
 
     @Test
     public void testAssignToUnknown_noError() {
-      newTest().addSource("let a = 4;", "/** @type {?} */ let b;", "a =b;").run();
+      newTest()
+          .addSource(
+              """
+              let a = 4;
+              /** @type {?} */ let b;
+              a =b;
+              """)
+          .run();
     }
 
     @Test
@@ -656,10 +702,11 @@ public class OptionalChainTypeCheckTest {
       newTest()
           .addSource("/** @param {!Number} foo*/function bar(foo){ bar('abc'); }")
           .addDiagnostic(
-              lines(
-                  "actual parameter 1 of bar does not match formal parameter",
-                  "found   : string",
-                  "required: Number"))
+              """
+              actual parameter 1 of bar does not match formal parameter
+              found   : string
+              required: Number
+              """)
           .run();
     }
 
@@ -668,10 +715,11 @@ public class OptionalChainTypeCheckTest {
       newTest()
           .addSource("/** @param {!Number} foo*/function bar(foo){ bar?.('abc'); }")
           .addDiagnostic(
-              lines(
-                  "actual parameter 1 of bar does not match formal parameter",
-                  "found   : string",
-                  "required: Number"))
+              """
+              actual parameter 1 of bar does not match formal parameter
+              found   : string
+              required: Number
+              """)
           .run();
     }
 
@@ -681,10 +729,12 @@ public class OptionalChainTypeCheckTest {
       // meet with a functional type to produce a callable type.
       newTest()
           .addSource(
-              "/** @type {Function|undefined} */var opt_f;",
-              "/** @type {some.unknown.type} */var f1;",
-              "var f2 = opt_f || f1;",
-              "f2();")
+              """
+              /** @type {Function|undefined} */var opt_f;
+              /** @type {some.unknown.type} */var f1;
+              var f2 = opt_f || f1;
+              f2();
+              """)
           .addDiagnostic("Bad type annotation. Unknown type some.unknown.type")
           .run();
     }
@@ -695,10 +745,12 @@ public class OptionalChainTypeCheckTest {
       // meet with a functional type to produce a callable type.
       newTest()
           .addSource(
-              "/** @type {Function|undefined} */var opt_f;",
-              "/** @type {some.unknown.type} */var f1;",
-              "var f2 = opt_f || f1;",
-              "f2();")
+              """
+              /** @type {Function|undefined} */var opt_f;
+              /** @type {some.unknown.type} */var f1;
+              var f2 = opt_f || f1;
+              f2();
+              """)
           .addDiagnostic("Bad type annotation. Unknown type some.unknown.type")
           .run();
     }

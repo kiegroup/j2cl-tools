@@ -1,5 +1,4 @@
 // Generated from "j2kt/Collections.java"
-@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -19,185 +18,359 @@
 package j2kt
 
 import javaemul.lang.*
+import java.lang.IndexOutOfBoundsException
 import java.lang.RuntimeException
-import javaemul.lang.JavaAbstractCollection
-import javaemul.lang.JavaAbstractList
-import javaemul.lang.JavaAbstractMap
+import java.util.AbstractCollection
+import java.util.AbstractList
+import java.util.AbstractMap
+import java.util.Spliterator
+import javaemul.lang.MutableCollectionJvm
+import javaemul.lang.MutableListJvm
+import javaemul.lang.MutableMapJvm
+import javaemul.lang.uninitializedArrayOf
 import kotlin.Any
+import kotlin.Array
 import kotlin.Boolean
 import kotlin.Int
-import kotlin.OptIn
 import kotlin.String
 import kotlin.Suppress
+import kotlin.collections.Collection
+import kotlin.collections.Map
 import kotlin.collections.MutableCollection
 import kotlin.collections.MutableIterator
 import kotlin.collections.MutableList
 import kotlin.collections.MutableMap
 import kotlin.collections.MutableMap.MutableEntry
 import kotlin.collections.MutableSet
-import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.JvmStatic
-import kotlin.native.ObjCName
 
-@ObjCName("J2ktJ2ktCollections", exact = true)
 open class Collections {
- @ObjCName("J2ktJ2ktCollectionsCompanion", exact = true)
  companion object {
   @JvmStatic
-  @ObjCName("testCollection_generic")
-  fun <T> testCollection_generic(
-   @ObjCName("withJavaUtilCollection") collection: MutableCollection<T>
-  ) {
-   collection.java_contains(Collections.generic<T>())
-   collection.java_remove(Collections.generic<T>())
-   collection.java_containsAll(Collections.genericCollection<T>())
-   collection.java_addAll(Collections.genericCollection<T>())
-   collection.java_removeAll(Collections.genericCollection<T>())
-   collection.java_retainAll(Collections.genericCollection<T>())
-   collection.java_contains(Collections.mismatching() as Any?)
-   collection.java_remove(Collections.mismatching() as Any?)
-   collection.java_containsAll(Collections.mismatchingCollection())
-   collection.java_removeAll(Collections.mismatchingCollection())
-   collection.java_retainAll(Collections.mismatchingCollection())
+  fun <T> testCollection_generic(collection: MutableCollection<T>) {
+   collection.java_contains(
+    Collections.generic<T>(),
+   )
+   collection.java_remove(
+    Collections.generic<T>(),
+   )
+   collection.java_containsAll(
+    Collections.genericCollection<T>(),
+   )
+   collection.java_addAll(
+    Collections.genericCollection<T>(),
+   )
+   collection.java_removeAll(
+    Collections.genericCollection<T>(),
+   )
+   collection.java_retainAll(
+    Collections.genericCollection<T>(),
+   )
+   collection.java_contains(
+    Collections.mismatching() as Any?,
+   )
+   collection.java_remove(
+    Collections.mismatching() as Any?,
+   )
+   collection.java_containsAll(
+    Collections.mismatchingCollection(),
+   )
+   collection.java_removeAll(
+    Collections.mismatchingCollection(),
+   )
+   collection.java_retainAll(
+    Collections.mismatchingCollection(),
+   )
   }
 
   @JvmStatic
-  @ObjCName("testCollection_parameterized")
-  fun testCollection_parameterized(
-   @ObjCName("withJavaUtilCollection") collection: MutableCollection<String>
-  ) {
-   collection.java_contains(Collections.string())
-   collection.java_remove(Collections.string())
-   collection.java_containsAll(Collections.collectionOfString())
-   collection.java_addAll(Collections.collectionOfString())
-   collection.java_removeAll(Collections.collectionOfString())
-   collection.java_retainAll(Collections.collectionOfString())
-   collection.java_contains(Collections.mismatching() as Any?)
-   collection.java_remove(Collections.mismatching() as Any?)
-   collection.java_containsAll(Collections.mismatchingCollection())
-   collection.java_removeAll(Collections.mismatchingCollection())
-   collection.java_retainAll(Collections.mismatchingCollection())
+  fun testCollection_parameterized(collection: MutableCollection<String>) {
+   collection.java_contains(
+    Collections.string(),
+   )
+   collection.java_remove(
+    Collections.string(),
+   )
+   collection.java_containsAll(
+    Collections.collectionOfString(),
+   )
+   collection.java_addAll(
+    Collections.collectionOfString(),
+   )
+   collection.java_removeAll(
+    Collections.collectionOfString(),
+   )
+   collection.java_retainAll(
+    Collections.collectionOfString(),
+   )
+   collection.java_contains(
+    Collections.mismatching() as Any?,
+   )
+   collection.java_remove(
+    Collections.mismatching() as Any?,
+   )
+   collection.java_containsAll(
+    Collections.mismatchingCollection(),
+   )
+   collection.java_removeAll(
+    Collections.mismatchingCollection(),
+   )
+   collection.java_retainAll(
+    Collections.mismatchingCollection(),
+   )
   }
 
   @JvmStatic
-  @ObjCName("testCollection_specialized")
-  fun testCollection_specialized(
-   @ObjCName("withJ2ktCollections_CollectionOfString") collection: Collections.CollectionOfString
-  ) {
-   collection.java_contains(Collections.string())
-   collection.java_remove(Collections.string())
-   collection.java_containsAll(Collections.collectionOfString())
-   collection.java_addAll(Collections.collectionOfString())
-   collection.java_removeAll(Collections.collectionOfString())
-   collection.java_retainAll(Collections.collectionOfString())
-   collection.java_contains(Collections.mismatching() as Any?)
-   collection.java_remove(Collections.mismatching() as Any?)
-   collection.java_containsAll(Collections.mismatchingCollection())
-   collection.java_removeAll(Collections.mismatchingCollection())
-   collection.java_retainAll(Collections.mismatchingCollection())
+  fun testCollection_specialized(collection: CollectionOfString) {
+   collection.java_contains(
+    Collections.string(),
+   )
+   collection.java_remove(
+    Collections.string(),
+   )
+   collection.java_containsAll(
+    Collections.collectionOfString(),
+   )
+   collection.java_addAll(
+    Collections.collectionOfString(),
+   )
+   collection.java_removeAll(
+    Collections.collectionOfString(),
+   )
+   collection.java_retainAll(
+    Collections.collectionOfString(),
+   )
+   collection.java_contains(
+    Collections.mismatching() as Any?,
+   )
+   collection.java_remove(
+    Collections.mismatching() as Any?,
+   )
+   collection.java_containsAll(
+    Collections.mismatchingCollection(),
+   )
+   collection.java_removeAll(
+    Collections.mismatchingCollection(),
+   )
+   collection.java_retainAll(
+    Collections.mismatchingCollection(),
+   )
   }
 
   @JvmStatic
-  @ObjCName("testList_generic")
-  fun <T> testList_generic(
-   @ObjCName("withJavaUtilList") list: MutableList<T>
-  ) {
-   list.java_indexOf(Collections.generic<T>())
-   list.java_lastIndexOf(Collections.generic<T>())
-   list.java_indexOf(Collections.mismatching() as Any?)
-   list.java_lastIndexOf(Collections.mismatching() as Any?)
+  fun <T> testList_generic(list: MutableList<T>) {
+   list.java_addAll(
+    0,
+    Collections.genericCollection<T>(),
+   )
+   list.java_indexOf(
+    Collections.generic<T>(),
+   )
+   list.java_lastIndexOf(
+    Collections.generic<T>(),
+   )
+   list.java_indexOf(
+    Collections.mismatching() as Any?,
+   )
+   list.java_lastIndexOf(
+    Collections.mismatching() as Any?,
+   )
   }
 
   @JvmStatic
-  @ObjCName("testList_parameterized")
-  fun testList_parameterized(
-   @ObjCName("withJavaUtilList") list: MutableList<String>
-  ) {
-   list.java_indexOf(Collections.string())
-   list.java_lastIndexOf(Collections.string())
-   list.java_indexOf(Collections.mismatching() as Any?)
-   list.java_lastIndexOf(Collections.mismatching() as Any?)
+  fun testList_parameterized(list: MutableList<String>) {
+   list.java_addAll(
+    0,
+    Collections.collectionOfString(),
+   )
+   list.java_indexOf(
+    Collections.string(),
+   )
+   list.java_lastIndexOf(
+    Collections.string(),
+   )
+   list.java_indexOf(
+    Collections.mismatching() as Any?,
+   )
+   list.java_lastIndexOf(
+    Collections.mismatching() as Any?,
+   )
   }
 
   @JvmStatic
-  @ObjCName("testList_specialized")
-  fun testList_specialized(
-   @ObjCName("withJ2ktCollections_ListOfString") list: Collections.ListOfString
-  ) {
-   list.java_indexOf(Collections.string())
-   list.java_lastIndexOf(Collections.string())
-   list.java_indexOf(Collections.mismatching() as Any?)
-   list.java_lastIndexOf(Collections.mismatching() as Any?)
+  fun testList_specialized(list: ListOfString) {
+   list.java_addAll(
+    0,
+    Collections.collectionOfString(),
+   )
+   list.java_indexOf(
+    Collections.string(),
+   )
+   list.java_lastIndexOf(
+    Collections.string(),
+   )
+   list.java_indexOf(
+    Collections.mismatching() as Any?,
+   )
+   list.java_lastIndexOf(
+    Collections.mismatching() as Any?,
+   )
   }
 
   @JvmStatic
-  @ObjCName("testMap_generic")
-  fun <K, V> testMap_generic(
-   @ObjCName("withJavaUtilMap") map: MutableMap<K, V>
-  ) {
-   map.java_get(Collections.generic<K>())
-   map.java_getOrDefault(Collections.generic<K>(), Collections.generic<V?>())
-   map.java_containsKey(Collections.generic<K>())
-   map.java_containsValue(Collections.generic<V>())
-   map.java_putAll(Collections.genericMap<K, V>())
-   map.java_remove(Collections.generic<K>())
-   map.java_remove(Collections.generic<K>(), Collections.generic<V>())
-   map.java_get(Collections.mismatching() as Any?)
-   map.java_getOrDefault(Collections.mismatching() as Any?, Collections.generic<V?>())
-   map.java_containsKey(Collections.mismatching() as Any?)
-   map.java_containsValue(Collections.mismatching() as Any?)
-   map.java_remove(Collections.mismatching() as Any?)
-   map.java_remove(Collections.mismatching() as Any?, Collections.mismatching() as Any?)
+  fun <K, V> testMap_generic(map: MutableMap<K, V>) {
+   map.java_get(
+    Collections.generic<K>(),
+   )
+   map.java_getOrDefault(
+    Collections.generic<K>(),
+    Collections.generic<V?>(),
+   )
+   map.java_containsKey(
+    Collections.generic<K>(),
+   )
+   map.java_containsValue(
+    Collections.generic<V>(),
+   )
+   map.java_putAll(
+    Collections.genericMap<K, V>(),
+   )
+   map.java_remove(
+    Collections.generic<K>(),
+   )
+   map.java_remove(
+    Collections.generic<K>(),
+    Collections.generic<V>(),
+   )
+   map.java_get(
+    Collections.mismatching() as Any?,
+   )
+   map.java_getOrDefault(
+    Collections.mismatching() as Any?,
+    Collections.generic<V?>(),
+   )
+   map.java_containsKey(
+    Collections.mismatching() as Any?,
+   )
+   map.java_containsValue(
+    Collections.mismatching() as Any?,
+   )
+   map.java_remove(
+    Collections.mismatching() as Any?,
+   )
+   map.java_remove(
+    Collections.mismatching() as Any?,
+    Collections.mismatching() as Any?,
+   )
   }
 
   @JvmStatic
-  @ObjCName("testMap_parameterized")
-  fun testMap_parameterized(
-   @ObjCName("withJavaUtilMap") map: MutableMap<String, String>
-  ) {
-   map.java_get(Collections.string())
-   map.java_getOrDefault(Collections.string(), Collections.string())
-   map.java_containsKey(Collections.string())
-   map.java_containsValue(Collections.string())
-   map.java_putAll(Collections.mapOfString())
-   map.java_remove(Collections.string())
-   map.java_remove(Collections.string(), Collections.string())
-   map.java_get(Collections.mismatching() as Any?)
-   map.java_getOrDefault(Collections.mismatching() as Any?, Collections.string())
-   map.java_containsKey(Collections.mismatching() as Any?)
-   map.java_containsValue(Collections.mismatching() as Any?)
-   map.java_remove(Collections.mismatching() as Any?)
-   map.java_remove(Collections.mismatching() as Any?, Collections.mismatching() as Any?)
+  fun testMap_parameterized(map: MutableMap<String, String>) {
+   map.java_get(
+    Collections.string(),
+   )
+   map.java_getOrDefault(
+    Collections.string(),
+    Collections.string(),
+   )
+   map.java_containsKey(
+    Collections.string(),
+   )
+   map.java_containsValue(
+    Collections.string(),
+   )
+   map.java_putAll(
+    Collections.mapOfString(),
+   )
+   map.java_remove(
+    Collections.string(),
+   )
+   map.java_remove(
+    Collections.string(),
+    Collections.string(),
+   )
+   map.java_get(
+    Collections.mismatching() as Any?,
+   )
+   map.java_getOrDefault(
+    Collections.mismatching() as Any?,
+    Collections.string(),
+   )
+   map.java_containsKey(
+    Collections.mismatching() as Any?,
+   )
+   map.java_containsValue(
+    Collections.mismatching() as Any?,
+   )
+   map.java_remove(
+    Collections.mismatching() as Any?,
+   )
+   map.java_remove(
+    Collections.mismatching() as Any?,
+    Collections.mismatching() as Any?,
+   )
   }
 
   @JvmStatic
-  @ObjCName("testMap_specialized")
-  fun testMap_specialized(
-   @ObjCName("withJ2ktCollections_MapOfString") map: Collections.MapOfString
-  ) {
-   map.java_get(Collections.string())
-   map.java_getOrDefault(Collections.string(), Collections.string())
-   map.java_containsKey(Collections.string())
-   map.java_containsValue(Collections.string())
-   map.java_putAll(Collections.mapOfString())
-   map.java_remove(Collections.string())
-   map.java_remove(Collections.string(), Collections.string())
-   map.java_get(Collections.mismatching() as Any?)
-   map.java_getOrDefault(Collections.mismatching() as Any?, Collections.string())
-   map.java_containsKey(Collections.mismatching() as Any?)
-   map.java_containsValue(Collections.mismatching() as Any?)
-   map.java_remove(Collections.mismatching() as Any?)
-   map.java_remove(Collections.mismatching() as Any?, Collections.mismatching() as Any?)
+  fun testMap_specialized(map: MapOfString) {
+   map.java_get(
+    Collections.string(),
+   )
+   map.java_getOrDefault(
+    Collections.string(),
+    Collections.string(),
+   )
+   map.java_containsKey(
+    Collections.string(),
+   )
+   map.java_containsValue(
+    Collections.string(),
+   )
+   map.java_putAll(
+    Collections.mapOfString(),
+   )
+   map.java_remove(
+    Collections.string(),
+   )
+   map.java_remove(
+    Collections.string(),
+    Collections.string(),
+   )
+   map.java_get(
+    Collections.mismatching() as Any?,
+   )
+   map.java_getOrDefault(
+    Collections.mismatching() as Any?,
+    Collections.string(),
+   )
+   map.java_containsKey(
+    Collections.mismatching() as Any?,
+   )
+   map.java_containsValue(
+    Collections.mismatching() as Any?,
+   )
+   map.java_remove(
+    Collections.mismatching() as Any?,
+   )
+   map.java_remove(
+    Collections.mismatching() as Any?,
+    Collections.mismatching() as Any?,
+   )
   }
 
   @JvmStatic
-  private fun convert(`object`: Any?): Any? {
+  private fun <T> convert(`object`: T): T {
    return `object`
   }
 
   @JvmStatic
-  private fun convertCollection(c: MutableCollection<*>): MutableCollection<*> {
+  private fun <T> convertCollection(c: MutableCollection<T>): MutableCollection<T> {
    return c
+  }
+
+  @JvmStatic
+  private fun <K, V> convertMap(m: MutableMap<K, V>): MutableMap<K, V> {
+   return m
   }
 
   @JvmStatic
@@ -241,10 +414,9 @@ open class Collections {
   }
  }
 
- @ObjCName("J2ktJ2ktCollections_CustomCollection", exact = true)
- open class CustomCollection<T>: JavaAbstractCollection<T>() {
+ open class CustomCollection<T>: AbstractCollection<T>() {
   override fun iterator(): MutableIterator<T> {
-   return null!!
+   throw RuntimeException()
   }
 
   override val size: Int
@@ -252,41 +424,78 @@ open class Collections {
     return 0
    }
 
-  override fun java_contains(o: Any?): Boolean {
-   var o_1: Any? = o
-   o_1 = Collections.convert(o_1)
-   return super<JavaAbstractCollection>.java_contains(o_1)
+  override fun contains(o: T): Boolean {
+   val o_1: Any? = o
+   var o_2: Any? = o_1
+   o_2 = Collections.convert<Any?>(o_2)
+   return super<AbstractCollection>.contains(
+    o_2 as T,
+   )
   }
 
-  override fun java_remove(o: Any?): Boolean {
-   var o_1: Any? = o
-   o_1 = Collections.convert(o_1)
-   return super<JavaAbstractCollection>.java_remove(o_1)
+  override fun remove(o: T): Boolean {
+   val o_1: Any? = o
+   var o_2: Any? = o_1
+   o_2 = Collections.convert<Any?>(o_2)
+   return super<AbstractCollection>.remove(
+    o_2 as T,
+   )
   }
 
-  override fun java_containsAll(c: MutableCollection<*>): Boolean {
-   var c_1: MutableCollection<*> = c
-   c_1 = Collections.convertCollection(c_1)
-   return super<JavaAbstractCollection>.java_containsAll(c_1)
+  override fun addAll(c: Collection<T>): Boolean {
+   val c_1: MutableCollection<out T> = c as MutableCollection<out T>
+   var c_2: MutableCollection<out T> = c_1
+   c_2 = Collections.convertCollection(c_2)
+   return super<AbstractCollection>.addAll(
+    c_2 as Collection<T>,
+   )
   }
 
-  override fun java_removeAll(c: MutableCollection<*>): Boolean {
-   var c_1: MutableCollection<*> = c
-   c_1 = Collections.convertCollection(c_1)
-   return super<JavaAbstractCollection>.java_removeAll(c_1)
+  override fun containsAll(c: Collection<T>): Boolean {
+   val c_1: MutableCollection<*> = c as MutableCollection<*>
+   var c_2: MutableCollection<*> = c_1
+   c_2 = Collections.convertCollection(c_2)
+   return super<AbstractCollection>.containsAll(
+    c_2 as Collection<T>,
+   )
   }
 
-  override fun java_retainAll(c: MutableCollection<*>): Boolean {
-   var c_1: MutableCollection<*> = c
-   c_1 = Collections.convertCollection(c_1)
-   return super<JavaAbstractCollection>.java_retainAll(c_1)
+  override fun removeAll(c: Collection<T>): Boolean {
+   val c_1: MutableCollection<*> = c as MutableCollection<*>
+   var c_2: MutableCollection<*> = c_1
+   c_2 = Collections.convertCollection(c_2)
+   return super<AbstractCollection>.removeAll(
+    c_2 as Collection<T>,
+   )
+  }
+
+  override fun retainAll(c: Collection<T>): Boolean {
+   val c_1: MutableCollection<*> = c as MutableCollection<*>
+   var c_2: MutableCollection<*> = c_1
+   c_2 = Collections.convertCollection(c_2)
+   return super<AbstractCollection>.retainAll(
+    c_2 as Collection<T>,
+   )
+  }
+
+  override fun toArray(): Array<Any?> {
+   return super<AbstractCollection>.toArray()
+  }
+
+  override fun <T1> toArray(a: Array<T1>): Array<T1> {
+   return super<AbstractCollection>.toArray<T1>(a)
   }
  }
 
- @ObjCName("J2ktJ2ktCollections_CustomList", exact = true)
- open class CustomList<T>: JavaAbstractList<T>() {
+ open class CustomCollectionDisambiguatingOverrides<T>: CustomCollection<T>(), MutableCollectionJvm<T> {
+  override fun spliterator(): Spliterator<T> {
+   return super<CustomCollection>.spliterator()
+  }
+ }
+
+ open class CustomList<T>: AbstractList<T>() {
   override fun get(index: Int): T {
-   return null as T
+   throw IndexOutOfBoundsException()
   }
 
   override val size: Int
@@ -294,139 +503,260 @@ open class Collections {
     return 0
    }
 
-  override fun java_indexOf(o: Any?): Int {
-   var o_1: Any? = o
-   o_1 = Collections.convert(o_1)
-   return super<JavaAbstractList>.java_indexOf(o_1)
+  override fun addAll(index: Int, c: Collection<T>): Boolean {
+   val c_1: MutableCollection<out T> = c as MutableCollection<out T>
+   var c_2: MutableCollection<out T> = c_1
+   c_2 = Collections.convertCollection(c_2)
+   return super<AbstractList>.addAll(
+    index,
+    c_2 as Collection<T>,
+   )
   }
 
-  override fun java_lastIndexOf(o: Any?): Int {
-   var o_1: Any? = o
-   o_1 = Collections.convert(o_1)
-   return super<JavaAbstractList>.java_lastIndexOf(o_1)
+  override fun indexOf(o: T): Int {
+   val o_1: Any? = o
+   var o_2: Any? = o_1
+   o_2 = Collections.convert<Any?>(o_2)
+   return super<AbstractList>.indexOf(
+    o_2 as T,
+   )
+  }
+
+  override fun lastIndexOf(o: T): Int {
+   val o_1: Any? = o
+   var o_2: Any? = o_1
+   o_2 = Collections.convert<Any?>(o_2)
+   return super<AbstractList>.lastIndexOf(
+    o_2 as T,
+   )
+  }
+
+  override fun toArray(): Array<Any?> {
+   return super<AbstractList>.toArray()
+  }
+
+  override fun <T1> toArray(a: Array<T1>): Array<T1> {
+   return super<AbstractList>.toArray<T1>(a)
   }
  }
 
- @ObjCName("J2ktJ2ktCollections_CustomMap", exact = true)
- open class CustomMap<K, V>: JavaAbstractMap<K, V>() {
+ open class CustomMap<K, V>: AbstractMap<K, V>() {
   override val entries: MutableSet<MutableEntry<K, V>>
    get() {
     throw RuntimeException()
    }
 
-  override fun java_containsKey(key: Any?): Boolean {
-   var key_1: Any? = key
-   key_1 = Collections.convert(key_1)
-   return super<JavaAbstractMap>.java_containsKey(key_1)
+  override fun containsKey(key: K): Boolean {
+   val key_1: Any? = key
+   var key_2: Any? = key_1
+   key_2 = Collections.convert<Any?>(key_2)
+   return super<AbstractMap>.containsKey(
+    key_2 as K,
+   )
   }
 
-  override fun java_containsValue(value: Any?): Boolean {
-   var value_1: Any? = value
-   value_1 = Collections.convert(value_1)
-   return super<JavaAbstractMap>.java_containsValue(value_1)
+  override fun containsValue(value: V): Boolean {
+   val value_1: Any? = value
+   var value_2: Any? = value_1
+   value_2 = Collections.convert<Any?>(value_2)
+   return super<AbstractMap>.containsValue(
+    value_2 as V,
+   )
   }
 
-  override fun java_remove(key: Any?): V {
-   var key_1: Any? = key
-   key_1 = Collections.convert(key_1)
-   return super<JavaAbstractMap>.java_remove(key_1) as V
+  override fun remove(key: K): V? {
+   val key_1: Any? = key
+   var key_2: Any? = key_1
+   key_2 = Collections.convert<Any?>(key_2)
+   return super<AbstractMap>.remove(
+    key_2 as K,
+   )
   }
 
-  override fun java_remove(key: Any?, value: Any?): Boolean {
-   var key_1: Any? = key
-   var value_1: Any? = value
-   key_1 = Collections.convert(key_1)
-   value_1 = Collections.convert(value_1)
-   return super<JavaAbstractMap>.java_remove(key_1, value_1)
+  override fun remove(key: K, value: V): Boolean {
+   val value_1: Any? = value
+   val key_1: Any? = key
+   var key_2: Any? = key_1
+   var value_2: Any? = value_1
+   key_2 = Collections.convert<Any?>(key_2)
+   value_2 = Collections.convert<Any?>(value_2)
+   return super<AbstractMap>.remove(
+    key_2 as K,
+    value_2 as V,
+   )
   }
 
-  override fun java_get(key: Any?): V {
-   var key_1: Any? = key
-   key_1 = Collections.convert(key_1)
-   return super<JavaAbstractMap>.java_get(key_1) as V
+  override fun get(key: K): V? {
+   val key_1: Any? = key
+   var key_2: Any? = key_1
+   key_2 = Collections.convert<Any?>(key_2)
+   return super<AbstractMap>.get(
+    key_2 as K,
+   )
   }
 
-  override fun java_getOrDefault(key: Any?, defaultValue: V?): V? {
-   var key_1: Any? = key
-   key_1 = Collections.convert(key_1)
-   return super<JavaAbstractMap>.java_getOrDefault(key_1, defaultValue)
+  override fun getOrDefault(key: K, defaultValue: V): V {
+   val defaultValue_1: V? = defaultValue
+   val key_1: Any? = key
+   var key_2: Any? = key_1
+   key_2 = Collections.convert<Any?>(key_2)
+   return super<AbstractMap>.getOrDefault(
+    key_2 as K,
+    defaultValue_1 as V,
+   ) as V
   }
 
-  override fun java_putAll(m: MutableMap<out K, out V>) {
-   super<JavaAbstractMap>.java_putAll(m)
+  override fun putAll(m: Map<out K, V>) {
+   val m_1: MutableMap<out K, out V> = m as MutableMap<out K, out V>
+   var m_2: MutableMap<out K, out V> = m_1
+   m_2 = Collections.convertMap(m_2)
+   super<AbstractMap>.putAll(
+    m_2 as Map<out K, V>,
+   )
   }
  }
 
- @ObjCName("J2ktJ2ktCollections_CollectionOfString", exact = true)
- open class CollectionOfString: Collections.CustomCollection<String>() {
-  @ObjCName("containsInteger")
-  open fun containsInteger(
-   @ObjCName("withJavaLangInteger") integer: Int
-  ): Boolean {
-   return super<Collections.CustomCollection>.java_remove(integer as Any?)
+ abstract class CustomMapDisambiguatingOverrides<K, V>: CustomMap<K, V>(), MutableMapJvm<K, V> {
+  override fun getOrDefault(arg0: K, arg1: V): V {
+   val arg1_1: V? = arg1
+   val arg0_1: Any? = arg0
+   return super<CustomMap>.getOrDefault(
+    arg0_1 as K,
+    arg1_1 as V,
+   ) as V
   }
 
-  @ObjCName("removeInteger")
-  open fun removeInteger(
-   @ObjCName("withJavaLangInteger") integer: Int
-  ): Boolean {
-   return super<Collections.CustomCollection>.java_remove(integer as Any?)
+  override fun remove(arg0: K, arg1: V): Boolean {
+   val arg1_1: Any? = arg1
+   val arg0_1: Any? = arg0
+   return super<CustomMap>.remove(
+    arg0_1 as K,
+    arg1_1 as V,
+   )
   }
  }
 
- @ObjCName("J2ktJ2ktCollections_ListOfString", exact = true)
- open class ListOfString: Collections.CustomList<String>() {
-  override fun java_indexOf(o: Any?): Int {
-   var o_1: Any? = o
-   o_1 = Collections.convert(o_1)
-   return super<Collections.CustomList>.java_indexOf(o_1)
-  }
-
-  override fun java_lastIndexOf(o: Any?): Int {
-   var o_1: Any? = o
-   o_1 = Collections.convert(o_1)
-   return super<Collections.CustomList>.java_lastIndexOf(o_1)
+ open class CustomMapReturnTypes<K, V>: CustomMap<K, V>() {
+  override fun getOrDefault(key: K, defaultValue: V): V {
+   val defaultValue_1: V? = defaultValue
+   val key_1: Any? = key
+   return defaultValue_1 as V
   }
  }
 
- @ObjCName("J2ktJ2ktCollections_MapOfString", exact = true)
- open class MapOfString: Collections.CustomMap<String, String>() {
-  override fun java_containsKey(key: Any?): Boolean {
-   var key_1: Any? = key
-   key_1 = Collections.convert(key_1)
-   return super<Collections.CustomMap>.java_containsKey(key_1)
+ open class CollectionOfString: CustomCollection<String>() {
+  open fun containsInteger(integer: Int): Boolean {
+   return super<CustomCollection>.remove(
+    integer as Any? as String,
+   )
   }
 
-  override fun java_containsValue(value: Any?): Boolean {
-   var value_1: Any? = value
-   value_1 = Collections.convert(value_1)
-   return super<Collections.CustomMap>.java_containsValue(value_1)
+  open fun removeInteger(integer: Int): Boolean {
+   return super<CustomCollection>.remove(
+    integer as Any? as String,
+   )
+  }
+ }
+
+ open class ListOfString: CustomList<String>() {
+  override fun indexOf(o: String): Int {
+   val o_1: Any? = o
+   var o_2: Any? = o_1
+   o_2 = Collections.convert<Any?>(o_2)
+   return super<CustomList>.indexOf(
+    o_2 as String,
+   )
   }
 
-  override fun java_remove(key: Any?): String {
-   var key_1: Any? = key
-   key_1 = Collections.convert(key_1)
-   return super<Collections.CustomMap>.java_remove(key_1)
+  override fun lastIndexOf(o: String): Int {
+   val o_1: Any? = o
+   var o_2: Any? = o_1
+   o_2 = Collections.convert<Any?>(o_2)
+   return super<CustomList>.lastIndexOf(
+    o_2 as String,
+   )
+  }
+ }
+
+ open class MapOfString: CustomMap<String, String>() {
+  override fun containsKey(key: String): Boolean {
+   val key_1: Any? = key
+   var key_2: Any? = key_1
+   key_2 = Collections.convert<Any?>(key_2)
+   return super<CustomMap>.containsKey(
+    key_2 as String,
+   )
   }
 
-  override fun java_remove(key: Any?, value: Any?): Boolean {
-   var key_1: Any? = key
-   var value_1: Any? = value
-   key_1 = Collections.convert(key_1)
-   value_1 = Collections.convert(value_1)
-   return super<Collections.CustomMap>.java_remove(key_1, value_1)
+  override fun containsValue(value: String): Boolean {
+   val value_1: Any? = value
+   var value_2: Any? = value_1
+   value_2 = Collections.convert<Any?>(value_2)
+   return super<CustomMap>.containsValue(
+    value_2 as String,
+   )
   }
 
-  override fun java_get(key: Any?): String {
-   var key_1: Any? = key
-   key_1 = Collections.convert(key_1)
-   return super<Collections.CustomMap>.java_get(key_1)
+  override fun remove(key: String): String? {
+   val key_1: Any? = key
+   var key_2: Any? = key_1
+   key_2 = Collections.convert<Any?>(key_2)
+   return super<CustomMap>.remove(
+    key_2 as String,
+   )
   }
 
-  override fun java_getOrDefault(key: Any?, defaultValue: String?): String? {
-   var key_1: Any? = key
-   key_1 = Collections.convert(key_1)
-   return super<Collections.CustomMap>.java_getOrDefault(key_1, defaultValue)
+  override fun remove(key: String, value: String): Boolean {
+   val value_1: Any? = value
+   val key_1: Any? = key
+   var key_2: Any? = key_1
+   var value_2: Any? = value_1
+   key_2 = Collections.convert<Any?>(key_2)
+   value_2 = Collections.convert<Any?>(value_2)
+   return super<CustomMap>.remove(
+    key_2 as String,
+    value_2 as String,
+   )
   }
+
+  override fun get(key: String): String? {
+   val key_1: Any? = key
+   var key_2: Any? = key_1
+   key_2 = Collections.convert<Any?>(key_2)
+   return super<CustomMap>.get(
+    key_2 as String,
+   )
+  }
+
+  override fun getOrDefault(key: String, defaultValue: String): String {
+   val defaultValue_1: String? = defaultValue
+   val key_1: Any? = key
+   var key_2: Any? = key_1
+   key_2 = Collections.convert<Any?>(key_2)
+   return super<CustomMap>.getOrDefault(
+    key_2 as String,
+    defaultValue_1 as String,
+   ) as String
+  }
+ }
+
+ abstract class AbstractCollectionWithToArrayOverride<E>: MutableCollectionJvm<E> {
+  @Suppress("NOTHING_TO_OVERRIDE")
+  override fun toArray(): Array<Any?> {
+   return uninitializedArrayOf<Any>(0) as Array<Any?>
+  }
+
+  @Suppress("NOTHING_TO_OVERRIDE")
+  override fun <T> toArray(a: Array<T>): Array<T> {
+   return a
+  }
+ }
+
+ interface CollectionInterfaceWithToArrayOverride<E>: MutableListJvm<E> {
+  @Suppress("NOTHING_TO_OVERRIDE")
+  override fun toArray(): Array<Any?>
+
+  @Suppress("NOTHING_TO_OVERRIDE")
+  override fun <T> toArray(a: Array<T>): Array<T>
  }
 }

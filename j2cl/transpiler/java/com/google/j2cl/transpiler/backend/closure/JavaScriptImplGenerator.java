@@ -30,15 +30,15 @@ import com.google.j2cl.common.SourcePosition;
 import com.google.j2cl.transpiler.ast.AstUtils;
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
 import com.google.j2cl.transpiler.ast.Field;
+import com.google.j2cl.transpiler.ast.HasAnnotations;
+import com.google.j2cl.transpiler.ast.MemberDescriptor;
 import com.google.j2cl.transpiler.ast.Method;
 import com.google.j2cl.transpiler.ast.MethodDescriptor;
-import com.google.j2cl.transpiler.ast.MethodLike;
 import com.google.j2cl.transpiler.ast.Type;
 import com.google.j2cl.transpiler.ast.TypeDeclaration;
 import com.google.j2cl.transpiler.ast.TypeDeclaration.SourceLanguage;
 import com.google.j2cl.transpiler.ast.TypeDescriptors;
 import com.google.j2cl.transpiler.ast.TypeVariable;
-import com.google.j2cl.transpiler.ast.Variable;
 import com.google.j2cl.transpiler.ast.Visibility;
 import java.util.Collection;
 import java.util.HashMap;
@@ -73,34 +73,15 @@ public class JavaScriptImplGenerator extends JavaScriptGenerator {
   private void emitMethodHeader(Method method) {
     MethodDescriptor methodDescriptor = method.getDescriptor();
     sourceBuilder.append(getMethodQualifiers(methodDescriptor));
+    if (methodDescriptor.isSuspendFunction()) {
+      // Kotlin suspend functions are transpiled to JavaScript generator functions, which are
+      // indicated by a `*` before their name.
+      sourceBuilder.append("*");
+    }
     sourceBuilder.emitWithMapping(
         method.getSourcePosition(), () -> sourceBuilder.append(methodDescriptor.getMangledName()));
 
-    sourceBuilder.append("(");
-
-    // TODO(goktug): Reuse with Expression transpiler which has similar logic.
-    String separator = "";
-    for (int i = 0; i < method.getParameters().size(); i++) {
-      sourceBuilder.append(separator);
-      // Emit parameters in the more readable inline short form.
-      emitParameter(method, i);
-      separator = ", ";
-    }
-    sourceBuilder.append(") ");
-  }
-
-  private void emitParameter(MethodLike expression, int i) {
-    Variable parameter = expression.getParameters().get(i);
-
-    if (parameter == expression.getJsVarargsParameter()) {
-      sourceBuilder.append("...");
-    }
-    sourceBuilder.append(
-        "/** " + closureTypesGenerator.getJsDocForParameter(expression, i) + " */ ");
-    sourceBuilder.emitWithMapping(
-        // Only map parameters if they are named.
-        AstUtils.removeUnnamedSourcePosition(parameter.getSourcePosition()),
-        () -> sourceBuilder.append(environment.getUniqueNameForVariable(parameter)));
+    environment.emitParameters(sourceBuilder, method);
   }
 
   @Override
@@ -140,7 +121,7 @@ public class JavaScriptImplGenerator extends JavaScriptGenerator {
             + closureTypesGenerator.getClosureTypeString(
                 AstUtils.getJsEnumValueFieldType(typeDeclaration))
             + "}");
-    if (type.getDeclaration().isDeprecated()) {
+    if (isDeprecated(type.getDeclaration())) {
       sourceBuilder.append(" @deprecated");
     }
     sourceBuilder.appendln(" */");
@@ -155,7 +136,7 @@ public class JavaScriptImplGenerator extends JavaScriptGenerator {
       sourceBuilder.emitWithMemberMapping(
           field.getDescriptor(),
           () -> {
-            if (field.getDescriptor().isDeprecated()) {
+            if (isDeprecated(field.getDescriptor())) {
               sourceBuilder.appendln(" /** @deprecated */");
             }
             sourceBuilder.emitWithMapping(
@@ -249,7 +230,7 @@ public class JavaScriptImplGenerator extends JavaScriptGenerator {
     type.getSuperInterfaceTypeDescriptors()
         .forEach(t -> renderClauseIfTypeExistsInJavaScript(extendsOrImplementsString, t, sb));
 
-    if (type.getDeclaration().isDeprecated()) {
+    if (isDeprecated(type.getDeclaration())) {
       appendWithNewLine(sb, " * @deprecated");
     }
 
@@ -388,7 +369,7 @@ public class JavaScriptImplGenerator extends JavaScriptGenerator {
     if (methodDescriptor.isBridge()
         && (isKotlinSource
             || methodDescriptor.getJsOverriddenMethodDescriptors().stream()
-                .anyMatch(m -> m.isFinal()))) {
+                .anyMatch(MemberDescriptor::isFinal))) {
       // Allow bridges to override final methods.
       jsDocBuilder.append(" @suppress{visibility}");
     }
@@ -398,13 +379,12 @@ public class JavaScriptImplGenerator extends JavaScriptGenerator {
           getJsDocDeclarationForTypeVariable(methodDescriptor.getTypeParameterTypeDescriptors()));
     }
 
-    String returnTypeName =
-        closureTypesGenerator.getClosureTypeString(methodDescriptor.getReturnTypeDescriptor());
     if (needsReturnJsDoc(methodDescriptor)) {
+      String returnTypeName = closureTypesGenerator.getJsDocForReturnType(methodDescriptor);
       jsDocBuilder.append(" @return {").append(returnTypeName).append("}");
     }
 
-    if (methodDescriptor.isDeprecated()) {
+    if (isDeprecated(methodDescriptor)) {
       jsDocBuilder.append(" @deprecated");
     }
 
@@ -413,7 +393,10 @@ public class JavaScriptImplGenerator extends JavaScriptGenerator {
 
   private boolean needsReturnJsDoc(MethodDescriptor methodDescriptor) {
     return !methodDescriptor.isConstructor()
-        && !TypeDescriptors.isPrimitiveVoid(methodDescriptor.getReturnTypeDescriptor());
+        && (!TypeDescriptors.isPrimitiveVoid(methodDescriptor.getReturnTypeDescriptor())
+            // Suspend functions are tranpiled to JS Generator functions which always require
+            // to declare the return type even if the generator does not yield any value.
+            || methodDescriptor.isSuspendFunction());
   }
 
   private void renderLoadModules() {
@@ -512,6 +495,12 @@ public class JavaScriptImplGenerator extends JavaScriptGenerator {
         typeDescriptors.stream()
             .map(closureTypesGenerator::getClosureTypeString)
             .collect(joining(", ")));
+  }
+
+  /** Returns true if the given node is annotated with @Deprecated. */
+  private static boolean isDeprecated(HasAnnotations hasAnnotations) {
+    return hasAnnotations.hasAnnotation("java.lang.Deprecated")
+        || hasAnnotations.hasAnnotation("kotlin.Deprecated");
   }
 
   private static void appendWithNewLine(StringBuilder sb, String string) {

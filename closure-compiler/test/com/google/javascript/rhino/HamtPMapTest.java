@@ -45,6 +45,7 @@ import static org.junit.Assert.assertThrows;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.rhino.PMap.Reconciler;
 import java.util.Objects;
 import java.util.TreeSet;
@@ -366,6 +367,7 @@ public class HamtPMapTest {
       return this.expectations.removeAll(key).get(2);
     }
 
+    @CanIgnoreReturnValue
     JoinExpectations<K, V> expect(K key, V left, V right, V result) {
       assertThat(this.expectations).doesNotContainKey(key);
       this.expectations.put(key, left);
@@ -457,8 +459,7 @@ public class HamtPMapTest {
 
     @Override
     public boolean equals(Object o) {
-      if (o instanceof IntegerWithCustomHashCode) {
-        IntegerWithCustomHashCode that = (IntegerWithCustomHashCode) o;
+      if (o instanceof IntegerWithCustomHashCode that) {
         return i.equals(that.i);
       }
       return false;

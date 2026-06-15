@@ -309,7 +309,6 @@ public class JSDocInfo implements Serializable {
     CONST,
     CONSTRUCTOR,
     DEFINE,
-    HIDDEN,
     TYPE_SUMMARY,
     FINAL,
     OVERRIDE,
@@ -326,6 +325,7 @@ public class JSDocInfo implements Serializable {
     NOCOMPILE,
     NODTS,
     UNRESTRICTED,
+    USED_VIA_DOT_CONSTRUCTOR,
     STRUCT,
     DICT,
     NOCOLLAPSE,
@@ -554,9 +554,9 @@ public class JSDocInfo implements Serializable {
 
     @Override
     boolean isEquivalentTo(SourcePosition<Node> that) {
-      if (!(that instanceof TypePosition)
+      if (!(that instanceof TypePosition typePosition)
           || !isSamePositionAs(that)
-          || brackets != ((TypePosition) that).brackets
+          || brackets != typePosition.brackets
           || (getItem() == null) != (that.getItem() == null)) {
         return false;
       }
@@ -651,7 +651,7 @@ public class JSDocInfo implements Serializable {
     return builder;
   }
 
-  @SuppressWarnings("MissingOverride") // Adding @Override breaks the GWT compilation.
+  @Override
   public JSDocInfo clone() {
     return clone(false);
   }
@@ -791,11 +791,6 @@ public class JSDocInfo implements Serializable {
    */
   public boolean isDefine() {
     return checkBit(Bit.DEFINE);
-  }
-
-  /** Returns whether the {@code @hidden} annotation is present on this {@link JSDocInfo}. */
-  public boolean isHidden() {
-    return checkBit(Bit.HIDDEN);
   }
 
   /** Returns whether the {@code @override} annotation is present on this {@link JSDocInfo}. */
@@ -1246,6 +1241,11 @@ public class JSDocInfo implements Serializable {
     return checkBit(Bit.CLOSURE_UNAWARE_CODE);
   }
 
+  /** Returns whether JSDoc is annotated with the {@code @usedViaDotConstructor} annotation. */
+  public boolean isUsedViaDotConstructor() {
+    return checkBit(Bit.USED_VIA_DOT_CONSTRUCTOR);
+  }
+
   /** Gets the description specified by the {@code @license} annotation. */
   public String getLicense() {
     return LICENSE.get(this);
@@ -1548,8 +1548,8 @@ public class JSDocInfo implements Serializable {
       throw new IllegalArgumentException("no property value");
     }
 
-    if (propertyValues instanceof Object[]) {
-      return ((Object[]) propertyValues)[index];
+    if (propertyValues instanceof Object[] array) {
+      return array[index];
     }
 
     if (index != 0) {
@@ -2297,17 +2297,6 @@ public class JSDocInfo implements Serializable {
     }
 
     /**
-     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isHidden()}
-     * flag set to {@code true}.
-     *
-     * @return {@code true} if the hiddenness was recorded and {@code false} if it was already
-     *     defined
-     */
-    public boolean recordHiddenness() {
-      return populateBit(Bit.HIDDEN, true);
-    }
-
-    /**
      * Records that the {@link JSDocInfo} being built should have its {@link
      * JSDocInfo#isNoCompile()} flag set to {@code true}.
      *
@@ -2542,6 +2531,7 @@ public class JSDocInfo implements Serializable {
      * Records that the {@link JSDocInfo} being built should have its {@link
      * JSDocInfo#isImplicitCast()} flag set to {@code true}.
      */
+    @CanIgnoreReturnValue
     public boolean recordImplicitCast() {
       return populateBit(Bit.IMPLICITCAST, true);
     }
@@ -2727,6 +2717,20 @@ public class JSDocInfo implements Serializable {
     /** Records that this JSDoc was annotated with the {@code @closureUnaware} annotation. */
     public boolean recordClosureUnawareCode() {
       return populateBit(Bit.CLOSURE_UNAWARE_CODE, true);
+    }
+
+    /**
+     * Removes the {@code @closureUnaware} annotation from this JSDoc, returning true the annotation
+     * was present before removal.
+     */
+    @CanIgnoreReturnValue
+    public boolean removeClosureUnawareCode() {
+      return populateBit(Bit.CLOSURE_UNAWARE_CODE, false);
+    }
+
+    /** Records that this JSDoc was annotated with the {@code @usedViaDotConstructor} annotation. */
+    public boolean recordUsedViaDotConstructor() {
+      return populateBit(Bit.USED_VIA_DOT_CONSTRUCTOR, true);
     }
 
     // TODO(sdh): this is a new method - consider removing it in favor of recordType?

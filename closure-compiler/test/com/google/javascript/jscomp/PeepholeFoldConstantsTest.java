@@ -1016,7 +1016,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Test
   public void testIssue821() {
     testSame("var a =(Math.random()>0.5? '1' : 2 ) + 3 + 4;");
-    testSame("var a = ((Math.random() ? 0 : 1) ||" + "(Math.random()>0.5? '1' : 2 )) + 3 + 4;");
+    testSame("var a = ((Math.random() ? 0 : 1) || (Math.random()>0.5? '1' : 2 )) + 3 + 4;");
   }
 
   @Test
@@ -1580,6 +1580,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("x=y-x");
     test("x=x|y", "x|=y");
     test("x=y|x", "x|=y");
+    test("x=x|y|z", "x|=y|z");
+    testSame("x=x&&y&&z");
     test("x=x*y", "x*=y");
     test("x=y*x", "x*=y");
     test("x=x**y", "x**=y");
@@ -2021,22 +2023,32 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
         "function foo(x = (1 !== void 0), y) {return x+y;}",
         "function foo(x = true, y) {return x+y;}");
     test(
-        lines("class Foo {", "  constructor() {this.x = null <= null;}", "}"),
-        lines("class Foo {", "  constructor() {this.x = true;}", "}"));
+        """
+        class Foo {
+          constructor() {this.x = null <= null;}
+        }
+        """,
+        """
+        class Foo {
+          constructor() {this.x = true;}
+        }
+        """);
     test("function foo() {return `${false && y}`}", "function foo() {return `${false}`}");
   }
 
   @Test
   public void testClassField() {
     test(
-        lines(
-            "class Foo {", //
-            "  x = null <= null;",
-            "}"),
-        lines(
-            "class Foo {", //
-            "  x = true;",
-            "}"));
+        """
+        class Foo {
+          x = null <= null;
+        }
+        """,
+        """
+        class Foo {
+          x = true;
+        }
+        """);
   }
 
   private static final ImmutableList<String> LITERAL_OPERANDS =

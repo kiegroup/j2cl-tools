@@ -5,6 +5,12 @@
 )
 
 ;;; Code for overridingmethods.Parent [type definition]
+(type $overridingmethods.Parent (sub $java.lang.Object (struct
+ (field $vtable (ref $overridingmethods.Parent.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $overridingmethods.Parent.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -14,14 +20,14 @@
  (field $m_nonFinal__void (ref $function.m_nonFinal__void))
  ))
 )
-(type $overridingmethods.Parent (sub $java.lang.Object (struct
- (field $vtable (ref $overridingmethods.Parent.vtable))
- (field $itable (ref $itable))
+
+;;; Code for overridingmethods.SomeInterface.$LambdaAdaptor [type definition]
+(type $overridingmethods.SomeInterface.$LambdaAdaptor (sub $java.lang.Object (struct
+ (field $vtable (ref $overridingmethods.SomeInterface.$LambdaAdaptor.vtable))
+ (field $itable (ref $overridingmethods.SomeInterface.$LambdaAdaptor.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for overridingmethods.SomeInterface.$LambdaAdaptor [type definition]
 (type $overridingmethods.SomeInterface.$LambdaAdaptor.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -30,14 +36,14 @@
  (field $m_interfaceMethod__void (ref $function.m_interfaceMethod__void))
  ))
 )
-(type $overridingmethods.SomeInterface.$LambdaAdaptor (sub $java.lang.Object (struct
- (field $vtable (ref $overridingmethods.SomeInterface.$LambdaAdaptor.vtable))
- (field $itable (ref $overridingmethods.SomeInterface.$LambdaAdaptor.itable))
+
+;;; Code for overridingmethods.Child [type definition]
+(type $overridingmethods.Child (sub $overridingmethods.Parent (struct
+ (field $vtable (ref $overridingmethods.Child.vtable))
+ (field $itable (ref $overridingmethods.Child.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for overridingmethods.Child [type definition]
 (type $overridingmethods.Child.vtable (sub $overridingmethods.Parent.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -48,14 +54,14 @@
  (field $m_interfaceMethod__void (ref $function.m_interfaceMethod__void))
  ))
 )
-(type $overridingmethods.Child (sub $overridingmethods.Parent (struct
- (field $vtable (ref $overridingmethods.Child.vtable))
- (field $itable (ref $overridingmethods.Child.itable))
+
+;;; Code for overridingmethods.FinalChild [type definition]
+(type $overridingmethods.FinalChild (sub $overridingmethods.Parent (struct
+ (field $vtable (ref $overridingmethods.FinalChild.vtable))
+ (field $itable (ref $overridingmethods.FinalChild.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for overridingmethods.FinalChild [type definition]
 (type $overridingmethods.FinalChild.vtable (sub $overridingmethods.Parent.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -64,12 +70,6 @@
  (field $m_finalInChild__void (ref $function.m_finalInChild__void))
  (field $m_nonFinal__void (ref $function.m_nonFinal__void))
  (field $m_interfaceMethod__void (ref $function.m_interfaceMethod__void))
- ))
-)
-(type $overridingmethods.FinalChild (sub $overridingmethods.Parent (struct
- (field $vtable (ref $overridingmethods.FinalChild.vtable))
- (field $itable (ref $overridingmethods.FinalChild.itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
 
@@ -214,7 +214,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/overridingmethods/readable-j2wasm.js/overridingmethods/Child.java:22:6
   (call $$clinit__void_<once>_@overridingmethods.Parent )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/overridingmethods/readable-j2wasm.js/overridingmethods/Child.java:22:6
-  (local.set $$instance (struct.new $overridingmethods.Parent (ref.as_non_null (global.get $overridingmethods.Parent.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $overridingmethods.Parent (global.get $overridingmethods.Parent.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/overridingmethods/readable-j2wasm.js/overridingmethods/Child.java:22:6
   (call $$ctor__void_$p_overridingmethods_Parent@overridingmethods.Parent (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/overridingmethods/readable-j2wasm.js/overridingmethods/Child.java:22:6
@@ -381,7 +381,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/overridingmethods/readable-j2wasm.js/overridingmethods/Child.java:30:6
   (call $$clinit__void_<once>_@overridingmethods.Child )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/overridingmethods/readable-j2wasm.js/overridingmethods/Child.java:30:6
-  (local.set $$instance (struct.new $overridingmethods.Child (ref.as_non_null (global.get $overridingmethods.Child.vtable)) (ref.as_non_null (global.get $overridingmethods.Child.itable)) (i32.const 0)))
+  (local.set $$instance (struct.new $overridingmethods.Child (global.get $overridingmethods.Child.vtable) (global.get $overridingmethods.Child.itable) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/overridingmethods/readable-j2wasm.js/overridingmethods/Child.java:30:6
   (call $$ctor__void_$p_overridingmethods_Child@overridingmethods.Child (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/overridingmethods/readable-j2wasm.js/overridingmethods/Child.java:30:6
@@ -491,7 +491,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/overridingmethods/readable-j2wasm.js/overridingmethods/Child.java:41:12
   (call $$clinit__void_<once>_@overridingmethods.FinalChild )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/overridingmethods/readable-j2wasm.js/overridingmethods/Child.java:41:12
-  (local.set $$instance (struct.new $overridingmethods.FinalChild (ref.as_non_null (global.get $overridingmethods.FinalChild.vtable)) (ref.as_non_null (global.get $overridingmethods.FinalChild.itable)) (i32.const 0)))
+  (local.set $$instance (struct.new $overridingmethods.FinalChild (global.get $overridingmethods.FinalChild.vtable) (global.get $overridingmethods.FinalChild.itable) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/overridingmethods/readable-j2wasm.js/overridingmethods/Child.java:41:12
   (call $$ctor__void_$p_overridingmethods_FinalChild@overridingmethods.FinalChild (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/overridingmethods/readable-j2wasm.js/overridingmethods/Child.java:41:12

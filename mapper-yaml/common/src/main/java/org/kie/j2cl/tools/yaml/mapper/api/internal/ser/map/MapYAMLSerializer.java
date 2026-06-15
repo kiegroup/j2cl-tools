@@ -17,6 +17,7 @@
 package org.kie.j2cl.tools.yaml.mapper.api.internal.ser.map;
 
 import java.util.Map;
+import org.kie.j2cl.tools.yaml.mapper.api.YAMLSerializer;
 import org.kie.j2cl.tools.yaml.mapper.api.internal.ser.AbstractYAMLSerializer;
 import org.kie.j2cl.tools.yaml.mapper.api.internal.ser.YAMLSerializationContext;
 import org.kie.j2cl.tools.yaml.mapper.api.node.YamlMapping;
@@ -26,37 +27,27 @@ import org.kie.j2cl.tools.yaml.mapper.api.node.YamlSequence;
  * Default {@link AbstractYAMLSerializer} implementation for {@link Map}.
  *
  * @param <M> Type of the {@link Map}
- * @param <K> Type of the keys inside the {@link Map}
  * @param <V> Type of the values inside the {@link Map}
  * @author Nicolas Morel
  * @version $Id: $
  */
-public class MapYAMLSerializer<M extends Map<K, V>, K, V> extends AbstractYAMLSerializer<M> {
+public class MapYAMLSerializer<M extends Map<String, V>, V> extends AbstractYAMLSerializer<M> {
 
-  protected final AbstractYAMLSerializer<K> keySerializer;
-  protected final AbstractYAMLSerializer<V> valueSerializer;
+  protected final YAMLSerializer<V> valueSerializer;
   protected final String propertyName;
 
   /**
    * Constructor for MapYAMLSerializer.
    *
-   * @param keySerializer {@link AbstractYAMLSerializer} used to serialize the keys.
    * @param valueSerializer {@link AbstractYAMLSerializer} used to serialize the values.
    */
-  protected MapYAMLSerializer(
-      AbstractYAMLSerializer<K> keySerializer,
-      AbstractYAMLSerializer<V> valueSerializer,
-      String propertyName) {
-    if (null == keySerializer) {
-      throw new IllegalArgumentException("keySerializer cannot be null");
-    }
+  protected MapYAMLSerializer(YAMLSerializer<V> valueSerializer, String propertyName) {
     if (null == valueSerializer) {
       throw new IllegalArgumentException("valueSerializer cannot be null");
     }
     if (null == propertyName) {
       throw new IllegalArgumentException("valueSerializer cannot be null");
     }
-    this.keySerializer = keySerializer;
     this.valueSerializer = valueSerializer;
     this.propertyName = propertyName;
   }
@@ -64,16 +55,14 @@ public class MapYAMLSerializer<M extends Map<K, V>, K, V> extends AbstractYAMLSe
   /**
    * newInstance
    *
-   * @param keySerializer {@link AbstractYAMLSerializer} used to serialize the keys.
    * @param valueSerializer {@link AbstractYAMLSerializer} used to serialize the values.
    * @param <M> Type of the {@link Map}
    * @return a new instance of {@link MapYAMLSerializer}
    */
-  public static <M extends Map<?, ?>> MapYAMLSerializer<M, ?, ?> newInstance(
-      AbstractYAMLSerializer<?> keySerializer,
-      AbstractYAMLSerializer<?> valueSerializer,
-      String propertyName) {
-    return new MapYAMLSerializer(keySerializer, valueSerializer, propertyName);
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public static <M extends Map<String, ?>> MapYAMLSerializer<M, ?> newInstance(
+      YAMLSerializer<?> valueSerializer, String propertyName) {
+    return new MapYAMLSerializer(valueSerializer, propertyName);
   }
 
   /** {@inheritDoc} */
@@ -96,40 +85,23 @@ public class MapYAMLSerializer<M extends Map<K, V>, K, V> extends AbstractYAMLSe
    * @param ctx a {@link YAMLSerializationContext} object.
    */
   public void serializeValues(YamlMapping writer, M values, YAMLSerializationContext ctx) {
-    throw new UnsupportedOperationException();
-    /*        if (!values.isEmpty()) {
-        Map<K, V> map = values;
-        if (ctx.isOrderMapEntriesByKeys() && !(values instanceof SortedMap<?, ?>)) {
-            map = new TreeMap<>(map);
+    if (!values.isEmpty()) {
+      for (Map.Entry<String, V> entry : values.entrySet()) {
+        String key = entry.getKey();
+        V value = entry.getValue();
+        if (null == value && !ctx.isSerializeNulls()) {
+          continue;
         }
-        writer.beginObject(propertyName);
-        for (Map.Entry<K, V> entry : map.entrySet()) {
-            writer.beginObject("entry");
-            String keyName = getNodeName(entry.getKey().getClass(), ctx);
-            String valueName = getNodeName(entry.getValue().getClass(), ctx);
-            writer.unescapeName(keyName);
-            keySerializer.setPropertyName(keyName)
-                    .serialize(writer, entry.getKey(), ctx, params, true);
-
-            writer.unescapeName(valueName);
-            valueSerializer.setPropertyName(valueName)
-                    .serialize(writer, entry.getValue(), ctx, params, true);
-
-            writer.endObject();
-        }
-        writer.endObject();
-    }*/
-  }
-
-  private String getNodeName(Class clazz, YAMLSerializationContext ctx) {
-    /*    if (ctx.isMapKeyAndValueCanonical()) {
-      return clazz.getCanonicalName();
-    }*/
-    return clazz.getSimpleName();
+        valueSerializer.serialize(writer, key, value, ctx);
+      }
+    }
   }
 
   @Override
-  public void serialize(YamlSequence writer, M value, YAMLSerializationContext ctx) {
-    throw new UnsupportedOperationException();
+  public void serialize(YamlSequence writer, M map, YAMLSerializationContext ctx) {
+    if (!map.isEmpty()) {
+      YamlMapping yamlMapping = writer.addMappingNode();
+      serializeValues(yamlMapping, map, ctx);
+    }
   }
 }

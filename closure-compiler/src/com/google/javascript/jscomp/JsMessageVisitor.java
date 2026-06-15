@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +31,6 @@ import com.google.javascript.jscomp.JsMessage.PlaceholderFormatException;
 import com.google.javascript.jscomp.JsMessage.PlaceholderReference;
 import com.google.javascript.jscomp.JsMessage.StringPart;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -55,7 +53,6 @@ import org.jspecify.annotations.Nullable;
  * or {@link JsMessageVisitor#processIcuTemplateDefinition(IcuTemplateDefinition)} for {@code
  * goog.i18n.messages.declareIcuTemplate()} calls.
  */
-@GwtIncompatible("JsMessage, java.util.regex")
 public abstract class JsMessageVisitor extends AbstractPostOrderCallback implements CompilerPass {
 
   private static final String MSG_FUNCTION_NAME = "getMsg";
@@ -121,7 +118,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   public static final DiagnosticType BAD_FALLBACK_SYNTAX =
       DiagnosticType.error(
           "JSC_MSG_BAD_FALLBACK_SYNTAX",
-          SimpleFormat.format(
+          String.format(
               "Bad syntax. " + "Expected syntax: %s(MSG_1, MSG_2)", MSG_FALLBACK_FUNCTION_NAME));
 
   public static final DiagnosticType FALLBACK_ARG_ERROR =
@@ -1051,6 +1048,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   private interface JsMessageOptions {
     // Replace `'<'` with `'&lt;'` in the message.
     boolean isEscapeLessThan();
+
     // Replace these escaped entities with their literal characters in the message
     // (Overrides escapeLessThan)
     // '&lt;' -> '<'
@@ -1215,6 +1213,13 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
             .addAll(placeholderExamplesMap.keySet())
             .addAll(placeholderOriginalCodeMap.keySet())
             .build();
+
+    for (String placeholderName : placeholderNames) {
+      if (!JsMessage.isCanonicalPlaceholderNameFormat(placeholderName)) {
+        throw new MalformedException(
+            String.format("Placeholder not in UPPER_SNAKE_CASE: %s", placeholderName), optionsBag);
+      }
+    }
 
     // NOTE: The getX() methods below should all do little to no computation.
     // In particular, all checking for MalformedExceptions must be done before creating this object.

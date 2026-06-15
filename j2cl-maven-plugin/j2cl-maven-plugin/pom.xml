@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.kie.j2cl.tools</groupId>
     <artifactId>j2cl-tools</artifactId>
-    <version>0.23.2</version>
+    <version>0.23.6</version>
   </parent>
   <artifactId>j2cl-maven-plugin</artifactId>
   <packaging>maven-plugin</packaging>
@@ -60,12 +60,24 @@
       <scope>provided</scope>
     </dependency>
 
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>failureaccess</artifactId>
+      <version>1.0.1</version>
+    </dependency>
+
 
 
     <!-- test goal dependencies -->
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-support</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>failureaccess</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
@@ -145,7 +157,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.6.4</version>
+        <version>3.15.1</version>
       </plugin>
 
       <plugin>
@@ -194,7 +206,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.6.2</version>
+        <version>3.15.1</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

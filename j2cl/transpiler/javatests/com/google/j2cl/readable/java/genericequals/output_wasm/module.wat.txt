@@ -1,18 +1,18 @@
 ;;; Code for genericequals.GenericEquals [type definition]
-(type $genericequals.GenericEquals.vtable (sub $java.lang.Object.vtable (struct
- (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
- (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
- (field $m_hashCode__int (ref $function.m_hashCode__int))
- (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
- (field $m_foo__genericequals_GenericEquals__java_lang_Object (ref $function.m_foo__genericequals_GenericEquals__java_lang_Object))
- ))
-)
 (type $genericequals.GenericEquals (sub $java.lang.Object (struct
  (field $vtable (ref $genericequals.GenericEquals.vtable))
  (field $itable (ref $itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  (field $value2@genericequals.GenericEquals (mut (ref null $genericequals.GenericEquals)))
  (field $value@genericequals.GenericEquals (mut (ref null $java.lang.Object)))
+ ))
+)
+(type $genericequals.GenericEquals.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_foo__genericequals_GenericEquals__java_lang_Object (ref $function.m_foo__genericequals_GenericEquals__java_lang_Object))
  ))
 )
 
@@ -49,7 +49,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/genericequals/readable-j2wasm.js/genericequals/GenericEquals.java:23:9
   (call $$clinit__void_<once>_@genericequals.GenericEquals )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/genericequals/readable-j2wasm.js/genericequals/GenericEquals.java:23:9
-  (local.set $$instance (struct.new $genericequals.GenericEquals (ref.as_non_null (global.get $genericequals.GenericEquals.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (ref.null $genericequals.GenericEquals) (ref.null $java.lang.Object)))
+  (local.set $$instance (struct.new $genericequals.GenericEquals (global.get $genericequals.GenericEquals.vtable) (global.get $itable.empty) (i32.const 0) (ref.null $genericequals.GenericEquals) (ref.null $java.lang.Object)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/genericequals/readable-j2wasm.js/genericequals/GenericEquals.java:23:9
   (call $$ctor__java_lang_Object__void_$p_genericequals_GenericEquals@genericequals.GenericEquals (ref.as_non_null (local.get $$instance))(local.get $value))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/genericequals/readable-j2wasm.js/genericequals/GenericEquals.java:23:9

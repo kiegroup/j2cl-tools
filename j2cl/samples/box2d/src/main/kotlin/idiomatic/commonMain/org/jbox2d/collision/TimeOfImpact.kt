@@ -70,7 +70,7 @@ class TimeOfImpact(private val pool: IWorldPool) {
     FAILED,
     OVERLAPPED,
     TOUCHING,
-    SEPARATED
+    SEPARATED,
   }
 
   /**
@@ -87,10 +87,8 @@ class TimeOfImpact(private val pool: IWorldPool) {
    * Compute the upper bound on time before two shapes penetrate. Time is represented as a fraction
    * between [0,tMax]. This uses a swept separating axis and may miss some intermediate,
    * non-tunneling collision. If you change the time interval, you should call this function again.
-   * Note: use Distance to compute the contact point and normal at the time of impact.
    *
-   * @param output
-   * @param input
+   * Note: use Distance to compute the contact point and normal at the time of impact.
    */
   fun timeOfImpact(output: TOIOutput, input: TOIInput) {
     // CCD via the local separating axis method. This seeks progression
@@ -113,8 +111,7 @@ class TimeOfImpact(private val pool: IWorldPool) {
     val target = MathUtils.max(Settings.LINEAR_SLOP, totalRadius - 3.0f * Settings.LINEAR_SLOP)
     val tolerance = 0.25f * Settings.LINEAR_SLOP
 
-    // assert is not supported in KMP.
-    // assert(target > tolerance)
+    assert(target > tolerance)
     var t1 = 0f
     var iter = 0
     cache.count = 0
@@ -288,7 +285,7 @@ class TimeOfImpact(private val pool: IWorldPool) {
 internal enum class Type {
   POINTS,
   FACE_A,
-  FACE_B
+  FACE_B,
 }
 
 internal class SeparationFunction {
@@ -324,14 +321,13 @@ internal class SeparationFunction {
     sweepA: Sweep,
     proxyB: DistanceProxy,
     sweepB: Sweep,
-    t1: Float
+    t1: Float,
   ): Float {
     this.proxyA = proxyA
     this.proxyB = proxyB
     val count = cache.count
 
-    // assert is not supported in KMP.
-    // assert(0 < count && count < 3)
+    assert(0 < count && count < 3)
     this.sweepA = sweepA
     this.sweepB = sweepB
     this.sweepA!!.getTransform(xfa, t1)
@@ -368,7 +364,7 @@ internal class SeparationFunction {
       localPointA.set(proxyA.vertices[cache.indexA[0]])
       Transform.mulToOutUnsafe(xfa, localPointA, pointA)
       temp.set(pointA).subLocal(pointB)
-      return Vec2.dot(temp, normal).let {
+      return (temp dot normal).let {
         if (it < 0.0f) {
           axis.negateLocal()
           -it
@@ -390,7 +386,7 @@ internal class SeparationFunction {
       localPointB.set(nonNullProxyB.vertices[cache.indexB[0]])
       Transform.mulToOutUnsafe(xfb, localPointB, pointB)
       temp.set(pointB).subLocal(pointA)
-      return Vec2.dot(temp, normal).let {
+      return (temp dot normal).let {
         if (it < 0.0f) {
           axis.negateLocal()
           -it
@@ -418,7 +414,7 @@ internal class SeparationFunction {
         localPointB.set(nonNullProxyB.vertices[indexes[1]])
         Transform.mulToOutUnsafe(xfa, localPointA, pointA)
         Transform.mulToOutUnsafe(xfb, localPointB, pointB)
-        return Vec2.dot(pointB.subLocal(pointA), axis)
+        return pointB.subLocal(pointA) dot axis
       }
       Type.FACE_A -> {
         Rot.mulToOutUnsafe(xfa.q, axis, normal)
@@ -429,7 +425,7 @@ internal class SeparationFunction {
         indexes[1] = nonNullProxyB.getSupport(axisB)
         localPointB.set(nonNullProxyB.vertices[indexes[1]])
         Transform.mulToOutUnsafe(xfb, localPointB, pointB)
-        return Vec2.dot(pointB.subLocal(pointA), normal)
+        return pointB.subLocal(pointA) dot normal
       }
       Type.FACE_B -> {
         Rot.mulToOutUnsafe(xfb.q, axis, normal)
@@ -440,11 +436,10 @@ internal class SeparationFunction {
         indexes[0] = nonNullProxyA.getSupport(axisA)
         localPointA.set(nonNullProxyA.vertices[indexes[0]])
         Transform.mulToOutUnsafe(xfa, localPointA, pointA)
-        return Vec2.dot(pointA.subLocal(pointB), normal)
+        return pointA.subLocal(pointB) dot normal
       }
       else -> {
-        // assert is not supported in KMP.
-        // assert(false)
+        assert(false)
         indexes[0] = -1
         indexes[1] = -1
         return 0f
@@ -466,10 +461,9 @@ internal class SeparationFunction {
         localPointB.set(nonNullProxyB.vertices[indexB])
         Transform.mulToOutUnsafe(xfa, localPointA, pointA)
         Transform.mulToOutUnsafe(xfb, localPointB, pointB)
-        Vec2.dot(pointB.subLocal(pointA), axis)
+        pointB.subLocal(pointA) dot axis
       }
       Type.FACE_A -> {
-
         // System.out.printf("We're faceA\n");
         Rot.mulToOutUnsafe(xfa.q, axis, normal)
         Transform.mulToOutUnsafe(xfa, localPoint, pointA)
@@ -477,10 +471,9 @@ internal class SeparationFunction {
         normal.negateLocal()
         localPointB.set(nonNullProxyB.vertices[indexB])
         Transform.mulToOutUnsafe(xfb, localPointB, pointB)
-        Vec2.dot(pointB.subLocal(pointA), normal)
+        pointB.subLocal(pointA) dot normal
       }
       Type.FACE_B -> {
-
         // System.out.printf("We're faceB\n");
         Rot.mulToOutUnsafe(xfb.q, axis, normal)
         Transform.mulToOutUnsafe(xfb, localPoint, pointB)
@@ -488,11 +481,10 @@ internal class SeparationFunction {
         normal.negateLocal()
         localPointA.set(nonNullProxyA.vertices[indexA])
         Transform.mulToOutUnsafe(xfa, localPointA, pointA)
-        Vec2.dot(pointA.subLocal(pointB), normal)
+        pointA.subLocal(pointB) dot normal
       }
       else -> {
-        // assert is not supported in KMP.
-        // assert(false)
+        assert(false)
         0f
       }
     }

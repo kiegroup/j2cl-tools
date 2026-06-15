@@ -13,17 +13,15 @@ ${BAZEL} build //jre/java/javaemul/internal/vmbootstrap/primitives:primitives
 ${BAZEL} build //jre/java:*
 
 ${BAZEL} build //junit/emul/java:*
-${BAZEL} build //jre/javatests/com/google/gwt/junit:*
+${BAZEL} build //junit/emul/java/com/google/gwt/junit:*
 ${BAZEL} build //junit/generator/java/com/google/j2cl/junit/async:*
 ${BAZEL} build //junit/generator/java/com/google/j2cl/junit/apt:*
 
+${BAZEL} build //junit/generator/java/com/google/j2cl/junit/runtime:junit_runtime
 ${BAZEL} build //junit/generator/java/com/google/j2cl/junit/runtime:jsunit_helpers-j2cl
-${BAZEL} build //junit/generator/java/com/google/j2cl/junit/runtime:jsunit_helpers
 
-${BAZEL} build //junit/generator/java/com/google/j2cl/junit/runtime:jsunit_helpers_internal_assumption_violated_exception-j2cl
-
-#${BAZEL} build @org_gwtproject_gwt//user:libgwt-javaemul-internal-annotations.jar
-#${BAZEL} build @org_gwtproject_gwt//user:libgwt-javaemul-internal-annotations-src.jar
+${BAZEL} build //junit/generator/java/com/google/j2cl/junit/runtime:*
+${BAZEL} build //junit/generator/java/com/google/j2cl/junit/runtime:internal_assumption_violated_exception-javadoc
 
 
 # This must be the last line, or else some other operation will apparently remove these

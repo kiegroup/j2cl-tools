@@ -139,8 +139,10 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
   @Test
   public void testOverride1() {
     testSame(
-        "/** @constructor */function A() { } var a = new A();"
-            + "/** @override */ a.foo = function() { this.bar = 5; };");
+        """
+        /** @constructor */function A() { } var a = new A();
+        /** @override */ a.foo = function() { this.bar = 5; };
+        """);
   }
 
   @Test
@@ -190,7 +192,11 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
 
   @Test
   public void testPropertyOfMethod() {
-    testFailure("a.protoype.b = {}; " + "a.prototype.b.c = function() { this.foo = 3; };");
+    testFailure(
+        """
+        a.protoype.b = {};
+        a.prototype.b.c = function() { this.foo = 3; };
+        """);
   }
 
   @Test
@@ -221,10 +227,12 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
   @Test
   public void testStaticFunctionInMethod2() {
     testSame(
-        "A.prototype.m1 = function() {"
-            + "  function me() {"
-            + "    function myself() {"
-            + "      function andI() { this.m2 = 5; } } } }");
+        """
+        A.prototype.m1 = function() {
+          function me() {
+            function myself() {
+              function andI() { this.m2 = 5; } } } }
+        """);
   }
 
   @Test
@@ -264,30 +272,40 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
 
   @Test
   public void testIssue182d() {
-    testSame("function Foo() {} " + "Foo.prototype = {write: function() { this.foo = 3; }};");
+    testSame(
+        """
+        function Foo() {}
+        Foo.prototype = {write: function() { this.foo = 3; }};
+        """);
   }
 
   @Test
   public void testLendsAnnotation1() {
     testFailure(
-        "/** @constructor */ function F() {}"
-            + "dojo.declare(F, {foo: function() { return this.foo; }});");
+        """
+        /** @constructor */ function F() {}
+        dojo.declare(F, {foo: function() { return this.foo; }});
+        """);
   }
 
   @Test
   public void testLendsAnnotation2() {
     testFailure(
-        "/** @constructor */ function F() {}"
-            + "dojo.declare(F, /** @lends {F.bar} */ ("
-            + "    {foo: function() { return this.foo; }}));");
+        """
+        /** @constructor */ function F() {}
+        dojo.declare(F, /** @lends {F.bar} */ (
+            {foo: function() { return this.foo; }}));
+        """);
   }
 
   @Test
   public void testLendsAnnotation3() {
     testSame(
-        "/** @constructor */ function F() {}"
-            + "dojo.declare(F, /** @lends {F.prototype} */ ("
-            + "    {foo: function() { return this.foo; }}));");
+        """
+        /** @constructor */ function F() {}
+        dojo.declare(F, /** @lends {F.prototype} */ (
+            {foo: function() { return this.foo; }}));
+        """);
   }
 
   @Test
@@ -307,55 +325,66 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
 
   @Test
   public void testArrowFunction3() {
-    testFailure("function Foo() {} " + "Foo.prototype.getFoo = () => this.foo;");
+    testFailure(
+        """
+        function Foo() {}
+        Foo.prototype.getFoo = () => this.foo;
+        """);
   }
 
   @Test
   public void testArrowFunction4() {
-    testFailure("function Foo() {} " + "Foo.prototype.setFoo = (f) => { this.foo = f; };");
+    testFailure(
+        """
+        function Foo() {}
+        Foo.prototype.setFoo = (f) => { this.foo = f; };
+        """);
   }
 
   @Test
   public void testInnerFunctionInClassMethod1() {
     // TODO(user): It would be nice to warn for using 'this' here
     testSame(
-        lines(
-            "function Foo() {}",
-            "Foo.prototype.init = function() {",
-            "  button.addEventListener('click', function () {",
-            "    this.click();",
-            "  });",
-            "}",
-            "Foo.prototype.click = function() {}"));
+        """
+        function Foo() {}
+        Foo.prototype.init = function() {
+          button.addEventListener('click', function () {
+            this.click();
+          });
+        }
+        Foo.prototype.click = function() {}
+        """);
   }
 
   @Test
   public void testInnerFunctionInClassMethod2() {
     // TODO(user): It would be nice to warn for using 'this' here
     testSame(
-        lines(
-            "function Foo() {",
-            "  var x = function() {",
-            "    button.addEventListener('click', function () {",
-            "      this.click();",
-            "    });",
-            "  }",
-            "}"));
+        """
+        function Foo() {
+          var x = function() {
+            button.addEventListener('click', function () {
+              this.click();
+            });
+          }
+        }
+        """);
   }
 
   @Test
   public void testInnerFunctionInEs6ClassMethod() {
     // TODO(user): It would be nice to warn for using 'this' here
     testSame(
-        lines(
-            "class Foo {",
-            "  constructor() {",
-            "    button.addEventListener('click', function () {",
-            "      this.click();",
-            "    });",
-            "  }",
-            "  click() {}",
-            "}"));
+        """
+        class Foo {
+          constructor() {
+            button.addEventListener('click', function () {
+              this.click();
+            });
+          }
+          click() {}
+        }
+        """);
   }
 
   @Test
@@ -364,26 +393,28 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
     testSame("class Foo {static {this.x = 2; }}");
     testSame("class Foo {static {this[this.x] = 3;}}");
     testSame(
-        lines(
-            "class Foo {",
-            "  static {",
-            "    function g() {",
-            "      return this.f() + 1;",
-            "    }",
-            "    var y = g() + 1;",
-            "  }",
-            "  static f() {return 1;}",
-            "}"));
+        """
+        class Foo {
+          static {
+            function g() {
+              return this.f() + 1;
+            }
+            var y = g() + 1;
+          }
+          static f() {return 1;}
+        }
+        """);
     testSame(
-        lines(
-            "class Foo {",
-            "  static {",
-            "    button.addEventListener('click', function () {",
-            "      this.click();",
-            "    });",
-            "  }",
-            "  static click() {}",
-            "}"));
+        """
+        class Foo {
+          static {
+            button.addEventListener('click', function () {
+              this.click();
+            });
+          }
+          static click() {}
+        }
+        """);
   }
 
   @Test
@@ -392,49 +423,53 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
     testSame("class Foo {static h() {this.x = 2; }}");
     testSame("class Foo {static h() {this[this.x] = 3;}}");
     testSame(
-        lines(
-            "class Foo {",
-            "  static h() {",
-            "    function g() {",
-            "      return this.f() + 1;",
-            "    }",
-            "    var y = g() + 1;",
-            "  }",
-            "  static f() {return 1;}",
-            "}"));
+        """
+        class Foo {
+          static h() {
+            function g() {
+              return this.f() + 1;
+            }
+            var y = g() + 1;
+          }
+          static f() {return 1;}
+        }
+        """);
     testSame(
-        lines(
-            "class Foo {",
-            "  static h() {",
-            "    button.addEventListener('click', function () {",
-            "      this.click();",
-            "    });",
-            "  }",
-            "  static click() {}",
-            "}"));
+        """
+        class Foo {
+          static h() {
+            button.addEventListener('click', function () {
+              this.click();
+            });
+          }
+          static click() {}
+        }
+        """);
   }
 
   @Test
   public void testFunctionWithThisTypeAnnotated() throws Exception {
     testSame(
-        lines(
-            "/**",
-            " * @type {function(this:{hello:string})}",
-            " */",
-            "function test() {",
-            "  console.log(this.hello)",
-            "}"));
+        """
+        /**
+         * @type {function(this:{hello:string})}
+         */
+        function test() {
+          console.log(this.hello)
+        }
+        """);
   }
 
   @Test
   public void testFunctionWithoutThisTypeAnnotated() throws Exception {
     testFailure(
-        lines(
-            "/**",
-            " * @type {function()}",
-            " */",
-            "function test() {",
-            "  console.log(this.hello)",
-            "}"));
+        """
+        /**
+         * @type {function()}
+         */
+        function test() {
+          console.log(this.hello)
+        }
+        """);
   }
 }

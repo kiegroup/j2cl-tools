@@ -1,4 +1,17 @@
 ;;; Code for exception.MyException [type definition]
+(type $exception.MyException (sub $java.lang.Exception (struct
+ (field $vtable (ref $exception.MyException.vtable))
+ (field $itable (ref $exception.MyException.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $backingJsObject@java.lang.Throwable (mut (ref null extern)))
+ (field $cause@java.lang.Throwable (mut (ref null $java.lang.Throwable)))
+ (field $detailMessage@java.lang.Throwable (mut (ref null $java.lang.String)))
+ (field $disableStackTrace@java.lang.Throwable (mut i8))
+ (field $disableSuppression@java.lang.Throwable (mut i8))
+ (field $stackTrace@java.lang.Throwable (mut (ref null $javaemul.internal.WasmArray.OfObject)))
+ (field $suppressedExceptions@java.lang.Throwable (mut (ref null $java.util.ArrayList)))
+ ))
+)
 (type $exception.MyException.vtable (sub $java.lang.Exception.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -17,9 +30,11 @@
  (field $m_setStackTrace__arrayOf_java_lang_StackTraceElement__void (ref $function.m_setStackTrace__arrayOf_java_lang_StackTraceElement__void))
  ))
 )
-(type $exception.MyException (sub $java.lang.Exception (struct
- (field $vtable (ref $exception.MyException.vtable))
- (field $itable (ref $exception.MyException.itable))
+
+;;; Code for exception.MyJsException [type definition]
+(type $exception.MyJsException (sub $java.lang.Exception (struct
+ (field $vtable (ref $exception.MyJsException.vtable))
+ (field $itable (ref $exception.MyJsException.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  (field $backingJsObject@java.lang.Throwable (mut (ref null extern)))
  (field $cause@java.lang.Throwable (mut (ref null $java.lang.Throwable)))
@@ -30,8 +45,6 @@
  (field $suppressedExceptions@java.lang.Throwable (mut (ref null $java.util.ArrayList)))
  ))
 )
-
-;;; Code for exception.MyJsException [type definition]
 (type $exception.MyJsException.vtable (sub $java.lang.Exception.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -48,19 +61,6 @@
  (field $m_printStackTrace__void (ref $function.m_printStackTrace__void))
  (field $m_privateInitError__javaemul_internal_ThrowableUtils_JsObject__void_$pp_java_lang (ref $function.m_privateInitError__javaemul_internal_ThrowableUtils_JsObject__void_$pp_java_lang))
  (field $m_setStackTrace__arrayOf_java_lang_StackTraceElement__void (ref $function.m_setStackTrace__arrayOf_java_lang_StackTraceElement__void))
- ))
-)
-(type $exception.MyJsException (sub $java.lang.Exception (struct
- (field $vtable (ref $exception.MyJsException.vtable))
- (field $itable (ref $exception.MyJsException.itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
- (field $backingJsObject@java.lang.Throwable (mut (ref null extern)))
- (field $cause@java.lang.Throwable (mut (ref null $java.lang.Throwable)))
- (field $detailMessage@java.lang.Throwable (mut (ref null $java.lang.String)))
- (field $disableStackTrace@java.lang.Throwable (mut i8))
- (field $disableSuppression@java.lang.Throwable (mut i8))
- (field $stackTrace@java.lang.Throwable (mut (ref null $javaemul.internal.WasmArray.OfObject)))
- (field $suppressedExceptions@java.lang.Throwable (mut (ref null $java.util.ArrayList)))
  ))
 )
 
@@ -145,7 +145,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyException.java:19:2
   (call $$clinit__void_<once>_@exception.MyException )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyException.java:19:2
-  (local.set $$instance (struct.new $exception.MyException (ref.as_non_null (global.get $exception.MyException.vtable)) (ref.as_non_null (global.get $exception.MyException.itable)) (i32.const 0) (ref.null extern) (ref.null $java.lang.Throwable) (ref.null $java.lang.String) (i32.const 0) (i32.const 0) (ref.null $javaemul.internal.WasmArray.OfObject) (ref.null $java.util.ArrayList)))
+  (local.set $$instance (struct.new $exception.MyException (global.get $exception.MyException.vtable) (global.get $exception.MyException.itable) (i32.const 0) (ref.null extern) (ref.null $java.lang.Throwable) (ref.null $java.lang.String) (i32.const 0) (i32.const 0) (ref.null $javaemul.internal.WasmArray.OfObject) (ref.null $java.util.ArrayList)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyException.java:19:2
   (call $$ctor__void_$p_exception_MyException@exception.MyException (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyException.java:19:2
@@ -175,7 +175,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyException.java:21:2
   (call $$clinit__void_<once>_@exception.MyException )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyException.java:21:2
-  (local.set $$instance (struct.new $exception.MyException (ref.as_non_null (global.get $exception.MyException.vtable)) (ref.as_non_null (global.get $exception.MyException.itable)) (i32.const 0) (ref.null extern) (ref.null $java.lang.Throwable) (ref.null $java.lang.String) (i32.const 0) (i32.const 0) (ref.null $javaemul.internal.WasmArray.OfObject) (ref.null $java.util.ArrayList)))
+  (local.set $$instance (struct.new $exception.MyException (global.get $exception.MyException.vtable) (global.get $exception.MyException.itable) (i32.const 0) (ref.null extern) (ref.null $java.lang.Throwable) (ref.null $java.lang.String) (i32.const 0) (i32.const 0) (ref.null $javaemul.internal.WasmArray.OfObject) (ref.null $java.util.ArrayList)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyException.java:21:2
   (call $$ctor__java_lang_Throwable__void_$p_exception_MyException@exception.MyException (ref.as_non_null (local.get $$instance))(local.get $cause))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyException.java:21:2
@@ -252,7 +252,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyJsException.java:23:9
   (call $$clinit__void_<once>_@exception.MyJsException )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyJsException.java:23:9
-  (local.set $$instance (struct.new $exception.MyJsException (ref.as_non_null (global.get $exception.MyJsException.vtable)) (ref.as_non_null (global.get $exception.MyJsException.itable)) (i32.const 0) (ref.null extern) (ref.null $java.lang.Throwable) (ref.null $java.lang.String) (i32.const 0) (i32.const 0) (ref.null $javaemul.internal.WasmArray.OfObject) (ref.null $java.util.ArrayList)))
+  (local.set $$instance (struct.new $exception.MyJsException (global.get $exception.MyJsException.vtable) (global.get $exception.MyJsException.itable) (i32.const 0) (ref.null extern) (ref.null $java.lang.Throwable) (ref.null $java.lang.String) (i32.const 0) (i32.const 0) (ref.null $javaemul.internal.WasmArray.OfObject) (ref.null $java.util.ArrayList)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyJsException.java:23:9
   (call $$ctor__void_$p_exception_MyJsException@exception.MyJsException (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyJsException.java:23:9
@@ -282,7 +282,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyJsException.java:26:9
   (call $$clinit__void_<once>_@exception.MyJsException )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyJsException.java:26:9
-  (local.set $$instance (struct.new $exception.MyJsException (ref.as_non_null (global.get $exception.MyJsException.vtable)) (ref.as_non_null (global.get $exception.MyJsException.itable)) (i32.const 0) (ref.null extern) (ref.null $java.lang.Throwable) (ref.null $java.lang.String) (i32.const 0) (i32.const 0) (ref.null $javaemul.internal.WasmArray.OfObject) (ref.null $java.util.ArrayList)))
+  (local.set $$instance (struct.new $exception.MyJsException (global.get $exception.MyJsException.vtable) (global.get $exception.MyJsException.itable) (i32.const 0) (ref.null extern) (ref.null $java.lang.Throwable) (ref.null $java.lang.String) (i32.const 0) (i32.const 0) (ref.null $javaemul.internal.WasmArray.OfObject) (ref.null $java.util.ArrayList)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyJsException.java:26:9
   (call $$ctor__java_lang_Throwable__void_$p_exception_MyJsException@exception.MyJsException (ref.as_non_null (local.get $$instance))(local.get $cause))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/exception/readable-j2wasm.js/exception/MyJsException.java:26:9

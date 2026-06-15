@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.kie.j2cl.tools.yaml.mapper</groupId>
     <artifactId>yaml-parent</artifactId>
-    <version>0.6</version>
+    <version>0.7</version>
   </parent>
 
   <artifactId>jre-tests</artifactId>
@@ -58,7 +58,6 @@
     <dependency>
       <groupId>org.kie.j2cl.tools</groupId>
       <artifactId>junit-annotations</artifactId>
-      <version>v20241110-1</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>

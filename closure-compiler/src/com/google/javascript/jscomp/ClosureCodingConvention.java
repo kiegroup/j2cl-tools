@@ -136,13 +136,6 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     return null;
   }
 
-  private static final QualifiedName GOOG_DEFINECLASS = QualifiedName.of("goog.defineClass");
-
-  @Override
-  public boolean isClassFactoryCall(Node callNode) {
-    return GOOG_DEFINECLASS.matches(callNode.getFirstChild());
-  }
-
   /**
    * Determines whether the given node is a class-defining name, like "inherits" or "mixin."
    *
@@ -397,8 +390,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   private static final QualifiedName GOOG_PARTIAL = QualifiedName.of("goog.partial");
 
   @Override
-  public @Nullable Bind describeFunctionBind(
-      Node n, boolean callerChecksTypes, boolean iCheckTypes) {
+  public @Nullable Bind describeFunctionBind(Node n, boolean checkTypes) {
     if (!n.isCall()) {
       return null;
     }
@@ -426,7 +418,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
         return new Bind(fn, thisValue, parameters);
       }
     }
-    return super.describeFunctionBind(n, callerChecksTypes, iCheckTypes);
+    return super.describeFunctionBind(n, checkTypes);
   }
 
   @Override

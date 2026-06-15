@@ -1,5 +1,4 @@
 // Generated from "switchstatement/SwitchStatement.java"
-@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -20,30 +19,22 @@ package switchstatement
 
 import javaemul.lang.*
 import java.lang.RuntimeException
+import kotlin.Boolean
 import kotlin.Byte
 import kotlin.Char
 import kotlin.Int
-import kotlin.OptIn
 import kotlin.Short
 import kotlin.Suppress
 import kotlin.assert
-import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.JvmStatic
-import kotlin.native.ObjCName
 
-@ObjCName("J2ktSwitchstatementNumbers", exact = true)
 enum class Numbers {
- @ObjCName("ONE")
  ONE,
- @ObjCName("TWO")
  TWO,
- @ObjCName("THREE")
  THREE;
 }
 
-@ObjCName("J2ktSwitchstatementSwitchStatement", exact = true)
 open class SwitchStatement {
- @ObjCName("main")
  open fun main() {
   when ("one") {
    "one", "two" -> {}
@@ -69,6 +60,19 @@ open class SwitchStatement {
    else -> {
     return
    }
+  }
+  var s: Short = 1.toShort()
+  when (s) {
+   1.toShort() -> {
+    s = (s.toInt() + 1).toShort()
+   }
+   3.toShort() -> {
+    s = (s.toInt() + 1).toShort()
+   }
+   12.toShort() -> {
+    s = (s.toInt() + 1).toShort()
+   }
+   else -> {}
   }
  }
 
@@ -509,10 +513,18 @@ open class SwitchStatement {
   } while (false)
  }
 
+ private fun testNonExhaustive_foldableFallThrough(i: Int) {
+  when (i) {
+   1, 2, 3 -> {}
+   else -> {}
+  }
+ }
+
  private fun foo(i: Int) {}
 
- @ObjCName("J2ktSwitchstatementSwitchStatementCompanion", exact = true)
  companion object {
+  internal const val CONST_pp_switchstatement: Short = 3.toShort()
+
   @JvmStatic
   private fun testSwitchVariableDeclarations() {
    var i: Int = 0
@@ -538,6 +550,79 @@ open class SwitchStatement {
     else -> {}
    }
    assert(false)
+  }
+
+  @JvmStatic
+  private fun testSwitchStatement_withRules() {
+   val o: Int = 0
+   SWITCH@ do {
+    CASE@ do {
+     do {
+      when (1) {
+       2 -> {
+        break@CASE
+       }
+       else -> {
+        break
+       }
+      }
+      break@SWITCH
+     } while (false)
+     break@SWITCH
+    } while (false)
+   } while (false)
+  }
+
+  @JvmStatic
+  private fun testDefaultNotLast_withRules(i: Int, doBreak: Boolean): Int {
+   var result: Int = 0
+   SWITCH@ do {
+    CASE@ do {
+     CASE_1@ do {
+      CASE_2@ do {
+       CASE_3@ do {
+        do {
+         when (i) {
+          1 -> {
+           break
+          }
+          2 -> {
+           break@CASE_3
+          }
+          3 -> {
+           break@CASE_1
+          }
+          4 -> {
+           break@CASE
+          }
+          else -> {
+           break@CASE_2
+          }
+         }
+         break@SWITCH
+        } while (false)
+        result = 1
+        if (doBreak) {
+         break@SWITCH
+        }
+        result = 2
+        break@SWITCH
+       } while (false)
+       break@SWITCH
+      } while (false)
+      break@SWITCH
+     } while (false)
+     result = 3
+     break@SWITCH
+    } while (false)
+    SwitchStatement.foo()
+   } while (false)
+   return result
+  }
+
+  @JvmStatic
+  private fun foo(): Int {
+   return 1
   }
  }
 }

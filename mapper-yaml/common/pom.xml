@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.kie.j2cl.tools.yaml.mapper</groupId>
         <artifactId>yaml-parent</artifactId>
-        <version>0.6</version>
+        <version>0.7</version>
     </parent>
 
     <artifactId>common</artifactId>
@@ -41,10 +41,6 @@
     </scm>
 
     <dependencies>
-        <dependency>
-            <groupId>com.google.jsinterop</groupId>
-            <artifactId>base</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.google.elemental2</groupId>
             <artifactId>elemental2-dom</artifactId>

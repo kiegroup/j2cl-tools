@@ -1,8 +1,10 @@
 # Description:
 #   Build rules used by J2CL and BUILD targets used by the rules.
 
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load(":j2cl_library.bzl", "j2cl_library")
 load(":j2kt_library.bzl", "j2kt_jvm_library", "j2kt_native_library")
+load(":j2wasm_common.bzl", "J2WASM_FEATURE_SET", "J2WASM_FEATURE_SET_VALUES")
 load(":j2wasm_library.bzl", "j2wasm_library")
 
 package(
@@ -39,38 +41,15 @@ config_setting(
     },
 )
 
-# Main J2CL transpiler binary.
-alias(
-    name = "BazelJ2clBuilder",
-    actual = "//transpiler/java/com/google/j2cl/transpiler:BazelJ2clBuilder",
-)
-
-alias(
-    name = "BazelJ2clBuilderWithKotlinSupport",
-    actual = "//transpiler/java/com/google/j2cl/transpiler:BazelJ2clBuilderWithKotlinSupport",
-    visibility = ["//build_defs/internal_do_not_use:kotlin_allowlist"],
-)
-
-# WARNING: Don't increase the visibility without talking to Kotlin team.
-package_group(
-    name = "kotlin_allowlist",
-    packages = [
-    ],
+string_flag(
+    name = "j2wasm_feature_set",
+    build_setting_default = J2WASM_FEATURE_SET.DEFAULT,
+    values = J2WASM_FEATURE_SET_VALUES,
 )
 
 # ***************************************************
 # Standard library related
 # ***************************************************
-
-alias(
-    name = "j2cl_java_toolchain",
-    actual = "//jre/java:j2cl_java_toolchain",
-)
-
-alias(
-    name = "j2wasm_java_toolchain",
-    actual = "//jre/java:j2wasm_java_toolchain",
-)
 
 alias(
     name = "j2wasm_jre",
@@ -129,52 +108,11 @@ j2cl_library(
 )
 
 alias(
-    name = "internal_parametrized_test_suite",
-    actual = "//junit/generator/java/com/google/j2cl/junit/runtime:internal_parametrized_test_suite",
+    name = "internal_j2cl_test_suite",
+    actual = "//junit/generator/java/com/google/j2cl/junit/runtime:internal_j2cl_test_suite",
 )
 
 alias(
     name = "closure_testcase",
     actual = "//third_party:closure_testcase",
 )
-
-alias(
-    name = "closure_testsuite",
-    actual = "//third_party:closure_testsuite",
-)
-
-# ***************************************************
-# Tools related
-# **************************************************
-
-alias(
-    name = "GwtIncompatibleStripper",
-    actual = "//tools/java/com/google/j2cl/tools/gwtincompatible:GwtIncompatibleStripper_worker",
-)
-
-alias(
-    name = "J2clRta",
-    actual = "//tools/java/com/google/j2cl/tools/rta:J2clRta_worker",
-)
-
-alias(
-    name = "J2wasmExportGenerator",
-    actual = "//transpiler/java/com/google/j2cl/transpiler:BazelJ2wasmExportGenerator",
-)
-
-alias(
-    name = "J2wasmBundler",
-    actual = "//transpiler/java/com/google/j2cl/transpiler:BazelJ2wasmBundler",
-)
-
-alias(
-    name = "binaryen",
-    actual = "//third_party:binaryen",
-)
-
-alias(
-    name = "binaryen-legacy",
-    actual = "//third_party:binaryen-legacy",
-)
-
-# bzl_librarys

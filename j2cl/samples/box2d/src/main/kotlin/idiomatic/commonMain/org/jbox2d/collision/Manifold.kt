@@ -48,7 +48,7 @@ class Manifold {
   enum class ManifoldType {
     CIRCLES,
     FACE_A,
-    FACE_B
+    FACE_B,
   }
 
   /** The points of contact. */
@@ -74,15 +74,11 @@ class Manifold {
     pointCount = 0
   }
 
-  /**
-   * Creates this manifold as a copy of the other
-   *
-   * @param other
-   */
+  /** Creates this manifold as a copy of the other */
   constructor(other: Manifold) {
     points = Array<ManifoldPoint>(Settings.MAX_MANIFOLD_POINTS) { ManifoldPoint(other.points[it]) }
-    localNormal = other.localNormal.clone()
-    localPoint = other.localPoint.clone()
+    localNormal = other.localNormal.copy()
+    localPoint = other.localPoint.copy()
     pointCount = other.pointCount
     type = other.type
   }

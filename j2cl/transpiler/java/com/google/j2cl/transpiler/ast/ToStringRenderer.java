@@ -39,6 +39,13 @@ class ToStringRenderer {
       }
 
       @Override
+      public boolean enterArrayCreationReference(ArrayCreationReference arrayCreationReference) {
+        print(arrayCreationReference.targetTypeDescriptor);
+        print("::new");
+        return false;
+      }
+
+      @Override
       public boolean enterArrayLiteral(ArrayLiteral arrayLiteral) {
         print("[");
         printSeparated(",", arrayLiteral.getValueExpressions());
@@ -192,6 +199,12 @@ class ToStringRenderer {
       }
 
       @Override
+      public boolean enterEmbeddedStatement(EmbeddedStatement embeddedStatement) {
+        accept(embeddedStatement.getStatement());
+        return false;
+      }
+
+      @Override
       public boolean enterExpression(Expression expression) {
         print("<expr>");
         return false;
@@ -333,8 +346,14 @@ class ToStringRenderer {
 
       @Override
       public boolean enterMethod(Method method) {
-        print(method.getReadableDescription() + " ");
-        accept(method.body);
+        printMethod(method);
+        return false;
+      }
+
+      @Override
+      public boolean enterLocalFunctionDeclarationStatement(
+          LocalFunctionDeclarationStatement functionDeclarationStatement) {
+        printMethod(functionDeclarationStatement);
         return false;
       }
 
@@ -342,6 +361,23 @@ class ToStringRenderer {
       public boolean enterMethodCall(MethodCall methodCall) {
         printQualifier(methodCall);
         printInvocation(methodCall);
+        return false;
+      }
+
+      @Override
+      public boolean enterMethodReference(MethodReference methodReference) {
+        var referencedMethodDescriptor = methodReference.getReferencedMethodDescriptor();
+        var qualifier = methodReference.getQualifier();
+        if (qualifier == null) {
+          print(referencedMethodDescriptor.getEnclosingTypeDescriptor());
+        } else {
+          accept(qualifier);
+        }
+        print("::");
+        print(
+            referencedMethodDescriptor.isConstructor()
+                ? "new"
+                : referencedMethodDescriptor.getName());
         return false;
       }
 
@@ -421,6 +457,10 @@ class ToStringRenderer {
       @Override
       public boolean enterYieldStatement(YieldStatement yieldStatement) {
         print("yield");
+        if (yieldStatement.getLabelReference() != null) {
+          print("@");
+          accept(yieldStatement.getLabelReference());
+        }
         if (yieldStatement.getExpression() != null) {
           print(" ");
           accept(yieldStatement.getExpression());
@@ -453,7 +493,7 @@ class ToStringRenderer {
           print("case ");
           printSeparated(", ", switchCase.getCaseExpressions());
         }
-        print(getParent() instanceof SwitchExpression ? " ->" : ":");
+        print(switchCase.canFallthrough() ? ":" : " ->");
         indent();
         for (Statement statement : switchCase.getStatements()) {
           newLine();
@@ -564,8 +604,7 @@ class ToStringRenderer {
       }
 
       @Override
-      public boolean enterJavaScriptConstructorReference(
-          JavaScriptConstructorReference constructorReference) {
+      public boolean enterJsConstructorReference(JsConstructorReference constructorReference) {
         print(constructorReference.getReferencedTypeDeclaration().getQualifiedSourceName());
         return false;
       }
@@ -710,6 +749,11 @@ class ToStringRenderer {
         unIndent();
         newLine();
         print("}");
+      }
+
+      private void printMethod(MethodLike methodLike) {
+        print(methodLike.getReadableDescription() + " ");
+        accept(methodLike.getBody());
       }
 
       private void unIndent() {

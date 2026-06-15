@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp.integration;
 
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
-
 import com.google.javascript.jscomp.ClosureCodingConvention;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -33,26 +31,28 @@ import org.junit.runners.JUnit4;
 public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase {
 
   private static final String RENAME_FN_DEFINITION =
-      lines(
-          "/** @const */ goog.reflect = {};",
-          "/**",
-          " * @param {string} propName",
-          " * @param {Object} type",
-          " * @return {string}",
-          " */",
-          "goog.reflect.objectProperty = function(propName, type) {",
-          "  return propName;",
-          "};");
+      """
+      /** @const */ goog.reflect = {};
+      /**
+       * @param {string} propName
+       * @param {Object} type
+       * @return {string}
+       */
+      goog.reflect.objectProperty = function(propName, type) {
+        return propName;
+      };
+      """;
 
   private static final String EXTERNS =
-      lines(
-          "/**",
-          " * @fileoverview",
-          " * @externs",
-          " */",
-          "/** @constructor */ function Console() {}",
-          "/** @param {*} input */ Console.prototype.log = function(input) {};",
-          "/** @type {Console} */ var console;");
+      """
+      /**
+       * @fileoverview
+       * @externs
+       */
+      /** @constructor */ function Console() {}
+      /** @param {*} input */ Console.prototype.log = function(input) {};
+      /** @type {Console} */ var console;
+      """;
 
   private boolean useSimpleMode = false;
 
@@ -63,26 +63,28 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
         new String[] {
           EXTERNS,
           RENAME_FN_DEFINITION,
-          lines(
-              "/** @constructor */ function Foo() {}",
-              "window['Foo'] = Foo;",
-              "Foo.prototype.log = function(input) { console.log(input) };",
-              "Foo.prototype['log'] = Foo.prototype.log;",
-              "var foo = new Foo;",
-              "console.log(goog.reflect.objectProperty('log', foo));",
-              "foo.log('foobar');")
+          """
+          /** @constructor */ function Foo() {}
+          window['Foo'] = Foo;
+          Foo.prototype.log = function(input) { console.log(input) };
+          Foo.prototype['log'] = Foo.prototype.log;
+          var foo = new Foo;
+          console.log(goog.reflect.objectProperty('log', foo));
+          foo.log('foobar');
+          """
         },
         new String[] {
           "",
           "goog.b = {};",
-          lines(
-              "function a() {}",
-              "window.Foo = a;",
-              "a.prototype.a = function(b) { console.log(b) };",
-              "a.prototype.log = a.prototype.a;",
-              "var c = new a;",
-              "console.log('a');",
-              "c.a('foobar');")
+          """
+          function a() {}
+          window.Foo = a;
+          a.prototype.a = function(b) { console.log(b) };
+          a.prototype.log = a.prototype.a;
+          var c = new a;
+          console.log('a');
+          c.a('foobar');
+          """
         });
   }
 
@@ -94,26 +96,31 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
         new String[] {
           EXTERNS,
           RENAME_FN_DEFINITION,
-          lines(
-              "/** @constructor */ function Foo() {}",
-              "window['Foo'] = Foo;",
-              "Foo.prototype.log = function(input) { console.log(input) };",
-              "Foo.prototype['log'] = Foo.prototype.log;",
-              "var foo = new Foo;",
-              "console.log(goog.reflect.objectProperty('log', foo));",
-              "foo.log('foobar');")
+          """
+          /** @constructor */ function Foo() {}
+          window['Foo'] = Foo;
+          Foo.prototype.log = function(input) { console.log(input) };
+          Foo.prototype['log'] = Foo.prototype.log;
+          var foo = new Foo;
+          console.log(goog.reflect.objectProperty('log', foo));
+          foo.log('foobar');
+          """
         },
         new String[] {
           "",
-          lines("goog.reflect = {};", "goog.reflect.objectProperty = function(a,b) { return a; };"),
-          lines(
-              "function Foo() {}",
-              "window.Foo = Foo;",
-              "Foo.prototype.log = function(a) { console.log(a); };",
-              "Foo.prototype.log = Foo.prototype.log;",
-              "var foo = new Foo;",
-              "console.log('log');",
-              "foo.log('foobar');")
+          """
+          goog.reflect = {};
+          goog.reflect.objectProperty = function(a,b) { return a; };
+          """,
+          """
+          function Foo() {}
+          window.Foo = Foo;
+          Foo.prototype.log = function(a) { console.log(a); };
+          Foo.prototype.log = Foo.prototype.log;
+          var foo = new Foo;
+          console.log('log');
+          foo.log('foobar');
+          """
         });
   }
 
@@ -121,17 +128,19 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
   public void testStaticPropRename() {
     test(
         createCompilerOptions(),
-        lines(
-            RENAME_FN_DEFINITION,
-            "/** @const */ var foo = {};",
-            "foo.log = function(input) { alert(input) };",
-            "alert(goog.reflect.objectProperty('log', foo));",
-            "foo.log('foobar');"),
-        lines(
-            "goog.b = {};",
-            "var b = {a: function(a) {alert(a)}};",
-            "alert('a');",
-            "b.a('foobar');"));
+        RENAME_FN_DEFINITION
+            + """
+            /** @const */ var foo = {};
+            foo.log = function(input) { alert(input) };
+            alert(goog.reflect.objectProperty('log', foo));
+            foo.log('foobar');
+            """,
+        """
+        goog.b = {};
+        var b = {a: function(a) {alert(a)}};
+        alert('a');
+        b.a('foobar');
+        """);
   }
 
   @Test
@@ -139,20 +148,22 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
     useSimpleMode = true;
     test(
         createCompilerOptions(),
-        lines(
-            RENAME_FN_DEFINITION,
-            "/** @const */ var foo = {};",
-            "foo.log = function(input) { alert(input) };",
-            "alert(goog.reflect.objectProperty('log', foo));",
-            "foo.log('foobar');"),
-        lines(
-            "goog.reflect = {};",
-            "goog.reflect.objectProperty = function(a,b) { return a; };",
-            "var foo = {",
-            "  log: function(a) { alert(a) }",
-            "};",
-            "alert('log');",
-            "foo.log('foobar');"));
+        RENAME_FN_DEFINITION
+            + """
+            /** @const */ var foo = {};
+            foo.log = function(input) { alert(input) };
+            alert(goog.reflect.objectProperty('log', foo));
+            foo.log('foobar');
+            """,
+        """
+        goog.reflect = {};
+        goog.reflect.objectProperty = function(a,b) { return a; };
+        var foo = {
+          log: function(a) { alert(a) }
+        };
+        alert('log');
+        foo.log('foobar');
+        """);
   }
 
   public CompilerOptions createCompilerOptions() {

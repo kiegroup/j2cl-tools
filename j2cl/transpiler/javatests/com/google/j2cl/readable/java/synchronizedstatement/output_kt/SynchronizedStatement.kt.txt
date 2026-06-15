@@ -1,5 +1,4 @@
 // Generated from "synchronizedstatement/SynchronizedStatement.java"
-@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -21,29 +20,50 @@ package synchronizedstatement
 import javaemul.lang.*
 import javaemul.lang.J2ktMonitor
 import kotlin.Int
-import kotlin.OptIn
 import kotlin.Suppress
 import kotlin.Unit
-import kotlin.experimental.ExperimentalObjCName
-import kotlin.native.ObjCName
+import kotlin.jvm.JvmStatic
+import kotlin.jvm.javaObjectType
 import kotlin.run
 import kotlin.synchronized
 
-@ObjCName("J2ktSynchronizedstatementSynchronizedStatement", exact = true)
 open class SynchronizedStatement: J2ktMonitor() {
  private var a: Int = 0
 
  private var b: Int = 0
 
- @ObjCName("main")
- open fun main() {
+ private val j2ktMonitor: J2ktMonitor? = J2ktMonitor()
+
+ private val customMonitor: J2ktMonitor? = CustomMonitor()
+
+ open fun testSynchronizedOnThis() {
   synchronized<Unit>(this) {
    this.a = this.a + 1
    this.b = this.b - 1
   }
  }
 
- @ObjCName("testReturn")
+ open fun testSynchronizedOnJ2ktMonitor() {
+  synchronized<Unit>(this.j2ktMonitor!!) {
+   this.a = this.a + 1
+   this.b = this.b - 1
+  }
+ }
+
+ open fun testSynchronizedOnCustomMonitor() {
+  synchronized<Unit>(this.customMonitor!!) {
+   this.a = this.a + 1
+   this.b = this.b - 1
+  }
+ }
+
+ open fun testSynchronizedMethod() {
+  synchronized<Unit>(this) {
+   this.a = this.a + 1
+   this.b = this.b - 1
+  }
+ }
+
  open fun testReturn(): Int {
   synchronized<Unit>(this) {
    if (this.a < 10) {
@@ -61,10 +81,8 @@ open class SynchronizedStatement: J2ktMonitor() {
   }
  }
 
- @ObjCName("testBreakAndContinue")
  open fun testBreakAndContinue() {}
 
- @ObjCName("testInitialization")
  open fun testInitialization(): Int {
   var a: Int = 0
   synchronized<Unit>(this) {
@@ -73,7 +91,6 @@ open class SynchronizedStatement: J2ktMonitor() {
   return a
  }
 
- @ObjCName("testIfStatementWithNonVoidBodyWithoutElse")
  open fun testIfStatementWithNonVoidBodyWithoutElse() {
   synchronized<Unit>(this) {
    if (this.a < 10) {
@@ -88,10 +105,33 @@ open class SynchronizedStatement: J2ktMonitor() {
   return 0
  }
 
- @ObjCName("J2ktSynchronizedstatementSynchronizedStatement_ExtendsSynchronized", exact = true)
+ companion object {
+  private var staticA: Int = 0
+
+  private var staticB: Int = 0
+
+  @JvmStatic
+  fun testSynchronizedOnClass() {
+   synchronized<Unit>(SynchronizedStatement::class.javaObjectType) {
+    SynchronizedStatement.staticA = SynchronizedStatement.staticA + 1
+    SynchronizedStatement.staticB = SynchronizedStatement.staticB - 1
+   }
+  }
+
+  @JvmStatic
+  fun testSynchronizedStaticMethod() {
+   synchronized<Unit>(SynchronizedStatement::class.javaObjectType) {
+    SynchronizedStatement.staticA = SynchronizedStatement.staticA + 1
+    SynchronizedStatement.staticB = SynchronizedStatement.staticB - 1
+   }
+  }
+ }
+
  open class ExtendsSynchronized: SynchronizedStatement() {
   internal open fun foo_pp_synchronizedstatement() {
    synchronized<Unit>(this) {}
   }
  }
+
+ open class CustomMonitor: J2ktMonitor()
 }

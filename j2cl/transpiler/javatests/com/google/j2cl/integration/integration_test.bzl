@@ -17,7 +17,7 @@ integration_test(
 
 """
 
-load("@io_bazel_rules_closure//closure:defs.bzl", "closure_js_test")
+load("@rules_closure//closure:defs.bzl", "closure_js_test")
 load("//build_defs:rules.bzl", "J2CL_TEST_DEFS", "j2cl_library")
 load("//build_defs/internal_do_not_use:j2cl_util.bzl", "get_java_package", "to_parallel_target")
 
@@ -35,6 +35,7 @@ def integration_test(
         main_class = None,
         closure_defines = dict(),
         suppress = [],
+        javacopts = [],
         tags = [],
         **kwargs):
     """Macro that turns Java files into integration test targets.
@@ -81,6 +82,7 @@ def integration_test(
         deps = deps,
         tags = tags,
         js_suppress = suppress,
+        javacopts = javacopts,
         enable_nullability = enable_nullability,
     )
 
@@ -104,7 +106,7 @@ def integration_test(
         deps = [
             ":%s-j2cl" % name,
             ":%s-TestRunner" % name,
-            "@com_google_javascript_closure_library//closure/goog/testing:testsuite",
+            "//third_party:closure_testsuite",
         ],
         # closure_js_test test infra is flaky so avoid noise in builds.
         flaky = True,
@@ -115,7 +117,13 @@ def integration_test(
         entry_points = ["gen.test.Harness"],
     )
 
-def integration_library(name, srcs = [], deps = [], exports = [], enable_nullability = False, **kwargs):
+def integration_library(
+        name,
+        srcs = [],
+        deps = [],
+        exports = [],
+        enable_wasm = True,
+        enable_nullability = False, **kwargs):
     default_deps = [
         "//jre/java:javaemul_internal_annotations",
         "//third_party:jsinterop-annotations",
@@ -131,8 +139,9 @@ def integration_library(name, srcs = [], deps = [], exports = [], enable_nullabi
         srcs = srcs,
         deps = [to_parallel_target(d, _to_j2cl_name) for d in deps],
         exports = [to_parallel_target(e, _to_j2cl_name) for e in exports],
-        javacopts = JAVAC_FLAGS,
+        javacopts = JAVAC_FLAGS + kwargs.pop("javacopts", []),
         generate_build_test = False,
+        generate_j2wasm_library = None if enable_wasm else False,
         experimental_enable_jspecify_support_do_not_enable_without_jspecify_static_checking_or_you_might_cause_an_outage = enable_nullability,
         **kwargs
     )

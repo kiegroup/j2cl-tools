@@ -7,20 +7,19 @@
     <parent>
         <groupId>org.kie.j2cl.tools</groupId>
         <artifactId>j2cl-tools</artifactId>
-        <version>0.23.2</version>
+        <version>0.23.6</version>
     </parent>
     <artifactId>build-caching</artifactId>
 
     <name>Build caching tools</name>
 
-
-
     <dependencies>
         <!-- watch service -->
+        <!-- Copying of static resources (aka public) only works with directory-watcher version ≤ 0.16.1. -->
         <dependency>
             <groupId>io.methvin</groupId>
             <artifactId>directory-watcher</artifactId>
-            <version>0.15.0</version>
+            <version>0.16.1</version>
         </dependency>
 
         <!-- JSON serialization -->
@@ -37,9 +36,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-
-
-
-
 </project>

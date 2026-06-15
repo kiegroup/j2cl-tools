@@ -126,7 +126,6 @@ public class XtbBundleParts {
         parts.forEach(System.out::println);
 
         assertEquals(3, parts.size());
-        System.out.println("??? " + parts.stream().collect(Collectors.joining("")));
         assertEquals(escaped, parts.stream().collect(Collectors.joining("")));
     }
 

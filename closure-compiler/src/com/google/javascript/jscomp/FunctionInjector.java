@@ -31,7 +31,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
@@ -764,17 +763,12 @@ class FunctionInjector {
           }
         });
 
-    switch (innerFns.size()) {
-      case 0:
-        cached = NO_FUNCTIONS;
-        break;
-      case 1:
-        cached = innerFns.get(0);
-        break;
-      default:
-        cached = MULTIPLE_FUNCTIONS;
-        break;
-    }
+    cached =
+        switch (innerFns.size()) {
+          case 0 -> NO_FUNCTIONS;
+          case 1 -> innerFns.get(0);
+          default -> MULTIPLE_FUNCTIONS;
+        };
 
     this.innerFunctionCache.put(containerFn, cached);
     return cached;
@@ -833,10 +827,14 @@ class FunctionInjector {
       boolean hasArgs = !args.isEmpty();
       if (hasArgs) {
         // Limit the inlining
-        Set<String> allNamesToAlias = new LinkedHashSet<>(namesToAlias);
-        functionArgumentInjector.maybeAddTempsForCallArguments(
-            compiler, calleeFn, args, allNamesToAlias, compiler.getCodingConvention());
-        if (!allNamesToAlias.isEmpty()) {
+        if (!namesToAlias.isEmpty()) {
+          return false;
+        }
+
+        ImmutableSet<String> allTemps =
+            functionArgumentInjector.gatherCallArgumentsNeedingTemps(
+                compiler, calleeFn, args, namesToAlias, compiler.getCodingConvention());
+        if (!allTemps.isEmpty()) {
           return false;
         }
       }
@@ -857,7 +855,7 @@ class FunctionInjector {
    * </pre>
    */
   private CanInlineResult canInlineReferenceDirectly(
-      Reference ref, Node fnNode, Set<String> namesToAlias) {
+      Reference ref, Node fnNode, ImmutableSet<String> namesToAlias) {
     if (!isDirectCallNodeReplacementPossible(fnNode)) {
       return CanInlineResult.NO;
     }
@@ -888,10 +886,14 @@ class FunctionInjector {
     boolean hasArgs = !args.isEmpty();
     if (hasArgs) {
       // Limit the inlining
-      Set<String> allNamesToAlias = new LinkedHashSet<>(namesToAlias);
-      functionArgumentInjector.maybeAddTempsForCallArguments(
-          compiler, fnNode, args, allNamesToAlias, compiler.getCodingConvention());
-      if (!allNamesToAlias.isEmpty()) {
+      if (!namesToAlias.isEmpty()) {
+        return CanInlineResult.NO;
+      }
+
+      ImmutableSet<String> allTemps =
+          functionArgumentInjector.gatherCallArgumentsNeedingTemps(
+              compiler, fnNode, args, namesToAlias, compiler.getCodingConvention());
+      if (!allTemps.isEmpty()) {
         return CanInlineResult.NO;
       }
     }

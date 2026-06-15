@@ -200,8 +200,7 @@ public class NodeTraversal {
       ControlFlowGraph<Node> result;
       Object o = cfgs.peek();
       checkState(o != null);
-      if (o instanceof Node) {
-        Node cfgRoot = (Node) o;
+      if (o instanceof Node cfgRoot) {
         result =
             ControlFlowAnalysis.builder()
                 .setCompiler(compiler)
@@ -264,9 +263,7 @@ public class NodeTraversal {
   public abstract static class AbstractShallowStatementCallback implements Callback {
     @Override
     public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      return parent == null
-          || NodeUtil.isControlStructure(parent)
-          || NodeUtil.isStatementBlock(parent);
+      return NodeUtil.isShallowStatementTree(parent);
     }
   }
 
@@ -489,7 +486,7 @@ public class NodeTraversal {
     this.compiler = checkNotNull(builder.compiler);
     this.callback = checkNotNull(builder.callback);
     this.scopeCallback =
-        (this.callback instanceof ScopedCallback) ? (ScopedCallback) this.callback : null;
+        (this.callback instanceof ScopedCallback scopedCallback) ? scopedCallback : null;
     this.scopeCreator =
         (builder.scopeCreator == null)
             ? new SyntacticScopeCreator(this.compiler)
@@ -658,7 +655,7 @@ public class NodeTraversal {
         }
         break;
       case BLOCK:
-      case SWITCH:
+      case SWITCH_BODY:
         if (callback.shouldTraverse(this, n, null)) {
           pushScope(s);
 
@@ -757,15 +754,15 @@ public class NodeTraversal {
 
       @Override
       public void enterScope(NodeTraversal t) {
-        if (insideScopeNode && cb instanceof ScopedCallback) {
-          ((ScopedCallback) cb).enterScope(t);
+        if (insideScopeNode && cb instanceof ScopedCallback scopedCallback) {
+          scopedCallback.enterScope(t);
         }
       }
 
       @Override
       public void exitScope(NodeTraversal t) {
-        if (insideScopeNode && cb instanceof ScopedCallback) {
-          ((ScopedCallback) cb).exitScope(t);
+        if (insideScopeNode && cb instanceof ScopedCallback scopedCallback) {
+          scopedCallback.exitScope(t);
         }
       }
     }
@@ -1197,7 +1194,7 @@ public class NodeTraversal {
    * `Node` representing the root of the scope.
    */
   private Node getNodeRootFromScopeObj(Object root) {
-    return root instanceof Node ? (Node) root : ((AbstractScope) root).getRootNode();
+    return root instanceof Node node ? node : ((AbstractScope) root).getRootNode();
   }
 
   /** Returns the current scope's root. */
@@ -1236,10 +1233,10 @@ public class NodeTraversal {
   private AbstractScope<?, ?> getAbstractScope(int rootDepth) {
 
     Object o = scopes.get(rootDepth);
-    if (o instanceof Node) {
+    if (o instanceof Node node) {
       // The root scope has a null parent.
       AbstractScope<?, ?> parentScope = (rootDepth > 0) ? getAbstractScope(rootDepth - 1) : null;
-      AbstractScope<?, ?> scope = scopeCreator.createScope((Node) o, parentScope);
+      AbstractScope<?, ?> scope = scopeCreator.createScope(node, parentScope);
       scopes.set(rootDepth, scope);
       return scope;
     } else {
@@ -1283,15 +1280,10 @@ public class NodeTraversal {
   }
 
   private static boolean isHoistScopeRootNode(Node n) {
-    switch (n.getToken()) {
-      case FUNCTION:
-      case MODULE_BODY:
-      case ROOT:
-      case SCRIPT:
-        return true;
-      default:
-        return NodeUtil.isFunctionBlock(n);
-    }
+    return switch (n.getToken()) {
+      case FUNCTION, MODULE_BODY, ROOT, SCRIPT -> true;
+      default -> NodeUtil.isFunctionBlock(n);
+    };
   }
 
   /** Returns the closest scope binding the `this` or `super` keyword */

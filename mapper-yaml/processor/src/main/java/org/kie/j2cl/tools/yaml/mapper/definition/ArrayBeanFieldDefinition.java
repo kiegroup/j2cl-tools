@@ -101,6 +101,15 @@ public class ArrayBeanFieldDefinition extends FieldDefinition {
       deserializerCreationExpr =
           field.getFieldYamlTypeDeserializerCreationExpr(
               field.getProperty().getAnnotation(YamlTypeDeserializer.class));
+    } else if (context.getTypeRegistry().containsDeserializer(array.getComponentType())) {
+      cu.addImport(YamlTypeSerializerWrapper.class);
+      deserializerCreationExpr =
+          new ObjectCreationExpr()
+              .setType(
+                  context
+                      .getTypeRegistry()
+                      .getCustomDeserializer(array.getComponentType())
+                      .toString());
     } else {
       deserializerCreationExpr =
           propertyDefinitionFactory
@@ -136,6 +145,18 @@ public class ArrayBeanFieldDefinition extends FieldDefinition {
       expression =
           field.getFieldYamlTypeSerializerCreationExpr(
               field.getProperty().getAnnotation(YamlTypeSerializer.class));
+    } else if (context.getTypeRegistry().containsSerializer(array.getComponentType())) {
+      cu.addImport(YamlTypeSerializerWrapper.class);
+      expression =
+          new ObjectCreationExpr()
+              .setType(YamlTypeSerializerWrapper.class.getCanonicalName())
+              .addArgument(
+                  new ObjectCreationExpr()
+                      .setType(
+                          context
+                              .getTypeRegistry()
+                              .getCustomSerializer(array.getComponentType())
+                              .toString()));
     }
 
     return new ObjectCreationExpr().setType(serializer).addArgument(expression);

@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
@@ -58,7 +59,9 @@ import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.KnownSymbolType;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.TemplateType;
@@ -85,6 +88,10 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
       DiagnosticType.warning(
           "JSC_FUNCTION_LITERAL_UNDEFINED_THIS",
           "Function literal argument refers to undefined this argument");
+
+  static final DiagnosticType REASSIGN_CLASS_PROTOTYPE =
+      DiagnosticType.error(
+          "JSC_REASSIGN_CLASS_PROTOTYPE", "Reassigning a class prototype is not allowed");
 
   private final AbstractCompiler compiler;
   private final JSTypeRegistry registry;
@@ -742,8 +749,12 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
         break;
 
       case YIELD:
-        scope = traverseChildren(n, scope);
-        n.setJSType(getNativeType(UNKNOWN_TYPE));
+        if (n.isYieldAll()) {
+          scope = traverseYieldAll(n, scope);
+        } else {
+          scope = traverseChildren(n, scope);
+          n.setJSType(getNativeType(UNKNOWN_TYPE));
+        }
         break;
 
       case VAR:
@@ -812,6 +823,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
       case ROOT:
       case SCRIPT:
       case MODULE_BODY:
+      case SWITCH_BODY:
       case FUNCTION:
       case PARAM_LIST:
       case BLOCK:
@@ -1065,6 +1077,18 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
         }
       }
     }
+    return scope;
+  }
+
+  private FlowScope traverseYieldAll(Node n, FlowScope scope) {
+    // A yield* expression will first yield all the elements of the given iterable, and then
+    // evaluate to whatever the iterable returns when done.
+    // The yielded type and done return type are not necessarily the same. Here, we look for the
+    // done type - TReturn in Iterable<T, TReturn, TNext>.
+    scope = traverseChildren(n, scope);
+    JSType innerType = getJSType(n.getFirstChild());
+    JSType yieldAllResult = JsIterables.getReturnElementType(innerType, registry);
+    n.setJSType(yieldAllResult);
     return scope;
   }
 
@@ -1365,7 +1389,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
         //    so that we can use it for missing property checks.
         if (objectType.hasProperty(propName) || !objectType.isInstanceType()) {
           if ("prototype".equals(propName)) {
-            objectType.defineDeclaredProperty(propName, rightType, getprop);
+            defineDeclaredProperty(objectType, propName, rightType, getprop);
           } else {
             objectType.defineInferredProperty(propName, rightType, getprop);
           }
@@ -1376,6 +1400,21 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
         }
       }
     }
+  }
+
+  @CanIgnoreReturnValue
+  private boolean defineDeclaredProperty(
+      ObjectType objectType, String propName, JSType rightType, Node getprop) {
+    if (propName.equals("prototype") && !getprop.getParent().isExprResult()) {
+      FunctionType functionType = objectType.toMaybeFunctionType();
+      if (functionType != null
+          && functionType.getSource() != null
+          && functionType.getSource().isClass()) {
+        compiler.report(JSError.make(getprop.getParent(), REASSIGN_CLASS_PROTOTYPE));
+        return true;
+      }
+    }
+    return objectType.defineDeclaredProperty(propName, rightType, getprop);
   }
 
   /**
@@ -1397,7 +1436,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
             (!objectType.hasOwnProperty(propName)
                 && (!objectType.isInstanceType()
                     || (var.isExtern() && !objectType.isNativeObjectType())))) {
-          return objectType.defineDeclaredProperty(propName, var.getType(), getprop);
+          return defineDeclaredProperty(objectType, propName, var.getType(), getprop);
         }
       }
     }
@@ -2104,8 +2143,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
    * target, if it's a function expression.
    */
   private void updateBind(Node n) {
-    CodingConvention.Bind bind =
-        compiler.getCodingConvention().describeFunctionBind(n, false, true);
+    CodingConvention.Bind bind = compiler.getCodingConvention().describeFunctionBind(n, true);
     if (bind == null) {
       return;
     }
@@ -2349,11 +2387,11 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     ctorType = ctorType.restrictByNotNullOrUndefined();
 
     FunctionType ctorFnType = ctorType.toMaybeFunctionType();
-    if (ctorFnType == null && ctorType instanceof FunctionType) {
+    if (ctorFnType == null && ctorType instanceof FunctionType functionType) {
       // If ctorType is a NoObjectType, then toMaybeFunctionType will
       // return null. But NoObjectType implements the FunctionType
       // interface, precisely because it can validly construct objects.
-      ctorFnType = (FunctionType) ctorType;
+      ctorFnType = functionType;
     }
 
     if (ctorFnType == null || !ctorFnType.isConstructor()) {
@@ -2416,36 +2454,70 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   }
 
   private void inferGetElemType(Node n) {
+    JSType objType = getJSType(n.getFirstChild()).restrictByNotNullOrUndefined();
     Node indexKey = n.getLastChild();
     JSType indexType = getJSType(indexKey);
-    JSType inferredType = unknownType;
-    if (indexType.isSymbolValueType()) {
+
+    final JSType inferredType;
+    if (indexType.isKnownSymbolValueType()) {
+      inferredType = dereferenceKnownSymbolProp(objType, indexType.toMaybeKnownSymbolType());
+    } else if (indexType.isSymbolValueType()) {
       // For now, allow symbols definitions/access on any type. In the future only allow them
       // on the subtypes for which they are defined.
-      // TODO(b/77474174): Type well known symbol accesses.
+      // TODO(b/77474174): be stricter about accesses for non-well-known symbols
+      inferredType = unknownType;
     } else {
-      JSType type = getJSType(n.getFirstChild()).restrictByNotNullOrUndefined();
-
-      // If this is a union type, then we must extract type arguments from each option.
-      UnionType.Builder argumentTypes = UnionType.builder(registry);
-      Collection<JSType> alternates =
-          type.isUnionType() ? type.toMaybeUnionType().getAlternates() : ImmutableList.of(type);
-      for (JSType option : alternates) {
-        TemplateTypeMap typeMap = option.getTemplateTypeMap();
-        if (!typeMap.hasTemplateType(registry.getObjectElementKey())) {
-          // This isn't an array or object, drop out.
-          argumentTypes = null;
-          break;
-        }
-
-        // Extract the element type and add all options to our set of alternates.
-        argumentTypes.addAlternate(typeMap.getResolvedTemplateType(registry.getObjectElementKey()));
-      }
-
-      // Unwrap the union if possible, and fail if we had no alternates.
-      inferredType = (argumentTypes == null) ? null : argumentTypes.build();
+      inferredType = dereferenceIndexSignature(objType);
     }
     n.setJSType(inferredType != null ? inferredType : unknownType);
+  }
+
+  private @Nullable JSType dereferenceKnownSymbolProp(JSType obj, KnownSymbolType indexSymbol) {
+    // If this is a union type, then we must extract type arguments from each option.
+    UnionType.Builder argumentTypes = UnionType.builder(registry);
+    Collection<JSType> alternates =
+        obj.isUnionType() ? obj.toMaybeUnionType().getAlternates() : ImmutableList.of(obj);
+    Property.Key key = new Property.SymbolKey(indexSymbol);
+    for (JSType option : alternates) {
+      if (option.toMaybeObjectType() == null) {
+        // This isn't an array or object, drop out.
+        argumentTypes = null;
+        break;
+      }
+
+      // Extract the element type and add all options to our set of alternates.
+      JSType propertyType = option.toMaybeObjectType().findPropertyType(key);
+      if (propertyType == null) {
+        // this union member doesn't have the property. just make it unknown.
+        argumentTypes = null;
+        break;
+      }
+      argumentTypes.addAlternate(propertyType);
+    }
+
+    // Unwrap the union if possible, and fail if we had no alternates.
+    return (argumentTypes == null) ? null : argumentTypes.build();
+  }
+
+  private @Nullable JSType dereferenceIndexSignature(JSType obj) {
+    // If this is a union type, then we must extract type arguments from each option.
+    UnionType.Builder argumentTypes = UnionType.builder(registry);
+    Collection<JSType> alternates =
+        obj.isUnionType() ? obj.toMaybeUnionType().getAlternates() : ImmutableList.of(obj);
+    for (JSType option : alternates) {
+      TemplateTypeMap typeMap = option.getTemplateTypeMap();
+      if (!typeMap.hasTemplateType(registry.getObjectElementKey())) {
+        // This isn't an array or object, drop out.
+        argumentTypes = null;
+        break;
+      }
+
+      // Extract the element type and add all options to our set of alternates.
+      argumentTypes.addAlternate(typeMap.getResolvedTemplateType(registry.getObjectElementKey()));
+    }
+
+    // Unwrap the union if possible, and fail if we had no alternates.
+    return (argumentTypes == null) ? null : argumentTypes.build();
   }
 
   private FlowScope traverseGetProp(Node n, FlowScope scope) {
@@ -2464,16 +2536,12 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   // Sets the appropriate type on the OptChain node `n` after its children have been traversed.
   private FlowScope setOptChainNodeTypeAfterChildrenTraversed(
       Node n, FlowScope scopeAfterChildren) {
-    switch (n.getToken()) {
-      case OPTCHAIN_GETPROP:
-        return setGetPropNodeTypeAfterChildrenTraversed(n, scopeAfterChildren);
-      case OPTCHAIN_GETELEM:
-        return setGetElemNodeTypeAfterChildrenTraversed(n, scopeAfterChildren);
-      case OPTCHAIN_CALL:
-        return setCallNodeTypeAfterChildrenTraversed(n, scopeAfterChildren);
-      default:
-        throw new IllegalStateException("Illegal token inside finishTraversingOptChain");
-    }
+    return switch (n.getToken()) {
+      case OPTCHAIN_GETPROP -> setGetPropNodeTypeAfterChildrenTraversed(n, scopeAfterChildren);
+      case OPTCHAIN_GETELEM -> setGetElemNodeTypeAfterChildrenTraversed(n, scopeAfterChildren);
+      case OPTCHAIN_CALL -> setCallNodeTypeAfterChildrenTraversed(n, scopeAfterChildren);
+      default -> throw new IllegalStateException("Illegal token inside finishTraversingOptChain");
+    };
   }
 
   /**
@@ -2754,17 +2822,14 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   }
 
   private BooleanOutcomePair traverseWithinShortCircuitingBinOp(Node n, FlowScope scope) {
-    switch (n.getToken()) {
-      case AND:
-        return traverseAnd(n, scope);
-
-      case OR:
-        return traverseOr(n, scope);
-
-      default:
+    return switch (n.getToken()) {
+      case AND -> traverseAnd(n, scope);
+      case OR -> traverseOr(n, scope);
+      default -> {
         scope = traverse(n, scope);
-        return newBooleanOutcomePair(n.getJSType(), scope);
-    }
+        yield newBooleanOutcomePair(n.getJSType(), scope);
+      }
+    };
   }
 
   private FlowScope traverseAwait(Node await, FlowScope scope) {

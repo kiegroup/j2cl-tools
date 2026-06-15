@@ -7,42 +7,56 @@
     <parent>
         <groupId>org.kie.j2cl.tools</groupId>
         <artifactId>j2cl-parent</artifactId>
-        <version>v20241110-1</version>
+        <version>v20250822-1</version>
     </parent>
     <artifactId>backend-kotlin-ast</artifactId>
     <packaging>pom</packaging>
 
-<!--     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.0.0</version>
-                <executions>
-                    <execution>
-                        <id>attach-artifacts</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>attach-artifact</goal>
-                        </goals>
-                        <configuration>
-                            <artifacts>
-                                <artifact>
-                                    <file>../../bazel-bin/transpiler/java/com/google/j2cl/transpiler/backend/kotlin/ast/ast.jar</file>
-                                    <type>jar</type>
-                                </artifact>
-                                <artifact>
-                                    <file>../../bazel-bin/transpiler/java/com/google/j2cl/transpiler/backend/kotlin/ast/ast-sources.jar</file>
-                                    <type>jar</type>
-                                    <classifier>sources</classifier>
-                                </artifact>
-                            </artifacts>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build> -->
+
+    <name>J2CL Backend Kotlin AST</name>
+    <description>
+        J2CL is a powerful, simple and lightweight transpiler from Java to Closure style JavaScript.
+        The project is designed, implemented, and maintained by the J2CL team at Google.
+        This distribution is slightly modified from the original and packaged for Maven Central by Vertispan LLC.
+        The links and references in this pom.xml will reference the Vertispan fork, to ensure that any error introduced
+        by our packaging are not incorrectly blamed on the upstream Google repository.
+    </description>
+    <url>https://github.com/vertispan/j2cl</url>
+    <inceptionYear>2015</inceptionYear>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>J2CL team</name>
+            <organization>Google</organization>
+            <organizationUrl>https://www.google.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Colin Alworth</name>
+            <email>colin@vertispan.com</email>
+            <organization>Vertispan LLC</organization>
+            <organizationUrl>https://www.vertispan.com/</organizationUrl>
+        </developer>
+    </developers>
+
+    <issueManagement>
+        <url>https://github.com/vertispan/j2cl/issues</url>
+        <system>GitHub Issues</system>
+    </issueManagement>
+
+    <scm>
+        <connection>scm:git:https://github.com/vertispan/j2cl.git</connection>
+        <developerConnection>scm:git:git@github.com:vertispan/j2cl.git</developerConnection>
+        <url>https://github.com/vertispan/j2cl</url>
+    </scm>
+
     <dependencies>
         <dependency>
             <groupId>org.kie.j2cl.tools</groupId>

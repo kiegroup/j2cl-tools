@@ -953,7 +953,6 @@ public final class AstValidator implements CompilerPass {
       validateProperties(superClass);
       validateChildless(superClass);
     } else {
-      validateFeature(Feature.CLASS_EXTENDS, n);
       validateExpression(superClass);
     }
 
@@ -1112,6 +1111,7 @@ public final class AstValidator implements CompilerPass {
     validateProperties(n);
     validateChildCount(n);
     validateTypeInformation(n);
+    validateShadowContentIfPresent(n);
   }
 
   private void validateOptionalName(Node n) {
@@ -1123,6 +1123,41 @@ public final class AstValidator implements CompilerPass {
     if (!isEmpty) {
       validateTypeInformation(n);
     }
+  }
+
+  private void validateShadowContentIfPresent(Node n) {
+    Node shadow = n.getClosureUnawareShadow();
+    if (shadow == null) {
+      return;
+    }
+    if (!shadow.isRoot()) {
+      violation("Shadow reference node is not a ROOT node", shadow);
+      return;
+    }
+    Node shadowScript = shadow.getFirstChild();
+    if (shadowScript == null || !shadowScript.isScript()) {
+      violation("Shadow root node's child is not a script node", shadowScript);
+      return;
+    }
+    if (shadowScript.getChildCount() != 1) {
+      violation("Shadow SCRIPT node child has more than one child", shadowScript);
+      return;
+    }
+    Node exprResult = shadowScript.getFirstChild();
+    if (exprResult == null || !exprResult.isExprResult()) {
+      violation("Shadow SCRIPT node child is not an expr result node", exprResult);
+      return;
+    }
+    if (exprResult.getChildCount() != 1) {
+      violation("Shadow EXPR_RESULT node should have exactly one child", exprResult);
+      return;
+    }
+    Node shadowJsFunction = exprResult.getFirstChild();
+    if (!shadowJsFunction.isFunction()) {
+      violation("Shadow node EXPR_RESULT child is not a function", shadowJsFunction);
+      return;
+    }
+    validateFunctionExpression(shadowJsFunction);
   }
 
   private void validateEmptyName(Node n) {
@@ -1718,10 +1753,12 @@ public final class AstValidator implements CompilerPass {
   private void validateSwitch(Node n) {
     validateNodeType(Token.SWITCH, n);
     validateProperties(n);
-    validateMinimumChildCount(n, 1);
+    validateChildCount(n, 2);
     validateExpression(n.getFirstChild());
+    validateNodeType(Token.SWITCH_BODY, n.getSecondChild());
+    Node cases = n.getSecondChild();
     int defaults = 0;
-    for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
+    for (Node c = cases.getFirstChild(); c != null; c = c.getNext()) {
       validateSwitchMember(c);
       if (c.isDefaultCase()) {
         defaults++;
@@ -1849,6 +1886,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateRegExpLit(Node n) {
+    validateFeature(Feature.REGEXP_SYNTAX, n);
     validateNodeType(Token.REGEXP, n);
     validateProperties(n);
     validateChildCountIn(n, 1, 2);

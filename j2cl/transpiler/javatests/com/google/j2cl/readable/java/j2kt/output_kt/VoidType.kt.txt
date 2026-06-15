@@ -1,5 +1,4 @@
 // Generated from "j2kt/VoidType.java"
-@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -22,30 +21,39 @@ import javaemul.lang.*
 import java.lang.Class
 import java.lang.Void
 import kotlin.Any
-import kotlin.OptIn
 import kotlin.Suppress
-import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.JvmStatic
-import kotlin.native.ObjCName
 
-@ObjCName("J2ktJ2ktVoidType", exact = true)
 open class VoidType {
- @ObjCName("J2ktJ2ktVoidTypeCompanion", exact = true)
  companion object {
   @JvmStatic
   internal fun testVoid_pp_j2kt() {
    val nonNullVoid: Void? = null
    val nullableVoid: Void? = null
-   val nullableBoundsWithNonNullVoid: VoidType.NullableBounds<Void?>? = null
-   val nullableBoundsWithNullableVoid: VoidType.NullableBounds<Void?>? = null
-   val nonNullBoundsWithNonNullVoid: VoidType.NonNullBounds<Void>? = null
+   val nullableBoundsWithNonNullVoid: NullableBounds<Void>? = null
+   val nullableBoundsWithNullableVoid: NullableBounds<Void?>? = null
+   val nonNullBoundsWithNonNullVoid: NonNullBounds<Void>? = null
    val voidClass: Class<Void>? = null
+   val nonNullVoidConsumer: Consumer<Void> = Consumer { v: Void ->
+    v.hashCode()
+   }
+   val nullableVoidConsumer: Consumer<Void?> = Consumer { v_1: Void? ->
+    v_1!!.hashCode()
+   }
+   val nonNullVoidConsumerWildcard: Consumer<*> = Consumer { v_2: Void ->
+    v_2.hashCode()
+   }
+   val nullableVoidConsumerWildcard: Consumer<*> = Consumer { v_3: Void? ->
+    v_3!!.hashCode()
+   }
   }
  }
 
- @ObjCName("J2ktJ2ktVoidType_NullableBounds", exact = true)
- interface NullableBounds<T> {}
+ interface NullableBounds<T>
 
- @ObjCName("J2ktJ2ktVoidType_NonNullBounds", exact = true)
- interface NonNullBounds<T: Any> {}
+ interface NonNullBounds<T: Any>
+
+ fun interface Consumer<V: Void?> {
+  fun accept(v: V)
+ }
 }

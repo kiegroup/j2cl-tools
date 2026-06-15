@@ -45,6 +45,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   private final List<String> polyfillTable = new ArrayList<>();
   private boolean isolatePolyfills = false;
   private boolean injectPolyfills = true;
+  private LanguageMode injectPolyfillsNewerThan = null;
 
   private void addLibrary(String name, String from, String to, @Nullable String library) {
     if (library != null) {
@@ -61,6 +62,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     super.setUp();
     injectableLibraries.clear();
     polyfillTable.clear();
+    injectPolyfillsNewerThan = null;
     setLanguageOut(LanguageMode.ECMASCRIPT5);
   }
 
@@ -70,7 +72,8 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
         compiler,
         Polyfills.fromTable(Joiner.on("\n").join(polyfillTable)),
         injectPolyfills,
-        isolatePolyfills);
+        isolatePolyfills,
+        injectPolyfillsNewerThan);
   }
 
   @Override
@@ -395,8 +398,10 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
 
     setLanguage(ES6, ES5);
     testInjects(
-        "var string = {}; string.endsWith = function() {}; "
-            + "string.foo = function(string) { return string.endsWith('x'); };",
+        """
+        var string = {}; string.endsWith = function() {};
+        string.foo = function(string) { return string.endsWith('x'); };
+        """,
         "es6/string/endswith");
   }
 
@@ -416,8 +421,10 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects(
         "var string = {endsWith: function() {}}; string.endsWith('x');", "es6/string/endswith");
     testInjects(
-        "var string = {}; string.endsWith = function() {}; "
-            + "string.foo = function() { return string.endsWith('x'); };",
+        """
+        var string = {}; string.endsWith = function() {};
+        string.foo = function() { return string.endsWith('x'); };
+        """,
         "es6/string/endswith");
   }
 
@@ -498,27 +505,28 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     // Put two polyfill statements in the same library.
     injectableLibraries.put(
         "es6/set",
-        lines(
-            "$jscomp.polyfill('Set', function() {}, 'es6', 'es3');",
-            "$jscomp.polyfill('Map', function() {}, 'es5', 'es3');"));
+        """
+        $jscomp.polyfill('Set', function() {}, 'es6', 'es3');
+        $jscomp.polyfill('Map', function() {}, 'es5', 'es3');
+        """);
     polyfillTable.add("Set es6 es3 es6/set");
 
     setLanguage(ES6, ES5);
     test(
         "var set = new Set();",
-        lines(
-            "", //
-            "$jscomp.polyfill('Set', function() {}, 'es6', 'es3');",
-            "var set = new Set();"));
+        """
+        $jscomp.polyfill('Set', function() {}, 'es6', 'es3');
+        var set = new Set();
+        """);
 
     setLanguage(ES6, ES3);
     test(
         "var set = new Set();",
-        lines(
-            "$jscomp.polyfill('Set', function() {}, 'es6', 'es3');",
-            "$jscomp.polyfill('Map', function() {}, 'es5', 'es3');",
-            "var set = new Set();",
-            ""));
+        """
+        $jscomp.polyfill('Set', function() {}, 'es6', 'es3');
+        $jscomp.polyfill('Map', function() {}, 'es5', 'es3');
+        var set = new Set();
+        """);
   }
 
   @Test
@@ -554,10 +562,11 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     // Put two polyfill statements in the same library.
     injectableLibraries.put(
         "es6/set",
-        lines(
-            "$jscomp.polyfill('Set', function() {}, 'es6', 'es3');",
-            // pretend Map isn't needed for ES5
-            "$jscomp.polyfill('Map', function() {}, 'es5', 'es3');"));
+        """
+        $jscomp.polyfill('Set', function() {}, 'es6', 'es3');
+        // pretend Map isn't needed for ES5
+        $jscomp.polyfill('Map', function() {}, 'es5', 'es3');
+        """);
     polyfillTable.add("Set es6 es3 es6/set");
 
     // simulate injection of Map by a prior-run pass
@@ -565,10 +574,11 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     setLanguage(ES6, ES5);
     test(
         "var set = new Set();",
-        lines(
-            "", // Map gets removed even though not added by RewritePolyfills
-            "$jscomp.polyfill('Set', function() {}, 'es6', 'es3');",
-            "var set = new Set();"));
+        """
+         // Map gets removed even though not added by RewritePolyfills
+        $jscomp.polyfill('Set', function() {}, 'es6', 'es3');
+        var set = new Set();
+        """);
   }
 
   @Test
@@ -589,5 +599,30 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
 
     allowExternsChanges();
     testSame("'x'.endsWith('y');");
+  }
+
+  @Test
+  public void testForceInject_es5_addsES6AndES8() {
+    injectPolyfillsNewerThan = LanguageMode.ECMASCRIPT5;
+    addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
+    addLibrary("Object.values", "es8", "es3", "es6/object/values");
+
+    testInjects("", "es6/string/endswith", "es6/object/values");
+  }
+
+  @Test
+  public void testForceInject_es2015_addsES8Polyfill() {
+    injectPolyfillsNewerThan = LanguageMode.ECMASCRIPT5;
+    addLibrary("Object.values", "es8", "es3", "es6/object/values");
+
+    testInjects("", "es6/object/values");
+  }
+
+  @Test
+  public void testForceInject_es2015_skipsEs2015Polyfills() {
+    injectPolyfillsNewerThan = LanguageMode.ECMASCRIPT_2015;
+    addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
+
+    testDoesNotInject("");
   }
 }

@@ -1,16 +1,16 @@
 ;;; Code for implicitparenthesis.ImplicitParenthesis [type definition]
+(type $implicitparenthesis.ImplicitParenthesis (sub $java.lang.Object (struct
+ (field $vtable (ref $implicitparenthesis.ImplicitParenthesis.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $implicitparenthesis.ImplicitParenthesis.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
  (field $m_hashCode__int (ref $function.m_hashCode__int))
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  (field $m_test__void (ref $function.m_test__void))
- ))
-)
-(type $implicitparenthesis.ImplicitParenthesis (sub $java.lang.Object (struct
- (field $vtable (ref $implicitparenthesis.ImplicitParenthesis.vtable))
- (field $itable (ref $itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
 
@@ -46,7 +46,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/implicitparenthesis/readable-j2wasm.js/implicitparenthesis/ImplicitParenthesis.java:21:13
   (call $$clinit__void_<once>_@implicitparenthesis.ImplicitParenthesis )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/implicitparenthesis/readable-j2wasm.js/implicitparenthesis/ImplicitParenthesis.java:21:13
-  (local.set $$instance (struct.new $implicitparenthesis.ImplicitParenthesis (ref.as_non_null (global.get $implicitparenthesis.ImplicitParenthesis.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $implicitparenthesis.ImplicitParenthesis (global.get $implicitparenthesis.ImplicitParenthesis.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/implicitparenthesis/readable-j2wasm.js/implicitparenthesis/ImplicitParenthesis.java:21:13
   (call $$ctor__void_$p_implicitparenthesis_ImplicitParenthesis@implicitparenthesis.ImplicitParenthesis (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/implicitparenthesis/readable-j2wasm.js/implicitparenthesis/ImplicitParenthesis.java:21:13

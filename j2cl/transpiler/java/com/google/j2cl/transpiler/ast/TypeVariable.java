@@ -254,24 +254,19 @@ public abstract class TypeVariable extends TypeDescriptor implements HasName {
   }
 
   @Override
+  @Nullable
+  public DeclaredTypeDescriptor findSupertype(TypeDeclaration supertypeDeclaration) {
+    return getUpperBoundTypeDescriptor().findSupertype(supertypeDeclaration);
+  }
+
+  @Override
   public String getReadableDescription() {
     return getName();
   }
 
   @Override
   public String getUniqueId() {
-    String prefix;
-    switch (getNullabilityAnnotation()) {
-      case NOT_NULLABLE:
-        prefix = "!";
-        break;
-      case NULLABLE:
-        prefix = "?";
-        break;
-      default:
-        prefix = "";
-    }
-    return prefix + getUniqueKey();
+    return getNullabilityAnnotation().toTypeModifierString() + getUniqueKey();
   }
 
   public final boolean hasRecursiveDefinition() {
@@ -289,13 +284,16 @@ public abstract class TypeVariable extends TypeDescriptor implements HasName {
 
   /** Creates a wildcard type variable with a specific upper bound. */
   public static TypeVariable createWildcardWithUpperBound(TypeDescriptor bound) {
-    return createWildcard(/* upperBound= */ bound, /* lowerBound= */ null);
+    return createWildcard(
+        /* upperBound= */ bound, /* lowerBound= */ null, NullabilityAnnotation.NONE);
   }
 
   /** Creates a wildcard type variable with a specific lower bound. */
   public static TypeVariable createWildcardWithLowerBound(TypeDescriptor bound) {
     return createWildcard(
-        /* upperBound= */ TypeDescriptors.get().javaLangObject, /* lowerBound= */ bound);
+        /* upperBound= */ TypeDescriptors.get().javaLangObject,
+        /* lowerBound= */ bound,
+        NullabilityAnnotation.NONE);
   }
 
   /** Creates wildcard type variable with no bound. */
@@ -304,7 +302,9 @@ public abstract class TypeVariable extends TypeDescriptor implements HasName {
   }
 
   private static TypeVariable createWildcard(
-      TypeDescriptor upperBound, @Nullable TypeDescriptor lowerBound) {
+      TypeDescriptor upperBound,
+      @Nullable TypeDescriptor lowerBound,
+      NullabilityAnnotation nullabilityAnnotation) {
     String upperBoundKey = "<??_^_>" + upperBound.getUniqueId();
     String lowerBoundKey = lowerBound == null ? "" : "<??_v_>" + lowerBound.getUniqueId();
 
@@ -317,7 +317,9 @@ public abstract class TypeVariable extends TypeDescriptor implements HasName {
 
     return TypeVariable.newBuilder()
         .setWildcard(true)
-        .setNullabilityAnnotation(NullabilityAnnotation.NONE)
+        // TODO(b/407362826): Reconsider whether the nullability annotation is kept in the wildcard
+        // or whether it needs to be applied to the bounds and disallowed here.
+        .setNullabilityAnnotation(nullabilityAnnotation)
         .setUpperBoundTypeDescriptorFactory(() -> upperBound)
         .setLowerBoundTypeDescriptor(lowerBound)
         // Create an unique key that does not conflict with the keys used for other types nor for
@@ -333,7 +335,9 @@ public abstract class TypeVariable extends TypeDescriptor implements HasName {
     if (isWildcard()) {
       return this;
     }
-    return createWildcard(getUpperBoundTypeDescriptor(), getLowerBoundTypeDescriptor());
+
+    return createWildcard(
+        getUpperBoundTypeDescriptor(), getLowerBoundTypeDescriptor(), getNullabilityAnnotation());
   }
 
   /**
@@ -362,7 +366,7 @@ public abstract class TypeVariable extends TypeDescriptor implements HasName {
       return this;
     }
 
-    return createWildcard(updatedUpperBound, updatedLowerBound);
+    return createWildcard(updatedUpperBound, updatedLowerBound, getNullabilityAnnotation());
   }
 
   @Override
@@ -409,6 +413,59 @@ public abstract class TypeVariable extends TypeDescriptor implements HasName {
     }
 
     return getUpperBoundTypeDescriptor().hasReferenceTo(typeVariable, seen);
+  }
+
+  @Override
+  String toStringInternal(ImmutableSet<TypeVariable> seen) {
+    // TODO(b/246332093): Make type variable unique identifiers compact so that when printed make it
+    // easier to see the actual type variable they are referencing.
+    // Ideally references just print the annotated variable name (when they are not captures or
+    // wildcards) and print the full definition when printing a the class or method declaration
+    // that declares them.
+    String referenceText =
+        getName()
+            + getNullabilityAnnotation().toTypeModifierString()
+            + (isCapture() ? "(capture) " : "");
+    if (seen.contains(this.withoutNullabilityAnnotations())) {
+      // We are in the definition of this type variable, don't print the bounds since they might
+      // be recursive.
+      return referenceText;
+    }
+    return referenceText
+        + getBoundString(
+            ImmutableSet.<TypeVariable>builder()
+                .addAll(seen)
+                .add(this.withoutNullabilityAnnotations())
+                .build());
+  }
+
+  private String getBoundString(ImmutableSet<TypeVariable> seen) {
+    TypeDescriptor upperBoundTypeDescriptor = getUpperBoundTypeDescriptor();
+    TypeDescriptor lowerBoundTypeDescriptor = getLowerBoundTypeDescriptor();
+    // TODO(b/246332093): Compute correctly if the bound can be omitted.
+    boolean isDefaultUpperbound =
+        upperBoundTypeDescriptor == null
+            || TypeDescriptors.isJavaLangObject(upperBoundTypeDescriptor);
+    boolean isUnbound = isDefaultUpperbound && lowerBoundTypeDescriptor == null;
+
+    if (isUnbound) {
+      return "";
+    }
+
+    if (isDefaultUpperbound) {
+      return " super " + lowerBoundTypeDescriptor.toStringInternal(seen);
+    }
+
+    if (lowerBoundTypeDescriptor != null) {
+      // bounded both ways ony in captures.
+      return " extends "
+          + upperBoundTypeDescriptor.toStringInternal(seen)
+          + "( super "
+          + lowerBoundTypeDescriptor.toStringInternal(seen)
+          + ")";
+    }
+
+    return " extends " + upperBoundTypeDescriptor.toStringInternal(seen);
   }
 
   /** Builder for a TypeVariableDeclaration. */

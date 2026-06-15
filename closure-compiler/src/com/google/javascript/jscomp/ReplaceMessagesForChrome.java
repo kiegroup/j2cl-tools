@@ -19,10 +19,10 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.AstFactory.type;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.colors.StandardColors;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.List;
@@ -33,7 +33,6 @@ import java.util.List;
  * placeholders, the second argument is an array of the values being used for the placeholders,
  * sorted by placeholder name.
  */
-@GwtIncompatible("JsMessage")
 class ReplaceMessagesForChrome extends JsMessageVisitor {
 
   static final DiagnosticType DECLARE_ICU_TEMPLATE_NOT_SUPPORTED =
@@ -42,6 +41,7 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
           "goog.i18n.messages.declareIcuTemplate() is not supported for Chrome i18n.");
 
   private final AstFactory astFactory;
+  boolean introducesRegexpSyntax = false;
 
   ReplaceMessagesForChrome(AbstractCompiler compiler, JsMessage.IdGenerator idGenerator) {
     super(compiler, idGenerator);
@@ -62,8 +62,14 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
 
   @Override
   protected void processJsMessageDefinition(JsMessageDefinition definition) {
+    this.introducesRegexpSyntax = false;
     Node newValue = getNewValueNode(definition.getMessage(), definition);
     definition.getMessageNode().replaceWith(newValue);
+    if (this.introducesRegexpSyntax) {
+      NodeUtil.addFeatureToScript(
+          NodeUtil.getEnclosingScript(newValue), Feature.REGEXP_SYNTAX, compiler);
+      this.introducesRegexpSyntax = false;
+    }
     compiler.reportChangeToEnclosingScope(newValue);
   }
 
@@ -117,6 +123,7 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
                 astFactory.createQNameWithUnknownType("chrome.i18n.getMessage.apply"),
                 astFactory.createNull(),
                 args);
+        this.introducesRegexpSyntax = true;
       } else {
         newValueNode.addChildToBack(placeholderValueArray);
       }

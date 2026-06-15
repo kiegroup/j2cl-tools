@@ -192,10 +192,9 @@ class FunctionArgumentInjector {
    * <p>Inlining this without taking precautions would cause the call site value to be modified
    * (bad).
    */
-  Set<String> findModifiedParameters(Node fnNode) {
+  ImmutableSet<String> findModifiedParameters(Node fnNode) {
     ImmutableSet<String> names = getFunctionParameterSet(fnNode);
-    Set<String> unsafeNames = new LinkedHashSet<>();
-    return findModifiedParameters(fnNode.getLastChild(), names, unsafeNames, false);
+    return ImmutableSet.copyOf(findModifiedParameters(fnNode.getLastChild(), names, false));
   }
 
   /**
@@ -208,12 +207,11 @@ class FunctionArgumentInjector {
    *
    * @param n The node in question.
    * @param names The set of names to check.
-   * @param unsafe The set of names that require aliases.
    * @param inInnerFunction Whether the inspection is occurring on a inner function.
    */
   private static Set<String> findModifiedParameters(
-      Node n, ImmutableSet<String> names, Set<String> unsafe, boolean inInnerFunction) {
-    checkArgument(unsafe != null);
+      Node n, ImmutableSet<String> names, boolean inInnerFunction) {
+    LinkedHashSet<String> unsafe = new LinkedHashSet<>();
     if (n.isName()) {
       if (names.contains(n.getString()) && (inInnerFunction || canNameValueChange(n))) {
         unsafe.add(n.getString());
@@ -228,7 +226,7 @@ class FunctionArgumentInjector {
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      findModifiedParameters(c, names, unsafe, inInnerFunction);
+      unsafe.addAll(findModifiedParameters(c, names, inInnerFunction));
     }
 
     return unsafe;
@@ -266,20 +264,21 @@ class FunctionArgumentInjector {
    *
    * @param fnNode The FUNCTION node to be inlined.
    * @param argMap The argument list for the call to fnNode.
-   * @param namesNeedingTemps The set of names to update.
+   * @param modifiedParameters The set of parameters known to be modified, which automatically need
+   *     temps.
    */
-  void maybeAddTempsForCallArguments(
+  ImmutableSet<String> gatherCallArgumentsNeedingTemps(
       AbstractCompiler compiler,
       Node fnNode,
       ImmutableMap<String, Node> argMap,
-      Set<String> namesNeedingTemps,
+      ImmutableSet<String> modifiedParameters,
       CodingConvention convention) {
+    checkArgument(fnNode.isFunction(), fnNode);
     if (argMap.isEmpty()) {
       // No arguments to check, we are done.
-      return;
+      return modifiedParameters;
     }
-
-    checkArgument(fnNode.isFunction(), fnNode);
+    Set<String> namesNeedingTemps = new LinkedHashSet<>(modifiedParameters);
     Node block = fnNode.getLastChild();
 
     /*
@@ -299,8 +298,12 @@ class FunctionArgumentInjector {
         NodeUtil.isUndefined(argMap.get(THIS_MARKER)) && argCount <= 2; // this + one parameter
 
     // Get the list of parameters that may need temporaries due to side-effects.
-    ImmutableSet<String> namesAfterSideEffects =
+    SetContainer parametersThatMayNeedTemps =
         findParametersReferencedAfterSideEffect(argMap.keySet(), block);
+    ImmutableSet<String> namesAfterSideEffects =
+        parametersThatMayNeedTemps.parametersReferencedAfterSideEffect();
+    ImmutableSet<String> parametersWithNamesReferencedBefore =
+        parametersThatMayNeedTemps.parametersWithNamesReferencedBeforeParameter();
 
     // Check for arguments that are evaluated more than once.
     for (Map.Entry<String, Node> entry : argMap.entrySet()) {
@@ -320,12 +323,20 @@ class FunctionArgumentInjector {
       } else if (isTrivialBody
           && hasMinimalParameters
           && references == 1
-          && !(NodeUtil.canBeSideEffected(cArg) && namesAfterSideEffects.contains(parameterName))) {
+          // The below line is checking: Can this be affected by side-effects in the function body?
+          && !(NodeUtil.canBeSideEffected(cArg) && namesAfterSideEffects.contains(parameterName))
+          // The below line is checking: Can the function body be affected by the side effects of
+          // the argument? If the argument has side effects and the function body contains names
+          // that are referenced before the argument, then we need to inline using temporaries. If
+          // not, then we can enter this condition's else-if block.
+          && (!argSideEffects || !parametersWithNamesReferencedBefore.contains(parameterName))) {
         // For functions with a trivial body, and where the parameter evaluation order
         // can't change, and there aren't any side-effect before the parameter, we can
         // avoid creating a temporary.
         //
         // This is done to help inline common trivial functions
+        // TODO: b/407603216 - return `true` when return expressions don't have
+        // references that can be side-effected
         requiresTemporary = false;
       } else if (compiler.getAstAnalyzer().mayEffectMutableState(cArg) && references > 0) {
         // Note: Mutable arguments should be assigned to temps, as the
@@ -401,6 +412,7 @@ class FunctionArgumentInjector {
         }
       }
     }
+    return ImmutableSet.copyOf(namesNeedingTemps);
   }
 
   /**
@@ -440,15 +452,18 @@ class FunctionArgumentInjector {
   }
 
   /**
-   * Bootstrap a traversal to look for parameters referenced after a non-local side-effect.
+   * Bootstrap a traversal to look for parameters referenced after a non-local side-effect, and
+   * parameters with names referenced before the parameter is referenced.
    *
    * <p>NOTE: This assumes no-inner functions.
    *
    * @param parameters The set of parameter names.
    * @param root The function code block.
-   * @return The subset of parameters referenced after the first seen non-local side-effect.
+   * @return Two sets: Set #1 is the subset of parameters referenced after the first seen non-local
+   *     side-effect. Set #2 is the subset of parameters with names referenced before the parameter
+   *     is referenced.
    */
-  private ImmutableSet<String> findParametersReferencedAfterSideEffect(
+  private SetContainer findParametersReferencedAfterSideEffect(
       ImmutableSet<String> parameters, Node root) {
 
     // TODO(johnlenz): Consider using scope for this.
@@ -458,8 +473,14 @@ class FunctionArgumentInjector {
     ReferencedAfterSideEffect collector =
         new ReferencedAfterSideEffect(parameters, ImmutableSet.copyOf(locals));
     NodeUtil.visitPostOrder(root, collector, collector);
-    return collector.getResults();
+    return new SetContainer(
+        collector.getParametersReferencedAfterSideEffect(),
+        collector.getParametersWithNamesReferencedBeforeParameter());
   }
+
+  static record SetContainer(
+      ImmutableSet<String> parametersReferencedAfterSideEffect,
+      ImmutableSet<String> parametersWithNamesReferencedBeforeParameter) {}
 
   /**
    * Collect parameter names referenced after a non-local side-effect.
@@ -486,6 +507,10 @@ class FunctionArgumentInjector {
     private final ImmutableSet<String> locals;
     private boolean sideEffectSeen = false;
     private final Set<String> parametersReferenced = new LinkedHashSet<>();
+
+    private boolean nameNodeHasBeenSeen = false;
+    private final Set<String> parametersWithNamesReferencedBeforeParameter = new LinkedHashSet<>();
+
     private int loopsEntered = 0;
 
     ReferencedAfterSideEffect(ImmutableSet<String> parameters, ImmutableSet<String> locals) {
@@ -493,8 +518,12 @@ class FunctionArgumentInjector {
       this.locals = locals;
     }
 
-    ImmutableSet<String> getResults() {
+    ImmutableSet<String> getParametersReferencedAfterSideEffect() {
       return ImmutableSet.copyOf(parametersReferenced);
+    }
+
+    ImmutableSet<String> getParametersWithNamesReferencedBeforeParameter() {
+      return ImmutableSet.copyOf(parametersWithNamesReferencedBeforeParameter);
     }
 
     @Override
@@ -515,6 +544,16 @@ class FunctionArgumentInjector {
 
     @Override
     public void visit(Node n) {
+      if (n.isName()) {
+        String name = n.getString();
+        if (parameters.contains(name) && nameNodeHasBeenSeen) {
+          // We have seen a name node before this parameter. If this parameter has side effects, it
+          // is not safe to inline.
+          parametersWithNamesReferencedBeforeParameter.add(name);
+        }
+        nameNodeHasBeenSeen = true;
+      }
+
       // If we are exiting a loop.
       if (NodeUtil.isLoopStructure(n)) {
         loopsEntered--;

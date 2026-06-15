@@ -183,7 +183,7 @@ class Island {
     newBodyCapacity: Int,
     newContactCapacity: Int,
     newJointCapacity: Int,
-    newListener: ContactListener?
+    newListener: ContactListener?,
   ) {
     // System.out.println("Initializing Island");
     bodyCapacity = newBodyCapacity
@@ -379,9 +379,9 @@ class Island {
           continue
         }
         if (
-          b.flags and Body.Companion.AUTO_SLEEP_FLAG == 0 ||
+          Body.AUTO_SLEEP_FLAG !in b.flags ||
             b.angularVelocity * b.angularVelocity > angTolSqr ||
-            Vec2.dot(b.linearVelocity, b.linearVelocity) > linTolSqr
+            (b.linearVelocity dot b.linearVelocity) > linTolSqr
         ) {
           b.sleepTime = 0.0f
           minSleepTime = 0.0f
@@ -400,9 +400,8 @@ class Island {
   }
 
   fun solveTOI(subStep: TimeStep, toiIndexA: Int, toiIndexB: Int) {
-    // assert is not supported in KMP.
-    // assert(toiIndexA < m_bodyCount)
-    // assert(toiIndexB < m_bodyCount)
+    assert(toiIndexA < bodyCount)
+    assert(toiIndexB < bodyCount)
 
     // Initialize the body state.
     for (i in 0 until bodyCount) {
@@ -532,29 +531,24 @@ class Island {
   }
 
   fun add(body: Body) {
-    // assert is not supported in KMP.
-    // assert(m_bodyCount < m_bodyCapacity)
+    assert(bodyCount < bodyCapacity)
     body.islandIndex = bodyCount
     bodies[bodyCount] = body
     ++bodyCount
   }
 
   fun add(contact: Contact) {
-    // assert is not supported in KMP.
-    // assert(m_contactCount < m_contactCapacity)
+    assert(contactCount < contactCapacity)
     contacts[contactCount++] = contact
   }
 
   fun add(joint: Joint) {
-    // assert is not supported in KMP.
-    // assert(m_jointCount < m_jointCapacity)
+    assert(jointCount < jointCapacity)
     joints[jointCount++] = joint
   }
 
   fun report(constraints: Array<ContactVelocityConstraint>) {
-    if (listener == null) {
-      return
-    }
+    val listener = this.listener ?: return
     for (i in 0 until contactCount) {
       val c = contacts[i]!!
       val vc = constraints[i]
@@ -563,7 +557,7 @@ class Island {
         impulse.normalImpulses[j] = vc.points[j].normalImpulse
         impulse.tangentImpulses[j] = vc.points[j].tangentImpulse
       }
-      listener!!.postSolve(c, impulse)
+      listener.postSolve(c, impulse)
     }
   }
 }

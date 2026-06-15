@@ -1,5 +1,4 @@
 // Generated from "jstype/SomeJsType.java"
-@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -19,23 +18,17 @@
 package jstype
 
 import javaemul.lang.*
-import java.lang.Double
 import jsinterop.annotations.JsIgnore
 import jsinterop.annotations.JsPackage
 import jsinterop.annotations.JsType
 import kotlin.Any
 import kotlin.Int
-import kotlin.OptIn
 import kotlin.Suppress
-import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.JvmField
-import kotlin.native.ObjCName
 
-@ObjCName("J2ktJstypeSomeJsType", exact = true)
 @JsType
 open class SomeJsType<T> {
  @JvmField
- @ObjCName("publicField_")
  var publicField: Int = 0
 
  private var privateField: Int = 0
@@ -44,22 +37,18 @@ open class SomeJsType<T> {
  internal var packageField_pp_jstype: Int = 0
 
  @JvmField
- @ObjCName("protectedField_")
  @JsIgnore
  var protectedField: Int = 0
 
- @ObjCName("publicMethod")
  open fun publicMethod() {}
 
  private fun privateMethod() {}
 
  internal open fun packageMethod_pp_jstype() {}
 
- @ObjCName("protectedMethod")
  @JsIgnore
  open fun protectedMethod() {}
 
- @ObjCName("useFieldsAndMethods")
  open fun useFieldsAndMethods() {
   val value: Int = this.publicField + this.privateField + this.packageField_pp_jstype + this.protectedField
   this.publicMethod()
@@ -68,17 +57,15 @@ open class SomeJsType<T> {
   this.protectedMethod()
  }
 
- private fun testStarAndWildCard(s: SomeJsType.Star?, w: SomeJsType.Wildcard?): SomeJsType.Wildcard? {
-  val `object`: Any? = Any()
-  val star: SomeJsType.Star? = Double.valueOf(3.0) as SomeJsType.Star
-  return star as SomeJsType.Wildcard?
+ private fun testStarAndWildCard(s: Star?, w: Wildcard?): Wildcard? {
+  val `object`: Any = Any()
+  val star: Star = 3.0 as Any as Star
+  return star as Wildcard?
  }
 
- @ObjCName("J2ktJstypeSomeJsType_Star", exact = true)
  @JsType(name = "*", namespace = JsPackage.GLOBAL, isNative = true)
- interface Star {}
+ interface Star
 
- @ObjCName("J2ktJstypeSomeJsType_Wildcard", exact = true)
  @JsType(name = "?", namespace = JsPackage.GLOBAL, isNative = true)
- interface Wildcard {}
+ interface Wildcard
 }

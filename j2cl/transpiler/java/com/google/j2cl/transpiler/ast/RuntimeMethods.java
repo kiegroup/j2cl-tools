@@ -17,6 +17,7 @@ package com.google.j2cl.transpiler.ast;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.j2cl.common.StringUtils.capitalize;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
@@ -47,7 +48,10 @@ public final class RuntimeMethods {
         TypeDescriptors.get()
             .kotlinJvmInternalReflectionFactory
             .getMethodDescriptor("createKClass", TypeDescriptors.get().javaLangClass);
-    return MethodCall.Builder.from(methodDescriptor).setArguments(typeLiteral).build();
+
+    return MethodCall.Builder.from(toKotlinJvmStaticBridge(methodDescriptor))
+        .setArguments(typeLiteral)
+        .build();
   }
 
   public static MethodCall createKClassCall(Expression expression) {
@@ -55,7 +59,23 @@ public final class RuntimeMethods {
         TypeDescriptors.get()
             .kotlinJvmInternalReflectionFactory
             .getMethodDescriptor("createKClass", TypeDescriptors.get().javaLangObject);
-    return MethodCall.Builder.from(methodDescriptor).setArguments(expression).build();
+    return MethodCall.Builder.from(toKotlinJvmStaticBridge(methodDescriptor))
+        .setArguments(expression)
+        .build();
+  }
+
+  /**
+   * Returns a static {@link MethodDescriptor} given one representing a Kotlin @JvmStatic function.
+   */
+  private static MethodDescriptor toKotlinJvmStaticBridge(MethodDescriptor methodDescriptor) {
+    // In the Kotlin frontend, object members annotated with JvmStatic will not be denoted as being
+    // static as Kotlin will prefer going through the instance member on the singleton instance and
+    // This is, however, problematic when we're trying to build descriptors in the Kotlin frontend.
+    // Since we're only dealing with a well-known set of methods here, we'll trust that we've
+    // appropriately annotated them with @JvmStatic and force the descriptor to be marked static.
+    return methodDescriptor.isStatic()
+        ? methodDescriptor
+        : methodDescriptor.toBuilder().setStatic(true).build();
   }
 
   /** Create a call to the Arrays.$stampType method. */
@@ -181,12 +201,14 @@ public final class RuntimeMethods {
         TypeDescriptors.get().javaLangString.getMethodDescriptorByName("fromNativeCharArray");
     return MethodCall.Builder.from(stringCreator)
         .setArguments(
-            new ArrayLiteral(
-                ArrayTypeDescriptor.newBuilder()
-                    .setComponentTypeDescriptor(PrimitiveTypes.CHAR)
-                    .setMarkedAsNativeWasmArray(true)
-                    .build(),
-                arrayInitializers),
+            ArrayLiteral.newBuilder()
+                .setTypeDescriptor(
+                    ArrayTypeDescriptor.newBuilder()
+                        .setComponentTypeDescriptor(PrimitiveTypes.CHAR)
+                        .setMarkedAsNativeWasmArray(true)
+                        .build())
+                .setValueExpressions(arrayInitializers)
+                .build(),
             NumberLiteral.fromInt(arrayInitializers.size()))
         .build();
   }
@@ -239,7 +261,7 @@ public final class RuntimeMethods {
 
     // createMapFromValues is parameterized by T extends Enum, so specialize the method to the
     // right type.
-    TypeVariable enumType = createMapMethodDescriptor.getTypeParameterTypeDescriptors().get(0);
+    TypeVariable enumType = createMapMethodDescriptor.getTypeParameterTypeDescriptors().getFirst();
     return MethodCall.Builder.from(
             createMapMethodDescriptor.specializeTypeVariables(
                 ImmutableMap.of(
@@ -262,7 +284,7 @@ public final class RuntimeMethods {
 
     // getValueFromNameAndMap is parameterized by T extends Enum, so specialize the method to the
     // right enum type.
-    TypeVariable enumType = getValueMethodDescriptor.getTypeParameterTypeDescriptors().get(0);
+    TypeVariable enumType = getValueMethodDescriptor.getTypeParameterTypeDescriptors().getFirst();
     return MethodCall.Builder.from(
             getValueMethodDescriptor.specializeTypeVariables(
                 ImmutableMap.of(enumType, enumTypeDescriptor)))
@@ -289,7 +311,7 @@ public final class RuntimeMethods {
     } else {
       // Boxing operations are parameterized by the JsEnum type, so specialize the method to the
       // right type.
-      TypeVariable type = boxingMethod.getTypeParameterTypeDescriptors().get(0);
+      TypeVariable type = boxingMethod.getTypeParameterTypeDescriptors().getFirst();
       boxingMethod =
           boxingMethod.specializeTypeVariables(ImmutableMap.of(type, valueTypeDescriptor));
     }
@@ -386,7 +408,7 @@ public final class RuntimeMethods {
   private static String getEnumsMethodSuffix(TypeDescriptor toTypeDescriptor) {
     TypeDescriptor valueTypeDescriptor = AstUtils.getJsEnumValueFieldType(toTypeDescriptor);
     if (valueTypeDescriptor.isPrimitive()) {
-      return ((PrimitiveTypeDescriptor) valueTypeDescriptor).toBoxedType().getSimpleSourceName();
+      return valueTypeDescriptor.toBoxedType().getSimpleSourceName();
     }
     checkArgument(TypeDescriptors.isJavaLangString(valueTypeDescriptor));
     return "String";
@@ -506,6 +528,22 @@ public final class RuntimeMethods {
                 .setArguments(tempVariable.createReference().infixNotEqualsNull())
                 .build(),
             tempVariable.createReference())
+        .build();
+  }
+
+  /** Creates a call to handling of unexpected values on exhaustive switch expressions. */
+  public static Expression createCheckCriticalExhaustiveCall(boolean isCritical) {
+    if (isCritical) {
+      return MethodCall.Builder.from(
+              TypeDescriptors.get()
+                  .javaemulInternalPreconditions
+                  .getMethodDescriptor("checkCriticalExhaustive"))
+          .build();
+    }
+    return MethodCall.Builder.from(
+            TypeDescriptors.get()
+                .javaemulInternalPreconditions
+                .getMethodDescriptor("checkExhaustive"))
         .build();
   }
 
@@ -663,12 +701,29 @@ public final class RuntimeMethods {
         .build();
   }
 
+  public static Expression createRefWrappingCall(
+      TypeDescriptor elementTypeDescriptor, Expression initializer) {
+    MethodDescriptor createRefMethodDescriptor =
+        elementTypeDescriptor.isPrimitive()
+            ? TypeDescriptors.get()
+                .javaemulInternalRef
+                .getMethodDescriptor("createRef", elementTypeDescriptor)
+            : TypeDescriptors.get()
+                .javaemulInternalRef
+                .getMethodDescriptor("createRef", TypeDescriptors.get().javaLangObject)
+                .specializeTypeVariables((TypeVariable unused) -> elementTypeDescriptor);
+
+    return MethodCall.Builder.from(createRefMethodDescriptor).setArguments(initializer).build();
+  }
+
   /** Creates a method call to BoxedType.xxxValue(). */
   public static MethodCall createUnboxingMethodCall(
       Expression expression, DeclaredTypeDescriptor boxedType) {
 
     MethodDescriptor valueMethodDescriptor =
-        boxedType.getMethodDescriptor(boxedType.toUnboxedType().getSimpleSourceName() + "Value");
+        boxedType.getMethodDescriptorByName(
+            boxedType.toUnboxedType().getSimpleSourceName() + "Value");
+    checkState(valueMethodDescriptor.getEnclosingTypeDescriptor().isSameBaseType(boxedType));
 
     return MethodCall.Builder.from(valueMethodDescriptor).setQualifier(expression).build();
   }
@@ -765,7 +820,7 @@ public final class RuntimeMethods {
                                           PrimitiveTypes.DOUBLE)
                                       .setRequiredParameters(2)
                                       .build())
-                              .build())
+                              .buildOrThrow())
                       .put(
                           BootstrapType.NATIVE_UTIL.getDescriptor(),
                           // Util methods
@@ -787,6 +842,12 @@ public final class RuntimeMethods {
                                       .build())
                               .put(
                                   "$makeEnumName",
+                                  MethodInfo.newBuilder()
+                                      .setReturnType(TypeDescriptors.get().javaLangString)
+                                      .setParameters(TypeDescriptors.get().javaLangString)
+                                      .build())
+                              .put(
+                                  "$makeLogMessage",
                                   MethodInfo.newBuilder()
                                       .setReturnType(TypeDescriptors.get().javaLangString)
                                       .setParameters(TypeDescriptors.get().javaLangString)
@@ -821,7 +882,7 @@ public final class RuntimeMethods {
                                       .setReturnType(PrimitiveTypes.VOID)
                                       .setParameters(TypeDescriptors.get().javaLangObject)
                                       .build())
-                              .build())
+                              .buildOrThrow())
                       .put(
                           BootstrapType.NATIVE_EQUALITY.getDescriptor(),
                           // Util methods
@@ -842,15 +903,13 @@ public final class RuntimeMethods {
                                           ParameterDescriptor.newBuilder()
                                               .setTypeDescriptor(
                                                   TypeDescriptors.get().javaLangDouble)
-                                              .setDoNotAutobox(true)
                                               .build(),
                                           ParameterDescriptor.newBuilder()
                                               .setTypeDescriptor(
                                                   TypeDescriptors.get().javaLangDouble)
-                                              .setDoNotAutobox(true)
                                               .build())
                                       .build())
-                              .build())
+                              .buildOrThrow())
                       .put(
                           BootstrapType.LONG_UTILS.getDescriptor(),
                           // LongUtils methods
@@ -867,7 +926,7 @@ public final class RuntimeMethods {
                                       .setReturnType(PrimitiveTypes.LONG)
                                       .setParameters(PrimitiveTypes.LONG)
                                       .build())
-                              .build())
+                              .buildOrThrow())
                       .put(
                           BootstrapType.NATIVE_LONG.getDescriptor(),
                           // goog.math.long methods
@@ -884,8 +943,8 @@ public final class RuntimeMethods {
                                       .setReturnType(PrimitiveTypes.LONG)
                                       .setParameters(PrimitiveTypes.INT, PrimitiveTypes.INT)
                                       .build())
-                              .build())
-                      .build());
+                              .buildOrThrow())
+                      .buildOrThrow());
 
   /** Create a call to a J2cl runtime method. */
   private static MethodCall createRuntimeMethodCall(
@@ -948,7 +1007,7 @@ public final class RuntimeMethods {
       abstract ImmutableList<ParameterDescriptor> getParameterDescriptors();
 
       public MethodInfo build() {
-        if (!getRequiredParameters().isPresent()) {
+        if (getRequiredParameters().isEmpty()) {
           setRequiredParameters(getParameterDescriptors().size());
         }
         MethodInfo methodInfo = autoBuild();

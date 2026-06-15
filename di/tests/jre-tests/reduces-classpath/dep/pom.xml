@@ -6,14 +6,15 @@
     <parent>
         <groupId>org.kie.j2cl.tools.di.tests.jre</groupId>
         <artifactId>reduces-classpath-parent</artifactId>
-        <version>0.8</version>
+        <version>0.9</version>
     </parent>
 
     <artifactId>reduces-classpath-dep</artifactId>
     <packaging>jar</packaging>
 
     <name>J2CL compatible Jakarta CDI-like dependency injection framework JRE reduces classpath tests dep</name>
-    <description>J2CL compatible Jakarta CDI-like dependency injection framework JRE reduces classpath tests dep</description>
+    <description>J2CL compatible Jakarta CDI-like dependency injection framework JRE reduces classpath tests dep
+    </description>
     <url>https://github.com/kiegroup/j2cl-tools</url>
 
     <organization>
@@ -42,17 +43,29 @@
     </scm>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.deploy.skip>true</maven.deploy.skip>
+        <gwt.jakarta.version>0.7</gwt.jakarta.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.treblereel.gwt.jakarta</groupId>
+                <artifactId>bom</artifactId>
+                <version>${gwt.jakarta.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
-            <groupId>org.kie.j2cl.tools.jakarta</groupId>
-            <artifactId>enterprise</artifactId>
-            <version>0.3</version>
+            <groupId>org.treblereel.gwt.jakarta</groupId>
+            <artifactId>cdi</artifactId>
         </dependency>
     </dependencies>
 

@@ -109,10 +109,11 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
         externs("var window; /** @const {number} */ var n;"),
         srcs(""),
         expected(
-            lines(
-                "var window;",
-                "/** @const {number} */ var n;",
-                "/** @const {number} @suppress {const,duplicate} */ window.n;")));
+            """
+            var window;
+            /** @const {number} */ var n;
+            /** @const {number} @suppress {const,duplicate} */ window.n;
+            """));
   }
 
   @Test
@@ -121,58 +122,67 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
         externs("var window; /** @const */ var ns = {}"),
         srcs(""),
         expected(
-            lines(
-                "var window;",
-                "/** @const */ var ns = {};",
-                "/** @suppress {const,duplicate} @const */ window.ns = ns;")));
+            """
+            var window;
+            /** @const */ var ns = {};
+            /** @suppress {const,duplicate} @const */ window.ns = ns;
+            """));
   }
 
   @Test
   public void testNameAliasing() {
     testExternChanges(
         externs(
-            lines(
-                "var window;", "/** @const */", "var ns = {};", "/** @const */", "var ns2 = ns;")),
+            """
+            var window;
+            /** @const */
+            var ns = {};
+            /** @const */
+            var ns2 = ns;
+            """),
         srcs(""),
         expected(
-            lines(
-                "var window;",
-                "/** @const */",
-                "var ns = {};",
-                "/** @const */",
-                "var ns2 = ns;",
-                "/** @suppress {const,duplicate} @const */",
-                "window.ns = ns;",
-                "/** @suppress {const,duplicate} @const */",
-                "window.ns2 = ns;")));
+            """
+            var window;
+            /** @const */
+            var ns = {};
+            /** @const */
+            var ns2 = ns;
+            /** @suppress {const,duplicate} @const */
+            window.ns = ns;
+            /** @suppress {const,duplicate} @const */
+            window.ns2 = ns;
+            """));
   }
 
   @Test
   public void testQualifiedNameAliasing() {
     testExternChanges(
         externs(
-            lines(
-                "var window;",
-                "/** @const */",
-                "var ns = {};",
-                "/** @type {number} A very important constant */",
-                "ns.THE_NUMBER;",
-                "/** @const */",
-                "var num = ns.THE_NUMBER;")),
+            """
+            var window;
+            /** @const */
+            var ns = {};
+            /** @type {number} A very important constant */
+            ns.THE_NUMBER;
+            /** @const */
+            var num = ns.THE_NUMBER;
+            """),
         srcs(""),
         expected(
-            lines(
-                "var window;",
-                "/** @const */",
-                "var ns = {};",
-                "/** @type {number} A very important constant */",
-                "ns.THE_NUMBER;",
-                "/** @const */",
-                "var num = ns.THE_NUMBER;",
-                "/** @suppress {const,duplicate} @const */",
-                "window.ns=ns;",
-                "/** @suppress {const,duplicate} @const */",
-                "window.num = ns.THE_NUMBER;")));
+            """
+            var window;
+            /** @const */
+            var ns = {};
+            /** @type {number} A very important constant */
+            ns.THE_NUMBER;
+            /** @const */
+            var num = ns.THE_NUMBER;
+            /** @suppress {const,duplicate} @const */
+            window.ns=ns;
+            /** @suppress {const,duplicate} @const */
+            window.num = ns.THE_NUMBER;
+            """));
   }
 
   @Test
@@ -181,10 +191,11 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
         externs("var window; /** @constructor */ function Foo() {}"),
         srcs(""),
         expected(
-            lines(
-                "var window;",
-                "/** @constructor */ function Foo(){}",
-                "/** @constructor @suppress {const,duplicate} */ window.Foo = Foo;")));
+            """
+            var window;
+            /** @constructor */ function Foo(){}
+            /** @constructor @suppress {const,duplicate} */ window.Foo = Foo;
+            """));
   }
 
   @Test
@@ -193,27 +204,42 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
         externs("var window; /** @enum {string} */ var Enum = { A: 'str' };"),
         srcs(""),
         expected(
-            lines(
-                "var window;",
-                "/** @enum {string} */ var Enum = { A: 'str' };",
-                "/** @enum {string} @suppress {const,duplicate} */ window.Enum = Enum;")));
+            """
+            var window;
+            /** @enum {string} */ var Enum = { A: 'str' };
+            /** @enum {string} @suppress {const,duplicate} */ window.Enum = Enum;
+            """));
   }
 
   /** Test to make sure the compiler knows the type of "window.x" is the same as that of "x". */
   @Test
   public void testWindowPropertyWithJsDoc() {
     testSame(
-        externs(lines(MINIMAL_EXTERNS, "var window;", "/** @type {string} */ var x;")),
-        srcs(lines("/** @param {number} n*/", "function f(n) {}", "f(window.x);")),
+        externs(
+            MINIMAL_EXTERNS
+                + """
+                var window;
+                /** @type {string} */ var x;
+                """),
+        srcs(
+            """
+            /** @param {number} n*/
+            function f(n) {}
+            f(window.x);
+            """),
         warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   @Test
   public void testEnum() {
     testSame(
-        externs(
-            lines(MINIMAL_EXTERNS, "/** @enum {string} */ var Enum = {FOO: 'foo', BAR: 'bar'};")),
-        srcs(lines("/** @param {Enum} e*/", "function f(e) {}", "f(window.Enum.FOO);")));
+        externs(MINIMAL_EXTERNS + "/** @enum {string} */ var Enum = {FOO: 'foo', BAR: 'bar'};"),
+        srcs(
+            """
+            /** @param {Enum} e*/
+            function f(e) {}
+            f(window.Enum.FOO);
+            """));
   }
 
   /**
@@ -223,11 +249,26 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
   @Test
   public void testConstructorIsSameType() {
     testSame(
-        externs(lines(MINIMAL_EXTERNS, "var window;", "/** @constructor */ function Foo() {}")),
-        srcs(lines("/** @param {!window.Foo} f*/", "function bar(f) {}", "bar(new Foo());")));
+        externs(
+            MINIMAL_EXTERNS
+                + """
+                var window;
+                /** @constructor */ function Foo() {}
+                """),
+        srcs(
+            """
+            /** @param {!window.Foo} f*/
+            function bar(f) {}
+            bar(new Foo());
+            """));
 
     testSame(
-        externs(lines(MINIMAL_EXTERNS, "/** @constructor */ function Foo() {}")),
-        srcs(lines("/** @param {!Foo} f*/", "function bar(f) {}", "bar(new window.Foo());")));
+        externs(MINIMAL_EXTERNS + "/** @constructor */ function Foo() {}"),
+        srcs(
+            """
+            /** @param {!Foo} f*/
+            function bar(f) {}
+            bar(new window.Foo());
+            """));
   }
 }

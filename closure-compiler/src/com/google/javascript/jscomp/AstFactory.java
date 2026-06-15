@@ -421,15 +421,11 @@ final class AstFactory {
 
   private @Nullable Type getTypeOfThisForEs6Class(Node functionNode) {
     checkArgument(functionNode.isClass(), functionNode);
-    switch (this.typeMode) {
-      case JSTYPE:
-        return type(getTypeOfThisForFunctionNode(functionNode));
-      case COLOR:
-        return type(getInstanceOfColor(functionNode.getColor()));
-      case NONE:
-        return noTypeInformation();
-    }
-    throw new AssertionError();
+    return switch (this.typeMode) {
+      case JSTYPE -> type(getTypeOfThisForFunctionNode(functionNode));
+      case COLOR -> type(getInstanceOfColor(functionNode.getColor()));
+      case NONE -> noTypeInformation();
+    };
   }
 
   private FunctionType getFunctionType(Node functionNode) {
@@ -461,16 +457,12 @@ final class AstFactory {
   }
 
   Node createSingleNameDeclaration(Token tokenType, String name, Node value) {
-    switch (tokenType) {
-      case LET:
-        return createSingleLetNameDeclaration(name, value);
-      case VAR:
-        return createSingleVarNameDeclaration(name, value);
-      case CONST:
-        return createSingleConstNameDeclaration(name, value);
-      default:
-        throw new UnsupportedOperationException("Unexpeted token type: " + tokenType);
-    }
+    return switch (tokenType) {
+      case LET -> createSingleLetNameDeclaration(name, value);
+      case VAR -> createSingleVarNameDeclaration(name, value);
+      case CONST -> createSingleConstNameDeclaration(name, value);
+      default -> throw new UnsupportedOperationException("Unexpeted token type: " + tokenType);
+    };
   }
 
   /**
@@ -675,13 +667,16 @@ final class AstFactory {
   }
 
   /**
-   * Looks up the type of a name from a {@link TypedScope} created from typechecking
+   * Looks up the type of a name from a {@link TypedScope} created from typechecking, using the
+   * {@link JSType} API. Will crash if is called on an AstFactory that is created after JSType ->
+   * color conversion.
+   *
+   * <p>Prefer {@link #createQName(StaticScope, String)} if running after JSType -> color
+   * conversion.
    *
    * @param globalTypedScope Must be the top, global scope.
-   * @deprecated Prefer {@link #createQName(StaticScope, String)}
    */
-  @Deprecated
-  Node createQNameFromTypedScope(TypedScope globalTypedScope, String qname) {
+  Node createQNameUsingJSTypeInfo(TypedScope globalTypedScope, String qname) {
     checkArgument(globalTypedScope == null || globalTypedScope.isGlobal(), globalTypedScope);
     assertNotAddingColors();
     List<String> nameParts = DOT_SPLITTER.splitToList(qname);

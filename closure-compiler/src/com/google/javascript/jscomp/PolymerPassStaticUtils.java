@@ -24,7 +24,6 @@ import com.google.common.base.Ascii;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -73,15 +72,19 @@ final class PolymerPassStaticUtils {
     // imported from an ES module, the rewriting should set the original name to `PolymerElement`.
     // When imported from an goog module (TS), we'll have a GETPROP like
     // `module$polymer$polymer_element.PolymerElement`.
-    // YT Polymer components may also extend the `PolymerElementWithoutHtml` base class.
+    // YT Polymer components may also extend the `PolymerElementWithoutHtml` or
+    // `PolymerLiteControllerBase` base classes.
     return !heritage.isEmpty()
         && (POLYMER_DOT_ELEMENT.matches(heritage)
-            || heritage.matchesName("PolymerElement")
-            || "PolymerElement".equals(heritage.getOriginalQualifiedName())
-            || (heritage.isGetProp() && heritage.getString().equals("PolymerElement"))
-            || heritage.matchesName("PolymerElementWithoutHtml")
-            || "PolymerElementWithoutHtml".equals(heritage.getOriginalQualifiedName())
-            || (heritage.isGetProp() && heritage.getString().equals("PolymerElementWithoutHtml")));
+            || matches(heritage, "PolymerElement")
+            || matches(heritage, "PolymerElementWithoutHtml")
+            || matches(heritage, "PolymerLiteControllerBase"));
+  }
+
+  private static boolean matches(Node n, String name) {
+    return n.matchesName(name)
+        || name.equals(n.getOriginalQualifiedName())
+        || (n.isGetProp() && n.getString().equals(name));
   }
 
   /**
@@ -131,7 +134,8 @@ final class PolymerPassStaticUtils {
   static void quoteListenerAndHostAttributeKeys(Node objLit, AbstractCompiler compiler) {
     checkState(objLit.isObjectLit());
     for (Node keyNode = objLit.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
-      if (keyNode.isComputedProp()) {
+      if (!keyNode.isStringKey()) {
+        // We should only quote string keys. If this is not a string key, then we should skip it.
         continue;
       }
       if (!keyNode.getString().equals("listeners")
@@ -176,6 +180,7 @@ final class PolymerPassStaticUtils {
     if (constructor != null) {
       collectConstructorPropertyJsDoc(constructor, constructorPropertyJsDoc);
     }
+    Node enclosingModule = NodeUtil.getEnclosingModuleIfPresent(descriptor);
 
     ImmutableList.Builder<MemberDefinition> members = ImmutableList.builder();
     for (Node keyNode = properties.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
@@ -193,7 +198,8 @@ final class PolymerPassStaticUtils {
       } else {
         bestJsDoc = propertiesConfigJsDoc;
       }
-      members.add(new MemberDefinition(bestJsDoc, keyNode, keyNode.getFirstChild()));
+      members.add(
+          new MemberDefinition(bestJsDoc, keyNode, keyNode.getFirstChild(), enclosingModule));
     }
     return members.build();
   }
@@ -282,7 +288,7 @@ final class PolymerPassStaticUtils {
         cls.nativeBaseElement == null
             ? ""
             : CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, cls.nativeBaseElement);
-    return SimpleFormat.format("Polymer%sElement", nativeElementName);
+    return String.format("Polymer%sElement", nativeElementName);
   }
 
   private PolymerPassStaticUtils() {}

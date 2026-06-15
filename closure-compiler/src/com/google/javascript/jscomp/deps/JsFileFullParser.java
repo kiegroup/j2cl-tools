@@ -157,16 +157,16 @@ public class JsFileFullParser {
               public void println(CheckLevel level, JSError error) {
                 if (level == CheckLevel.ERROR) {
                   errorReporter.error(
-                      error.getDescription(),
-                      error.getSourceName(),
+                      error.description(),
+                      error.sourceName(),
                       error.getLineNumber(),
-                      error.getCharno());
+                      error.charno());
                 } else if (level == CheckLevel.WARNING) {
                   errorReporter.warning(
-                      error.getDescription(),
-                      error.getSourceName(),
+                      error.description(),
+                      error.sourceName(),
                       error.getLineNumber(),
-                      error.getCharno());
+                      error.charno());
                 }
               }
 
@@ -325,6 +325,7 @@ public class JsFileFullParser {
           break;
         case "@enhanceable":
         case "@pintomodule":
+        case "@mayhaveextraedge":
           info.customAnnotations.put(annotation.name.substring(1), annotation.value);
           break;
         case "@enhance":

@@ -1,4 +1,12 @@
 ;;; Code for jstypeenum.Color [type definition]
+(type $jstypeenum.Color (sub $java.lang.Enum (struct
+ (field $vtable (ref $jstypeenum.Color.vtable))
+ (field $itable (ref $jstypeenum.Color.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $name@java.lang.Enum (mut (ref null $java.lang.String)))
+ (field $ordinal@java.lang.Enum (mut i32))
+ ))
+)
 (type $jstypeenum.Color.vtable (sub $java.lang.Enum.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -6,14 +14,6 @@
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  (field $m_compareTo__java_lang_Object__int (ref $function.m_compareTo__java_lang_Object__int))
  (field $m_getDeclaringClass__java_lang_Class (ref $function.m_getDeclaringClass__java_lang_Class))
- ))
-)
-(type $jstypeenum.Color (sub $java.lang.Enum (struct
- (field $vtable (ref $jstypeenum.Color.vtable))
- (field $itable (ref $jstypeenum.Color.itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
- (field $name@java.lang.Enum (mut (ref null $java.lang.String)))
- (field $ordinal@java.lang.Enum (mut i32))
  ))
 )
 
@@ -71,7 +71,7 @@
  (local $$instance (ref null $jstypeenum.Color))
  (block
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/jstypeenum/readable-j2wasm.js/jstypeenum/Color.java:21:12
-  (local.set $$instance (struct.new $jstypeenum.Color (ref.as_non_null (global.get $jstypeenum.Color.vtable)) (ref.as_non_null (global.get $jstypeenum.Color.itable)) (i32.const 0) (ref.null $java.lang.String) (i32.const 0)))
+  (local.set $$instance (struct.new $jstypeenum.Color (global.get $jstypeenum.Color.vtable) (global.get $jstypeenum.Color.itable) (i32.const 0) (ref.null $java.lang.String) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/jstypeenum/readable-j2wasm.js/jstypeenum/Color.java:21:12
   (call $$ctor__java_lang_String__int__void_$p_jstypeenum_Color@jstypeenum.Color (ref.as_non_null (local.get $$instance))(local.get $$name)(local.get $$ordinal))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/jstypeenum/readable-j2wasm.js/jstypeenum/Color.java:21:12

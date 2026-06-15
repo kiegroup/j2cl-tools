@@ -1,7 +1,17 @@
-goog.provide('holder');
+goog.module('holder');
+
+const jre = goog.require('jre');
 
 /** @define {string} */
-holder.value = goog.define('holder.value', 'unknown');
+const value = goog.define('holder.value', 'unknown');
 
 /** @define {string} */
-holder.testEscape = goog.define('holder.testEscape', 'false');
+const testEscape = goog.define('holder.testEscape', 'false');
+
+jre.addSystemPropertyFromGoogDefine('holder.value', value);
+jre.addSystemPropertyFromGoogDefine('holder.testEscape', testEscape);
+
+exports = {
+    value,
+    testEscape,
+};

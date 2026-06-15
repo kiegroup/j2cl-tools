@@ -8,7 +8,20 @@
     <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
         <fileSet>
-            <directory>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/runtime/jsunit_helpers_internal_assumption_violated_exception-j2cl.js</directory>
+            <directory>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/runtime/internal_assumption_violated_exception-j2cl.js</directory>
+        </fileSet>
+        <fileSet>
+            <directory>../../../junit/generator/java/com/google/j2cl/junit/runtime</directory>
+            <includes>
+                <include>j2cl_test_suite.js</include>
+                <include>jasmine_test_converter.js</include>
+                <include>parameterized_test_suite.js</include>
+            </includes>
+            <outputDirectory>/</outputDirectory>
+            <filtered>false</filtered>
+        </fileSet>
+        <fileSet>
+            <directory>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/runtime/jsunit_helpers-j2cl.js</directory>
         </fileSet>
     </fileSets>
 </assembly>

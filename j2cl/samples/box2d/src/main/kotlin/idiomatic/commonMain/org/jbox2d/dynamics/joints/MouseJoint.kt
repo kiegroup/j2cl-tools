@@ -25,6 +25,7 @@ package org.jbox2d.dynamics.joints
 import org.jbox2d.common.Mat22
 import org.jbox2d.common.MathUtils
 import org.jbox2d.common.Rot
+import org.jbox2d.common.Settings
 import org.jbox2d.common.Transform
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.SolverData
@@ -46,6 +47,7 @@ class MouseJoint(argWorld: IWorldPool, def: MouseJointDef) : Joint(argWorld, def
       }
       targetA.set(value)
     }
+
   var frequencyHz: Float = def.frequencyHz
   var dampingRatio: Float = def.dampingRatio
   var maxForce: Float = def.maxForce
@@ -114,8 +116,7 @@ class MouseJoint(argWorld: IWorldPool, def: MouseJointDef) : Joint(argWorld, def
     // gamma has units of inverse mass.
     // beta has units of inverse time.
     val h = data.step.dt
-    // assert is not supported in KMP.
-    // assert(d + h * k > Settings.EPSILON)
+    assert(d + h * k > Settings.EPSILON)
     gamma = h * (d + h * k)
     if (gamma != 0.0f) {
       gamma = 1.0f / gamma
@@ -144,7 +145,7 @@ class MouseJoint(argWorld: IWorldPool, def: MouseJointDef) : Joint(argWorld, def
       impulse.mulLocal(data.step.dtRatio)
       vB.x += invMassB * impulse.x
       vB.y += invMassB * impulse.y
-      wB += invIB * Vec2.cross(rB, impulse)
+      wB += invIB * (rB cross impulse)
     } else {
       impulse.setZero()
     }
@@ -179,7 +180,7 @@ class MouseJoint(argWorld: IWorldPool, def: MouseJointDef) : Joint(argWorld, def
     localImpulse.set(impulse).subLocal(temp)
     vB.x += invMassB * localImpulse.x
     vB.y += invMassB * localImpulse.y
-    wB += invIB * Vec2.cross(rB, localImpulse)
+    wB += invIB * (rB cross localImpulse)
 
     //    data.velocities[m_indexB].v.set(vB);
     data.velocities[indexB].w = wB

@@ -37,4 +37,12 @@ public class InnerClassWithConstructor {
       this.b = a + b;
     }
   }
+
+  public class InnerClassWithFieldAfterConstructor {
+    InnerClassWithFieldAfterConstructor(int i) {
+      this.i = i;
+    }
+
+    private final int i;
+  }
 }

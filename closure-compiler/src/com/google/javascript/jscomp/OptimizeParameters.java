@@ -670,7 +670,9 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
             return !NodeUtil.doesFunctionReferenceOwnArgumentsObject(functionNode)
                 // In `function f(a, b = a) { ... }` it's very difficult to determine if `a` is
                 // movable.
-                && !mayReferenceParamBeforeBody(functionNode);
+                && !mayReferenceParamBeforeBody(functionNode)
+                // `/** @usedViaDotConstructor */ function f(a) {...}` means back off.
+                && !isUsedViaDotConstructor(functionNode);
           }
         }
       case FUNCTION:
@@ -679,7 +681,9 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
             // "arguments" can refer to all parameters or their count.
             && !NodeUtil.doesFunctionReferenceOwnArgumentsObject(n)
             // In `function f(a, b = a) { ... }` it's very difficult to determine if `a` is movable.
-            && !mayReferenceParamBeforeBody(n);
+            && !mayReferenceParamBeforeBody(n)
+            // `/** @usedViaDotConstructor */ function f(a) {...}` means back off.
+            && !isUsedViaDotConstructor(n);
       case CAST:
       case COMMA:
         return allDefinitionsAreCandidateFunctions(n.getLastChild());
@@ -694,6 +698,17 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       default:
         return false;
     }
+  }
+
+  /**
+   * Returns true if the function is annotated with @usedViaDotConstructor
+   *
+   * <p>In this case we just back off on all parameter optimizations since we cannot detect which
+   * parameters are used via calls through {@code .constructor}.
+   */
+  private static boolean isUsedViaDotConstructor(Node function) {
+    var docInfo = NodeUtil.getBestJSDocInfo(function);
+    return docInfo != null && docInfo.isUsedViaDotConstructor();
   }
 
   /**

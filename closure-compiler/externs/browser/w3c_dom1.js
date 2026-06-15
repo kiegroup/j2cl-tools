@@ -27,6 +27,7 @@
  * @param {string=} message
  * @param {string=} name
  * @see https://heycam.github.io/webidl/#idl-DOMException
+ * @extends {Error}
  */
 function DOMException(message, name) {}
 
@@ -327,6 +328,13 @@ function DocumentFragment() {}
 function Document() {}
 
 /**
+ * @param {string} html
+ * @return {!Document}
+ * @see https://developer.mozilla.org/docs/Web/API/Document/parseHTMLUnsafe_static
+ */
+Document.parseHTMLUnsafe = function(html) {};
+
+/**
  * @type {!HTMLCollection}
  * @see https://dom.spec.whatwg.org/#parentnode
  */
@@ -455,6 +463,33 @@ Document.prototype.write = function(text) {};
  */
 Document.prototype.writeln = function(text) {};
 
+/** @type {?function (!Event)} */
+Document.prototype.onvisibilitychange;
+
+/** @type {?function (!Event)} */
+Document.prototype.onfullscreenchange;
+
+/** @type {?function (!Event)} */
+Document.prototype.onfullscreenerror;
+
+/** @type {?function (!Event)} */
+Document.prototype.onpointerlockchange;
+
+/** @type {?function (!Event)} */
+Document.prototype.onpointerlockerror;
+
+/**
+ * @type {!FragmentDirective|undefined}
+ * @see https://developer.mozilla.org/docs/Web/API/Document/fragmentDirective
+ */
+Document.prototype.fragmentDirective;
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/FragmentDirective
+ */
+function FragmentDirective() {}
+
 /**
  * @constructor
  * @implements {IArrayLike<T>}
@@ -463,6 +498,9 @@ Document.prototype.writeln = function(text) {};
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-536297177
  */
 function NodeList() {}
+
+/** @override */
+NodeList.prototype[Symbol.iterator] = function() {};
 
 /**
  * @type {number}
@@ -514,6 +552,9 @@ NodeList.prototype.values = function() {};
  */
 function NamedNodeMap() {}
 
+/** @override */
+NamedNodeMap.prototype[Symbol.iterator] = function() {};
+
 /**
  * @type {number}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-6D0FB19E
@@ -527,6 +568,14 @@ NamedNodeMap.prototype.length;
  * @nosideeffects
  */
 NamedNodeMap.prototype.getNamedItem = function(name) {};
+
+/**
+ * @param {string} namespace
+ * @param {string} localName
+ * @return {?Node}
+ * @see https://developer.mozilla.org/docs/Web/API/NamedNodeMap/getNamedItemNS
+ */
+NamedNodeMap.prototype.getNamedItemNS = function(namespace, localName) {};
 
 /**
  * @param {number} index
@@ -544,11 +593,26 @@ NamedNodeMap.prototype.item = function(index) {};
 NamedNodeMap.prototype.removeNamedItem = function(name) {};
 
 /**
+ * @param {string} namespace
+ * @param {string} localName
+ * @return {Node}
+ * @see https://developer.mozilla.org/docs/Web/API/NamedNodeMap/removeNamedItemNS
+ */
+NamedNodeMap.prototype.removeNamedItemNS = function(namespace, localName) {};
+
+/**
  * @param {Node} arg
  * @return {Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1025163788
  */
 NamedNodeMap.prototype.setNamedItem = function(arg) {};
+
+/**
+ * @param {Node} arg
+ * @return {?Node}
+ * @see https://developer.mozilla.org/docs/Web/API/NamedNodeMap/setNamedItemNS
+ */
+NamedNodeMap.prototype.setNamedItemNS = function(arg) {};
 
 /**
  * @constructor
@@ -637,10 +701,540 @@ Attr.prototype.value;
 
 /**
  * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/CSSStyleValue
+ */
+function CSSStyleValue() {}
+
+/**
+ * @param {string} property
+ * @param {string} cssText
+ * @return {!CSSStyleValue}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSStyleValue/parse_static
+ */
+CSSStyleValue.parse = function(property, cssText) {}
+
+/**
+ * @param {string} property
+ * @param {string} cssText
+ * @return {!Array<!CSSStyleValue>}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSStyleValue/parseAll_static
+ */
+CSSStyleValue.parseAll = function(property, cssText) {}
+
+/**
+ * @override
+ * @return {string}
+ */
+CSSStyleValue.prototype.toString = function() {};
+
+
+/**
+ * @constructor
+ * @extends {CSSStyleValue}
+ * @see https://www.w3.org/TR/css-typed-om-1/#cssnumericvalue
+ */
+function CSSNumericValue() {}
+
+/**
+ * @param {string} cssText
+ * @return {!CSSNumericValue}
+ */
+CSSNumericValue.parse = function(cssText) {}
+
+/**
+ * @param {...number|!CSSNumericValue} values
+ * @return {!CSSNumericValue}
+ */
+CSSNumericValue.prototype.add = function(values) {}
+
+/**
+ * @param {...number|!CSSNumericValue} values
+ * @return {!CSSNumericValue}
+ */
+CSSNumericValue.prototype.div = function(values) {}
+
+/**
+ * @param {...number|!CSSNumericValue} values
+ * @return {boolean}
+ */
+CSSNumericValue.prototype.equals = function(values) {};
+
+/**
+ * @param {...number|!CSSNumericValue} values
+ * @return {!CSSNumericValue}
+ */
+CSSNumericValue.prototype.max = function(values) {};
+
+/**
+ * @param {...number|!CSSNumericValue} values
+ * @return {!CSSNumericValue}
+ */
+CSSNumericValue.prototype.min = function(values) {};
+
+/**
+ * @param {...number|!CSSNumericValue} values
+ * @return {!CSSNumericValue}
+ */
+CSSNumericValue.prototype.mul = function(values) {};
+
+/**
+ * @param {...number|!CSSNumericValue} values
+ * @return {!CSSNumericValue}
+ */
+CSSNumericValue.prototype.sub = function(values) {};
+
+/**
+ * @param {string} unit
+ * @return {!CSSUnitValue}
+ */
+CSSNumericValue.prototype.to = function(unit) {};
+
+/**
+ * @param {...string} units
+ * @return {!CSSNumericValue}
+ * TODO(b/408277839): This should really return a CSSMathSum.
+ * Change the return type when it is added.
+ */
+CSSNumericValue.prototype.toSum = function(units) {};
+
+/**
+ * @return {!CSSNumericType}
+ */
+CSSNumericValue.prototype.type = function() {};
+
+/**
+ * @constructor
+ * @extends {CSSNumericValue}
+ * @param {number} value
+ * @param {string} unit
+ * @see https://developer.mozilla.org/docs/Web/API/CSSUnitValue
+ */
+function CSSUnitValue(value, unit) {}
+
+/**
+ * @type {number}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSUnitValue/value
+ */
+CSSUnitValue.prototype.value;
+
+/**
+ * @const {string}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSUnitValue/unit
+ */
+CSSUnitValue.prototype.unit;
+
+/**
+ * @typedef {{
+ *   angle: (number|undefined),
+ *   flex: (number|undefined),
+ *   frequency: (number|undefined),
+ *   length: (number|undefined),
+ *   percent: (number|undefined),
+ *   percentHint: (string|undefined),
+ *   resolution: (number|undefined),
+ *   time: (number|undefined)
+ * }}
+ */
+var CSSNumericType;
+
+/**
+ * @constructor
+ * @extends {CSSStyleValue}
+ * @param {string} value
+ */
+function CSSKeywordValue(value) {}
+
+/**
+ * @type {string}
+ */
+CSSKeywordValue.prototype.value;
+
+/**
+ * @constructor
+ * @extends {CSSStyleValue}
+ */
+function CSSImageValue() {}
+
+/**
+ * @constructor
+ * @extends {CSSNumericValue}
+ */
+function CSSMathValue() {}
+
+/** @type {string} */
+CSSMathValue.prototype.operator;
+
+/**
+ * @constructor
+ * @extends {CSSMathValue}
+ * @param {number|!CSSNumericValue} value
+ */
+function CSSMathInvert(value) {}
+
+/** @type {!CSSNumericValue} */
+CSSMathInvert.prototype.value
+
+/**
+ * @constructor
+ * @extends {CSSMathValue}
+ * @param {number|!CSSNumericValue} lower
+ * @param {number|!CSSNumericValue} value
+ * @param {number|!CSSNumericValue} upper
+ */
+function CSSMathClamp(lower, value, upper) {}
+
+/** @type {!CSSNumericValue} */
+CSSMathClamp.prototype.lower;
+
+/** @type {!CSSNumericValue} */
+CSSMathClamp.prototype.upper;
+
+/** @type {!CSSNumericValue} */
+CSSMathClamp.prototype.value;
+
+/**
+ * @constructor
+ * @extends {CSSMathValue}
+ * @param {...(number|!CSSNumericValue)} args
+ */
+function CSSMathMin(args) {}
+
+/** @type {!CSSNumericArray} */
+CSSMathMin.prototype.values;
+
+/**
+ * @constructor
+ * @extends {CSSMathValue}
+ * @param {number|!CSSNumericValue} arg
+ */
+function CSSMathNegate(arg) {}
+
+/** @type {!CSSNumericValue} */
+CSSMathNegate.prototype.value;
+
+/**
+ * @constructor
+ * @extends {CSSMathValue}
+ * @param {...(number|!CSSNumericValue)} args
+ */
+function CSSMathProduct(args) {}
+
+/** @type {!CSSNumericArray} */
+CSSMathProduct.prototype.values;
+
+/**
+ * @constructor
+ * @extends {CSSMathValue}
+ * @param {...(number|!CSSNumericValue)} args
+ */
+function CSSMathSum(args) {}
+
+/** @type {!CSSNumericArray} */
+CSSMathSum.prototype.values;
+
+/**
+ * @constructor
+ */
+function CSSTransformComponent() {}
+
+/** @type {boolean} */
+CSSTransformComponent.prototype.is2D;
+
+/** @return {!DOMMatrix} */
+CSSTransformComponent.prototype.toMatrix = function() {};
+
+/**
+ * @override
+ * @return {string}
+ */
+CSSTransformComponent.prototype.toString = function() {};
+
+/**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!CSSNumericValue|number} angle_or_x
+ * @param {!CSSNumericValue|number=} y
+ * @param {!CSSNumericValue|number=} z
+ * @param {!CSSNumericValue=} angle
+ */
+function CSSRotate(angle_or_x, y, z, angle) {}
+
+/** @type {!CSSNumericValue} */
+CSSRotate.prototype.angle;
+
+/** @type {!CSSNumericValue|number} */
+CSSRotate.prototype.x;
+
+/** @type {!CSSNumericValue|number} */
+CSSRotate.prototype.y;
+
+/** @type {!CSSNumericValue|number} */
+CSSRotate.prototype.z;
+
+/**
+ * @typedef {{
+ *   is2D: (boolean|undefined)
+ * }}
+ */
+var CSSMatrixComponentOptions;
+
+/**
+ * @constructor
+ * @extends {CSSStyleValue}
+ * @implements {IArrayLike<!CSSTransformComponent>}
+ * @param {!Array<!CSSTransformComponent>} transforms
+ */
+function CSSTransformValue(transforms) {}
+
+/** @type {boolean} */
+CSSTransformValue.prototype.is2D;
+
+/** @type {number} */
+CSSTransformValue.prototype.length;
+
+/** @return {!DOMMatrix} */
+CSSTransformValue.prototype.toMatrix = function() {};
+
+/**
+ * @param {function(this: S, !CSSTransformComponent, number, !CSSTransformValue): ?} callbackfn
+ * @param {S=} thisArg
+ * @template S
+ * @see https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
+ */
+CSSTransformValue.prototype.forEach = function(callbackfn, thisArg) {};
+
+/**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!DOMMatrixReadOnly} matrix
+ * @param {!CSSMatrixComponentOptions=} options
+ */
+function CSSMatrixComponent(matrix, options) {}
+
+/** @type {!DOMMatrix} */
+CSSMatrixComponent.prototype.matrix;
+
+/**
+ * @constructor
+ * @param {string} variable
+ * @param {?CSSUnparsedValue=} fallback
+ */
+function CSSVariableReferenceValue(variable, fallback) {}
+
+/** @type {string} */
+CSSVariableReferenceValue.prototype.variable;
+
+/** @type {?CSSUnparsedValue} */
+CSSVariableReferenceValue.prototype.fallback;
+
+/**
+ * @typedef {(string|!CSSVariableReferenceValue)}
+ */
+var CSSUnparsedSegment;
+
+/**
+ * @constructor
+ * @extends {CSSStyleValue}
+ * @implements {IArrayLike<!CSSUnparsedSegment>}
+ * @param {!Array<!CSSUnparsedSegment>} members
+ */
+function CSSUnparsedValue(members) {}
+
+/** @type {number} */
+CSSUnparsedValue.prototype.length;
+
+/**
+ * @param {function(this: S, !CSSUnparsedSegment, number, !CSSUnparsedValue): ?} callbackfn
+ * @param {S=} thisArg
+ * @template S
+ * @see https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
+ */
+CSSUnparsedValue.prototype.forEach = function(callbackfn, thisArg) {};
+
+/**
+ * @constructor
+ * @implements {IArrayLike<!CSSNumericValue>}
+ */
+function CSSNumericArray() {}
+
+/**
+ * @param {function(this: S, !CSSNumericValue, number, !CSSNumericArray): ?} callbackfn
+ * @param {S=} thisArg
+ * @template S
+ * @see https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
+ */
+CSSNumericArray.prototype.forEach = function(callbackfn, thisArg) {};
+
+/** @type {number} */
+CSSNumericArray.prototype.length;
+
+/**
+ * @constructor
+ * @extends {CSSMathValue}
+ * @param {...(number|!CSSNumericValue)} args
+ */
+function CSSMathMax(args) {}
+
+/** @type {!CSSNumericArray} */
+CSSMathMax.prototype.values;
+
+/**
+ * @constructor
+ * @extends {Animation}
+ */
+function CSSTransition() {}
+
+/** @type {string} */
+CSSTransition.prototype.transitionProperty;
+
+/**
+ * @constructor
+ * @extends {Animation}
+ */
+function CSSAnimation() {}
+
+/** @type {string} */
+CSSAnimation.prototype.animationName;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSNestedDeclarations() {}
+
+/**
+ * @type {!CSSStyleDeclaration}
+ */
+CSSNestedDeclarations.prototype.style;
+
+/**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!CSSNumericValue|string} length
+ */
+function CSSPerspective(length) {}
+
+/** @type {!CSSNumericValue|string} */
+CSSPerspective.prototype.length;
+
+/**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!CSSNumericValue|number} x
+ * @param {!CSSNumericValue|number} y
+ * @param {!CSSNumericValue|number} z
+ * @param {!CSSNumericValue} angle
+ */
+function CSSTranslate(x, y, z, angle) {}
+
+/** @type {!CSSNumericValue|number} */ CSSTranslate.prototype.x;
+/** @type {!CSSNumericValue|number} */ CSSTranslate.prototype.y;
+/** @type {!CSSNumericValue|number} */ CSSTranslate.prototype.z;
+/** @type {!CSSNumericValue} */ CSSTranslate.prototype.angle;
+
+/**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!CSSNumericValue|number} x
+ * @param {!CSSNumericValue|number} y
+ * @param {!CSSNumericValue|number=} z
+ */
+function CSSScale(x, y, z) {}
+
+/** @type {!CSSNumericValue|number} */ CSSScale.prototype.x;
+/** @type {!CSSNumericValue|number} */ CSSScale.prototype.y;
+/** @type {!CSSNumericValue|number} */ CSSScale.prototype.z;
+
+/**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!CSSNumericValue} ax
+ * @param {!CSSNumericValue} ay
+ */
+function CSSSkew(ax, ay) {}
+
+/** @type {!CSSNumericValue} */ CSSSkew.prototype.ax;
+/** @type {!CSSNumericValue} */ CSSSkew.prototype.ay;
+
+/**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!CSSNumericValue} ax
+ */
+function CSSSkewX(ax) {}
+
+/** @type {!CSSNumericValue} */ CSSSkewX.prototype.ax;
+
+/**
+ * @constructor
+ * @extends {CSSTransformComponent}
+ * @param {!CSSNumericValue} ay
+ */
+function CSSSkewY(ay) {}
+
+/** @type {!CSSNumericValue} */ CSSSkewY.prototype.ay;
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly
+ */
+function StylePropertyMapReadOnly() {}
+
+/**
+ * @const {number}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/size
+ */
+StylePropertyMapReadOnly.prototype.size;
+
+/**
+ * @param {string} property
+ * @return {(CSSStyleValue|undefined)}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/get
+ */
+StylePropertyMapReadOnly.prototype.get = function(property) {}
+
+/**
+ * @param {string} property
+ * @return {!Array<!CSSStyleValue>}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/getAll
+ */
+StylePropertyMapReadOnly.prototype.getAll = function(property) {}
+
+/**
+ * @param {string} property
+ * @return {boolean}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/has
+ */
+StylePropertyMapReadOnly.prototype.has = function(property) {}
+
+/**
+ * @param {function(!Array<!CSSStyleValue>, string, !StylePropertyMapReadOnly): void} callbackfn
+ * @param {*=} opt_thisArg
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/forEach
+ */
+StylePropertyMapReadOnly.prototype.forEach = function(callbackfn, opt_thisArg) {}
+
+/**
+ * @typedef {{
+ *   serializableShadowRoots: (boolean|undefined),
+ *   shadowRoots: (!Array<!ShadowRoot>|undefined)
+ * }}
+ */
+var GetHTMLOptions;
+
+/**
+ * @constructor
  * @extends {Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-745549614
  */
 function Element() {}
+
+/**
+ * @type {!DOMTokenList}
+ * @implicitCast
+ * @see https://developer.mozilla.org/docs/Web/API/Element/part
+ */
+Element.prototype.part;
 
 /**
  * @type {string}
@@ -673,6 +1267,19 @@ Element.prototype.tagName;
  *    SVGElement as ?.
  */
 Element.prototype.className;
+
+/**
+ * @return {!StylePropertyMapReadOnly}
+ * @see https://developer.mozilla.org/docs/Web/API/Element/computedStyleMap
+ */
+Element.prototype.computedStyleMap = function() {};
+
+/**
+ * @param {!GetHTMLOptions=} options
+ * @return {string}
+ * @see https://developer.mozilla.org/docs/Web/API/Element/getHTML
+ */
+Element.prototype.getHTML = function (options) {}
 
 /**
  * @param {string} name
@@ -716,7 +1323,7 @@ Element.prototype.removeAttributeNode = function(oldAttr) {};
 
 /**
  * @param {string} name
- * @param {string|number|boolean|!TrustedHTML|!TrustedScriptURL}
+ * @param {string|number|boolean|!TrustedHTML|!TrustedScriptURL|!TrustedScript}
  *     value Values are converted to strings with ToString, so we accept number
  *     and boolean since both convert easily to strings.
  * @return {undefined}
@@ -737,7 +1344,7 @@ Element.prototype.setAttributeNode = function(newAttr) {};
 
 /** @type {?function (Event)} */ Element.prototype.onabort;
 /** @type {?function (Event)} */ Element.prototype.onbeforeinput;
-/** @type {?function (Event)} */ Element.prototype.onbeforeunload;
+/** @type {?function (BeforeUnloadEvent)} */ Element.prototype.onbeforeunload;
 /** @type {?function (Event)} */ Element.prototype.onblur;
 /** @type {?function (Event)} */ Element.prototype.onchange;
 /** @type {?function (Event)} */ Element.prototype.onclick;
@@ -745,6 +1352,8 @@ Element.prototype.setAttributeNode = function(newAttr) {};
 /** @type {?function (Event)} */ Element.prototype.oncompositionupdate;
 /** @type {?function (Event)} */ Element.prototype.oncompositionend;
 /** @type {?function (Event)} */ Element.prototype.oncontextmenu;
+/** @type {?function (!Event)} */ Element.prototype.oncontextlost;
+/** @type {?function (!Event)} */ Element.prototype.oncontextrestored;
 /** @type {?function (Event)} */ Element.prototype.oncopy;
 /** @type {?function (Event)} */ Element.prototype.oncut;
 /** @type {?function (Event)} */ Element.prototype.ondblclick;
@@ -772,6 +1381,20 @@ Element.prototype.setAttributeNode = function(newAttr) {};
 /** @type {?function (Event=)} */ Element.prototype.onsubmit;
 /** @type {?function (Event)} */ Element.prototype.ontextinput;
 /** @type {?function (Event)} */ Element.prototype.onwheel;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondrag;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondragend;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondragenter;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondragleave;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondragover;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondragstart;
+/** @type {?function (!DragEvent)} */ Element.prototype.ondrop;
+
+/**
+ * @constructor
+ * @extends {Element}
+ * @see https://developer.mozilla.org/docs/Web/API/MathMLElement
+ */
+function MathMLElement() {}
 
 /**
  * @constructor
@@ -914,15 +1537,33 @@ Window.prototype.removeEventListener = function(type, listener, opt_options) {};
 /** @override */
 Window.prototype.dispatchEvent = function(evt) {};
 
+/** @type {!Navigator} */
+Window.prototype.clientInformation;
+
+/** @type {?function(!DeviceMotionEvent)} */
+Window.prototype.ondevicemotion;
+
+/** @type {?function(!DeviceOrientationEvent)} */
+Window.prototype.ondeviceorientation;
+
+/** @type {?function(!DeviceOrientationEvent)} */
+Window.prototype.ondeviceorientationabsolute;
+
 /** @type {?function (Event)} */ Window.prototype.onabort;
-/** @type {?function (Event)} */ Window.prototype.onbeforeunload;
+/** @type {?function (BeforeUnloadEvent)} */ Window.prototype.onbeforeunload;
 /** @type {?function (Event)} */ Window.prototype.onblur;
 /** @type {?function (Event)} */ Window.prototype.onchange;
 /** @type {?function (Event)} */ Window.prototype.onclick;
 /** @type {?function (Event)} */ Window.prototype.onclose;
 /** @type {?function (Event)} */ Window.prototype.oncontextmenu;
 /** @type {?function (Event)} */ Window.prototype.ondblclick;
-/** @type {?function (Event)} */ Window.prototype.ondragdrop;
+/** @type {?function (!DragEvent)} */ Window.prototype.ondrag;
+/** @type {?function (!DragEvent)} */ Window.prototype.ondragend;
+/** @type {?function (!DragEvent)} */ Window.prototype.ondragenter;
+/** @type {?function (!DragEvent)} */ Window.prototype.ondragleave;
+/** @type {?function (!DragEvent)} */ Window.prototype.ondragover;
+/** @type {?function (!DragEvent)} */ Window.prototype.ondragstart;
+/** @type {?function (!DragEvent)} */ Window.prototype.ondrop;
 // onerror has a special signature.
 // See
 //  https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror
@@ -930,6 +1571,11 @@ Window.prototype.dispatchEvent = function(evt) {};
  * @type {?function (string, string, number, number, !Error):?}
  */
 Window.prototype.onerror;
+/** @type {?function (MessageEvent<*>)} */ Window.prototype.onmessageerror
+/** @type {?function (PageTransitionEvent)} */ Window.prototype.onpagehide;
+/** @type {?function (PageTransitionEvent)} */ Window.prototype.onpageshow;
+/** @type {?function (!Event)} */ Window.prototype.onpageswap;
+/** @type {?function (!Event)} */ Window.prototype.onpagereveal;
 /** @type {?function (Event)} */ Window.prototype.onfocus;
 /** @type {?function (Event)} */ Window.prototype.onhashchange;
 /** @type {?function (Event)} */ Window.prototype.onkeydown;
@@ -942,14 +1588,45 @@ Window.prototype.onerror;
 /** @type {?function (Event)} */ Window.prototype.onmouseover;
 /** @type {?function (Event)} */ Window.prototype.onmouseup;
 /** @type {?function (Event)} */ Window.prototype.onmousewheel;
+/** @type {?function (!Event)} */ Window.prototype.onauxclick;
 /** @type {?function (Event)} */ Window.prototype.onpaint;
 /** @type {?function (Event)} */ Window.prototype.onpopstate;
 /** @type {?function (Event)} */ Window.prototype.onreset;
 /** @type {?function (Event)} */ Window.prototype.onresize;
 /** @type {?function (Event)} */ Window.prototype.onscroll;
+/** @type {?function (!Event)} */ Window.prototype.onscrollend;
 /** @type {?function (Event)} */ Window.prototype.onselect;
 /** @type {?function (Event=)} */ Window.prototype.onsubmit;
+/** @type {?function (TransitionEvent)} */ Window.prototype.ontransitioncancel;
+/** @type {?function (TransitionEvent)} */ Window.prototype.ontransitionend;
+/** @type {?function (TransitionEvent)} */ Window.prototype.ontransitionrun;
+/** @type {?function (TransitionEvent)} */ Window.prototype.ontransitionstart;
 /** @type {?function (Event)} */ Window.prototype.onunhandledrejection;
 /** @type {?function (Event)} */ Window.prototype.onunload;
 /** @type {?function (Event)} */ Window.prototype.onwheel;
 /** @type {?function (Event)} */ Window.prototype.onstorage;
+/** @type {?function (!AnimationEvent)} */ Window.prototype.onanimationcancel;
+/** @type {?function (!AnimationEvent)} */ Window.prototype.onanimationend;
+/** @type {?function (!AnimationEvent)} */ Window.prototype.onanimationiteration;
+/** @type {?function (!AnimationEvent)} */ Window.prototype.onanimationstart;
+/** @type {?function (!SecurityPolicyViolationEvent)} */ Window.prototype.onsecuritypolicyviolation;
+/** @type {?function (!Event)} */ Window.prototype.oninvalid;
+/** @type {?function (!PointerEvent)} */ Window.prototype.onlostpointercapture;
+/** @type {?function (!PointerEvent)} */ Window.prototype.ongotpointercapture;
+/** @type {?function (!PointerEvent)} */ Window.prototype.onpointercancel;
+/** @type {?function (!PointerEvent)} */ Window.prototype.onpointerdown;
+/** @type {?function (!PointerEvent)} */ Window.prototype.onpointerenter;
+/** @type {?function (!PointerEvent)} */ Window.prototype.onpointerleave;
+/** @type {?function (!PointerEvent)} */ Window.prototype.onpointermove;
+/** @type {?function (!PointerEvent)} */ Window.prototype.onpointerout;
+/** @type {?function (!PointerEvent)} */ Window.prototype.onpointerover;
+/** @type {?function (!PointerEvent)} */ Window.prototype.onpointerup;
+/** @type {?function (!Event)} */ Window.prototype.onslotchange;
+/** @type {?function (!Event)} */ Window.prototype.ontoggle;
+/** @type {?function (!Event)} */ Window.prototype.onbeforetoggle;
+/** @type {?function (!Event)} */ Window.prototype.onlanguagechange;
+/** @type {?function (!Event)} */ Window.prototype.onafterprint;
+/** @type {?function (!Event)} */ Window.prototype.onbeforeprint;
+/** @type {?function (!GamepadEvent)} */ Window.prototype.ongamepadconnected;
+/** @type {?function (!GamepadEvent)} */ Window.prototype.ongamepaddisconnected;
+/** @type {?function (!PromiseRejectionEvent)} */ Window.prototype.onrejectionhandled;

@@ -7,3 +7,4 @@
 **/.flattened-pom.xml
 target/
 .DS_Store
+.vscode

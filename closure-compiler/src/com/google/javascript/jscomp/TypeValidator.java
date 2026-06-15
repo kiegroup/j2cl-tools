@@ -94,15 +94,30 @@ class TypeValidator implements Serializable {
   private final TypeMismatch.Accumulator mismatches = new TypeMismatch.Accumulator();
 
   // User warnings
-  private static final String FOUND_REQUIRED = "{0}\n" + "found   : {1}\n" + "required: {2}";
+  private static final String FOUND_REQUIRED =
+      """
+      {0}
+      found   : {1}
+      required: {2}\
+      """;
 
   private static final String FOUND_REQUIRED_MISSING =
-      "{0}\n" + "found   : {1}\n" + "required: {2}\n" + "missing : [{3}]\n" + "mismatch: [{4}]";
+      """
+      {0}
+      found   : {1}
+      required: {2}
+      missing : [{3}]
+      mismatch: [{4}]\
+      """;
 
   static final DiagnosticType INVALID_CAST =
       DiagnosticType.warning(
           "JSC_INVALID_CAST",
-          "invalid cast - must be a subtype or supertype\n" + "from: {0}\n" + "to  : {1}");
+          """
+          invalid cast - must be a subtype or supertype
+          from: {0}
+          to  : {1}\
+          """);
 
   static final DiagnosticType TYPE_MISMATCH_WARNING =
       DiagnosticType.warning("JSC_TYPE_MISMATCH", "{0}");
@@ -543,13 +558,11 @@ class TypeValidator implements Serializable {
     ObjectType dereferenced = objType.dereference();
     if (dereferenced != null
         && dereferenced.getTemplateTypeMap().hasTemplateKey(typeRegistry.getObjectIndexKey())) {
-      expectCanAssignTo(
-          indexNode,
-          indexType,
+      JSType templateType =
           dereferenced
               .getTemplateTypeMap()
-              .getResolvedTemplateType(typeRegistry.getObjectIndexKey()),
-          "restricted index type");
+              .getResolvedTemplateType(typeRegistry.getObjectIndexKey());
+      expectCanAssignTo(indexNode, indexType, templateType, "restricted index type");
     } else if (dereferenced != null && dereferenced.isArrayType()) {
       expectNumberOrSymbol(indexNode, indexType, "array access");
     } else if (objType.isStruct()) {
@@ -873,6 +886,8 @@ class TypeValidator implements Serializable {
           if (n.hasChildren()) {
             n.getFirstChild().setJSType(varType);
           }
+        } else if (parent.isExprResult()) {
+          n.setJSType(varType);
         } else {
           checkState(parent.isFunction() || parent.isClass());
           parent.setJSType(varType);
@@ -931,12 +946,12 @@ class TypeValidator implements Serializable {
   private void expectInterfaceProperties(
       Node n, ObjectType instance, ObjectType ancestorInterface) {
     // Case: `/** @interface */ class Foo { constructor() { this.prop; } }`
-    for (String prop : ancestorInterface.getOwnPropertyNames()) {
+    for (Property.Key prop : ancestorInterface.getOwnPropertyKeys()) {
       expectInterfaceProperty(n, instance, ancestorInterface, prop);
     }
     if (ancestorInterface.getImplicitPrototype() != null) {
       // Case: `/** @interface */ class Foo { prop() { } }`
-      for (String prop : ancestorInterface.getImplicitPrototype().getOwnPropertyNames()) {
+      for (Property.Key prop : ancestorInterface.getImplicitPrototype().getOwnPropertyKeys()) {
         expectInterfaceProperty(n, instance, ancestorInterface, prop);
       }
     }
@@ -947,7 +962,7 @@ class TypeValidator implements Serializable {
    * typed.
    */
   private void expectInterfaceProperty(
-      Node n, ObjectType instance, ObjectType implementedInterface, String propName) {
+      Node n, ObjectType instance, ObjectType implementedInterface, Property.Key propName) {
     OwnedProperty propSlot = instance.findClosestDefinition(propName);
     if (propSlot == null
         || (!instance.getConstructor().isInterface() && propSlot.isOwnedByInterface())) {
@@ -957,7 +972,7 @@ class TypeValidator implements Serializable {
         return;
       }
       if (implementedInterface.getPropertyType(propName).isVoidable()) {
-        // Voidable properties don't require explicit initializaition in type constructors.
+        // Voidable properties don't require explicit initialization in type constructors.
         return;
       }
 
@@ -967,7 +982,7 @@ class TypeValidator implements Serializable {
           JSError.make(
               n,
               INTERFACE_METHOD_NOT_IMPLEMENTED,
-              propName,
+              propName.humanReadableName(),
               implementedInterface.getReferenceName(),
               instance.toString()));
     } else {
@@ -990,7 +1005,7 @@ class TypeValidator implements Serializable {
    * Check the property is correctly typed (i.e. subtype of the parent property's type declaration).
    */
   void checkPropertyType(
-      Node n, JSType instance, ObjectType parent, String propertyName, JSType found) {
+      Node n, JSType instance, ObjectType parent, Property.Key propertyName, JSType found) {
     JSType required = parent.getPropertyType(propertyName);
     TemplateTypeMap typeMap = instance.getTemplateTypeMap();
     if (!typeMap.isEmpty() && required.hasAnyTemplateTypes()) {
@@ -1008,7 +1023,7 @@ class TypeValidator implements Serializable {
             parent.getConstructor().isInterface()
                 ? HIDDEN_INTERFACE_PROPERTY_MISMATCH
                 : HIDDEN_SUPERCLASS_PROPERTY_MISMATCH,
-            propertyName,
+            propertyName.humanReadableName(),
             parent.getReferenceName(),
             required.toString(),
             found.toString(),
@@ -1023,7 +1038,7 @@ class TypeValidator implements Serializable {
   void expectAbstractMethodsImplemented(Node n, FunctionType ctorType) {
     checkArgument(ctorType.isConstructor());
 
-    Map<String, ObjectType> abstractMethodSuperTypeMap = new LinkedHashMap<>();
+    Map<Property.Key, ObjectType> abstractMethodSuperTypeMap = new LinkedHashMap<>();
     FunctionType currSuperCtor = ctorType.getSuperClassConstructor();
     if (currSuperCtor == null || !currSuperCtor.isAbstract()) {
       return;
@@ -1031,7 +1046,7 @@ class TypeValidator implements Serializable {
 
     while (currSuperCtor != null && currSuperCtor.isAbstract()) {
       ObjectType superType = currSuperCtor.getInstanceType();
-      for (String prop : currSuperCtor.getPrototype().getOwnPropertyNames()) {
+      for (Property.Key prop : currSuperCtor.getPrototype().getOwnPropertyKeys()) {
         FunctionType maybeAbstractMethod = superType.findPropertyType(prop).toMaybeFunctionType();
         if (maybeAbstractMethod != null
             && maybeAbstractMethod.isAbstract()
@@ -1044,7 +1059,7 @@ class TypeValidator implements Serializable {
 
     ObjectType instance = ctorType.getInstanceType();
     for (var entry : abstractMethodSuperTypeMap.entrySet()) {
-      String method = entry.getKey();
+      Property.Key method = entry.getKey();
       ObjectType superType = entry.getValue();
       FunctionType abstractMethod = instance.findPropertyType(method).toMaybeFunctionType();
       if (abstractMethod == null || abstractMethod.isAbstract()) {
@@ -1054,7 +1069,7 @@ class TypeValidator implements Serializable {
             JSError.make(
                 n,
                 ABSTRACT_METHOD_NOT_IMPLEMENTED,
-                method,
+                method.humanReadableName(),
                 superType.toString(),
                 instance.toString()));
       }
@@ -1124,7 +1139,11 @@ class TypeValidator implements Serializable {
   /** Registers a type mismatch into the universe of mismatches owned by this pass. */
   private void registerMismatchAndReport(JSType found, JSType required, JSError error) {
     this.compiler.report(error);
-    this.mismatches.registerMismatch(error.getNode(), found, required);
+    this.mismatches.registerMismatch(error.node(), found, required);
+  }
+
+  private static String formatNodeLocation(Node node) {
+    return String.format("%s:%s:%s", node.getSourceFileName(), node.getLineno(), node.getCharno());
   }
 
   /** Formats a found/required error message. */
@@ -1139,6 +1158,27 @@ class TypeValidator implements Serializable {
     if (foundStr.equals(requiredStr)) {
       foundStr = found.toAnnotationString(Nullability.IMPLICIT);
       requiredStr = required.toAnnotationString(Nullability.IMPLICIT);
+    }
+    if (foundStr.equals(requiredStr)) {
+      // For some types, their annotation strings will be identical, but they might be identically
+      // named structures in different scopes (and have theoretically different "fully-qualified"
+      // names).
+      // The general case of giving a correct fully qualified name is quite difficult, so instead we
+      // address some common cases where we know that types have a concrete name to use.
+      if (found.isEnumElementType()) {
+        foundStr =
+            foundStr
+                + " (enum definition: "
+                + formatNodeLocation(found.toMaybeEnumElementType().getEnumType().getSource())
+                + ")";
+      }
+      if (required.isEnumElementType()) {
+        requiredStr =
+            requiredStr
+                + " (enum definition: "
+                + formatNodeLocation(required.toMaybeEnumElementType().getEnumType().getSource())
+                + ")";
+      }
     }
     String missingStr = "";
     String mismatchStr = "";

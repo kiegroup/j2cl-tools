@@ -1,4 +1,10 @@
 ;;; Code for devirtualizedsupermethodcall.FooCallsSuperObjectMethod [type definition]
+(type $devirtualizedsupermethodcall.FooCallsSuperObjectMethod (sub $java.lang.Object (struct
+ (field $vtable (ref $devirtualizedsupermethodcall.FooCallsSuperObjectMethod.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $devirtualizedsupermethodcall.FooCallsSuperObjectMethod.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -6,14 +12,14 @@
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  ))
 )
-(type $devirtualizedsupermethodcall.FooCallsSuperObjectMethod (sub $java.lang.Object (struct
- (field $vtable (ref $devirtualizedsupermethodcall.FooCallsSuperObjectMethod.vtable))
+
+;;; Code for devirtualizedsupermethodcall.Main [type definition]
+(type $devirtualizedsupermethodcall.Main (sub $java.lang.Object (struct
+ (field $vtable (ref $devirtualizedsupermethodcall.Main.vtable))
  (field $itable (ref $itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for devirtualizedsupermethodcall.Main [type definition]
 (type $devirtualizedsupermethodcall.Main.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -22,14 +28,14 @@
  (field $m_main__void (ref $function.m_main__void))
  ))
 )
-(type $devirtualizedsupermethodcall.Main (sub $java.lang.Object (struct
- (field $vtable (ref $devirtualizedsupermethodcall.Main.vtable))
- (field $itable (ref $itable))
+
+;;; Code for devirtualizedsupermethodcall.SubNumber [type definition]
+(type $devirtualizedsupermethodcall.SubNumber (sub $java.lang.Number (struct
+ (field $vtable (ref $devirtualizedsupermethodcall.SubNumber.vtable))
+ (field $itable (ref $devirtualizedsupermethodcall.SubNumber.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for devirtualizedsupermethodcall.SubNumber [type definition]
 (type $devirtualizedsupermethodcall.SubNumber.vtable (sub $java.lang.Number.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -41,12 +47,6 @@
  (field $m_intValue__int (ref $function.m_intValue__int))
  (field $m_longValue__long (ref $function.m_longValue__long))
  (field $m_shortValue__short (ref $function.m_shortValue__short))
- ))
-)
-(type $devirtualizedsupermethodcall.SubNumber (sub $java.lang.Number (struct
- (field $vtable (ref $devirtualizedsupermethodcall.SubNumber.vtable))
- (field $itable (ref $devirtualizedsupermethodcall.SubNumber.itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
 
@@ -132,7 +132,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedsupermethodcall/readable-j2wasm.js/devirtualizedsupermethodcall/Main.java:40:6
   (call $$clinit__void_<once>_@devirtualizedsupermethodcall.FooCallsSuperObjectMethod )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedsupermethodcall/readable-j2wasm.js/devirtualizedsupermethodcall/Main.java:40:6
-  (local.set $$instance (struct.new $devirtualizedsupermethodcall.FooCallsSuperObjectMethod (ref.as_non_null (global.get $devirtualizedsupermethodcall.FooCallsSuperObjectMethod.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $devirtualizedsupermethodcall.FooCallsSuperObjectMethod (global.get $devirtualizedsupermethodcall.FooCallsSuperObjectMethod.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedsupermethodcall/readable-j2wasm.js/devirtualizedsupermethodcall/Main.java:40:6
   (call $$ctor__void_$p_devirtualizedsupermethodcall_FooCallsSuperObjectMethod@devirtualizedsupermethodcall.FooCallsSuperObjectMethod (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedsupermethodcall/readable-j2wasm.js/devirtualizedsupermethodcall/Main.java:40:6
@@ -221,7 +221,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedsupermethodcall/readable-j2wasm.js/devirtualizedsupermethodcall/Main.java:47:13
   (call $$clinit__void_<once>_@devirtualizedsupermethodcall.Main )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedsupermethodcall/readable-j2wasm.js/devirtualizedsupermethodcall/Main.java:47:13
-  (local.set $$instance (struct.new $devirtualizedsupermethodcall.Main (ref.as_non_null (global.get $devirtualizedsupermethodcall.Main.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $devirtualizedsupermethodcall.Main (global.get $devirtualizedsupermethodcall.Main.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedsupermethodcall/readable-j2wasm.js/devirtualizedsupermethodcall/Main.java:47:13
   (call $$ctor__void_$p_devirtualizedsupermethodcall_Main@devirtualizedsupermethodcall.Main (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedsupermethodcall/readable-j2wasm.js/devirtualizedsupermethodcall/Main.java:47:13
@@ -325,7 +325,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedsupermethodcall/readable-j2wasm.js/devirtualizedsupermethodcall/Main.java:18:6
   (call $$clinit__void_<once>_@devirtualizedsupermethodcall.SubNumber )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedsupermethodcall/readable-j2wasm.js/devirtualizedsupermethodcall/Main.java:18:6
-  (local.set $$instance (struct.new $devirtualizedsupermethodcall.SubNumber (ref.as_non_null (global.get $devirtualizedsupermethodcall.SubNumber.vtable)) (ref.as_non_null (global.get $devirtualizedsupermethodcall.SubNumber.itable)) (i32.const 0)))
+  (local.set $$instance (struct.new $devirtualizedsupermethodcall.SubNumber (global.get $devirtualizedsupermethodcall.SubNumber.vtable) (global.get $devirtualizedsupermethodcall.SubNumber.itable) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedsupermethodcall/readable-j2wasm.js/devirtualizedsupermethodcall/Main.java:18:6
   (call $$ctor__void_$p_devirtualizedsupermethodcall_SubNumber@devirtualizedsupermethodcall.SubNumber (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedsupermethodcall/readable-j2wasm.js/devirtualizedsupermethodcall/Main.java:18:6

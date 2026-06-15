@@ -21,45 +21,38 @@ import java.util.LinkedHashMap;
 import org.kie.j2cl.tools.yaml.mapper.api.YAMLDeserializer;
 
 /**
- * Default {@link YAMLDeserializer} implementation for {@link java.util.AbstractMap}. The
- * deserialization process returns a {@link java.util.LinkedHashMap}.
+ * Default {@link YAMLDeserializer} implementation for {@link AbstractMap}. The deserialization
+ * process returns a {@link LinkedHashMap}.
  *
  * <p>Cannot be overriden. Use {@link BaseMapYAMLDeserializer}.
  *
- * @param <K> Type of the keys inside the {@link java.util.AbstractMap}
- * @param <V> Type of the values inside the {@link java.util.AbstractMap}
+ * @param <V> Type of the values inside the {@link AbstractMap}
  * @author Nicolas Morel
  * @version $Id: $
  */
-public final class AbstractMapYAMLDeserializer<K, V>
-    extends BaseMapYAMLDeserializer<AbstractMap<K, V>, K, V> {
+public class AbstractMapYAMLDeserializer<V>
+    extends BaseMapYAMLDeserializer<AbstractMap<String, V>, V> {
 
-  /**
-   * @param keyDeserializer {@link YAMLDeserializer} used to deserialize the keys.
-   * @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values.
-   */
-  private AbstractMapYAMLDeserializer(
-      YAMLDeserializer<K> keyDeserializer, YAMLDeserializer<V> valueDeserializer) {
-    super(keyDeserializer, valueDeserializer);
+  /** @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values. */
+  private AbstractMapYAMLDeserializer(YAMLDeserializer<V> valueDeserializer) {
+    super(valueDeserializer);
   }
 
   /**
    * newInstance
    *
-   * @param keyDeserializer {@link YAMLDeserializer} used to deserialize the keys.
    * @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values.
-   * @param <K> Type of the keys inside the {@link java.util.AbstractMap}
-   * @param <V> Type of the values inside the {@link java.util.AbstractMap}
+   * @param <V> Type of the values inside the {@link AbstractMap}
    * @return a new instance of {@link AbstractMapYAMLDeserializer}
    */
-  public static <K, V> AbstractMapYAMLDeserializer<K, V> newInstance(
-      YAMLDeserializer<K> keyDeserializer, YAMLDeserializer<V> valueDeserializer) {
-    return new AbstractMapYAMLDeserializer<>(keyDeserializer, valueDeserializer);
+  public static <V> AbstractMapYAMLDeserializer<V> newInstance(
+      YAMLDeserializer<V> valueDeserializer) {
+    return new AbstractMapYAMLDeserializer<>(valueDeserializer);
   }
 
   /** {@inheritDoc} */
   @Override
-  protected AbstractMap<K, V> newMap() {
+  protected AbstractMap<String, V> newMap() {
     return new LinkedHashMap<>();
   }
 }

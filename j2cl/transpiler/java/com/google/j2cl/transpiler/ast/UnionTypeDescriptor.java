@@ -60,11 +60,15 @@ public abstract class UnionTypeDescriptor extends TypeDescriptor {
   }
 
   @Override
-  @Memoized
   public DeclaredTypeDescriptor toRawTypeDescriptor() {
+    return getClosestCommonSuperClass().toRawTypeDescriptor();
+  }
+
+  /** Returns the closest common super-type of all type descriptors in this union. */
+  @Memoized
+  public DeclaredTypeDescriptor getClosestCommonSuperClass() {
     DeclaredTypeDescriptor typeDescriptor =
-        (DeclaredTypeDescriptor) getUnionTypeDescriptors().get(0).toRawTypeDescriptor();
-    // Find the closest common ancestor of all the types in the union.
+        (DeclaredTypeDescriptor) getUnionTypeDescriptors().getFirst();
     while (typeDescriptor != null && !isAssignableTo(typeDescriptor)) {
       typeDescriptor = typeDescriptor.getSuperTypeDescriptor();
     }
@@ -102,7 +106,7 @@ public abstract class UnionTypeDescriptor extends TypeDescriptor {
   @Override
   @Nullable
   public MethodDescriptor getMethodDescriptor(String methodName, TypeDescriptor... parameters) {
-    // There might be different methods in the different components of the union with/ different
+    // There might be different methods in the different components of the union with different
     // parameterizations, so this method should return one with a parameterization that
     // consistent with all components. For this reason the method is not supported.
     throw new UnsupportedOperationException("getMethodDescriptor is unsupported in union types.");
@@ -193,6 +197,17 @@ public abstract class UnionTypeDescriptor extends TypeDescriptor {
   }
 
   @Override
+  @Nullable
+  public DeclaredTypeDescriptor findSupertype(TypeDeclaration supertypeDeclaration) {
+    return getUnionTypeDescriptors().stream()
+        .map(td -> td.findSupertype(supertypeDeclaration))
+        // Perform a reduction where if any value is null, the result is null.
+        // For union types, all types must have the given supertype in order to be considered.
+        .reduce((a, b) -> (a == null || b == null) ? null : a)
+        .orElse(null);
+  }
+
+  @Override
   boolean isDenotable(ImmutableSet<TypeVariable> seen) {
     return false;
   }
@@ -200,6 +215,13 @@ public abstract class UnionTypeDescriptor extends TypeDescriptor {
   @Override
   boolean hasReferenceTo(TypeVariable typeVariable, ImmutableSet<TypeVariable> seen) {
     return getUnionTypeDescriptors().stream().anyMatch(it -> it.hasReferenceTo(typeVariable, seen));
+  }
+
+  @Override
+  String toStringInternal(ImmutableSet<TypeVariable> seen) {
+    return getUnionTypeDescriptors().stream()
+        .map(t -> t.toStringInternal(seen))
+        .collect(joining(" | ", "(", ")"));
   }
 
   @Override

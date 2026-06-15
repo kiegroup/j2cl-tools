@@ -20,44 +20,37 @@ import java.util.HashMap;
 import org.kie.j2cl.tools.yaml.mapper.api.YAMLDeserializer;
 
 /**
- * Default {@link YAMLDeserializer} implementation for {@link java.util.HashMap}.
+ * Default {@link YAMLDeserializer} implementation for {@link HashMap}.
  *
  * <p>Cannot be overriden. Use {@link BaseMapYAMLDeserializer}.
  *
- * @param <K> Type of the keys inside the {@link java.util.HashMap}
- * @param <V> Type of the values inside the {@link java.util.HashMap}
+ * @param <V> Type of the values inside the {@link HashMap}
  * @author Nicolas Morel
  * @version $Id: $
  */
-public final class HashMapYAMLDeserializer<K, V>
-    extends BaseMapYAMLDeserializer<HashMap<K, V>, K, V> {
+public final class HashMapYAMLDeserializer<V>
+    extends BaseMapYAMLDeserializer<HashMap<String, V>, V> {
 
-  /**
-   * @param keyDeserializer {@link YAMLDeserializer} used to deserialize the keys.
-   * @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values.
-   */
-  private HashMapYAMLDeserializer(
-      YAMLDeserializer<K> keyDeserializer, YAMLDeserializer<V> valueDeserializer) {
-    super(keyDeserializer, valueDeserializer);
+  /** @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values. */
+  private HashMapYAMLDeserializer(YAMLDeserializer<V> valueDeserializer) {
+    super(valueDeserializer);
   }
 
   /**
    * newInstance
    *
-   * @param keyDeserializer {@link YAMLDeserializer} used to deserialize the keys.
    * @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values.
-   * @param <K> Type of the keys inside the {@link java.util.HashMap}
-   * @param <V> Type of the values inside the {@link java.util.HashMap}
+   * @param <V> Type of the values inside the {@link HashMap}
    * @return a new instance of {@link HashMapYAMLDeserializer}
    */
-  public static <K, V> HashMapYAMLDeserializer<K, V> newInstance(
-      YAMLDeserializer<K> keyDeserializer, YAMLDeserializer<V> valueDeserializer) {
-    return new HashMapYAMLDeserializer<>(keyDeserializer, valueDeserializer);
+  public static <K, V> HashMapYAMLDeserializer<V> newInstance(
+      YAMLDeserializer<V> valueDeserializer) {
+    return new HashMapYAMLDeserializer<>(valueDeserializer);
   }
 
   /** {@inheritDoc} */
   @Override
-  protected HashMap<K, V> newMap() {
+  protected HashMap<String, V> newMap() {
     return new HashMap<>();
   }
 }

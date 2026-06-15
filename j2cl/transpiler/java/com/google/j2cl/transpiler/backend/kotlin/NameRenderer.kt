@@ -29,11 +29,23 @@ import com.google.j2cl.transpiler.backend.kotlin.source.Source
  * @property localTypeNameMap a map from local names to qualified names
  * @property localFieldNames a set of local field names
  */
-internal data class NameRenderer(
+internal data class NameRenderer
+private constructor(
   val environment: Environment,
-  val localTypeNameMap: Map<String, String> = mapOf(),
-  val localFieldNames: Set<String> = setOf(),
+  val objCNamePrefix: String,
+  private val localTypeNameMap: Map<String, String>,
+  private val localFieldNames: Set<String>,
 ) {
+  constructor(
+    environment: Environment,
+    objCNamePrefix: String,
+  ) : this(
+    environment,
+    objCNamePrefix = objCNamePrefix,
+    localTypeNameMap = mapOf(),
+    localFieldNames = setOf(),
+  )
+
   fun plusLocalNames(type: Type): NameRenderer =
     plusLocalTypeNameMap(type.localTypeNameMap).plusLocalFieldNames(type.localFieldNames)
 
@@ -109,7 +121,6 @@ internal data class NameRenderer(
   fun qualifiedNameSource(typeDescriptor: TypeDescriptor, asSuperType: Boolean = false): Source =
     if (typeDescriptor is DeclaredTypeDescriptor) {
       val typeDeclaration = typeDescriptor.typeDeclaration
-      val enclosingTypeDescriptor = typeDescriptor.enclosingTypeDescriptor
       val nativeQualifiedName = typeDeclaration.ktNativeQualifiedName
       val bridgeQualifiedName = typeDeclaration.ktBridgeQualifiedName
       when {
@@ -123,12 +134,6 @@ internal data class NameRenderer(
         nativeQualifiedName != null ->
           // Use fully-qualified native name if present
           topLevelQualifiedNameSource(nativeQualifiedName)
-        enclosingTypeDescriptor != null ->
-          // Use fully-qualified name for top-level type, and simple name for inner types
-          Source.dotSeparated(
-            qualifiedNameSource(enclosingTypeDescriptor),
-            identifierSource(typeDeclaration.ktSimpleName()),
-          )
         else -> topLevelQualifiedNameSource(typeDescriptor.ktQualifiedName)
       }
     } else {

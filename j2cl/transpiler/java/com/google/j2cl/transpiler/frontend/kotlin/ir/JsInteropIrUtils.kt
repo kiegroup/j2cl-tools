@@ -42,7 +42,7 @@ import org.jetbrains.kotlin.ir.declarations.IrField
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
-import org.jetbrains.kotlin.ir.expressions.IrConstKind
+import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.isUnit
@@ -121,10 +121,10 @@ private val IrField.canBeJsProperty: Boolean
 private val IrConstructorCall.jsAnnotationInfo: JsAnnotationInfo
   get() =
     JsAnnotationInfo(
-      getValueArgumentAsConst(Name.identifier("name"), IrConstKind.String),
-      getValueArgumentAsConst(Name.identifier("namespace"), IrConstKind.String),
-      (getValueArgumentAsConst(Name.identifier("isNative"), IrConstKind.Boolean) ?: false),
-      (getValueArgumentAsConst(Name.identifier("hasCustomValue"), IrConstKind.Boolean) ?: false),
+      getValueArgumentAsConst<String>(Name.identifier("name")),
+      getValueArgumentAsConst<String>(Name.identifier("namespace")),
+      (getValueArgumentAsConst<Boolean>(Name.identifier("isNative")) ?: false),
+      (getValueArgumentAsConst<Boolean>(Name.identifier("hasCustomValue")) ?: false),
     )
 
 fun IrClass.getJsEnumInfo(): JsEnumInfo? {
@@ -146,9 +146,6 @@ val IrClass.isJsFunction: Boolean
 
 val IrClass.isJsType: Boolean
   get() = findJsinteropAnnotation(JS_TYPE_ANNOTATION_FQ_NAME) != null
-
-private val IrFunction.isJsAsync: Boolean
-  get() = findJsinteropAnnotation(JS_ASYNC_ANNOTATION_FQ_NAME) != null
 
 val IrClass.isJsEnum: Boolean
   get() = findJsinteropAnnotation(JS_ENUM_ANNOTATION_FQ_NAME) != null
@@ -176,6 +173,9 @@ val IrValueParameter.isJsOptional: Boolean
     findJsinteropAnnotation(JS_OPTIONAL_ANNOTATION_FQ_NAME) != null &&
       (parent as? IrDeclaration)?.isCompanionMember == false
 
+private val IrFunction.isJsAsync: Boolean
+  get() = findJsinteropAnnotation(JS_ASYNC_ANNOTATION_FQ_NAME) != null
+
 private val IrDeclaration.isJsOverlay: Boolean
   get() =
     when {
@@ -191,10 +191,10 @@ private val IrDeclaration.isJsOverlay: Boolean
     }
 
 fun IrDeclaration.getJsInfo(): JsInfo =
-  // TODO(b/225908831): Handle JsAsync
   JsInfo.newBuilder()
     .setJsMemberType(getJsMemberType())
     .setJsOverlay(isJsOverlay)
+    .setJsAsync(this is IrFunction && isJsAsync)
     .apply {
       if (isJsMember()) {
         getJsMemberAnnotationInfo()?.let {
@@ -206,8 +206,9 @@ fun IrDeclaration.getJsInfo(): JsInfo =
     .setHasJsMemberAnnotation(getJsMemberAnnotationInfo() != null)
     .build()
 
-private fun IrDeclaration.isJsMember(): Boolean =
+fun IrDeclaration.isJsMember(): Boolean =
   when {
+    this is IrVariable -> false
     isJsIgnore -> false
     isCompanionMember -> false
     getJsMemberAnnotationInfo() != null -> true
@@ -280,7 +281,7 @@ private fun IrDeclaration.isPublicMemberOfJsType(): Boolean {
   return when (this) {
     is IrDeclarationWithVisibility -> visibility == DescriptorVisibilities.PUBLIC
     is IrEnumEntry -> true // Enum entries are always public
-    else -> throw AssertionError("Unexpected IrDeclaration")
+    else -> false
   }
 }
 

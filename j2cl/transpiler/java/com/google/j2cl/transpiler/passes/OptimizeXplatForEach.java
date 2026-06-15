@@ -79,10 +79,9 @@ public class OptimizeXplatForEach extends NormalizationPass {
           public Statement rewriteForEachStatement(ForEachStatement forEachStatement) {
             Expression unwrappedIterableExpression =
                 unwrapNoopExpressions(forEachStatement.getIterableExpression());
-            if (!(unwrappedIterableExpression instanceof MethodCall)) {
+            if (!(unwrappedIterableExpression instanceof MethodCall iterableMethodCall)) {
               return forEachStatement;
             }
-            MethodCall iterableMethodCall = (MethodCall) unwrappedIterableExpression;
             MethodDescriptor invokedMethod = iterableMethodCall.getTarget();
             Optional<WellKnownIterable> wellKnownIterable =
                 WELL_KNOWN_ITERABLES.stream()
@@ -93,25 +92,23 @@ public class OptimizeXplatForEach extends NormalizationPass {
               return forEachStatement;
             }
 
-            switch (wellKnownIterable.get().iterationType()) {
-              case FOR_IN:
-                return convertToForInObject(forEachStatement, iterableMethodCall);
-              case FOR_ARRAY:
-                return convertToArrayForLoop(
-                    forEachStatement, iterableMethodCall, wellKnownIterable.get());
-            }
-            throw new AssertionError("exhaustive switch");
+            return switch (wellKnownIterable.get().iterationType()) {
+              case FOR_IN -> convertToForInObject(forEachStatement, iterableMethodCall);
+              case FOR_ARRAY ->
+                  convertToArrayForLoop(
+                      forEachStatement, iterableMethodCall, wellKnownIterable.get());
+            };
           }
         });
   }
 
   /** Unwraps enclosing cast and not-null postfix expression */
   private static Expression unwrapNoopExpressions(Expression expression) {
-    if (expression instanceof JsDocCastExpression) {
-      return unwrapNoopExpressions(((JsDocCastExpression) expression).getExpression());
-    } else if (expression instanceof PostfixExpression
-        && ((PostfixExpression) expression).getOperator() == PostfixOperator.NOT_NULL_ASSERTION) {
-      return unwrapNoopExpressions(((PostfixExpression) expression).getOperand());
+    if (expression instanceof JsDocCastExpression jsDocCastExpression) {
+      return unwrapNoopExpressions(jsDocCastExpression.getExpression());
+    } else if (expression instanceof PostfixExpression postfixExpression
+        && postfixExpression.getOperator() == PostfixOperator.NOT_NULL_ASSERTION) {
+      return unwrapNoopExpressions(postfixExpression.getOperand());
     }
     return expression;
   }

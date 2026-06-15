@@ -6,7 +6,7 @@
 
     <groupId>org.kie.j2cl.tools</groupId>
     <artifactId>bom</artifactId>
-    <version>0.3</version>
+    <version>0.5</version>
     <packaging>pom</packaging>
 
     <name>J2CL Libraries Bill of Materials</name>
@@ -43,12 +43,12 @@
         <maven.deploy.plugin.version>3.0.0-M2</maven.deploy.plugin.version>
 
         <gwt.nio.version>1.5</gwt.nio.version>
-        <gwt3.processors.version>0.8.0</gwt3.processors.version>
-        <jakarta4g.version>0.5</jakarta4g.version>
-        <dependency.inject.version>0.8</dependency.inject.version>
-        <json.mapper.version>0.6.0</json.mapper.version>
-        <xml.mapper.version>0.9</xml.mapper.version>
-        <yaml.mapper.version>0.6</yaml.mapper.version>
+        <gwt3.processors.version>0.9</gwt3.processors.version>
+        <jakarta4g.version>0.7</jakarta4g.version>
+        <dependency.inject.version>0.9</dependency.inject.version>
+        <json.mapper.version>0.7</json.mapper.version>
+        <xml.mapper.version>0.10</xml.mapper.version>
+        <yaml.mapper.version>0.7</yaml.mapper.version>
     </properties>
 
     <dependencyManagement>
@@ -74,7 +74,7 @@
                 <version>${gwt.nio.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.kie.j2cl.tools.jakarta</groupId>
+                <groupId>org.treblereel.gwt.jakarta</groupId>
                 <artifactId>bom</artifactId>
                 <version>${jakarta4g.version}</version>
                 <type>pom</type>
@@ -118,7 +118,6 @@
                 <version>${yaml.mapper.version}</version>
             </dependency>
         </dependencies>
-
     </dependencyManagement>
 
     <profiles>
@@ -128,8 +127,31 @@
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${maven.gpg.plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -139,14 +161,6 @@
                                 </goals>
                             </execution>
                         </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-deploy-plugin</artifactId>
-                        <version>${maven.deploy.plugin.version}</version>
-                        <configuration>
-                            <skip>false</skip>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -170,13 +184,8 @@
         <repository>
             <id>jboss-public-repository-group</id>
             <name>JBoss Public Repository Group</name>
-            <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
+            <url>https://repository.jboss.org/nexus/repository/releases/</url>
         </repository>
-        <snapshotRepository>
-            <id>jboss-snapshots-repository</id>
-            <name>JBoss Snapshot Repository</name>
-            <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
-        </snapshotRepository>
     </distributionManagement>
 
 </project>

@@ -370,6 +370,50 @@ MouseEvent.prototype.button;
 /** @type {EventTarget} */
 MouseEvent.prototype.relatedTarget;
 
+/**
+ * @constructor
+ * @deprecated
+ * @extends {UIEvent}
+ */
+function TextEvent() {}
+
+/**
+ * @type {string}
+ * @deprecated
+ */
+TextEvent.prototype.data;
+
+/**
+ * @param {string} type
+ * @param {boolean=} bubbles
+ * @param {boolean=} cancelable
+ * @param {?Window=} view
+ * @param {string=} data
+ * @return {undefined}
+ * @deprecated
+ */
+TextEvent.prototype.initTextEvent = function(type, bubbles, cancelable, view, data) {};
+
+/**
+ * @record
+ * @extends {EventInit}
+ */
+function TrackEventInit() {}
+
+/** @type {!TextTrack|undefined} */
+TrackEventInit.prototype.track;
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {TrackEventInit=} opt_eventInitDict
+ * @see https://dom.spec.whatwg.org/#interface-trackevent
+ */
+function TrackEvent(type, opt_eventInitDict) {}
+
+/** @type {!TextTrack|undefined} */
+TrackEvent.prototype.track;
 
 /**
  * @constructor
@@ -549,8 +593,8 @@ InputEventInit.prototype.inputType;
 /** @type {undefined|?DataTransfer} */
 InputEventInit.prototype.dataTransfer;
 
-/** @type {undefined|function():!Array<!StaticRange>} */
-InputEventInit.prototype.getTargetRanges;
+/** @type {undefined|!Array<!StaticRange>} */
+InputEventInit.prototype.targetRanges;
 
 /**
  * @constructor
@@ -566,7 +610,7 @@ function InputEvent(type, opt_eventInitDict) {}
 InputEvent.prototype.data;
 
 /** @type {boolean} */
-InputEvent.prototype.isComposed;
+InputEvent.prototype.isComposing;
 
 /** @type {string} */
 InputEvent.prototype.inputType;
@@ -605,3 +649,12 @@ PromiseRejectionEvent.prototype.promise;
 
 /** @type {*} */
 PromiseRejectionEvent.prototype.reason;
+
+/**
+ * @constructor
+ * @extends {Event}
+ */
+function BeforeUnloadEvent() {}
+
+/** @type {?} */
+BeforeUnloadEvent.prototype.returnValue;

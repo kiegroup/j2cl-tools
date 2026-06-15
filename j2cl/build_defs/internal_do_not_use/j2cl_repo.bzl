@@ -14,14 +14,31 @@ _PASS_PROPS = (
     "visibility",
     "exports",
     "deps",
-    "tags",
 )
 
 def _j2cl_import_external(repository_ctx):
     """Implementation of `j2cl_import_external` rule."""
+    _j2cl_import_external_common(
+        repository_ctx,
+        repository_ctx.attr.artifact_urls,
+        repository_ctx.attr.additional_rule_attrs | {"tags": repository_ctx.attr.tags},
+    )
 
+def _j2cl_maven_import_external(repository_ctx):
+    """Implementation of `j2cl_maven_import_external` rule."""
+    coordinates = _decode_maven_coordinates(repository_ctx.attr.artifact, default_packaging = "jar")
+    artifact_urls = _convert_coordinates_to_urls(coordinates, repository_ctx.attr.server_urls)
+    additional_attrs = dict(repository_ctx.attr.additional_rule_attrs)
+    additional_attrs["tags"] = repository_ctx.attr.tags + [
+        "maven_coordinates=" + repository_ctx.attr.artifact,
+    ]
+
+    _j2cl_import_external_common(repository_ctx, artifact_urls, additional_attrs)
+
+
+def _j2cl_import_external_common(repository_ctx, artifact_urls, additional_attrs):
     lines = [
-        "load('@com_google_j2cl//build_defs:rules.bzl', 'j2cl_library', 'j2cl_import')",
+        "load('@j2cl//build_defs:rules.bzl', 'j2cl_library', 'j2cl_import')",
         "",
         "package(default_visibility = %s)" % repository_ctx.attr.default_visibility,
         "",
@@ -30,11 +47,11 @@ def _j2cl_import_external(repository_ctx):
     ]
 
     if repository_ctx.attr.annotation_only:
-        jar = repository_ctx.name + "-java"
+        jar = repository_ctx.original_name + "-java"
         jar_name = jar + ".jar"
 
         repository_ctx.download(
-            repository_ctx.attr.artifact_urls,
+            artifact_urls,
             output = jar_name,
             sha256 = repository_ctx.attr.artifact_sha256,
         )
@@ -45,13 +62,13 @@ def _j2cl_import_external(repository_ctx):
             "    jars = ['%s']," % jar_name,
             ")",
             "j2cl_import(",
-            "    name = '%s'," % repository_ctx.name,
+            "    name = '%s'," % repository_ctx.original_name,
             "    jar = ':%s'," % jar,
         ]
 
     else:
         repository_ctx.download_and_extract(
-            repository_ctx.attr.artifact_urls,
+            artifact_urls,
             sha256 = repository_ctx.attr.artifact_sha256,
         )
 
@@ -60,9 +77,10 @@ def _j2cl_import_external(repository_ctx):
             "REPLACED_SRCS = [s.split('/super/')[1] for s in SUPER_SRCS]",
             "",
             "j2cl_library(",
-            "    name = '%s'," % repository_ctx.name,
+            "    name = '%s'," % repository_ctx.original_name,
             "    srcs = glob(['**/*.java', '**/*.js'],",
-            "        exclude = REPLACED_SRCS + ['**/*_CustomFieldSerializer*']",
+            "        exclude = REPLACED_SRCS + ['**/*_CustomFieldSerializer*'],",
+            "        allow_empty = True",
             "    ),",
             "    js_suppress = ['deprecated'],",
         ]
@@ -75,6 +93,9 @@ def _j2cl_import_external(repository_ctx):
             if prop.endswith("_"):
                 prop = prop[:-1]
             lines.append("    %s = %s," % (prop, repr(value)))
+
+    for attr_key in additional_attrs:
+        lines.append("    %s = %s," % (attr_key, additional_attrs[attr_key]))
 
     lines.append(")")
     lines.append("")
@@ -133,49 +154,37 @@ def _concat_with_needed_slash(server_url, url_suffix):
     else:
         return server_url + "/" + url_suffix
 
+_COMMON_ATTRS = {
+    "licenses": attr.string_list(default = ["none"]),
+    "annotation_only": attr.bool(default = False),
+    "artifact_sha256": attr.string(),
+    "additional_rule_attrs": attr.string_dict(),
+    "deps": attr.string_list(),
+    "runtime_deps": attr.string_list(),
+    "testonly_": attr.bool(),
+    "exports": attr.string_list(),
+    "default_visibility": attr.string_list(default = ["//visibility:public"]),
+}
+
 j2cl_import_external = repository_rule(
-    attrs = {
-        "licenses": attr.string_list(default = ["none"]),
+    attrs = _COMMON_ATTRS | {
         "artifact_urls": attr.string_list(
             mandatory = True,
             allow_empty = False,
         ),
-        "annotation_only": attr.bool(default = False),
-        "artifact_sha256": attr.string(),
-        "additional_rule_attrs": attr.string_dict(),
-        "deps": attr.string_list(),
-        "runtime_deps": attr.string_list(),
-        "testonly_": attr.bool(),
-        "exports": attr.string_list(),
-        "default_visibility": attr.string_list(default = ["//visibility:public"]),
     },
     implementation = _j2cl_import_external,
 )
 
-def j2cl_maven_import_external(
-        artifact,
-        server_urls,
-        annotation_only = False,
-        **kwargs):
-    coordinates = _decode_maven_coordinates(artifact, default_packaging = "jar")
-    if annotation_only:
-        src_coordinates = coordinates
-    else:
-        src_coordinates = struct(
-            group_id = coordinates.group_id,
-            artifact_id = coordinates.artifact_id,
-            version = coordinates.version,
-            classifier = "sources",
-            packaging = "jar",
-        )
-
-    srcjar_urls = _convert_coordinates_to_urls(src_coordinates, server_urls)
-    tags = kwargs.pop("tags", [])
-    tags.append("maven_coordinates=" + artifact)
-
-    j2cl_import_external(
-        artifact_urls = srcjar_urls,
-        tags = tags,
-        annotation_only = annotation_only,
-        **kwargs
-    )
+j2cl_maven_import_external = repository_rule(
+    attrs = _COMMON_ATTRS | {
+        "artifact": attr.string(
+            mandatory = True,
+        ),
+        "server_urls": attr.string_list(
+            mandatory = True,
+            allow_empty = False,
+        ),
+    },
+    implementation = _j2cl_maven_import_external,
+)

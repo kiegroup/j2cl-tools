@@ -7,15 +7,52 @@
   <parent>
     <groupId>org.kie.j2cl.tools</groupId>
     <artifactId>j2cl-parent</artifactId>
-    <version>v20241110-1</version>
+    <version>v20250822-1</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <artifactId>closure-test</artifactId>
   <packaging>pom</packaging>
-  <description>
-    Contains the requirements for a goog.testing.TestCase and testSuite to run in closure,
-    minus the contents of bootstrap.
-  </description>
+
+    <name>J2CL Junit closure testing</name>
+    <url>https://github.com/vertispan/j2cl</url>
+    <inceptionYear>2015</inceptionYear>
+    <description>
+        Contains the requirements for a goog.testing.TestCase and testSuite to run in closure,
+        minus the contents of bootstrap.
+    </description>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>J2CL team</name>
+            <organization>Google</organization>
+            <organizationUrl>https://www.google.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Colin Alworth</name>
+            <email>colin@vertispan.com</email>
+            <organization>Vertispan LLC</organization>
+            <organizationUrl>https://www.vertispan.com/</organizationUrl>
+        </developer>
+    </developers>
+
+    <issueManagement>
+        <url>https://github.com/vertispan/j2cl/issues</url>
+        <system>GitHub Issues</system>
+    </issueManagement>
+
+    <scm>
+        <connection>scm:git:https://github.com/vertispan/j2cl.git</connection>
+        <developerConnection>scm:git:git@github.com:vertispan/j2cl.git</developerConnection>
+        <url>https://github.com/vertispan/j2cl</url>
+    </scm>
 
   <build>
     <plugins>

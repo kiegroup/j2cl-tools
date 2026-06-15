@@ -139,8 +139,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   @Test
   public void testNoWarningInGlobalScope() {
     testSame(
-        "goog.makeSingleton = function(x) {};"
-            + "/** @deprecated */ function f() {} goog.makeSingleton(f);");
+        """
+        goog.makeSingleton = function(x) {};
+        /** @deprecated */ function f() {} goog.makeSingleton(f);
+        """);
   }
 
   @Test
@@ -162,8 +164,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoWarningInGoogModuleScopeWithFileoverviewForCall() {
     disableRewriteClosureCode(); // Remove this line once Closure rewriting is after typechecking.
     testDepName(
-        "/** @deprecated @fileoverview */ goog.module('m'); /** @deprecated Some module scope */"
-            + " function f() {} f();",
+        """
+        /** @deprecated @fileoverview */ goog.module('m'); /** @deprecated Some module scope */
+         function f() {} f();
+        """,
         "Variable f has been deprecated: Some module scope");
   }
 
@@ -199,252 +203,319 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   @Test
   public void testWarningInNormalClass() {
     testDepName(
-        "/** @deprecated FooBar */ function f() {}"
-            + "/** @constructor */  var Foo = function() {}; "
-            + "Foo.prototype.bar = function() { f(); }",
+        """
+        /** @deprecated FooBar */ function f() {}
+        /** @constructor */  var Foo = function() {};
+        Foo.prototype.bar = function() { f(); }
+        """,
         "Variable f has been deprecated: FooBar");
   }
 
   @Test
   public void testWarningForProperty1() {
     testDepProp(
-        "/** @constructor */ function Foo() {}"
-            + "/** @deprecated A property is bad */ Foo.prototype.bar = 3;"
-            + "Foo.prototype.baz = function() { alert((new Foo()).bar); };",
+        """
+        /** @constructor */ function Foo() {}
+        /** @deprecated A property is bad */ Foo.prototype.bar = 3;
+        Foo.prototype.baz = function() { alert((new Foo()).bar); };
+        """,
         "Property bar of type Foo has been deprecated: A property is bad");
   }
 
   @Test
   public void testWarningForProperty2() {
     testDepProp(
-        "/** @constructor */ function Foo() {}"
-            + "/** @deprecated Zee prop, it is deprecated! */ Foo.prototype.bar = 3;"
-            + "Foo.prototype.baz = function() { alert(this.bar); };",
+        """
+        /** @constructor */ function Foo() {}
+        /** @deprecated Zee prop, it is deprecated! */ Foo.prototype.bar = 3;
+        Foo.prototype.baz = function() { alert(this.bar); };
+        """,
         "Property bar of type Foo has been deprecated: Zee prop, it is deprecated!");
   }
 
   @Test
   public void testWarningForDeprecatedClass() {
     testDepClass(
-        "/** @constructor \n* @deprecated Use the class 'Bar' */ function Foo() {} "
-            + "function f() { new Foo(); }",
+        """
+        /** @constructor\s
+        * @deprecated Use the class 'Bar' */ function Foo() {}
+        function f() { new Foo(); }
+        """,
         "Class Foo has been deprecated: Use the class 'Bar'");
   }
 
   @Test
   public void testWarningForDeprecatedClassNoReason() {
     testError(
-        "/** @constructor \n* @deprecated */ function Foo() {} " + "function f() { new Foo(); }",
+        """
+        /** @constructor\s
+        * @deprecated */ function Foo() {}
+        function f() { new Foo(); }
+        """,
         DEPRECATED_CLASS);
   }
 
   @Test
   public void testNoWarningForDeprecatedClassInstance() {
     testSame(
-        "/** @constructor \n * @deprecated */ function Foo() {} "
-            + "/** @param {Foo} x */ function f(x) { return x; }");
+        """
+        /** @constructor\s
+        * @deprecated */ function Foo() {}
+        /** @param {Foo} x */ function f(x) { return x; }
+        """);
   }
 
   @Test
   public void testNoWarningForDeprecatedSuperClass() {
     testNoWarning(
-        lines(
-            "/** @constructor @deprecated Superclass to the rescue! */",
-            "function Foo() {}",
-            "/** @constructor * @extends {Foo} */",
-            "function SubFoo() {}",
-            "function f() { new SubFoo(); }"));
+        """
+        /** @constructor @deprecated Superclass to the rescue! */
+        function Foo() {}
+        /** @constructor * @extends {Foo} */
+        function SubFoo() {}
+        function f() { new SubFoo(); }
+        """);
   }
 
   @Test
   public void testNoWarningForDeprecatedSuperClassOnNamespace() {
     testNoWarning(
-        lines(
-            "/**",
-            " * @constructor",
-            " * @deprecated Its only weakness is Kryptoclass",
-            "*/",
-            " function Foo() {} ",
-            "/** @const */ var namespace = {};",
-            "/** @constructor \n * @extends {Foo} */",
-            "namespace.SubFoo = function() {};",
-            "function f() { new namespace.SubFoo(); }"));
+        """
+        /**
+         * @constructor
+         * @deprecated Its only weakness is Kryptoclass
+        */
+         function Foo() {}
+        /** @const */ var namespace = {};
+        /** @constructor
+         * @extends {Foo} */
+        namespace.SubFoo = function() {};
+        function f() { new namespace.SubFoo(); }
+        """);
   }
 
   @Test
   public void testWarningForPrototypeProperty() {
     String js =
-        "/** @constructor */ function Foo() {}"
-            + "/** @deprecated It is now in production, use that model... */ Foo.prototype.bar = 3;"
-            + "Foo.prototype.baz = function() { alert(Foo.prototype.bar); };";
+        """
+        /** @constructor */ function Foo() {}
+        /** @deprecated It is now in production, use that model... */
+        Foo.prototype.bar = 3;
+        Foo.prototype.baz = function() { alert(Foo.prototype.bar); };
+        """;
     testDepProp(
         js,
-        "Property bar of type Foo.prototype has been deprecated:"
-            + " It is now in production, use that model...");
+        """
+        Property bar of type Foo.prototype has been deprecated:\
+         It is now in production, use that model...
+        """);
   }
 
   @Test
   public void testNoWarningForNumbers() {
     testSame(
-        "/** @constructor */ function Foo() {}"
-            + "/** @deprecated */ Foo.prototype.bar = 3;"
-            + "Foo.prototype.baz = function() { alert(3); };");
+        """
+        /** @constructor */ function Foo() {}
+        /** @deprecated */ Foo.prototype.bar = 3;
+        Foo.prototype.baz = function() { alert(3); };
+        """);
   }
 
   @Test
   public void testWarningForMethod1() {
     testDepProp(
-        "/** @constructor */ function Foo() {}"
-            + "/** @deprecated There is a madness to this method */"
-            + "Foo.prototype.bar = function() {};"
-            + "Foo.prototype.baz = function() { this.bar(); };",
+        """
+        /** @constructor */ function Foo() {}
+        /** @deprecated There is a madness to this method */
+        Foo.prototype.bar = function() {};
+        Foo.prototype.baz = function() { this.bar(); };
+        """,
         "Property bar of type Foo has been deprecated: There is a madness to this method");
   }
 
   @Test
   public void testWarningForMethod2() {
     testDepProp(
-        "/** @constructor */ function Foo() {}"
-            + "/** @deprecated Stop the ringing! */ Foo.prototype.bar;"
-            + "Foo.prototype.baz = function() { this.bar(); };",
+        """
+        /** @constructor */ function Foo() {}
+        /** @deprecated Stop the ringing! */ Foo.prototype.bar;
+        Foo.prototype.baz = function() { this.bar(); };
+        """,
         "Property bar of type Foo has been deprecated: Stop the ringing!");
   }
 
   @Test
   public void testNoWarningInDeprecatedClass() {
     testSame(
-        "/** @deprecated */ function f() {} "
-            + "/** @constructor \n * @deprecated */ "
-            + "var Foo = function() {}; "
-            + "Foo.prototype.bar = function() { f(); }");
+        """
+        /** @deprecated */ function f() {}
+        /** @constructor\s
+         * @deprecated */
+        var Foo = function() {};
+        Foo.prototype.bar = function() { f(); }
+        """);
   }
 
   @Test
   public void testNoWarningOnDeclaration() {
     testSame(
-        "/** @constructor */ function F() {\n"
-            + "  /**\n"
-            + "   * @type {number}\n"
-            + "   * @deprecated Use something else.\n"
-            + "   */\n"
-            + "  this.code;\n"
-            + "}");
+        """
+        /** @constructor */ function F() {
+          /**
+           * @type {number}
+           * @deprecated Use something else.
+           */
+          this.code;
+        }
+        """);
   }
 
   @Test
   public void testNoWarningInDeprecatedClass2() {
     testSame(
-        "/** @deprecated */ function f() {} "
-            + "/** @constructor \n * @deprecated */ "
-            + "var Foo = function() {}; "
-            + "Foo.bar = function() { f(); }");
+        """
+        /** @deprecated */ function f() {}
+        /** @constructor\s
+         * @deprecated */
+        var Foo = function() {};
+        Foo.bar = function() { f(); }
+        """);
   }
 
   @Test
   public void testNoWarningInDeprecatedStaticMethod() {
     testSame(
-        "/** @deprecated */ function f() {} "
-            + "/** @constructor */ "
-            + "var Foo = function() {}; "
-            + "/** @deprecated */ Foo.bar = function() { f(); }");
+        """
+        /** @deprecated */ function f() {}
+        /** @constructor */
+        var Foo = function() {};
+        /** @deprecated */ Foo.bar = function() { f(); }
+        """);
   }
 
   @Test
   public void testWarningInStaticMethod() {
     testDepName(
-        "/** @deprecated crazy! */ function f() {} "
-            + "/** @constructor */ "
-            + "var Foo = function() {}; "
-            + "Foo.bar = function() { f(); }",
+        """
+        /** @deprecated crazy! */ function f() {}
+        /** @constructor */
+        var Foo = function() {};
+        Foo.bar = function() { f(); }
+        """,
         "Variable f has been deprecated: crazy!");
   }
 
   @Test
   public void testDeprecatedObjLitKey() {
     testDepProp(
-        "/** @const */ var f = {};"
-            + "/** @deprecated It is literally not used anymore */ f.foo = 3;"
-            + "function g() { return f.foo; }",
+        """
+        /** @const */ var f = {};
+        /** @deprecated It is literally not used anymore */ f.foo = 3;
+        function g() { return f.foo; }
+        """,
         "Property foo of type f has been deprecated: It is literally not used anymore");
   }
 
   @Test
   public void testWarningForSubclassMethod() {
     testDepProp(
-        "/** @constructor */ function Foo() {}"
-            + "Foo.prototype.bar = function() {};"
-            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
-            + "/** @deprecated I have a parent class! */ SubFoo.prototype.bar = function() {};"
-            + "function f() { (new SubFoo()).bar(); };",
+        """
+        /** @constructor */ function Foo() {}
+        Foo.prototype.bar = function() {};
+        /** @constructor\s
+         * @extends {Foo} */ function SubFoo() {}
+        /** @deprecated I have a parent class! */ SubFoo.prototype.bar = function() {};
+        function f() { (new SubFoo()).bar(); };
+        """,
         "Property bar of type SubFoo has been deprecated: I have a parent class!");
   }
 
   @Test
   public void testWarningForSuperClassWithDeprecatedSubclassMethod() {
     testSame(
-        "/** @constructor */ function Foo() {}"
-            + "Foo.prototype.bar = function() {};"
-            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
-            + "/** @deprecated \n * @override */ SubFoo.prototype.bar = "
-            + "function() {};"
-            + "function f() { (new Foo()).bar(); };");
+        """
+        /** @constructor */ function Foo() {}
+        Foo.prototype.bar = function() {};
+        /** @constructor\s
+         * @extends {Foo} */ function SubFoo() {}
+        /** @deprecated\s
+         * @override */ SubFoo.prototype.bar =
+        function() {};
+        function f() { (new Foo()).bar(); };
+        """);
   }
 
   @Test
   public void testWarningForSuperclassMethod() {
     testDepProp(
-        "/** @constructor */ function Foo() {}"
-            + "/** @deprecated I have a child class! */ Foo.prototype.bar = function() {};"
-            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
-            + "SubFoo.prototype.bar = function() {};"
-            + "function f() { (new SubFoo()).bar(); };",
+        """
+        /** @constructor */ function Foo() {}
+        /** @deprecated I have a child class! */ Foo.prototype.bar = function() {};
+        /** @constructor\s
+         * @extends {Foo} */ function SubFoo() {}
+        SubFoo.prototype.bar = function() {};
+        function f() { (new SubFoo()).bar(); };
+        """,
         "Property bar of type SubFoo has been deprecated: I have a child class!");
   }
 
   @Test
   public void testWarningForSuperclassMethod2() {
     testDepProp(
-        "/** @constructor */ function Foo() {}"
-            + "/** @deprecated I have another child class... \n* @protected */"
-            + "Foo.prototype.bar = function() {};"
-            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
-            + "/** @protected */SubFoo.prototype.bar = function() {};"
-            + "function f() { (new SubFoo()).bar(); };",
+        """
+        /** @constructor */ function Foo() {}
+        /** @deprecated I have another child class...\s
+        * @protected */
+        Foo.prototype.bar = function() {};
+        /** @constructor\s
+         * @extends {Foo} */ function SubFoo() {}
+        /** @protected */SubFoo.prototype.bar = function() {};
+        function f() { (new SubFoo()).bar(); };
+        """,
         "Property bar of type SubFoo has been deprecated: I have another child class...");
   }
 
   @Test
   public void testWarningForFunctionProp() {
     testDepProp(
-        "/** @deprecated Don't call me... */ Function.prototype.deprecatedMethod = function() {};"
-            + "(function() {}).deprecatedMethod();",
+        """
+        /** @deprecated Don't call me... */ Function.prototype.deprecatedMethod = function() {};
+        (function() {}).deprecatedMethod();
+        """,
         "Property deprecatedMethod of type function has been deprecated: Don't call me...");
   }
 
   @Test
   public void testWarningForDeprecatedClassInGlobalScope() {
     testDepClass(
-        "/** @constructor \n * @deprecated I'm a very worldly object! */ var Foo = function() {};"
-            + "new Foo();",
+        """
+        /** @constructor\s
+         * @deprecated I'm a very worldly object! */ var Foo = function() {};
+        new Foo();
+        """,
         "Class Foo has been deprecated: I'm a very worldly object!");
   }
 
   @Test
   public void testNoWarningForPrototypeCopying() {
     testSame(
-        "/** @constructor */ var Foo = function() {};"
-            + "Foo.prototype.bar = function() {};"
-            + "/** @deprecated */ Foo.prototype.baz = Foo.prototype.bar;"
-            + "(new Foo()).bar();");
+        """
+        /** @constructor */ var Foo = function() {};
+        Foo.prototype.bar = function() {};
+        /** @deprecated */ Foo.prototype.baz = Foo.prototype.bar;
+        (new Foo()).bar();
+        """);
   }
 
   @Test
   public void testNoWarningOnDeprecatedPrototype() {
     // This used to cause an NPE.
     testSame(
-        "/** @constructor */ var Foo = function() {};"
-            + "/** @deprecated */ Foo.prototype = {};"
-            + "Foo.prototype.bar = function() {};");
+        """
+        /** @constructor */ var Foo = function() {};
+        /** @deprecated */ Foo.prototype = {};
+        Foo.prototype.bar = function() {};
+        """);
   }
 
   @Test
@@ -463,9 +534,11 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   @Test
   public void testPrivateAccessForProperties1() {
     testSame(
-        "/** @constructor */ function Foo() {}"
-            + "/** @private */ Foo.prototype.bar_ = function() {};"
-            + "Foo.prototype.baz = function() { this.bar_(); }; (new Foo).bar_();");
+        """
+        /** @constructor */ function Foo() {}
+        /** @private */ Foo.prototype.bar_ = function() {};
+        Foo.prototype.baz = function() { this.bar_(); }; (new Foo).bar_();
+        """);
   }
 
   @Test
@@ -473,8 +546,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     testSame(
         srcs(
             "/** @constructor */ function Foo() {}",
-            "/** @private */ Foo.prototype.bar_ = function() {};"
-                + "Foo.prototype.baz = function() { this.bar_(); }; (new Foo).bar_();"));
+            """
+            /** @private */ Foo.prototype.bar_ = function() {};
+            Foo.prototype.baz = function() { this.bar_(); }; (new Foo).bar_();
+            """));
   }
 
   @Test
@@ -483,8 +558,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     // not in the same file.
     testError(
         srcs(
-            "/** @constructor */ function Foo() {}"
-                + "/** @private */ Foo.prototype.bar_ = function() {}; (new Foo).bar_();",
+            """
+            /** @constructor */ function Foo() {}
+            /** @private */ Foo.prototype.bar_ = function() {}; (new Foo).bar_();
+            """,
             "Foo.prototype.baz = function() { this.bar_(); };"),
         BAD_PRIVATE_PROPERTY_ACCESS);
   }
@@ -492,9 +569,11 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   @Test
   public void testPrivateAccessForProperties4() {
     testSame(
-        "/** @constructor */ function Foo() {}"
-            + "/** @private */ Foo.prototype.bar_ = function() {};"
-            + "Foo.prototype['baz'] = function() { (new Foo()).bar_(); };");
+        """
+        /** @constructor */ function Foo() {}
+        /** @private */ Foo.prototype.bar_ = function() {};
+        Foo.prototype['baz'] = function() { (new Foo()).bar_(); };
+        """);
   }
 
   @Test
@@ -502,21 +581,23 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     testError(
         srcs(
             new String[] {
-              lines(
-                  "/** @constructor */",
-                  "function Parent () {",
-                  "  /** @private */",
-                  "  this.prop = 'foo';",
-                  "};"),
-              lines(
-                  "/**",
-                  " * @constructor",
-                  " * @extends {Parent}",
-                  " */",
-                  "function Child() {",
-                  "  this.prop = 'asdf';",
-                  "}",
-                  "Child.prototype = new Parent();")
+              """
+              /** @constructor */
+              function Parent () {
+                /** @private */
+                this.prop = 'foo';
+              };
+              """,
+              """
+              /**
+               * @constructor
+               * @extends {Parent}
+               */
+              function Child() {
+                this.prop = 'asdf';
+              }
+              Child.prototype = new Parent();
+              """
             }),
         error(BAD_PRIVATE_PROPERTY_ACCESS)
             .withMessage("Access to private property prop of Parent not allowed here."));
@@ -526,52 +607,56 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testBug133902968() {
     test(
         externs(
-            lines(
-                "/** @interface */", //
-                "function CSSProperties() {}",
-                "/** @type {string} */",
-                "CSSProperties.prototype.fontStyle;",
-                "",
-                "/** @struct @interface @extends {CSSProperties} */",
-                "function CSSStyleDeclaration() {}",
-                "",
-                "function alert(s) {}")),
+            """
+            /** @interface */
+            function CSSProperties() {}
+            /** @type {string} */
+            CSSProperties.prototype.fontStyle;
+
+            /** @struct @interface @extends {CSSProperties} */
+            function CSSStyleDeclaration() {}
+
+            function alert(s) {}
+            """),
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("apackage", "afile.js"),
-                lines(
-                    "/**", //
-                    " * @fileoverview",
-                    " * @package",
-                    " */",
-                    "",
-                    "/** @param {!CSSStyleDeclaration} style */",
-                    "function f(style) {",
-                    "  style.fontStyle = 'normal';",
-                    "}")),
+                """
+                /**
+                 * @fileoverview
+                 * @package
+                 */
+
+                /** @param {!CSSStyleDeclaration} style */
+                function f(style) {
+                  style.fontStyle = 'normal';
+                }
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("anotherpackage", "anotherfile.js"),
-                lines(
-                    "/** @param {!CSSStyleDeclaration} style */", //
-                    "function g(style) {",
-                    "  alert(style.fontStyle);",
-                    "}"))));
+                """
+                /** @param {!CSSStyleDeclaration} style */
+                function g(style) {
+                  alert(style.fontStyle);
+                }
+                """)));
   }
 
   @Test
   public void testPrivatePropAccess_inSameFile_throughDestructuring() {
     test(
         srcs(
-            lines(
-                "/** @constructor */",
-                "function Foo() { }", //
-                "",
-                "/** @private */",
-                "Foo.prototype.bar_ = function() { };",
-                "",
-                "function f(/** !Foo */ x) {", //
-                "  const {bar_: bar} = x;",
-                "}")));
+            """
+            /** @constructor */
+            function Foo() { }
+
+            /** @private */
+            Foo.prototype.bar_ = function() { };
+
+            function f(/** !Foo */ x) {
+              const {bar_: bar} = x;
+            }
+            """));
   }
 
   @Test
@@ -579,25 +664,27 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     testError(
         srcs(
             new String[] {
-              lines(
-                  "goog.provide('x.y.z.Parent');",
-                  "",
-                  "/** @constructor */",
-                  "x.y.z.Parent = function() {",
-                  "  /** @private */",
-                  "  this.prop = 'foo';",
-                  "};"),
-              lines(
-                  "goog.require('x.y.z.Parent');",
-                  "",
-                  "/**",
-                  " * @constructor",
-                  " * @extends {x.y.z.Parent}",
-                  " */",
-                  "function Child() {",
-                  "  this.prop = 'asdf';",
-                  "}",
-                  "Child.prototype = new x.y.z.Parent();")
+              """
+              goog.provide('x.y.z.Parent');
+
+              /** @constructor */
+              x.y.z.Parent = function() {
+                /** @private */
+                this.prop = 'foo';
+              };
+              """,
+              """
+              goog.require('x.y.z.Parent');
+
+              /**
+               * @constructor
+               * @extends {x.y.z.Parent}
+               */
+              function Child() {
+                this.prop = 'asdf';
+              }
+              Child.prototype = new x.y.z.Parent();
+              """
             }),
         error(BAD_PRIVATE_PROPERTY_ACCESS)
             .withMessage("Access to private property prop of x.y.z.Parent not allowed here."));
@@ -607,15 +694,17 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testPrivateAccess_googModule() {
     String[] js =
         new String[] {
-          lines(
-              "goog.module('example.One');",
-              "/** @constructor */ function One() {}",
-              "/** @private */ One.prototype.m = function() {};",
-              "exports = One;"),
-          lines(
-              "goog.module('example.two');",
-              "var One = goog.require('example.One');",
-              "(new One()).m();"),
+          """
+          goog.module('example.One');
+          /** @constructor */ function One() {}
+          /** @private */ One.prototype.m = function() {};
+          exports = One;
+          """,
+          """
+          goog.module('example.two');
+          var One = goog.require('example.One');
+          (new One()).m();
+          """,
         };
 
     testError(
@@ -629,8 +718,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     testError(
         srcs(
             "/** @constructor */ function Foo() {} (new Foo).bar_();",
-            "/** @private */ Foo.prototype.bar_ = function() {};"
-                + "Foo.prototype.baz = function() { this.bar_(); };"),
+            """
+            /** @private */ Foo.prototype.bar_ = function() {};
+            Foo.prototype.baz = function() { this.bar_(); };
+            """),
         BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
@@ -638,9 +729,11 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoPrivateAccessForProperties2() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() {} "
-                + "/** @private */ Foo.prototype.bar_ = function() {};"
-                + "Foo.prototype.baz = function() { this.bar_(); };",
+            """
+            /** @constructor */ function Foo() {}
+            /** @private */ Foo.prototype.bar_ = function() {};
+            Foo.prototype.baz = function() { this.bar_(); };
+            """,
             "(new Foo).bar_();"),
         BAD_PRIVATE_PROPERTY_ACCESS);
   }
@@ -649,8 +742,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoPrivateAccessForProperties3() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() {} "
-                + "/** @private */ Foo.prototype.bar_ = function() {};",
+            """
+            /** @constructor */ function Foo() {}
+            /** @private */ Foo.prototype.bar_ = function() {};
+            """,
             "/** @constructor */ function OtherFoo() { (new Foo).bar_(); }"),
         BAD_PRIVATE_PROPERTY_ACCESS);
   }
@@ -659,9 +754,15 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoPrivateAccessForProperties4() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() {} "
-                + "/** @private */ Foo.prototype.bar_ = function() {};",
-            "/** @constructor \n * @extends {Foo} */ " + "function SubFoo() { this.bar_(); }"),
+            """
+            /** @constructor */ function Foo() {}
+            /** @private */ Foo.prototype.bar_ = function() {};
+            """,
+            """
+            /** @constructor\s
+             * @extends {Foo} */
+            function SubFoo() { this.bar_(); }
+            """),
         BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
@@ -669,11 +770,16 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoPrivateAccessForProperties5() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() {} "
-                + "/** @private */ Foo.prototype.bar_ = function() {};",
-            "/** @constructor \n * @extends {Foo} */ "
-                + "function SubFoo() {};"
-                + "SubFoo.prototype.baz = function() { this.bar_(); }"),
+            """
+            /** @constructor */ function Foo() {}
+            /** @private */ Foo.prototype.bar_ = function() {};
+            """,
+            """
+            /** @constructor\s
+             * @extends {Foo} */
+            function SubFoo() {};
+            SubFoo.prototype.baz = function() { this.bar_(); }
+            """),
         BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
@@ -683,20 +789,22 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     // in a different file causes problems.
     test(
         srcs(
-            lines(
-                "/** @constructor */",
-                "function Foo() {}",
-                "",
-                "/** @private */",
-                "Foo.prototype.bar_ = function() {};"),
-            lines(
-                "/**",
-                " * @constructor",
-                " * @extends {Foo}",
-                " */",
-                "function SubFoo() {};",
-                "",
-                "SubFoo.prototype.bar_ = function() {};")),
+            """
+            /** @constructor */
+            function Foo() {}
+
+            /** @private */
+            Foo.prototype.bar_ = function() {};
+            """,
+            """
+            /**
+             * @constructor
+             * @extends {Foo}
+             */
+            function SubFoo() {};
+
+            SubFoo.prototype.bar_ = function() {};
+            """),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
@@ -705,12 +813,17 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     // Same as above, except with namespaced constructors
     testError(
         srcs(
-            "/** @const */ var ns = {};"
-                + "/** @constructor */ ns.Foo = function() {}; "
-                + "/** @private */ ns.Foo.prototype.bar_ = function() {};",
-            "/** @constructor \n * @extends {ns.Foo} */ "
-                + "ns.SubFoo = function() {};"
-                + "ns.SubFoo.prototype.bar_ = function() {};"),
+            """
+            /** @const */ var ns = {};
+            /** @constructor */ ns.Foo = function() {};
+            /** @private */ ns.Foo.prototype.bar_ = function() {};
+            """,
+            """
+            /** @constructor\s
+             * @extends {ns.Foo} */
+            ns.SubFoo = function() {};
+            ns.SubFoo.prototype.bar_ = function() {};
+            """),
         BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
@@ -720,11 +833,14 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     // in the same file, but you'll get yelled at when you try to use it.
     testError(
         srcs(
-            "/** @constructor */ function Foo() {} "
-                + "/** @private */ Foo.prototype.bar_ = function() {};"
-                + "/** @constructor \n * @extends {Foo} */ "
-                + "function SubFoo() {};"
-                + "SubFoo.prototype.bar_ = function() {};",
+            """
+            /** @constructor */ function Foo() {}
+            /** @private */ Foo.prototype.bar_ = function() {};
+            /** @constructor\s
+             * @extends {Foo} */
+            function SubFoo() {};
+            SubFoo.prototype.bar_ = function() {};
+            """,
             "SubFoo.prototype.baz = function() { this.bar_(); }"),
         BAD_PRIVATE_PROPERTY_ACCESS);
   }
@@ -734,8 +850,11 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     testError(
         srcs(
             "/** @constructor */ function Foo() { /** @private */ this.bar_ = 3; }",
-            "/** @constructor \n * @extends {Foo} */ "
-                + "function SubFoo() { /** @private */ this.bar_ = 3; };"),
+            """
+            /** @constructor\s
+             * @extends {Foo} */
+            function SubFoo() { /** @private */ this.bar_ = 3; };
+            """),
         PRIVATE_OVERRIDE);
   }
 
@@ -743,10 +862,12 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoPrivateAccessForProperties9() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() {}"
-                + "Foo.prototype = {"
-                + "/** @private */ bar_: 3"
-                + "}",
+            """
+            /** @constructor */ function Foo() {}
+            Foo.prototype = {
+            /** @private */ bar_: 3
+            }
+            """,
             "new Foo().bar_;"),
         BAD_PRIVATE_PROPERTY_ACCESS);
   }
@@ -755,10 +876,12 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoPrivateAccessForProperties10() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() {}"
-                + "Foo.prototype = {"
-                + "/** @private */ bar_: function() {}"
-                + "}",
+            """
+            /** @constructor */ function Foo() {}
+            Foo.prototype = {
+            /** @private */ bar_: function() {}
+            }
+            """,
             "new Foo().bar_();"),
         BAD_PRIVATE_PROPERTY_ACCESS);
   }
@@ -767,10 +890,12 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoPrivateAccessForProperties11() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() {}"
-                + "Foo.prototype = {"
-                + "/** @private */ get bar_() { return 1; }"
-                + "}",
+            """
+            /** @constructor */ function Foo() {}
+            Foo.prototype = {
+            /** @private */ get bar_() { return 1; }
+            }
+            """,
             "var a = new Foo().bar_;"),
         BAD_PRIVATE_PROPERTY_ACCESS);
   }
@@ -779,10 +904,12 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoPrivateAccessForProperties12() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() {}"
-                + "Foo.prototype = {"
-                + "/** @private */ set bar_(x) { this.barValue = x; }"
-                + "}",
+            """
+            /** @constructor */ function Foo() {}
+            Foo.prototype = {
+            /** @private */ set bar_(x) { this.barValue = x; }
+            }
+            """,
             "new Foo().bar_ = 1;"),
         BAD_PRIVATE_PROPERTY_ACCESS);
   }
@@ -791,16 +918,18 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoPrivatePropAccess_inDifferentFile_throughDestructuring() {
     test(
         srcs(
-            lines(
-                "/** @constructor */",
-                "function Foo() { }", //
-                "",
-                "/** @private */",
-                "Foo.prototype.bar_ = function() { };"),
-            lines(
-                "function f(/** !Foo */ x) {", //
-                "  const {bar_: bar} = x;",
-                "}")),
+            """
+            /** @constructor */
+            function Foo() { }
+
+            /** @private */
+            Foo.prototype.bar_ = function() { };
+            """,
+            """
+            function f(/** !Foo */ x) {
+              const {bar_: bar} = x;
+            }
+            """),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
@@ -808,7 +937,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoPrivateAccessForNamespaces() {
     testError(
         srcs(
-            "/** @const */ var foo = {};\n" + "/** @private */ foo.bar_ = function() {};",
+            """
+            /** @const */ var foo = {};
+            /** @private */ foo.bar_ = function() {};
+            """,
             "foo.bar_();"),
         BAD_PRIVATE_PROPERTY_ACCESS);
   }
@@ -817,9 +949,11 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testProtectedAccessForProperties1() {
     testSame(
         srcs(
-            "/** @constructor */ function Foo() {}"
-                + "/** @protected */ Foo.prototype.bar = function() {};"
-                + "(new Foo).bar();",
+            """
+            /** @constructor */ function Foo() {}
+            /** @protected */ Foo.prototype.bar = function() {};
+            (new Foo).bar();
+            """,
             "Foo.prototype.baz = function() { this.bar(); };"));
   }
 
@@ -827,83 +961,127 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testProtectedAccessForProperties2() {
     testSame(
         srcs(
-            "/** @constructor */ function Foo() {}"
-                + "/** @protected */ Foo.prototype.bar = function() {};"
-                + "(new Foo).bar();",
-            "/** @constructor \n * @extends {Foo} */" + "function SubFoo() { this.bar(); }"));
+            """
+            /** @constructor */ function Foo() {}
+            /** @protected */ Foo.prototype.bar = function() {};
+            (new Foo).bar();
+            """,
+            """
+            /** @constructor\s
+             * @extends {Foo} */
+            function SubFoo() { this.bar(); }
+            """));
   }
 
   @Test
   public void testProtectedAccessForProperties3() {
     testSame(
         srcs(
-            "/** @constructor */ function Foo() {}"
-                + "/** @protected */ Foo.prototype.bar = function() {};"
-                + "(new Foo).bar();",
-            "/** @constructor \n * @extends {Foo} */"
-                + "function SubFoo() { }"
-                + "SubFoo.baz = function() { (new Foo).bar(); }"));
+            """
+            /** @constructor */ function Foo() {}
+            /** @protected */ Foo.prototype.bar = function() {};
+            (new Foo).bar();
+            """,
+            """
+            /** @constructor\s
+             * @extends {Foo} */
+            function SubFoo() { }
+            SubFoo.baz = function() { (new Foo).bar(); }
+            """));
   }
 
   @Test
   public void testProtectedAccessForProperties4() {
     testSame(
         srcs(
-            "/** @constructor */ function Foo() {}" + "/** @protected */ Foo.bar = function() {};",
-            "/** @constructor \n * @extends {Foo} */" + "function SubFoo() { Foo.bar(); }"));
+            """
+            /** @constructor */ function Foo() {}
+            /** @protected */ Foo.bar = function() {};
+            """,
+            """
+            /** @constructor\s
+             * @extends {Foo} */
+            function SubFoo() { Foo.bar(); }
+            """));
   }
 
   @Test
   public void testProtectedAccessForProperties5() {
     testSame(
         srcs(
-            "/** @constructor */ function Foo() {}"
-                + "/** @protected */ Foo.prototype.bar = function() {};"
-                + "(new Foo).bar();",
-            "/** @constructor \n * @extends {Foo} */" + "var SubFoo = function() { this.bar(); }"));
+            """
+            /** @constructor */ function Foo() {}
+            /** @protected */ Foo.prototype.bar = function() {};
+            (new Foo).bar();
+            """,
+            """
+            /** @constructor\s
+             * @extends {Foo} */
+            var SubFoo = function() { this.bar(); }
+            """));
   }
 
   @Test
   public void testProtectedAccessForProperties6() {
     testSame(
         srcs(
-            "/** @constructor */ goog.Foo = function() {};"
-                + "/** @protected */ goog.Foo.prototype.bar = function() {};",
-            "/** @constructor \n * @extends {goog.Foo} */"
-                + "goog.SubFoo = function() { this.bar(); };"));
+            """
+            /** @constructor */ goog.Foo = function() {};
+            /** @protected */ goog.Foo.prototype.bar = function() {};
+            """,
+            """
+            /** @constructor\s
+             * @extends {goog.Foo} */
+            goog.SubFoo = function() { this.bar(); };
+            """));
   }
 
   @Test
   public void testProtectedAccessForProperties7() {
     testSame(
         srcs(
-            "/** @constructor */ var Foo = function() {};"
-                + "Foo.prototype = { /** @protected */ bar: function() {} }",
-            "/** @constructor \n * @extends {Foo} */"
-                + "var SubFoo = function() { this.bar(); };"
-                + "SubFoo.prototype = { moo: function() { this.bar(); }};"));
+            """
+            /** @constructor */ var Foo = function() {};
+            Foo.prototype = { /** @protected */ bar: function() {} }
+            """,
+            """
+            /** @constructor\s
+             * @extends {Foo} */
+            var SubFoo = function() { this.bar(); };
+            SubFoo.prototype = { moo: function() { this.bar(); }};
+            """));
   }
 
   @Test
   public void testProtectedAccessForProperties8() {
     testSame(
         srcs(
-            "/** @constructor */ var Foo = function() {};"
-                + "Foo.prototype = { /** @protected */ bar: function() {} }",
-            "/** @constructor \n * @extends {Foo} */"
-                + "var SubFoo = function() {};"
-                + "SubFoo.prototype = { get moo() { this.bar(); }};"));
+            """
+            /** @constructor */ var Foo = function() {};
+            Foo.prototype = { /** @protected */ bar: function() {} }
+            """,
+            """
+            /** @constructor\s
+             * @extends {Foo} */
+            var SubFoo = function() {};
+            SubFoo.prototype = { get moo() { this.bar(); }};
+            """));
   }
 
   @Test
   public void testProtectedAccessForProperties9() {
     testSame(
         srcs(
-            "/** @constructor */ var Foo = function() {};"
-                + "Foo.prototype = { /** @protected */ bar: function() {} }",
-            "/** @constructor \n * @extends {Foo} */"
-                + "var SubFoo = function() {};"
-                + "SubFoo.prototype = { set moo(val) { this.x = this.bar(); }};"));
+            """
+            /** @constructor */ var Foo = function() {};
+            Foo.prototype = { /** @protected */ bar: function() {} }
+            """,
+            """
+            /** @constructor\s
+             * @extends {Foo} */
+            var SubFoo = function() {};
+            SubFoo.prototype = { set moo(val) { this.x = this.bar(); }};
+            """));
   }
 
   @Test
@@ -912,15 +1090,19 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 "foo.js",
-                "/** @constructor */ var Foo = function() {};"
-                    + "/** @protected */ Foo.prototype.bar = function() {};"),
+                """
+                /** @constructor */ var Foo = function() {};
+                /** @protected */ Foo.prototype.bar = function() {};
+                """),
             SourceFile.fromCode(
                 "sub_foo.js",
-                "/** @constructor @extends {Foo} */"
-                    + "var SubFoo = function() {};"
-                    + "(function() {"
-                    + "SubFoo.prototype.baz = function() { this.bar(); }"
-                    + "})();")));
+                """
+                /** @constructor @extends {Foo} */
+                var SubFoo = function() {};
+                (function() {
+                SubFoo.prototype.baz = function() { this.bar(); }
+                })();
+                """)));
   }
 
   @Test
@@ -929,16 +1111,18 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 "foo.js",
-                lines(
-                    "goog.provide('Foo');",
-                    "/** @interface */ Foo = function() {};",
-                    "/** @protected */ Foo.prop = {};")),
+                """
+                goog.provide('Foo');
+                /** @interface */ Foo = function() {};
+                /** @protected */ Foo.prop = {};
+                """),
             SourceFile.fromCode(
                 "bar.js",
-                lines(
-                    "goog.require('Foo');",
-                    "/** @constructor @implements {Foo} */",
-                    "function Bar() { Foo.prop; };"))));
+                """
+                goog.require('Foo');
+                /** @constructor @implements {Foo} */
+                function Bar() { Foo.prop; };
+                """)));
   }
 
   @Test
@@ -947,28 +1131,30 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 "a.js",
-                lines(
-                    "goog.provide('A');",
-                    "/** @constructor */",
-                    "var A = function() {",
-                    "  /**",
-                    "   * @type {?String}",
-                    "   * @protected",
-                    "   */",
-                    "  this.prop;",
-                    "}")),
+                """
+                goog.provide('A');
+                /** @constructor */
+                var A = function() {
+                  /**
+                   * @type {?String}
+                   * @protected
+                   */
+                  this.prop;
+                }
+                """),
             SourceFile.fromCode(
                 "b.js",
-                lines(
-                    "goog.require('A');",
-                    "/**",
-                    " * @constructor",
-                    " * @extends {A}",
-                    " */",
-                    "var B = function() {",
-                    "  this.prop.length;",
-                    "  this.prop.length;",
-                    "};"))));
+                """
+                goog.require('A');
+                /**
+                 * @constructor
+                 * @extends {A}
+                 */
+                var B = function() {
+                  this.prop.length;
+                  this.prop.length;
+                };
+                """)));
   }
 
   // FYI: Java warns for the b1.method access in c.js.
@@ -980,56 +1166,60 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 "a.js",
-                lines(
-                    "goog.provide('A');",
-                    "",
-                    "/** @constructor */",
-                    "var A = function() {}",
-                    "",
-                    "/** @protected */",
-                    "A.prototype.method = function() {};")),
+                """
+                goog.provide('A');
+
+                /** @constructor */
+                var A = function() {}
+
+                /** @protected */
+                A.prototype.method = function() {};
+                """),
             SourceFile.fromCode(
                 "b1.js",
-                lines(
-                    "goog.require('A');",
-                    "goog.provide('B1');",
-                    "",
-                    "/**",
-                    " * @constructor",
-                    " * @extends {A}",
-                    " */",
-                    "var B1 = function() {};",
-                    "",
-                    "/** @override */",
-                    "B1.prototype.method = function() {};")),
+                """
+                goog.require('A');
+                goog.provide('B1');
+
+                /**
+                 * @constructor
+                 * @extends {A}
+                 */
+                var B1 = function() {};
+
+                /** @override */
+                B1.prototype.method = function() {};
+                """),
             SourceFile.fromCode(
                 "b2.js",
-                lines(
-                    "goog.require('A');",
-                    "goog.provide('B2');",
-                    "",
-                    "/**",
-                    " * @constructor",
-                    " * @extends {A}",
-                    " */",
-                    "var B2 = function() {};",
-                    "",
-                    "/** @override */",
-                    "B2.prototype.method = function() {};")),
+                """
+                goog.require('A');
+                goog.provide('B2');
+
+                /**
+                 * @constructor
+                 * @extends {A}
+                 */
+                var B2 = function() {};
+
+                /** @override */
+                B2.prototype.method = function() {};
+                """),
             SourceFile.fromCode(
                 "c.js",
-                lines(
-                    "goog.require('B1');",
-                    "goog.require('B2');",
-                    "",
-                    "/**",
-                    " * @param {!B1} b1",
-                    " * @constructor",
-                    " * @extends {B2}",
-                    " */",
-                    "var C = function(b1) {",
-                    "  var x = b1.method();",
-                    "};"))));
+                """
+                goog.require('B1');
+                goog.require('B2');
+
+                /**
+                 * @param {!B1} b1
+                 * @constructor
+                 * @extends {B2}
+                 */
+                var C = function(b1) {
+                  var x = b1.method();
+                };
+                """)));
   }
 
   @Test
@@ -1037,13 +1227,15 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     // access in member function
     test(
         srcs(
-            lines(
-                "/** @constructor */ var Foo = function() {};",
-                "Foo.prototype = { /** @protected */ bar: function() {} }"),
-            lines(
-                "/** @constructor @extends {Foo} */",
-                "var OtherFoo = function() { this.bar(); };",
-                "OtherFoo.prototype = { moo() { new Foo().bar(); }};")));
+            """
+            /** @constructor */ var Foo = function() {};
+            Foo.prototype = { /** @protected */ bar: function() {} }
+            """,
+            """
+            /** @constructor @extends {Foo} */
+            var OtherFoo = function() { this.bar(); };
+            OtherFoo.prototype = { moo() { new Foo().bar(); }};
+            """));
   }
 
   @Test
@@ -1051,13 +1243,15 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     // access in computed member function
     test(
         srcs(
-            lines(
-                "/** @constructor */ var Foo = function() {};",
-                "Foo.prototype = { /** @protected */ bar: function() {} }"),
-            lines(
-                "/** @constructor @extends {Foo} */",
-                "var OtherFoo = function() { this['bar'](); };",
-                "OtherFoo.prototype = { ['bar']() { new Foo().bar(); }};")));
+            """
+            /** @constructor */ var Foo = function() {};
+            Foo.prototype = { /** @protected */ bar: function() {} }
+            """,
+            """
+            /** @constructor @extends {Foo} */
+            var OtherFoo = function() { this['bar'](); };
+            OtherFoo.prototype = { ['bar']() { new Foo().bar(); }};
+            """));
   }
 
   @Test
@@ -1065,57 +1259,62 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     // access in nested arrow function
     test(
         srcs(
-            lines(
-                "/** @constructor */ var Foo = function() {};",
-                "/** @protected */ Foo.prototype.bar = function() {};"),
-            lines(
-                "/** @constructor @extends {Foo} */",
-                "var OtherFoo = function() { var f = () => this.bar(); };",
-                "OtherFoo.prototype.baz = function() { return () => this.bar(); };")));
+            """
+            /** @constructor */ var Foo = function() {};
+            /** @protected */ Foo.prototype.bar = function() {};
+            """,
+            """
+            /** @constructor @extends {Foo} */
+            var OtherFoo = function() { var f = () => this.bar(); };
+            OtherFoo.prototype.baz = function() { return () => this.bar(); };
+            """));
   }
 
   @Test
   public void testProtectedPropAccess_inDifferentFile_inSubclass_throughDestructuring() {
     test(
         srcs(
-            lines(
-                "/** @constructor */",
-                "function Foo() { }", //
-                "",
-                "/** @protected */",
-                "Foo.prototype.bar = function() { }"),
-            lines(
-                "/** @constructor @extends {Foo} */",
-                "function SubFoo() { }", //
-                "",
-                "SubFoo.prototype.method = function(/** !Foo */ x) {",
-                "  const {bar: bar} = x;",
-                "};")));
+            """
+            /** @constructor */
+            function Foo() { }
+
+            /** @protected */
+            Foo.prototype.bar = function() { }
+            """,
+            """
+            /** @constructor @extends {Foo} */
+            function SubFoo() { }
+
+            SubFoo.prototype.method = function(/** !Foo */ x) {
+              const {bar: bar} = x;
+            };
+            """));
   }
 
   @Test
   public void testNoProtectedAccess_forOverriddenProperty_elsewhereInSubclassFile() {
     test(
         srcs(
-            lines(
-                "/** @constructor */", //
-                "function Foo() { }",
-                "",
-                "/** @protected */",
-                "Foo.prototype.bar = function() { };"),
-            lines(
-                "/**",
-                " * @constructor",
-                " * @extends {Foo}",
-                " */",
-                "function Bar() { }",
-                "",
-                "/** @override */",
-                "Bar.prototype.bar = function() { };",
-                "",
-                // TODO(b/113705099): This should be legal.
-                "(new Bar()).bar();" // But `Foo::bar` is still invisible.
-                )),
+            """
+            /** @constructor */
+            function Foo() { }
+
+            /** @protected */
+            Foo.prototype.bar = function() { };
+            """,
+            """
+            /**
+             * @constructor
+             * @extends {Foo}
+             */
+            function Bar() { }
+
+            /** @override */
+            Bar.prototype.bar = function() { };
+
+            // TODO(b/113705099): This should be legal.
+            (new Bar()).bar();
+            """),
         error(BAD_PROTECTED_PROPERTY_ACCESS));
   }
 
@@ -1123,81 +1322,89 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testProtectedAccessThroughNestedFunction() {
     test(
         srcs(
-            lines(
-                "/** @constructor */", //
-                "function Foo() { }",
-                "",
-                "/** @protected */",
-                "Foo.prototype.bar = function() { };"),
-            lines(
-                "/**",
-                " * @constructor",
-                " * @extends {Foo}",
-                " */",
-                "function Bar() {",
-                "  function f(/** !Foo */ foo) {",
-                "    foo.bar();",
-                "  }",
-                "}")));
+            """
+            /** @constructor */
+            function Foo() { }
+
+            /** @protected */
+            Foo.prototype.bar = function() { };
+            """,
+            """
+            /**
+             * @constructor
+             * @extends {Foo}
+             */
+            function Bar() {
+              function f(/** !Foo */ foo) {
+                foo.bar();
+              }
+            }
+            """));
   }
 
   @Test
   public void testProtectedAccessThroughNestedEs5Class() {
     test(
         srcs(
-            lines(
-                "/** @constructor */", //
-                "function Foo() { }",
-                "",
-                "/** @protected */",
-                "Foo.prototype.bar = function() { };"),
-            lines(
-                "/**",
-                " * @constructor",
-                " * @extends {Foo}",
-                " */",
-                "function Bar() {",
-                "  /** @constructor */",
-                "  var Nested = function() { }",
-                "",
-                "  /** @param {!Foo} foo */",
-                "  Nested.prototype.qux = function(foo) {",
-                "    foo.bar();",
-                "  }",
-                "}")));
+            """
+            /** @constructor */
+            function Foo() { }
+
+            /** @protected */
+            Foo.prototype.bar = function() { };
+            """,
+            """
+            /**
+             * @constructor
+             * @extends {Foo}
+             */
+            function Bar() {
+              /** @constructor */
+              var Nested = function() { }
+
+              /** @param {!Foo} foo */
+              Nested.prototype.qux = function(foo) {
+                foo.bar();
+              }
+            }
+            """));
   }
 
   @Test
   public void testProtectedAccessThroughNestedEs6Class() {
     test(
         srcs(
-            lines(
-                "/** @constructor */", //
-                "function Foo() { }",
-                "",
-                "/** @protected */",
-                "Foo.prototype.bar = function() { };"),
-            lines(
-                "/**",
-                " * @constructor",
-                " * @extends {Foo}",
-                " */",
-                "function Bar() {",
-                "  class Nested {",
-                "    /** @param {!Foo} foo */",
-                "    qux(foo) {",
-                "      foo.bar();",
-                "    }",
-                "  }",
-                "}")));
+            """
+            /** @constructor */
+            function Foo() { }
+
+            /** @protected */
+            Foo.prototype.bar = function() { };
+            """,
+            """
+            /**
+             * @constructor
+             * @extends {Foo}
+             */
+            function Bar() {
+              class Nested {
+                /** @param {!Foo} foo */
+                qux(foo) {
+                  foo.bar();
+                }
+              }
+            }
+            """));
   }
 
   @Test
   public void testNoProtectedAccessForProperties1() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() {} "
-                + "/** @protected */ Foo.prototype.bar = function() {};",
+            """
+            /** @constructor */ function Foo() {}
+            /** @protected */ Foo.prototype.bar = function() {};
+            """,
             "(new Foo).bar();"),
         BAD_PROTECTED_PROPERTY_ACCESS);
   }
@@ -1206,8 +1413,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoProtectedAccessForProperties2() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() {} "
-                + "/** @protected */ Foo.prototype.bar = function() {};",
+            """
+            /** @constructor */ function Foo() {}
+            /** @protected */ Foo.prototype.bar = function() {};
+            """,
             "/** @constructor */ function OtherFoo() { (new Foo).bar(); }"),
         BAD_PROTECTED_PROPERTY_ACCESS);
   }
@@ -1216,12 +1425,18 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoProtectedAccessForProperties3() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() {} "
-                + "/** @constructor \n * @extends {Foo} */ "
-                + "function SubFoo() {}"
-                + "/** @protected */ SubFoo.prototype.bar = function() {};",
-            "/** @constructor \n * @extends {Foo} */ "
-                + "function SubberFoo() { (new SubFoo).bar(); }"),
+            """
+            /** @constructor */ function Foo() {}
+            /** @constructor\s
+             * @extends {Foo} */
+            function SubFoo() {}
+            /** @protected */ SubFoo.prototype.bar = function() {};
+            """,
+            """
+            /** @constructor\s
+             * @extends {Foo} */
+            function SubberFoo() { (new SubFoo).bar(); }
+            """),
         BAD_PROTECTED_PROPERTY_ACCESS);
   }
 
@@ -1230,9 +1445,12 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     testError(
         srcs(
             "/** @constructor */ function Foo() { (new SubFoo).bar(); } ",
-            "/** @constructor \n * @extends {Foo} */ "
-                + "function SubFoo() {}"
-                + "/** @protected */ SubFoo.prototype.bar = function() {};"),
+            """
+            /** @constructor\s
+             * @extends {Foo} */
+            function SubFoo() {}
+            /** @protected */ SubFoo.prototype.bar = function() {};
+            """),
         BAD_PROTECTED_PROPERTY_ACCESS);
   }
 
@@ -1240,9 +1458,14 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoProtectedAccessForProperties5() {
     testError(
         srcs(
-            "/** @constructor */ goog.Foo = function() {};"
-                + "/** @protected */ goog.Foo.prototype.bar = function() {};",
-            "/** @constructor */" + "goog.NotASubFoo = function() { (new goog.Foo).bar(); };"),
+            """
+            /** @constructor */ goog.Foo = function() {};
+            /** @protected */ goog.Foo.prototype.bar = function() {};
+            """,
+            """
+            /** @constructor */
+            goog.NotASubFoo = function() { (new goog.Foo).bar(); };
+            """),
         BAD_PROTECTED_PROPERTY_ACCESS);
   }
 
@@ -1250,10 +1473,12 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoProtectedAccessForProperties6() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() {}"
-                + "Foo.prototype = {"
-                + "/** @protected */ bar: 3"
-                + "}",
+            """
+            /** @constructor */ function Foo() {}
+            Foo.prototype = {
+            /** @protected */ bar: 3
+            }
+            """,
             "new Foo().bar;"),
         BAD_PROTECTED_PROPERTY_ACCESS);
   }
@@ -1262,10 +1487,12 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoProtectedAccessForProperties7() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() {}"
-                + "Foo.prototype = {"
-                + "/** @protected */ bar: function() {}"
-                + "}",
+            """
+            /** @constructor */ function Foo() {}
+            Foo.prototype = {
+            /** @protected */ bar: function() {}
+            }
+            """,
             "new Foo().bar();"),
         BAD_PROTECTED_PROPERTY_ACCESS);
   }
@@ -1274,13 +1501,15 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoProtectedAccessForProperties8() {
     testError(
         srcs(
-            lines(
-                "/** @constructor */ var Foo = function() {};",
-                "Foo.prototype = { /** @protected */ bar: function() {} }"),
-            lines(
-                "/** @constructor */",
-                "var OtherFoo = function() { this.bar(); };",
-                "OtherFoo.prototype = { moo() { new Foo().bar(); }};")),
+            """
+            /** @constructor */ var Foo = function() {};
+            Foo.prototype = { /** @protected */ bar: function() {} }
+            """,
+            """
+            /** @constructor */
+            var OtherFoo = function() { this.bar(); };
+            OtherFoo.prototype = { moo() { new Foo().bar(); }};
+            """),
         BAD_PROTECTED_PROPERTY_ACCESS);
   }
 
@@ -1288,13 +1517,15 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoProtectedAccessForProperties9() {
     testError(
         srcs(
-            lines(
-                "/** @constructor */ var Foo = function() {};",
-                "Foo.prototype = { /** @protected */ bar: function() {} }"),
-            lines(
-                "/** @constructor */",
-                "var OtherFoo = function() { this['bar'](); };",
-                "OtherFoo.prototype = { ['bar']() { new Foo().bar(); }};")),
+            """
+            /** @constructor */ var Foo = function() {};
+            Foo.prototype = { /** @protected */ bar: function() {} }
+            """,
+            """
+            /** @constructor */
+            var OtherFoo = function() { this['bar'](); };
+            OtherFoo.prototype = { ['bar']() { new Foo().bar(); }};
+            """),
         BAD_PROTECTED_PROPERTY_ACCESS);
   }
 
@@ -1302,16 +1533,18 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoProtectedPropAccess_inDifferentFile_throughDestructuring() {
     test(
         srcs(
-            lines(
-                "/** @constructor */", //
-                "function Foo() { }", //
-                "",
-                "/** @protected */",
-                "Foo.prototype.bar = function() { }"),
-            lines(
-                "function f(/** !Foo */ x) {", //
-                "  const {bar: bar} = x;",
-                "}")),
+            """
+            /** @constructor */
+            function Foo() { }
+
+            /** @protected */
+            Foo.prototype.bar = function() { }
+            """,
+            """
+            function f(/** !Foo */ x) {
+              const {bar: bar} = x;
+            }
+            """),
         error(BAD_PROTECTED_PROPERTY_ACCESS));
   }
 
@@ -1319,21 +1552,22 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoProtectedAccess_forInheritedProperty_elsewhereInSubclassFile() {
     test(
         srcs(
-            lines(
-                "/** @constructor */", //
-                "function Foo() { }",
-                "",
-                "/** @protected */",
-                "Foo.prototype.bar = function() { };"),
-            lines(
-                "/**",
-                " * @constructor",
-                " * @extends {Foo}",
-                " */",
-                "function Bar() { }",
-                "",
-                "(new Bar()).bar();" // But `Foo::bar` is still invisible.
-                )),
+            """
+            /** @constructor */
+            function Foo() { }
+
+            /** @protected */
+            Foo.prototype.bar = function() { };
+            """,
+            """
+            /**
+             * @constructor
+             * @extends {Foo}
+             */
+            function Bar() { }
+
+            (new Bar()).bar();
+            """),
         error(BAD_PROTECTED_PROPERTY_ACCESS));
   }
 
@@ -1341,10 +1575,14 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoProtectedAccessForPropertiesWithNoRhs() {
     testSame(
         srcs(
-            lines("/** @constructor */ function Foo() {}", "/** @protected */ Foo.prototype.x;"),
-            lines(
-                "/** @constructor @extends {Foo} */ function Bar() {}",
-                "/** @protected */ Bar.prototype.x;")));
+            """
+            /** @constructor */ function Foo() {}
+            /** @protected */ Foo.prototype.x;
+            """,
+            """
+            /** @constructor @extends {Foo} */ function Bar() {}
+            /** @protected */ Bar.prototype.x;
+            """));
   }
 
   @Test
@@ -1353,12 +1591,13 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                lines(
-                    "/** @package */", //
-                    "var name = 'foo';")),
+                """
+                /** @package */
+                var name = 'foo';
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"), //
-                lines("name;"))),
+                "name;")),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -1370,11 +1609,12 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                lines(
-                    "goog.module('Foo');",
-                    "/** @package */",
-                    "var name = 'foo';",
-                    "exports = name;")),
+                """
+                goog.module('Foo');
+                /** @package */
+                var name = 'foo';
+                exports = name;
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
                 "goog.module('client'); const name = goog.require('Foo'); name;")));
@@ -1387,10 +1627,11 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                lines(
-                    "/** @package */", //
-                    "var name = 'foo';",
-                    "export {name};")),
+                """
+                /** @package */
+                var name = 'foo';
+                export {name};
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
                 "import {name} from '/foo/bar.js'; name;")));
@@ -1399,9 +1640,11 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   @Test
   public void testPackagePrivateAccessForProperties1() {
     testSame(
-        "/** @constructor */ function Foo() {}"
-            + "/** @package */ Foo.prototype.bar = function() {};"
-            + "Foo.prototype.baz = function() { this.bar(); }; (new Foo).bar();");
+        """
+        /** @constructor */ function Foo() {}
+        /** @package */ Foo.prototype.bar = function() {};
+        Foo.prototype.baz = function() { this.bar(); }; (new Foo).bar();
+        """);
   }
 
   @Test
@@ -1412,8 +1655,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
                 Compiler.joinPathParts("foo", "bar.js"), "/** @constructor */ function Foo() {}"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
-                "/** @package */ Foo.prototype.bar = function() {};"
-                    + "Foo.prototype.baz = function() { this.bar(); }; (new Foo).bar();")));
+                """
+                /** @package */ Foo.prototype.bar = function() {};
+                Foo.prototype.baz = function() { this.bar(); }; (new Foo).bar();
+                """)));
   }
 
   @Test
@@ -1422,8 +1667,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/** @constructor */ function Foo() {}"
-                    + "/** @package */ Foo.prototype.bar = function() {}; (new Foo).bar();"),
+                """
+                /** @constructor */ function Foo() {}
+                /** @package */ Foo.prototype.bar = function() {}; (new Foo).bar();
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "baz.js"),
                 "Foo.prototype.baz = function() { this.bar(); };")));
@@ -1435,8 +1682,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/** @constructor */ function Foo() {}"
-                    + "/** @package */ Foo.prototype.bar = function() {};"),
+                """
+                /** @constructor */ function Foo() {}
+                /** @package */ Foo.prototype.bar = function() {};
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "baz.js"),
                 "Foo.prototype['baz'] = function() { (new Foo()).bar(); };")));
@@ -1448,21 +1697,25 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/** @constructor */\n"
-                    + "function Parent () {\n"
-                    + "  /** @package */\n"
-                    + "  this.prop = 'foo';\n"
-                    + "};"),
+                """
+                /** @constructor */
+                function Parent () {
+                  /** @package */
+                  this.prop = 'foo';
+                };
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
-                "/**\n"
-                    + " * @constructor\n"
-                    + " * @extends {Parent}\n"
-                    + " */\n"
-                    + "function Child() {\n"
-                    + "  this.prop = 'asdf';\n"
-                    + "}\n"
-                    + "Child.prototype = new Parent();")),
+                """
+                /**
+                 * @constructor
+                 * @extends {Parent}
+                 */
+                function Child() {
+                  this.prop = 'asdf';
+                }
+                Child.prototype = new Parent();
+                """)),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -1472,18 +1725,20 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                lines(
-                    "/** @constructor */", //
-                    "function Foo() { }",
-                    "",
-                    "/** @package */",
-                    "Foo.prototype.bar = function() { };")),
+                """
+                /** @constructor */
+                function Foo() { }
+
+                /** @package */
+                Foo.prototype.bar = function() { };
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "quux.js"),
-                lines(
-                    "function f(/** !Foo */ x) {", //
-                    "  const {bar: bar} = x;",
-                    "}"))));
+                """
+                function f(/** !Foo */ x) {
+                  const {bar: bar} = x;
+                }
+                """)));
   }
 
   @Test
@@ -1492,18 +1747,20 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                lines(
-                    "/** @constructor */", //
-                    "function Foo() { }",
-                    "",
-                    "/** @package */",
-                    "Foo.prototype.bar = function() { };")),
+                """
+                /** @constructor */
+                function Foo() { }
+
+                /** @package */
+                Foo.prototype.bar = function() { };
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
-                lines(
-                    "function f(/** !Foo */ x) {", //
-                    "  const {bar: bar} = x;",
-                    "}"))),
+                """
+                function f(/** !Foo */ x) {
+                  const {bar: bar} = x;
+                }
+                """)),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -1516,8 +1773,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
                 "/** @constructor */ function Foo() {} (new Foo).bar();"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
-                "/** @package */ Foo.prototype.bar = function() {};"
-                    + "Foo.prototype.baz = function() { this.bar(); };")),
+                """
+                /** @package */ Foo.prototype.bar = function() {};
+                Foo.prototype.baz = function() { this.bar(); };
+                """)),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -1527,9 +1786,11 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/** @constructor */ function Foo() {} "
-                    + "/** @package */ Foo.prototype.bar = function() {};"
-                    + "Foo.prototype.baz = function() { this.bar(); };"),
+                """
+                /** @constructor */ function Foo() {}
+                /** @package */ Foo.prototype.bar = function() {};
+                Foo.prototype.baz = function() { this.bar(); };
+                """),
             SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "(new Foo).bar();")),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
@@ -1540,8 +1801,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/** @constructor */ function Foo() {} "
-                    + "/** @package */ Foo.prototype.bar = function() {};"),
+                """
+                /** @constructor */ function Foo() {}
+                /** @package */ Foo.prototype.bar = function() {};
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
                 "/** @constructor */ function OtherFoo() { (new Foo).bar(); }")),
@@ -1554,11 +1817,17 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/** @constructor */ function Foo() {} "
-                    + "/** @package */ Foo.prototype.bar = function() {};"),
+                """
+                /** @constructor */ function Foo() {}
+                /** @package */ Foo.prototype.bar = function() {};
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
-                "/** @constructor \n * @extends {Foo} */ " + "function SubFoo() { this.bar(); }")),
+                """
+                /** @constructor\s
+                 * @extends {Foo} */
+                function SubFoo() { this.bar(); }
+                """)),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -1568,7 +1837,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/** @const */ var foo = {};\n" + "/** @package */ foo.bar = function() {};"),
+                """
+                /** @const */ var foo = {};
+                /** @package */ foo.bar = function() {};
+                """),
             SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "foo.bar();")),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
@@ -1579,13 +1851,18 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/** @constructor */ function Foo() {} "
-                    + "/** @package */ Foo.prototype.bar = function() {};"),
+                """
+                /** @constructor */ function Foo() {}
+                /** @package */ Foo.prototype.bar = function() {};
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
-                "/** @constructor \n * @extends {Foo} */ "
-                    + "function SubFoo() {};"
-                    + "SubFoo.prototype.baz = function() { this.bar(); }")),
+                """
+                /** @constructor\s
+                 * @extends {Foo} */
+                function SubFoo() {};
+                SubFoo.prototype.baz = function() { this.bar(); }
+                """)),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -1597,13 +1874,18 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/** @constructor */ function Foo() {} "
-                    + "/** @package */ Foo.prototype.bar = function() {};"),
+                """
+                /** @constructor */ function Foo() {}
+                /** @package */ Foo.prototype.bar = function() {};
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
-                "/** @constructor \n * @extends {Foo} */ "
-                    + "function SubFoo() {};"
-                    + "SubFoo.prototype.bar = function() {};")),
+                """
+                /** @constructor\s
+                 * @extends {Foo} */
+                function SubFoo() {};
+                SubFoo.prototype.bar = function() {};
+                """)),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -1616,11 +1898,14 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/** @constructor */ function Foo() {} "
-                    + "/** @package */ Foo.prototype.bar = function() {};"
-                    + "/** @constructor \n * @extends {Foo} */ "
-                    + "function SubFoo() {};"
-                    + "SubFoo.prototype.bar = function() {};"),
+                """
+                /** @constructor */ function Foo() {}
+                /** @package */ Foo.prototype.bar = function() {};
+                /** @constructor\s
+                 * @extends {Foo} */
+                function SubFoo() {};
+                SubFoo.prototype.bar = function() {};
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
                 "SubFoo.prototype.baz = function() { this.bar(); }")),
@@ -1631,18 +1916,20 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void
       testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_OneFile() {
     testError(
-        "/**\n"
-            + "* @fileoverview\n"
-            + "* @package\n"
-            + "*/\n"
-            + "/** @struct @constructor */\n"
-            + "Foo = function() {};\n"
-            + "/** @private */\n"
-            + "Foo.prototype.privateMethod_ = function() {};\n"
-            + "/** @struct @constructor @extends {Foo} */\n"
-            + "Bar = function() {};\n"
-            + "/** @override */\n"
-            + "Bar.prototype.privateMethod_ = function() {};\n",
+        """
+        /**
+        * @fileoverview
+        * @package
+        */
+        /** @struct @constructor */
+        Foo = function() {};
+        /** @private */
+        Foo.prototype.privateMethod_ = function() {};
+        /** @struct @constructor @extends {Foo} */
+        Bar = function() {};
+        /** @override */
+        Bar.prototype.privateMethod_ = function() {};
+        """,
         BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY);
   }
 
@@ -1650,20 +1937,21 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void
       testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_GoogModule() {
     testError(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @package",
-            " */",
-            "goog.module('mod')",
-            "/** @struct @constructor */",
-            "Foo = function() {};",
-            "/** @private */",
-            "Foo.prototype.privateMethod_ = function() {};",
-            "/** @struct @constructor @extends {Foo} */",
-            "Bar = function() {};",
-            "/** @override */",
-            "Bar.prototype.privateMethod_ = function() {};"),
+        """
+        /**
+         * @fileoverview
+         * @package
+         */
+        goog.module('mod')
+        /** @struct @constructor */
+        Foo = function() {};
+        /** @private */
+        Foo.prototype.privateMethod_ = function() {};
+        /** @struct @constructor @extends {Foo} */
+        Bar = function() {};
+        /** @override */
+        Bar.prototype.privateMethod_ = function() {};
+        """,
         BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY);
   }
 
@@ -1671,32 +1959,35 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void
       testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_esModule() {
     testError(
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @package",
-            " */",
-            "/** @struct @constructor */",
-            "var Foo = function() {};",
-            "/** @private */",
-            "Foo.prototype.privateMethod_ = function() {};",
-            "/** @struct @constructor @extends {Foo} */",
-            "var Bar = function() {};",
-            "/** @override */",
-            "Bar.prototype.privateMethod_ = function() {};",
-            "export {Foo, Bar};"),
+        """
+        /**
+         * @fileoverview
+         * @package
+         */
+        /** @struct @constructor */
+        var Foo = function() {};
+        /** @private */
+        Foo.prototype.privateMethod_ = function() {};
+        /** @struct @constructor @extends {Foo} */
+        var Bar = function() {};
+        /** @override */
+        Bar.prototype.privateMethod_ = function() {};
+        export {Foo, Bar};
+        """,
         BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY);
   }
 
   @Test
   public void testNamespacedFunctionDoesNotNeedVisibilityRedeclInFileWithFileOverviewVisibility() {
     testSame(
-        "/**\n"
-            + " * @fileoverview\n"
-            + " * @package\n"
-            + " */\n"
-            + "/** @return {string} */\n"
-            + "foo.bar = function() { return 'asdf'; };");
+        """
+        /**
+         * @fileoverview
+         * @package
+         */
+        /** @return {string} */
+        foo.bar = function() { return 'asdf'; };
+        """);
   }
 
   @Test
@@ -1704,83 +1995,97 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
       testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_TwoFiles() {
     testError(
         srcs(
-            "/** @struct @constructor */\n"
-                + "Foo = function() {};\n"
-                + "/** @protected */\n"
-                + "Foo.prototype.protectedMethod = function() {};\n",
-            "  /**\n"
-                + "* @fileoverview \n"
-                + "* @package\n"
-                + "*/\n"
-                + "/** @struct @constructor @extends {Foo} */\n"
-                + "Bar = function() {};\n"
-                + "/** @override */\n"
-                + "Bar.prototype.protectedMethod = function() {};\n"),
+            """
+            /** @struct @constructor */
+            Foo = function() {};
+            /** @protected */
+            Foo.prototype.protectedMethod = function() {};
+            """,
+            """
+              /**
+            * @fileoverview\s
+            * @package
+            */
+            /** @struct @constructor @extends {Foo} */
+            Bar = function() {};
+            /** @override */
+            Bar.prototype.protectedMethod = function() {};
+            """),
         BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY);
   }
 
   @Test
   public void testOverrideWithoutVisibilityRedeclInFileWithNoFileOverviewOk() {
     testSame(
-        "/** @struct @constructor */\n"
-            + "Foo = function() {};\n"
-            + "/** @private */\n"
-            + "Foo.prototype.privateMethod_ = function() {};\n"
-            + "/** @struct @constructor @extends {Foo} */\n"
-            + "Bar = function() {};\n"
-            + "/** @override */\n"
-            + "Bar.prototype.privateMethod_ = function() {};\n");
+        """
+        /** @struct @constructor */
+        Foo = function() {};
+        /** @private */
+        Foo.prototype.privateMethod_ = function() {};
+        /** @struct @constructor @extends {Foo} */
+        Bar = function() {};
+        /** @override */
+        Bar.prototype.privateMethod_ = function() {};
+        """);
   }
 
   @Test
   public void testOverrideWithoutVisibilityRedeclInFileWithNoFileOverviewVisibilityOk() {
     testSame(
-        "/**\n"
-            + "  * @fileoverview\n"
-            + "  */\n"
-            + "/** @struct @constructor */\n"
-            + "Foo = function() {};\n"
-            + "/** @private */\n"
-            + "Foo.prototype.privateMethod_ = function() {};\n"
-            + "/** @struct @constructor @extends {Foo} */\n"
-            + "Bar = function() {};\n"
-            + "/** @override */\n"
-            + "Bar.prototype.privateMethod_ = function() {};\n");
+        """
+        /**
+          * @fileoverview
+          */
+        /** @struct @constructor */
+        Foo = function() {};
+        /** @private */
+        Foo.prototype.privateMethod_ = function() {};
+        /** @struct @constructor @extends {Foo} */
+        Bar = function() {};
+        /** @override */
+        Bar.prototype.privateMethod_ = function() {};
+        """);
   }
 
   @Test
   public void testOverrideWithVisibilityRedeclInFileWithFileOverviewVisibilityOk_OneFile() {
     testSame(
-        "/**\n"
-            + "  * @fileoverview\n"
-            + "  * @package\n"
-            + "  */\n"
-            + "/** @struct @constructor */\n"
-            + "Foo = function() {};\n"
-            + "/** @private */\n"
-            + "Foo.prototype.privateMethod_ = function() {};\n"
-            + "/** @struct @constructor @extends {Foo} */\n"
-            + "Bar = function() {};\n"
-            + "/** @override @private */\n"
-            + "Bar.prototype.privateMethod_ = function() {};\n");
+        """
+        /**
+          * @fileoverview
+          * @package
+          */
+        /** @struct @constructor */
+        Foo = function() {};
+        /** @private */
+        Foo.prototype.privateMethod_ = function() {};
+        /** @struct @constructor @extends {Foo} */
+        Bar = function() {};
+        /** @override @private */
+        Bar.prototype.privateMethod_ = function() {};
+        """);
   }
 
   @Test
   public void testOverrideWithVisibilityRedeclInFileWithFileOverviewVisibilityOk_TwoFiles() {
     testSame(
         srcs(
-            "/** @struct @constructor */\n"
-                + "Foo = function() {};\n"
-                + "/** @protected */\n"
-                + "Foo.prototype.protectedMethod = function() {};\n",
-            "  /**\n"
-                + "* @fileoverview\n"
-                + "* @package\n"
-                + "*/\n"
-                + "/** @struct @constructor @extends {Foo} */\n"
-                + "Bar = function() {};\n"
-                + "/** @override @protected */\n"
-                + "Bar.prototype.protectedMethod = function() {};\n"));
+            """
+            /** @struct @constructor */
+            Foo = function() {};
+            /** @protected */
+            Foo.prototype.protectedMethod = function() {};
+            """,
+            """
+              /**
+            * @fileoverview
+            * @package
+            */
+            /** @struct @constructor @extends {Foo} */
+            Bar = function() {};
+            /** @override @protected */
+            Bar.prototype.protectedMethod = function() {};
+            """));
   }
 
   @Test
@@ -1789,11 +2094,13 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/**\n"
-                    + " * @fileoverview\n"
-                    + " * @public\n"
-                    + " */\n"
-                    + "/** @constructor @package */ function Foo() {};"),
+                """
+                /**
+                 * @fileoverview
+                 * @public
+                 */
+                /** @constructor @package */ function Foo() {};
+                """),
             SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "new Foo();")),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
@@ -1804,11 +2111,13 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/**\n"
-                    + " * @fileoverview\n"
-                    + " * @package\n"
-                    + " */\n"
-                    + "/** @constructor @public */ function Foo() {};"),
+                """
+                /**
+                 * @fileoverview
+                 * @package
+                 */
+                /** @constructor @public */ function Foo() {};
+                """),
             SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "new Foo();")));
   }
 
@@ -1818,12 +2127,14 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/**\n"
-                    + " * @fileoverview\n"
-                    + " * @package\n"
-                    + " */\n"
-                    + "/** @constructor */\n"
-                    + "var Foo = function() {};\n"),
+                """
+                /**
+                 * @fileoverview
+                 * @package
+                 */
+                /** @constructor */
+                var Foo = function() {};
+                """),
             SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "new Foo();")),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
@@ -1836,15 +2147,16 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                lines(
-                    "/**",
-                    " * @fileoverview",
-                    " * @package",
-                    " */",
-                    "goog.module('Foo');",
-                    "/** @constructor */",
-                    "var Foo = function() {};",
-                    "exports = Foo;")),
+                """
+                /**
+                 * @fileoverview
+                 * @package
+                 */
+                goog.module('Foo');
+                /** @constructor */
+                var Foo = function() {};
+                exports = Foo;
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
                 "goog.module('client'); const Foo = goog.require('Foo'); new Foo();")));
@@ -1857,14 +2169,15 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                lines(
-                    "/**",
-                    " * @fileoverview",
-                    " * @package",
-                    " */",
-                    "/** @constructor */",
-                    "var Foo = function() {};",
-                    "export {Foo};")),
+                """
+                /**
+                 * @fileoverview
+                 * @package
+                 */
+                /** @constructor */
+                var Foo = function() {};
+                export {Foo};
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
                 "import {Foo} from '/foo/bar.js'; new Foo();")));
@@ -1877,17 +2190,22 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/**\n"
-                    + " * @fileoverview\n"
-                    + " * @package\n"
-                    + " */\n"
-                    + "/** @constructor */\n"
-                    + "Foo = function() {};\n"
-                    + "/** @public */\n"
-                    + "Foo.prototype.bar = function() {};\n"),
+                """
+                /**
+                 * @fileoverview
+                 * @package
+                 */
+                /** @constructor */
+                Foo = function() {};
+                /** @public */
+                Foo.prototype.bar = function() {};
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
-                "var foo = new Foo();\n" + "foo.bar();")));
+                """
+                var foo = new Foo();
+                foo.bar();
+                """)));
   }
 
   @Test
@@ -1897,12 +2215,17 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
             SourceFile.fromCode("foo.js", "goog.provide('foo');"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                lines(
-                    "/**\n",
-                    "  * @fileoverview\n",
-                    "  * @package\n",
-                    "  */\n",
-                    "goog.provide('foo.bar');")),
+                """
+                /**
+
+                  * @fileoverview
+
+                  * @package
+
+                  */
+
+                goog.provide('foo.bar');
+                """),
             SourceFile.fromCode("bar.js", "goog.require('foo')")));
   }
 
@@ -1912,9 +2235,20 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                lines("/**", " * @fileoverview", " * @package", " */", "goog.provide('foo.bar');")),
+                """
+                /**
+                 * @fileoverview
+                 * @package
+                 */
+                goog.provide('foo.bar');
+                """),
             SourceFile.fromCode("foo.js", "goog.provide('foo');"),
-            SourceFile.fromCode("bar.js", lines("goog.require('foo');", "var x = foo;"))));
+            SourceFile.fromCode(
+                "bar.js",
+                """
+                goog.require('foo');
+                var x = foo;
+                """)));
   }
 
   @Test
@@ -1923,14 +2257,20 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                lines(
-                    "/**",
-                    " * @fileoverview",
-                    " * @package",
-                    " */",
-                    "goog.provide('one.two');",
-                    "one.two.three = function(){};")),
-            SourceFile.fromCode("baz.js", lines("goog.require('one.two');", "var x = one.two;"))));
+                """
+                /**
+                 * @fileoverview
+                 * @package
+                 */
+                goog.provide('one.two');
+                one.two.three = function(){};
+                """),
+            SourceFile.fromCode(
+                "baz.js",
+                """
+                goog.require('one.two');
+                var x = one.two;
+                """)));
   }
 
   @Test
@@ -1939,14 +2279,20 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/**\n"
-                    + " * @fileoverview\n"
-                    + " * @package\n"
-                    + " */\n"
-                    + "goog.provide('one.two');\n"
-                    + "one.two.three = function(){};"),
+                """
+                /**
+                 * @fileoverview
+                 * @package
+                 */
+                goog.provide('one.two');
+                one.two.three = function(){};
+                """),
             SourceFile.fromCode(
-                "baz.js", "goog.require('one.two');\n" + "var x = one.two.three();")),
+                "baz.js",
+                """
+                goog.require('one.two');
+                var x = one.two.three();
+                """)),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -1957,16 +2303,22 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/**\n"
-                    + " * @fileoverview\n"
-                    + " * @public\n"
-                    + " */\n"
-                    + "/** @constructor */\n"
-                    + "Foo = function() {};\n"
-                    + "/** @package */\n"
-                    + "Foo.prototype.bar = function() {};\n"),
+                """
+                /**
+                 * @fileoverview
+                 * @public
+                 */
+                /** @constructor */
+                Foo = function() {};
+                /** @package */
+                Foo.prototype.bar = function() {};
+                """),
             SourceFile.fromCode(
-                Compiler.joinPathParts("baz", "quux.js"), "var foo = new Foo();\n" + "foo.bar();")),
+                Compiler.joinPathParts("baz", "quux.js"),
+                """
+                var foo = new Foo();
+                foo.bar();
+                """)),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -1976,16 +2328,21 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/**\n"
-                    + " * @fileoverview\n"
-                    + " * @public\n"
-                    + " */\n"
-                    + "/** @constructor */\n"
-                    + "Foo = function() {};\n"
-                    + "Foo.prototype.bar = function() {};\n"),
+                """
+                /**
+                 * @fileoverview
+                 * @public
+                 */
+                /** @constructor */
+                Foo = function() {};
+                Foo.prototype.bar = function() {};
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
-                "var foo = new Foo();\n" + "foo.bar();")));
+                """
+                var foo = new Foo();
+                foo.bar();
+                """)));
   }
 
   @Test
@@ -1994,15 +2351,21 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/**\n"
-                    + " * @fileoverview\n"
-                    + " * @package\n"
-                    + " */\n"
-                    + "/** @constructor */\n"
-                    + "Foo = function() {};\n"
-                    + "Foo.prototype.bar = function() {};\n"),
+                """
+                /**
+                 * @fileoverview
+                 * @package
+                 */
+                /** @constructor */
+                Foo = function() {};
+                Foo.prototype.bar = function() {};
+                """),
             SourceFile.fromCode(
-                Compiler.joinPathParts("baz", "quux.js"), "var foo = new Foo();\n" + "foo.bar();")),
+                Compiler.joinPathParts("baz", "quux.js"),
+                """
+                var foo = new Foo();
+                foo.bar();
+                """)),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -2012,21 +2375,25 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
         srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/**\n"
-                    + " * @fileoverview\n"
-                    + " * @package\n"
-                    + " */\n"
-                    + "/** @constructor */\n"
-                    + "Foo = function() {};\n"
-                    + "Foo.prototype.bar = function() {};\n"),
+                """
+                /**
+                 * @fileoverview
+                 * @package
+                 */
+                /** @constructor */
+                Foo = function() {};
+                Foo.prototype.bar = function() {};
+                """),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
-                "/**\n"
-                    + " * @fileoverview\n"
-                    + " * @public\n"
-                    + " */\n"
-                    + "var foo = new Foo();\n"
-                    + "foo.bar();")),
+                """
+                /**
+                 * @fileoverview
+                 * @public
+                 */
+                var foo = new Foo();
+                foo.bar();
+                """)),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -2034,43 +2401,57 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoExceptionsWithBadConstructors1() {
     testSame(
         srcs(
-            "function Foo() { (new SubFoo).bar(); } "
-                + "/** @constructor */ function SubFoo() {}"
-                + "/** @protected */ SubFoo.prototype.bar = function() {};"));
+            """
+            function Foo() { (new SubFoo).bar(); }
+            /** @constructor */ function SubFoo() {}
+            /** @protected */ SubFoo.prototype.bar = function() {};
+            """));
   }
 
   @Test
   public void testNoExceptionsWithBadConstructors2() {
     testSame(
         srcs(
-            "/** @constructor */ function Foo() {} "
-                + "Foo.prototype.bar = function() {};"
-                + "/** @constructor */"
-                + "function SubFoo() {}"
-                + "/** @protected */ "
-                + "SubFoo.prototype.bar = function() { (new Foo).bar(); };"));
+            """
+            /** @constructor */ function Foo() {}
+            Foo.prototype.bar = function() {};
+            /** @constructor */
+            function SubFoo() {}
+            /** @protected */
+            SubFoo.prototype.bar = function() { (new Foo).bar(); };
+            """));
   }
 
   @Test
   public void testGoodOverrideOfProtectedProperty() {
     testSame(
         srcs(
-            "/** @constructor */ function Foo() { } "
-                + "/** @protected */ Foo.prototype.bar = function() {};",
-            "/** @constructor \n * @extends {Foo} */ "
-                + "function SubFoo() {}"
-                + "/** @inheritDoc */ SubFoo.prototype.bar = function() {};"));
+            """
+            /** @constructor */ function Foo() { }
+            /** @protected */ Foo.prototype.bar = function() {};
+            """,
+            """
+            /** @constructor\s
+             * @extends {Foo} */
+            function SubFoo() {}
+            /** @inheritDoc */ SubFoo.prototype.bar = function() {};
+            """));
   }
 
   @Test
   public void testBadOverrideOfProtectedProperty() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() { } "
-                + "/** @protected */ Foo.prototype.bar = function() {};",
-            "/** @constructor \n * @extends {Foo} */ "
-                + "function SubFoo() {}"
-                + "/** @private */ SubFoo.prototype.bar = function() {};"),
+            """
+            /** @constructor */ function Foo() { }
+            /** @protected */ Foo.prototype.bar = function() {};
+            """,
+            """
+            /** @constructor\s
+             * @extends {Foo} */
+            function SubFoo() {}
+            /** @private */ SubFoo.prototype.bar = function() {};
+            """),
         VISIBILITY_MISMATCH);
   }
 
@@ -2078,11 +2459,16 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testBadOverrideOfPrivateProperty() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() { } "
-                + "/** @private */ Foo.prototype.bar = function() {};",
-            "/** @constructor \n * @extends {Foo} */ "
-                + "function SubFoo() {}"
-                + "/** @protected */ SubFoo.prototype.bar = function() {};"),
+            """
+            /** @constructor */ function Foo() { }
+            /** @private */ Foo.prototype.bar = function() {};
+            """,
+            """
+            /** @constructor\s
+             * @extends {Foo} */
+            function SubFoo() {}
+            /** @protected */ SubFoo.prototype.bar = function() {};
+            """),
         PRIVATE_OVERRIDE);
   }
 
@@ -2090,8 +2476,11 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testAccessOfStaticMethodOnPrivateConstructor() {
     testSame(
         srcs(
-            "/** @constructor \n * @private */ function Foo() { } "
-                + "Foo.create = function() { return new Foo(); };",
+            """
+            /** @constructor\s
+             * @private */ function Foo() { }
+            Foo.create = function() { return new Foo(); };
+            """,
             "Foo.create()"));
   }
 
@@ -2099,8 +2488,11 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testAccessOfStaticMethodOnPrivateQualifiedConstructor() {
     testSame(
         srcs(
-            "/** @constructor \n * @private */ goog.Foo = function() { }; "
-                + "goog.Foo.create = function() { return new goog.Foo(); };",
+            """
+            /** @constructor\s
+             * @private */ goog.Foo = function() { };
+            goog.Foo.create = function() { return new goog.Foo(); };
+            """,
             "goog.Foo.create()"));
   }
 
@@ -2108,23 +2500,33 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testInstanceofOfPrivateConstructor() {
     testSame(
         srcs(
-            "/** @constructor \n * @private */ goog.Foo = function() { }; "
-                + "goog.Foo.create = function() { return new goog.Foo(); };",
+            """
+            /** @constructor\s
+             * @private */ goog.Foo = function() { };
+            goog.Foo.create = function() { return new goog.Foo(); };
+            """,
             "goog instanceof goog.Foo"));
   }
 
   @Test
   public void testOkAssignmentOfDeprecatedProperty() {
-    testSame("/** @constructor */ function Foo() {" + " /** @deprecated */ this.bar = 3;" + "}");
+    testSame(
+        """
+        /** @constructor */ function Foo() {
+         /** @deprecated */ this.bar = 3;
+        }
+        """);
   }
 
   @Test
   public void testBadReadOfDeprecatedProperty() {
     testDepProp(
-        "/** @constructor */ function Foo() {"
-            + " /** @deprecated GRR */ this.bar = 3;"
-            + "  this.baz = this.bar;"
-            + "}",
+        """
+        /** @constructor */ function Foo() {
+         /** @deprecated GRR */ this.bar = 3;
+          this.baz = this.bar;
+        }
+        """,
         "Property bar of type Foo has been deprecated: GRR");
   }
 
@@ -2147,9 +2549,11 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   @Test
   public void testNullableDeprecatedProperty() {
     testError(
-        "/** @constructor */ function Foo() {}"
-            + "/** @deprecated */ Foo.prototype.length;"
-            + "/** @param {?Foo} x */ function f(x) { return x.length; }",
+        """
+        /** @constructor */ function Foo() {}
+        /** @deprecated */ Foo.prototype.length;
+        /** @param {?Foo} x */ function f(x) { return x.length; }
+        """,
         DEPRECATED_PROP);
   }
 
@@ -2157,7 +2561,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNullablePrivateProperty() {
     testError(
         srcs(
-            "/** @constructor */ function Foo() {}" + "/** @private */ Foo.prototype.length;",
+            """
+            /** @constructor */ function Foo() {}
+            /** @private */ Foo.prototype.length;
+            """,
             "/** @param {?Foo} x */ function f(x) { return x.length; }"),
         BAD_PRIVATE_PROPERTY_ACCESS);
   }
@@ -2166,8 +2573,10 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoPrivatePropertyByConvention1() {
     testSame(
         srcs(
-            "/** @constructor */ function Foo() {}\n"
-                + "/** @type {number} */ Foo.prototype.length_;\n",
+            """
+            /** @constructor */ function Foo() {}
+            /** @type {number} */ Foo.prototype.length_;
+            """,
             "/** @param {?Foo} x */ function f(x) { return x.length_; }\n"));
   }
 
@@ -2175,10 +2584,12 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testNoPrivatePropertyByConvention2() {
     testSame(
         srcs(
-            "/** @constructor */ function Foo() {\n"
-                + "  /** @type {number} */ this.length_ = 1;\n"
-                + "}\n"
-                + "/** @type {number} */ Foo.prototype.length_;\n",
+            """
+            /** @constructor */ function Foo() {
+              /** @type {number} */ this.length_ = 1;
+            }
+            /** @type {number} */ Foo.prototype.length_;
+            """,
             "/** @param {Foo} x */ function f(x) { return x.length_; }\n"));
   }
 
@@ -2203,34 +2614,38 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   @Test
   public void testConstantPropertyByJsdoc_initialAssignmentOk() {
     testNoWarning(
-        lines(
-            "/** @constructor */ function A() {",
-            "  /** @const */ this.bar = 3;",
-            "}",
-            "/** @constructor */ function B() {",
-            "  /** @const */ this.bar = 3;",
-            "}"));
+        """
+        /** @constructor */ function A() {
+          /** @const */ this.bar = 3;
+        }
+        /** @constructor */ function B() {
+          /** @const */ this.bar = 3;
+        }
+        """);
   }
 
   @Test
   public void testConstantPropertyByConvention_initialAssignmentOk() {
     testNoWarning(
-        lines(
-            "/** @constructor */ function A() {",
-            "  this.BAR = 3;",
-            "}",
-            "/** @constructor */ function B() {",
-            "  this.BAR = 3;",
-            "}"));
+        """
+        /** @constructor */ function A() {
+          this.BAR = 3;
+        }
+        /** @constructor */ function B() {
+          this.BAR = 3;
+        }
+        """);
   }
 
   @Test
   public void testConstantPropertyByJsdoc_reassignmentWarns() {
     testError(
-        "/** @constructor */ function A() {"
-            + "/** @const */ this.bar = 3;}"
-            + "/** @constructor */ function B() {"
-            + "/** @const */ this.bar = 3;this.bar += 4;}",
+        """
+        /** @constructor */ function A() {
+        /** @const */ this.bar = 3;}
+        /** @constructor */ function B() {
+        /** @const */ this.bar = 3;this.bar += 4;}
+        """,
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
@@ -2239,231 +2654,307 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     disableRewriteClosureCode();
     testNoWarning(
         srcs(
-            lines(
-                "goog.module('mod1');",
-                "/** @constructor */",
-                "function A() {",
-                "  /** @const */",
-                "  this.bar = 3;",
-                "}"),
-            lines(
-                "goog.module('mod2');",
-                "/** @constructor */",
-                "function A() {",
-                "  /** @const */",
-                "  this.bar = 3;",
-                "}")));
+            """
+            goog.module('mod1');
+            /** @constructor */
+            function A() {
+              /** @const */
+              this.bar = 3;
+            }
+            """,
+            """
+            goog.module('mod2');
+            /** @constructor */
+            function A() {
+              /** @const */
+              this.bar = 3;
+            }
+            """));
   }
 
   @Test
   public void testNoConstantPropertyByConvention() {
     testSame(
-        "/** @constructor */ function A() {"
-            + "this.BAR = 3;}"
-            + "/** @constructor */ function B() {"
-            + "this.BAR = 3;this.BAR += 4;}");
+        """
+        /** @constructor */ function A() {
+        this.BAR = 3;}
+        /** @constructor */ function B() {
+        this.BAR = 3;this.BAR += 4;}
+        """);
   }
 
   @Test
   public void testConstantPropertyByJsdocOnPrototype_reassignmentWarns() {
     testError(
-        "/** @constructor */ function Foo() {}"
-            + "/** @const */ Foo.prototype.prop = 2;"
-            + "var foo = new Foo();"
-            + "foo.prop = 3;",
+        """
+        /** @constructor */ function Foo() {}
+        /** @const */ Foo.prototype.prop = 2;
+        var foo = new Foo();
+        foo.prop = 3;
+        """,
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
   public void testConstantPropertyByConventionOnPrototype_notEnforced() {
     testSame(
-        "/** @constructor */ function Foo() {}"
-            + "Foo.prototype.PROP = 2;"
-            + "var foo = new Foo();"
-            + "foo.PROP = 3;");
+        """
+        /** @constructor */ function Foo() {}
+        Foo.prototype.PROP = 2;
+        var foo = new Foo();
+        foo.PROP = 3;
+        """);
   }
 
   @Test
   public void testConstantPropertyOnConstNamespaceByAssignment_initialAssignmentOk() {
-    testNoWarning(lines("/** @const */ var o = {};", "/** @const */ o.x = 1;"));
+    testNoWarning(
+        """
+        /** @const */ var o = {};
+        /** @const */ o.x = 1;
+        """);
   }
 
   @Test
   public void testConstantPropertyOnConstNamespaceByAssignment_reassignmentWarns() {
     testError(
-        "" + "/** @const */ var o = {};\n" + "/** @const */ o.x = 1;" + "o.x = 2;",
+        """
+        /** @const */ var o = {};
+        /** @const */ o.x = 1;
+        o.x = 2;
+        """,
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
   public void testConstantPropertyOnNamespaceByAssignment_reassignmentWarns() {
     testError(
-        "var o = {};\n" + "/** @const */ o.x = 1;\n" + "o.x = 2;\n",
+        """
+        var o = {};
+        /** @const */ o.x = 1;
+        o.x = 2;
+        """,
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
   public void testNamespaceConstantPropertyOnNamespace_assigningSeparateNamespacesOk() {
     testSame(
-        "/** @const */ var o = {};\n"
-            + "/** @const */ o.x = 1;\n"
-            + "/** @const */ var o2 = {};\n"
-            + "/** @const */ o2.x = 1;\n");
+        """
+        /** @const */ var o = {};
+        /** @const */ o.x = 1;
+        /** @const */ var o2 = {};
+        /** @const */ o2.x = 1;
+        """);
   }
 
   @Test
   public void testConstantPropertyOnObjectLiteralByLiteralKey_initialAssignmentOk() {
-    testNoWarning(lines("var o = {", "  /** @const */ x: 1", " };"));
+    testNoWarning(
+        """
+        var o = {
+          /** @const */ x: 1
+         };
+        """);
   }
 
   @Test
   public void testConstantPropertyOnObjectLiteralByLiteralKey_reassignmentWarns() {
     testError(
-        lines("var o = {", "  /** @const */ x: 1", " };", "o.x = 2;"),
+        """
+        var o = {
+          /** @const */ x: 1
+         };
+        o.x = 2;
+        """,
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
   public void testConstantPropertyOnConstObjectLiteralByLiteralKey_reassignmentWarns() {
     testError(
-        lines("/** @const */", "var o = {", "  /** @const */ x: 1", " };", "o.x = 2;"),
+        """
+        /** @const */
+        var o = {
+          /** @const */ x: 1
+         };
+        o.x = 2;
+        """,
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
   public void testConstantPropertyOnObjectLiteralByConvention_notEnforced() {
-    testSame(lines("var o = {", "  XYZ: 1", " };", "o.XYZ = 2;"));
+    testSame(
+        """
+        var o = {
+          XYZ: 1
+         };
+        o.XYZ = 2;
+        """);
   }
 
   @Test
   public void testConstantPropertyOnConstObjectLiteralByConvention_notEnforced() {
     testSame(
-        lines(
-            "/** @const */ var o = {", //
-            "  XYZ: 1",
-            "};",
-            "o.XYZ = 2;"));
+        """
+        /** @const */ var o = {
+          XYZ: 1
+        };
+        o.XYZ = 2;
+        """);
   }
 
   @Test
   public void testConstantProperty4() {
     testError(
-        "/** @constructor */ function cat(name) {}"
-            + "/** @const */ cat.test = 1;"
-            + "cat.test *= 2;",
+        """
+        /** @constructor */ function cat(name) {}
+        /** @const */ cat.test = 1;
+        cat.test *= 2;
+        """,
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
   public void testConstantProperty4b() {
     testSame(
-        lines(
-            "/** @constructor */ function cat(name) {}", //
-            "cat.TEST = 1;",
-            "cat.TEST *= 2;"));
+        """
+        /** @constructor */ function cat(name) {}
+        cat.TEST = 1;
+        cat.TEST *= 2;
+        """);
   }
 
   @Test
   public void testConstantProperty5() {
     testError(
-        "/** @constructor */ function Foo() { this.prop = 1;}"
-            + "/** @const */ Foo.prototype.prop;"
-            + "Foo.prototype.prop = 2",
+        """
+        /** @constructor */ function Foo() { this.prop = 1;}
+        /** @const */ Foo.prototype.prop;
+        Foo.prototype.prop = 2
+        """,
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
   public void testConstantProperty6() {
     testError(
-        "/** @constructor */ function Foo() { this.prop = 1;}"
-            + "/** @const */ Foo.prototype.prop = 2;",
+        """
+        /** @constructor */ function Foo() { this.prop = 1;}
+        /** @const */ Foo.prototype.prop = 2;
+        """,
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
   public void testConstantProperty7() {
     testSame(
-        "/** @constructor */ function Foo() {} "
-            + "Foo.prototype.bar_ = function() {};"
-            + "/** @constructor \n * @extends {Foo} */ "
-            + "function SubFoo() {};"
-            + "/** @const */ /** @override */ SubFoo.prototype.bar_ = function() {};"
-            + "SubFoo.prototype.baz = function() { this.bar_(); }");
+        """
+        /** @constructor */ function Foo() {}
+        Foo.prototype.bar_ = function() {};
+        /** @constructor\s
+         * @extends {Foo} */
+        function SubFoo() {};
+        /** @const */ /** @override */ SubFoo.prototype.bar_ = function() {};
+        SubFoo.prototype.baz = function() { this.bar_(); }
+        """);
   }
 
   @Test
   public void testConstantProperty8() {
-    testSame("/** @const */ var o = { /** @const */ x: 1 };" + "var y = o.x;");
+    testSame(
+        """
+        /** @const */ var o = { /** @const */ x: 1 };
+        var y = o.x;
+        """);
   }
 
   @Test
   public void testConstantProperty9() {
     testSame(
-        "/** @constructor */ function A() {"
-            + "/** @const */ this.bar = 3;}"
-            + "/** @constructor */ function B() {"
-            + "this.bar = 4;}");
+        """
+        /** @constructor */ function A() {
+        /** @const */ this.bar = 3;}
+        /** @constructor */ function B() {
+        this.bar = 4;}
+        """);
   }
 
   @Test
   public void testConstantProperty10a() {
     testSame(
-        "/** @constructor */ function Foo() { this.prop = 1;}"
-            + "/** @const */ Foo.prototype.prop;");
+        """
+        /** @constructor */ function Foo() { this.prop = 1;}
+        /** @const */ Foo.prototype.prop;
+        """);
   }
 
   @Test
   public void testConstantProperty10b() {
-    testSame("/** @constructor */ function Foo() { this.PROP = 1;}" + "Foo.prototype.PROP;");
+    testSame(
+        """
+        /** @constructor */ function Foo() { this.PROP = 1;}
+        Foo.prototype.PROP;
+        """);
   }
 
   @Test
   public void testConstantProperty11() {
     testError(
-        "/** @constructor */ function Foo() {}"
-            + "/** @const */ Foo.prototype.bar;"
-            + "/**\n"
-            + " * @constructor\n"
-            + " * @extends {Foo}\n"
-            + " */ function SubFoo() { this.bar = 5; this.bar = 6; }",
+        """
+        /** @constructor */ function Foo() {}
+        /** @const */ Foo.prototype.bar;
+        /**
+         * @constructor
+         * @extends {Foo}
+         */ function SubFoo() { this.bar = 5; this.bar = 6; }
+        """,
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
   public void testConstantProperty12() {
     testSame(
-        "/** @constructor */ function Foo() {}"
-            + "/** @const */ Foo.prototype.bar;"
-            + "/**\n"
-            + " * @constructor\n"
-            + " * @extends {Foo}\n"
-            + " */ function SubFoo() { this.bar = 5; }"
-            + "/**\n"
-            + " * @constructor\n"
-            + " * @extends {Foo}\n"
-            + " */ function SubFoo2() { this.bar = 5; }");
+        """
+        /** @constructor */ function Foo() {}
+        /** @const */ Foo.prototype.bar;
+        /**
+         * @constructor
+         * @extends {Foo}
+         */ function SubFoo() { this.bar = 5; }
+        /**
+         * @constructor
+         * @extends {Foo}
+         */ function SubFoo2() { this.bar = 5; }
+        """);
   }
 
   @Test
   public void testConstantProperty13() {
     testError(
-        "/** @constructor */ function Foo() {}"
-            + "/** @const */ Foo.prototype.bar;"
-            + "/**\n"
-            + " * @constructor\n"
-            + " * @extends {Foo}\n"
-            + " */ function SubFoo() { this.bar = 5; }"
-            + "/**\n"
-            + " * @constructor\n"
-            + " * @extends {SubFoo}\n"
-            + " */ function SubSubFoo() { this.bar = 5; }",
+        """
+        /** @constructor */ function Foo() {}
+        /** @const */ Foo.prototype.bar;
+        /**
+         * @constructor
+         * @extends {Foo}
+         */ function SubFoo() { this.bar = 5; }
+        /**
+         * @constructor
+         * @extends {SubFoo}
+         */ function SubSubFoo() { this.bar = 5; }
+        """,
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
   public void testConstantProperty14() {
     testError(
-        "/** @constructor */ function Foo() {" + "/** @const */ this.bar = 3; delete this.bar; }",
+        """
+        /** @constructor */ function Foo() {
+        /** @const */ this.bar = 3; delete this.bar; }
+        """,
         CONST_PROPERTY_DELETED);
   }
 
@@ -2471,16 +2962,17 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testConstantProperty_recordType() {
     test(
         srcs(
-            lines(
-                "/** @record */",
-                "function Foo() { }",
-                "/** @const {number} */",
-                "Foo.prototype.bar;",
-                "",
-                "const /** !Foo */ x = {",
-                "  bar: 9,",
-                "};",
-                "x.bar = 0;")),
+            """
+            /** @record */
+            function Foo() { }
+            /** @const {number} */
+            Foo.prototype.bar;
+
+            const /** !Foo */ x = {
+              bar: 9,
+            };
+            x.bar = 0;
+            """),
         error(CONST_PROPERTY_REASSIGNED_VALUE)
             .withMessageContaining("unknown location due to structural typing"));
   }
@@ -2489,10 +2981,11 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testConstantProperty_fromExternsOrIjs_duplicateExternOk() {
     testSame(
         externs(
-            lines(
-                "/** @constructor */ function Foo() {}", //
-                "/** @const */ Foo.prototype.PROP;",
-                "/** @const */ Foo.prototype.PROP;")),
+            """
+            /** @constructor */ function Foo() {}
+            /** @const */ Foo.prototype.PROP;
+            /** @const */ Foo.prototype.PROP;
+            """),
         srcs(""));
   }
 
@@ -2500,98 +2993,116 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testConstantProperty_fromExternsOrIjs() {
     test(
         externs(
-            lines(
-                "/** @constructor */ function Foo() {}", //
-                "/** @const */ Foo.prototype.PROP;")),
+            """
+            /** @constructor */ function Foo() {}
+            /** @const */ Foo.prototype.PROP;
+            """),
         srcs(
-            lines(
-                "var f = new Foo();", //
-                "f.PROP = 1;")),
+            """
+            var f = new Foo();
+            f.PROP = 1;
+            """),
         error(CONST_PROPERTY_REASSIGNED_VALUE).withMessageContaining("at externs:2:"));
   }
 
   @Test
   public void testConstantProperty15() {
     testSame(
-        "/** @constructor */ function Foo() {};\n"
-            + "Foo.CONST = 100;\n"
-            + "/** @type {Foo} */\n"
-            + "var foo = new Foo();\n"
-            + "/** @type {number} */\n"
-            + "foo.CONST = Foo.CONST;");
+        """
+        /** @constructor */ function Foo() {};
+        Foo.CONST = 100;
+        /** @type {Foo} */
+        var foo = new Foo();
+        /** @type {number} */
+        foo.CONST = Foo.CONST;
+        """);
   }
 
   @Test
   public void testConstantProperty_convention_not_enforced1() {
     testSame(
-        "/** @constructor */ function Foo() { this.CONST = 100; };\n"
-            + "/** @type {Foo} */\n"
-            + "var foo = new Foo();\n"
-            + "/** @type {number} */\n"
-            + "foo.CONST = 0;");
+        """
+        /** @constructor */ function Foo() { this.CONST = 100; };
+        /** @type {Foo} */
+        var foo = new Foo();
+        /** @type {number} */
+        foo.CONST = 0;
+        """);
   }
 
   @Test
   public void testConstantProperty_convention_not_enforced2() {
     testSame(
-        "/** @constructor */ function Foo() {};\n"
-            + "Foo.prototype.CONST = 100;\n"
-            + "/** @type {Foo} */\n"
-            + "var foo = new Foo();\n"
-            + "/** @type {number} */\n"
-            + "foo.CONST = 0;");
+        """
+        /** @constructor */ function Foo() {};
+        Foo.prototype.CONST = 100;
+        /** @type {Foo} */
+        var foo = new Foo();
+        /** @type {number} */
+        foo.CONST = 0;
+        """);
   }
 
   @Test
   public void testConstantProperty_convention_not_enforced3() {
     testSame(
-        ""
-            + "/** @constructor */ function Bar() {this.CONST = 100;};\n"
-            + "/** @constructor \n @extends {Bar} */ function Foo() {};\n"
-            + "/** @type {Foo} */\n"
-            + "var foo = new Foo();\n"
-            + "/** @type {number} */\n"
-            + "foo.CONST = 0;");
+        """
+        /** @constructor */ function Bar() {this.CONST = 100;};
+        /** @constructor\s
+         @extends {Bar} */ function Foo() {};
+        /** @type {Foo} */
+        var foo = new Foo();
+        /** @type {number} */
+        foo.CONST = 0;
+        """);
   }
 
   @Test
   public void testConstantProperty16() {
     testSame(
-        "/** @constructor */ function Foo() {};\n"
-            + "Foo.CONST = 100;\n"
-            + "/** @constructor */ function Bar() {};\n"
-            + "Bar.CONST = 100;\n");
+        """
+        /** @constructor */ function Foo() {};
+        Foo.CONST = 100;
+        /** @constructor */ function Bar() {};
+        Bar.CONST = 100;
+        """);
   }
 
   @Test
   public void testConstantProperty17() {
     testSame(
-        "function Foo() {};\n"
-            + "Foo.CONST = 100;\n"
-            + "function Bar() {};\n"
-            + "Bar.CONST = 100;\n");
+        """
+        function Foo() {};
+        Foo.CONST = 100;
+        function Bar() {};
+        Bar.CONST = 100;
+        """);
   }
 
   @Test
   public void testConstantProperty18() {
     testSame(
-        "/** @param {string} a */\n"
-            + "function Foo(a) {};\n"
-            + "Foo.CONST = 100;\n"
-            + "/** @param {string} a */\n"
-            + "function Bar(a) {};\n"
-            + "Bar.CONST = 100;\n");
+        """
+        /** @param {string} a */
+        function Foo(a) {};
+        Foo.CONST = 100;
+        /** @param {string} a */
+        function Bar(a) {};
+        Bar.CONST = 100;
+        """);
   }
 
   @Test
   public void testConstantProperty19() {
     testSame(
-        "/** @param {string} a */\n"
-            + "function Foo(a) {};\n"
-            + "Foo.CONST = 100;\n"
-            + "/** @param {number} a */\n"
-            + "function Bar(a) {};\n"
-            + "Bar.CONST = 100;\n");
+        """
+        /** @param {string} a */
+        function Foo(a) {};
+        Foo.CONST = 100;
+        /** @param {number} a */
+        function Bar(a) {};
+        Bar.CONST = 100;
+        """);
   }
 
   @Test
@@ -2601,121 +3112,131 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     // moment.unitOfTime declaration be treated as a declaration so that it doesn't just look like
     // a mutation of the readonly property that it just defined.
     testNoWarning(
-        lines(
-            "/** @externs */",
-            "/** @record */",
-            "function MomentStatic() {}",
-            "/** @return {number} */",
-            "MomentStatic.prototype.now = function() {};",
-            "/** @const */",
-            "moment.unitOfTime = {};",
-            "/** @const {!MomentStatic} */",
-            "var moment;"));
+        """
+        /** @externs */
+        /** @record */
+        function MomentStatic() {}
+        /** @return {number} */
+        MomentStatic.prototype.now = function() {};
+        /** @const */
+        moment.unitOfTime = {};
+        /** @const {!MomentStatic} */
+        var moment;
+        """);
   }
 
   @Test
   public void testConstantPropertyOnStructuralInterfaceByJsdoc_initializeFromObjLitOk() {
     testNoWarning(
-        lines(
-            "/** @record */",
-            "function Foo() {",
-            "  /** @const {number} */ this.bar;",
-            "}",
-            "var /** !Foo */ foo = {bar: 1};",
-            "var /** !Foo */ baz = {bar: 2};"));
+        """
+        /** @record */
+        function Foo() {
+          /** @const {number} */ this.bar;
+        }
+        var /** !Foo */ foo = {bar: 1};
+        var /** !Foo */ baz = {bar: 2};
+        """);
   }
 
   @Test
   public void testConstantPropertyOnStructuralInterfaceByJsdoc_reassignmentWarns() {
     testError(
-        lines(
-            "/** @record */",
-            "function Foo() {",
-            "  /** @const {number} */ this.bar;",
-            "}",
-            "var /** !Foo */ foo = {bar: 1};",
-            "foo.bar = 2;"),
+        """
+        /** @record */
+        function Foo() {
+          /** @const {number} */ this.bar;
+        }
+        var /** !Foo */ foo = {bar: 1};
+        foo.bar = 2;
+        """,
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
   public void testConstantPropertyOnStructuralInterfaceByJsdoc_assignmentOnOpaqueObjectWarns() {
     testError(
-        lines(
-            "/** @record */",
-            "function Foo() {",
-            "  /** @const {number} */ this.bar;",
-            "}",
-            "function f(/** !Foo */ foo) {",
-            "  foo.bar = 2;",
-            "}"),
+        """
+        /** @record */
+        function Foo() {
+          /** @const {number} */ this.bar;
+        }
+        function f(/** !Foo */ foo) {
+          foo.bar = 2;
+        }
+        """,
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
   public void testConstantPropertyOnStructuralInterfaceByConvention_noReassignmentWarns() {
     testSame(
-        lines(
-            "/** @record */",
-            "function Foo() {",
-            "  /** @type {number} */ this.BAR;",
-            "}",
-            "var /** !Foo */ foo = {BAR: 1};",
-            "foo.BAR = 2;"));
+        """
+        /** @record */
+        function Foo() {
+          /** @type {number} */ this.BAR;
+        }
+        var /** !Foo */ foo = {BAR: 1};
+        foo.BAR = 2;
+        """);
   }
 
   @Test
   public void testFunctionWithNewType_canReturnFinalClass() {
     testNoWarning(
-        lines(
-            "goog.forwardDeclare('Parent');",
-            "/** @type {function(new: Parent): !Parent} */",
-            "const PatchedParent = function Parent() { return /** @type {?} */ (0); }"));
+        """
+        goog.forwardDeclare('Parent');
+        /** @type {function(new: Parent): !Parent} */
+        const PatchedParent = function Parent() { return /** @type {?} */ (0); }
+        """);
 
     testNoWarning(
-        lines(
-            "/** @constructor @final */",
-            "const Parent = function() {}",
-            "/** @type {function(new: Parent): !Parent} */",
-            "const PatchedParent = function Parent() { return /** @type {?} */ (0); }"));
+        """
+        /** @constructor @final */
+        const Parent = function() {}
+        /** @type {function(new: Parent): !Parent} */
+        const PatchedParent = function Parent() { return /** @type {?} */ (0); }
+        """);
   }
 
   @Test
   public void testFinalClassCannotBeSubclassed() {
     testError(
-        lines(
-            "/**",
-            " * @constructor",
-            " * @final",
-            " */ var Foo = function() {};",
-            "/**",
-            " * @constructor",
-            " * @extends {Foo}*",
-            " */ var Bar = function() {};"),
+        """
+        /**
+         * @constructor
+         * @final
+         */ var Foo = function() {};
+        /**
+         * @constructor
+         * @extends {Foo}*
+         */ var Bar = function() {};
+        """,
         EXTEND_FINAL_CLASS);
 
     testError(
-        lines(
-            "/**",
-            " * @constructor",
-            " * @final",
-            " */ function Foo() {};",
-            "/**",
-            " * @constructor",
-            " * @extends {Foo}*",
-            " */ function Bar() {};"),
+        """
+        /**
+         * @constructor
+         * @final
+         */ function Foo() {};
+        /**
+         * @constructor
+         * @extends {Foo}*
+         */ function Bar() {};
+        """,
         EXTEND_FINAL_CLASS);
 
     testSame(
-        lines(
-            "/**",
-            " * @constructor",
-            " * @const",
-            " */ var Foo = function() {};",
-            "/**",
-            " * @constructor",
-            " * @extends {Foo}",
-            " */ var Bar = function() {};"));
+        """
+        /**
+         * @constructor
+         * @const
+         */ var Foo = function() {};
+        /**
+         * @constructor
+         * @extends {Foo}
+         */ var Bar = function() {};
+        """);
   }
 
   @Test
@@ -2724,10 +3245,11 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     //      WARNING - Cycle detected in inheritance chain of type Foo
     // This warning already has a test: TypeCheckTest::testPrototypeLoop.
     testError(
-        lines(
-            "/** @constructor @extends {Foo} */ function Foo() {}",
-            "/** @const */ Foo.prop = 1;",
-            "Foo.prop = 2;"),
+        """
+        /** @constructor @extends {Foo} */ function Foo() {}
+        /** @const */ Foo.prop = 1;
+        Foo.prop = 2;
+        """,
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
@@ -2735,12 +3257,13 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testCheckFinalClass_prototypeMethodMarkedCtor_butNotOwnerFunction_doesNotCrash() {
     // Covers an edge case reported in b/129361702.
     testSame(
-        lines(
-            "function Foo() {}",
-            "",
-            "Foo.prototype = {",
-            "  /** @constructor */",
-            "  init: function() { }",
-            "};"));
+        """
+        function Foo() {}
+
+        Foo.prototype = {
+          /** @constructor */
+          init: function() { }
+        };
+        """);
   }
 }

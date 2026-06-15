@@ -53,6 +53,9 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
           .put("goog", "g")
           .put("fooStylesBar", "fsr")
           .put("fooStylesBaz", "fsz")
+          .put("--foo-bar", "--fb")
+          .put("---foo-baz", "--fbz")
+          .put("--foo-bar-baz--qux", "--fbzq")
           .buildOrThrow();
 
   Map<String, String> replacementMapFull =
@@ -63,6 +66,9 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
           .put("unrelated", "l")
           .put("long-suffix", "m")
           .put("long-prefix-suffix1", "h-i")
+          .put("--foo-bar", "--fb")
+          .put("---foo-baz", "--fbz")
+          .put("--foo-bar-baz--qux", "--fbzq")
           .buildOrThrow();
 
   CssRenamingMap renamingMap;
@@ -72,11 +78,12 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
 
   public ReplaceCssNamesTest() {
     super(
-        lines(
-            DEFAULT_EXTERNS,
-            "Object.prototype.getClass;",
-            "goog.getCssName;",
-            "goog.setCssNameMapping;"));
+        DEFAULT_EXTERNS
+            + """
+            Object.prototype.getClass;
+            goog.getCssName;
+            goog.setCssNameMapping;
+            """);
   }
 
   @Override
@@ -129,42 +136,70 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   @Test
   public void testValidSetCssNameMapping() {
     test(
-        lines(
-            "goog.setCssNameMapping({foo:'bar',\"biz\":'baz'});",
-            "const x = goog.getCssName('foo'),",
-            "  y = goog.getCssName('biz'),",
-            "  z = goog.getCssName('foo-biz');"),
+        """
+        goog.setCssNameMapping({foo:'bar',"biz":'baz'});
+        const x = goog.getCssName('foo'),
+          y = goog.getCssName('biz'),
+          z = goog.getCssName('foo-biz');
+        """,
         "const x = 'bar', y = 'baz', z = 'bar-baz';");
   }
 
   @Test
   public void testValidSetCssNameMapping_byPart() {
     test(
-        lines(
-            "goog.setCssNameMapping({foo:'bar',\"biz\":'baz'}, 'BY_PART');",
-            "const x = goog.getCssName('foo'),",
-            "  y = goog.getCssName('biz'),",
-            "  z = goog.getCssName('foo-biz');"),
+        """
+        goog.setCssNameMapping({foo:'bar',"biz":'baz'}, 'BY_PART');
+        const x = goog.getCssName('foo'),
+          y = goog.getCssName('biz'),
+          z = goog.getCssName('foo-biz');
+        """,
         "const x = 'bar', y = 'baz', z = 'bar-baz';");
+  }
+
+  @Test
+  public void testValidSetCssNameMapping_byPart_withCssVariable() {
+    test(
+        """
+        goog.setCssNameMapping({classy: 'c',selector: 's',"--foo":'--f',"--biz-baz":'--b'}, 'BY_PART');
+        const x = goog.getCssName('--foo'),
+          y = goog.getCssName('--biz-baz'),
+          z = goog.getCssName('classy-selector');
+        """,
+        "const x = '--f', y = '--b', z = 'c-s';");
   }
 
   @Test
   public void testValidSetCssNameMapping_byWhole() {
     test(
-        lines(
-            "goog.setCssNameMapping({foo:'bar',\"biz\":'baz'}, 'BY_WHOLE');",
-            "const x = goog.getCssName('foo'),",
-            "  y = goog.getCssName('biz'),",
-            "  z = goog.getCssName('foo-biz');"),
+        """
+        goog.setCssNameMapping({foo:'bar',"biz":'baz'}, 'BY_WHOLE');
+        const x = goog.getCssName('foo'),
+          y = goog.getCssName('biz'),
+          z = goog.getCssName('foo-biz');
+        """,
         "const x = 'bar', y = 'baz', z = 'foo-biz';");
 
     test(
-        lines(
-            "goog.setCssNameMapping({foo:'bar',\"biz\":'baz','biz-foo':'baz-bar'}, 'BY_WHOLE');",
-            "const x = goog.getCssName('foo'),",
-            "  y = goog.getCssName('biz'),",
-            "  z = goog.getCssName('foo-biz');"),
+        """
+        goog.setCssNameMapping({foo:'bar',"biz":'baz','biz-foo':'baz-bar'}, 'BY_WHOLE');
+        const x = goog.getCssName('foo'),
+          y = goog.getCssName('biz'),
+          z = goog.getCssName('foo-biz');
+        """,
         "const x = 'bar', y = 'baz', z = 'foo-biz';");
+  }
+
+  @Test
+  public void testValidSetCssNameMapping_byWhole_withCssVariable() {
+    test(
+        """
+        goog.setCssNameMapping({classy: 'c',"--foo":'--f',"--biz-baz":'--b'}, 'BY_WHOLE');
+        const x = goog.getCssName('--foo'),
+          y = goog.getCssName('--biz-baz'),
+          z = goog.getCssName('classy');
+        """,
+        "const x = '--f', y = '--b', z = 'c';");
   }
 
   @Test
@@ -255,6 +290,23 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testOneArgWithCssVariables_byWhole() {
+    renamingMap = getFullMap();
+
+    test(
+        "var x = goog.getCssName('--foo-bar')", //
+        "var x = '--fb'");
+
+    test(
+        "var x = goog.getCssName('---foo-baz')", //
+        "var x = '--fbz'");
+
+    test(
+        "var x = goog.getCssName('--foo-bar-baz--qux')", //
+        "var x = '--fbzq'");
+  }
+
+  @Test
   public void testOneArgWithCompositeClassNamesWithUnknownParts() {
     test(
         "var x = goog.getCssName('goog-header-active')",
@@ -268,6 +320,21 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
         "setClass(goog.getCssName('inactive-buttonbar'))",
         "setClass('inactive-buttonbar')",
         warning(UNKNOWN_SYMBOL_WARNING));
+  }
+
+  @Test
+  public void testOneArgWithCssVariable() {
+    test(
+        "var x = goog.getCssName('--foo-bar')", //
+        "var x = '--fb'");
+
+    test(
+        "var x = goog.getCssName('---foo-baz')", //
+        "var x = '--fbz'");
+
+    test(
+        "var x = goog.getCssName('--foo-bar-baz--qux')", //
+        "var x = '--fbzq'");
   }
 
   @Test
@@ -410,45 +477,48 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     SourceFile cssVarsDefinition =
         SourceFile.fromCode(
             "foo/styles.css.closure.js",
-            lines(
-                "/**",
-                " * @fileoverview generated from foo/styles.css",
-                " * @sassGeneratedCssTs",
-                " */",
-                "goog.module('foo.styles$2ecss');",
-                // These files will be automatically generated, so we know the
-                // exported 'classes' property will always be declared like this.
-                "/** @type {{Bar: string, Baz: string}} */",
-                "exports.classes = {",
-                "  'Bar': goog.getCssName('fooStylesBar'),",
-                "  'Baz': goog.getCssName('fooStylesBaz'),",
-                "}"));
+            """
+            /**
+             * @fileoverview generated from foo/styles.css
+             * @sassGeneratedCssTs
+             */
+            goog.module('foo.styles$2ecss');
+            // These files will be automatically generated, so we know the
+            // exported 'classes' property will always be declared like this.
+            /** @type {{Bar: string, Baz: string}} */
+            exports.classes = {
+              'Bar': goog.getCssName('fooStylesBar'),
+              'Baz': goog.getCssName('fooStylesBaz'),
+            }
+            """);
     SourceFile cssVarsExpected =
         SourceFile.fromCode(
             "foo/styles.css.closure.js",
-            lines(
-                "/**",
-                " * @fileoverview generated from foo/styles.css",
-                " * @sassGeneratedCssTs",
-                " */",
-                "goog.module('foo.styles$2ecss');",
-                "/** @type {{Bar: string, Baz: string}} */",
-                "exports.classes = {",
-                "  'Bar': 'fsr',",
-                "  'Baz': 'fsz',",
-                "}"));
+            """
+            /**
+             * @fileoverview generated from foo/styles.css
+             * @sassGeneratedCssTs
+             */
+            goog.module('foo.styles$2ecss');
+            /** @type {{Bar: string, Baz: string}} */
+            exports.classes = {
+              'Bar': 'fsr',
+              'Baz': 'fsz',
+            }
+            """);
     SourceFile importer =
         SourceFile.fromCode(
             "foo/importer.closure.js",
-            lines(
-                "goog.module('foo.importer');",
-                "/** @type {string} */",
-                "const foo_styles_css = goog.require('foo.styles$2ecss')",
-                // Even when the original TS import was
-                // `import {classes as foo} from './path/to/file';`
-                // tsickle will convert references to `foo` into a fully qualified
-                // name like this rather than creating an alias variable named `foo`.
-                "var x = foo_styles_css.classes.Bar"));
+            """
+            goog.module('foo.importer');
+            /** @type {string} */
+            const foo_styles_css = goog.require('foo.styles$2ecss')
+            // Even when the original TS import was
+            // `import {classes as foo} from './path/to/file';`
+            // tsickle will convert references to `foo` into a fully qualified
+            // name like this rather than creating an alias variable named `foo`.
+            var x = foo_styles_css.classes.Bar
+            """);
     test(srcs(cssVarsDefinition, importer), expected(cssVarsExpected, importer));
     assertThat(cssNames).containsExactly("fooStylesBar");
   }
@@ -458,49 +528,53 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     SourceFile cssVarsDefinition =
         SourceFile.fromCode(
             "foo/styles.css.closure.js",
-            lines(
-                "/**",
-                " * @fileoverview generated from foo/styles.css",
-                " * @sassGeneratedCssTs",
-                " */",
-                "goog.module('foo.styles$2ecss');",
-                "/** @type {{Bar: string, Baz: string}} */",
-                "exports.classes = {",
-                "  'Bar': goog.getCssName('fooStylesBar'),",
-                "  'Baz': goog.getCssName('fooStylesBaz'),",
-                "}"));
+            """
+            /**
+             * @fileoverview generated from foo/styles.css
+             * @sassGeneratedCssTs
+             */
+            goog.module('foo.styles$2ecss');
+            /** @type {{Bar: string, Baz: string}} */
+            exports.classes = {
+              'Bar': goog.getCssName('fooStylesBar'),
+              'Baz': goog.getCssName('fooStylesBaz'),
+            }
+            """);
     SourceFile cssVarsExpected =
         SourceFile.fromCode(
             "foo/styles.css.closure.js",
-            lines(
-                "/**",
-                " * @fileoverview generated from foo/styles.css",
-                " * @sassGeneratedCssTs",
-                " */",
-                "goog.module('foo.styles$2ecss');",
-                "/** @type {{Bar: string, Baz: string}} */",
-                "exports.classes = {",
-                "  'Bar': 'fsr',",
-                "  'Baz': 'fsz',",
-                "}"));
+            """
+            /**
+             * @fileoverview generated from foo/styles.css
+             * @sassGeneratedCssTs
+             */
+            goog.module('foo.styles$2ecss');
+            /** @type {{Bar: string, Baz: string}} */
+            exports.classes = {
+              'Bar': 'fsr',
+              'Baz': 'fsz',
+            }
+            """);
     SourceFile importer =
         SourceFile.fromCode(
             "foo/importer.closure.js",
-            lines(
-                "goog.module('foo.importer');",
-                "/** @type {string} */",
-                "const foo_styles_css = goog.require('foo.styles$2ecss');",
-                "var x = foo_styles_css.classes.Bar;",
-                "var y = goog.getCssName('active');"));
+            """
+            goog.module('foo.importer');
+            /** @type {string} */
+            const foo_styles_css = goog.require('foo.styles$2ecss');
+            var x = foo_styles_css.classes.Bar;
+            var y = goog.getCssName('active');
+            """);
     SourceFile importerExpected =
         SourceFile.fromCode(
             "foo/importer.closure.js",
-            lines(
-                "goog.module('foo.importer');",
-                "/** @type {string} */",
-                "const foo_styles_css = goog.require('foo.styles$2ecss');",
-                "var x = foo_styles_css.classes.Bar;",
-                "var y = 'a';"));
+            """
+            goog.module('foo.importer');
+            /** @type {string} */
+            const foo_styles_css = goog.require('foo.styles$2ecss');
+            var x = foo_styles_css.classes.Bar;
+            var y = 'a';
+            """);
     test(srcs(cssVarsDefinition, importer), expected(cssVarsExpected, importerExpected));
     assertThat(cssNames).containsExactly("fooStylesBar", "active");
   }
@@ -510,31 +584,33 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     SourceFile cssVarsDefinition =
         SourceFile.fromCode(
             "foo/styles.css.closure.js",
-            lines(
-                "/**",
-                " * @fileoverview generated from foo/styles.css",
-                " * @sassGeneratedCssTs",
-                " */",
-                "goog.module('foo.styles$2ecss');",
-                "/** @type {{Bar: string, Baz: string}} */",
-                "exports.classes = {",
-                "  'Bar': goog.getCssName('fooStylesBar'),",
-                "  'Baz': goog.getCssName('fooStylesBaz'),",
-                "}"));
+            """
+            /**
+             * @fileoverview generated from foo/styles.css
+             * @sassGeneratedCssTs
+             */
+            goog.module('foo.styles$2ecss');
+            /** @type {{Bar: string, Baz: string}} */
+            exports.classes = {
+              'Bar': goog.getCssName('fooStylesBar'),
+              'Baz': goog.getCssName('fooStylesBaz'),
+            }
+            """);
     SourceFile cssVarsExpected =
         SourceFile.fromCode(
             "foo/styles.css.closure.js",
-            lines(
-                "/**",
-                " * @fileoverview generated from foo/styles.css",
-                " * @sassGeneratedCssTs",
-                " */",
-                "goog.module('foo.styles$2ecss');",
-                "/** @type {{Bar: string, Baz: string}} */",
-                "exports.classes = {",
-                "  'Bar': 'fsr',",
-                "  'Baz': 'fsz',",
-                "}"));
+            """
+            /**
+             * @fileoverview generated from foo/styles.css
+             * @sassGeneratedCssTs
+             */
+            goog.module('foo.styles$2ecss');
+            /** @type {{Bar: string, Baz: string}} */
+            exports.classes = {
+              'Bar': 'fsr',
+              'Baz': 'fsz',
+            }
+            """);
     test(srcs(cssVarsDefinition), expected(cssVarsExpected));
     assertThat(cssNames).isEmpty();
   }
@@ -544,13 +620,14 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     SourceFile nonCssClosureFile =
         SourceFile.fromCode(
             "foo/invalid.closure.js",
-            lines(
-                "/**",
-                " * @fileoverview contains an invalid sassGeneratedCssTs annotation",
-                // This annotation is invalid since this is not a .css.closure.js file
-                " * @sassGeneratedCssTs",
-                " */",
-                "var x = 'foo';"));
+            """
+            /**
+             * @fileoverview contains an invalid sassGeneratedCssTs annotation
+            // This annotation is invalid since this is not a .css.closure.js file
+             * @sassGeneratedCssTs
+             */
+            var x = 'foo';
+            """);
     test(srcs(nonCssClosureFile), error(UNEXPECTED_SASS_GENERATED_CSS_TS_ERROR));
   }
 
@@ -559,25 +636,27 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     SourceFile cssVarsDefinition =
         SourceFile.fromCode(
             "foo/styles.css.closure.js",
-            lines(
-                "/**",
-                " * @fileoverview generated from foo/styles.css",
-                " * @sassGeneratedCssTs",
-                " */",
-                "goog.module('foo.styles$2ecss');",
-                "/** @type {{Bar: string, Baz: string}} */",
-                "exports.classes = {",
-                "  'Bar': goog.getCssName('fooStylesBar'),",
-                "  'Baz': goog.getCssName('fooStylesBaz'),",
-                "}"));
+            """
+            /**
+             * @fileoverview generated from foo/styles.css
+             * @sassGeneratedCssTs
+             */
+            goog.module('foo.styles$2ecss');
+            /** @type {{Bar: string, Baz: string}} */
+            exports.classes = {
+              'Bar': goog.getCssName('fooStylesBar'),
+              'Baz': goog.getCssName('fooStylesBaz'),
+            }
+            """);
     SourceFile importer =
         SourceFile.fromCode(
             "foo/importer.closure.js",
-            lines(
-                "goog.module('foo.importer');",
-                "/** @type {string} */",
-                "const foo_styles_css = goog.require('foo.styles$2ecss')",
-                "var x = foo_styles_css.classes;"));
+            """
+            goog.module('foo.importer');
+            /** @type {string} */
+            const foo_styles_css = goog.require('foo.styles$2ecss')
+            var x = foo_styles_css.classes;
+            """);
     test(srcs(cssVarsDefinition, importer), error(INVALID_USE_OF_CLASSES_OBJECT_ERROR));
   }
 
@@ -586,25 +665,27 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     SourceFile cssVarsDefinition =
         SourceFile.fromCode(
             "foo/styles.css.closure.js",
-            lines(
-                "/**",
-                " * @fileoverview generated from foo/styles.css",
-                " * @sassGeneratedCssTs",
-                " */",
-                "goog.module('foo.styles$2ecss');",
-                "/** @type {{Bar: string, Baz: string}} */",
-                "exports.classes = {",
-                "  'Bar': goog.getCssName('fooStylesBar'),",
-                "  'Baz': goog.getCssName('fooStylesBaz'),",
-                "}"));
+            """
+            /**
+             * @fileoverview generated from foo/styles.css
+             * @sassGeneratedCssTs
+             */
+            goog.module('foo.styles$2ecss');
+            /** @type {{Bar: string, Baz: string}} */
+            exports.classes = {
+              'Bar': goog.getCssName('fooStylesBar'),
+              'Baz': goog.getCssName('fooStylesBaz'),
+            }
+            """);
     SourceFile importer =
         SourceFile.fromCode(
             "foo/importer.closure.js",
-            lines(
-                "goog.module('foo.importer');",
-                "/** @type {string} */",
-                "const foo_styles_css = goog.require('foo.styles$2ecss')",
-                "var x = foo_styles_css.classes.Quux;"));
+            """
+            goog.module('foo.importer');
+            /** @type {string} */
+            const foo_styles_css = goog.require('foo.styles$2ecss')
+            var x = foo_styles_css.classes.Quux;
+            """);
     test(srcs(cssVarsDefinition, importer), error(UNKNOWN_SYMBOL_ERROR));
   }
 }

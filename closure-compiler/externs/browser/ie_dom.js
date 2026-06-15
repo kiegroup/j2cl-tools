@@ -403,6 +403,24 @@ Window.prototype.external;
 Window.prototype.msCrypto;
 
 /**
+ * @constructor
+ * @deprecated
+ */
+function External() {}
+
+/**
+ * @deprecated
+ * @return {undefined}
+*/
+External.prototype.AddSearchProvider = function() {};
+
+/**
+ * @deprecated
+ * @return {undefined}
+*/
+External.prototype.IsSearchProviderInstalled = function() {};
+
+/**
  * @type {boolean}
  * @implicitCast
  * @see http://msdn.microsoft.com/en-us/library/ie/ms533072(v=vs.85).aspx
@@ -875,6 +893,18 @@ Element.prototype.componentFromPoint = function(iCoordX, iCoordY) {};
  * @see http://msdn.microsoft.com/en-us/library/ms533690(VS.85).aspx
  */
 Element.prototype.contentEditable;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/enterKeyHint
+ */
+Element.prototype.enterKeyHint;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/inputMode
+ */
+Element.prototype.inputMode;
 
 /**
  * @return {TextRange}

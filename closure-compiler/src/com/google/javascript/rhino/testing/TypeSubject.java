@@ -45,12 +45,15 @@ import static com.google.common.truth.Fact.simpleFact;
 import static com.google.common.truth.Truth.assertAbout;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.KnownSymbolType;
+import com.google.javascript.rhino.jstype.Property;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
@@ -154,6 +157,17 @@ public final class TypeSubject extends Subject {
     return this;
   }
 
+  public void isUnionType() {
+    check("isUnionType()").that(actualNonNull().isUnionType()).isTrue();
+  }
+
+  public void isUnionOf(JSType... alternates) {
+    isUnionType();
+    check("getAlternates().equals(%s)", ImmutableList.copyOf(alternates))
+        .that(actualNonNull().toMaybeUnionType().getAlternates())
+        .containsExactlyElementsIn(ImmutableList.copyOf(alternates));
+  }
+
   public void isResolved() {
     check("isResolved()").that(actualNonNull().isResolved()).isTrue();
   }
@@ -176,11 +190,34 @@ public final class TypeSubject extends Subject {
         .that(actualNonNull().toMaybeObjectType().getPropertyType(propName));
   }
 
+  /**
+   * Returns a {@code TypeSubject} that is the type of the property with name propName, to make
+   * assertions about the objectType's property Type message. Assumes that {@code actual()} is an
+   * object type with property propName, so it should be run after {@link
+   * #isObjectTypeWithProperty}.
+   */
+  public TypeSubject withTypeOfProp(KnownSymbolType propName) {
+    check("isObjectType()").that(actualNonNull().isObjectType()).isTrue();
+
+    return check("toMaybeObjectType().getPropertyType(%s)", propName)
+        .about(types())
+        .that(
+            actualNonNull().toMaybeObjectType().getPropertyType(new Property.SymbolKey(propName)));
+  }
+
   public void hasDeclaredProperty(String propName) {
     check("isObjectType()").that(actualNonNull().isObjectType()).isTrue();
 
     check("toMaybeObjectType().isPropertyTypeDeclared(%s)", propName)
         .that(actualNonNull().toMaybeObjectType().isPropertyTypeDeclared(propName))
+        .isTrue();
+  }
+
+  public void hasProperty(KnownSymbolType propName) {
+    check("isObjectType()").that(actualNonNull().isObjectType()).isTrue();
+
+    check("toMaybeObjectType().isPropertyTypeDeclared(%s)", propName)
+        .that(actualNonNull().toMaybeObjectType().hasProperty(new Property.SymbolKey(propName)))
         .isTrue();
   }
 
@@ -203,6 +240,18 @@ public final class TypeSubject extends Subject {
 
   public void isNotSubtypeOf(JSType superType) {
     check("isSubtypeOf(%s)", superType).that(actualNonNull().isSubtypeOf(superType)).isFalse();
+  }
+
+  public void canTestForShallowEqualityWith(JSType other) {
+    check("canTestForShallowEqualityWith(%s)", other)
+        .that(actualNonNull().canTestForShallowEqualityWith(other))
+        .isTrue();
+  }
+
+  public void cannotTestForShallowEqualityWith(JSType other) {
+    check("canTestForShallowEqualityWith(%s)", other)
+        .that(actualNonNull().canTestForShallowEqualityWith(other))
+        .isFalse();
   }
 
   public void toStringIsEqualTo(String typeString) {
@@ -298,6 +347,10 @@ public final class TypeSubject extends Subject {
       check("getInstanceType().getDisplayName()")
           .that(actualFunctionType().getInstanceType().getDisplayName())
           .isEqualTo(name);
+    }
+
+    public void isAbstract() {
+      check("isAbstract()").that(actualFunctionType().isAbstract()).isTrue();
     }
 
     public void hasPrimitiveId(ClosurePrimitive id) {

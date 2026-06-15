@@ -47,7 +47,6 @@ public class TaskRegistry {
                 outputTypeToTaskMappings.put(task.getOutputType(), task);
             }
         }
-//        System.out.println(outputTypeToTaskMappings);
     }
 
     public TaskFactory taskForOutputType(String outputType) {

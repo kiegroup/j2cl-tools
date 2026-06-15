@@ -31,6 +31,7 @@ import com.google.j2cl.transpiler.ast.LabeledStatement;
 import com.google.j2cl.transpiler.ast.LoopStatement;
 import com.google.j2cl.transpiler.ast.Node;
 import com.google.j2cl.transpiler.ast.Statement;
+import com.google.j2cl.transpiler.ast.YieldStatement;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -99,8 +100,8 @@ public class RemoveUnnecessaryLabels extends NormalizationPass {
 
           private void addEnclosingLabel() {
             // Only loops that that are targeted by breaks or continues are labeled.
-            if (getParent() instanceof LabeledStatement) {
-              labelsToConvert.add(((LabeledStatement) getParent()).getLabel());
+            if (getParent() instanceof LabeledStatement labeledStatement) {
+              labelsToConvert.add(labeledStatement.getLabel());
             }
           }
         });
@@ -115,10 +116,9 @@ public class RemoveUnnecessaryLabels extends NormalizationPass {
         new AbstractRewriter() {
           @Override
           public Node rewriteLabeledStatement(LabeledStatement labeledStatement) {
-            if (!(labeledStatement.getStatement() instanceof Block)) {
+            if (!(labeledStatement.getStatement() instanceof Block labeledBlock)) {
               return labeledStatement;
             }
-            Block labeledBlock = (Block) labeledStatement.getStatement();
 
             if (labeledBlock.getStatements().isEmpty()) {
               return labeledBlock;
@@ -193,8 +193,8 @@ public class RemoveUnnecessaryLabels extends NormalizationPass {
           }
 
           private Label getInnermostLabel(LabeledStatement labeledStatement) {
-            if (labeledStatement.getStatement() instanceof LabeledStatement) {
-              return getInnermostLabel((LabeledStatement) labeledStatement.getStatement());
+            if (labeledStatement.getStatement() instanceof LabeledStatement innerStatement) {
+              return getInnermostLabel(innerStatement);
             }
             return labeledStatement.getLabel();
           }
@@ -224,6 +224,23 @@ public class RemoveUnnecessaryLabels extends NormalizationPass {
             }
 
             return breakOrContinueStatement.toBuilder()
+                .setLabelReference(replacementLabel.createReference())
+                .build();
+          }
+
+          @Override
+          public Node rewriteYieldStatement(YieldStatement yieldStatement) {
+            if (yieldStatement.getLabelReference() == null) {
+              return yieldStatement;
+            }
+
+            Label replacementLabel =
+                labelReplacementMap.get(yieldStatement.getLabelReference().getTarget());
+            if (replacementLabel == null) {
+              return yieldStatement;
+            }
+
+            return YieldStatement.Builder.from(yieldStatement)
                 .setLabelReference(replacementLabel.createReference())
                 .build();
           }

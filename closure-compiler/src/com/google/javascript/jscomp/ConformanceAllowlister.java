@@ -17,29 +17,28 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlistedConformanceViolationsBehavior;
 import com.google.javascript.jscomp.Requirement.Severity;
 import com.google.javascript.rhino.Node;
 
 /** Creates or updates conformance allowlist/whitelist entries. */
-@GwtIncompatible("Conformance")
 public class ConformanceAllowlister {
   private ConformanceAllowlister() {}
 
   public static ImmutableSet<String> getViolatingPaths(
       Compiler compiler, Node externs, Node ast, Requirement requirement) {
     return getConformanceErrors(compiler, externs, ast, requirement).stream()
-        .map(JSError::getSourceName)
+        .map(JSError::sourceName)
         .collect(toImmutableSet());
   }
 
   public static ImmutableSet<Node> getViolatingNodes(
       Compiler compiler, Node externs, Node ast, Requirement requirement) {
     return getConformanceErrors(compiler, externs, ast, requirement).stream()
-        .map(JSError::getNode)
+        .map(JSError::node)
         .collect(toImmutableSet());
   }
 
@@ -68,12 +67,16 @@ public class ConformanceAllowlister {
             public synchronized boolean shouldReportConformanceViolation(
                 Requirement requirement,
                 Optional<Requirement.WhitelistEntry> whitelistEntry,
-                JSError diagnostic) {
+                JSError diagnostic,
+                LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior,
+                boolean isAllowlisted) {
               errors.add(diagnostic);
               return false;
             }
           });
-      CheckConformance check = new CheckConformance(compiler, ImmutableList.of(cleanedConfig));
+      CheckConformance check =
+          new CheckConformance(
+              compiler, ImmutableList.of(cleanedConfig), /* reportingMode= */ null);
       check.process(externs, ast);
     } finally {
       compiler.setErrorManager(oldErrorManager);

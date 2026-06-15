@@ -548,13 +548,16 @@ public final class CodePrinter {
       }
 
       StaticSourceFile staticSrc = NodeUtil.getSourceFile(n);
-      if (!(staticSrc instanceof SourceFile)) {
+      if (!(staticSrc instanceof SourceFile src)) {
         return null;
       }
-      SourceFile src = (SourceFile) staticSrc;
 
       String srcCode;
       try {
+        if (src.isStubSourceFileForAlreadyProvidedInput()) {
+          // source file is a stub file, so we can not get number from source.
+          return null;
+        }
         srcCode = src.getCode();
       } catch (IOException e) {
         return null;

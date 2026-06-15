@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.kie.j2cl.tools.processors</groupId>
         <artifactId>parent</artifactId>
-        <version>0.8.0</version>
+        <version>0.9</version>
     </parent>
 
     <artifactId>processors</artifactId>
@@ -54,7 +54,6 @@
         <dependency>
             <groupId>com.google.jsinterop</groupId>
             <artifactId>jsinterop-annotations</artifactId>
-            <version>${com.google.jsinterop.annotations.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -89,7 +88,7 @@
         <dependency>
             <groupId>com.google.javascript</groupId>
             <artifactId>closure-compiler</artifactId>
-            <version>v20221004</version>
+            <version>${closure.compiler.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.resolver</groupId>

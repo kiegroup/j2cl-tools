@@ -20,7 +20,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.j2cl.common.EntryPointPattern;
 import com.google.j2cl.common.OutputUtils.Output;
 import com.google.j2cl.common.Problems;
@@ -31,6 +30,7 @@ import com.google.j2cl.transpiler.frontend.Frontend;
 import com.google.j2cl.transpiler.frontend.common.FrontendOptions;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /** Configuration for the transpiler. */
@@ -41,12 +41,12 @@ public abstract class J2clTranspilerOptions implements FrontendOptions, BackendO
 
   public abstract Backend getBackend();
 
-  public abstract Builder toBuilder();
-
   public static Builder newBuilder() {
     return new AutoValue_J2clTranspilerOptions.Builder()
+        .setSystem("")
         .setOptimizeAutoValue(false)
-        .setNullMarkedSupported(false);
+        .setNullMarkedSupported(false)
+        .setEnableWasmCustomDescriptors(false);
   }
 
   @Override
@@ -65,6 +65,10 @@ public abstract class J2clTranspilerOptions implements FrontendOptions, BackendO
     public abstract Builder setNativeSources(List<FileInfo> files);
 
     public abstract Builder setClasspaths(List<String> entries);
+
+    public abstract Builder setDirectDeps(List<String> entries);
+
+    public abstract Builder setSystem(String jdkSystem);
 
     public abstract Builder setOutput(Output output);
 
@@ -86,20 +90,26 @@ public abstract class J2clTranspilerOptions implements FrontendOptions, BackendO
 
     public abstract Builder setBackend(Backend backend);
 
-    public Builder setWasmEntryPointStrings(ImmutableList<String> wasmEntryPoints) {
+    public Builder setWasmEntryPointStrings(List<String> wasmEntryPoints) {
       return setWasmEntryPointPatterns(
           wasmEntryPoints.stream().map(EntryPointPattern::from).collect(toImmutableList()));
     }
 
-    abstract Builder setWasmEntryPointPatterns(ImmutableList<EntryPointPattern> entryPointSpecs);
+    abstract Builder setWasmEntryPointPatterns(List<EntryPointPattern> entryPointSpecs);
 
-    public abstract Builder setDefinesForWasm(ImmutableMap<String, String> definesForWasm);
+    public abstract Builder setDefinesForWasm(Map<String, String> definesForWasm);
+
+    public abstract Builder setEnableWasmCustomDescriptors(boolean enableWasmCustomDescriptors);
 
     public abstract Builder setNullMarkedSupported(boolean isNullMarkedSupported);
 
-    public abstract Builder setKotlincOptions(ImmutableList<String> kotlincOptions);
+    public abstract Builder setJavacOptions(List<String> javacOptions);
 
-    public abstract Builder setForbiddenAnnotations(ImmutableList<String> forbiddenAnnotations);
+    public abstract Builder setKotlincOptions(List<String> kotlincOptions);
+
+    public abstract Builder setForbiddenAnnotations(List<String> forbiddenAnnotations);
+
+    public abstract Builder setObjCNamePrefix(String objCNamePrefix);
 
     abstract J2clTranspilerOptions autoBuild();
 

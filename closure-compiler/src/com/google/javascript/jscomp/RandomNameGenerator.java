@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -33,39 +32,33 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 /**
- * A class for generating unique, randomized JavaScript variable/property
- * names.
+ * A class for generating unique, randomized JavaScript variable/property names.
  *
- * <p>Unlike NameGenerator, names do not follow a predictable sequence such as
- *   a, b, ... z, aa, ab, ..., az, ba, ...
- * but instead they are random, based on an external random seed. We do
- * partially compromise for efficiency in that
+ * <p>Unlike NameGenerator, names do not follow a predictable sequence such as a, b, ... z, aa, ab,
+ * ..., az, ba, ... but instead they are random, based on an external random seed. We do partially
+ * compromise for efficiency in that
+ *
  * <ul>
- * <li>Generated names will have the same length as they would with
- * NameGenerator
- * <li>We don't use a completely different alphabet for each name prefix, but
- * instead choose among a few with a predictable formula.
+ *   <li>Generated names will have the same length as they would with NameGenerator
+ *   <li>We don't use a completely different alphabet for each name prefix, but instead choose among
+ *       a few with a predictable formula.
  * </ul>
  *
  * <p>More precisely:
+ *
  * <ul>
- * <li>We compute a random shuffle of the alphabet for "first characters", and
- * a small number of random shuffles of the alphabet for "non-first
- * characters". Then we do a typical number-to-text conversion of a name's
- * "index", where the alphabet for digits is not just 0 to 9. The least
- * significant digit comes first.
- * <li>We represent each digit using an appropriate alphabet. If it's not the
- * first character of the name (i.e. not the least significant one, or there
- * is a constant prefix) then we have several appropriate alphabets to choose
- * from; we choose one based a hash of the previous digits of this name.
+ *   <li>We compute a random shuffle of the alphabet for "first characters", and a small number of
+ *       random shuffles of the alphabet for "non-first characters". Then we do a typical
+ *       number-to-text conversion of a name's "index", where the alphabet for digits is not just 0
+ *       to 9. The least significant digit comes first.
+ *   <li>We represent each digit using an appropriate alphabet. If it's not the first character of
+ *       the name (i.e. not the least significant one, or there is a constant prefix) then we have
+ *       several appropriate alphabets to choose from; we choose one based a hash of the previous
+ *       digits of this name.
  * </ul>
  *
  * <p>This class is not thread safe.
  */
-@GwtIncompatible(
-    "java.util.Collections.shuffle, "
-    + "com.google.common.hash.Hasher, "
-    + "com.google.common.hash.Hashing")
 public final class RandomNameGenerator implements NameGenerator {
 
   /** Generate random names with this first character. */
@@ -89,9 +82,10 @@ public final class RandomNameGenerator implements NameGenerator {
   /** Prefix added to all generated names */
   private String prefix;
 
-  /** How many names have we issued so far (includes names that cannot be used
-   * because they are reserved through 'reservedNames' or JavaScript
-   * keywords) */
+  /**
+   * How many names have we issued so far (includes names that cannot be used because they are
+   * reserved through 'reservedNames' or JavaScript keywords)
+   */
   private int nameCount;
 
   /** How many shuffles of nonFirstChars to generate */
@@ -99,21 +93,19 @@ public final class RandomNameGenerator implements NameGenerator {
 
   /** Randomly-shuffled version of firstChars */
   private String shuffledFirst;
+
   /** Randomly-shuffled versions of nonFirstChars (there are NUM_SHUFFLES of them) */
   private ImmutableList<String> shuffledNonFirst;
 
   public RandomNameGenerator(Random random) {
     this.random = random;
-    reset(ImmutableSet.of(), "", null);
+    reset(ImmutableSet.of(), "", ImmutableSet.of());
   }
 
   RandomNameGenerator(
-      Set<String> reservedNames,
-      String prefix,
-      char @Nullable [] reservedCharacters,
-      Random random) {
+      Set<String> reservedNames, String prefix, Set<Character> reservedCharacters, Random random) {
     this.random = random;
-    reset(reservedNames, prefix, reservedCharacters);
+    reset(reservedNames, prefix, reservedCharacters, reservedCharacters);
   }
 
   /**
@@ -133,16 +125,15 @@ public final class RandomNameGenerator implements NameGenerator {
   RandomNameGenerator(
       Set<String> reservedNames,
       String prefix,
-      char @Nullable [] reservedFirstCharacters,
-      char @Nullable [] reservedNonFirstCharacters,
+      Set<Character> reservedFirstCharacters,
+      Set<Character> reservedNonFirstCharacters,
       Random random) {
     this.random = random;
     reset(reservedNames, prefix, reservedFirstCharacters, reservedNonFirstCharacters);
   }
 
   @Override
-  public void reset(
-      Set<String> reservedNames, String prefix, char @Nullable [] reservedCharacters) {
+  public void reset(Set<String> reservedNames, String prefix, Set<Character> reservedCharacters) {
     reset(reservedNames, prefix, reservedCharacters, reservedCharacters);
   }
 
@@ -150,16 +141,15 @@ public final class RandomNameGenerator implements NameGenerator {
   public void reset(
       Set<String> reservedNames,
       String prefix,
-      char @Nullable [] reservedFirstCharacters,
-      char @Nullable [] reservedNonFirstCharacters) {
+      Set<Character> reservedFirstCharacters,
+      Set<Character> reservedNonFirstCharacters) {
     this.reservedNames = ImmutableSet.copyOf(reservedNames);
     this.prefix = prefix;
     nameCount = 0;
 
-    // Build the character arrays to use
-    firstChars = Sets.difference(FIRST_CHAR, asSet(reservedFirstCharacters)).immutableCopy();
-    nonFirstChars =
-        Sets.difference(NONFIRST_CHAR, asSet(reservedNonFirstCharacters)).immutableCopy();
+    // Build the character sets to use
+    firstChars = Sets.difference(FIRST_CHAR, reservedFirstCharacters).immutableCopy();
+    nonFirstChars = Sets.difference(NONFIRST_CHAR, reservedNonFirstCharacters).immutableCopy();
 
     checkPrefix(prefix);
     shuffleAlphabets();
@@ -167,31 +157,27 @@ public final class RandomNameGenerator implements NameGenerator {
 
   @Override
   public NameGenerator clone(
-      Set<String> reservedNames, String prefix, char @Nullable [] reservedCharacters) {
-    return new RandomNameGenerator(
-        reservedNames, prefix, reservedCharacters, random);
+      Set<String> reservedNames, String prefix, Set<Character> reservedCharacters) {
+    return new RandomNameGenerator(reservedNames, prefix, reservedCharacters, random);
   }
 
   private static ImmutableSet<Character> asSet(char @Nullable [] chars) {
     return chars == null ? ImmutableSet.of() : ImmutableSet.copyOf(Chars.asList(chars));
   }
 
-  /**
-   * Validates a name prefix.
-   */
+  /** Validates a name prefix. */
   private void checkPrefix(String prefix) {
     if (prefix.length() > 0) {
       // Make sure that prefix starts with a legal character.
       if (!firstChars.contains(prefix.charAt(0))) {
         throw new IllegalArgumentException(
-            "prefix must start with one of: "
-            + Joiner.on(", ").join(firstChars));
+            "prefix must start with one of: " + Joiner.on(", ").join(firstChars));
       }
       for (int pos = 1; pos < prefix.length(); ++pos) {
         if (!nonFirstChars.contains(prefix.charAt(pos))) {
           throw new IllegalArgumentException(
               "prefix has invalid characters, must be one of: "
-              + Joiner.on(", ").join(nonFirstChars));
+                  + Joiner.on(", ").join(nonFirstChars));
         }
       }
     }
@@ -213,16 +199,13 @@ public final class RandomNameGenerator implements NameGenerator {
     shuffledNonFirst = builder.build();
   }
 
-  /**
-   * Computes the length (in digits) for a name suffix.
-   */
+  /** Computes the length (in digits) for a name suffix. */
   private int getNameLength(int position, int nameIdx) {
     int length = 0;
     nameIdx++;
     do {
       nameIdx--;
-      int alphabetSize = position == 0
-          ? firstChars.size() : nonFirstChars.size();
+      int alphabetSize = position == 0 ? firstChars.size() : nonFirstChars.size();
       nameIdx /= alphabetSize;
       position++;
       length++;
@@ -231,9 +214,9 @@ public final class RandomNameGenerator implements NameGenerator {
   }
 
   /**
-   * Returns the {@code nameIdx}-th short name. This might be a reserved name.
-   * A user-requested prefix is not included, but the first returned character
-   * is supposed to go at position {@code position} in the final name
+   * Returns the {@code nameIdx}-th short name. This might be a reserved name. A user-requested
+   * prefix is not included, but the first returned character is supposed to go at position {@code
+   * position} in the final name
    */
   private String generateSuffix(int position, int nameIdx) {
     StringBuilder name = new StringBuilder();
@@ -264,8 +247,8 @@ public final class RandomNameGenerator implements NameGenerator {
   /**
    * Generates the next short name.
    *
-   * <p>This generates names of increasing length. To minimize output size,
-   * therefore, it's good to call it for the most used symbols first.
+   * <p>This generates names of increasing length. To minimize output size, therefore, it's good to
+   * call it for the most used symbols first.
    */
   @Override
   public String generateNextName() {
@@ -273,7 +256,9 @@ public final class RandomNameGenerator implements NameGenerator {
       String name = prefix + generateSuffix(prefix.length(), nameCount++);
 
       // Make sure it's not a JS keyword or reserved name.
-      if (TokenStream.isKeyword(name) || reservedNames.contains(name)) {
+      if (TokenStream.isKeyword(name)
+          || reservedNames.contains(name)
+          || DefaultNameGenerator.isBadName(name)) {
         continue;
       }
 

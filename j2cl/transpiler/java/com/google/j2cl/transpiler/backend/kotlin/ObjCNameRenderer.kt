@@ -38,64 +38,123 @@ internal class ObjCNameRenderer(val nameRenderer: NameRenderer) {
   private val environment: Environment
     get() = nameRenderer.environment
 
-  fun objCNameAnnotationSource(name: String, exact: Boolean? = null): Source =
+  private val hiddenFromObjCMapping: HiddenFromObjCMapping
+    get() = environment.hiddenFromObjCMapping
+
+  private val isJ2ObjCInteropEnabled: Boolean
+    get() = nameRenderer.environment.isJ2ObjCInteropEnabled
+
+  fun hiddenFromObjCAnnotationSource(): Source =
+    annotation(
+      nameRenderer.sourceWithOptInQualifiedName("kotlin.experimental.ExperimentalObjCRefinement") {
+        topLevelQualifiedNameSource("kotlin.native.HiddenFromObjC")
+      }
+    )
+
+  fun objCNameAnnotationSource(
+    name: String,
+    swiftName: String? = null,
+    exact: Boolean? = null,
+  ): Source =
     annotation(
       nameRenderer.sourceWithOptInQualifiedName("kotlin.experimental.ExperimentalObjCName") {
         topLevelQualifiedNameSource("kotlin.native.ObjCName")
       },
       literal(name),
+      swiftName?.let { parameterSource("swiftName", literal(it)) }.orEmpty(),
       exact?.let { parameterSource("exact", literal(it)) }.orEmpty(),
     )
 
   fun objCAnnotationSource(typeDeclaration: TypeDeclaration): Source =
-    Source.emptyUnless(needsObjCNameAnnotation(typeDeclaration)) {
-      objCNameAnnotationSource(typeDeclaration.objCName, exact = true)
+    when {
+      !isJ2ObjCInteropEnabled -> Source.EMPTY
+      hiddenFromObjCMapping.contains(typeDeclaration) -> hiddenFromObjCAnnotationSource()
+      needsObjCNameAnnotation(typeDeclaration) ->
+        objCNameAnnotationSource(
+          typeDeclaration.objCName(nameRenderer.objCNamePrefix),
+          swiftName = typeDeclaration.objCNameWithoutPrefix,
+          exact = true,
+        )
+      else -> Source.EMPTY
     }
 
   fun objCAnnotationSource(companionObject: CompanionObject): Source =
-    Source.emptyUnless(needsObjCNameAnnotation(companionObject)) {
-      objCNameAnnotationSource(companionObject.declaration.objCName, exact = true)
+    Source.emptyUnless(isJ2ObjCInteropEnabled && needsObjCNameAnnotation(companionObject)) {
+      objCNameAnnotationSource(
+        companionObject.declaration.objCName(nameRenderer.objCNamePrefix),
+        swiftName = companionObject.declaration.objCNameWithoutPrefix,
+        exact = true,
+      )
     }
 
   fun objCAnnotationSource(
     methodDescriptor: MethodDescriptor,
     methodObjCNames: MethodObjCNames?,
   ): Source =
-    Source.emptyUnless(!methodDescriptor.isConstructor) {
-      methodObjCNames?.methodName?.let { objCNameAnnotationSource(it) }.orEmpty()
+    Source.emptyIf(
+      !isJ2ObjCInteropEnabled ||
+        methodDescriptor.isConstructor ||
+        hiddenFromObjCMapping.contains(methodDescriptor.enclosingTypeDescriptor)
+    ) {
+      when {
+        hiddenFromObjCMapping.contains(methodDescriptor) -> hiddenFromObjCAnnotationSource()
+        else -> objCNameAnnotationSource(methodObjCNames)
+      }
     }
+
+  fun objCNameAnnotationSource(methodObjCNames: MethodObjCNames?): Source =
+    methodObjCNames
+      ?.objCName
+      ?.let { objCNameAnnotationSource(it.string, swiftName = it.swiftString) }
+      .orEmpty()
 
   fun objCAnnotationSource(fieldDescriptor: FieldDescriptor): Source =
-    Source.emptyUnless(needsObjCNameAnnotation(fieldDescriptor)) {
-      objCNameAnnotationSource(fieldDescriptor.objCName)
+    Source.emptyIf(
+      !isJ2ObjCInteropEnabled ||
+        hiddenFromObjCMapping.contains(fieldDescriptor.enclosingTypeDescriptor)
+    ) {
+      when {
+        hiddenFromObjCMapping.contains(fieldDescriptor) -> hiddenFromObjCAnnotationSource()
+        needsObjCNameAnnotation(fieldDescriptor) ->
+          objCNameAnnotationSource(fieldDescriptor.objCName)
+        else -> Source.EMPTY
+      }
     }
 
-  private fun needsObjCNameAnnotation(typeDeclaration: TypeDeclaration): Boolean =
+  private fun needsObjCNameAnnotation(
+    typeDeclaration: TypeDeclaration,
+    forceObjCNameAnnotation: Boolean = false,
+  ): Boolean =
     environment.ktVisibility(typeDeclaration).needsObjCNameAnnotation &&
       !typeDeclaration.isLocal &&
-      !typeDeclaration.isAnonymous
+      !typeDeclaration.isAnonymous &&
+      (forceObjCNameAnnotation ||
+        typeDeclaration.objectiveCName != null ||
+        typeDeclaration.objectiveCNamePrefix != null)
 
   private fun needsObjCNameAnnotation(companionObject: CompanionObject): Boolean =
     needsObjCNameAnnotation(companionObject.enclosingTypeDeclaration)
 
   private fun needsObjCNameAnnotation(method: Method): Boolean =
-    method.descriptor.enclosingTypeDescriptor.typeDeclaration.let { enclosingTypeDeclaration ->
-      !enclosingTypeDeclaration.isLocal &&
-        !enclosingTypeDeclaration.isAnonymous &&
-        environment.ktVisibility(method.descriptor).needsObjCNameAnnotation &&
-        !method.isJavaOverride
-    }
+    !hiddenFromObjCMapping.contains(method.descriptor) &&
+      method.descriptor.enclosingTypeDescriptor.typeDeclaration.let { enclosingTypeDeclaration ->
+        !enclosingTypeDeclaration.isLocal &&
+          !enclosingTypeDeclaration.isAnonymous &&
+          environment.ktVisibility(method.descriptor).needsObjCNameAnnotation &&
+          !method.isJavaOverride &&
+          method.descriptor.objectiveCName != null
+      }
 
   private fun needsObjCNameAnnotation(fieldDescriptor: FieldDescriptor): Boolean =
-    fieldDescriptor.enclosingTypeDescriptor.typeDeclaration.let { enclosingTypeDeclaration ->
-      needsObjCNameAnnotation(enclosingTypeDeclaration) &&
-        !enclosingTypeDeclaration.isLocal &&
-        !enclosingTypeDeclaration.isAnonymous &&
-        environment.ktVisibility(fieldDescriptor).needsObjCNameAnnotation
-    }
+    !hiddenFromObjCMapping.contains(fieldDescriptor) &&
+      fieldDescriptor.enclosingTypeDescriptor.typeDeclaration.let { enclosingTypeDeclaration ->
+        needsObjCNameAnnotation(enclosingTypeDeclaration, forceObjCNameAnnotation = true) &&
+          environment.ktVisibility(fieldDescriptor).needsObjCNameAnnotation
+      }
 
   internal fun renderedObjCNames(method: Method): MethodObjCNames? =
     when {
+      !isJ2ObjCInteropEnabled -> null
       !needsObjCNameAnnotation(method) -> null
       else -> method.toObjCNames()
     }

@@ -24,6 +24,12 @@
 )
 
 ;;; Code for libraryinfo.Main [type definition]
+(type $libraryinfo.Main (sub $java.lang.Object (struct
+ (field $vtable (ref $libraryinfo.Main.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $libraryinfo.Main.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -31,14 +37,14 @@
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  ))
 )
-(type $libraryinfo.Main (sub $java.lang.Object (struct
- (field $vtable (ref $libraryinfo.Main.vtable))
- (field $itable (ref $itable))
+
+;;; Code for libraryinfo.Main.FunctionnalInterface.$LambdaAdaptor [type definition]
+(type $libraryinfo.Main.FunctionnalInterface.$LambdaAdaptor (sub $java.lang.Object (struct
+ (field $vtable (ref $libraryinfo.Main.FunctionnalInterface.$LambdaAdaptor.vtable))
+ (field $itable (ref $libraryinfo.Main.FunctionnalInterface.$LambdaAdaptor.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for libraryinfo.Main.FunctionnalInterface.$LambdaAdaptor [type definition]
 (type $libraryinfo.Main.FunctionnalInterface.$LambdaAdaptor.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -47,14 +53,14 @@
  (field $m_foo__void (ref $function.m_foo__void))
  ))
 )
-(type $libraryinfo.Main.FunctionnalInterface.$LambdaAdaptor (sub $java.lang.Object (struct
- (field $vtable (ref $libraryinfo.Main.FunctionnalInterface.$LambdaAdaptor.vtable))
- (field $itable (ref $libraryinfo.Main.FunctionnalInterface.$LambdaAdaptor.itable))
+
+;;; Code for libraryinfo.Main.JsAccessibleFunctionnalInterface.$LambdaAdaptor [type definition]
+(type $libraryinfo.Main.JsAccessibleFunctionnalInterface.$LambdaAdaptor (sub $java.lang.Object (struct
+ (field $vtable (ref $libraryinfo.Main.JsAccessibleFunctionnalInterface.$LambdaAdaptor.vtable))
+ (field $itable (ref $libraryinfo.Main.JsAccessibleFunctionnalInterface.$LambdaAdaptor.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for libraryinfo.Main.JsAccessibleFunctionnalInterface.$LambdaAdaptor [type definition]
 (type $libraryinfo.Main.JsAccessibleFunctionnalInterface.$LambdaAdaptor.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -63,14 +69,14 @@
  (field $m_accessibleFunctionalInterfaceMethod__void (ref $function.m_accessibleFunctionalInterfaceMethod__void))
  ))
 )
-(type $libraryinfo.Main.JsAccessibleFunctionnalInterface.$LambdaAdaptor (sub $java.lang.Object (struct
- (field $vtable (ref $libraryinfo.Main.JsAccessibleFunctionnalInterface.$LambdaAdaptor.vtable))
- (field $itable (ref $libraryinfo.Main.JsAccessibleFunctionnalInterface.$LambdaAdaptor.itable))
+
+;;; Code for libraryinfo.Main.Function.$LambdaAdaptor [type definition]
+(type $libraryinfo.Main.Function.$LambdaAdaptor (sub $java.lang.Object (struct
+ (field $vtable (ref $libraryinfo.Main.Function.$LambdaAdaptor.vtable))
+ (field $itable (ref $libraryinfo.Main.Function.$LambdaAdaptor.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for libraryinfo.Main.Function.$LambdaAdaptor [type definition]
 (type $libraryinfo.Main.Function.$LambdaAdaptor.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -79,14 +85,14 @@
  (field $m_apply__java_lang_String__void (ref $function.m_apply__java_lang_String__void))
  ))
 )
-(type $libraryinfo.Main.Function.$LambdaAdaptor (sub $java.lang.Object (struct
- (field $vtable (ref $libraryinfo.Main.Function.$LambdaAdaptor.vtable))
- (field $itable (ref $libraryinfo.Main.Function.$LambdaAdaptor.itable))
+
+;;; Code for libraryinfo.Main.1 [type definition]
+(type $libraryinfo.Main.1 (sub $java.lang.Object (struct
+ (field $vtable (ref $libraryinfo.Main.1.vtable))
+ (field $itable (ref $itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for libraryinfo.Main.1 [type definition]
 (type $libraryinfo.Main.1.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -95,14 +101,14 @@
  (field $m_foo__void_$pp_libraryinfo (ref $function.m_foo__void_$pp_libraryinfo))
  ))
 )
-(type $libraryinfo.Main.1 (sub $java.lang.Object (struct
- (field $vtable (ref $libraryinfo.Main.1.vtable))
- (field $itable (ref $itable))
+
+;;; Code for libraryinfo.Main.FunctionImpl [type definition]
+(type $libraryinfo.Main.FunctionImpl (sub $java.lang.Object (struct
+ (field $vtable (ref $libraryinfo.Main.FunctionImpl.vtable))
+ (field $itable (ref $libraryinfo.Main.FunctionImpl.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for libraryinfo.Main.FunctionImpl [type definition]
 (type $libraryinfo.Main.FunctionImpl.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -111,21 +117,8 @@
  (field $m_apply__java_lang_String__void (ref $function.m_apply__java_lang_String__void))
  ))
 )
-(type $libraryinfo.Main.FunctionImpl (sub $java.lang.Object (struct
- (field $vtable (ref $libraryinfo.Main.FunctionImpl.vtable))
- (field $itable (ref $libraryinfo.Main.FunctionImpl.itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
- ))
-)
 
 ;;; Code for libraryinfo.Main.MyJsType [type definition]
-(type $libraryinfo.Main.MyJsType.vtable (sub $java.lang.Object.vtable (struct
- (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
- (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
- (field $m_hashCode__int (ref $function.m_hashCode__int))
- (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
- ))
-)
 (type $libraryinfo.Main.MyJsType (sub $java.lang.Object (struct
  (field $vtable (ref $libraryinfo.Main.MyJsType.vtable))
  (field $itable (ref $itable))
@@ -133,8 +126,22 @@
  (field $someField@libraryinfo.Main.MyJsType (mut (ref null $java.lang.Object)))
  ))
 )
+(type $libraryinfo.Main.MyJsType.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ ))
+)
 
 ;;; Code for libraryinfo.Main.Foo [type definition]
+(type $libraryinfo.Main.Foo (sub $java.lang.Object (struct
+ (field $vtable (ref $libraryinfo.Main.Foo.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $$outer_this@libraryinfo.Main.Foo (mut (ref null $libraryinfo.Main)))
+ ))
+)
 (type $libraryinfo.Main.Foo.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -143,15 +150,14 @@
  (field $m_instanceMethod__void_$pp_libraryinfo (ref $function.m_instanceMethod__void_$pp_libraryinfo))
  ))
 )
-(type $libraryinfo.Main.Foo (sub $java.lang.Object (struct
- (field $vtable (ref $libraryinfo.Main.Foo.vtable))
- (field $itable (ref $itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
- (field $$outer_this@libraryinfo.Main.Foo (mut (ref null $libraryinfo.Main)))
- ))
-)
 
 ;;; Code for libraryinfo.Main.$LambdaImplementor$1 [type definition]
+(type $libraryinfo.Main.$LambdaImplementor$1 (sub $libraryinfo.Main.Function.$LambdaAdaptor (struct
+ (field $vtable (ref $libraryinfo.Main.$LambdaImplementor$1.vtable))
+ (field $itable (ref $libraryinfo.Main.$LambdaImplementor$1.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $libraryinfo.Main.$LambdaImplementor$1.vtable (sub $libraryinfo.Main.Function.$LambdaAdaptor.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -160,14 +166,16 @@
  (field $m_apply__java_lang_String__void (ref $function.m_apply__java_lang_String__void))
  ))
 )
-(type $libraryinfo.Main.$LambdaImplementor$1 (sub $libraryinfo.Main.Function.$LambdaAdaptor (struct
- (field $vtable (ref $libraryinfo.Main.$LambdaImplementor$1.vtable))
- (field $itable (ref $libraryinfo.Main.$LambdaImplementor$1.itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
- ))
-)
 
 ;;; Code for libraryinfo.Main.MyJsEnum [type definition]
+(type $libraryinfo.Main.MyJsEnum (sub $java.lang.Enum (struct
+ (field $vtable (ref $libraryinfo.Main.MyJsEnum.vtable))
+ (field $itable (ref $libraryinfo.Main.MyJsEnum.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $name@java.lang.Enum (mut (ref null $java.lang.String)))
+ (field $ordinal@java.lang.Enum (mut i32))
+ ))
+)
 (type $libraryinfo.Main.MyJsEnum.vtable (sub $java.lang.Enum.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -177,16 +185,16 @@
  (field $m_getDeclaringClass__java_lang_Class (ref $function.m_getDeclaringClass__java_lang_Class))
  ))
 )
-(type $libraryinfo.Main.MyJsEnum (sub $java.lang.Enum (struct
- (field $vtable (ref $libraryinfo.Main.MyJsEnum.vtable))
- (field $itable (ref $libraryinfo.Main.MyJsEnum.itable))
+
+;;; Code for libraryinfo.Main.MyEnum [type definition]
+(type $libraryinfo.Main.MyEnum (sub $java.lang.Enum (struct
+ (field $vtable (ref $libraryinfo.Main.MyEnum.vtable))
+ (field $itable (ref $libraryinfo.Main.MyEnum.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  (field $name@java.lang.Enum (mut (ref null $java.lang.String)))
  (field $ordinal@java.lang.Enum (mut i32))
  ))
 )
-
-;;; Code for libraryinfo.Main.MyEnum [type definition]
 (type $libraryinfo.Main.MyEnum.vtable (sub $java.lang.Enum.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -194,14 +202,6 @@
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  (field $m_compareTo__java_lang_Object__int (ref $function.m_compareTo__java_lang_Object__int))
  (field $m_getDeclaringClass__java_lang_Class (ref $function.m_getDeclaringClass__java_lang_Class))
- ))
-)
-(type $libraryinfo.Main.MyEnum (sub $java.lang.Enum (struct
- (field $vtable (ref $libraryinfo.Main.MyEnum.vtable))
- (field $itable (ref $libraryinfo.Main.MyEnum.itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
- (field $name@java.lang.Enum (mut (ref null $java.lang.String)))
- (field $ordinal@java.lang.Enum (mut i32))
  ))
 )
 
@@ -646,7 +646,7 @@
  (local $$instance (ref null $libraryinfo.Main))
  (block
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:25:13
-  (local.set $$instance (struct.new $libraryinfo.Main (ref.as_non_null (global.get $libraryinfo.Main.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $libraryinfo.Main (global.get $libraryinfo.Main.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:25:13
   (call $$ctor__void_$p_libraryinfo_Main@libraryinfo.Main (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:25:13
@@ -957,7 +957,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:89:17
   (call $$clinit__void_<once>_@libraryinfo.Main.1 )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:89:17
-  (local.set $$instance (struct.new $libraryinfo.Main.1 (ref.as_non_null (global.get $libraryinfo.Main.1.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $libraryinfo.Main.1 (global.get $libraryinfo.Main.1.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:89:17
   (call $$ctor__void_$p_libraryinfo_Main_1@libraryinfo.Main.1 (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:89:17
@@ -1043,7 +1043,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:54:29
   (call $$clinit__void_<once>_@libraryinfo.Main.FunctionImpl )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:54:29
-  (local.set $$instance (struct.new $libraryinfo.Main.FunctionImpl (ref.as_non_null (global.get $libraryinfo.Main.FunctionImpl.vtable)) (ref.as_non_null (global.get $libraryinfo.Main.FunctionImpl.itable)) (i32.const 0)))
+  (local.set $$instance (struct.new $libraryinfo.Main.FunctionImpl (global.get $libraryinfo.Main.FunctionImpl.vtable) (global.get $libraryinfo.Main.FunctionImpl.itable) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:54:29
   (call $$ctor__void_$p_libraryinfo_Main_FunctionImpl@libraryinfo.Main.FunctionImpl (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:54:29
@@ -1130,7 +1130,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:74:11
   (call $$clinit__void_<once>_@libraryinfo.Main.MyJsType )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:74:11
-  (local.set $$instance (struct.new $libraryinfo.Main.MyJsType (ref.as_non_null (global.get $libraryinfo.Main.MyJsType.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (ref.null $java.lang.Object)))
+  (local.set $$instance (struct.new $libraryinfo.Main.MyJsType (global.get $libraryinfo.Main.MyJsType.vtable) (global.get $itable.empty) (i32.const 0) (ref.null $java.lang.Object)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:74:11
   (call $$ctor__void_$p_libraryinfo_Main_MyJsType@libraryinfo.Main.MyJsType (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:74:11
@@ -1207,7 +1207,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:107:15
   (call $$clinit__void_<once>_@libraryinfo.Main.Foo )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:107:15
-  (local.set $$instance (struct.new $libraryinfo.Main.Foo (ref.as_non_null (global.get $libraryinfo.Main.Foo.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (ref.null $libraryinfo.Main)))
+  (local.set $$instance (struct.new $libraryinfo.Main.Foo (global.get $libraryinfo.Main.Foo.vtable) (global.get $itable.empty) (i32.const 0) (ref.null $libraryinfo.Main)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:107:15
   (call $$ctor__libraryinfo_Main__void_$p_libraryinfo_Main_Foo@libraryinfo.Main.Foo (ref.as_non_null (local.get $$instance))(local.get $$outer_this))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:107:15
@@ -1296,7 +1296,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:84:17
   (call $$clinit__void_<once>_@libraryinfo.Main.$LambdaImplementor$1 )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:84:17
-  (local.set $$instance (struct.new $libraryinfo.Main.$LambdaImplementor$1 (ref.as_non_null (global.get $libraryinfo.Main.$LambdaImplementor$1.vtable)) (ref.as_non_null (global.get $libraryinfo.Main.$LambdaImplementor$1.itable)) (i32.const 0)))
+  (local.set $$instance (struct.new $libraryinfo.Main.$LambdaImplementor$1 (global.get $libraryinfo.Main.$LambdaImplementor$1.vtable) (global.get $libraryinfo.Main.$LambdaImplementor$1.itable) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:84:17
   (call $$ctor__void_$p_libraryinfo_Main_$LambdaImplementor$1@libraryinfo.Main.$LambdaImplementor$1 (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:84:17
@@ -1372,7 +1372,7 @@
  (local $$instance (ref null $libraryinfo.Main.MyJsEnum))
  (block
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:59:7
-  (local.set $$instance (struct.new $libraryinfo.Main.MyJsEnum (ref.as_non_null (global.get $libraryinfo.Main.MyJsEnum.vtable)) (ref.as_non_null (global.get $libraryinfo.Main.MyJsEnum.itable)) (i32.const 0) (ref.null $java.lang.String) (i32.const 0)))
+  (local.set $$instance (struct.new $libraryinfo.Main.MyJsEnum (global.get $libraryinfo.Main.MyJsEnum.vtable) (global.get $libraryinfo.Main.MyJsEnum.itable) (i32.const 0) (ref.null $java.lang.String) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:59:7
   (call $$ctor__java_lang_String__int__void_$p_libraryinfo_Main_MyJsEnum@libraryinfo.Main.MyJsEnum (ref.as_non_null (local.get $$instance))(local.get $$name)(local.get $$ordinal))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:59:7
@@ -1458,7 +1458,7 @@
  (local $$instance (ref null $libraryinfo.Main.MyEnum))
  (block
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:65:7
-  (local.set $$instance (struct.new $libraryinfo.Main.MyEnum (ref.as_non_null (global.get $libraryinfo.Main.MyEnum.vtable)) (ref.as_non_null (global.get $libraryinfo.Main.MyEnum.itable)) (i32.const 0) (ref.null $java.lang.String) (i32.const 0)))
+  (local.set $$instance (struct.new $libraryinfo.Main.MyEnum (global.get $libraryinfo.Main.MyEnum.vtable) (global.get $libraryinfo.Main.MyEnum.itable) (i32.const 0) (ref.null $java.lang.String) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:65:7
   (call $$ctor__java_lang_String__int__void_$p_libraryinfo_Main_MyEnum@libraryinfo.Main.MyEnum (ref.as_non_null (local.get $$instance))(local.get $$name)(local.get $$ordinal))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/libraryinfo/readable-j2wasm.js/libraryinfo/Main.java:65:7

@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.LocaleDataPasses.ProtectGoogLocale;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
@@ -25,7 +24,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Test which checks that replacer works correctly. */
-@GwtIncompatible("Unnecessary")
 @RunWith(JUnit4.class)
 public final class LocaleDataPassesTest extends CompilerTestCase {
 
@@ -70,28 +68,27 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    switch (testMode) {
-      case PROTECT_DATA:
-        return new CompilerPass() {
-          @Override
-          public void process(Node externs, Node root) {
-            final ProtectGoogLocale extract = new ProtectGoogLocale(compiler);
-            extract.process(externs, root);
-          }
-        };
-      case REPLACE_PROTECTED_DATA:
-        return new CompilerPass() {
-          @Override
-          public void process(Node externs, Node root) {
-            final ProtectGoogLocale extract = new ProtectGoogLocale(compiler);
-            extract.process(externs, root);
-            final LocaleDataPasses.LocaleSubstitutions subs =
-                new LocaleDataPasses.LocaleSubstitutions(compiler, compiler.getOptions().locale);
-            subs.process(externs, root);
-          }
-        };
-    }
-    throw new UnsupportedOperationException("unexpected testMode: " + testMode);
+    return switch (testMode) {
+      case PROTECT_DATA ->
+          new CompilerPass() {
+            @Override
+            public void process(Node externs, Node root) {
+              final ProtectGoogLocale extract = new ProtectGoogLocale(compiler);
+              extract.process(externs, root);
+            }
+          };
+      case REPLACE_PROTECTED_DATA ->
+          new CompilerPass() {
+            @Override
+            public void process(Node externs, Node root) {
+              final ProtectGoogLocale extract = new ProtectGoogLocale(compiler);
+              extract.process(externs, root);
+              final LocaleDataPasses.LocaleSubstitutions subs =
+                  new LocaleDataPasses.LocaleSubstitutions(compiler, compiler.getOptions().locale);
+              subs.process(externs, root);
+            }
+          };
+    };
   }
 
   static class LocaleResult {
@@ -149,34 +146,34 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
   public void testBaseJsGoogLocaleRef() {
     // We're confirming that there won't be any error reported for the use of `goog.LOCALE`.
     multiTest( //
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @provideGoog", // no @localeFile, but base.js has this special annotation
-            " */",
-            "goog.provide('some.Obj');",
-            "goog.LOCALE = 'en';",
-            "console.log(goog.LOCALE);",
-            ""),
-        lines(
-            "/**",
-            " * @fileoverview",
-            " * @provideGoog", // no @localeFile, but base.js has this special annotation
-            " */",
-            "goog.provide('some.Obj');",
-            "goog.LOCALE = __JSC_LOCALE__;",
-            "console.log(__JSC_LOCALE__);",
-            ""),
+        """
+        /**
+         * @fileoverview
+         * @provideGoog // no @localeFile, but base.js has this special annotation
+         */
+        goog.provide('some.Obj');
+        goog.LOCALE = 'en';
+        console.log(goog.LOCALE);
+        """,
+        """
+        /**
+         * @fileoverview
+         * @provideGoog // no @localeFile, but base.js has this special annotation
+         */
+        goog.provide('some.Obj');
+        goog.LOCALE = __JSC_LOCALE__;
+        console.log(__JSC_LOCALE__);
+        """,
         new LocaleResult(
             "es_ES",
-            lines(
-                "/**",
-                " * @fileoverview",
-                " * @provideGoog", // no @localeFile, but base.js has this special annotation
-                " */",
-                "goog.provide('some.Obj');",
-                "goog.LOCALE = 'es_ES';",
-                "console.log('es_ES');",
-                "")));
+            """
+            /**
+             * @fileoverview
+             * @provideGoog // no @localeFile, but base.js has this special annotation
+             */
+            goog.provide('some.Obj');
+            goog.LOCALE = 'es_ES';
+            console.log('es_ES');
+            """));
   }
 }

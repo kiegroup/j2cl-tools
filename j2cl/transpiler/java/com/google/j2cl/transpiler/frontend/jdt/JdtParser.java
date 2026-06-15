@@ -16,10 +16,14 @@
 package com.google.j2cl.transpiler.frontend.jdt;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.j2cl.common.Problems;
 import com.google.j2cl.common.Problems.FatalError;
 import com.google.j2cl.common.SourceUtils.FileInfo;
+import com.google.j2cl.transpiler.ast.Library;
+import com.google.j2cl.transpiler.ast.TypeDescriptors;
+import com.google.j2cl.transpiler.frontend.common.FrontendOptions;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,8 +32,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.BindingKey;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.IProblem;
@@ -45,32 +50,76 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
  * into compilation unit.
  */
 public class JdtParser {
-  private static final String JAVA_VERSION = JavaCore.VERSION_11;
-  private static final int AST_JLS_VERSION = AST.JLS11;
+  private static final String JAVA_VERSION = JavaCore.VERSION_14;
+  private static final int AST_JLS_VERSION = AST.JLS14;
 
-  private final Problems problems;
   private final Map<String, String> compilerOptions = new HashMap<>();
-  private final ImmutableList<String> classpathEntries;
+  private final Problems problems;
 
   /** Create and initialize a JdtParser based on passed parameters. */
-  public JdtParser(Iterable<String> classpathEntries, Problems problems) {
+  public JdtParser(Problems problems) {
     compilerOptions.put(JavaCore.COMPILER_SOURCE, JAVA_VERSION);
     compilerOptions.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JAVA_VERSION);
     compilerOptions.put(JavaCore.COMPILER_COMPLIANCE, JAVA_VERSION);
+    compilerOptions.put(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, "enabled");
 
-    this.classpathEntries = ImmutableList.copyOf(classpathEntries);
     this.problems = problems;
   }
 
+  public Library parseFiles(FrontendOptions options) {
+    CompilationUnitsAndTypeBindings compilationUnitsAndTypeBindings =
+        parseFiles(
+            options.getSources(),
+            options.getClasspaths(),
+            options.getGenerateKytheIndexingMetadata(),
+            options.getForbiddenAnnotations(),
+            TypeDescriptors.getWellKnownTypeNames());
+    problems.abortIfHasErrors();
+
+    var packageAnnotationsResolver =
+        PackageAnnotationsResolver.create(
+            compilationUnitsAndTypeBindings.getCompilationUnitsByFilePath().entrySet().stream()
+                .filter(e -> e.getKey().endsWith("package-info.java"))
+                .map(Entry::getValue),
+            new PackageInfoCache(options.getClasspaths(), problems));
+    problems.abortIfCancelled();
+    JdtEnvironment environment = new JdtEnvironment(packageAnnotationsResolver);
+
+    Map<String, CompilationUnit> jdtUnitsByFilePath =
+        compilationUnitsAndTypeBindings.getCompilationUnitsByFilePath();
+    List<ITypeBinding> wellKnownTypeBindings = compilationUnitsAndTypeBindings.getTypeBindings();
+    CompilationUnitBuilder compilationUnitBuilder =
+        new CompilationUnitBuilder(wellKnownTypeBindings, environment, problems);
+
+    ImmutableList.Builder<com.google.j2cl.transpiler.ast.CompilationUnit> compilationUnits =
+        ImmutableList.builder();
+    for (var e : jdtUnitsByFilePath.entrySet()) {
+      compilationUnits.add(compilationUnitBuilder.buildCompilationUnit(e.getKey(), e.getValue()));
+    }
+    return Library.newBuilder().setCompilationUnits(compilationUnits.build()).build();
+  }
+
   /** Returns a map from file paths to compilation units after JDT parsing. */
-  public CompilationUnitsAndTypeBindings parseFiles(
+  private CompilationUnitsAndTypeBindings parseFiles(
       List<FileInfo> filePaths,
+      List<String> classpathEntries,
       boolean useTargetPath,
       List<String> forbiddenAnnotations,
       Collection<String> binaryNamesToResolve) {
 
     // Parse and create a compilation unit for every file.
-    ASTParser parser = newASTParser();
+    ASTParser parser = newASTParser(classpathEntries);
+    problems.abortIfCancelled();
+
+    var sources =
+        filePaths.stream()
+            .map(FileInfo::sourcePath)
+            // Skip module-info in JDT to avoid NPEs. They are not used regardless...
+            .filter(f -> !f.endsWith("module-info.java"))
+            .toArray(String[]::new);
+    var encodings = getEncodings(sources.length);
+    var bindingKeys =
+        binaryNamesToResolve.stream().map(BindingKey::createTypeBindingKey).toArray(String[]::new);
 
     // The map must be ordered because it will be iterated over later and if it was not ordered then
     // our output would be unstable
@@ -102,36 +151,39 @@ public class JdtParser {
             wellKnownTypeBindings.add((ITypeBinding) binding);
           }
         };
+
+    // We don't know how soon JDT will be able to check for cancellation, so we check here too.
+    problems.abortIfCancelled();
+
     parser.createASTs(
-        filePaths.stream()
-            .map(FileInfo::sourcePath)
-            // Skip module-info in JDT to avoid NPEs. They are not used regardless...
-            .filter(f -> !f.endsWith("module-info.java"))
-            .toArray(String[]::new),
-        getEncodings(filePaths.size()),
-        binaryNamesToResolve.stream().map(BindingKey::createTypeBindingKey).toArray(String[]::new),
+        sources,
+        encodings,
+        bindingKeys,
         astRequestor,
-        null);
+        new NullProgressMonitor() {
+          @Override
+          public boolean isCanceled() {
+            problems.abortIfCancelled();
+            return false;
+          }
+        });
+
     return new CompilationUnitsAndTypeBindings(compilationUnitsByFilePath, wellKnownTypeBindings);
   }
 
   /** Resolves binary names to type bindings. */
-  public List<ITypeBinding> resolveBindings(Collection<String> binaryNames) {
+  public List<ITypeBinding> resolveBindings(
+      List<String> classpathEntries, Collection<String> binaryNames) {
     return parseFiles(
             /* filePaths= */ new ArrayList<>(),
+            /* classpathEntries= */ classpathEntries,
             /* useTargetPath= */ false,
             /* forbiddenAnnotations= */ new ArrayList<>(),
             binaryNames)
         .getTypeBindings();
   }
 
-  @Nullable
-  public ITypeBinding resolveBinding(String qualifiedBinaryName) {
-    List<ITypeBinding> bindings = resolveBindings(ImmutableList.of(qualifiedBinaryName));
-    return Iterables.getOnlyElement(bindings, null);
-  }
-
-  private ASTParser newASTParser() {
+  private ASTParser newASTParser(List<String> classpathEntries) {
     ASTParser parser = ASTParser.newParser(AST_JLS_VERSION);
 
     parser.setCompilerOptions(compilerOptions);
@@ -153,14 +205,17 @@ public class JdtParser {
   private boolean compilationHasErrors(
       String filename, CompilationUnit unit, List<String> forbiddenAnnotations) {
     boolean hasErrors = false;
-    // Here we check for instances of @GwtIncompatible in the ast. If that is the case, we throw an
-    // error since these should have been stripped by the build system already.
+    // Here we check for instances of forbidden annotations in the ast. If that is the case, we
+    // throw an error since these should have been stripped by the build system already.
+    AnnotatedNodeCollector collector =
+        new AnnotatedNodeCollector(
+            ImmutableSet.copyOf(forbiddenAnnotations), /* stopTraversalOnMatch= */ false);
+    unit.accept(collector);
     for (String forbiddenAnnotation : forbiddenAnnotations) {
-      AnnotatedNodeCollector collector = new AnnotatedNodeCollector(forbiddenAnnotation);
-      unit.accept(collector);
-      if (!collector.getNodes().isEmpty()) {
+      var nodes = collector.getNodesAnnotatedWith(forbiddenAnnotation);
+      if (!nodes.isEmpty()) {
         problems.fatal(
-            unit.getLineNumber(collector.getNodes().get(0).getStartPosition()),
+            unit.getLineNumber(Iterables.getFirst(nodes, null).getStartPosition()),
             filename,
             FatalError.INCOMPATIBLE_ANNOTATION_FOUND_IN_COMPILE,
             forbiddenAnnotation);

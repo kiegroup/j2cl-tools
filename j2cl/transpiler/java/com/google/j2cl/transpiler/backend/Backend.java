@@ -28,16 +28,22 @@ import com.google.j2cl.transpiler.passes.AddDisambiguatingOverloadResolutionCast
 import com.google.j2cl.transpiler.passes.AddDisambiguatingSuperMethodForwardingStubs;
 import com.google.j2cl.transpiler.passes.AddEntryPointBridgesWasm;
 import com.google.j2cl.transpiler.passes.AddEnumImplicitMethods;
+import com.google.j2cl.transpiler.passes.AddInterfaceConstructorCasts;
 import com.google.j2cl.transpiler.passes.AddJavaLangObjectForwardingMethods;
 import com.google.j2cl.transpiler.passes.AddNothingReturnStatements;
+import com.google.j2cl.transpiler.passes.AddSwitchExpressionsExhaustivenessCheck;
 import com.google.j2cl.transpiler.passes.AddVisibilityMethodBridgesJ2kt;
+import com.google.j2cl.transpiler.passes.AnnotateProtobufMethodsAsKtProperties;
+import com.google.j2cl.transpiler.passes.ConvertLocalFunctionDeclarationToFunctionExpressions;
 import com.google.j2cl.transpiler.passes.ConvertMethodReferencesToLambdas;
 import com.google.j2cl.transpiler.passes.CreateImplicitConstructors;
+import com.google.j2cl.transpiler.passes.DesugarInstanceOfPatterns;
 import com.google.j2cl.transpiler.passes.DevirtualizeBoxedTypesAndJsFunctionImplementations;
 import com.google.j2cl.transpiler.passes.DevirtualizeMethodCalls;
 import com.google.j2cl.transpiler.passes.ExpandCompoundAssignments;
 import com.google.j2cl.transpiler.passes.ExtractNonIdempotentExpressions;
 import com.google.j2cl.transpiler.passes.FilloutMissingSourceMapInformation;
+import com.google.j2cl.transpiler.passes.FixJavaKotlinCollectionMethodsMismatch;
 import com.google.j2cl.transpiler.passes.FixJavaKotlinMethodOverrideMismatch;
 import com.google.j2cl.transpiler.passes.ImplementArraysAsClasses;
 import com.google.j2cl.transpiler.passes.ImplementAssertStatements;
@@ -57,6 +63,7 @@ import com.google.j2cl.transpiler.passes.ImplementStaticInitializationViaClinitF
 import com.google.j2cl.transpiler.passes.ImplementStaticInitializationViaConditionChecks;
 import com.google.j2cl.transpiler.passes.ImplementStringCompileTimeConstants;
 import com.google.j2cl.transpiler.passes.ImplementStringConcatenation;
+import com.google.j2cl.transpiler.passes.ImplementSwitchExpressionsViaIifes;
 import com.google.j2cl.transpiler.passes.ImplementSynchronizedStatements;
 import com.google.j2cl.transpiler.passes.ImplementSystemGetProperty;
 import com.google.j2cl.transpiler.passes.InsertBitwiseOperatorBooleanCoercions;
@@ -65,6 +72,7 @@ import com.google.j2cl.transpiler.passes.InsertCastForLowerBounds;
 import com.google.j2cl.transpiler.passes.InsertCastOnArrayAccess;
 import com.google.j2cl.transpiler.passes.InsertCastOnNewInstances;
 import com.google.j2cl.transpiler.passes.InsertCastsForBoxedTypes;
+import com.google.j2cl.transpiler.passes.InsertCastsForTypeLiteralsJ2kt;
 import com.google.j2cl.transpiler.passes.InsertCastsOnNullabilityMismatch;
 import com.google.j2cl.transpiler.passes.InsertErasureTypeSafetyCasts;
 import com.google.j2cl.transpiler.passes.InsertExceptionConversions;
@@ -78,7 +86,9 @@ import com.google.j2cl.transpiler.passes.InsertJsFunctionImplementationConversio
 import com.google.j2cl.transpiler.passes.InsertNarrowingPrimitiveConversions;
 import com.google.j2cl.transpiler.passes.InsertNarrowingPrimitiveConversionsJ2kt;
 import com.google.j2cl.transpiler.passes.InsertNarrowingReferenceConversions;
-import com.google.j2cl.transpiler.passes.InsertNotNullAssertions;
+import com.google.j2cl.transpiler.passes.InsertNotNullAssertionToPolyNullMethodCalls;
+import com.google.j2cl.transpiler.passes.InsertNotNullAssertionsOnNullabilityMismatch;
+import com.google.j2cl.transpiler.passes.InsertNumericCoercionsForAutoboxing;
 import com.google.j2cl.transpiler.passes.InsertQualifierProjectionCasts;
 import com.google.j2cl.transpiler.passes.InsertRawTypeCasts;
 import com.google.j2cl.transpiler.passes.InsertStringConversions;
@@ -91,6 +101,8 @@ import com.google.j2cl.transpiler.passes.InsertWideningPrimitiveConversionsJ2kt;
 import com.google.j2cl.transpiler.passes.J2ktRestrictionsChecker;
 import com.google.j2cl.transpiler.passes.JsInteropRestrictionsChecker;
 import com.google.j2cl.transpiler.passes.MakeVariablesFinal;
+import com.google.j2cl.transpiler.passes.MakeVariablesNonNull;
+import com.google.j2cl.transpiler.passes.MarkNoFallthroughSwitchCases;
 import com.google.j2cl.transpiler.passes.MoveNestedClassesToTop;
 import com.google.j2cl.transpiler.passes.NormalizationPass;
 import com.google.j2cl.transpiler.passes.NormalizeArrayAccesses;
@@ -121,6 +133,7 @@ import com.google.j2cl.transpiler.passes.NormalizeJsDocCastExpressions;
 import com.google.j2cl.transpiler.passes.NormalizeJsEnums;
 import com.google.j2cl.transpiler.passes.NormalizeJsFunctionPropertyInvocations;
 import com.google.j2cl.transpiler.passes.NormalizeJsVarargs;
+import com.google.j2cl.transpiler.passes.NormalizeJsYieldMethodInvocations;
 import com.google.j2cl.transpiler.passes.NormalizeLabeledStatements;
 import com.google.j2cl.transpiler.passes.NormalizeLabels;
 import com.google.j2cl.transpiler.passes.NormalizeLambdaExpressionsJ2kt;
@@ -139,8 +152,9 @@ import com.google.j2cl.transpiler.passes.NormalizeShifts;
 import com.google.j2cl.transpiler.passes.NormalizeStaticMemberQualifiers;
 import com.google.j2cl.transpiler.passes.NormalizeStaticNativeMemberReferences;
 import com.google.j2cl.transpiler.passes.NormalizeSuperMemberReferences;
-import com.google.j2cl.transpiler.passes.NormalizeSwitchStatements;
-import com.google.j2cl.transpiler.passes.NormalizeSwitchStatementsJ2kt;
+import com.google.j2cl.transpiler.passes.NormalizeSuspendFunctionCalls;
+import com.google.j2cl.transpiler.passes.NormalizeSwitchConstructs;
+import com.google.j2cl.transpiler.passes.NormalizeSwitchConstructsJ2kt;
 import com.google.j2cl.transpiler.passes.NormalizeSynchronizedConstructs;
 import com.google.j2cl.transpiler.passes.NormalizeSystemGetPropertyCalls;
 import com.google.j2cl.transpiler.passes.NormalizeTryWithResources;
@@ -154,10 +168,13 @@ import com.google.j2cl.transpiler.passes.OptimizeImplicitConstructors;
 import com.google.j2cl.transpiler.passes.OptimizeImplicitSuperCalls;
 import com.google.j2cl.transpiler.passes.OptimizeKotlinCompanions;
 import com.google.j2cl.transpiler.passes.OptimizeXplatForEach;
+import com.google.j2cl.transpiler.passes.OptimizeXplatLogger;
 import com.google.j2cl.transpiler.passes.PreventSmartCasts;
+import com.google.j2cl.transpiler.passes.ProjectCapturesInLambdaParameters;
 import com.google.j2cl.transpiler.passes.PropagateCompileTimeConstants;
 import com.google.j2cl.transpiler.passes.PropagateConstants;
-import com.google.j2cl.transpiler.passes.PropagateNullabilityJ2kt;
+import com.google.j2cl.transpiler.passes.PropagateNullability;
+import com.google.j2cl.transpiler.passes.PropagateNullabilityInOverrides;
 import com.google.j2cl.transpiler.passes.RecoverShortcutBooleanOperator;
 import com.google.j2cl.transpiler.passes.RemoveCustomIsInstanceMethods;
 import com.google.j2cl.transpiler.passes.RemoveEmptyFallthroughSwitchCases;
@@ -168,6 +185,7 @@ import com.google.j2cl.transpiler.passes.RemoveNonreferencedNativeMethods;
 import com.google.j2cl.transpiler.passes.RemoveNoopStatements;
 import com.google.j2cl.transpiler.passes.RemoveUnnecessaryLabels;
 import com.google.j2cl.transpiler.passes.RemoveUnneededCasts;
+import com.google.j2cl.transpiler.passes.RemoveUnneededCastsJ2kt;
 import com.google.j2cl.transpiler.passes.RemoveUnneededJsDocCasts;
 import com.google.j2cl.transpiler.passes.RemoveUnneededNotNullChecks;
 import com.google.j2cl.transpiler.passes.RemoveUnreachableCode;
@@ -175,6 +193,7 @@ import com.google.j2cl.transpiler.passes.RemoveWasmAnnotatedMethodBodies;
 import com.google.j2cl.transpiler.passes.ResolveCaptures;
 import com.google.j2cl.transpiler.passes.ResolveImplicitInstanceQualifiers;
 import com.google.j2cl.transpiler.passes.ResolveImplicitStaticQualifiers;
+import com.google.j2cl.transpiler.passes.RewriteAnnotationTypesJ2kt;
 import com.google.j2cl.transpiler.passes.RewriteAssignmentExpressions;
 import com.google.j2cl.transpiler.passes.RewriteReferenceEqualityOperations;
 import com.google.j2cl.transpiler.passes.RewriteShortcutOperators;
@@ -210,6 +229,8 @@ public enum Backend {
           // Early run of determining whether variables are effectively final so that passes that
           // depend on Expression.isEffectivelyInvariant it can take advantage.
           MakeVariablesFinal::new,
+          DesugarInstanceOfPatterns::new,
+          NormalizeSuspendFunctionCalls::new,
           ConvertMethodReferencesToLambdas::new,
           NormalizePackagedJsEnumVarargsLiterals::new,
           ResolveImplicitInstanceQualifiers::new,
@@ -219,7 +240,8 @@ public enum Backend {
           // Must run after NormalizeForEachIterable.
           () -> new NormalizeForEachStatement(/* useDoubleForIndexVariable= */ true),
           NormalizeSuperMemberReferences::new,
-          RecoverShortcutBooleanOperator::new);
+          RecoverShortcutBooleanOperator::new,
+          OptimizeXplatLogger::new);
     }
 
     @Override
@@ -246,11 +268,12 @@ public enum Backend {
           OptimizeAnonymousInnerClassesToFunctionExpressions::new,
           ImplementLambdaExpressionsViaJsFunctionAdaptor::new,
           NormalizeFunctionExpressions::new,
+          ConvertLocalFunctionDeclarationToFunctionExpressions::new,
           // Compute bridge methods before optimizing autovalue, since inlining the autovalue
           // classes requires inlining the bridges as well.
           AddBridgeMethods::new,
-          () -> new OptimizeAutoValue(options.getOptimizeAutoValue()),
           OptimizeKotlinCompanions::new,
+          () -> new OptimizeAutoValue(options.getOptimizeAutoValue()),
 
           // Default constructors and explicit super calls should be synthesized first.
           CreateImplicitConstructors::new,
@@ -278,7 +301,6 @@ public enum Backend {
           // End of class structure normalization.
 
           // Statement/Expression normalizations
-          NormalizeArrayLiterals::new,
           NormalizeShifts::new,
           NormalizeStaticMemberQualifiers::new,
           // Runs after NormalizeStaticMemberQualifiersPass.
@@ -302,8 +324,11 @@ public enum Backend {
           // Run before other passes that normalize JsEnum expressions, but after all the normal
           // Java semantic conversions.
           InsertJsEnumBoxingAndUnboxingConversions::new,
+          NormalizeArrayLiterals::new, // Needs to run after conversions and coercions.
           RemoveUnneededCasts::new,
-          NormalizeSwitchStatements::new,
+          AddSwitchExpressionsExhaustivenessCheck::new,
+          ImplementSwitchExpressionsViaIifes::new,
+          NormalizeSwitchConstructs::new,
           NormalizeArrayAccesses::new,
           ImplementAssertStatements::new,
           ImplementSynchronizedStatements::new,
@@ -344,8 +369,10 @@ public enum Backend {
           // variable motion.
           NormalizeMultiExpressions::new,
           RemoveUnneededJsDocCasts::new,
+          AddInterfaceConstructorCasts::new,
           NormalizeJsDocCastExpressions::new,
           NormalizeJsAwaitMethodInvocations::new,
+          NormalizeJsYieldMethodInvocations::new,
           RemoveUnneededNotNullChecks::new,
           ImplementNotNullOperator::new,
 
@@ -385,6 +412,7 @@ public enum Backend {
           options.getOutput(),
           options.getLibraryInfoOutput(),
           options.getSourceMappingPathPrefix(),
+          options.getEnableWasmCustomDescriptors(),
           problems);
     }
 
@@ -396,6 +424,7 @@ public enum Backend {
           // TODO(b/277799806): Consider removing this pass if the immutable field optimization is
           // removed.
           MakeVariablesFinal::new,
+          DesugarInstanceOfPatterns::new,
           ConvertMethodReferencesToLambdas::new,
           NormalizePackagedJsEnumVarargsLiterals::new,
           ResolveImplicitInstanceQualifiers::new,
@@ -458,7 +487,8 @@ public enum Backend {
           () -> new ExpandCompoundAssignments(/* expandAll= */ true),
           InsertErasureTypeSafetyCasts::new,
           RewriteUnaryExpressions::new,
-          NormalizeSwitchStatements::new,
+          AddSwitchExpressionsExhaustivenessCheck::new,
+          NormalizeSwitchConstructs::new,
           // Propagate constants needs to run after NormalizeSwitchStatements since it introduces
           // field references to constant fields.
           PropagateConstants::new,
@@ -534,6 +564,7 @@ public enum Backend {
           options.getOutput(),
           options.getLibraryInfoOutput(),
           options.getSourceMappingPathPrefix(),
+          options.getEnableWasmCustomDescriptors(),
           problems);
     }
 
@@ -545,6 +576,7 @@ public enum Backend {
           // TODO(b/277799806): Consider removing this pass if the immutable field optimization is
           // removed.
           MakeVariablesFinal::new,
+          DesugarInstanceOfPatterns::new,
           ConvertMethodReferencesToLambdas::new,
           NormalizePackagedJsEnumVarargsLiterals::new,
           ResolveImplicitInstanceQualifiers::new,
@@ -605,7 +637,8 @@ public enum Backend {
           () -> new ExpandCompoundAssignments(/* expandAll= */ true),
           InsertErasureTypeSafetyCasts::new,
           RewriteUnaryExpressions::new,
-          NormalizeSwitchStatements::new,
+          AddSwitchExpressionsExhaustivenessCheck::new,
+          NormalizeSwitchConstructs::new,
           // Propagate constants needs to run after NormalizeSwitchStatements since it introduces
           // field references to constant fields.
           PropagateCompileTimeConstants::new,
@@ -663,11 +696,8 @@ public enum Backend {
           // Post-verifications
           VerifySingleAstReference::new,
           VerifyParamAndArgCounts::new,
-          VerifyReferenceScoping::new
-
-          // TODO(b/283154833): Add the invariants for modular_wasm
-          // () -> new VerifyNormalizedUnits(/* verifyForWasm= **/ true)
-          );
+          VerifyReferenceScoping::new,
+          () -> new VerifyNormalizedUnits(/* verifyForWasm= **/ true));
     }
 
     @Override
@@ -678,14 +708,20 @@ public enum Backend {
   KOTLIN {
     @Override
     public void generateOutputs(BackendOptions options, Library library, Problems problems) {
-      new KotlinGeneratorStage(options.getOutput(), problems).generateOutputs(library);
+      new KotlinGeneratorStage(options.getOutput(), problems, options.getObjCNamePrefix())
+          .generateOutputs(library);
     }
 
     @Override
     public ImmutableList<Supplier<NormalizationPass>> getDesugaringPassFactories() {
       return ImmutableList.of(
+          NormalizeNullLiterals::new,
           MakeVariablesFinal::new,
+          DesugarInstanceOfPatterns::new,
+          MakeVariablesNonNull::new,
           ConvertMethodReferencesToLambdas::new,
+          PropagateNullability::new,
+          ProjectCapturesInLambdaParameters::new,
           ResolveImplicitInstanceQualifiers::new);
     }
 
@@ -704,18 +740,21 @@ public enum Backend {
           RemoveEmptyFallthroughSwitchCases::new,
 
           // Normalizations
+          AddDisambiguatingSuperMethodForwardingStubs::new,
+
+          // Must be run after AddDisambiguatingSuperMethodForwardingStubs
           FixJavaKotlinMethodOverrideMismatch::new,
-          NormalizeNullLiterals::new,
+          AnnotateProtobufMethodsAsKtProperties::new,
+          RewriteAnnotationTypesJ2kt::new,
           NormalizeMinValueIntegralLiterals::new,
           CreateImplicitConstructors::new,
           InsertExplicitSuperCalls::new,
           NormalizeLambdaExpressionsJ2kt::new,
           AddJavaLangObjectForwardingMethods::new,
-          AddDisambiguatingSuperMethodForwardingStubs::new,
           AddDisambiguatingOverloadResolutionCastsJ2kt::new,
           AddVisibilityMethodBridgesJ2kt::new,
           NormalizeSynchronizedConstructs::new,
-          PropagateNullabilityJ2kt::new,
+          PropagateNullabilityInOverrides::new,
           NormalizeInterfaces::new,
           NormalizeTryWithResources::new,
           NormalizeForEachIterable::new,
@@ -728,7 +767,7 @@ public enum Backend {
           () -> new ExpandCompoundAssignments(/* expandAll= */ true),
           RewriteAssignmentExpressions::new,
           () -> new InsertUnboxingConversions(/* areBooleanAndDoubleBoxed= */ true),
-          () -> new InsertBoxingConversions(/* areBooleanAndDoubleBoxed= */ true),
+          InsertNumericCoercionsForAutoboxing::new,
           InsertWideningPrimitiveConversionsJ2kt::new,
           InsertNarrowingPrimitiveConversionsJ2kt::new,
           NormalizeVarargParametersJ2kt::new,
@@ -737,16 +776,20 @@ public enum Backend {
           MakeVariablesFinal::new,
           // Needs to run after NormalizeVarargParametersJ2kt and MakeVariablesFinal.
           NormalizeMethodParametersJ2kt::new,
+          MakeVariablesNonNull::new,
           NormalizeLabels::new,
           NormalizeForStatements::new,
-          NormalizeSwitchStatementsJ2kt::new,
+          MarkNoFallthroughSwitchCases::new,
+          NormalizeSwitchConstructsJ2kt::new,
           NormalizeLabeledStatements::new,
           () -> new NormalizeShifts(/* narrowAllToInt= */ true),
           NormalizeNumberLiterals::new,
           NormalizePrimitiveCastsJ2kt::new,
           ImplementBitLevelOperatorsJ2kt::new,
           InsertQualifierProjectionCasts::new,
-          InsertNotNullAssertions::new,
+          InsertNotNullAssertionToPolyNullMethodCalls::new,
+          InsertNotNullAssertionsOnNullabilityMismatch::new,
+          InsertCastsForTypeLiteralsJ2kt::new,
           InsertCastsOnNullabilityMismatch::new,
           InsertCastForLowerBounds::new,
           InsertRawTypeCasts::new,
@@ -761,6 +804,7 @@ public enum Backend {
           () -> new RemoveUnnecessaryLabels(/* onlyLoopsAreBreakable= */ true),
           RemoveNestedBlocks::new,
           RemoveNoopStatements::new,
+          RemoveUnneededCastsJ2kt::new,
 
           // Passes that breaks the invariants for running ConversionContextVisitor related passes.
           NormalizeVarargInvocationsJ2kt::new,
@@ -768,6 +812,7 @@ public enum Backend {
           OptimizeImplicitSuperCalls::new,
           OptimizeImplicitConstructors::new,
           InsertUnreachableAssertionErrors::new,
+          FixJavaKotlinCollectionMethodsMismatch::new,
 
           // This needs to run after all passes that can potentially add casts.
           PreventSmartCasts::new,

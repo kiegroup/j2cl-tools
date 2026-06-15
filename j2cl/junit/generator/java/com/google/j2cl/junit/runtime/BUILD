@@ -1,6 +1,7 @@
-load("@io_bazel_rules_closure//closure:defs.bzl", "closure_js_library")
+load("@rules_closure//closure:defs.bzl", "closure_js_library")
 load("//build_defs:rules.bzl", "j2cl_library", "j2wasm_library")
-load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
+load("@rules_java//java:defs.bzl", "java_library", "java_plugin")
+load("@google_bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 package(
     default_applicable_licenses = ["//:j2cl_license"],
@@ -8,15 +9,30 @@ package(
 )
 
 closure_js_library(
-    name = "internal_parametrized_test_suite",
+    name = "internal_j2cl_test_suite",
     testonly = 1,
-    srcs = ["parameterized_test_suite.js"],
+    srcs = ["j2cl_test_suite.js"],
     visibility = ["//build_defs/internal_do_not_use:__pkg__"],
     deps = [
-        "//third_party:closure_asserts",
+        ":internal_jasmine_test_converter",
+        ":internal_parametrized_test_suite",
         "//third_party:closure_testcase",
         "//third_party:closure_testsuite",
     ],
+)
+
+closure_js_library(
+    name = "internal_jasmine_test_converter",
+    testonly = 1,
+    srcs = ["jasmine_test_converter.js"],
+    lenient = True,
+)
+
+closure_js_library(
+    name = "internal_parametrized_test_suite",
+    testonly = 1,
+    srcs = ["parameterized_test_suite.js"],
+    lenient = True,
 )
 
 j2wasm_library(
@@ -29,31 +45,6 @@ j2wasm_library(
         "//:jsinterop-annotations-j2wasm",
         "//jre/java:javaemul_internal_annotations-j2wasm",
         "//third_party:closure_testcase",
-    ],
-)
-
-j2cl_library(
-    name = "jsunit_helpers",
-    testonly = 1,
-    srcs = ["JsUnitHelpers.java"],
-    visibility = ["//build_defs/internal_do_not_use:__pkg__"],
-    deps = [
-        "//:jsinterop-annotations-j2cl",
-        "//third_party:closure_testcase",
-        "//jre/java:javaemul_internal_annotations-j2cl",
-        ":internal_assumption_violated_exception-j2cl",
-    ],
-)
-
-javadoc_library(
-    name = "jsunit_helpers-javadoc",
-    testonly = 1,
-    srcs = ["JsUnitHelpers.java"],
-    deps = [
-        "//:jsinterop-annotations",
-        "//third_party:closure_testcase",
-        ":internal_assumption_violated_exception",
-        "//jre/java:javaemul_internal_annotations",
     ],
 )
 
@@ -96,41 +87,29 @@ java_library(
     ],
 )
 
+javadoc_library(
+    name = "internal_assumption_violated_exception-javadoc",
+    srcs = ["InternalAssumptionViolatedException.java"],
+)
+
 java_library(
-    name = "jsunit_helpers_internal_assumption_violated_exception",
-    srcs = ["JsUnitHelpers.java", "InternalAssumptionViolatedException.java"],
-    visibility = [
-        "//build_defs/internal_do_not_use:__pkg__",
-        "//junit/emul/java:__pkg__",
-    ],
+    name = "junit_runtime",
+    srcs = glob(["*.java"]),
+    resources = glob(["*.js"]),
     deps = [
         "//:jsinterop-annotations",
         "//jre/java:javaemul_internal_annotations",
-    ],
-)
-
-j2cl_library(
-    name = "jsunit_helpers_internal_assumption_violated_exception-j2cl",
-    srcs = ["JsUnitHelpers.java", "InternalAssumptionViolatedException.java"],
-    visibility = [
-        "//build_defs/internal_do_not_use:__pkg__",
-        "//junit/emul/java:__pkg__",
-    ],
-    deps = [
-        "//:jsinterop-annotations-j2cl",
-        "//jre/java:javaemul_internal_annotations-j2cl",
+        "//junit/emul/java:junit_emul-jdk",
     ],
 )
 
 javadoc_library(
-    name = "jsunit_helpers_internal_assumption_violated_exception-javadoc",
-    srcs = ["JsUnitHelpers.java", "InternalAssumptionViolatedException.java"],
-    visibility = [
-        "//build_defs/internal_do_not_use:__pkg__",
-        "//junit/emul/java:__pkg__",
-    ],
+    name = "junit_runtime-javadoc",
+    srcs = glob(["*.java"]),
+    testonly = 1,
     deps = [
         "//:jsinterop-annotations",
         "//jre/java:javaemul_internal_annotations",
+        "//junit/emul/java:junit_emul-jdk",
     ],
 )

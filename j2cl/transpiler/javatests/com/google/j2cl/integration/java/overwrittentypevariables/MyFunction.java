@@ -15,6 +15,8 @@
  */
 package overwrittentypevariables;
 
-public interface MyFunction<F, T> {
+import org.jspecify.annotations.Nullable;
+
+public interface MyFunction<F extends @Nullable Object, T extends @Nullable Object> {
   T apply(F input);
 }

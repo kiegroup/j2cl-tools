@@ -23,7 +23,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.io.CharStreams;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.InlineMe;
@@ -78,6 +77,8 @@ public final class SourceFile implements StaticSourceFile {
 
   private final CodeLoader loader;
 
+  private boolean isStubSourceFileForAlreadyProvidedInput = false;
+
   // Source Line Information
   private int @Nullable [] lineOffsets = null;
 
@@ -100,6 +101,15 @@ public final class SourceFile implements StaticSourceFile {
     this.loader = loader;
     this.fileName = fileName;
     this.kind = kind;
+  }
+
+  public boolean isStubSourceFileForAlreadyProvidedInput() {
+    return isStubSourceFileForAlreadyProvidedInput;
+  }
+
+  private void setIsStubSourceFileForAlreadyProvidedInput(
+      boolean isStubSourceFileForAlreadyProvidedInput) {
+    this.isStubSourceFileForAlreadyProvidedInput = isStubSourceFileForAlreadyProvidedInput;
   }
 
   @Override
@@ -207,7 +217,6 @@ public final class SourceFile implements StaticSourceFile {
   }
 
   /** Gets a reader for the code in this source file. */
-  @GwtIncompatible("java.io.Reader")
   public Reader getCodeReader() throws IOException {
     // Only synchronize if we need to
     if (this.code == null) {
@@ -466,7 +475,6 @@ public final class SourceFile implements StaticSourceFile {
     return fileName;
   }
 
-  @GwtIncompatible("fromZipInput")
   public static List<SourceFile> fromZipFile(String zipName, Charset inputCharset)
       throws IOException {
     try (InputStream input = new FileInputStream(zipName)) {
@@ -474,7 +482,6 @@ public final class SourceFile implements StaticSourceFile {
     }
   }
 
-  @GwtIncompatible("java.util.zip.ZipInputStream")
   public static List<SourceFile> fromZipInput(
       String zipName, InputStream input, Charset inputCharset) throws IOException {
     final String absoluteZipPath = new File(zipName).getAbsolutePath();
@@ -498,17 +505,14 @@ public final class SourceFile implements StaticSourceFile {
     return sourceFiles;
   }
 
-  @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(String fileName, Charset charset) {
     return builder().withPath(fileName).withCharset(charset).build();
   }
 
-  @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(String fileName) {
     return builder().withPath(fileName).build();
   }
 
-  @GwtIncompatible("java.io.File")
   public static SourceFile fromPath(Path path, Charset charset) {
     return builder().withPath(path).withCharset(charset).build();
   }
@@ -519,6 +523,18 @@ public final class SourceFile implements StaticSourceFile {
 
   public static SourceFile fromCode(String fileName, String code) {
     return builder().withPath(fileName).withContent(code).build();
+  }
+
+  /**
+   * Returns a stub SourceFile with the given name and kind. It is used when the actual sources are
+   * provided via TypedASTs to stage2 and stage3.
+   */
+  public static SourceFile stubSourceFile(String fileName, SourceKind kind) {
+    return builder()
+        .withPath(fileName)
+        .withKind(kind)
+        .setIsStubSourceFileForAlreadyProvidedInput()
+        .build();
   }
 
   /**
@@ -564,7 +580,6 @@ public final class SourceFile implements StaticSourceFile {
     this.isClosureUnawareCode = protoSourceFile.getIsClosureUnawareCode();
   }
 
-  @GwtIncompatible("java.io.Reader")
   public static SourceFile fromProto(SourceFileProto protoSourceFile) {
     SourceKind sourceKind = getSourceKindFromProto(protoSourceFile);
     SourceFile sourceFile = fromProto(protoSourceFile, sourceKind);
@@ -603,6 +618,12 @@ public final class SourceFile implements StaticSourceFile {
               .withZipEntryPath(zipEntry.getZipPath(), zipEntry.getEntryName())
               .build();
         }
+      case STUB_FILE:
+        return SourceFile.builder()
+            .withKind(sourceKind)
+            .withOriginalPath(protoSourceFile.getFilename())
+            .setIsStubSourceFileForAlreadyProvidedInput()
+            .build();
       case LOADER_NOT_SET:
         break;
     }
@@ -644,6 +665,7 @@ public final class SourceFile implements StaticSourceFile {
     private SourceKind kind = SourceKind.STRONG;
     private Charset charset = UTF_8;
     private @Nullable String originalPath = null;
+    private boolean isStubSourceFileForAlreadyProvidedInput = false;
 
     private @Nullable String path = null;
     private @Nullable Path pathWithFilesystem = null;
@@ -682,7 +704,6 @@ public final class SourceFile implements StaticSourceFile {
     }
 
     @CanIgnoreReturnValue
-    @GwtIncompatible
     public Builder withContent(InputStream x) {
       this.lazyContent =
           () -> {
@@ -718,6 +739,16 @@ public final class SourceFile implements StaticSourceFile {
       return this;
     }
 
+    /**
+     * Sets that this SourceFile is a stub file for an input that was already provided to the
+     * compiler in the form of TypedAST.
+     */
+    @CanIgnoreReturnValue
+    public Builder setIsStubSourceFileForAlreadyProvidedInput() {
+      this.isStubSourceFileForAlreadyProvidedInput = true;
+      return this;
+    }
+
     public SourceFile build() {
       String displayPath =
           (this.originalPath != null)
@@ -725,6 +756,13 @@ public final class SourceFile implements StaticSourceFile {
               : ((this.zipEntryPath == null)
                   ? this.path
                   : this.path + BANG_SLASH + this.zipEntryPath);
+
+      if (this.isStubSourceFileForAlreadyProvidedInput) {
+        SourceFile file =
+            new SourceFile(new CodeLoader.StubSourceFileCodeLoader(), displayPath, this.kind);
+        file.setIsStubSourceFileForAlreadyProvidedInput(true);
+        return file;
+      }
 
       if (this.lazyContent != null) {
         return new SourceFile(
@@ -817,6 +855,25 @@ public final class SourceFile implements StaticSourceFile {
       }
     }
 
+    /* A code loader which throws an error when loading code for a stub SourceFile. */
+    static final class StubSourceFileCodeLoader extends CodeLoader {
+      private static final long serialVersionUID = 2L;
+
+      StubSourceFileCodeLoader() {
+        super();
+      }
+
+      @Override
+      String loadUncachedCode() {
+        throw new UnsupportedOperationException("Attempting to load code from a stub SourceFile.");
+      }
+
+      @Override
+      SourceFileProto.Builder toProtoLocationBuilder(String fileName) {
+        return SourceFileProto.newBuilder().setFilename(fileName).setStubFile(true);
+      }
+    }
+
     static final class OnDisk extends CodeLoader {
       private static final long serialVersionUID = 1L;
 
@@ -830,7 +887,6 @@ public final class SourceFile implements StaticSourceFile {
       }
 
       @Override
-      @GwtIncompatible
       String loadUncachedCode() throws IOException {
         try {
           return Files.readString(this.relativePath, this.getCharset());
@@ -841,7 +897,6 @@ public final class SourceFile implements StaticSourceFile {
       }
 
       @Override
-      @GwtIncompatible
       Reader openUncachedReader() throws IOException {
         return Files.newBufferedReader(this.relativePath, this.getCharset());
       }
@@ -878,13 +933,11 @@ public final class SourceFile implements StaticSourceFile {
       }
 
       @Override
-      @GwtIncompatible
       String loadUncachedCode() throws IOException {
         return CharStreams.toString(this.openUncachedReader());
       }
 
       @Override
-      @GwtIncompatible
       Reader openUncachedReader() throws IOException {
         return new InputStreamReader(
             JSCompZipFileCache.getEntryStream(this.zipName, this.entryName), this.getCharset());

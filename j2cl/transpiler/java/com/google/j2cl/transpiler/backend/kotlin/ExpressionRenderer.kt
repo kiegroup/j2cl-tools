@@ -16,6 +16,7 @@
 package com.google.j2cl.transpiler.backend.kotlin
 
 import com.google.j2cl.common.InternalCompilerError
+import com.google.j2cl.transpiler.ast.AbstractVisitor
 import com.google.j2cl.transpiler.ast.ArrayAccess
 import com.google.j2cl.transpiler.ast.ArrayLength
 import com.google.j2cl.transpiler.ast.ArrayLiteral
@@ -26,6 +27,7 @@ import com.google.j2cl.transpiler.ast.BooleanLiteral
 import com.google.j2cl.transpiler.ast.CastExpression
 import com.google.j2cl.transpiler.ast.ConditionalExpression
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor
+import com.google.j2cl.transpiler.ast.EmbeddedStatement
 import com.google.j2cl.transpiler.ast.Expression
 import com.google.j2cl.transpiler.ast.Expression.Precedence
 import com.google.j2cl.transpiler.ast.ExpressionWithComment
@@ -63,6 +65,7 @@ import com.google.j2cl.transpiler.ast.Variable
 import com.google.j2cl.transpiler.ast.VariableDeclarationExpression
 import com.google.j2cl.transpiler.ast.VariableDeclarationFragment
 import com.google.j2cl.transpiler.ast.VariableReference
+import com.google.j2cl.transpiler.ast.YieldStatement
 import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.AND_OPERATOR
 import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.ARROW_OPERATOR
 import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.ASSIGN_OPERATOR
@@ -105,14 +108,19 @@ import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.nonNull
 import com.google.j2cl.transpiler.backend.kotlin.common.letIf
 import com.google.j2cl.transpiler.backend.kotlin.source.Source
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.COLON
+import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.COMMA
+import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.NEW_LINE
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.SPACE
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.block
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.commaSeparated
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.dotSeparated
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.inAngleBrackets
+import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.inCurlyBrackets
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.inInlineCurlyBrackets
+import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.inNewLine
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.inParentheses
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.inSquareBrackets
+import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.indented
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.infix
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.join
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.newLineSeparated
@@ -161,6 +169,7 @@ internal data class ExpressionRenderer(
       is BinaryExpression -> binaryExpressionSource(expression)
       is CastExpression -> castExpressionSource(expression)
       is ConditionalExpression -> conditionalExpressionSource(expression)
+      is EmbeddedStatement -> embeddedStatementSource(expression)
       is ExpressionWithComment -> expressionWithCommentSource(expression)
       is FieldAccess -> fieldAccessSource(expression)
       is FunctionExpression -> functionExpressionSource(expression)
@@ -285,6 +294,20 @@ internal data class ExpressionRenderer(
       expressionSource(conditionalExpression.falseExpression),
     )
 
+  private fun embeddedStatementSource(embeddedStatement: EmbeddedStatement): Source =
+    // Render embedded statements as:
+    // run {
+    //        ...stmts...
+    //        return@run ...  // We render `YieldStatements` like `ReturnStatement` where
+    //                        // the label is passed in the context here.
+    // }
+    spaceSeparated(
+      nameRenderer.extensionMemberQualifiedNameSource("kotlin.run"),
+      statementRenderer
+        .copy(currentReturnLabelIdentifier = "run")
+        .statementsSource(listOf(embeddedStatement.statement)),
+    )
+
   private fun expressionWithCommentSource(expressionWithComment: ExpressionWithComment): Source =
     expressionSource(expressionWithComment.expression)
 
@@ -299,7 +322,10 @@ internal data class ExpressionRenderer(
 
   private fun functionExpressionLambdaSource(functionExpression: FunctionExpression): Source =
     spaceSeparated(
-      newInstanceTypeDescriptorSource(functionExpression.typeDescriptor.functionalInterface!!),
+      newInstanceTypeDescriptorSource(
+        functionExpression.typeDescriptor.functionalInterface!!,
+        omitTypeArguments = true,
+      ),
       block(parametersSource(functionExpression), lambdaBodySource(functionExpression)),
     )
 
@@ -381,22 +407,32 @@ internal data class ExpressionRenderer(
 
   private fun methodInvocationSource(expression: MethodCall): Source =
     expression.target.let { methodDescriptor ->
-      when {
-        methodDescriptor.isProtobufGetter ->
-          identifierSource(expression.target.name!!.toProtobufPropertyName())
-        else ->
-          join(
-            identifierSource(environment.ktMangledName(expression.target)),
-            expression
-              .takeIf { !it.target.isKtProperty }
-              ?.let {
-                join(
-                  invocationTypeArgumentsSource(methodDescriptor.typeArgumentTypeBindings),
-                  invocationSource(expression),
-                )
-              }
-              .orEmpty(),
-          )
+      join(
+        identifierSource(environment.ktMangledName(expression.target)),
+        expression
+          .takeIf { !it.target.isKtProperty }
+          ?.let {
+            join(
+              invocationTypeArgumentsSource(methodDescriptor.typeArgumentTypeBindings),
+              invocationSource(expression),
+            )
+          }
+          .orEmpty(),
+      )
+    }
+
+  private fun invocationTypeArgumentsSource(
+    typeBindings: List<TypeBinding>,
+    omitNonDenotable: Boolean = true,
+    emitAsComment: Boolean = false,
+  ): Source =
+    Source.emptyIf(typeBindings.isEmpty()) {
+      val includeTypeBindings =
+        !emitAsComment && (typeBindings.all(TypeBinding::isDenotable) || !omitNonDenotable)
+      Source.emptyIf(!includeTypeBindings && !TYPE_COMMENTS_ENABLED) {
+        nameRenderer
+          .typeBindingsSource(typeBindings, rendersCaptures = !includeTypeBindings)
+          .letIf(!includeTypeBindings, ::blockComment)
       }
     }
 
@@ -404,13 +440,21 @@ internal data class ExpressionRenderer(
     typeBindings: List<TypeBinding>,
     omitNonDenotable: Boolean = true,
   ): Source =
-    typeBindings
-      .takeIf { it.isNotEmpty() && (it.all(TypeBinding::isDenotable) || !omitNonDenotable) }
-      ?.let { nameRenderer.typeBindingsSource(it) }
-      .orEmpty()
+    Source.emptyIf(typeBindings.isEmpty()) {
+      Source.emptyUnless(typeBindings.all(TypeBinding::isDenotable) || !omitNonDenotable) {
+        nameRenderer.typeBindingsSource(typeBindings)
+      }
+    }
 
   internal fun invocationSource(invocation: Invocation) =
-    inParentheses(commaSeparated(invocation.arguments.map(this::expressionSource)))
+    inParentheses(argumentsSource(invocation.arguments))
+
+  private fun argumentsSource(arguments: List<Expression>) =
+    if (arguments.any(::shouldRenderArgumentInNewLine)) {
+      indented(join(arguments.map { inNewLine(expressionSource(it)) + COMMA })) + NEW_LINE
+    } else {
+      commaSeparated(arguments.map(this::expressionSource))
+    }
 
   private fun multiExpressionSource(multiExpression: MultiExpression): Source =
     spaceSeparated(
@@ -504,7 +548,7 @@ internal data class ExpressionRenderer(
       dotSeparated(
         qualifierSource(expression),
         spaceSeparated(
-          Source.emptyUnless(expression.anonymousInnerClass != null) {
+          Source.emptyIf(expression.anonymousInnerClass == null) {
             spaceSeparated(OBJECT_KEYWORD, COLON)
           },
           join(
@@ -527,6 +571,7 @@ internal data class ExpressionRenderer(
   private fun newInstanceTypeDescriptorSource(
     typeDescriptor: DeclaredTypeDescriptor,
     omitNonDenotable: Boolean = true,
+    omitTypeArguments: Boolean = false,
   ): Source =
     // Render qualified name if there's no qualifier, otherwise render simple name.
     typeDescriptor.typeDeclaration.let { typeDeclaration ->
@@ -536,7 +581,11 @@ internal data class ExpressionRenderer(
         } else {
           nameRenderer.qualifiedNameSource(typeDescriptor, asSuperType = true)
         },
-        invocationTypeArgumentsSource(typeDescriptor.typeArgumentTypeBindings(), omitNonDenotable),
+        invocationTypeArgumentsSource(
+          typeDescriptor.typeArgumentTypeBindings(),
+          omitNonDenotable,
+          emitAsComment = omitTypeArguments,
+        ),
       )
     }
 
@@ -572,29 +621,41 @@ internal data class ExpressionRenderer(
     )
 
   private fun switchExpressionSource(switchExpression: SwitchExpression): Source =
-    spaceSeparated(
-      KotlinSource.WHEN_KEYWORD,
-      inParentheses(expressionSource(switchExpression.expression)),
-      block(
-        newLineSeparated(
-          switchExpression.cases.map { case ->
-            if (case.isDefault) {
-              infix(
-                ELSE_KEYWORD,
-                ARROW_OPERATOR,
-                block(statementRenderer.statementsSource(case.statements)),
-              )
-            } else {
-              infix(
-                commaSeparated(case.caseExpressions.map(::expressionSource)),
-                ARROW_OPERATOR,
-                block(statementRenderer.statementsSource(case.statements)),
-              )
+    enclosedByRunIf(switchExpression.hasYieldStatements) {
+      spaceSeparated(
+        KotlinSource.WHEN_KEYWORD,
+        inParentheses(expressionSource(switchExpression.expression)),
+        block(
+          newLineSeparated(
+            switchExpression.cases.map { case ->
+              if (case.isDefault) {
+                infix(
+                  ELSE_KEYWORD,
+                  ARROW_OPERATOR,
+                  block(statementRenderer.statementsSource(case.statements)),
+                )
+              } else {
+                infix(
+                  commaSeparated(case.caseExpressions.map(::expressionSource)),
+                  ARROW_OPERATOR,
+                  block(statementRenderer.statementsSource(case.statements)),
+                )
+              }
             }
-          }
-        )
-      ),
-    )
+          )
+        ),
+      )
+    }
+
+  private fun enclosedByRunIf(condition: Boolean, fn: () -> Source): Source =
+    fn().letIf(condition) {
+      spaceSeparated(
+        // TODO(b/377873836): Decide how to label switch expressions to avoid possible incorrect
+        // interactions between constructs.
+        nameRenderer.extensionMemberQualifiedNameSource("kotlin.run"),
+        inCurlyBrackets(inNewLine(it)),
+      )
+    }
 
   private fun thisReferenceSource(thisReference: ThisReference): Source =
     join(
@@ -641,10 +702,12 @@ internal data class ExpressionRenderer(
     if (typeDescriptor.isDenotableNonWildcard) {
       spaceSeparated(COLON, nameRenderer.typeDescriptorSource(typeDescriptor))
     } else {
-      join(
-        SPACE,
-        blockComment(nameRenderer.typeDescriptorSource(typeDescriptor, rendersCaptures = true)),
-      )
+      Source.emptyUnless(TYPE_COMMENTS_ENABLED) {
+        join(
+          SPACE,
+          blockComment(nameRenderer.typeDescriptorSource(typeDescriptor, rendersCaptures = true)),
+        )
+      }
     }
 
   private fun leftSubExpressionSource(precedence: Precedence, operand: Expression) =
@@ -703,6 +766,13 @@ internal data class ExpressionRenderer(
     }
 
   companion object {
+    // TODO(b/407498527): Remove when no longer useful during debugging.
+    private const val TYPE_COMMENTS_ENABLED = false
+
+    private fun shouldRenderArgumentInNewLine(argument: Expression): Boolean =
+      // This is a heuristic which gives good enough results.
+      argument.hasSideEffects()
+
     private fun BinaryOperator.ktSource(useEquality: Boolean): Source =
       when (this) {
         BinaryOperator.TIMES -> TIMES_OPERATOR
@@ -801,5 +871,28 @@ internal data class ExpressionRenderer(
         leftOperand is NullLiteral ||
           rightOperand is NullLiteral ||
           (leftOperand.typeDescriptor.isPrimitive && rightOperand.typeDescriptor.isPrimitive)
+
+    private val SwitchExpression.hasYieldStatements: Boolean
+      get() {
+        for (switchCase in cases) {
+          var hasYieldStatement = false
+          switchCase.accept(
+            object : AbstractVisitor() {
+              override fun enterSwitchExpression(switchExpression: SwitchExpression?): Boolean {
+                // Do not recurse in nested switch expressions.
+                return false
+              }
+
+              override fun exitYieldStatement(yieldStatement: YieldStatement) {
+                hasYieldStatement = true
+              }
+            }
+          )
+          if (hasYieldStatement) {
+            return true
+          }
+        }
+        return false
+      }
   }
 }

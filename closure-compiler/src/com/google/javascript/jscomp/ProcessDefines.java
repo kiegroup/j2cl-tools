@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSUR
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_BOOLEAN;
 import static java.util.stream.Collectors.toCollection;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -29,6 +30,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.base.Tri;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -41,6 +43,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -59,6 +62,8 @@ class ProcessDefines implements CompilerPass {
           "COMPILED",
           "goog.DEBUG",
           "$jscomp.ASSUME_ES5",
+          "$jscomp.ASSUME_ES6",
+          "$jscomp.ASSUME_ES2020",
           "$jscomp.ISOLATE_POLYFILLS",
           "$jscomp.INSTRUMENT_ASYNC_CONTEXT");
 
@@ -70,6 +75,9 @@ class ProcessDefines implements CompilerPass {
   private final Mode mode;
   private final Supplier<GlobalNamespace> namespaceSupplier;
   private final boolean recognizeClosureDefines;
+  private final @Nullable String enableZonesDefineName;
+  private final @Nullable Pattern zoneInputPattern;
+  private final ImmutableSet<String> unknownDefinesToIgnore;
 
   private final LinkedHashSet<JSDocInfo> knownDefineJsdocs = new LinkedHashSet<>();
   private final LinkedHashSet<Node> knownGoogDefineCalls = new LinkedHashSet<>();
@@ -78,6 +86,7 @@ class ProcessDefines implements CompilerPass {
   private final LinkedHashMap<String, Node> replacementValuesFromClosureDefines =
       new LinkedHashMap<>();
   private final LinkedHashSet<Node> validDefineValueExpressions = new LinkedHashSet<>();
+  private boolean hasZoneInput = false;
 
   private GlobalNamespace namespace;
 
@@ -128,6 +137,12 @@ class ProcessDefines implements CompilerPass {
           "JSC_DEFINE_CALL_WITHOUT_ASSIGNMENT",
           "The result of a goog.define call must be assigned as an isolated statement.");
 
+  static final DiagnosticType ZONE_NOT_SUPPORTED_WITH_NATIVE_ASYNC_AWAIT =
+      DiagnosticType.error(
+          "JSC_ZONE_NOT_SUPPORTED_WITH_NATIVE_ASYNC_AWAIT",
+          "ZoneJS is incompatible with language level ES2017 or higher (See go/ngissue/31730)\n"
+              + "Please set `--language_out=ECMASCRIPT_2016` (or older) in your flags.");
+
   /** Create a pass that overrides define constants. */
   private ProcessDefines(Builder builder) {
     this.mode = builder.mode;
@@ -136,6 +151,9 @@ class ProcessDefines implements CompilerPass {
     this.replacementValuesFromFlags = ImmutableMap.copyOf(builder.replacementValues);
     this.namespaceSupplier = builder.namespaceSupplier;
     this.recognizeClosureDefines = builder.recognizeClosureDefines;
+    this.enableZonesDefineName = builder.enableZonesDefineName;
+    this.zoneInputPattern = builder.zoneInputPattern;
+    this.unknownDefinesToIgnore = ImmutableSet.copyOf(builder.unknownDefinesToIgnore);
   }
 
   enum Mode {
@@ -159,6 +177,9 @@ class ProcessDefines implements CompilerPass {
     private Mode mode;
     private Supplier<GlobalNamespace> namespaceSupplier;
     private boolean recognizeClosureDefines = true;
+    private @Nullable String enableZonesDefineName = null;
+    private @Nullable Pattern zoneInputPattern = null;
+    private ImmutableList<String> unknownDefinesToIgnore = ImmutableList.of();
 
     Builder(AbstractCompiler compiler) {
       this.compiler = compiler;
@@ -188,8 +209,26 @@ class ProcessDefines implements CompilerPass {
     }
 
     @CanIgnoreReturnValue
+    Builder setUnknownDefinesToIgnore(ImmutableList<String> unknownDefinesToIgnore) {
+      this.unknownDefinesToIgnore = unknownDefinesToIgnore;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
     Builder setRecognizeClosureDefines(boolean recognizeClosureDefines) {
       this.recognizeClosureDefines = recognizeClosureDefines;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    Builder setEnableZonesDefineName(@Nullable String enableZonesDefineName) {
+      this.enableZonesDefineName = enableZonesDefineName;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    Builder setZoneInputPattern(@Nullable Pattern zoneInputPattern) {
+      this.zoneInputPattern = zoneInputPattern;
       return this;
     }
 
@@ -206,13 +245,7 @@ class ProcessDefines implements CompilerPass {
     this.collectValidDefineValueExpressions();
     this.validateDefineDeclarations();
     this.overrideDefines();
-  }
-
-  final ImmutableSet<String> collectDefineNames(Node externs, Node root) {
-    this.initNamespace(externs, root);
-    this.collectDefines(root);
-
-    return ImmutableSet.copyOf(this.defineByDefineName.keySet());
+    this.validateDefines();
   }
 
   private void initNamespace(Node externs, Node root) {
@@ -249,6 +282,31 @@ class ProcessDefines implements CompilerPass {
 
           compiler.reportChangeToEnclosingScope(define.valueParent);
         }
+
+        // When requested, create a globally accessible alias for all define values. This will
+        // provide a hook for passes like J2clUtilGetDefineRewriterPass to read them in out-of-scope
+        // contexts.
+        if (J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
+          String alias = getGlobalDefineAlias(define.defineName);
+          if (!alias.equals(define.defineName)) {
+            // If we had:
+            //  var x = goog.define('y', ...);
+            // we'll add an additional statement:
+            //  var goog$defines$y = x;
+            Node globalDefineName =
+                NodeUtil.newName(
+                    compiler, getGlobalDefineAlias(define.defineName), define.valueParent);
+            Node defineLhs =
+                define.valueParent.isAssign()
+                    ? define.valueParent.getFirstChild().cloneTree()
+                    : define.valueParent.cloneNode();
+            checkState(defineLhs.isName() || defineLhs.isQualifiedName(), defineLhs);
+            Node globalDefineVar =
+                IR.var(globalDefineName, defineLhs).srcrefTreeIfMissing(define.valueParent);
+            globalDefineVar.insertAfter(define.valueParent.getParent());
+            compiler.reportChangeToEnclosingScope(define.valueParent.getParent());
+          }
+        }
       }
     }
 
@@ -258,12 +316,25 @@ class ProcessDefines implements CompilerPass {
               Sets.union(
                   this.replacementValuesFromFlags.keySet(),
                   this.replacementValuesFromClosureDefines.keySet()),
-              Sets.union(KNOWN_DEFINES, this.defineByDefineName.keySet()));
+              Sets.union(
+                  Sets.union(KNOWN_DEFINES, this.defineByDefineName.keySet()),
+                  this.unknownDefinesToIgnore));
 
       for (String unknownDefine : unusedReplacements) {
         compiler.report(JSError.make(UNKNOWN_DEFINE_WARNING, unknownDefine));
       }
     }
+  }
+
+  static String getGlobalDefineAlias(String defineName) {
+    // Known defines are already globally accessible and may not be present in code. Therefore we'll
+    // reference them directly.
+    // goog.LOCALE is a special case as it's not processed as a define, it is instead
+    // late-substituted.
+    if (KNOWN_DEFINES.contains(defineName) || defineName.equals("goog.LOCALE")) {
+      return defineName;
+    }
+    return "jscomp$defines$" + defineName.replace('.', '$');
   }
 
   /**
@@ -276,21 +347,38 @@ class ProcessDefines implements CompilerPass {
    *       the default value.
    */
   private @Nullable Node getReplacementForDefine(Define define) {
-    Node replacementFromFlags = this.replacementValuesFromFlags.get(define.defineName);
-    if (replacementFromFlags != null) {
-      return replacementFromFlags;
-    }
-
-    Node replacementFromClosureDefines =
-        this.replacementValuesFromClosureDefines.get(define.defineName);
-    if (replacementFromClosureDefines != null) {
-      return replacementFromClosureDefines;
+    Node replacement = getReplacementForDefineName(define.defineName);
+    if (replacement != null) {
+      return replacement;
     }
 
     if (isGoogDefineCall(define.value) && define.value.getChildCount() == 3) {
       // Return the second argument of goog.define('name', false);
       return define.value.getChildAtIndex(2);
     }
+    return null;
+  }
+
+  /**
+   * Returns the replacement value for a @define, if any.
+   *
+   * <ol>
+   *   <li>First checks the flags/compiler options `--define=FOO=1`
+   *   <li>If nothing was found, check for values in a "var CLOSURE_DEFINES = {'FOO': 1}` definition
+   *   <li>If still not found, returns `null`.
+   * </ol>
+   */
+  private @Nullable Node getReplacementForDefineName(String defineName) {
+    Node replacementFromFlags = this.replacementValuesFromFlags.get(defineName);
+    if (replacementFromFlags != null) {
+      return replacementFromFlags;
+    }
+
+    Node replacementFromClosureDefines = this.replacementValuesFromClosureDefines.get(defineName);
+    if (replacementFromClosureDefines != null) {
+      return replacementFromClosureDefines;
+    }
+
     return null;
   }
 
@@ -352,6 +440,11 @@ class ProcessDefines implements CompilerPass {
         }
       }
     }
+    compiler.setDefineNames(
+        ImmutableSet.<String>builder()
+            .addAll(KNOWN_DEFINES)
+            .addAll(defineByDefineName.keySet())
+            .build());
   }
 
   private @Nullable Ref selectDefineDeclaration(Name name) {
@@ -521,6 +614,13 @@ class ProcessDefines implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isScript() && zoneInputPattern != null) {
+        String source = n.getSourceFileName();
+        if (source != null && zoneInputPattern.matcher(source).matches()) {
+          hasZoneInput = true;
+        }
+      }
+
       if (NodeUtil.isNameDeclaration(n) && n.getFirstChild().matchesName("CLOSURE_DEFINES")) {
         // var CLOSURE_DEFINES = {...};
         Node valueNode = n.getFirstFirstChild();
@@ -561,17 +661,11 @@ class ProcessDefines implements CompilerPass {
     // Values allowed in 'var CLOSURE_DEFINES = {'
     // Must be a subset of the values allowed for <val> in
     // /** @define {...} */ var DEF = <val>
-    switch (val.getToken()) {
-      case STRINGLIT:
-      case NUMBER:
-      case TRUE:
-      case FALSE:
-        return true;
-      case NEG:
-        return val.getFirstChild().isNumber();
-      default:
-        return false;
-    }
+    return switch (val.getToken()) {
+      case STRINGLIT, NUMBER, TRUE, FALSE -> true;
+      case NEG -> val.getFirstChild().isNumber();
+      default -> false;
+    };
   }
 
   private boolean hasValidValue(Define define) {
@@ -692,6 +786,25 @@ class ProcessDefines implements CompilerPass {
       return jsdoc != null && jsdoc.isConstant() ? name.getNext() : null;
     }
     return null;
+  }
+
+  private void validateDefines() {
+    // Validate that a Zone-enabled app does not include native async/await, which is incompatible.
+    boolean willOutputAsyncFunctions =
+        compiler.getOptions().getOutputFeatureSet().contains(Feature.ASYNC_FUNCTIONS);
+    if (isZoneEnabled() && hasZoneInput && willOutputAsyncFunctions) {
+      compiler.report(JSError.make(ZONE_NOT_SUPPORTED_WITH_NATIVE_ASYNC_AWAIT));
+    }
+  }
+
+  private boolean isZoneEnabled() {
+    boolean enableZonesDefault = true;
+    Node zoneEnabled = getReplacementForDefineName(enableZonesDefineName);
+    if (zoneEnabled == null) {
+      return enableZonesDefault;
+    }
+
+    return NodeUtil.getBooleanValue(zoneEnabled).toBoolean(enableZonesDefault);
   }
 
   private static final class Define {

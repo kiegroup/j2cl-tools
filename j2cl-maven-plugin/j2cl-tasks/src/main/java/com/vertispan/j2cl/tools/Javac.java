@@ -52,16 +52,14 @@ public class Javac {
 
     public Javac(BuildLog log, File generatedClassesPath, List<File> sourcePaths, List<File> classpath, File classesDirFile, File bootstrap, Set<String> processors, Map<String, String> annotationProcessorsArgs) throws IOException {
         this.log = log;
-//        for (File file : classpath) {
-//            System.out.println(file.getAbsolutePath() + " " + file.exists() + " " + file.isDirectory());
-//        }
-        javacOptions = new ArrayList<>(Arrays.asList("-encoding", "utf8", "-implicit:none", "-bootclasspath", bootstrap.toString()));
+        javacOptions = new ArrayList<>(Arrays.asList("-encoding", "utf8", "-implicit:none", "-bootclasspath", bootstrap.getAbsolutePath()));
+        javacOptions.add("-AtestPlatform=CLOSURE");
         if (generatedClassesPath == null) {
             javacOptions.add("-proc:none");
         }
-        if (SourceVersion.latestSupported().compareTo(SourceVersion.RELEASE_11) > 0) {
+        if (SourceVersion.latestSupported().compareTo(SourceVersion.RELEASE_21) > 0) {
             //java 11+
-            javacOptions.add("--release=11");
+            javacOptions.add("--release=21");
         }
         if (!processors.isEmpty()) {
             javacOptions.add("-processor");

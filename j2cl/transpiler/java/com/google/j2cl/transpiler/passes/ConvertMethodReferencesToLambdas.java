@@ -28,7 +28,7 @@ import com.google.j2cl.transpiler.ast.AstUtils;
 import com.google.j2cl.transpiler.ast.CompilationUnit;
 import com.google.j2cl.transpiler.ast.Expression;
 import com.google.j2cl.transpiler.ast.FunctionExpression;
-import com.google.j2cl.transpiler.ast.JavaScriptConstructorReference;
+import com.google.j2cl.transpiler.ast.JsConstructorReference;
 import com.google.j2cl.transpiler.ast.MethodDescriptor;
 import com.google.j2cl.transpiler.ast.MethodReference;
 import com.google.j2cl.transpiler.ast.MultiExpression;
@@ -173,13 +173,14 @@ public class ConvertMethodReferencesToLambdas extends NormalizationPass {
         AstUtils.createParameterVariables(jsFunctionMethodDescriptor.getParameterTypeDescriptors());
 
     // Does the method reference have a qualifier? I.e., the qualifier is not null and is not a
-    // class name (modeled as a JavaScriptConstructorReference). Used in unqualified instance
+    // class name (modeled as a JsConstructorReference). Used in unqualified instance
     // method/Kotlin extension transformations below.
-    boolean hasQualifier =
-        qualifier != null && !(qualifier instanceof JavaScriptConstructorReference);
+    boolean hasQualifier = qualifier != null && !(qualifier instanceof JsConstructorReference);
 
+    boolean needsQualifier =
+        !targetMethodDescriptor.isStatic() && !targetMethodDescriptor.isLocalFunction();
     ImmutableList<Expression> forwardedArguments;
-    if (!targetMethodDescriptor.isStatic() && !hasQualifier) {
+    if (needsQualifier && !hasQualifier) {
       // This is a reference to an instance method without an explicit qualifier, e.g.:
       //
       // Class::instanceMethod
@@ -194,10 +195,11 @@ public class ConvertMethodReferencesToLambdas extends NormalizationPass {
       qualifier = parameters.get(0).createReference();
       forwardedArguments =
           parameters.stream().skip(1).map(Variable::createReference).collect(toImmutableList());
-    } else if (targetMethodDescriptor.isStatic() && hasQualifier) {
-      // This is a reference to a static method but has an explicit qualifier. This path cannot
-      // be invoked by Java method references, because references to static methods in Java cannot
-      // have qualifiers. It can only be a Kotlin extension method, e.g.:
+    } else if (!needsQualifier && hasQualifier) {
+      // This is a reference to a static method or local function but has an explicit qualifier.
+      // This path cannot be invoked by Java method references, because references to static methods
+      // in Java cannot have qualifiers and local functions do not exist in Java. It can only be a
+      // Kotlin extension method, e.g.:
       //
       // q::extensionMethod
       //

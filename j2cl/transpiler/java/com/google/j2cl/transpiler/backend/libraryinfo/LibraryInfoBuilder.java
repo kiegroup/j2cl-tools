@@ -31,7 +31,7 @@ import com.google.j2cl.transpiler.ast.FieldAccess;
 import com.google.j2cl.transpiler.ast.FieldDeclarationStatement;
 import com.google.j2cl.transpiler.ast.FieldDescriptor;
 import com.google.j2cl.transpiler.ast.Invocation;
-import com.google.j2cl.transpiler.ast.JavaScriptConstructorReference;
+import com.google.j2cl.transpiler.ast.JsConstructorReference;
 import com.google.j2cl.transpiler.ast.Member;
 import com.google.j2cl.transpiler.ast.MemberDescriptor;
 import com.google.j2cl.transpiler.ast.MethodCall;
@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -134,10 +135,9 @@ public final class LibraryInfoBuilder {
       // associate them with those fields. When RTA will determine that an enum field is used, it
       // will make the method used to initialize that field live and will traverse it.
       for (Statement statement : type.getLoadTimeStatements()) {
-        if (!(statement instanceof FieldDeclarationStatement)) {
+        if (!(statement instanceof FieldDeclarationStatement fieldDeclarationStatement)) {
           continue;
         }
-        FieldDeclarationStatement fieldDeclarationStatement = (FieldDeclarationStatement) statement;
         if (!fieldDeclarationStatement.getFieldDescriptor().isEnumConstant()) {
           continue;
         }
@@ -206,11 +206,13 @@ public final class LibraryInfoBuilder {
     // so when collecting references for the current member, a member info might already have
     // been constructed for the corresponding accessor and its information is passed in the
     // memberInfoBuilder.
-    Set<MethodInvocation> invokedMethods =
-        new LinkedHashSet<>(memberInfoBuilder.getInvokedMethodsList());
+    Map<String, MethodInvocation> invokedMethods = new LinkedHashMap<>();
+    for (MethodInvocation methodInvocation : memberInfoBuilder.getInvokedMethodsList()) {
+      invokedMethods.put(toKey(methodInvocation), methodInvocation);
+    }
 
     // The set of types that are explicitly referenced in this member; these come from
-    // JavaScriptConstructorReferences that appear in the AST from type literals, casts,
+    // JsConstructorReference that appear in the AST from type literals, casts,
     // instanceofs and also the qualifier in every static member reference.
     // References to static members already include the enclosing class, so in order to avoid
     // redundancy in library info these types are tracked separately and removed.
@@ -226,9 +228,9 @@ public final class LibraryInfoBuilder {
     member.accept(
         new AbstractVisitor() {
           @Override
-          public void exitJavaScriptConstructorReference(JavaScriptConstructorReference node) {
+          public void exitJsConstructorReference(JsConstructorReference node) {
             DeclaredTypeDescriptor referencedType =
-                node.getReferencedTypeDeclaration().toRawTypeDescriptor();
+                node.getReferencedTypeDeclaration().toDescriptor();
 
             if (!isPrunableType(referencedType)) {
               return;
@@ -308,7 +310,8 @@ public final class LibraryInfoBuilder {
           }
 
           private void addInvokedMethod(MemberDescriptor target) {
-            invokedMethods.add(createMethodInvocation(target));
+            MethodInvocation methodInvocation = createMethodInvocation(target);
+            invokedMethods.put(toKey(methodInvocation), methodInvocation);
             if (!target.isInstanceMember()) {
               typesReferencedViaStaticMemberReferences.add(
                   getTypeId(target.getEnclosingTypeDescriptor()));
@@ -319,10 +322,14 @@ public final class LibraryInfoBuilder {
     memberInfoBuilder
         .clearReferencedTypes()
         .clearInvokedMethods()
-        .addAllInvokedMethods(invokedMethods)
+        .addAllInvokedMethods(invokedMethods.values())
         // Record only the explicit type references without the implicit ones which are redundant.
         .addAllReferencedTypes(
             Sets.difference(explicitlyReferencedTypes, typesReferencedViaStaticMemberReferences));
+  }
+
+  private static String toKey(MethodInvocation methodInvocation) {
+    return methodInvocation.getMethod() + "@" + methodInvocation.getEnclosingType();
   }
 
   private MethodInvocation createMethodInvocation(MemberDescriptor memberDescriptor) {
@@ -352,7 +359,7 @@ public final class LibraryInfoBuilder {
     try {
       return JsonFormat.printer().print(build());
     } catch (IOException e) {
-      problems.fatal(FatalError.CANNOT_WRITE_FILE, e.toString());
+      problems.fatal(FatalError.CANNOT_WRITE_FILE, e.getMessage());
       return null;
     }
   }
@@ -407,7 +414,7 @@ public final class LibraryInfoBuilder {
 
   private static boolean isInBootstrap(DeclaredTypeDescriptor typeDescriptor) {
     return TypeDescriptors.isBootstrapNamespace(typeDescriptor)
-        || isAccesssedFromJ2clBootstrapJsFiles(typeDescriptor);
+        || isAccessedFromJ2clBootstrapJsFiles(typeDescriptor);
   }
 
   // There are references to non JsMember members of these types from JavaScript in the J2CL
@@ -433,8 +440,7 @@ public final class LibraryInfoBuilder {
           "java.lang.Void",
           "javaemul.internal.InternalPreconditions");
 
-  private static boolean isAccesssedFromJ2clBootstrapJsFiles(
-      DeclaredTypeDescriptor typeDescriptor) {
+  private static boolean isAccessedFromJ2clBootstrapJsFiles(DeclaredTypeDescriptor typeDescriptor) {
     return TYPES_ACCESSED_FROM_J2CL_BOOTSTRAP_JS.contains(typeDescriptor.getQualifiedSourceName());
   }
 }

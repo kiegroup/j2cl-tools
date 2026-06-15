@@ -49,7 +49,7 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
   }
 
   /**
-   * Returns the correspoinding {@link JsEnumInfo} if the type is a {@link
+   * Returns the corresponding {@link JsEnumInfo} if the type is a {@link
    * jsinterop.annotations.JsEnum} otherwise {@code null}
    */
   public JsEnumInfo getJsEnumInfo() {
@@ -97,6 +97,11 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
     return false;
   }
 
+  /** Returns whether the described type is an annotation. */
+  public boolean isAnnotation() {
+    return false;
+  }
+
   /** Returns whether the described type is an enum type. */
   public boolean isEnum() {
     return false;
@@ -119,11 +124,6 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
 
   /** Returns whether the described type is a functional interface (JLS 9.8). */
   public boolean isFunctionalInterface() {
-    return false;
-  }
-
-  /** Returns whether the described type has the @FunctionalInterface annotation. */
-  public boolean isAnnotatedWithFunctionalInterface() {
     return false;
   }
 
@@ -204,15 +204,11 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
   /** Returns this type descriptor with nullability set from the given annotation. */
   public final TypeDescriptor withNullabilityAnnotation(
       NullabilityAnnotation nullabilityAnnotation) {
-    switch (nullabilityAnnotation) {
-      case NOT_NULLABLE:
-        return toNonNullable();
-      case NONE:
-        return this;
-      case NULLABLE:
-        return toNullable();
-    }
-    throw new AssertionError();
+    return switch (nullabilityAnnotation) {
+      case NOT_NULLABLE -> toNonNullable();
+      case NONE -> this;
+      case NULLABLE -> toNullable();
+    };
   }
 
   /**
@@ -231,8 +227,8 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
    * casts. In most cases it the underlying JavaScript constructor for the class but not in all
    * (such as native @JsTypes and @JsFunctions).
    */
-  public final JavaScriptConstructorReference getMetadataConstructorReference() {
-    return new JavaScriptConstructorReference(getMetadataTypeDeclaration());
+  public final JsConstructorReference getMetadataConstructorReference() {
+    return new JsConstructorReference(getMetadataTypeDeclaration());
   }
 
   /** A function that replaces a TypeDescriptor. */
@@ -251,7 +247,7 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
       return null;
     }
     T typeDescriptor = fn.apply(t);
-    // Note that the use of generics is sketchy here. 'T' here is actually intendeted to be the
+    // Note that the use of generics is sketchy here. 'T' here is actually intended to be the
     // "this" type. As long as TypeReplacer guarantees preservation of type during replacement based
     // on its T -> T contract, we should be able to preserve 'this' type. However there is no way to
     // represent that through return here via Java generics without overhauling TypeDescriptor type
@@ -298,6 +294,13 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
       Function<TypeVariable, ? extends TypeDescriptor> replacementTypeArgumentByTypeVariable);
 
   /**
+   * Finds the supertype of this type (or this type itself) that has the same base type as given.
+   * The returned type has the parameterization of the current type.
+   */
+  @Nullable
+  public abstract DeclaredTypeDescriptor findSupertype(TypeDeclaration supertypeDeclaration);
+
+  /**
    * Returns true if the two types have the same raw type.
    *
    * <p>The raw type is always a declared type, an array of raw type or a primitive type. And is
@@ -336,6 +339,11 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
     return false;
   }
 
+  /** Returns true if the given type descriptor is a Kotlin companion object class. */
+  public boolean isKotlinCompanionClass() {
+    return false;
+  }
+
   /**
    * Returns true if the given type descriptor is a Kotlin companion object class that can be
    * optimized.
@@ -354,18 +362,8 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
 
   @Override
   public final boolean equals(Object o) {
-    if (o == null) {
-      return false;
-    }
-
-    if (o == this) {
-      return true;
-    }
-
-    if (o instanceof TypeDescriptor) {
-      return getUniqueId().equals(((TypeDescriptor) o).getUniqueId());
-    }
-    return false;
+    return o == this
+        || (o instanceof TypeDescriptor other && getUniqueId().equals(other.getUniqueId()));
   }
 
   @Override
@@ -375,8 +373,10 @@ public abstract class TypeDescriptor implements Comparable<TypeDescriptor>, HasR
 
   @Override
   public final String toString() {
-    return getUniqueId();
+    return toStringInternal(ImmutableSet.of());
   }
+
+  abstract String toStringInternal(ImmutableSet<TypeVariable> seen);
 
   public final boolean isDenotable() {
     return isDenotable(/* seen= */ ImmutableSet.of());

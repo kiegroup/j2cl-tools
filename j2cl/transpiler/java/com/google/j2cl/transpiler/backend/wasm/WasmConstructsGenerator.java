@@ -17,9 +17,11 @@ package com.google.j2cl.transpiler.backend.wasm;
 
 import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.j2cl.transpiler.backend.wasm.WasmGenerationEnvironment.getWasmInfo;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
 
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.j2cl.common.StringUtils;
 import com.google.j2cl.transpiler.ast.AbstractVisitor;
@@ -121,16 +123,26 @@ public class WasmConstructsGenerator {
     return sb.toString();
   }
 
-  /** Emits all wasm type definitions into a single rec group. */
-  void emitLibraryRecGroup(Library library, List<ArrayTypeDescriptor> usedNativeArrayTypes) {
+  /** Emits all wasm type definitions. */
+  void emitLibraryTypes(Library library, List<ArrayTypeDescriptor> usedWasmArrayTypes) {
+    builder.newLine();
+    // Emit primitive wasm arrays outside the rec group, since the i16 wasm array is used for
+    // string operations and binaryen expects a particular type of array. Having it in the rec
+    // group would mean that the i16 array used by string operations is not the same as the
+    // one in the rec group.
+    usedWasmArrayTypes.stream()
+        .filter(ArrayTypeDescriptor::isPrimitiveArray)
+        .forEach(this::emitWasmArrayType);
     builder.newLine();
     builder.append("(rec");
     builder.indent();
 
     emitDynamicDispatchMethodTypes();
     emitItableSupportTypes();
-    emitNativeArrayTypes(usedNativeArrayTypes);
     emitForEachType(library, this::renderMonolithicTypeStructs, "type definition");
+    usedWasmArrayTypes.stream()
+        .filter(Predicates.not(ArrayTypeDescriptor::isPrimitiveArray))
+        .forEach(this::emitWasmArrayType);
 
     builder.unindent();
     builder.newLine();
@@ -238,17 +250,20 @@ public class WasmConstructsGenerator {
   }
 
   private void renderTypeStructs(Type type, boolean isModular) {
-    if (type.isNative() || type.getDeclaration().getWasmInfo() != null) {
+    if (type.isNative() || getWasmInfo(type.getDeclaration()) != null) {
       return;
     }
 
-    renderTypeVtableStruct(type);
     if (!type.isInterface()) {
       renderTypeStruct(type);
       if (!isModular) {
         renderClassItableStruct(type);
       }
     }
+
+    // Custom descriptors refer to the type struct, so must be rendered afterwards. The forward
+    // reference from the type struct to the descriptor is allowed.
+    renderTypeVtableStruct(type);
   }
 
   private void renderClassItableStruct(Type type) {
@@ -271,7 +286,14 @@ public class WasmConstructsGenerator {
   }
 
   private void renderVtableStruct(Type type, Collection<MethodDescriptor> methods) {
-    emitWasmStruct(type, environment::getWasmVtableTypeName, () -> renderVtableEntries(methods));
+    emitWasmStruct(
+        type,
+        environment::getWasmVtableTypeName,
+        // Interface vtables are not custom descriptors.
+        /* descriptorClause= */ type.isInterface()
+            ? null
+            : format("describes %s ", environment.getWasmTypeName(type.getTypeDescriptor())),
+        () -> renderVtableEntries(methods));
   }
 
   private void renderVtableEntries(Collection<MethodDescriptor> methodDescriptors) {
@@ -338,7 +360,7 @@ public class WasmConstructsGenerator {
   public void renderMethod(Method method) {
     MethodDescriptor methodDescriptor = method.getDescriptor();
     if ((methodDescriptor.isAbstract() && !methodDescriptor.isNative())
-        || methodDescriptor.getWasmInfo() != null) {
+        || getWasmInfo(methodDescriptor) != null) {
       // Abstract methods don't generate any code, except if they are native; neither do methods
       // that have @Wasm annotation.
       return;
@@ -491,16 +513,26 @@ public class WasmConstructsGenerator {
   }
 
   private void renderTypeStruct(Type type) {
-    emitWasmStruct(type, environment::getWasmTypeName, () -> renderTypeFields(type));
+    emitWasmStruct(
+        type,
+        /* structNamer= */ environment::getWasmTypeName,
+        /* descriptorClause= */ format(
+            "descriptor %s ", environment.getWasmVtableTypeName(type.getTypeDescriptor())),
+        () -> renderTypeFields(type));
   }
 
   private void renderTypeFields(Type type) {
-    // The first field is always the vtable for class dynamic dispatch.
-    builder.newLine();
-    builder.append(
-        format(
-            "(field $vtable (ref %s))",
-            environment.getWasmVtableTypeName(type.getTypeDescriptor())));
+    // Optionally emit a vtable field for class dynamic dispatch.
+    // If custom descriptors are enabled, the vtable is the descriptor for the struct and not
+    // emitted here as a field.
+    if (!environment.isCustomDescriptorsEnabled()) {
+      builder.newLine();
+      builder.append(
+          format(
+              "(field $vtable (ref %s))",
+              environment.getWasmVtableTypeName(type.getTypeDescriptor())));
+    }
+
     // The second field is always the itable for interface method dispatch.
     builder.newLine();
     builder.append(
@@ -553,7 +585,7 @@ public class WasmConstructsGenerator {
         .filter(not(Type::isNative))
         .map(Type::getDeclaration)
         .filter(not(TypeDeclaration::isAbstract))
-        .filter(type -> type.getWasmInfo() == null)
+        .filter(type -> getWasmInfo(type) == null)
         .forEach(
             t -> {
               emitVtablesInitialization(t);
@@ -570,11 +602,13 @@ public class WasmConstructsGenerator {
 
     emitBeginCodeComment(typeDeclaration, "vtable.init");
     builder.newLine();
-    //  Create the class vtable for this type (which is either a class or an enum) and store it
+    // Create the class vtable for this type (which is either a class or an enum) and store it
     // in a global variable to be able to use it to initialize instance of this class.
     builder.append(
         format(
-            "(global %s (ref %s)",
+            environment.isCustomDescriptorsEnabled()
+                ? "(global %s (ref (exact %s))"
+                : "(global %s (ref %s)",
             environment.getWasmVtableGlobalName(typeDeclaration),
             environment.getWasmVtableTypeName(typeDeclaration)));
     builder.indent();
@@ -809,9 +843,18 @@ public class WasmConstructsGenerator {
     builder.append(")");
   }
 
-  /** Emits a Wasm struct using nominal inheritance. */
+  /**
+   * Emits a Wasm struct using nominal inheritance with an optional descriptor or describes clause.
+   */
   private void emitWasmStruct(
-      Type type, Function<DeclaredTypeDescriptor, String> structNamer, Runnable fieldsRenderer) {
+      Type type,
+      Function<DeclaredTypeDescriptor, String> structNamer,
+      String descriptorClause,
+      Runnable fieldsRenderer) {
+    if (!environment.isCustomDescriptorsEnabled()) {
+      descriptorClause = null;
+    }
+
     WasmTypeLayout wasmType = environment.getWasmTypeLayout(type.getDeclaration());
     boolean hasSuperType = wasmType.getWasmSupertypeLayout() != null;
     builder.newLine();
@@ -820,25 +863,26 @@ public class WasmConstructsGenerator {
       builder.append(
           format("%s ", structNamer.apply(wasmType.getWasmSupertypeLayout().getTypeDescriptor())));
     }
+    if (descriptorClause != null) {
+      builder.append("(");
+      builder.append(descriptorClause);
+    }
     builder.append("(struct");
     builder.indent();
     fieldsRenderer.run();
 
     builder.newLine();
     builder.append(")");
+    if (descriptorClause != null) {
+      builder.append(")");
+    }
     builder.append(")");
     builder.unindent();
     builder.newLine();
     builder.append(")");
   }
 
-  void emitNativeArrayTypes(List<ArrayTypeDescriptor> arrayTypes) {
-    emitBeginCodeComment("Native Array types");
-    arrayTypes.forEach(this::emitNativeArrayType);
-    emitEndCodeComment("Native Array types");
-  }
-
-  void emitNativeArrayType(ArrayTypeDescriptor arrayTypeDescriptor) {
+  void emitWasmArrayType(ArrayTypeDescriptor arrayTypeDescriptor) {
     String wasmArrayTypeName = environment.getWasmTypeName(arrayTypeDescriptor);
     builder.newLine();
     builder.append(

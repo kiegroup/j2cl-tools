@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.DiagnosticGroups.ES5_STRICT;
 import static com.google.javascript.rhino.Token.ADD;
 import static com.google.javascript.rhino.Token.ARRAYLIT;
@@ -82,7 +81,6 @@ import static com.google.javascript.rhino.Token.YIELD;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -142,7 +140,7 @@ public final class AstAnalyzerTest {
 
     @Override
     public String toString() {
-      return SimpleFormat.format("%s node in `%s` -> %s", token, js, expect);
+      return String.format("%s node in `%s` -> %s", token, js, expect);
     }
   }
 
@@ -851,7 +849,7 @@ public final class AstAnalyzerTest {
     public void testTypeBasedStringMethodCallSideEffects() {
       ParseHelper helper = new ParseHelper();
 
-      Node xDotReplaceCall = helper.parseFirst(CALL, lines("x.replace(/xyz/g, '');"));
+      Node xDotReplaceCall = helper.parseFirst(CALL, "x.replace(/xyz/g, '');");
       AstAnalyzer astAnalyzer = helper.getAstAnalyzer();
       assertThat(astAnalyzer.functionCallHasSideEffects(xDotReplaceCall)).isTrue();
 
@@ -895,7 +893,7 @@ public final class AstAnalyzerTest {
     @Test
     public void test() {
       ParseHelper parseHelper = new ParseHelper();
-      Node func = parseHelper.parseFirst(CALL, SimpleFormat.format("%s(1);", functionName));
+      Node func = parseHelper.parseFirst(CALL, String.format("%s(1);", functionName));
       assertThat(parseHelper.getAstAnalyzer().functionCallHasSideEffects(func)).isFalse();
     }
   }
@@ -973,7 +971,7 @@ public final class AstAnalyzerTest {
     @Test
     public void noSideEffectsForKnownConstructor() {
       ParseHelper parseHelper = new ParseHelper();
-      Node newNode = parseHelper.parseFirst(NEW, SimpleFormat.format("new %s();", constructorName));
+      Node newNode = parseHelper.parseFirst(NEW, String.format("new %s();", constructorName));
       AstAnalyzer astAnalyzer = parseHelper.getAstAnalyzer();
       // we know nothing about the class being instantiated, so assume side effects occur.
       assertThat(astAnalyzer.constructorCallHasSideEffects(newNode)).isFalse();

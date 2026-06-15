@@ -98,16 +98,9 @@ public final class AstUtils {
 
   /** Returns true if {@code statement} is a constructor invocation statement. */
   public static boolean isConstructorInvocationStatement(Statement statement) {
-    if (!(statement instanceof ExpressionStatement)) {
-      return false;
-    }
-    ExpressionStatement expressionStatement = (ExpressionStatement) statement;
-    Expression expression = expressionStatement.getExpression();
-    if (!(expression instanceof MethodCall)) {
-      return false;
-    }
-    MethodCall methodCall = (MethodCall) expression;
-    return methodCall.getTarget().isConstructor();
+    return statement instanceof ExpressionStatement expressionStatement
+        && expressionStatement.getExpression() instanceof MethodCall methodCall
+        && methodCall.getTarget().isConstructor();
   }
 
   /**
@@ -179,22 +172,6 @@ public final class AstUtils {
       MethodDescriptor fromMethodDescriptor,
       MethodDescriptor toMethodDescriptor,
       String jsDocDescription) {
-    return createForwardingMethod(
-        sourcePosition,
-        qualifier,
-        fromMethodDescriptor,
-        toMethodDescriptor,
-        jsDocDescription,
-        /* isStaticDispatch= */ false);
-  }
-
-  private static Method createForwardingMethod(
-      SourcePosition sourcePosition,
-      Expression qualifier,
-      MethodDescriptor fromMethodDescriptor,
-      MethodDescriptor toMethodDescriptor,
-      String jsDocDescription,
-      boolean isStaticDispatch) {
     List<Variable> parameters =
         createParameterVariables(fromMethodDescriptor.getParameterTypeDescriptors());
 
@@ -203,7 +180,7 @@ public final class AstUtils {
             sourcePosition,
             qualifier,
             toMethodDescriptor,
-            isStaticDispatch,
+            /* isStaticDispatch= */ false,
             parameters.stream().map(Variable::createReference).collect(toImmutableList()),
             fromMethodDescriptor.getReturnTypeDescriptor());
     return Method.newBuilder()
@@ -251,22 +228,33 @@ public final class AstUtils {
 
   /** Returns {@code true} if the expression result is used by the parent. */
   public static boolean isExpressionResultUsed(Expression expression, Object parent) {
-    if (parent instanceof ExpressionStatement) {
-      return false;
-    } else if (parent instanceof TryStatement) {
-      return false;
-    } else if (parent instanceof MultiExpression) {
-      return expression == Iterables.getLast(((MultiExpression) parent).getExpressions());
-    } else if (parent instanceof ForStatement) {
-      return expression == ((ForStatement) parent).getConditionExpression();
-    } else if (parent instanceof BinaryExpression) {
-      // The value of the lhs of an assignment is overwritten and not used.
-      BinaryExpression parentBinaryExpression = (BinaryExpression) parent;
-      return !parentBinaryExpression.isSimpleAssignment()
-          || expression == parentBinaryExpression.getRightOperand();
-    } else {
-      return true;
-    }
+    return switch (parent) {
+      case ExpressionStatement expressionStatement -> false;
+      case TryStatement tryStatement -> false;
+      case MultiExpression multiExpression ->
+          expression == Iterables.getLast(multiExpression.getExpressions());
+      case ForStatement forStatement -> expression == forStatement.getConditionExpression();
+      case BinaryExpression binaryExpression ->
+          // The value of the lhs of an assignment is overwritten and not used.
+          !binaryExpression.isSimpleAssignment()
+              || expression == binaryExpression.getRightOperand();
+      default -> true;
+    };
+  }
+
+  /**
+   * Returns true if {@code expression} is left operand of simple or compound assignment expression.
+   */
+  public static boolean isAssignmentTarget(Expression expression, Object parent) {
+    return switch (parent) {
+      case BinaryExpression parentBinaryExpression ->
+          parentBinaryExpression.isSimpleOrCompoundAssignment()
+              && expression == parentBinaryExpression.getLeftOperand();
+      case UnaryExpression unaryExpression ->
+          unaryExpression.isSimpleOrCompoundAssignment()
+              && expression == unaryExpression.getOperand();
+      default -> false;
+    };
   }
 
   /**
@@ -316,37 +304,35 @@ public final class AstUtils {
     boolean leftIsPrimitive = leftOperand.getTypeDescriptor().isPrimitive();
     boolean rightIsPrimitive = rightOperand.getTypeDescriptor().isPrimitive();
 
-    switch (operator.isCompoundAssignment() ? operator.getUnderlyingBinaryOperator() : operator) {
-      case TIMES:
-      case DIVIDE:
-      case REMAINDER:
-      case PLUS:
-      case MINUS:
-      case LESS:
-      case GREATER:
-      case LESS_EQUALS:
-      case GREATER_EQUALS:
-      case BIT_XOR:
-      case BIT_AND:
-      case BIT_OR:
-        return true; // Both numerics and booleans get these operators.
-      case EQUALS:
-      case NOT_EQUALS:
-        return leftIsPrimitive || rightIsPrimitive; // Equality is sometimes instance comparison.
-      default:
-        return false;
-    }
+    BinaryOperator binaryOperator =
+        operator.isCompoundAssignment() ? operator.getUnderlyingBinaryOperator() : operator;
+
+    return switch (binaryOperator) {
+      case TIMES,
+          DIVIDE,
+          REMAINDER,
+          PLUS,
+          MINUS,
+          LESS,
+          GREATER,
+          LESS_EQUALS,
+          GREATER_EQUALS,
+          BIT_XOR,
+          BIT_AND,
+          BIT_OR ->
+          true; // Both numerics and booleans get these operators.
+      case EQUALS, NOT_EQUALS ->
+          leftIsPrimitive || rightIsPrimitive; // Equality is sometimes instance comparison.
+      default -> false;
+    };
   }
 
   /** See JLS 5.1. */
   public static boolean matchesBooleanConversionContext(BinaryOperator operator) {
-    switch (operator) {
-      case CONDITIONAL_AND:
-      case CONDITIONAL_OR:
-        return true; // Booleans get these operators.
-      default:
-        return false;
-    }
+    return switch (operator) {
+      case CONDITIONAL_AND, CONDITIONAL_OR -> true; // Booleans get these operators.
+      default -> false;
+    };
   }
 
   /** See JLS 5.1. */
@@ -452,7 +438,7 @@ public final class AstUtils {
                     .setOriginalJsInfo(JsInfo.RAW_FIELD)
                     .build())
             .setQualifier(
-                new JavaScriptConstructorReference(lambdaType.getTypeDeclaration())
+                new JsConstructorReference(lambdaType.getTypeDeclaration())
                     .getPrototypeFieldAccess())
             .build();
 
@@ -463,9 +449,8 @@ public final class AstUtils {
                     .setName("$copy")
                     .setTypeDescriptor(TypeDescriptors.get().nativeFunction)
                     .setOriginalJsInfo(JsInfo.RAW_FIELD)
-                    .setDeprecated(lambdaType.isDeprecated())
                     .build())
-            .setQualifier(new JavaScriptConstructorReference(lambdaType.getTypeDeclaration()))
+            .setQualifier(new JsConstructorReference(lambdaType.getTypeDeclaration()))
             .build();
 
     return RuntimeMethods.createUtilMethodCall(
@@ -495,8 +480,6 @@ public final class AstUtils {
         .setExpression(declarationExpression)
         .setFieldDescriptor(fieldDescriptor)
         .setPublic(isPublic)
-        .setConst(field.isCompileTimeConstant())
-        .setDeprecated(fieldDescriptor.isDeprecated())
         .setSourcePosition(
             field.isCompileTimeConstant() ? field.getSourcePosition() : sourcePosition)
         .build();
@@ -630,8 +613,8 @@ public final class AstUtils {
   }
 
   public static Expression removeJsDocCastIfPresent(Expression expression) {
-    if (expression instanceof JsDocCastExpression) {
-      return ((JsDocCastExpression) expression).getExpression();
+    if (expression instanceof JsDocCastExpression jsDocCastExpression) {
+      return jsDocCastExpression.getExpression();
     }
     return expression;
   }
@@ -804,12 +787,11 @@ public final class AstUtils {
             methodCall.getTarget(), targetTypeDescriptor, Optional.ofNullable(postfix));
 
     Expression qualifier = checkNotNull(methodCall.getQualifier());
-    if (qualifier instanceof SuperReference) {
+    if (qualifier instanceof SuperReference superReference) {
       // A 'super' qualifier is used to resolve to the correct method to dispatch, once the method
       // is devirutalized and receives the qualifier as its first parameter, 'super' must be turned
-      // into 'this' since both evaluate to the implicit instance parameter but 'super'is not
+      // into 'this' since both evaluate to the implicit instance parameter but 'super' is not
       // valid as a general expression.
-      SuperReference superReference = (SuperReference) qualifier;
       qualifier = new ThisReference(superReference.getTypeDescriptor());
     }
     // Call the method like Objects.foo(instance, ...)
@@ -868,8 +850,7 @@ public final class AstUtils {
 
     int parameterLength = methodDescriptor.getParameterDescriptors().size();
     Expression packagedVarargs = getPackagedVarargs(methodDescriptor, arguments);
-    List<Expression> result = new ArrayList<>();
-    result.addAll(arguments.subList(0, parameterLength - 1));
+    List<Expression> result = new ArrayList<>(arguments.subList(0, parameterLength - 1));
     result.add(packagedVarargs);
     return result;
   }
@@ -896,28 +877,31 @@ public final class AstUtils {
   private static Expression getPackagedVarargs(
       MethodDescriptor methodDescriptor, List<Expression> arguments) {
     checkArgument(methodDescriptor.isVarargs());
-    int parametersLength = methodDescriptor.getParameterDescriptors().size();
-    ParameterDescriptor varargsParameterDescriptor =
-        Iterables.getLast(methodDescriptor.getParameterDescriptors());
-    ArrayTypeDescriptor varargsTypeDescriptor =
-        (ArrayTypeDescriptor) varargsParameterDescriptor.getTypeDescriptor();
-    if (arguments.size() < parametersLength) {
-      // no argument for the varargs, add an empty array.
-      return new ArrayLiteral(varargsTypeDescriptor);
+    int varargsParameterIndex = methodDescriptor.getParameterDescriptors().size() - 1;
+    TypeDescriptor varargsTypeDescriptor =
+        methodDescriptor.getParameterTypeDescriptors().get(varargsParameterIndex);
+    return ArrayLiteral.newBuilder()
+        .setTypeDescriptor((ArrayTypeDescriptor) varargsTypeDescriptor)
+        .setValueExpressions(arguments.subList(varargsParameterIndex, arguments.size()))
+        .build();
+  }
+
+  // TODO(b/182341814): This is a temporary hack to be able to disable DoNotAutobox annotations
+  // on wasm
+  private static final ThreadLocal<Boolean> ignoreDoNotAutoboxAnnotations =
+      ThreadLocal.withInitial(() -> false);
+
+  public static void setIgnoreDoNotAutoboxAnnotations() {
+    ignoreDoNotAutoboxAnnotations.set(true);
+  }
+
+  /** Returns whether the parameter is annotated with {@code @DoNotAutobox}. */
+  public static boolean isAnnotatedWithDoNotAutobox(
+      MethodDescriptor.ParameterDescriptor parameter) {
+    if (ignoreDoNotAutoboxAnnotations.get()) {
+      return false;
     }
-    List<Expression> valueExpressions = new ArrayList<>();
-    for (int i = parametersLength - 1; i < arguments.size(); i++) {
-      valueExpressions.add(
-          // Wrap isDoNotAutobox arguments in a JsDocCastExpression so that they don't get converted
-          // by passes based on ContextRewriter.
-          varargsParameterDescriptor.isDoNotAutobox()
-              ? JsDocCastExpression.newBuilder()
-                  .setCastTypeDescriptor(varargsTypeDescriptor.getComponentTypeDescriptor())
-                  .setExpression(arguments.get(i))
-                  .build()
-              : arguments.get(i));
-    }
-    return new ArrayLiteral(varargsTypeDescriptor, valueExpressions);
+    return parameter.hasAnnotation("javaemul.internal.annotations.DoNotAutobox");
   }
 
   /** Whether the function is the identity function. */
@@ -975,8 +959,17 @@ public final class AstUtils {
         .setName(fieldDescriptor.getName())
         .setVisibility(fieldDescriptor.getVisibility())
         .setStatic(fieldDescriptor.isStatic())
-        .setDeprecated(fieldDescriptor.isDeprecated())
+        // TODO(b/402181063): Determine if we need to propagate annotations here.
+        .setAnnotations(
+            fieldDescriptor.getAnnotations().stream()
+                .filter(AstUtils::isDeprecatedAnnotation)
+                .collect(toImmutableList()))
         .setNative(fieldDescriptor.isNative());
+  }
+
+  private static boolean isDeprecatedAnnotation(Annotation annotation) {
+    return annotation.getTypeDescriptor().getQualifiedSourceName().equals("java.lang.Deprecated")
+        || annotation.getTypeDescriptor().getQualifiedSourceName().equals("kotlin.Deprecated");
   }
 
   /** Returns the field descriptor for the const field that holds the ordinal value. */
@@ -1183,7 +1176,9 @@ public final class AstUtils {
       MemberReference memberReference, DeclaredTypeDescriptor contextTypeDescriptor) {
     MemberDescriptor target = memberReference.getTarget();
     DeclaredTypeDescriptor targetQualifierType = getTargetQualifierTypeDescriptor(target);
-    if (memberReference.getQualifier() != null || targetQualifierType == null) {
+    if (target.isLocalFunction()
+        || memberReference.getQualifier() != null
+        || targetQualifierType == null) {
       return memberReference;
     }
 
@@ -1257,8 +1252,8 @@ public final class AstUtils {
     // optimizations that alter the class hierarchy are not reflected in the type model.
     TypeDeclaration contextTypeDeclaration = contextTypeDescriptor.getTypeDeclaration();
     if (contextTypeDeclaration.isJsEnum()
-        || contextTypeDeclaration.isAnnotatedWithAutoValue()
-        || contextTypeDeclaration.isAnnotatedWithAutoValueBuilder()) {
+        || isAnnotatedWithAutoValue(contextTypeDeclaration)
+        || isAnnotatedWithAutoValueBuilder(contextTypeDeclaration)) {
       return new ThisReference(contextTypeDescriptor);
     }
     // TODO(b/241300930): Remove when anonymous classes defined in inline functions are not marked
@@ -1266,9 +1261,21 @@ public final class AstUtils {
     return NullLiteral.get(targetTypeDescriptor);
   }
 
+  /** Returns true if the specified type is annotated with AutoValue. */
+  public static boolean isAnnotatedWithAutoValue(TypeDeclaration type) {
+    return type.hasAnnotation("com.google.auto.value.AutoValue")
+        || type.hasAnnotation("javaemul.lang.annotations.WasAutoValue");
+  }
+
+  /** Returns true if the specified type is annotated with AutoValue.Builder. */
+  public static boolean isAnnotatedWithAutoValueBuilder(TypeDeclaration type) {
+    return type.hasAnnotation("com.google.auto.value.AutoValue.Builder")
+        || type.hasAnnotation("javaemul.lang.annotations.WasAutoValue.Builder");
+  }
+
   /** Returns a list of statements in {@code body} which may be a block or a single statement. */
   public static List<Statement> getBodyStatements(Statement body) {
-    return body instanceof Block ? ((Block) body).getStatements() : ImmutableList.of(body);
+    return body instanceof Block block ? block.getStatements() : ImmutableList.of(body);
   }
 
   public static boolean needsVisibilityBridge(MethodDescriptor methodDescriptor) {
@@ -1292,6 +1299,11 @@ public final class AstUtils {
             md ->
                 !md.getEnclosingTypeDescriptor().isInterface()
                     && md.getVisibility().isPackagePrivate());
+  }
+
+  /** Returns true if the specified type is annotated with Wasm. */
+  public static boolean isAnnotatedWithWasm(HasAnnotations node) {
+    return node.getAnnotation("javaemul.internal.annotations.Wasm") != null;
   }
 
   private AstUtils() {}

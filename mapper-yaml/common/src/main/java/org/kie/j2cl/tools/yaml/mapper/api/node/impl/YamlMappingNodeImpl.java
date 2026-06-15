@@ -138,6 +138,11 @@ class YamlMappingNodeImpl implements YamlMapping, Wrappable<Map<String, Object>>
   }
 
   @Override
+  public boolean containsNode(String key) {
+    return holder.containsKey(key);
+  }
+
+  @Override
   public boolean isEmpty() {
     return holder.isEmpty();
   }

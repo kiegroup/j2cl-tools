@@ -1825,6 +1825,11 @@ WebGLRenderingContext.prototype.BROWSER_DEFAULT_WEBGL;
 WebGLRenderingContext.prototype.canvas;
 
 /**
+ * @type {string}
+ */
+WebGLRenderingContext.prototype.drawingBufferColorSpace;
+
+/**
  * @type {number}
  */
 WebGLRenderingContext.prototype.drawingBufferWidth;
@@ -1859,6 +1864,11 @@ WebGLRenderingContext.prototype.getSupportedExtensions = function() {};
  * @return {Object}
  */
 WebGLRenderingContext.prototype.getExtension = function(name) {};
+
+/**
+ * @type {string}
+ */
+WebGLRenderingContext.prototype.unpackColorSpace;
 
 /**
  * @param {number} texture
@@ -2903,7 +2913,7 @@ WebGLRenderingContext.prototype.viewport = function(x, y, width, height) {};
 
 
 /**
- * @constructor
+ * @record
  */
 function WebGLContextAttributes() {}
 
@@ -2986,6 +2996,12 @@ WebGLShaderPrecisionFormat.prototype.rangeMax;
  */
 WebGLShaderPrecisionFormat.prototype.precision;
 
+/**
+ * @typedef {{
+ *   COMPLETION_STATUS_KHR: number
+ * }}
+ */
+var KHR_parallel_shader_compile;
 
 /**
  * @constructor
@@ -3387,6 +3403,21 @@ EXT_color_buffer_half_float.prototype.RGBA16F_EXT;
 /** @const {number} */
 EXT_color_buffer_half_float.prototype.UNSIGNED_NORMALIZED_EXT;
 
+/**
+ * @interface
+ * @see https://www.khronos.org/registry/webgl/extensions/WEBGL_color_buffer_float/
+ */
+function WEBGL_color_buffer_float() {}
+
+/** @const {number} */
+WEBGL_color_buffer_float.prototype.RGBA32F_EXT;
+
+/** @const {number} */
+WEBGL_color_buffer_float.prototype.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT;
+
+/** @const {number} */
+WEBGL_color_buffer_float.prototype.UNSIGNED_NORMALIZED_EXT;
+
 
 /**
  * @see https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc1/
@@ -3396,3 +3427,141 @@ function WEBGL_compressed_texture_etc1() {}
 
 /** @const {number} */
 WEBGL_compressed_texture_etc1.prototype.COMPRESSED_RGB_ETC1_WEBGL;
+
+
+/**
+ * @typedef {{
+ *   MIN_EXT: number,
+ *   MAX_EXT: number
+ * }}
+ * @see https://developer.mozilla.org/docs/Web/API/EXT_blend_minmax
+ */
+var EXT_blend_minmax;
+
+/**
+ * @typedef {{
+ *   SRGB_EXT: number,
+ *   SRGB_ALPHA_EXT: number,
+ *   SRGB8_ALPHA8_EXT: number,
+ *   FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT: number
+ * }}
+ * @see https://developer.mozilla.org/docs/Web/API/EXT_sRGB
+ */
+var EXT_sRGB;
+
+/**
+ * @typedef {{
+ *   COMPRESSED_RGBA_BPTC_UNORM_EXT: number,
+ *   COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT: number,
+ *   COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT: number,
+ *   COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT: number
+ * }}
+ * @see https://developer.mozilla.org/docs/Web/API/EXT_texture_compression_bptc
+ */
+var EXT_texture_compression_bptc;
+
+/**
+ * @typedef {{
+ *   COMPRESSED_RED_RGTC1_EXT: number,
+ *   COMPRESSED_SIGNED_RED_RGTC1_EXT: number,
+ *   COMPRESSED_RED_GREEN_RGTC2_EXT: number,
+ *   COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT: number
+ * }}
+ * @see https://developer.mozilla.org/docs/Web/API/EXT_texture_compression_rgtc
+ */
+var EXT_texture_compression_rgtc;
+
+/**
+ * @typedef {{
+ *   framebufferTextureMultiviewOVR: function(number, number, ?Object, number, number, number): void,
+ *   FRAMEBUFFER_ATTACHMENT_TEXTURE_NUM_VIEWS_OVR: number,
+ *   FRAMEBUFFER_ATTACHMENT_TEXTURE_BASE_VIEW_INDEX_OVR: number,
+ *   MAX_VIEWS_OVR: number,
+ *   FRAMEBUFFER_INCOMPLETE_VIEW_TARGETS_OVR: number
+ * }}
+ * @see https://developer.mozilla.org/docs/Web/API/OVR_multiview2
+ */
+var OVR_multiview2;
+
+/**
+ * @typedef {{
+ *   getSupportedProfiles: function(): !Array<string>,
+ *   COMPRESSED_RGBA_ASTC_4x4_KHR: number,
+ *   COMPRESSED_RGBA_ASTC_5x4_KHR: number,
+ *   COMPRESSED_RGBA_ASTC_5x5_KHR: number,
+ *   COMPRESSED_RGBA_ASTC_6x5_KHR: number,
+ *   COMPRESSED_RGBA_ASTC_6x6_KHR: number,
+ *   COMPRESSED_RGBA_ASTC_8x5_KHR: number,
+ *   COMPRESSED_RGBA_ASTC_8x6_KHR: number,
+ *   COMPRESSED_RGBA_ASTC_8x8_KHR: number,
+ *   COMPRESSED_RGBA_ASTC_10x5_KHR: number,
+ *   COMPRESSED_RGBA_ASTC_10x6_KHR: number,
+ *   COMPRESSED_RGBA_ASTC_10x8_KHR: number,
+ *   COMPRESSED_RGBA_ASTC_10x10_KHR: number,
+ *   COMPRESSED_RGBA_ASTC_12x10_KHR: number,
+ *   COMPRESSED_RGBA_ASTC_12x12_KHR: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR: number
+ * }}
+ * @see https://developer.mozilla.org/docs/Web/API/WEBGL_compressed_texture_astc
+ */
+var WEBGL_compressed_texture_astc;
+
+/**
+ * @typedef {{
+ *   COMPRESSED_R11_EAC: number,
+ *   COMPRESSED_SIGNED_R11_EAC: number,
+ *   COMPRESSED_RG11_EAC: number,
+ *   COMPRESSED_SIGNED_RG11_EAC: number,
+ *   COMPRESSED_RGB8_ETC2: number,
+ *   COMPRESSED_SRGB8_ETC2: number,
+ *   COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2: number,
+ *   COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2: number,
+ *   COMPRESSED_RGBA8_ETC2_EAC: number,
+ *   COMPRESSED_SRGB8_ALPHA8_ETC2_EAC: number
+ * }}
+ * @see https://developer.mozilla.org/docs/Web/API/WEBGL_compressed_texture_etc
+ */
+var WEBGL_compressed_texture_etc;
+
+/**
+ * @typedef {{
+ *   UNSIGNED_INT_24_8_WEBGL: number
+ * }}
+ * @see https://developer.mozilla.org/docs/Web/API/WEBGL_depth_texture
+ */
+var WEBGL_depth_texture;
+
+/**
+ * @typedef {{
+ *   COMPRESSED_RGB_PVRTC_4BPPV1_IMG: number,
+ *   COMPRESSED_RGB_PVRTC_2BPPV1_IMG: number,
+ *   COMPRESSED_RGBA_PVRTC_4BPPV1_IMG: number,
+ *   COMPRESSED_RGBA_PVRTC_2BPPV1_IMG: number,
+ * }}
+ * @see https://developer.mozilla.org/docs/Web/API/WEBGL_compressed_texture_pvrtc
+ */
+var WEBGL_compressed_texture_pvrtc;
+
+/**
+ * @typedef {{
+ *   COMPRESSED_SRGB_S3TC_DXT1_EXT: number,
+ *   COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT: number,
+ *   COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT: number,
+ *   COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT: number,
+ * }}
+ * @see https://developer.mozilla.org/docs/Web/API/WEBGL_compressed_texture_s3tc_srgb
+ */
+var WEBGL_compressed_texture_s3tc_srgb;

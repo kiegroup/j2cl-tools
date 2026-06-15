@@ -20,44 +20,37 @@ import java.util.TreeMap;
 import org.kie.j2cl.tools.yaml.mapper.api.YAMLDeserializer;
 
 /**
- * Default {@link YAMLDeserializer} implementation for {@link java.util.TreeMap}.
+ * Default {@link YAMLDeserializer} implementation for {@link TreeMap}.
  *
  * <p>Cannot be overriden. Use {@link BaseMapYAMLDeserializer}.
  *
- * @param <K> Type of the keys inside the {@link java.util.TreeMap}
- * @param <V> Type of the values inside the {@link java.util.TreeMap}
+ * @param <V> Type of the values inside the {@link TreeMap}
  * @author Nicolas Morel
  * @version $Id: $
  */
-public final class TreeMapYAMLDeserializer<K, V>
-    extends BaseMapYAMLDeserializer<TreeMap<K, V>, K, V> {
+public final class TreeMapYAMLDeserializer<V>
+    extends BaseMapYAMLDeserializer<TreeMap<String, V>, V> {
 
-  /**
-   * @param keyDeserializer {@link YAMLDeserializer} used to deserialize the keys.
-   * @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values.
-   */
-  private TreeMapYAMLDeserializer(
-      YAMLDeserializer<K> keyDeserializer, YAMLDeserializer<V> valueDeserializer) {
-    super(keyDeserializer, valueDeserializer);
+  /** @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values. */
+  private TreeMapYAMLDeserializer(YAMLDeserializer<V> valueDeserializer) {
+    super(valueDeserializer);
   }
 
   /**
    * newInstance
    *
-   * @param keyDeserializer {@link YAMLDeserializer} used to deserialize the keys.
    * @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values.
-   * @param <K> Type of the keys inside the {@link java.util.TreeMap}
-   * @param <V> Type of the values inside the {@link java.util.TreeMap}
+   * @param <V> Type of the values inside the {@link TreeMap}
    * @return a new instance of {@link TreeMapYAMLDeserializer}
    */
-  public static <K, V> TreeMapYAMLDeserializer<K, V> newInstance(
-      YAMLDeserializer<K> keyDeserializer, YAMLDeserializer<V> valueDeserializer) {
-    return new TreeMapYAMLDeserializer<>(keyDeserializer, valueDeserializer);
+  public static <K, V> TreeMapYAMLDeserializer<V> newInstance(
+      YAMLDeserializer<V> valueDeserializer) {
+    return new TreeMapYAMLDeserializer<>(valueDeserializer);
   }
 
   /** {@inheritDoc} */
   @Override
-  protected TreeMap<K, V> newMap() {
+  protected TreeMap<String, V> newMap() {
     return new TreeMap<>();
   }
 }

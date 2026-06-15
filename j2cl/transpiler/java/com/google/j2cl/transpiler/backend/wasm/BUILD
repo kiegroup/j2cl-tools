@@ -1,5 +1,5 @@
 load("@rules_java//java:defs.bzl", "java_library")
-load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
+load("@google_bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 package(
     default_applicable_licenses = ["//:j2cl_license"],
@@ -25,6 +25,7 @@ java_library(
     deps = [
         ":summary_java_proto",
         "//third_party:auto_value",
+        "//third_party:error_prone_annotations",
         "//third_party:gson",
         "//third_party:guava",
         "//third_party:jsr305_annotations",
@@ -40,6 +41,16 @@ javadoc_library(
     name = "wasm-javadoc",
     srcs = glob(["*.java"]),
     deps = [
-        ":wasm",
+        ":summary_java_proto",
+        "//third_party:auto_value",
+        "//third_party:error_prone_annotations",
+        "//third_party:gson",
+        "//third_party:guava",
+        "//third_party:jsr305_annotations",
+        "//third_party:protobuf_util_json",
+        "//transpiler/java/com/google/j2cl/common",
+        "//transpiler/java/com/google/j2cl/transpiler/ast",
+        "//transpiler/java/com/google/j2cl/transpiler/backend/closure",
+        "//transpiler/java/com/google/j2cl/transpiler/backend/common",
     ],
 )

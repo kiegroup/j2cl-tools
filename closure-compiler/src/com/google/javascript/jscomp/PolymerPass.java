@@ -75,8 +75,8 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
 
     Node externsAndJsRoot = root.getParent();
     NodeTraversal.traverse(compiler, externsAndJsRoot, this);
-    PolymerPassSuppressBehaviors suppressBehaviorsCallback =
-        new PolymerPassSuppressBehaviors(compiler);
+    PolymerPassSuppressBehaviorsAndProtectKeys suppressBehaviorsCallback =
+        new PolymerPassSuppressBehaviorsAndProtectKeys(compiler);
     NodeTraversal.traverse(compiler, externsAndJsRoot, suppressBehaviorsCallback);
   }
 
@@ -217,10 +217,13 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
     /** Value {@link Node} (RHS) for the definition of this member. */
     final Node value;
 
-    MemberDefinition(JSDocInfo info, Node name, Node value) {
+    final Node enclosingModule;
+
+    MemberDefinition(JSDocInfo info, Node name, Node value, Node enclosingModule) {
       this.info = info;
       this.name = name;
       this.value = value;
+      this.enclosingModule = enclosingModule;
     }
 
     @Override

@@ -16,6 +16,7 @@
 package com.google.j2cl.common;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.Boolean.getBoolean;
 
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimaps;
@@ -33,13 +34,15 @@ import java.util.stream.Collectors;
 
 /** An error logger class that records the number of errors and provides error print methods. */
 public class Problems {
+  private static final boolean REPORT_DEBUG =
+      getBoolean("com.google.j2cl.common.Problems.reportDebug");
 
   /** Represents compiler fatal errors. */
   public enum FatalError {
     FILE_NOT_FOUND("File '%s' not found.", 1),
     UNKNOWN_INPUT_TYPE("Cannot recognize input type for file '%s'.", 1),
     OUTPUT_LOCATION("Output location '%s' must be a directory or .zip file.", 1),
-    CANNOT_EXTRACT_ZIP("Cannot extract zip '%s'.", 1),
+    CANNOT_EXTRACT_ZIP("Cannot extract zip '%s': %s.", 2),
     CANNOT_CREATE_ZIP("Cannot create zip '%s': %s.", 2),
     CANNOT_CLOSE_ZIP("Cannot close zip: %s.", 1),
     CANNOT_CREATE_TEMP_DIR("Cannot create temporary directory: %s.", 1),
@@ -52,7 +55,6 @@ public class Problems {
         "Unexpected @%s annotation found. "
             + "Please run this library through the incompatible annotated code stripper tool.",
         1),
-    LIBRARY_INFO_OUTPUT_ARG_MISSING("-libraryinfooutput option is mandatory", 0),
     INVALID_JAVA_FRONTEND("%s is not a valid Java frontend.", 1);
 
     // used for customized message.
@@ -78,7 +80,8 @@ public class Problems {
   public enum Severity {
     ERROR("Error"),
     WARNING("Warning"),
-    INFO("Info");
+    INFO("Info"),
+    DEBUG("Debug");
 
     Severity(String messagePrefix) {
       this.messagePrefix = messagePrefix;
@@ -96,51 +99,66 @@ public class Problems {
 
   public void fatal(FatalError fatalError, Object... args) {
     checkArgument(fatalError.getNumberOfArguments() == args.length);
-    problem(Severity.ERROR, "Error: " + String.format(fatalError.getMessage(), args));
+    log(Severity.ERROR, "Error: " + String.format(fatalError.getMessage(), args));
     abort();
   }
 
   public void fatal(int lineNumber, String filePath, FatalError fatalError, Object... args) {
     checkArgument(fatalError.getNumberOfArguments() == args.length);
-    problem(Severity.ERROR, lineNumber, filePath, String.format(fatalError.getMessage(), args));
+    log(Severity.ERROR, lineNumber, filePath, String.format(fatalError.getMessage(), args));
     abort();
   }
 
   @FormatMethod
   public void error(
       SourcePosition sourcePosition, @FormatString String detailMessage, Object... args) {
-    problem(Severity.ERROR, sourcePosition, detailMessage, args);
+    log(Severity.ERROR, sourcePosition, detailMessage, args);
   }
 
   @FormatMethod
   public void error(
       int lineNumber, String filePath, @FormatString String detailMessage, Object... args) {
-    problem(Severity.ERROR, lineNumber, filePath, detailMessage, args);
+    log(Severity.ERROR, lineNumber, filePath, detailMessage, args);
   }
 
   @FormatMethod
   public void error(String detailMessage, Object... args) {
-    problem(Severity.ERROR, "Error: " + String.format(detailMessage, args));
+    log(Severity.ERROR, "Error: " + String.format(detailMessage, args));
   }
 
   @FormatMethod
   public void warning(SourcePosition sourcePosition, String detailMessage, Object... args) {
-    problem(Severity.WARNING, sourcePosition, detailMessage, args);
+    log(Severity.WARNING, sourcePosition, detailMessage, args);
   }
 
   @FormatMethod
   public void warning(String detailMessage, Object... args) {
-    problem(Severity.WARNING, String.format(detailMessage, args));
+    log(Severity.WARNING, String.format(detailMessage, args));
   }
 
   @FormatMethod
-  private void problem(
+  public void info(SourcePosition sourcePosition, String detailMessage, Object... args) {
+    log(Severity.INFO, sourcePosition, detailMessage, args);
+  }
+
+  @FormatMethod
+  public void info(String detailMessage, Object... args) {
+    log(Severity.INFO, String.format(detailMessage, args));
+  }
+
+  @FormatMethod
+  public void debug(SourcePosition sourcePosition, String detailMessage, Object... args) {
+    log(Severity.DEBUG, sourcePosition, detailMessage, args);
+  }
+
+  @FormatMethod
+  public void log(
       Severity severity, SourcePosition sourcePosition, String detailMessage, Object... args) {
     checkArgument(sourcePosition != null);
     if (sourcePosition == SourcePosition.NONE) {
-      problem(severity, String.format(detailMessage, args));
+      log(severity, String.format(detailMessage, args));
     } else {
-      problem(
+      log(
           severity,
           // SourcePosition lines are 0 based.
           sourcePosition.getStartFilePosition().getLine() + 1,
@@ -151,18 +169,18 @@ public class Problems {
   }
 
   @FormatMethod
-  private void problem(
+  private void log(
       Severity severity,
       int lineNumber,
       String filePath,
       @FormatString String detailMessage,
       Object... args) {
     String message = args.length == 0 ? detailMessage : String.format(detailMessage, args);
-    problem(severity, lineNumber, filePath, message);
+    log(severity, lineNumber, filePath, message);
   }
 
-  private void problem(Severity severity, int lineNumber, String filePath, String message) {
-    problem(
+  private void log(Severity severity, int lineNumber, String filePath, String message) {
+    log(
         severity,
         String.format(
             "%s:%s:%s: %s",
@@ -172,13 +190,8 @@ public class Problems {
             message));
   }
 
-  private void problem(Severity severity, String message) {
+  private void log(Severity severity, String message) {
     problemsBySeverity.put(severity, message);
-  }
-
-  @FormatMethod
-  public void info(String detailMessage, Object... args) {
-    problem(Severity.INFO, String.format(detailMessage, args));
   }
 
   /** Prints all problems to provided output and returns the exit code. */
@@ -189,7 +202,9 @@ public class Problems {
   /** Prints all problems to provided output and returns the exit code. */
   public int reportAndGetExitCode(PrintWriter output) {
     for (Map.Entry<Severity, String> severityMessagePair : problemsBySeverity.entries()) {
-      output.println(severityMessagePair.getValue());
+      if (REPORT_DEBUG || severityMessagePair.getKey() != Severity.DEBUG) {
+        output.println(severityMessagePair.getValue());
+      }
     }
     if (hasErrors() || hasWarnings()) {
       output.printf(
@@ -214,9 +229,29 @@ public class Problems {
   }
 
   public void abortIfHasErrors() {
-    if (hasErrors()) {
+    if (isCancelled() || hasErrors()) {
       abort();
     }
+  }
+
+  /**
+   * Alternative to abortIfHasErrors for cases where we want to keep accumulating errors but still
+   * abort when cancelled.
+   */
+  public void abortIfCancelled() {
+    if (isCancelled()) {
+      abort();
+    }
+  }
+
+  private volatile boolean cancelled = false;
+
+  public boolean isCancelled() {
+    return cancelled;
+  }
+
+  public void requestCancellation() {
+    cancelled = true;
   }
 
   private void abort() {

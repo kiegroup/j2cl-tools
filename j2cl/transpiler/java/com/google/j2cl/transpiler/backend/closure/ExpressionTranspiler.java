@@ -17,6 +17,8 @@ package com.google.j2cl.transpiler.backend.closure;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static java.util.stream.Collectors.joining;
 
 import com.google.common.collect.Iterables;
 import com.google.j2cl.common.SourcePosition;
@@ -24,21 +26,24 @@ import com.google.j2cl.transpiler.ast.AbstractVisitor;
 import com.google.j2cl.transpiler.ast.ArrayAccess;
 import com.google.j2cl.transpiler.ast.ArrayLength;
 import com.google.j2cl.transpiler.ast.ArrayLiteral;
-import com.google.j2cl.transpiler.ast.ArrayTypeDescriptor;
 import com.google.j2cl.transpiler.ast.AstUtils;
-import com.google.j2cl.transpiler.ast.AwaitExpression;
 import com.google.j2cl.transpiler.ast.BinaryExpression;
+import com.google.j2cl.transpiler.ast.Block;
 import com.google.j2cl.transpiler.ast.CastExpression;
 import com.google.j2cl.transpiler.ast.ConditionalExpression;
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
+import com.google.j2cl.transpiler.ast.EmbeddedStatement;
 import com.google.j2cl.transpiler.ast.Expression;
+import com.google.j2cl.transpiler.ast.Expression.Precedence;
 import com.google.j2cl.transpiler.ast.ExpressionWithComment;
 import com.google.j2cl.transpiler.ast.FieldAccess;
 import com.google.j2cl.transpiler.ast.FunctionExpression;
 import com.google.j2cl.transpiler.ast.InstanceOfExpression;
-import com.google.j2cl.transpiler.ast.JavaScriptConstructorReference;
+import com.google.j2cl.transpiler.ast.JsAwaitExpression;
+import com.google.j2cl.transpiler.ast.JsConstructorReference;
 import com.google.j2cl.transpiler.ast.JsDocCastExpression;
 import com.google.j2cl.transpiler.ast.JsDocExpression;
+import com.google.j2cl.transpiler.ast.JsYieldExpression;
 import com.google.j2cl.transpiler.ast.Literal;
 import com.google.j2cl.transpiler.ast.MemberReference;
 import com.google.j2cl.transpiler.ast.MethodCall;
@@ -51,10 +56,12 @@ import com.google.j2cl.transpiler.ast.NumberLiteral;
 import com.google.j2cl.transpiler.ast.PostfixExpression;
 import com.google.j2cl.transpiler.ast.PrefixExpression;
 import com.google.j2cl.transpiler.ast.PrefixOperator;
+import com.google.j2cl.transpiler.ast.Statement;
 import com.google.j2cl.transpiler.ast.SuperReference;
 import com.google.j2cl.transpiler.ast.ThisReference;
 import com.google.j2cl.transpiler.ast.TypeDescriptor;
 import com.google.j2cl.transpiler.ast.TypeDescriptors;
+import com.google.j2cl.transpiler.ast.TypeVariable;
 import com.google.j2cl.transpiler.ast.Variable;
 import com.google.j2cl.transpiler.ast.VariableDeclarationExpression;
 import com.google.j2cl.transpiler.ast.VariableDeclarationFragment;
@@ -100,9 +107,20 @@ public final class ExpressionTranspiler {
       }
 
       @Override
-      public boolean enterAwaitExpression(AwaitExpression awaitExpression) {
+      public boolean enterJsAwaitExpression(JsAwaitExpression awaitExpression) {
         sourceBuilder.append("await ");
         processRightSubExpression(awaitExpression, awaitExpression.getExpression());
+        return false;
+      }
+
+      @Override
+      public boolean enterJsYieldExpression(JsYieldExpression yieldExpression) {
+        if (yieldExpression.getExpression() == null) {
+          sourceBuilder.append("yield");
+        } else {
+          sourceBuilder.append("yield ");
+          processRightSubExpression(yieldExpression, yieldExpression.getExpression());
+        }
         return false;
       }
 
@@ -149,6 +167,24 @@ public final class ExpressionTranspiler {
       }
 
       @Override
+      public boolean enterEmbeddedStatement(EmbeddedStatement expression) {
+        // Emit the embedded statements as a parameterless IIFE.
+        sourceBuilder.append("(() =>");
+        Statement statement = expression.getStatement();
+        StatementTranspiler.render(
+            statement instanceof Block
+                ? statement
+                : Block.newBuilder()
+                    .setStatements(statement)
+                    .setSourcePosition(statement.getSourcePosition())
+                    .build(),
+            environment,
+            sourceBuilder);
+        sourceBuilder.append(")()");
+        return false;
+      }
+
+      @Override
       public boolean enterFieldAccess(FieldAccess fieldAccess) {
         String fieldMangledName = fieldAccess.getTarget().getMangledName();
         renderQualifiedName(fieldAccess, fieldMangledName, fieldAccess.getSourcePosition());
@@ -157,63 +193,71 @@ public final class ExpressionTranspiler {
 
       @Override
       public boolean enterFunctionExpression(FunctionExpression expression) {
+        String jsDoc = getJsDoc(expression);
+        if (!jsDoc.isEmpty()) {
+          sourceBuilder.append("/** " + jsDoc + "*/ (");
+        }
+
         if (expression.isJsAsync()) {
           sourceBuilder.append("async ");
         }
 
-        emitParameters(expression);
+        if (expression.isSuspendFunction()) {
+          renderGeneratorFunction(expression);
+        } else {
+          renderArrowFunction(expression);
+        }
 
-        // After the header is emitted, emit the rest of the arrow function.
-        sourceBuilder.append(" =>");
-        StatementTranspiler.render(expression.getBody(), environment, sourceBuilder);
+        if (!jsDoc.isEmpty()) {
+          sourceBuilder.append(")");
+        }
+
+        if (expression.isSuspendFunction() && expression.isCapturingEnclosingInstance()) {
+          // Unlike arrow functions that inherits the `this` from the enclosing scope, anonymous
+          // functions have their own `this` binding. To achieve the Java semantics for lambdas, we
+          // explicitly bind the anonymous function's `this` to the `this` of the enclosing scope.
+          sourceBuilder.append(".bind(this)");
+        }
 
         return false;
       }
 
-      private void emitParameters(FunctionExpression expression) {
-        List<Variable> parameters = expression.getParameters();
-        sourceBuilder.append("(");
+      private String getJsDoc(FunctionExpression expression) {
+        var methodDescriptor = expression.getDescriptor();
+        var typeParameterTypeDescriptors = methodDescriptor.getTypeParameterTypeDescriptors();
+        TypeDescriptor returnTypeDescriptor = methodDescriptor.getReturnTypeDescriptor();
 
-        String separator = "";
-        for (int i = 0; i < parameters.size(); i++) {
-          sourceBuilder.append(separator);
-          // Emit parameters in the more readable inline short form.
-          emitParameter(expression, i);
-          separator = ", ";
+        var sb = new StringBuilder();
+        if (!typeParameterTypeDescriptors.isEmpty()) {
+          sb.append(" @template ");
+          sb.append(
+              typeParameterTypeDescriptors.stream()
+                  .map(TypeVariable::getName)
+                  .collect(joining(",")));
         }
-        sourceBuilder.append(")");
+
+        if (!TypeDescriptors.isPrimitiveVoid(returnTypeDescriptor)) {
+          sb.append(String.format(" @return {%s}", environment.getJsDocForReturn(expression)));
+        }
+        return sb.toString();
       }
 
-      private void emitParameter(FunctionExpression expression, int i) {
-        Variable parameter = expression.getParameters().get(i);
-
-        if (parameter == expression.getJsVarargsParameter()) {
-          sourceBuilder.append("...");
-        }
-
-        // Avoid explicitly declaring unknown parameters in anonymous functions to avoid spurious
-        // conformance errors. Parameter annotations are not required for anonymous functions so
-        // they can be safely skipped here.
-        if (!isUnknownTypeParameter(expression, i)) {
-          // The inline type annotation for parameters has to be just right preceding the  parameter
-          // name, hence if it is a varargs parameter then it would be emitted as follows:
-          // ... /* <inline type annotation> */ <parameter name>
-          //
-          sourceBuilder.append("/** " + environment.getJsDocForParameter(expression, i) + " */ ");
-        }
-        // Render the parameter, which is not an expression but is just a name, so no parens.
-        renderNoParens(parameter);
+      private void renderArrowFunction(FunctionExpression expression) {
+        environment.emitParameters(sourceBuilder, expression);
+        // After the header is emitted, emit the rest of the arrow function.
+        sourceBuilder.append("=>");
+        StatementTranspiler.render(expression.getBody(), environment, sourceBuilder);
       }
 
-      private boolean isUnknownTypeParameter(FunctionExpression functionExpression, int i) {
-        Variable parameter = functionExpression.getParameters().get(i);
+      private void renderGeneratorFunction(FunctionExpression expression) {
+        // There is no arrow function syntax for generators functions yet. We should reconsider
+        // this in the future if the following proposal is accepted and implemented:
+        // https://github.com/tc39/proposal-generators-as-functions
+        sourceBuilder.append("function* ");
 
-        TypeDescriptor parameterType = parameter.getTypeDescriptor();
-        if (parameter == functionExpression.getJsVarargsParameter()) {
-          parameterType = ((ArrayTypeDescriptor) parameterType).getComponentTypeDescriptor();
-        }
+        environment.emitParameters(sourceBuilder, expression);
 
-        return parameterType.isWildcardOrCapture();
+        StatementTranspiler.render(expression.getBody(), environment, sourceBuilder);
       }
 
       @Override
@@ -249,15 +293,26 @@ public final class ExpressionTranspiler {
 
       @Override
       public boolean enterMethodCall(MethodCall expression) {
+        MethodDescriptor target = expression.getTarget();
+        if (target.isSuspendFunction()) {
+          // Kotlin suspend functions are emitted as JavaScript generator function. They can only
+          // be invoked within other suspend functions, requiring 'yield*' for delegating the call
+          // to the targeted generator.
+          sourceBuilder.append("(yield* ");
+        }
+
         if (expression.isStaticDispatch()) {
           renderStaticDispatchMethodCall(expression);
-        } else if (expression.getTarget().isJsPropertyGetter()) {
+        } else if (target.isJsPropertyGetter()) {
           renderJsPropertyAccess(expression);
-        } else if (expression.getTarget().isJsPropertySetter()) {
+        } else if (target.isJsPropertySetter()) {
           renderJsPropertySetter(expression);
         } else {
-          renderMethodCallHeader(expression);
-          renderDelimitedAndCommaSeparated("(", ")", expression.getArguments());
+          renderMethodCall(expression);
+        }
+
+        if (target.isSuspendFunction()) {
+          sourceBuilder.append(")");
         }
         return false;
       }
@@ -301,36 +356,37 @@ public final class ExpressionTranspiler {
       @SuppressWarnings("ReferenceEquality")
       private boolean shouldRenderQualifier(Expression qualifier) {
         checkNotNull(qualifier);
-        if (!(qualifier instanceof JavaScriptConstructorReference)) {
+        if (!(qualifier instanceof JsConstructorReference constructorReference)) {
           return true;
         }
 
         // Static members in the global scope are explicitly qualified by a
-        // JavaScriptConstructorReference node to the TypeDescriptor representing the global scope.
-        JavaScriptConstructorReference constructorReference =
-            (JavaScriptConstructorReference) qualifier;
+        // JsConstructorReference node to the TypeDescriptor representing the global scope.
         return constructorReference.getReferencedTypeDeclaration()
             != TypeDescriptors.get().globalNamespace.getTypeDeclaration();
       }
 
       /** JsProperty getter is emitted as property access: qualifier.property. */
       private void renderJsPropertyAccess(MethodCall expression) {
+        checkState(!expression.getTarget().isSuspendFunction());
         renderQualifiedName(expression, expression.getTarget().getSimpleJsName());
       }
 
       /** JsProperty setter is emitted as property set: qualifier.property = argument. */
       private void renderJsPropertySetter(MethodCall expression) {
+        checkState(!expression.getTarget().isSuspendFunction());
         renderJsPropertyAccess(expression);
         sourceBuilder.append(" = ");
         // Setters are a special case. They cannot be nested in any non top level expression as they
         // return void.
-        renderNoParens(expression.getArguments().get(0));
+        renderNoParens(expression.getArguments().getFirst());
       }
 
-      private void renderMethodCallHeader(MethodCall expression) {
+      private void renderMethodCall(MethodCall expression) {
         checkArgument(!expression.isStaticDispatch());
         MethodDescriptor target = expression.getTarget();
         if (target.isConstructor()) {
+          checkState(!target.isSuspendFunction());
           sourceBuilder.append("super");
         } else if (target.isJsFunction()) {
           // Call to a JsFunction method is emitted as the call on the qualifier itself.
@@ -338,13 +394,28 @@ public final class ExpressionTranspiler {
         } else {
           renderQualifiedName(expression, target.getMangledName());
         }
+        renderDelimitedAndCommaSeparated("(", ")", expression.getArguments());
       }
 
       @Override
       public boolean enterMultiExpression(MultiExpression multiExpression) {
         List<Expression> expressions = multiExpression.getExpressions();
         checkArgument(expressions.size() > 1);
-        renderDelimitedAndCommaSeparated("(", ")", expressions);
+        // TODO(b/390642878): Review the handling of multiexpressions once jscompiler fixes the
+        // inconsistencies in their handling of precedence
+        // Explicitly parenthesize multiexpressions since they are modeled with the highest
+        // precedence.
+        sourceBuilder.append("(");
+        String separator = "";
+        for (var expression : multiExpression.getExpressions()) {
+          sourceBuilder.append(separator);
+          separator = ", ";
+          // But when rendering the individual components use the COMMA expression precedence
+          // so that constructs with lower precedence are rendered correctly.
+          renderExpression(
+              expression, Precedence.COMMA.requiresParensOnLeft(expression.getPrecedence()));
+        }
+        sourceBuilder.append(")");
         return false;
       }
 
@@ -410,8 +481,7 @@ public final class ExpressionTranspiler {
       }
 
       @Override
-      public boolean enterJavaScriptConstructorReference(
-          JavaScriptConstructorReference constructorReference) {
+      public boolean enterJsConstructorReference(JsConstructorReference constructorReference) {
         sourceBuilder.append(
             environment.aliasForType(constructorReference.getReferencedTypeDeclaration()));
         return false;

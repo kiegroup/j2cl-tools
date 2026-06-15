@@ -42,30 +42,34 @@ public final class RenameLabelsTest extends CompilerTestCase {
     test("function x(){ Foo:{ a(); break Foo; } }", "function x(){ a:{ a(); break a; } }");
 
     test(
-        "function x() { "
-            + "Foo:{ "
-            + "function goo() {"
-            + "Foo: {"
-            + "a(); "
-            + "break Foo; "
-            + "}"
-            + "}"
-            + "}"
-            + "}",
+        """
+        function x() {
+        Foo:{
+        function goo() {
+        Foo: {
+        a();
+        break Foo;
+        }
+        }
+        }
+        }
+        """,
         "function x(){{function goo(){a:{ a(); break a; }}}}");
 
     test(
-        "function x() { "
-            + "Foo:{ "
-            + "function goo() {"
-            + "Foo: {"
-            + "a(); "
-            + "break Foo; "
-            + "}"
-            + "}"
-            + "break Foo;"
-            + "}"
-            + "}",
+        """
+        function x() {
+        Foo:{
+        function goo() {
+        Foo: {
+        a();
+        break Foo;
+        }
+        }
+        break Foo;
+        }
+        }
+        """,
         "function x(){a:{function goo(){a:{ a(); break a; }} break a;}}");
   }
 
@@ -83,9 +87,22 @@ public final class RenameLabelsTest extends CompilerTestCase {
   @Test
   public void testRenameForOf() {
     test(
-        lines(
-            "loop:", "for (let x of [1, 2, 3]) {", "  if (x > 2) {", "    break loop;", "  }", "}"),
-        lines("a:", "for (let x of [1, 2, 3]) {", "  if (x > 2) {", "    break a;", "  }", "}"));
+        """
+        loop:
+        for (let x of [1, 2, 3]) {
+          if (x > 2) {
+            break loop;
+          }
+        }
+        """,
+        """
+        a:
+        for (let x of [1, 2, 3]) {
+          if (x > 2) {
+            break a;
+          }
+        }
+        """);
   }
 
   @Test

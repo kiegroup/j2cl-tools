@@ -184,26 +184,27 @@ final class SubtypeChecker {
    * this behaviour should be integrated into the main body of subtyping logic.
    */
   private boolean isSubtypeDispatching(JSType subtype, JSType supertype) {
-    switch (subtype.getTypeClass()) {
-      case ARROW:
-        return this.isArrowTypeSubtype((ArrowType) subtype, supertype);
-      case ENUM_ELEMENT:
-        return this.isEnumElementSubtype((EnumElementType) subtype, supertype);
-      case ENUM:
-        return this.isEnumSubtype((EnumType) subtype, supertype);
-      case NO_OBJECT:
-      case NO:
-      case NO_RESOLVED:
-        return this.isVariousBottomsSubtype(subtype, supertype);
-      case FUNCTION:
-        return this.isFunctionSubtype((FunctionType) subtype, supertype);
-      case TEMPLATE:
-        return this.isTemplateSubtype((TemplateType) subtype, supertype);
-      case PROXY_OBJECT:
-        return this.isProxyObjectSubtype((ProxyObjectType) subtype, supertype);
-      default:
-        return this.isSubtypeHelper(subtype, supertype);
+    return switch (subtype.getTypeClass()) {
+      case ARROW -> this.isArrowTypeSubtype((ArrowType) subtype, supertype);
+      case ENUM_ELEMENT -> this.isEnumElementSubtype((EnumElementType) subtype, supertype);
+      case ENUM -> this.isEnumSubtype((EnumType) subtype, supertype);
+      case NO_OBJECT, NO -> this.isVariousBottomsSubtype(subtype, supertype);
+      case FUNCTION -> this.isFunctionSubtype((FunctionType) subtype, supertype);
+      case TEMPLATE -> this.isTemplateSubtype((TemplateType) subtype, supertype);
+      case PROXY_OBJECT -> this.isProxyObjectSubtype((ProxyObjectType) subtype, supertype);
+      case WELL_KNOWN_SYMBOL -> this.isWellKnownSymbolSubtype((KnownSymbolType) subtype, supertype);
+      default -> this.isSubtypeHelper(subtype, supertype);
+    };
+  }
+
+  private boolean isWellKnownSymbolSubtype(KnownSymbolType subtype, JSType supertype) {
+    if (supertype.isKnownSymbolValueType()) {
+      return subtype.equals(supertype);
     }
+    if (supertype.isSymbolValueType()) {
+      return true;
+    }
+    return isSubtypeHelper(subtype, supertype);
   }
 
   private boolean isSubtypeHelper(JSType subtype, JSType supertype) {
@@ -305,7 +306,9 @@ final class SubtypeChecker {
        */
       return this.isStructuralSubtypeHelper(
           subtype, supertype, PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL);
-    } else if (!subAndSuperAreSameBaseType && supertype.isRecordType()) {
+    } else if (!subAndSuperAreSameBaseType
+        && supertype.isRecordType()
+        && this.isUsingStructuralTyping) {
       /*
        * Anonymous record types are always considered structurally when supertypes.
        *
@@ -366,26 +369,49 @@ final class SubtypeChecker {
     // 2) And for each property of supertype, its type must be
     //    a super type of the corresponding property of subtype.
 
+    PropertyMap.AllKeys keys =
+        supertype.isRecordType() ? null : supertype.getPropertyMap().getAllKeys();
     Iterable<String> props =
         // NOTE: Inline record literal types always have Object as a supertype. In these cases, we
         // really only care about the properties explicitly declared in the record literal, and not
         // about any properties inherited from Object.prototype. On the other hand, @record types
         // allow inheritance and we need to match against inherited properties as well.
-        supertype.isRecordType() ? supertype.getOwnPropertyNames() : supertype.getPropertyNames();
+        supertype.isRecordType() ? supertype.getOwnPropertyNames() : keys.stringKeys();
 
     for (String property : props) {
-      JSType supertypeProp = supertype.getPropertyType(property);
-      if (subtype.hasProperty(property)) {
-        JSType subtypeProp = subtype.getPropertyType(property);
-        if (!this.isSubtypeCaching(subtypeProp, supertypeProp)) {
-          return false;
-        }
-      } else if (!optionality.isOptional(supertypeProp)) {
-        // Currently, any type that explicitly includes undefined (eg, `?|undefined`) is optional.
+      if (!checkPropertyPresence(
+          new Property.StringKey(property), subtype, supertype, optionality)) {
+        return false;
+      }
+    }
+    Iterable<KnownSymbolType> knownSymbols =
+        supertype.isRecordType() ? supertype.getOwnPropertyKnownSymbols() : keys.knownSymbolKeys();
+
+    for (KnownSymbolType knownSymbolType : knownSymbols) {
+      Property.Key knownSymbolTypeKey = new Property.SymbolKey(knownSymbolType);
+      if (!checkPropertyPresence(knownSymbolTypeKey, subtype, supertype, optionality)) {
         return false;
       }
     }
 
+    return true;
+  }
+
+  private boolean checkPropertyPresence(
+      Property.Key propertyKey,
+      ObjectType subtype,
+      ObjectType supertype,
+      PropertyOptionality optionality) {
+
+    JSType supertypeProp = supertype.getPropertyType(propertyKey);
+    if (subtype.hasProperty(propertyKey)) {
+      JSType subtypeProp = subtype.getPropertyType(propertyKey);
+      if (!this.isSubtypeCaching(subtypeProp, supertypeProp)) {
+        return false;
+      }
+    } else if (!optionality.isOptional(supertypeProp)) {
+      return false;
+    }
     return true;
   }
 
@@ -419,19 +445,13 @@ final class SubtypeChecker {
       return true;
     }
 
-    if (subtype instanceof NoResolvedType) {
-      return !supertype.isNoType();
-    }
-
-    return supertype.isObject() && !supertype.isNoType() && !supertype.isNoResolvedType();
+    return supertype.isObject() && !supertype.isNoType();
   }
 
   private boolean isArrowTypeSubtype(ArrowType subtype, JSType nonArrowSupertype) {
-    if (!(nonArrowSupertype instanceof ArrowType)) {
+    if (!(nonArrowSupertype instanceof ArrowType supertype)) {
       return false;
     }
-
-    ArrowType supertype = (ArrowType) nonArrowSupertype;
 
     // This is described in Draft 2 of the ES4 spec,
     // Section 3.4.7: Subtyping Function Types.
@@ -608,19 +628,16 @@ final class SubtypeChecker {
   }
 
   private boolean meetVarianceConstraint(Variance variance, JSType override, JSType reference) {
-    switch (variance) {
-      case COVARIANT:
-        return this.isSubtypeCaching(override, reference);
-      case CONTRAVARIANT:
-        return this.isSubtypeCaching(reference, override);
-      case BIVARIANT:
-        return this.meetVarianceConstraint(Variance.COVARIANT, reference, override)
-            || this.meetVarianceConstraint(Variance.CONTRAVARIANT, reference, override);
-      case INVARIANT:
-        return this.meetVarianceConstraint(Variance.COVARIANT, reference, override)
-            && this.meetVarianceConstraint(Variance.CONTRAVARIANT, reference, override);
-    }
-    throw new AssertionError();
+    return switch (variance) {
+      case COVARIANT -> this.isSubtypeCaching(override, reference);
+      case CONTRAVARIANT -> this.isSubtypeCaching(reference, override);
+      case BIVARIANT ->
+          this.meetVarianceConstraint(Variance.COVARIANT, reference, override)
+              || this.meetVarianceConstraint(Variance.CONTRAVARIANT, reference, override);
+      case INVARIANT ->
+          this.meetVarianceConstraint(Variance.COVARIANT, reference, override)
+              && this.meetVarianceConstraint(Variance.CONTRAVARIANT, reference, override);
+    };
   }
 
   /**
@@ -650,35 +667,19 @@ final class SubtypeChecker {
     if (unwrappedTypeName == null) {
       return null;
     }
-    switch (unwrappedTypeName) {
-      case "ReadonlyArray":
-        return unwrapped.registry.getReadonlyArrayElementKey();
-
-      case "Iterator":
-        return unwrapped.registry.getIteratorValueTemplate();
-
-      case "Generator":
-        return unwrapped.registry.getGeneratorValueTemplate();
-
-      case "AsyncIterator":
-        return unwrapped.registry.getAsyncIteratorValueTemplate();
-
-      case "Iterable":
-        return unwrapped.registry.getIterableValueTemplate();
-
-      case "IteratorIterable":
-        return unwrapped.registry.getIteratorIterableValueTemplate();
-
-      case "IIterableResult":
-        return unwrapped.registry.getIIterableResultValueTemplate();
-
-      case "AsyncIterable":
-        return unwrapped.registry.getAsyncIterableValueTemplate();
-
-      default:
-        // All other types are either invariant or bivariant
-        return null;
-    }
+    return switch (unwrappedTypeName) {
+      case "ReadonlyArray" -> unwrapped.registry.getReadonlyArrayElementKey();
+      case "Iterator" -> unwrapped.registry.getIteratorValueTemplate();
+      case "Generator" -> unwrapped.registry.getGeneratorValueTemplate();
+      case "AsyncIterator" -> unwrapped.registry.getAsyncIteratorValueTemplate();
+      case "Iterable" -> unwrapped.registry.getIterableValueTemplate();
+      case "IteratorIterable" -> unwrapped.registry.getIteratorIterableValueTemplate();
+      case "IIterableResult" -> unwrapped.registry.getIIterableResultValueTemplate();
+      case "AsyncIterable" -> unwrapped.registry.getAsyncIterableValueTemplate();
+      default ->
+          // All other types are either invariant or bivariant
+          null;
+    };
   }
 
   private boolean shouldTreatThisTypesAsCovariant(FunctionType subtype, FunctionType supertype) {

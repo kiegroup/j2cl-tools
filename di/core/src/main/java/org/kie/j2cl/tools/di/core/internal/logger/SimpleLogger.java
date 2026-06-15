@@ -14,7 +14,7 @@
 package org.kie.j2cl.tools.di.core.internal.logger;
 
 import elemental2.dom.DomGlobal;
-import org.kie.j2cl.tools.utils.GwtIncompatible;
+import org.kie.j2cl.tools.di.core.internal.GwtIncompatible;
 
 public class SimpleLogger {
 

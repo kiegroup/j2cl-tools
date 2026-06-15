@@ -27,6 +27,10 @@ import com.google.j2cl.transpiler.ast.MemberReference
 import com.google.j2cl.transpiler.ast.Type
 import com.google.j2cl.transpiler.backend.common.UniqueNamesResolver.computeUniqueNames
 import com.google.j2cl.transpiler.backend.kotlin.source.Source
+import java.lang.Boolean.getBoolean
+
+private val isJ2ObjCInteropEnabled: Boolean =
+  getBoolean("com.google.j2cl.transpiler.backend.kotlin.isJ2ObjCInteropEnabled")
 
 /**
  * The OutputGeneratorStage contains all necessary information for generating the Kotlin output for
@@ -34,8 +38,16 @@ import com.google.j2cl.transpiler.backend.kotlin.source.Source
  *
  * @property output output for generated sources
  * @property problems problems collected during generation
+ * @property objCNamePrefix ObjCName prefix for types
+ * @property isJ2ObjCInteropEnabled whether J2ObjC interop is enabled
  */
-class KotlinGeneratorStage(private val output: OutputUtils.Output, private val problems: Problems) {
+class KotlinGeneratorStage(
+  private val output: OutputUtils.Output,
+  private val problems: Problems,
+  private val objCNamePrefix: String,
+) {
+  private val hiddenFromObjCMapping: HiddenFromObjCMapping = HiddenFromObjCMapping()
+
   /** Generate outputs for a library. */
   fun generateOutputs(library: Library) {
     library.compilationUnits.forEach { generateOutputs(it) }
@@ -43,8 +55,11 @@ class KotlinGeneratorStage(private val output: OutputUtils.Output, private val p
 
   /** Generate all outputs for a compilation unit. */
   private fun generateOutputs(compilationUnit: CompilationUnit) {
+    problems.abortIfCancelled()
     generateKtOutputs(compilationUnit)
-    generateObjCOutputs(compilationUnit)
+    if (isJ2ObjCInteropEnabled) {
+      generateObjCOutputs(compilationUnit)
+    }
   }
 
   /** Generate Kotlin outputs for a compilation unit. */
@@ -56,8 +71,8 @@ class KotlinGeneratorStage(private val output: OutputUtils.Output, private val p
 
   /** Generate ObjC outputs for a compilation unit. */
   private fun generateObjCOutputs(compilationUnit: CompilationUnit) {
-    val source = compilationUnit.j2ObjCCompatHeaderSource
-    if (!source.isEmpty()) {
+    val source = J2ObjCCompatRenderer(objCNamePrefix, hiddenFromObjCMapping).source(compilationUnit)
+    if (source.isNotEmpty()) {
       val path = compilationUnit.packageRelativePath.replace(".java", "+J2ObjCCompat.h")
       output.write(path, source.buildString())
     }
@@ -69,14 +84,16 @@ class KotlinGeneratorStage(private val output: OutputUtils.Output, private val p
 
     val environment =
       Environment(
+        hiddenFromObjCMapping = hiddenFromObjCMapping,
         nameToIdentifierMap = nameToIdentifierMap,
         identifierSet = nameToIdentifierMap.values.toSet(),
         privateAsKtInternalDeclarationMemberDescriptorSet =
           compilationUnit.buildPrivateKtInternalMemberDescriptorSet(),
+        isJ2ObjCInteropEnabled = isJ2ObjCInteropEnabled,
       )
 
     val nameRenderer =
-      NameRenderer(environment).plusLocalTypeNameMap(compilationUnit.localTypeNames)
+      NameRenderer(environment, objCNamePrefix).plusLocalTypeNameMap(compilationUnit.localTypeNames)
 
     val compilationUnitRenderer = CompilationUnitRenderer(nameRenderer)
 

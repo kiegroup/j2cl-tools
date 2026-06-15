@@ -1,7 +1,7 @@
 """This module contains j2cl_js_provider helpers."""
 
 load(
-    "@io_bazel_rules_closure//closure:defs.bzl",
+    "@rules_closure//closure:defs.bzl",
     "CLOSURE_JS_TOOLCHAIN_ATTRS",
     "ClosureJsLibraryInfo",
     "closure_js_binary",
@@ -16,6 +16,7 @@ def j2cl_js_provider(ctx, srcs = [], deps = [], exports = [], artifact_suffix = 
     default_j2cl_suppresses = [
         "analyzerChecks",
         "underscore",
+        "strictDependencies",
         "superfluousSuppress",
         "JSC_UNKNOWN_EXPR_TYPE",
     ]
@@ -64,15 +65,13 @@ def js_devserver(
         ],
     )
 
-js_binary = closure_js_binary
+JsInfo = ClosureJsLibraryInfo
 
 J2CL_JS_TOOLCHAIN_ATTRS = CLOSURE_JS_TOOLCHAIN_ATTRS
 
 J2CL_JS_ATTRS = {
     "js_suppress": attr.string_list(),
 }
-
-JS_PROVIDER_NAME = ClosureJsLibraryInfo
 
 J2CL_OPTIMIZED_DEFS = [
     "--define=goog.DEBUG=false",
@@ -86,6 +85,7 @@ def j2cl_web_test(
         name,
         src,
         deps,
+        compile,
         browsers,
         data,
         test_class,
@@ -114,9 +114,10 @@ def j2cl_web_test(
             testsuite_file_name,
         ],
         cmd = "\n".join([
-            "unzip -q -o $(locations %s) *.js -d zip_out/" % src,
-            "cd zip_out/",
-            "mkdir -p ../$(RULEDIR)",
+            "TMP=$$(mktemp -d)",
+            "WD=$$(pwd)",
+            "unzip -q -o $(locations %s) *.js -d $$TMP" % src,
+            "cd $$TMP",
             "if [ $$(find . -name *.js | wc -l) -ne 1 ]; then",
             "  echo \"%s\"" % fail_multiple_testsuites,
             "  exit 1",
@@ -126,7 +127,8 @@ def j2cl_web_test(
             "  echo \"%s\"" % fail_suiteclass,
             "  exit 1",
             "fi",
-            "mv \"$$testsuite\" ../$@;",
+            "mv \"$$testsuite\" $$WD/$@;",
+            "rm -rf $$TMP",
         ]),
         testonly = 1,
     )
@@ -134,10 +136,17 @@ def j2cl_web_test(
     if default_browser and not browsers:
         browsers = [default_browser]
 
+    # If no browsers are specified, force compilation of the test.
+    # No browser means Phantomjs and Phantomjs doesn't work in bundle mode.
+    # This is hacky but the least disrubtive way to start honoring the flag.
+    if not browsers:
+        compile = True
+
     closure_js_test(
         name = name,
         srcs = [":%s" % testsuite_file_name],
         deps = deps,
+        compilation_level = "ADVANCED" if compile else "BUNDLE",
         browsers = browsers,
         data = data,
         testonly = 1,

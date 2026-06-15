@@ -17,8 +17,8 @@ package com.google.j2cl.transpiler.ast;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.j2cl.common.InternalCompilerError;
 import com.google.j2cl.common.visitor.Processor;
 import com.google.j2cl.common.visitor.Visitable;
 import com.google.j2cl.transpiler.ast.MethodDescriptor.MethodOrigin;
@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
 /** Abstract base class for member descriptors. */
 @Visitable
 public abstract class MemberDescriptor
-    implements HasJsNameInfo, HasReadableDescription, HasUnusableByJsSuppression {
+    implements HasJsNameInfo, HasReadableDescription, HasAnnotations {
 
   /** Represents the origin of a specific member */
   public interface Origin {
@@ -51,16 +51,12 @@ public abstract class MemberDescriptor
   abstract KtInfo getKtInfo();
 
   public boolean isKtProperty() {
-    return isField() || getKtInfo().isProperty();
+    return isField() || getKtInfo().isProperty() || getEnclosingTypeDescriptor().isAnnotation();
   }
 
-  public String getKtName() {
-    String ktName = getKtInfo().getName();
-    if (ktName != null) {
-      return ktName;
-    }
-    String name = getName();
-    return getKtInfo().isProperty() ? KtInfo.computePropertyName(name) : name;
+  @Nullable
+  public String getExplicitKtName() {
+    return getKtInfo().getName();
   }
 
   public boolean isKtDisabled() {
@@ -114,11 +110,13 @@ public abstract class MemberDescriptor
 
   public abstract boolean isSynthetic();
 
-  public abstract boolean isDeprecated();
-
   public abstract Origin getOrigin();
 
   public boolean isMethod() {
+    return false;
+  }
+
+  public boolean isLocalFunction() {
     return false;
   }
 
@@ -187,6 +185,9 @@ public abstract class MemberDescriptor
             && getJsNamespace().equals(getEnclosingTypeDescriptor().getQualifiedJsName()));
   }
 
+  @Override
+  public abstract ImmutableList<Annotation> getAnnotations();
+
   /** Returns true if this is a user written $isInstance method. */
   public boolean isCustomIsInstanceMethod() {
     return false;
@@ -199,16 +200,11 @@ public abstract class MemberDescriptor
 
   /** Determines whether a method is visible from {@code type} or not (following JLS 6.6.1). */
   public boolean isVisibleFrom(DeclaredTypeDescriptor type) {
-    switch (getVisibility()) {
-      case PUBLIC:
-      case PROTECTED:
-        return true;
-      case PACKAGE_PRIVATE:
-        return type.isInSamePackage(getEnclosingTypeDescriptor());
-      case PRIVATE:
-        return isEnclosedBySameTopLevelClass(type, getEnclosingTypeDescriptor());
-    }
-    throw new InternalCompilerError("Unexpected visibility: %s.", getVisibility());
+    return switch (getVisibility()) {
+      case PUBLIC, PROTECTED -> true;
+      case PACKAGE_PRIVATE -> type.isInSamePackage(getEnclosingTypeDescriptor());
+      case PRIVATE -> isEnclosedBySameTopLevelClass(type, getEnclosingTypeDescriptor());
+    };
   }
 
   private static boolean isEnclosedBySameTopLevelClass(

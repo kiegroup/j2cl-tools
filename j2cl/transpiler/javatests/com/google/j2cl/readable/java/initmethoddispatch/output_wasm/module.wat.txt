@@ -1,16 +1,16 @@
 ;;; Code for initmethoddispatch.InitMethodDispatch [type definition]
-(type $initmethoddispatch.InitMethodDispatch.vtable (sub $java.lang.Object.vtable (struct
- (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
- (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
- (field $m_hashCode__int (ref $function.m_hashCode__int))
- (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
- ))
-)
 (type $initmethoddispatch.InitMethodDispatch (sub $java.lang.Object (struct
  (field $vtable (ref $initmethoddispatch.InitMethodDispatch.vtable))
  (field $itable (ref $itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  (field $value@initmethoddispatch.InitMethodDispatch (mut i32))
+ ))
+)
+(type $initmethoddispatch.InitMethodDispatch.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  ))
 )
 
@@ -45,7 +45,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/initmethoddispatch/readable-j2wasm.js/initmethoddispatch/InitMethodDispatch.java:21:2
   (call $$clinit__void_<once>_@initmethoddispatch.InitMethodDispatch )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/initmethoddispatch/readable-j2wasm.js/initmethoddispatch/InitMethodDispatch.java:21:2
-  (local.set $$instance (struct.new $initmethoddispatch.InitMethodDispatch (ref.as_non_null (global.get $initmethoddispatch.InitMethodDispatch.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (i32.const 0)))
+  (local.set $$instance (struct.new $initmethoddispatch.InitMethodDispatch (global.get $initmethoddispatch.InitMethodDispatch.vtable) (global.get $itable.empty) (i32.const 0) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/initmethoddispatch/readable-j2wasm.js/initmethoddispatch/InitMethodDispatch.java:21:2
   (call $$ctor__void_$p_initmethoddispatch_InitMethodDispatch@initmethoddispatch.InitMethodDispatch (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/initmethoddispatch/readable-j2wasm.js/initmethoddispatch/InitMethodDispatch.java:21:2
@@ -73,7 +73,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/initmethoddispatch/readable-j2wasm.js/initmethoddispatch/InitMethodDispatch.java:27:2
   (call $$clinit__void_<once>_@initmethoddispatch.InitMethodDispatch )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/initmethoddispatch/readable-j2wasm.js/initmethoddispatch/InitMethodDispatch.java:27:2
-  (local.set $$instance (struct.new $initmethoddispatch.InitMethodDispatch (ref.as_non_null (global.get $initmethoddispatch.InitMethodDispatch.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (i32.const 0)))
+  (local.set $$instance (struct.new $initmethoddispatch.InitMethodDispatch (global.get $initmethoddispatch.InitMethodDispatch.vtable) (global.get $itable.empty) (i32.const 0) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/initmethoddispatch/readable-j2wasm.js/initmethoddispatch/InitMethodDispatch.java:27:2
   (call $$ctor__int__void_$p_initmethoddispatch_InitMethodDispatch@initmethoddispatch.InitMethodDispatch (ref.as_non_null (local.get $$instance))(local.get $i))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/initmethoddispatch/readable-j2wasm.js/initmethoddispatch/InitMethodDispatch.java:27:2

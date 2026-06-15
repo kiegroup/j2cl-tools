@@ -5,18 +5,18 @@
 )
 
 ;;; Code for jstypewithdefault.SomeJsType [type definition]
+(type $jstypewithdefault.SomeJsType (sub $java.lang.Object (struct
+ (field $vtable (ref $jstypewithdefault.SomeJsType.vtable))
+ (field $itable (ref $jstypewithdefault.SomeJsType.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $jstypewithdefault.SomeJsType.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
  (field $m_hashCode__int (ref $function.m_hashCode__int))
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  (field $m_defaultMethod__void (ref $function.m_defaultMethod__void))
- ))
-)
-(type $jstypewithdefault.SomeJsType (sub $java.lang.Object (struct
- (field $vtable (ref $jstypewithdefault.SomeJsType.vtable))
- (field $itable (ref $jstypewithdefault.SomeJsType.itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
 
@@ -108,7 +108,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/jstypewithdefault/readable-j2wasm.js/jstypewithdefault/SomeJsType.java:20:13
   (call $$clinit__void_<once>_@jstypewithdefault.SomeJsType )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/jstypewithdefault/readable-j2wasm.js/jstypewithdefault/SomeJsType.java:20:13
-  (local.set $$instance (struct.new $jstypewithdefault.SomeJsType (ref.as_non_null (global.get $jstypewithdefault.SomeJsType.vtable)) (ref.as_non_null (global.get $jstypewithdefault.SomeJsType.itable)) (i32.const 0)))
+  (local.set $$instance (struct.new $jstypewithdefault.SomeJsType (global.get $jstypewithdefault.SomeJsType.vtable) (global.get $jstypewithdefault.SomeJsType.itable) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/jstypewithdefault/readable-j2wasm.js/jstypewithdefault/SomeJsType.java:20:13
   (call $$ctor__void_$p_jstypewithdefault_SomeJsType@jstypewithdefault.SomeJsType (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/jstypewithdefault/readable-j2wasm.js/jstypewithdefault/SomeJsType.java:20:13

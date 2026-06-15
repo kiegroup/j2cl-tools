@@ -132,31 +132,37 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     // return statements in the three possible configurations: both scopes
     // return; enclosed doesn't return; enclosing doesn't return.
     testNotMissing(
-        "try {"
-            + "   /** @return {number} */ function f() {"
-            + "       try { return 1; }"
-            + "       finally { }"
-            + "   };"
-            + "   return 1;"
-            + "}"
-            + "finally { }");
+        """
+        try {
+           /** @return {number} */ function f() {
+               try { return 1; }
+               finally { }
+           };
+           return 1;
+        }
+        finally { }
+        """);
     testMissing(
-        "try {"
-            + "   /** @return {number} */ function f() {"
-            + "       try { }"
-            + "       finally { }"
-            + "   };"
-            + "   return 1;"
-            + "}"
-            + "finally { }");
+        """
+        try {
+           /** @return {number} */ function f() {
+               try { }
+               finally { }
+           };
+           return 1;
+        }
+        finally { }
+        """);
     testMissing(
-        "try {"
-            + "   /** @return {number} */ function f() {"
-            + "       try { return 1; }"
-            + "       finally { }"
-            + "   };"
-            + "}"
-            + "finally { }");
+        """
+        try {
+           /** @return {number} */ function f() {
+               try { return 1; }
+               finally { }
+           };
+        }
+        finally { }
+        """);
   }
 
   @Test
@@ -201,7 +207,10 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   @Test
   public void testIssue779() {
     testNotMissing(
-        "var a = f(); try { alert(); if (a > 0) return 1; }" + "finally { a = 5; } return 2;");
+        """
+        var a = f(); try { alert(); if (a > 0) return 1; }
+        finally { a = 5; } return 2;
+        """);
   }
 
   @Test
@@ -209,18 +218,22 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     testSame("/** @constructor */ function foo() {} ");
 
     final String constructorWithReturn =
-        "/** @constructor \n"
-            + " * @return {!foo} */ function foo() {"
-            + " if (!(this instanceof foo)) { return new foo; } }";
+        """
+        /** @constructor\s
+         * @return {!foo} */ function foo() {
+         if (!(this instanceof foo)) { return new foo; } }
+        """;
     testSame(constructorWithReturn);
   }
 
   @Test
   public void testClosureAsserts() {
     String closureDefs =
-        "/** @const */ var goog = {};\n"
-            + "goog.asserts = {};\n"
-            + "goog.asserts.fail = function(x) {};";
+        """
+        /** @const */ var goog = {};
+        goog.asserts = {};
+        goog.asserts.fail = function(x) {};
+        """;
 
     testNotMissing(closureDefs + "goog.asserts.fail('');");
 
@@ -240,8 +253,14 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   }
 
   private static String createShorthandFunctionInObjLit(String returnType, String body) {
-    return lines(
-        "var obj = {", "  /** @return {" + returnType + "} */", "  foo() {", body, "}", "}");
+    return """
+    var obj = {
+      /** @return {RETURN_TYPE} */
+      foo() {BODY}
+    }
+    """
+        .replace("RETURN_TYPE", returnType)
+        .replace("BODY", body);
   }
 
   private void testMissingInTraditionalFunction(String returnType, String body) {
@@ -284,29 +303,47 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
 
   @Test
   public void testArrowFunctions_noReturn() {
-    testNoWarning(lines("/** @return {undefined} */", "() => {}"));
+    testNoWarning(
+        """
+        /** @return {undefined} */
+        () => {}
+        """);
   }
 
   @Test
   public void testArrowFunctions_expressionBody1() {
-    testSame(lines("/** @return {number} */", "() => 1"));
+    testSame(
+        """
+        /** @return {number} */
+        () => 1
+        """);
   }
 
   @Test
   public void testArrowFunctions_expressionBody2() {
-    testSame(lines("/** @return {number} */", "(a) => (a > 3) ? 1 : 0"));
+    testSame(
+        """
+        /** @return {number} */
+        (a) => (a > 3) ? 1 : 0
+        """);
   }
 
   @Test
   public void testArrowFunctions_block() {
     testSame(
-        lines("/** @return {number} */", "(a) => { if (a > 3) { return 1; } else { return 0; }}"));
+        """
+        /** @return {number} */
+        (a) => { if (a > 3) { return 1; } else { return 0; }}
+        """);
   }
 
   @Test
   public void testArrowFunctions_blockMissingReturn() {
     testWarning(
-        lines("/** @return {number} */", "(a) => { if (a > 3) { return 1; } else { } }"),
+        """
+        /** @return {number} */
+        (a) => { if (a > 3) { return 1; } else { } }
+        """,
         CheckMissingReturn.MISSING_RETURN_STATEMENT);
   }
 
@@ -316,25 +353,46 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   }
 
   @Test
-  public void testGeneratorFunctionDoesntWarn() {
+  public void testGeneratorFunctionWithoutSpecifiedReturnType() {
     testNoWarning("function *gen() {}");
 
     testNoWarning(
-        lines(
-            "/** @return {!Generator<number>} */", // no yields is OK
-            "function *gen() {}"));
+        """
+        /** @return {!Generator<number>} */ // no yields is OK
+        function *gen() {}
+        """);
 
     testNoWarning(
-        lines(
-            "/** @return {!Generator<number>} */", // one yield is OK
-            "function *gen() {",
-            " yield 1;",
-            "}"));
+        """
+        /** @return {!Generator<number>} */ // no yields is OK
+        function *gen() { return; }
+        """);
 
     testNoWarning(
-        lines(
-            "/** @return {!Object} */", // Return type more vague than Generator is also OK
-            "function *gen() {}"));
+        """
+        /** @return {!Generator<number>} */ // one yield is OK
+        function *gen() {
+         yield 1;
+        }
+        """);
+
+    testNoWarning(
+        """
+        /** @return {!Object} */ // Return type more vague than Generator is also OK
+        function *gen() {}
+        """);
+  }
+
+  @Test
+  public void testGeneratorFunctionWithSpecifiedReturnType() {
+    testWarning(
+        """
+        /** @return {!Iterable<number, number>} */
+        function *gen() {
+         yield 1;
+        }
+        """,
+        CheckMissingReturn.MISSING_RETURN_STATEMENT);
   }
 
   @Test
@@ -365,14 +423,15 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   @Test
   public void testClosureAssertsFailPreventsWarning() {
     String input =
-        lines(
-            "/** @return {string} */",
-            "function foo(param) {",
-            "  if (param) {",
-            "    return 'success';",
-            "  }",
-            "  fail();",
-            "}");
+        """
+        /** @return {string} */
+        function foo(param) {
+          if (param) {
+            return 'success';
+          }
+          fail();
+        }
+        """;
     testWarning("function fail() {}" + input, CheckMissingReturn.MISSING_RETURN_STATEMENT);
 
     testNoWarning("/** @closurePrimitive {asserts.fail} */ function fail() {}" + input);

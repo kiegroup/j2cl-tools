@@ -262,6 +262,22 @@ AudioContext.prototype.createGainNode = function() {};
 AudioContext.prototype.createDelayNode = function(maxDelayTime) {};
 
 /**
+ * @return {!AudioTimestamp}
+ */
+AudioContext.prototype.getOutputTimestamp = function() {};
+
+/**
+ * @record
+ */
+function AudioTimestamp() {};
+
+/** @type {number} */
+AudioTimestamp.prototype.contextTime;
+
+/** @type {number} */
+AudioTimestamp.prototype.performanceTime;
+
+/**
  * @param {number} numberOfChannels
  * @param {number} length
  * @param {number} sampleRate
@@ -350,6 +366,28 @@ AudioNode.prototype.channelCountMode;
  * See https://www.w3.org/TR/webaudio/#the-audionode-interface for valid values
  */
 AudioNode.prototype.channelInterpretation;
+
+
+/**
+ * @constructor
+ * @extends {AudioNode}
+ */
+function AudioScheduledSourceNode() {}
+
+/** @type {?function(!Event)} */
+AudioScheduledSourceNode.prototype.onended;
+
+/**
+ * @param {(number|undefined)} when
+ * @return {undefined}
+ */
+AudioScheduledSourceNode.prototype.start = function(when) {};
+
+/**
+ * @param {(number|undefined)} when
+ * @return {undefined}
+ */
+AudioScheduledSourceNode.prototype.stop = function(when) {};
 
 /**
  * @constructor
@@ -471,6 +509,12 @@ AudioParam.prototype.setValueCurveAtTime = function(
 AudioParam.prototype.cancelScheduledValues = function(startTime) {};
 
 /**
+ * @param {number} cancelTime
+ * @return {!AudioParam}
+ */
+AudioParam.prototype.cancelAndHoldAtTime = function(cancelTime) {};
+
+/**
  * @constructor
  * @extends {AudioParam}
  */
@@ -484,6 +528,44 @@ function GainNode() {}
 
 /** @type {!AudioParam} */
 GainNode.prototype.gain;
+
+/**
+ * @record
+ */
+function AudioNodeOptions() {};
+
+/** @type {(number|undefined)} */
+AudioNodeOptions.prototype.channelCount;
+
+/** @type {(string|undefined)} */
+AudioNodeOptions.prototype.channelCountMode;
+
+/** @type {(string|undefined)} */
+AudioNodeOptions.prototype.channelInterpretation;
+
+/**
+ * @record
+ * @extends {AudioNodeOptions}
+ */
+function IIRFilterOptions() {};
+
+/** @type {!Array<number>} */
+IIRFilterOptions.prototype.feedback;
+
+/** @type {!Array<number>} */
+IIRFilterOptions.prototype.feedforward;
+
+/**
+ * @record
+ * @extends {AudioNodeOptions}
+ */
+function DelayOptions() {};
+
+/** @type {(number|undefined)} */
+DelayOptions.prototype.delayTime;
+
+/** @type {(number|undefined)} */
+DelayOptions.prototype.maxDelayTime;
 
 /**
  * @constructor
@@ -1218,10 +1300,24 @@ function StereoPannerNode() {}
 StereoPannerNode.prototype.pan;
 
 /**
+ * @record
+ * @extends {AudioNodeOptions}
+ */
+function ConvolverOptions() {};
+
+/** @type {(AudioBuffer|undefined)} */
+ConvolverOptions.prototype.buffer;
+
+/** @type {(boolean|undefined)} */
+ConvolverOptions.prototype.disableNormalization;
+
+/**
  * @constructor
  * @extends {AudioNode}
+ * @param {!BaseAudioContext} context
+ * @param {!ConvolverOptions=} options
  */
-function ConvolverNode() {}
+function ConvolverNode(context, options) {}
 
 /** @type {?AudioBuffer} */
 ConvolverNode.prototype.buffer;
@@ -1411,9 +1507,11 @@ BiquadFilterNode.prototype.getFrequencyResponse = function(
 
 /**
  * @constructor
+ * @param {!BaseAudioContext} context
+ * @param {!IIRFilterOptions=} options
  * @extends {AudioNode}
  */
-function IIRFilterNode() {}
+function IIRFilterNode(context, options) {}
 
 /**
  * @param {!Float32Array} frequencyHz
@@ -1443,10 +1541,30 @@ WaveShaperNode.prototype.oversample;
 function WaveTable() {}
 
 /**
+ * @record
+ * @extends {AudioNodeOptions}
+ */
+function OscillatorOptions() {}
+
+/** @type {number|undefined} */
+OscillatorOptions.prototype.detune;
+
+/** @type {number|undefined} */
+OscillatorOptions.prototype.frequency;
+
+/** @type {!PeriodicWave|undefined} */
+OscillatorOptions.prototype.periodicWave;
+
+/** @type {string|undefined} */
+OscillatorOptions.prototype.type;
+
+/**
  * @constructor
+ * @param {!BaseAudioContext} context
+ * @param {!OscillatorOptions=} options
  * @extends {AudioNode}
  */
-function OscillatorNode() {}
+function OscillatorNode(context, options) {}
 
 /**
  * @type {string}
@@ -1491,10 +1609,33 @@ OscillatorNode.prototype.setPeriodicWave = function(periodicWave) {};
 /** @type {?function(!Event)} */
 OscillatorNode.prototype.onended;
 
+
+/**
+ * @record
+ */
+function PeriodicWaveConstraints() { }
+
+/** @type {boolean|undefined} */
+PeriodicWaveConstraints.prototype.disableNormalization;
+
+/**
+ * @record
+ * @extends {PeriodicWaveConstraints}
+ */
+function PeriodicWaveOptions() {}
+
+/** @type {(!Array<number>|!Float32Array)|undefined} */
+PeriodicWaveOptions.prototype.imag;
+
+/** @type {(!Array<number>|!Float32Array)|undefined} */
+PeriodicWaveOptions.prototype.real;
+
 /**
  * @constructor
+ * @param {!BaseAudioContext} context
+ * @param {!PeriodicWaveOptions=} options
  */
-function PeriodicWave() {}
+function PeriodicWave(context, options) {}
 
 /**
  * @record
@@ -1533,11 +1674,16 @@ ConstantSourceNode.prototype.offset;
  */
 function MediaStreamAudioSourceNode() {}
 
+/** @type {!MediaStream} */
+MediaStreamAudioSourceNode.prototype.mediaStream;
+
 /**
  * @constructor
  * @extends {AudioNode}
+ * @param {!AudioContext} context
+ * @param {!AudioNodeOptions=} options
  */
-function MediaStreamAudioDestinationNode() {}
+function MediaStreamAudioDestinationNode(context, options) {}
 
 /** @type {!MediaStream} */
 MediaStreamAudioDestinationNode.prototype.stream;
@@ -1582,8 +1728,8 @@ AudioWorkletGlobalScope.prototype.registerProcessor = function(
  */
 function AudioWorkletNode(context, name, options) {}
 
-/** @type {!EventListener|function()} */
-AudioWorkletNode.prototype.onprocesserror;
+/** @type {?function(!ErrorEvent)} */
+AudioWorkletNode.prototype.onprocessorerror;
 
 /** @type {!Object<string, !AudioParam>} */
 AudioWorkletNode.prototype.parameters;

@@ -22,9 +22,7 @@ import java.util.Arrays;
 import junit.framework.TestCase;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Tests java.lang.System.
- */
+/** Tests java.lang.System. */
 public class SystemTest extends TestCase {
 
   private static class Bar extends Foo {

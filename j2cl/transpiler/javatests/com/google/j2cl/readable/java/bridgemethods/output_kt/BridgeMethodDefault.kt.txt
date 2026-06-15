@@ -1,5 +1,4 @@
 // Generated from "bridgemethods/BridgeMethodDefault.java"
-@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -21,48 +20,39 @@ package bridgemethods
 import javaemul.lang.*
 import jsinterop.annotations.JsMethod
 import kotlin.Any
-import kotlin.OptIn
 import kotlin.String
 import kotlin.Suppress
-import kotlin.experimental.ExperimentalObjCName
-import kotlin.native.ObjCName
 
-@ObjCName("J2ktBridgemethodsBridgeMethodDefault", exact = true)
 open class BridgeMethodDefault internal constructor() {
  init {
-  val jj: BridgeMethodDefault.JJ? = BridgeMethodDefault.C()
-  jj!!.m(Any())
-  val i: BridgeMethodDefault.I<Any?>? = jj
-  i!!.m(Any())
- }
-
- @ObjCName("J2ktBridgemethodsBridgeMethodDefault_I", exact = true)
- fun interface I<T> {
-  @ObjCName("m")
-  fun m(
-   @ObjCName("withId") t: T
+  val jj: JJ = C()
+  jj.m(
+   Any(),
+  )
+  val i: I<Any?> = jj
+  i.m(
+   Any(),
   )
  }
 
- @ObjCName("J2ktBridgemethodsBridgeMethodDefault_II", exact = true)
- interface II: BridgeMethodDefault.I<String?> {
+ fun interface I<T> {
+  fun m(t: T)
+ }
+
+ interface II: I<String?> {
   override fun m(s: String?) {}
  }
 
- @ObjCName("J2ktBridgemethodsBridgeMethodDefault_A", exact = true)
- open class A internal constructor(): BridgeMethodDefault.II {}
+ open class A internal constructor(): II
 
- @ObjCName("J2ktBridgemethodsBridgeMethodDefault_JJ", exact = true)
- interface JJ: BridgeMethodDefault.I<Any?> {
+ interface JJ: I<Any?> {
   @JsMethod
   override fun m(o: Any?) {}
  }
 
- @ObjCName("J2ktBridgemethodsBridgeMethodDefault_B", exact = true)
- open class B internal constructor(): BridgeMethodDefault.JJ {}
+ open class B internal constructor(): JJ
 
- @ObjCName("J2ktBridgemethodsBridgeMethodDefault_C", exact = true)
- open class C internal constructor(): BridgeMethodDefault.B() {
+ open class C internal constructor(): B() {
   override fun m(o: Any?) {}
  }
 }

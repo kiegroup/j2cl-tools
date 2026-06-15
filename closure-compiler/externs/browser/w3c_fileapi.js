@@ -27,6 +27,9 @@ function BlobPropertyBag() {};
 /** @type {(string|undefined)} */
 BlobPropertyBag.prototype.type;
 
+/** @type {(string|undefined)} */
+BlobPropertyBag.prototype.endings;
+
 /**
  * @see http://dev.w3.org/2006/webapi/FileAPI/#dfn-Blob
  * @param {Array<ArrayBuffer|ArrayBufferView|Blob|string>=} opt_blobParts
@@ -64,6 +67,13 @@ Blob.prototype.slice = function(start, length, opt_contentType) {};
  * @nosideeffects
  */
 Blob.prototype.arrayBuffer = function() {};
+
+/**
+ * @see https://www.w3.org/TR/FileAPI/#bytes-method-algo
+ * @return {!Promise<!Uint8Array>}
+ * @nosideeffects
+ */
+Blob.prototype.bytes = function() {};
 
 /**
  * @see https://www.w3.org/TR/FileAPI/#dom-blob-text

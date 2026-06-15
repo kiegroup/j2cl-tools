@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Answers.RETURNS_SMART_NULLS;
 import static org.mockito.Mockito.when;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
@@ -36,7 +35,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 /** Tests for {@link CoverageInstrumenter}. */
-@GwtIncompatible
 @RunWith(JUnit4.class)
 public final class CoverageInstrumenterTest {
 
@@ -91,10 +89,15 @@ public final class CoverageInstrumenterTest {
     CoverageInstrumenter.CompileResult result = compiler.compile(SOURCE_JS, "var x = 42;");
     String[] expected =
         new String[] {
-          "(function(self){if(!self.window){self.window=self;self.window.top=self}})(typeof"
-              + " self!==\"undefined\"?self:globalThis);",
+          """
+          (function(self){if(!self.window){self.window=self;self.window.top=self}})(typeof \
+          self!=="undefined"?self:globalThis);\
+          """,
           "var __jscov=window.top[\"__jscov\"]||",
-          "(window.top[\"__jscov\"]={\"fileNames\":[],\"instrumentedLines\":[],\"executedLines\":[]});",
+          """
+          (window.top["__jscov"]={"fileNames":[],"instrumentedLines":[],\
+          "executedLines":[]});\
+          """,
           "var JSCompiler_lcov_data_source_js=[];",
           "__jscov[\"executedLines\"].push(JSCompiler_lcov_data_source_js);",
           "__jscov[\"instrumentedLines\"].push(\"01\");",

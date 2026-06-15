@@ -155,9 +155,6 @@ public final class JSDocSerializer {
     }
 
     // Used by ReplaceMessages
-    if (jsdoc.isHidden()) {
-      builder.addKind(JsdocTag.JSDOC_HIDDEN);
-    }
     if (jsdoc.getDescription() != null) {
       builder.setDescriptionPointer(stringPool.put(jsdoc.getDescription()));
     }
@@ -172,6 +169,9 @@ public final class JSDocSerializer {
     }
     if (jsdoc.getSuppressions().contains("untranspilableFeatures")) {
       builder.addKind(JsdocTag.JSDOC_SUPPRESS_UNTRANSPILABLE_FEATURES);
+    }
+    if (jsdoc.isUsedViaDotConstructor()) {
+      builder.addKind(JsdocTag.JSDOC_USED_VIA_DOT_CONSTRUCTOR);
     }
 
     OptimizationJsdoc result = builder.build();
@@ -325,10 +325,6 @@ public final class JSDocSerializer {
           builder.recordAbstract();
           continue;
 
-        case JSDOC_HIDDEN:
-          builder.recordHiddenness();
-          continue;
-
           // TODO(lharker): stage 2 passes ideally shouldn't report diagnostics, so this could be
           // moved to stage 1.
         case JSDOC_SUPPRESS_MESSAGE_CONVENTION:
@@ -356,7 +352,11 @@ public final class JSDocSerializer {
         case JSDOC_SASS_GENERATED_CSS_TS:
           builder.recordSassGeneratedCssTs();
           continue;
-
+        case JSDOC_USED_VIA_DOT_CONSTRUCTOR:
+          {
+            var unused = builder.recordUsedViaDotConstructor();
+            continue;
+          }
         case JSDOC_UNSPECIFIED:
         case UNRECOGNIZED:
           throw new MalformedTypedAstException(

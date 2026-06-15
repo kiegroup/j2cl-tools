@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.kie.j2cl.tools.di</groupId>
         <artifactId>parent</artifactId>
-        <version>0.8</version>
+        <version>0.9</version>
     </parent>
 
     <artifactId>annotations</artifactId>
@@ -41,24 +41,20 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.kie.j2cl.tools.jakarta</groupId>
+            <groupId>org.treblereel.gwt.jakarta</groupId>
             <artifactId>annotations</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.kie.j2cl.tools.jakarta</groupId>
+            <groupId>org.treblereel.gwt.jakarta</groupId>
             <artifactId>ejb</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.kie.j2cl.tools.jakarta</groupId>
-            <artifactId>enterprise</artifactId>
+            <groupId>org.treblereel.gwt.jakarta</groupId>
+            <artifactId>cdi</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.kie.j2cl.tools.jakarta</groupId>
+            <groupId>org.treblereel.gwt.jakarta</groupId>
             <artifactId>inject</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.kie.j2cl.tools.jakarta</groupId>
-            <artifactId>utils</artifactId>
         </dependency>
     </dependencies>
 
@@ -90,58 +86,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-deploy-plugin</artifactId>
-                        <configuration>
-                            <skip>false</skip>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

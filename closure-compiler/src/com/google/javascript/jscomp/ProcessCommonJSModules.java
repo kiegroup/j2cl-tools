@@ -237,7 +237,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             .resolveJsModule(importPath, n.getSourceFileName(), n.getLineno(), n.getCharno());
 
     if (modulePath == null) {
-      return ModuleIdentifier.forFile(importPath).getModuleName();
+      return ModuleIdentifier.forFile(importPath).moduleName();
     }
     return modulePath.toModuleName();
   }
@@ -601,9 +601,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       // Check for goog.provide or goog.module statements
-      if (parent == null
-          || NodeUtil.isControlStructure(parent)
-          || NodeUtil.isStatementBlock(parent)) {
+      if (NodeUtil.isShallowStatementTree(parent)) {
         if (n.isExprResult()) {
           Node maybeGetProp = n.getFirstFirstChild();
           if (maybeGetProp != null
@@ -942,7 +940,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       return directAssignments < 2 && (exports.isEmpty() || moduleExports.isEmpty());
     }
 
-    private class UmdTestInfo {
+    private static class UmdTestInfo {
       public final Node enclosingIf;
       public final Node activeBranch;
 

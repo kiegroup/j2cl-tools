@@ -268,7 +268,9 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       final Node paramList = IR.paramList();
       NameGenerator nameGenerator =
           new DefaultNameGenerator(
-              ImmutableSet.copyOf(originalParamNames), "", /* reservedCharacters= */ null);
+              ImmutableSet.copyOf(originalParamNames),
+              "",
+              /* reservedCharacters= */ ImmutableSet.of());
       for (String originalParamName : originalParamNames) {
         String externParamName =
             originalParamName.isEmpty() ? nameGenerator.generateNextName() : originalParamName;
@@ -535,12 +537,14 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       .setOutputTypes(true)
       .setTypeRegistry(compiler.getTypeRegistry());
 
-    compiler.setExternExports(Joiner.on("\n").join(
-        "/**",
-        " * @fileoverview Generated externs.",
-        " * @externs",
-        " */",
-        builder.build()));
+    compiler.setExternExports(
+        """
+        /**
+         * @fileoverview Generated externs.
+         * @externs
+         */
+        """
+            + builder.build());
   }
 
   @Override

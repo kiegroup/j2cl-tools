@@ -1,16 +1,16 @@
 ;;; Code for ternaryexpression.TernaryExpression [type definition]
+(type $ternaryexpression.TernaryExpression (sub $java.lang.Object (struct
+ (field $vtable (ref $ternaryexpression.TernaryExpression.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $ternaryexpression.TernaryExpression.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
  (field $m_hashCode__int (ref $function.m_hashCode__int))
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  (field $m_test__void (ref $function.m_test__void))
- ))
-)
-(type $ternaryexpression.TernaryExpression (sub $java.lang.Object (struct
- (field $vtable (ref $ternaryexpression.TernaryExpression.vtable))
- (field $itable (ref $itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
 
@@ -46,7 +46,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/ternaryexpression/readable-j2wasm.js/ternaryexpression/TernaryExpression.java:18:13
   (call $$clinit__void_<once>_@ternaryexpression.TernaryExpression )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/ternaryexpression/readable-j2wasm.js/ternaryexpression/TernaryExpression.java:18:13
-  (local.set $$instance (struct.new $ternaryexpression.TernaryExpression (ref.as_non_null (global.get $ternaryexpression.TernaryExpression.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $ternaryexpression.TernaryExpression (global.get $ternaryexpression.TernaryExpression.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/ternaryexpression/readable-j2wasm.js/ternaryexpression/TernaryExpression.java:18:13
   (call $$ctor__void_$p_ternaryexpression_TernaryExpression@ternaryexpression.TernaryExpression (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/ternaryexpression/readable-j2wasm.js/ternaryexpression/TernaryExpression.java:18:13

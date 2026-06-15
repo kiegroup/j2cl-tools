@@ -29,12 +29,7 @@ class Mat22 : Serializable {
   val ey: Vec2
 
   /** Convert the matrix to printable format. */
-  override fun toString(): String {
-    var s = ""
-    s += "[" + ex.x + "," + ey.x + "]\n"
-    s += "[" + ex.y + "," + ey.y + "]"
-    return s
-  }
+  override fun toString(): String = "[${ex.x},${ey.x}]\n[${ex.y},${ey.y}]"
 
   /**
    * Construct zero matrix. Note: this is NOT an identity matrix! djm fixed double allocation
@@ -52,18 +47,11 @@ class Mat22 : Serializable {
    * @param c2 Column 2 of matrix
    */
   constructor(c1: Vec2, c2: Vec2) {
-    ex = c1.clone()
-    ey = c2.clone()
+    ex = c1.copy()
+    ey = c2.copy()
   }
 
-  /**
-   * Create a matrix from four floats.
-   *
-   * @param exx
-   * @param col2x
-   * @param exy
-   * @param col2y
-   */
+  /** Create a matrix from four floats. */
   constructor(exx: Float, col2x: Float, exy: Float, col2y: Float) {
     ex = Vec2(exx, exy)
     ey = Vec2(col2x, col2y)
@@ -124,11 +112,7 @@ class Mat22 : Serializable {
     ey.y = 0.0f
   }
 
-  /**
-   * Extract the angle from this matrix (assumed to be a rotation matrix).
-   *
-   * @return
-   */
+  /** Extract the angle from this matrix (assumed to be a rotation matrix). */
   val angle: Float
     get() = MathUtils.atan2(ex.y, ex.x)
 
@@ -147,10 +131,8 @@ class Mat22 : Serializable {
 
   /** Returns the inverted Mat22 - does NOT invert the matrix locally! */
   fun invert(): Mat22 {
-    val a = ex.x
-    val b = ey.x
-    val c = ex.y
-    val d = ey.y
+    val (a, c) = ex
+    val (b, d) = ey
     val B = Mat22()
     var det = a * d - b * c
     if (det != 0f) {
@@ -164,10 +146,8 @@ class Mat22 : Serializable {
   }
 
   fun invertLocal(): Mat22 {
-    val a = ex.x
-    val b = ey.x
-    val c = ex.y
-    val d = ey.y
+    val (a, c) = ex
+    val (b, d) = ey
     var det = a * d - b * c
     if (det != 0f) {
       det = 1.0f / det
@@ -180,10 +160,8 @@ class Mat22 : Serializable {
   }
 
   fun invertToOut(out: Mat22) {
-    val a = ex.x
-    val b = ey.x
-    val c = ex.y
-    val d = ey.y
+    val (a, c) = ex
+    val (b, d) = ey
     var det = a * d - b * c
     // b2Assert(det != 0.0f);
     det = 1.0f / det
@@ -222,18 +200,12 @@ class Mat22 : Serializable {
   }
 
   fun mulToOutUnsafe(v: Vec2, out: Vec2) {
-    // assert is not supported in KMP.
-    // assert(v !== out)
+    assert(v !== out)
     out.x = ex.x * v.x + ey.x * v.y
     out.y = ex.y * v.x + ey.y * v.y
   }
 
-  /**
-   * Multiply another matrix by this one (this one on left). djm optimized
-   *
-   * @param R
-   * @return
-   */
+  /** Multiply another matrix by this one (this one on left). djm optimized */
   fun mul(R: Mat22): Mat22 {
     /*
      * Mat22 C = new Mat22();C.set(this.mul(R.ex), this.mul(R.ey));return C;
@@ -264,9 +236,8 @@ class Mat22 : Serializable {
   }
 
   fun mulToOutUnsafe(R: Mat22, out: Mat22) {
-    // assert is not supported in KMP.
-    // assert(out !== R)
-    // assert(out !== this)
+    assert(out !== R)
+    assert(out !== this)
     out.ex.x = ex.x * R.ex.x + ey.x * R.ex.y
     out.ex.y = ex.y * R.ex.x + ey.y * R.ex.y
     out.ey.x = ex.x * R.ey.x + ey.x * R.ey.y
@@ -276,9 +247,6 @@ class Mat22 : Serializable {
   /**
    * Multiply another matrix by the transpose of this one (transpose of this one on left). djm:
    * optimized
-   *
-   * @param B
-   * @return
    */
   fun mulTrans(B: Mat22): Mat22 {
     /*
@@ -287,10 +255,10 @@ class Mat22 : Serializable {
      * return C;
      */
     val C: Mat22 = Mat22()
-    C.ex.x = Vec2.dot(ex, B.ex)
-    C.ex.y = Vec2.dot(ey, B.ex)
-    C.ey.x = Vec2.dot(ex, B.ey)
-    C.ey.y = Vec2.dot(ey, B.ey)
+    C.ex.x = ex dot B.ex
+    C.ex.y = ey dot B.ex
+    C.ey.x = ex dot B.ey
+    C.ey.y = ey dot B.ey
     return C
   }
 
@@ -315,21 +283,15 @@ class Mat22 : Serializable {
   }
 
   fun mulTransToOutUnsafe(B: Mat22, out: Mat22) {
-    // assert is not supported in KMP.
-    // assert(B !== out)
-    // assert(this !== out)
+    assert(B !== out)
+    assert(this !== out)
     out.ex.x = ex.x * B.ex.x + ex.y * B.ex.y
     out.ey.x = ex.x * B.ey.x + ex.y * B.ey.y
     out.ex.y = ey.x * B.ex.x + ey.y * B.ex.y
     out.ey.y = ey.x * B.ey.x + ey.y * B.ey.y
   }
 
-  /**
-   * Multiply a vector by the transpose of this matrix.
-   *
-   * @param v
-   * @return
-   */
+  /** Multiply a vector by the transpose of this matrix. */
   fun mulTrans(v: Vec2): Vec2 = Vec2(v.x * ex.x + v.y * ex.y, v.x * ey.x + v.y * ey.y)
 
   /* djm added */
@@ -342,12 +304,7 @@ class Mat22 : Serializable {
     out.x = tempx
   }
 
-  /**
-   * Add this matrix to B, return the result.
-   *
-   * @param B
-   * @return
-   */
+  /** Add this matrix to B, return the result. */
   fun add(B: Mat22): Mat22 {
     // return new Mat22(ex.add(B.ex), col2.add(B.ey));
     val m = Mat22()
@@ -358,12 +315,7 @@ class Mat22 : Serializable {
     return m
   }
 
-  /**
-   * Add B to this matrix locally.
-   *
-   * @param B
-   * @return
-   */
+  /** Add B to this matrix locally. */
   fun addLocal(B: Mat22): Mat22 {
     // ex.addLocal(B.ex);
     // col2.addLocal(B.ey);
@@ -414,13 +366,7 @@ class Mat22 : Serializable {
   }
 
   override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-    if (other == null) return false
-    if (this::class != other::class) return false
-    if (other !is Mat22) return false
-    if (ex != other.ex) return false
-    if (ey != other.ey) return false
-    return true
+    return equalsOther(other) { ex == it.ex && ey == it.ey }
   }
 
   companion object {
@@ -450,8 +396,7 @@ class Mat22 : Serializable {
     }
 
     fun mulToOutUnsafe(R: Mat22, v: Vec2, out: Vec2) {
-      // assert is not supported in KMP.
-      // assert(v !== out)
+      assert(v !== out)
       out.x = R.ex.x * v.x + R.ey.x * v.y
       out.y = R.ex.y * v.x + R.ey.y * v.y
     }
@@ -478,9 +423,8 @@ class Mat22 : Serializable {
     }
 
     fun mulToOutUnsafe(A: Mat22, B: Mat22, out: Mat22) {
-      // assert is not supported in KMP.
-      // assert(out !== A)
-      // assert(out !== B)
+      assert(out !== A)
+      assert(out !== B)
       out.ex.x = A.ex.x * B.ex.x + A.ey.x * B.ex.y
       out.ex.y = A.ex.y * B.ex.x + A.ey.y * B.ex.y
       out.ey.x = A.ex.x * B.ey.x + A.ey.x * B.ey.y
@@ -497,8 +441,7 @@ class Mat22 : Serializable {
     }
 
     fun mulTransToOutUnsafe(R: Mat22, v: Vec2, out: Vec2) {
-      // assert is not supported in KMP.
-      // assert(out !== v)
+      assert(out !== v)
       out.y = v.x * R.ey.x + v.y * R.ey.y
       out.x = v.x * R.ex.x + v.y * R.ex.y
     }
@@ -524,9 +467,8 @@ class Mat22 : Serializable {
     }
 
     fun mulTransToOutUnsafe(A: Mat22, B: Mat22, out: Mat22) {
-      // assert is not supported in KMP.
-      // assert(A !== out)
-      // assert(B !== out)
+      assert(A !== out)
+      assert(B !== out)
       out.ex.x = A.ex.x * B.ex.x + A.ex.y * B.ex.y
       out.ex.y = A.ey.x * B.ex.x + A.ey.y * B.ex.y
       out.ey.x = A.ex.x * B.ey.x + A.ex.y * B.ey.y

@@ -4,7 +4,7 @@
 <module>
   <inherits name="com.google.gwt.user.User"/>
   <inherits name="elemental2.dom.Dom"/>
-  <inherits name="org.kie.j2cl.tools.emul.Stdlib"/>
-  <inherits name="org.gwtproject.nio.Nio"/>
+    <inherits name="org.treblereel.gwt.emul.Stdlib"/>
+    <inherits name="org.gwtproject.nio.Nio"/>
   <source path="engine" />
 </module>

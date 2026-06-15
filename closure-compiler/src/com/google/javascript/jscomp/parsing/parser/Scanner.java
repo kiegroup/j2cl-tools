@@ -167,15 +167,14 @@ public class Scanner {
   }
 
   private boolean skipRegularExpressionChar() {
-    switch (peekChar()) {
-      case '\\':
-        return skipRegularExpressionBackslashSequence();
-      case '[':
-        return skipRegularExpressionClass();
-      default:
+    return switch (peekChar()) {
+      case '\\' -> skipRegularExpressionBackslashSequence();
+      case '[' -> skipRegularExpressionClass();
+      default -> {
         nextChar();
-        return true;
-    }
+        yield true;
+      }
+    };
   }
 
   private boolean skipRegularExpressionBackslashSequence() {
@@ -221,15 +220,11 @@ public class Scanner {
   }
 
   private static boolean isRegularExpressionChar(char ch) {
-    switch (ch) {
-      case '/':
-        return false;
-      case '\\':
-      case '[':
-        return true;
-      default:
-        return !isLineTerminator(ch);
-    }
+    return switch (ch) {
+      case '/' -> false;
+      case '\\', '[' -> true;
+      default -> !isLineTerminator(ch);
+    };
   }
 
   public Token peekToken() {
@@ -268,48 +263,45 @@ public class Scanner {
   }
 
   private static boolean isWhitespace(char ch) {
-    switch (ch) {
-      case '\u0009': // Tab
-      case '\u000B': // Vertical Tab
-      case '\u000C': // Form Feed
-      case '\u0020': // Space
-      case '\u00A0': // No-break space
-      case '\uFEFF': // Byte Order Mark
-      case '\n': // Line Feed
-      case '\r': // Carriage Return
-      case '\u2028': // Line Separator
-      case '\u2029': // Paragraph Separator
-      case '\u3000': // Ideographic Space
-        // TODO: there are other Unicode Category 'Zs' chars that should go here.
-        return true;
-      default:
-        return false;
-    }
+    return switch (ch) {
+      case '\u0009', // Tab
+          '\u000B', // Vertical Tab
+          '\u000C', // Form Feed
+          '\u0020', // Space
+          '\u00A0', // No-break space
+          '\uFEFF', // Byte Order Mark
+          '\n', // Line Feed
+          '\r', // Carriage Return
+          '\u2028', // Line Separator
+          '\u2029', // Paragraph Separator
+          '\u3000' -> // Ideographic Space
+          // TODO: there are other Unicode Category 'Zs' chars that should go here.
+          true;
+      default -> false;
+    };
   }
 
   // 7.3 Line Terminators
   private static boolean isLineTerminator(char ch) {
-    switch (ch) {
-      case '\n': // Line Feed
-      case '\r': // Carriage Return
-      case '\u2028': // Line Separator
-      case '\u2029': // Paragraph Separator
-        return true;
-      default:
-        return false;
-    }
+    return switch (ch) {
+      case '\n', // Line Feed
+          '\r', // Carriage Return
+          '\u2028', // Line Separator
+          '\u2029' -> // Paragraph Separator
+          true;
+      default -> false;
+    };
   }
 
   // Allow line separator and paragraph separator in string literals.
   // https://github.com/tc39/proposal-json-superset
   private static boolean isStringLineTerminator(char ch) {
-    switch (ch) {
-      case '\u2028': // Line Separator
-      case '\u2029': // Paragraph Separator
-        return false;
-      default:
-        return isLineTerminator(ch);
-    }
+    return switch (ch) {
+      case '\u2028', // Line Separator
+          '\u2029' -> // Paragraph Separator
+          false;
+      default -> isLineTerminator(ch);
+    };
   }
 
   // 7.4 Comments
@@ -625,7 +617,14 @@ public class Scanner {
             return createToken(TokenType.BAR, beginToken);
         }
       case '#':
-        return createToken(TokenType.POUND, beginToken);
+        // Shebang is not actually ever parsed here (when used correctly, it's handled above in the
+        // skipComments() call) so its token is an error.
+        if (peek('!')) {
+          reportError(getPosition(index), "Shebang comment must be at the start of the file");
+          return createToken(TokenType.ERROR, beginToken);
+        }
+        // Handle private identifiers.
+        return scanIdentifierOrKeyword(beginToken, ch);
         // TODO: add NumberToken
         // TODO: character following NumericLiteral must not be an IdentifierStart or DecimalDigit
       case '0':
@@ -766,6 +765,7 @@ public class Scanner {
 
     boolean containsUnicodeEscape = ch == '\\';
     boolean bracedUnicodeEscape = false;
+    boolean isPrivateIdentifier = ch == '#';
     int unicodeEscapeLen = containsUnicodeEscape ? 1 : 0;
 
     ch = peekChar();
@@ -797,6 +797,11 @@ public class Scanner {
 
     String value = contents.substring(valueStartIndex, index);
 
+    if (isPrivateIdentifier && value.equals("#")) {
+      reportError(getPosition(beginToken), "Invalid usage of #");
+      return createToken(TokenType.ERROR, beginToken);
+    }
+
     // Process unicode escapes.
     if (containsUnicodeEscape) {
       value = processUnicodeEscapes(value);
@@ -809,6 +814,10 @@ public class Scanner {
     // Check to make sure the first character (or the unicode escape at the
     // beginning of the identifier) is a valid identifier start character.
     char start = value.charAt(0);
+    if (isPrivateIdentifier) {
+      // Skip the leading # for name validation.
+      start = value.charAt(1);
+    }
     if (!Identifiers.isIdentifierStart(start)) {
       reportError(
           getPosition(beginToken),
@@ -921,35 +930,38 @@ public class Scanner {
     }
 
     String value = getTokenString(beginIndex);
-    switch (peekChar()) {
-      case '`':
+    return switch (peekChar()) {
+      case '`' -> {
         nextChar();
-        return new TemplateLiteralToken(
+        yield new TemplateLiteralToken(
             endType,
             value,
             skipTemplateCharactersResult.getErrorMessage(),
             skipTemplateCharactersResult.getErrorLevel(),
             skipTemplateCharactersResult.getPosition(),
             getTokenRange(startingPosition));
-      case '$':
+      }
+      case '$' -> {
         nextChar(); // $
         nextChar(); // {
-        return new TemplateLiteralToken(
+        yield new TemplateLiteralToken(
             middleType,
             value,
             skipTemplateCharactersResult.getErrorMessage(),
             skipTemplateCharactersResult.getErrorLevel(),
             skipTemplateCharactersResult.getPosition(),
             getTokenRange(startingPosition));
-      default: // Should have reported error already
-        return new TemplateLiteralToken(
-            endType,
-            value,
-            skipTemplateCharactersResult.getErrorMessage(),
-            skipTemplateCharactersResult.getErrorLevel(),
-            skipTemplateCharactersResult.getPosition(),
-            getTokenRange(startingPosition));
-    }
+      }
+      default ->
+          // Should have reported error already
+          new TemplateLiteralToken(
+              endType,
+              value,
+              skipTemplateCharactersResult.getErrorMessage(),
+              skipTemplateCharactersResult.getErrorLevel(),
+              skipTemplateCharactersResult.getPosition(),
+              getTokenRange(startingPosition));
+    };
   }
 
   private String getTokenString(int beginIndex) {
@@ -1008,7 +1020,7 @@ public class Scanner {
     char next = nextChar();
     switch (next) {
       case '0':
-        if (peekOctalDigit()) {
+        if (isDecimalDigit(peekChar())) {
           return createSkipTemplateCharactersResult("Invalid escape sequence", ErrorLevel.ERROR);
         }
         return null;
@@ -1019,6 +1031,8 @@ public class Scanner {
       case '5':
       case '6':
       case '7':
+      case '8':
+      case '9':
         return createSkipTemplateCharactersResult("Invalid escape sequence", ErrorLevel.ERROR);
       case 'x':
         boolean doubleHexDigit = skipHexDigit() && skipHexDigit();
@@ -1204,21 +1218,10 @@ public class Scanner {
   }
 
   private static boolean isDecimalDigit(char ch) {
-    switch (ch) {
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-        return true;
-      default:
-        return false;
-    }
+    return switch (ch) {
+      case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> true;
+      default -> false;
+    };
   }
 
   private boolean peekHexDigit() {
@@ -1244,10 +1247,6 @@ public class Scanner {
     }
   }
 
-  private boolean peekOctalDigit() {
-    return isOctalDigit(peekChar());
-  }
-
   private void skipOctalDigits() {
     char ch = peekChar();
     while (isOctalDigit(ch) || ch == '_') {
@@ -1268,19 +1267,10 @@ public class Scanner {
   }
 
   private static int valueOfOctalDigit(char ch) {
-    switch (ch) {
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-        return ch - '0';
-      default:
-        return -1;
-    }
+    return switch (ch) {
+      case '0', '1', '2', '3', '4', '5', '6', '7' -> ch - '0';
+      default -> -1;
+    };
   }
 
   private void skipBinaryDigits() {
@@ -1303,14 +1293,11 @@ public class Scanner {
   }
 
   private static int valueOfBinaryDigit(char ch) {
-    switch (ch) {
-      case '0':
-        return 0;
-      case '1':
-        return 1;
-      default:
-        return -1;
-    }
+    return switch (ch) {
+      case '0' -> 0;
+      case '1' -> 1;
+      default -> -1;
+    };
   }
 
   private char nextChar() {

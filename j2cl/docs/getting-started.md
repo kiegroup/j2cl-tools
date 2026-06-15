@@ -116,7 +116,6 @@ To setup your first project you can use the sample as template:
 
 ```shell
       $ cp -R <j2cl-repo>/samples/helloworld <my-repo>/<app-name>
-      $ mv <my-repo>/<app-name>/WORKSPACE.remote <my-repo>/<app-name>/WORKSPACE
 ```
 
 and you are done.

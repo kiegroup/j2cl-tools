@@ -45,24 +45,18 @@ class ConstantVolumeJoint(private val world: World, def: ConstantVolumeJointDef)
   }
 
   init {
-    if (def.bodies.size <= 2) {
-      throw IllegalArgumentException(
-        "You cannot create a constant volume joint with less than three bodies."
-      )
+    require(def.bodies.size > 2) {
+      "You cannot create a constant volume joint with less than three bodies."
     }
     targetLengths = FloatArray(bodies.size)
     for (i in targetLengths.indices) {
       val next = if (i == targetLengths.size - 1) 0 else i + 1
-      val dist: Float = bodies[i].worldCenter.sub(bodies[next].worldCenter).length()
+      val dist: Float = (bodies[i].worldCenter - bodies[next].worldCenter).length()
       targetLengths[i] = dist
     }
     targetVolume = getBodyArea()
-    if (def.joints != null && def.joints!!.size != def.bodies.size) {
-      throw IllegalArgumentException(
-        "Incorrect joint definition.  Joints have to correspond to the bodies"
-      )
-    }
-    if (def.joints == null) {
+    val joints = def.joints
+    if (joints == null) {
       val djd = DistanceJointDef()
       distanceJoints = arrayOfNulls(bodies.size)
       for (i in targetLengths.indices) {
@@ -74,7 +68,10 @@ class ConstantVolumeJoint(private val world: World, def: ConstantVolumeJointDef)
         distanceJoints[i] = world.createJoint(djd) as DistanceJoint?
       }
     } else {
-      distanceJoints = def.joints!!.toTypedArray()
+      require(joints.size == def.bodies.size) {
+        "Incorrect joint definition.  Joints have to correspond to the bodies"
+      }
+      distanceJoints = joints.toTypedArray()
     }
   }
 
@@ -131,7 +128,7 @@ class ConstantVolumeJoint(private val world: World, def: ConstantVolumeJointDef)
       val next = if (i == bodies.size - 1) 0 else i + 1
       delta.set(
         toExtrude * (normals[i].x + normals[next].x),
-        toExtrude * (normals[i].y + normals[next].y)
+        toExtrude * (normals[i].y + normals[next].y),
       )
       // sumdeltax += dx;
       val normSqrd = delta.lengthSquared()
@@ -191,7 +188,7 @@ class ConstantVolumeJoint(private val world: World, def: ConstantVolumeJointDef)
       d[i].set(positions[bodies[next].islandIndex].c)
       d[i].subLocal(positions[bodies[prev].islandIndex].c)
       dotMassSum += d[i].lengthSquared() / bodies[i].mass
-      crossMassSum += Vec2.cross(velocities[bodies[i].islandIndex].v, d[i])
+      crossMassSum += velocities[bodies[i].islandIndex].v cross d[i]
     }
     val lambda = -2.0f * crossMassSum / dotMassSum
     // System.out.println(crossMassSum + " " +dotMassSum);

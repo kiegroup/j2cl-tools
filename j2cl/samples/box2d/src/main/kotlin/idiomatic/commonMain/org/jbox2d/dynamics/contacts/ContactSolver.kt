@@ -30,6 +30,7 @@ import org.jbox2d.common.Rot
 import org.jbox2d.common.Settings
 import org.jbox2d.common.Transform
 import org.jbox2d.common.Vec2
+import org.jbox2d.common.cross
 import org.jbox2d.dynamics.TimeStep
 
 /** @author Daniel */
@@ -109,8 +110,7 @@ class ContactSolver {
       val bodyB = fixtureB.body!!
       val manifold = contact.manifold
       val pointCount = manifold.pointCount
-      // assert is not supported in KMP.
-      // assert(pointCount > 0)
+      assert(pointCount > 0)
       val vc = velocityConstraints[i]
       vc.friction = contact.friction
       vc.restitution = contact.restitution
@@ -146,7 +146,7 @@ class ContactSolver {
         val cp = manifold.points[j]
         val vcp = vc.points[j]
         if (step.warmStarting) {
-          // assert(cp.normalImpulse == 0);
+          // assert(cp.normalImpulse == 0f)
           // System.out.println("contact normal impulse: " + cp.normalImpulse);
           vcp.normalImpulse = step.dtRatio * cp.normalImpulse
           vcp.tangentImpulse = step.dtRatio * cp.tangentImpulse
@@ -223,8 +223,7 @@ class ContactSolver {
       val aB = positions[indexB].a
       val vB = velocities[indexB].v
       val wB = velocities[indexB].w
-      // assert is not supported in KMP.
-      // assert(manifold!!.pointCount > 0)
+      assert(manifold!!.pointCount > 0)
       xfA.q.set(aA)
       xfB.q.set(aB)
       xfA.p.x = cA.x - (xfA.q.cos * localCenterA.x - xfA.q.sin * localCenterA.y)
@@ -263,10 +262,10 @@ class ContactSolver {
       if (vc.pointCount == 2) {
         val vcp1 = vc.points[0]
         val vcp2 = vc.points[1]
-        val rn1A = Vec2.cross(vcp1.rA, vc.normal)
-        val rn1B = Vec2.cross(vcp1.rB, vc.normal)
-        val rn2A = Vec2.cross(vcp2.rA, vc.normal)
-        val rn2B = Vec2.cross(vcp2.rB, vc.normal)
+        val rn1A = vcp1.rA cross vc.normal
+        val rn1B = vcp1.rB cross vc.normal
+        val rn2A = vcp2.rA cross vc.normal
+        val rn2B = vcp2.rB cross vc.normal
         val k11 = mA + mB + iA * rn1A * rn1A + iB * rn1B * rn1B
         val k22 = mA + mB + iA * rn2A * rn2A + iB * rn2B * rn2B
         val k12 = mA + mB + iA * rn1A * rn2A + iB * rn1B * rn2B
@@ -302,8 +301,7 @@ class ContactSolver {
       tangent.x = 1.0f * vc.normal.y
       tangent.y = -1.0f * vc.normal.x
       val friction = vc.friction
-      // assert is not supported in KMP.
-      // assert(pointCount == 1 || pointCount == 2)
+      assert(pointCount == 1 || pointCount == 2)
 
       // Solve tangent constraints
       for (j in 0 until pointCount) {
@@ -413,8 +411,7 @@ class ContactSolver {
         val cp2 = vc.points[1]
         a.x = cp1.normalImpulse
         a.y = cp2.normalImpulse
-        // assert is not supported in KMP.
-        // assert(a.x >= 0.0f && a.y >= 0.0f)
+        assert(a.x >= 0.0f && a.y >= 0.0f)
         // Relative velocity at contact
         // Vec2 dv1 = vB + Cross(wB, cp1.rB) - vA - Cross(wA, cp1.rA);
         dv1.x = -wB * cp1.rB.y + vB.x - vA.x + wA * cp1.rA.y
@@ -476,8 +473,8 @@ class ContactSolver {
             vA.subLocal(temp2)
             temp2.set(temp1).mulLocal(mB)
             vB.addLocal(temp2)
-            wA -= iA * (Vec2.cross(cp1.rA, P1) + Vec2.cross(cp2.rA, P2))
-            wB += iB * (Vec2.cross(cp1.rB, P1) + Vec2.cross(cp2.rB, P2))
+            wA -= iA * ((cp1.rA cross P1) + (cp2.rA cross P2))
+            wB += iB * ((cp1.rB cross P1) + (cp2.rB cross P2))
 
             // Accumulate
             cp1.normalImpulse = x.x
@@ -494,16 +491,13 @@ class ContactSolver {
              */
             if (DEBUG_SOLVER) {
               // Postconditions
-              val dv1 = vB.add(Vec2.cross(wB, cp1.rB).subLocal(vA).subLocal(Vec2.cross(wA, cp1.rA)))
-              val dv2 = vB.add(Vec2.cross(wB, cp2.rB).subLocal(vA).subLocal(Vec2.cross(wA, cp2.rA)))
+              val dv1 = vB + (wB cross cp1.rB).subLocal(vA).subLocal(wA cross cp1.rA)
+              val dv2 = vB + (wB cross cp2.rB).subLocal(vA).subLocal(wA cross cp2.rA)
               // Compute normal velocity
-              @Suppress("UNUSED_VALUE")
-              vn1 = Vec2.dot(dv1, normal)
-              @Suppress("UNUSED_VALUE")
-              vn2 = Vec2.dot(dv2, normal)
-              // assert is not supported in KMP.
-              // assert(MathUtils.abs(vn1 - cp1.velocityBias) < k_errorTol)
-              // assert(MathUtils.abs(vn2 - cp2.velocityBias) < k_errorTol)
+              vn1 = dv1 dot normal
+              vn2 = dv2 dot normal
+              assert(MathUtils.abs(vn1 - cp1.velocityBias) < K_ERROR_TOL)
+              assert(MathUtils.abs(vn2 - cp2.velocityBias) < K_ERROR_TOL)
             }
             break
           }
@@ -541,8 +535,8 @@ class ContactSolver {
             vA.subLocal(temp2)
             temp2.set(temp1).mulLocal(mB)
             vB.addLocal(temp2)
-            wA -= iA * (Vec2.cross(cp1.rA, P1) + Vec2.cross(cp2.rA, P2))
-            wB += iB * (Vec2.cross(cp1.rB, P1) + Vec2.cross(cp2.rB, P2))
+            wA -= iA * ((cp1.rA cross P1) + (cp2.rA cross P2))
+            wB += iB * ((cp1.rB cross P1) + (cp2.rB cross P2))
 
             // Accumulate
             cp1.normalImpulse = x.x
@@ -558,12 +552,10 @@ class ContactSolver {
              */
             if (DEBUG_SOLVER) {
               // Postconditions
-              val dv1 = vB.add(Vec2.cross(wB, cp1.rB).subLocal(vA).subLocal(Vec2.cross(wA, cp1.rA)))
+              val dv1 = vB + (wB cross cp1.rB).subLocal(vA).subLocal(wA cross cp1.rA)
               // Compute normal velocity
-              @Suppress("UNUSED_VALUE")
-              vn1 = Vec2.dot(dv1, normal)
-              // assert is not supported in KMP.
-              // assert(MathUtils.abs(vn1 - cp1.velocityBias) < k_errorTol)
+              vn1 = dv1 dot normal
+              assert(MathUtils.abs(vn1 - cp1.velocityBias) < K_ERROR_TOL)
             }
             break
           }
@@ -599,8 +591,8 @@ class ContactSolver {
             vA.subLocal(temp2)
             temp2.set(temp1).mulLocal(mB)
             vB.addLocal(temp2)
-            wA -= iA * (Vec2.cross(cp1.rA, P1) + Vec2.cross(cp2.rA, P2))
-            wB += iB * (Vec2.cross(cp1.rB, P1) + Vec2.cross(cp2.rB, P2))
+            wA -= iA * ((cp1.rA cross P1) + (cp2.rA cross P2))
+            wB += iB * ((cp1.rB cross P1) + (cp2.rB cross P2))
 
             // Accumulate
             cp1.normalImpulse = x.x
@@ -616,12 +608,10 @@ class ContactSolver {
              */
             if (DEBUG_SOLVER) {
               // Postconditions
-              val dv2 = vB.add(Vec2.cross(wB, cp2.rB).subLocal(vA).subLocal(Vec2.cross(wA, cp2.rA)))
+              val dv2 = vB + (wB cross cp2.rB).subLocal(vA).subLocal(wA cross cp2.rA)
               // Compute normal velocity
-              @Suppress("UNUSED_VALUE")
-              vn2 = Vec2.dot(dv2, normal)
-              // assert is not supported in KMP.
-              // assert(MathUtils.abs(vn2 - cp2.velocityBias) < k_errorTol)
+              vn2 = dv2 dot normal
+              assert(MathUtils.abs(vn2 - cp2.velocityBias) < K_ERROR_TOL)
             }
             break
           }
@@ -654,8 +644,8 @@ class ContactSolver {
             vA.subLocal(temp2)
             temp2.set(temp1).mulLocal(mB)
             vB.addLocal(temp2)
-            wA -= iA * (Vec2.cross(cp1.rA, P1) + Vec2.cross(cp2.rA, P2))
-            wB += iB * (Vec2.cross(cp1.rB, P1) + Vec2.cross(cp2.rB, P2))
+            wA -= iA * ((cp1.rA cross P1) + (cp2.rA cross P2))
+            wB += iB * ((cp1.rB cross P1) + (cp2.rB cross P2))
 
             // Accumulate
             cp1.normalImpulse = x.x
@@ -769,21 +759,21 @@ class ContactSolver {
           MathUtils.clamp(
             Settings.BAUGARTE * (separation + Settings.LINEAR_SLOP),
             -Settings.MAX_LINEAR_CORRECTION,
-            0.0f
+            0.0f,
           )
 
         // Compute the effective mass.
-        val rnA = Vec2.cross(rA, normal)
-        val rnB = Vec2.cross(rB, normal)
+        val rnA = rA cross normal
+        val rnB = rB cross normal
         val K = mA + mB + iA * rnA * rnA + iB * rnB * rnB
 
         // Compute normal impulse
         val impulse = if (K > 0.0f) -C / K else 0.0f
         P.set(normal).mulLocal(impulse)
         cA.subLocal(temp.set(P).mulLocal(mA))
-        aA -= iA * Vec2.cross(rA, P)
+        aA -= iA * (rA cross P)
         cB.addLocal(temp.set(P).mulLocal(mB))
-        aB += iB * Vec2.cross(rB, P)
+        aB += iB * (rB cross P)
       }
 
       // m_positions[indexA].c.set(cA);
@@ -849,21 +839,21 @@ class ContactSolver {
           MathUtils.clamp(
             Settings.TOI_BAUGARTE * (separation + Settings.LINEAR_SLOP),
             -Settings.MAX_LINEAR_CORRECTION,
-            0.0f
+            0.0f,
           )
 
         // Compute the effective mass.
-        val rnA = Vec2.cross(rA, normal)
-        val rnB = Vec2.cross(rB, normal)
+        val rnA = rA cross normal
+        val rnB = rB cross normal
         val K = mA + mB + iA * rnA * rnA + iB * rnB * rnB
 
         // Compute normal impulse
         val impulse = if (K > 0.0f) -C / K else 0.0f
         P.set(normal).mulLocal(impulse)
         cA.subLocal(temp.set(P).mulLocal(mA))
-        aA -= iA * Vec2.cross(rA, P)
+        aA -= iA * (rA cross P)
         cB.addLocal(temp.set(P).mulLocal(mB))
-        aB += iB * Vec2.cross(rB, P)
+        aB += iB * (rB cross P)
       }
 
       // m_positions[indexA].c.set(cA);
@@ -907,8 +897,7 @@ internal class PositionSolverManifold {
   var separation = 0f
 
   fun initialize(pc: ContactPositionConstraint, xfA: Transform, xfB: Transform, index: Int) {
-    // assert is not supported in KMP.
-    // assert(pc!!.pointCount > 0)
+    assert(pc.pointCount > 0)
     val xfAq = xfA.q
     val xfBq = xfB.q
     val pcLocalPointsI = pc.localPoints[index]
@@ -945,7 +934,7 @@ internal class PositionSolverManifold {
         //
         // Transform.mulToOutUnsafe(xfB, pc.localPoints[index], clipPoint);
         // temp.set(clipPoint).subLocal(planePoint);
-        // separation = Vec2.dot(temp, normal) - pc.radiusA - pc.radiusB;
+        // separation = (temp dot normal) - pc.radiusA - pc.radiusB;
         // point.set(clipPoint);
         val pcLocalNormal = pc.localNormal
         val pcLocalPoint = pc.localPoint
@@ -968,7 +957,7 @@ internal class PositionSolverManifold {
         //
         // Transform.mulToOutUnsafe(xfA, pcLocalPointsI, clipPoint);
         // temp.set(clipPoint).subLocal(planePoint);
-        // separation = Vec2.dot(temp, normal) - pc.radiusA - pc.radiusB;
+        // separation = (temp dot normal) - pc.radiusA - pc.radiusB;
         // point.set(clipPoint);
         //
         // // Ensure normal points from A to B

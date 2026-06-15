@@ -127,15 +127,15 @@ public final class JsDocTokenStreamTest {
   public void testJsDocTokenization6() {
     ImmutableList<JsDocToken> tokens =
         ImmutableList.of(ANNOTATION, EOL, ANNOTATION, EOL, ANNOTATION, EOC);
-    ImmutableList<String> strings = ImmutableList.of("hidden", "static", "desc");
-    testJSDocTokenStream("@hidden\n@static\n@desc*/", tokens, strings);
-    testJSDocTokenStream("@hidden\n @static\n@desc*/", tokens, strings);
-    testJSDocTokenStream("@hidden\n@static\n @desc*/", tokens, strings);
-    testJSDocTokenStream("@hidden\n@static\n@desc */", tokens, strings);
-    testJSDocTokenStream(" @hidden \n@static\n @desc*/", tokens, strings);
-    testJSDocTokenStream("@hidden\n@static    \n @desc  */", tokens, strings);
-    testJSDocTokenStream("@hidden\n@static\n@desc*/", tokens, strings);
-    testJSDocTokenStream("@hidden   \n@static   \n @desc*/", tokens, strings);
+    ImmutableList<String> strings = ImmutableList.of("private", "static", "desc");
+    testJSDocTokenStream("@private\n@static\n@desc*/", tokens, strings);
+    testJSDocTokenStream("@private\n @static\n@desc*/", tokens, strings);
+    testJSDocTokenStream("@private\n@static\n @desc*/", tokens, strings);
+    testJSDocTokenStream("@private\n@static\n@desc */", tokens, strings);
+    testJSDocTokenStream(" @private \n@static\n @desc*/", tokens, strings);
+    testJSDocTokenStream("@private\n@static    \n @desc  */", tokens, strings);
+    testJSDocTokenStream("@private\n@static\n@desc*/", tokens, strings);
+    testJSDocTokenStream("@private   \n@static   \n @desc*/", tokens, strings);
   }
 
   @Test
@@ -160,9 +160,19 @@ public final class JsDocTokenStreamTest {
     ImmutableList<String> strings =
         ImmutableList.of("param", "foo.Bar", "opt_name", "this", "parameter", "is", "a", "name");
     testJSDocTokenStream(
-        " * @param foo.Bar opt_name this parameter is a name\n" + " */", tokens, strings);
+        """
+        * @param foo.Bar opt_name this parameter is a name
+        */
+        """,
+        tokens,
+        strings);
     testJSDocTokenStream(
-        "  *  @param foo.Bar opt_name this parameter is a name \n" + " */ ", tokens, strings);
+        """
+         *  @param foo.Bar opt_name this parameter is a name\s
+        */\s
+        """,
+        tokens,
+        strings);
   }
 
   @Test
@@ -174,7 +184,12 @@ public final class JsDocTokenStreamTest {
         ImmutableList.of(
             "param", "foo.Bar", "opt_name", "this", "parameter", "does", "media", "blah");
     testJSDocTokenStream(
-        " * @param foo.Bar opt_name this parameter does @media blah\n" + " */", tokens, strings);
+        """
+        * @param foo.Bar opt_name this parameter does @media blah
+        */
+        """,
+        tokens,
+        strings);
   }
 
   @Test

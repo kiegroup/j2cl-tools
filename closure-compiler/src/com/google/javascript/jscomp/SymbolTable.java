@@ -30,7 +30,6 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.rhino.JSDocInfo;
@@ -505,7 +504,7 @@ public final class SymbolTable {
       builder
           .append(prefix)
           .append(
-              SimpleFormat.format(
+              String.format(
                   "  Ref %d: %s line: %d col: %d len: %d %s\n",
                   refCount,
                   node.getSourceFileName(),
@@ -1623,10 +1622,9 @@ public final class SymbolTable {
 
     @Override
     public boolean equals(Object o) {
-      if (!(o instanceof Symbol)) {
+      if (!(o instanceof Symbol other)) {
         return false;
       }
-      Symbol other = (Symbol) o;
 
       return isTypeInferred() == other.isTypeInferred()
           && Objects.equals(getName(), other.getName())
@@ -2161,15 +2159,10 @@ public final class SymbolTable {
     }
 
     private boolean isNativeSourcelessType(String name) {
-      switch (name) {
-        case "null":
-        case "undefined":
-        case "void":
-          return true;
-
-        default:
-          return false;
-      }
+      return switch (name) {
+        case "null", "undefined", "void" -> true;
+        default -> false;
+      };
     }
 
     public void visitTypeNode(
@@ -2368,22 +2361,22 @@ public final class SymbolTable {
   }
 
   private @Nullable JSType getType(StaticSlot sym) {
-    if (sym instanceof StaticTypedSlot) {
-      return ((StaticTypedSlot) sym).getType();
+    if (sym instanceof StaticTypedSlot staticTypedSlot) {
+      return staticTypedSlot.getType();
     }
     return null;
   }
 
   private @Nullable JSType getTypeOfThis(StaticScope s) {
-    if (s instanceof StaticTypedScope) {
-      return ((StaticTypedScope) s).getTypeOfThis();
+    if (s instanceof StaticTypedScope staticTypedScope) {
+      return staticTypedScope.getTypeOfThis();
     }
     return null;
   }
 
   private boolean isTypeInferred(StaticSlot sym) {
-    if (sym instanceof StaticTypedSlot) {
-      return ((StaticTypedSlot) sym).isTypeInferred();
+    if (sym instanceof StaticTypedSlot staticTypedSlot) {
+      return staticTypedSlot.isTypeInferred();
     }
     return true;
   }

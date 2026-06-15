@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.serialization;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.SourceFile;
@@ -38,7 +37,6 @@ import org.jspecify.annotations.Nullable;
  * <p>This process depends on other information from the TypedAST format, but the output it limited
  * to only a single SCRIPT. The other deserialized content must be provided beforehand.
  */
-@GwtIncompatible("protobuf.lite")
 final class ScriptNodeDeserializer {
 
   private final SourceFile sourceFile;
@@ -78,7 +76,7 @@ final class ScriptNodeDeserializer {
         Node scriptNode =
             this.visit(
                 AstNode.parseFrom(astStream, ExtensionRegistry.getEmptyRegistry()),
-                null,
+                FeatureContext.NONE,
                 this.owner().createSourceInfoTemplate(this.owner().sourceFile));
         scriptNode.putProp(Node.FEATURE_SET, this.scriptFeatures);
         return scriptNode;
@@ -91,7 +89,8 @@ final class ScriptNodeDeserializer {
       return ScriptNodeDeserializer.this;
     }
 
-    private Node visit(AstNode astNode, @Nullable Node parent, @Nullable Node sourceFileTemplate) {
+    private Node visit(
+        AstNode astNode, @Nullable FeatureContext context, @Nullable Node sourceFileTemplate) {
       if (sourceFileTemplate == null || astNode.getSourceFile() != 0) {
         // 0 == 'not set'
         sourceFileTemplate =
@@ -115,26 +114,42 @@ final class ScriptNodeDeserializer {
       n.setLinenoCharno(currentLine, currentColumn);
       this.previousLine = currentLine;
       this.previousColumn = currentColumn;
+      if (context != null) {
+        this.recordScriptFeatures(context, n);
+      }
 
+      @Nullable FeatureContext newContext = contextFor(context, n);
+      if (Node.hasBitSet(properties, NodeProperty.CLOSURE_UNAWARE_SHADOW.getNumber())) {
+        AstNode serializedShadowChild = astNode.getChild(0);
+        // Unlike normal deserialization, we want to avoid recording features for code within the
+        // shadow because we don't run transpilation passes over it and later stages of the compiler
+        // attempt to validate that transpilation has successfully run over the entire AST and no
+        // features remain that won't work in the given language output level.
+        Node shadowedCode = this.visit(serializedShadowChild, null, sourceFileTemplate);
+        this.owner().setOriginalNameIfPresent(serializedShadowChild, shadowedCode);
+        // The shadowed code is only the "source" parts of the shadow structure, and does not
+        // include the synthetic code that is needed for the compiler to consider it a valid
+        // standalone AST. We recreate that here.
+        // This must be kept in sync with the shadow structure created by TypedAstSerializer.
+        Node shadowRoot = IR.root(IR.script(IR.exprResult(shadowedCode)));
+        shadowRoot.getFirstChild().setStaticSourceFileFrom(sourceFileTemplate);
+        shadowRoot.getFirstFirstChild().setStaticSourceFileFrom(sourceFileTemplate);
+        n.setClosureUnawareShadow(shadowRoot);
+        return n;
+      }
       int children = astNode.getChildCount();
+
       for (int i = 0; i < children; i++) {
         AstNode child = astNode.getChild(i);
-        Node deserializedChild = this.visit(child, n, sourceFileTemplate);
+        Node deserializedChild = this.visit(child, newContext, sourceFileTemplate);
         n.addChildToBack(deserializedChild);
-        // record script features here instead of while visiting child because some features are
-        // context-dependent, and we need to know the parent and/or grandparent.
-        this.recordScriptFeatures(parent, n, deserializedChild);
         this.owner().setOriginalNameIfPresent(child, deserializedChild);
       }
 
       return n;
     }
 
-    private void recordScriptFeatures(Node grandparent, Node parent, Node node) {
-      if (parent.isClass() && !node.isEmpty() && node.isSecondChildOf(parent)) {
-        this.addScriptFeature(Feature.CLASS_EXTENDS);
-      }
-
+    private void recordScriptFeatures(FeatureContext context, Node node) {
       switch (node.getToken()) {
         case FUNCTION:
           if (node.isAsyncGeneratorFunction()) {
@@ -150,7 +165,7 @@ final class ScriptNodeDeserializer {
             this.addScriptFeature(Feature.GENERATORS);
           }
 
-          if (parent.isBlock() && !grandparent.isFunction()) {
+          if (context.equals(FeatureContext.BLOCK_SCOPE)) {
             this.scriptFeatures =
                 this.scriptFeatures.with(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
           }
@@ -168,39 +183,43 @@ final class ScriptNodeDeserializer {
           return;
 
         case DEFAULT_VALUE:
-          if (parent.isParamList()) {
+          if (context.equals(FeatureContext.PARAM_LIST)) {
             this.addScriptFeature(Feature.DEFAULT_PARAMETERS);
           }
           return;
 
         case GETTER_DEF:
           this.addScriptFeature(Feature.GETTER);
-          if (parent.isClassMembers()) {
+          if (context.equals(FeatureContext.CLASS_MEMBERS)) {
             this.addScriptFeature(Feature.CLASS_GETTER_SETTER);
           }
           return;
 
+        case REGEXP:
+          this.addScriptFeature(Feature.REGEXP_SYNTAX);
+          return;
+
         case SETTER_DEF:
           this.addScriptFeature(Feature.SETTER);
-          if (parent.isClassMembers()) {
+          if (context.equals(FeatureContext.CLASS_MEMBERS)) {
             this.addScriptFeature(Feature.CLASS_GETTER_SETTER);
           }
           return;
 
         case BLOCK:
-          if (parent.isClassMembers()) {
+          if (context.equals(FeatureContext.CLASS_MEMBERS)) {
             this.addScriptFeature(Feature.CLASS_STATIC_BLOCK);
           }
           return;
 
         case EMPTY:
-          if (parent.isCatch()) {
+          if (context.equals(FeatureContext.CATCH)) {
             this.addScriptFeature(Feature.OPTIONAL_CATCH_BINDING);
           }
           return;
         case ITER_REST:
           this.addScriptFeature(Feature.ARRAY_PATTERN_REST);
-          if (parent.isParamList()) {
+          if (context.equals(FeatureContext.PARAM_LIST)) {
             this.addScriptFeature(Feature.REST_PARAMETERS);
           }
           return;
@@ -322,12 +341,19 @@ final class ScriptNodeDeserializer {
 
   private void setOriginalNameIfPresent(AstNode astNode, Node n) {
     if (astNode.getOriginalNamePointer() != 0) {
-      n.setOriginalName(this.stringPool.get(astNode.getOriginalNamePointer()));
+      n.setOriginalNameFromStringPool(
+          this.stringPool.getInternedStrings(), astNode.getOriginalNamePointer());
     }
   }
 
-  private String getString(AstNode n) {
-    return this.stringPool.get(n.getStringValuePointer());
+  /**
+   * Creates a new string node with the given token & string value of the AstNode
+   *
+   * <p>Prefer calling this method over calling a regular Node.* or IR.* method when possible. This
+   * method integrates with {@link RhinoStringPool} to cache String interning results.
+   */
+  private Node stringNode(Token token, AstNode n) {
+    return Node.newString(token, this.stringPool.getInternedStrings(), n.getStringValuePointer());
   }
 
   private Node deserializeSingleNode(AstNode n) {
@@ -338,9 +364,9 @@ final class ScriptNodeDeserializer {
       case NUMBER_LITERAL:
         return IR.number(n.getDoubleValue());
       case STRING_LITERAL:
-        return IR.string(getString(n));
+        return stringNode(Token.STRINGLIT, n);
       case IDENTIFIER:
-        return IR.name(getString(n));
+        return stringNode(Token.NAME, n);
       case FALSE:
         return new Node(Token.FALSE);
       case TRUE:
@@ -352,7 +378,8 @@ final class ScriptNodeDeserializer {
       case VOID:
         return new Node(Token.VOID);
       case BIGINT_LITERAL:
-        return IR.bigint(new BigInteger(getString(n)));
+        String bigintString = this.stringPool.get(n.getStringValuePointer());
+        return IR.bigint(new BigInteger(bigintString));
       case REGEX_LITERAL:
         return new Node(Token.REGEXP);
       case ARRAY_LITERAL:
@@ -367,7 +394,7 @@ final class ScriptNodeDeserializer {
       case NEW:
         return new Node(Token.NEW);
       case PROPERTY_ACCESS:
-        return Node.newString(Token.GETPROP, getString(n));
+        return stringNode(Token.GETPROP, n);
       case ELEMENT_ACCESS:
         return new Node(Token.GETELEM);
 
@@ -487,10 +514,10 @@ final class ScriptNodeDeserializer {
       case TEMPLATELIT_STRING:
         {
           TemplateStringValue templateStringValue = n.getTemplateStringValue();
-          int cookedPointer = templateStringValue.getCookedStringPointer();
-          String cookedString = cookedPointer == -1 ? null : this.stringPool.get(cookedPointer);
-          String rawString = this.stringPool.get(templateStringValue.getRawStringPointer());
-          return Node.newTemplateLitString(cookedString, rawString);
+          return Node.newTemplateLitString(
+              this.stringPool.getInternedStrings(),
+              templateStringValue.getCookedStringPointer(),
+              templateStringValue.getRawStringPointer());
         }
       case NEW_TARGET:
         return new Node(Token.NEW_TARGET);
@@ -499,7 +526,7 @@ final class ScriptNodeDeserializer {
       case IMPORT_META:
         return new Node(Token.IMPORT_META);
       case OPTCHAIN_PROPERTY_ACCESS:
-        return Node.newString(Token.OPTCHAIN_GETPROP, getString(n));
+        return stringNode(Token.OPTCHAIN_GETPROP, n);
       case OPTCHAIN_CALL:
         return new Node(Token.OPTCHAIN_CALL);
       case OPTCHAIN_ELEMENT_ACCESS:
@@ -540,6 +567,8 @@ final class ScriptNodeDeserializer {
         return new Node(Token.RETURN);
       case SWITCH_STATEMENT:
         return new Node(Token.SWITCH);
+      case SWITCH_BODY:
+        return new Node(Token.SWITCH_BODY);
       case THROW_STATEMENT:
         return new Node(Token.THROW);
       case TRY_STATEMENT:
@@ -571,21 +600,21 @@ final class ScriptNodeDeserializer {
       case LABELED_STATEMENT:
         return new Node(Token.LABEL);
       case LABELED_NAME:
-        return IR.labelName(getString(n));
+        return stringNode(Token.LABEL_NAME, n);
       case CLASS_MEMBERS:
         return new Node(Token.CLASS_MEMBERS);
       case METHOD_DECLARATION:
-        return Node.newString(Token.MEMBER_FUNCTION_DEF, getString(n));
+        return stringNode(Token.MEMBER_FUNCTION_DEF, n);
       case FIELD_DECLARATION:
-        return Node.newString(Token.MEMBER_FIELD_DEF, getString(n));
+        return stringNode(Token.MEMBER_FIELD_DEF, n);
       case COMPUTED_PROP_FIELD:
         return new Node(Token.COMPUTED_FIELD_DEF);
       case PARAMETER_LIST:
         return new Node(Token.PARAM_LIST);
       case RENAMABLE_STRING_KEY:
-        return IR.stringKey(getString(n));
+        return stringNode(Token.STRING_KEY, n);
       case QUOTED_STRING_KEY:
-        Node quotedStringKey = IR.stringKey(getString(n));
+        Node quotedStringKey = stringNode(Token.STRING_KEY, n);
         quotedStringKey.setQuotedStringKey();
         return quotedStringKey;
       case CASE:
@@ -607,14 +636,14 @@ final class ScriptNodeDeserializer {
 
       case RENAMABLE_GETTER_DEF:
       case QUOTED_GETTER_DEF:
-        Node getterDef = Node.newString(Token.GETTER_DEF, getString(n));
+        Node getterDef = stringNode(Token.GETTER_DEF, n);
         if (n.getKind().equals(NodeKind.QUOTED_GETTER_DEF)) {
           getterDef.setQuotedStringKey();
         }
         return getterDef;
       case RENAMABLE_SETTER_DEF:
       case QUOTED_SETTER_DEF:
-        Node setterDef = Node.newString(Token.SETTER_DEF, getString(n));
+        Node setterDef = stringNode(Token.SETTER_DEF, n);
         if (n.getKind().equals(NodeKind.QUOTED_SETTER_DEF)) {
           setterDef.setQuotedStringKey();
         }
@@ -625,7 +654,7 @@ final class ScriptNodeDeserializer {
       case IMPORT_SPEC:
         return new Node(Token.IMPORT_SPEC);
       case IMPORT_STAR:
-        return Node.newString(Token.IMPORT_STAR, getString(n));
+        return stringNode(Token.IMPORT_STAR, n);
       case EXPORT_SPECS:
         return new Node(Token.EXPORT_SPECS);
       case EXPORT_SPEC:
@@ -659,5 +688,53 @@ final class ScriptNodeDeserializer {
       return nodeProperties; // we are deserializing colors, so this is fine.
     }
     return nodeProperties & ~(1L << NodeProperty.COLOR_FROM_CAST.getNumber());
+  }
+
+  /**
+   * Parent context of a node while deserializing, specifically for the purpose of tracking {@link
+   * com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature}
+   *
+   * <p>This models only the direct parent of a node. e.g. nested nodes within a function body
+   * should not have the FUNCTION context. Only direct children of the function would. The intent is
+   * to have a way to model the parent Node of a node being visited before the AST is fully built,
+   * as the parent pointer may not have been instantiated yet.
+   */
+  private enum FeatureContext {
+    PARAM_LIST,
+    CLASS_MEMBERS,
+    CLASS,
+    CATCH,
+    // the top of a block scope, e.g. within an if/while/for loop block, or a plain `{ }` block
+    BLOCK_SCOPE,
+    FUNCTION,
+    NONE;
+  }
+
+  private static @Nullable FeatureContext contextFor(
+      @Nullable FeatureContext parentContext, Node node) {
+    if (parentContext == null) {
+      return null;
+    }
+    switch (node.getToken()) {
+      case PARAM_LIST:
+        return FeatureContext.PARAM_LIST;
+      case CLASS_MEMBERS:
+        return FeatureContext.CLASS_MEMBERS;
+      case CLASS:
+        return FeatureContext.CLASS;
+      case CATCH:
+        return FeatureContext.CATCH;
+      case BLOCK:
+        // a function body is not a block scope - BLOCK is just overloaded. all other references to
+        // BLOCK are block scopes.
+        if (parentContext.equals(FeatureContext.FUNCTION)) {
+          return FeatureContext.NONE;
+        }
+        return FeatureContext.BLOCK_SCOPE;
+      case FUNCTION:
+        return FeatureContext.FUNCTION;
+      default:
+        return FeatureContext.NONE;
+    }
   }
 }

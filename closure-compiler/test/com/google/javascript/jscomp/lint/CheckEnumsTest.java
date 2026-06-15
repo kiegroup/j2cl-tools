@@ -116,26 +116,36 @@ public final class CheckEnumsTest extends CompilerTestCase {
     testWarning(
         "function foo() {} /** @enum {?} */ let E = {A: foo() };", ENUM_TYPE_NOT_STRING_OR_NUMBER);
     testWarning(
-        "/** @typedef {number} */ var someName; /** @enum {!someName} */ const"
-            + " EnumTwo = { FOO: EnumOne.FOO}",
+        """
+        /** @typedef {number} */
+        var someName;
+        /** @enum {!someName} */
+        const EnumTwo = { FOO: EnumOne.FOO }
+        """,
         ENUM_TYPE_NOT_STRING_OR_NUMBER);
     testWarning(
-        "/** @typedef {string} */ var someName; /** @enum {!someName} */ const"
-            + " EnumTwo = { FOO: 'some'}",
+        """
+        /** @typedef {string} */
+        var someName;
+        /** @enum {!someName} */
+        const EnumTwo = { FOO: 'some' }
+        """,
         ENUM_TYPE_NOT_STRING_OR_NUMBER);
     testWarning(
-        lines(
-            "/** @enum {number} */",
-            "let EnumOne = {  FOO: 1, BAR: 2};",
-            "/** @enum {!EnumOne}*/",
-            "let EnumTwo = { FOO: EnumOne.FOO}"),
+        """
+        /** @enum {number} */
+        let EnumOne = { FOO: 1, BAR: 2 };
+        /** @enum {!EnumOne}*/
+        let EnumTwo = { FOO: EnumOne.FOO }
+        """,
         ENUM_TYPE_NOT_STRING_OR_NUMBER);
     testWarning(
-        lines(
-            "/** @enum {string} */",
-            "let EnumOne = {  FOO: 'foo',  BAR: 'bar'};",
-            "/** @enum {!EnumOne}*/",
-            "let EnumTwo = { FOO: EnumOne.FOO}"),
+        """
+        /** @enum {string} */
+        let EnumOne = { FOO: 'foo',  BAR: 'bar' };
+        /** @enum {!EnumOne}*/
+        let EnumTwo = { FOO: EnumOne.FOO }
+        """,
         ENUM_TYPE_NOT_STRING_OR_NUMBER);
 
     testWarning(" /** @enum {{x: number}} */ var E = {A: true };", ENUM_TYPE_NOT_STRING_OR_NUMBER);
@@ -178,19 +188,37 @@ public final class CheckEnumsTest extends CompilerTestCase {
         NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM); // non-statically initialized with name
 
     testWarning(
-        "/** @return {string} */ function foo() {return ''} /** @enum {string} */ let E = { A:"
-            + " foo() };",
+        """
+        /** @return {string} */
+        function foo() {
+          return ''
+        }
+        /** @enum {string} */
+        let E = { A: foo() };
+        """,
         NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM); // non-statically initialized with call
 
     // call to a function missing `@return` annotation
     testWarning(
-        "function foo() {return ''} /** @enum {string} */ let E = { A: foo() };",
+        """
+        function foo() {
+          return ''
+        }
+        /** @enum {string} */
+        let E = { A: foo() };
+        """,
         NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM);
 
     // call to a tagged template function
     testWarning(
-        "/** @return {string} */ function tag(x) {return x} /** @enum {string} */ let E = { A:"
-            + " tag`some` };",
+        """
+        /** @return {string} */
+        function tag(x) {
+          return x
+        }
+        /** @enum {string} */
+        let E = { A: tag`some` };
+        """,
         NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM);
 
     testWarning(
@@ -212,11 +240,12 @@ public final class CheckEnumsTest extends CompilerTestCase {
     // template lit substitution.
 
     testWarning(
-        lines(
-            "/** @enum {string} */",
-            "let EnumOne = {  FOO: 'foo',  BAR: 'bar'};",
-            "/** @enum {string}*/",
-            "let EnumTwo = { FOO: EnumOne.FOO}"),
+        """
+        /** @enum {string} */
+        let EnumOne = {  FOO: 'foo',  BAR: 'bar'};
+        /** @enum {string}*/
+        let EnumTwo = { FOO: EnumOne.FOO}
+        """,
         NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM); // using another string enum as value gets
     // reported
   }

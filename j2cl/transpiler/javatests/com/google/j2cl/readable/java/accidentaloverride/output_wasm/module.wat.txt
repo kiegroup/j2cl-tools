@@ -6,6 +6,12 @@
 )
 
 ;;; Code for accidentaloverride.Parent [type definition]
+(type $accidentaloverride.Parent (sub $java.lang.Object (struct
+ (field $vtable (ref $accidentaloverride.Parent.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $accidentaloverride.Parent.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -14,14 +20,14 @@
  (field $m_foo__java_lang_Error__void (ref $function.m_foo__java_lang_Error__void))
  ))
 )
-(type $accidentaloverride.Parent (sub $java.lang.Object (struct
- (field $vtable (ref $accidentaloverride.Parent.vtable))
- (field $itable (ref $itable))
+
+;;; Code for accidentaloverride.AnotherAccidentalOverride [type definition]
+(type $accidentaloverride.AnotherAccidentalOverride (sub $accidentaloverride.Parent (struct
+ (field $vtable (ref $accidentaloverride.AnotherAccidentalOverride.vtable))
+ (field $itable (ref $accidentaloverride.AnotherAccidentalOverride.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for accidentaloverride.AnotherAccidentalOverride [type definition]
 (type $accidentaloverride.AnotherAccidentalOverride.vtable (sub $accidentaloverride.Parent.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -34,14 +40,14 @@
  (field $m_foo__java_lang_Object__void (ref $function.m_foo__java_lang_Object__void))
  ))
 )
-(type $accidentaloverride.AnotherAccidentalOverride (sub $accidentaloverride.Parent (struct
- (field $vtable (ref $accidentaloverride.AnotherAccidentalOverride.vtable))
- (field $itable (ref $accidentaloverride.AnotherAccidentalOverride.itable))
+
+;;; Code for accidentaloverride.AccidentalOverride [type definition]
+(type $accidentaloverride.AccidentalOverride (sub $accidentaloverride.Parent (struct
+ (field $vtable (ref $accidentaloverride.AccidentalOverride.vtable))
+ (field $itable (ref $accidentaloverride.AccidentalOverride.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for accidentaloverride.AccidentalOverride [type definition]
 (type $accidentaloverride.AccidentalOverride.vtable (sub $accidentaloverride.Parent.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -50,12 +56,6 @@
  (field $m_foo__java_lang_Error__void (ref $function.m_foo__java_lang_Error__void))
  (field $m_bar__java_lang_Object__void (ref $function.m_bar__java_lang_Object__void))
  (field $m_foo__java_lang_Object__void (ref $function.m_foo__java_lang_Object__void))
- ))
-)
-(type $accidentaloverride.AccidentalOverride (sub $accidentaloverride.Parent (struct
- (field $vtable (ref $accidentaloverride.AccidentalOverride.vtable))
- (field $itable (ref $accidentaloverride.AccidentalOverride.itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
 
@@ -193,7 +193,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/accidentaloverride/readable-j2wasm.js/accidentaloverride/AccidentalOverride.java:18:6
   (call $$clinit__void_<once>_@accidentaloverride.Parent )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/accidentaloverride/readable-j2wasm.js/accidentaloverride/AccidentalOverride.java:18:6
-  (local.set $$instance (struct.new $accidentaloverride.Parent (ref.as_non_null (global.get $accidentaloverride.Parent.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $accidentaloverride.Parent (global.get $accidentaloverride.Parent.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/accidentaloverride/readable-j2wasm.js/accidentaloverride/AccidentalOverride.java:18:6
   (call $$ctor__void_$p_accidentaloverride_Parent@accidentaloverride.Parent (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/accidentaloverride/readable-j2wasm.js/accidentaloverride/AccidentalOverride.java:18:6
@@ -293,7 +293,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/accidentaloverride/readable-j2wasm.js/accidentaloverride/AccidentalOverride.java:36:6
   (call $$clinit__void_<once>_@accidentaloverride.AnotherAccidentalOverride )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/accidentaloverride/readable-j2wasm.js/accidentaloverride/AccidentalOverride.java:36:6
-  (local.set $$instance (struct.new $accidentaloverride.AnotherAccidentalOverride (ref.as_non_null (global.get $accidentaloverride.AnotherAccidentalOverride.vtable)) (ref.as_non_null (global.get $accidentaloverride.AnotherAccidentalOverride.itable)) (i32.const 0)))
+  (local.set $$instance (struct.new $accidentaloverride.AnotherAccidentalOverride (global.get $accidentaloverride.AnotherAccidentalOverride.vtable) (global.get $accidentaloverride.AnotherAccidentalOverride.itable) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/accidentaloverride/readable-j2wasm.js/accidentaloverride/AccidentalOverride.java:36:6
   (call $$ctor__void_$p_accidentaloverride_AnotherAccidentalOverride@accidentaloverride.AnotherAccidentalOverride (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/accidentaloverride/readable-j2wasm.js/accidentaloverride/AccidentalOverride.java:36:6
@@ -427,7 +427,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/accidentaloverride/readable-j2wasm.js/accidentaloverride/AccidentalOverride.java:46:13
   (call $$clinit__void_<once>_@accidentaloverride.AccidentalOverride )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/accidentaloverride/readable-j2wasm.js/accidentaloverride/AccidentalOverride.java:46:13
-  (local.set $$instance (struct.new $accidentaloverride.AccidentalOverride (ref.as_non_null (global.get $accidentaloverride.AccidentalOverride.vtable)) (ref.as_non_null (global.get $accidentaloverride.AccidentalOverride.itable)) (i32.const 0)))
+  (local.set $$instance (struct.new $accidentaloverride.AccidentalOverride (global.get $accidentaloverride.AccidentalOverride.vtable) (global.get $accidentaloverride.AccidentalOverride.itable) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/accidentaloverride/readable-j2wasm.js/accidentaloverride/AccidentalOverride.java:46:13
   (call $$ctor__void_$p_accidentaloverride_AccidentalOverride@accidentaloverride.AccidentalOverride (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/accidentaloverride/readable-j2wasm.js/accidentaloverride/AccidentalOverride.java:46:13

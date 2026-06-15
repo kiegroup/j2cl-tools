@@ -35,6 +35,7 @@ import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
+import com.google.auto.common.MoreElements;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.lang.model.element.TypeElement;
@@ -42,7 +43,6 @@ import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import org.kie.j2cl.tools.yaml.mapper.TypeUtils;
 import org.kie.j2cl.tools.yaml.mapper.api.YAMLSerializer;
 import org.kie.j2cl.tools.yaml.mapper.api.annotation.YamlTypeSerializer;
 import org.kie.j2cl.tools.yaml.mapper.api.internal.ser.YAMLSerializationContext;
@@ -170,7 +170,7 @@ public class SerializerGenerator extends AbstractGenerator {
 
     String fieldType;
     if (variableElement.getBean().getKind().isPrimitive()) {
-      fieldType = TypeUtils.wrapperType(variableElement.getBean());
+      fieldType = context.getTypeUtils().wrapperType(variableElement.getBean());
     } else if (variableElement.getBean().getKind().equals(TypeKind.ARRAY)) {
       ArrayType arrayType = (ArrayType) variableElement.getBean();
       fieldType = arrayType.toString();
@@ -239,7 +239,7 @@ public class SerializerGenerator extends AbstractGenerator {
     method.addParameter(YAMLSerializationContext.class.getSimpleName(), "ctx");
 
     ClassOrInterfaceType interfaceType =
-        new ClassOrInterfaceType().setName(TypeUtils.wrapperType(field.getBean()));
+        new ClassOrInterfaceType().setName(context.getTypeUtils().wrapperType(field.getBean()));
     addTypeArguments(field.getBean(), interfaceType);
 
     method.setType(interfaceType);
@@ -250,10 +250,13 @@ public class SerializerGenerator extends AbstractGenerator {
   }
 
   private Expression getFieldAccessor(PropertyDefinition field) {
-    if (typeUtils.hasGetter(field.getProperty())) {
+    if (typeUtils.hasGetter(MoreElements.asVariable(field.getProperty()))) {
       return new MethodCallExpr(
           new NameExpr("bean"),
-          typeUtils.getGetter(field.getProperty()).getSimpleName().toString());
+          typeUtils
+              .getGetter(MoreElements.asVariable(field.getProperty()))
+              .getSimpleName()
+              .toString());
     } else {
       return new FieldAccessExpr(
           new NameExpr("bean"), field.getProperty().getSimpleName().toString());

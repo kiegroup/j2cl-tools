@@ -152,26 +152,52 @@ public abstract class JSType {
 
   /**
    * Checks whether the property is present on the object.
+   *
    * @param pname The property name.
    */
-  public HasPropertyKind getPropertyKind(String pname) {
+  public HasPropertyKind getPropertyKind(Property.Key pname) {
     return getPropertyKind(pname, true);
   }
 
   /**
    * Checks whether the property is present on the object.
+   *
    * @param pname The property name.
    * @param autobox Whether to check for the presents on an autoboxed type
    */
-  public HasPropertyKind getPropertyKind(String pname, boolean autobox) {
+  public HasPropertyKind getPropertyKind(Property.Key pname, boolean autobox) {
     return HasPropertyKind.ABSENT;
   }
 
   /**
    * Checks whether the property is present on the object.
+   *
+   * @param pname The property name.
+   * @param autobox Whether to check for the presents on an autoboxed type
+   */
+  public final HasPropertyKind getPropertyKind(String pname, boolean autobox) {
+    return getPropertyKind(new Property.StringKey(pname), autobox);
+  }
+
+  /**
+   * Checks whether the property is present on the object.
+   *
+   * @param pname The property name.
+   */
+  public final HasPropertyKind getPropertyKind(String pname) {
+    return getPropertyKind(new Property.StringKey(pname));
+  }
+
+  /**
+   * Checks whether the property is present on the object.
+   *
    * @param pname The property name.
    */
   public final boolean hasProperty(String pname) {
+    return hasProperty(new Property.StringKey(pname));
+  }
+
+  public final boolean hasProperty(Property.Key pname) {
     return !getPropertyKind(pname, false).equals(HasPropertyKind.ABSENT);
   }
 
@@ -233,6 +259,10 @@ public abstract class JSType {
   }
 
   public boolean isSymbolValueType() {
+    return false;
+  }
+
+  public boolean isKnownSymbolValueType() {
     return false;
   }
 
@@ -379,8 +409,8 @@ public abstract class JSType {
   }
 
   public final boolean isLiteralObject() {
-    if (this instanceof PrototypeObjectType) {
-      return ((PrototypeObjectType) this).isAnonymous();
+    if (this instanceof PrototypeObjectType prototypeObjectType) {
+      return prototypeObjectType.isAnonymous();
     }
     return false;
   }
@@ -435,6 +465,10 @@ public abstract class JSType {
   @SuppressWarnings("AmbiguousMethodReference")
   public static @Nullable FunctionType toMaybeFunctionType(JSType type) {
     return type == null ? null : type.toMaybeFunctionType();
+  }
+
+  public @Nullable KnownSymbolType toMaybeKnownSymbolType() {
+    return null;
   }
 
   public final boolean isEnumElementType() {
@@ -696,8 +730,8 @@ public abstract class JSType {
     if (this == other) {
       return true;
     }
-    return (other instanceof JSType)
-        && new EqualityChecker().setEqMethod(EqMethod.IDENTITY).check(this, (JSType) other);
+    return (other instanceof JSType jSType)
+        && new EqualityChecker().setEqMethod(EqMethod.IDENTITY).check(this, jSType);
   }
 
   /**
@@ -803,7 +837,7 @@ public abstract class JSType {
    * @return The property's type. {@code null} if the current type cannot have properties, or if the
    *     type is not found.
    */
-  public final @Nullable JSType findPropertyType(String propertyName) {
+  public final @Nullable JSType findPropertyType(Property.Key propertyName) {
     @Nullable JSType propertyType = findPropertyTypeWithoutConsideringTemplateTypes(propertyName);
     if (propertyType == null) {
       return null;
@@ -821,6 +855,18 @@ public abstract class JSType {
   }
 
   /**
+   * Coerces this type to an Object type, then gets the type of the property whose name is given.
+   *
+   * <p>Unlike {@link ObjectType#getPropertyType}, returns null if the property is not found.
+   *
+   * @return The property's type. {@code null} if the current type cannot have properties, or if the
+   *     type is not found.
+   */
+  public final @Nullable JSType findPropertyType(String propertyName) {
+    return findPropertyType(new Property.StringKey(propertyName));
+  }
+
+  /**
    * Looks up a property on this type, but without properly replacing any templates in the result.
    *
    * <p>Subclasses can override this if they need more complicated logic for property lookup than
@@ -830,7 +876,8 @@ public abstract class JSType {
    * need to lookup a property on a random JSType
    */
   @ForOverride
-  protected @Nullable JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
+  protected @Nullable JSType findPropertyTypeWithoutConsideringTemplateTypes(
+      Property.Key propertyName) {
     ObjectType autoboxObjType = ObjectType.cast(autoboxesTo());
     if (autoboxObjType != null) {
       return autoboxObjType.findPropertyType(propertyName);
@@ -878,7 +925,7 @@ public abstract class JSType {
    * dereferencing, you should use autoboxesTo() or dereference().
    */
   public @Nullable ObjectType toObjectType() {
-    return this instanceof ObjectType ? (ObjectType) this : null;
+    return this instanceof ObjectType objectType ? objectType : null;
   }
 
   /**
@@ -948,6 +995,10 @@ public abstract class JSType {
       }
     }
 
+    if (bType.isUnionType()) {
+      return bType.testForEquality(aType);
+    }
+
     if (aType.isFunctionType() || bType.isFunctionType()) {
       JSType otherType = aType.isFunctionType() ? bType : aType;
 
@@ -971,7 +1022,7 @@ public abstract class JSType {
       }
     }
 
-    if (bType.isEnumElementType() || bType.isUnionType()) {
+    if (bType.isEnumElementType()) {
       return bType.testForEquality(aType);
     }
 
@@ -1001,6 +1052,9 @@ public abstract class JSType {
    * ECMA-262 specification.<p>
    */
   public final boolean canTestForShallowEqualityWith(JSType that) {
+    if (isNoResolvedType() || that.isNoResolvedType()) {
+      return true;
+    }
     if (isEmptyType() || that.isEmptyType()) {
       return isSubtypeOf(that) || that.isSubtypeOf(this);
     }
@@ -1140,14 +1194,6 @@ public abstract class JSType {
     }  else if (thatType.isTemplatizedType()) {
       return thatType.toMaybeTemplatizedType().getGreatestSubtypeHelper(
           thisType);
-    } else if (thisType.isNoResolvedType() && thatType.isNoResolvedType()) {
-      // NoResolvedType has some strange semantics: "isSubtypeOf(otherType)" always returns true,
-      // to avoid type mismatch errors on assignments, but registry.createUnionType() also preserves
-      // all NoResolvedTypes in unions with other types instead of dropping them as irrelevant, so
-      // that Clutz & conformance checks can see all NoResolvedTypes later on.
-      // For the purposes of computing the "greatest common subtype" of two types, use the
-      // registry.createUnionType semantics rather than the .isSubtypeOf semantics.
-      return thisType.registry.createUnionType(thisType, thatType);
     } else if (thisType.isSubtypeOf(thatType)) {
       return thisType;
     } else if (thatType.isSubtypeOf(thisType)) {
@@ -1255,17 +1301,10 @@ public abstract class JSType {
     }
 
     // other types
-    switch (testForEquality(that)) {
-      case FALSE:
-        return new TypePair(null, null);
-
-      case TRUE:
-      case UNKNOWN:
-        return new TypePair(this, that);
-    }
-
-    // switch case is exhaustive
-    throw new IllegalStateException();
+    return switch (testForEquality(that)) {
+      case FALSE -> new TypePair(null, null);
+      case TRUE, UNKNOWN -> new TypePair(this, that);
+    };
   }
 
   /**
@@ -1496,7 +1535,7 @@ public abstract class JSType {
    * resolution work needs to be done.
    */
   final void eagerlyResolveToSelf() {
-    checkState(!this.isResolved());
+    checkState(!this.isResolved(), this);
     resolveResult = this;
     this.registry.getResolver().resolveIfClosed(this, this.getTypeClass());
   }

@@ -257,11 +257,6 @@ public class Parser {
     return sourceMapURL;
   }
 
-  /** Returns true if the string value should be treated as a keyword in the current context. */
-  private boolean isKeyword(String value) {
-    return Keywords.isKeyword(value);
-  }
-
   // 14 Program
   public @Nullable ProgramTree parseProgram() {
     try {
@@ -394,7 +389,7 @@ public class Parser {
     if (peekPredefinedString(PredefinedName.AS)) {
       eatPredefinedString(PredefinedName.AS);
       destinationName = eatId();
-    } else if (isKeyword(importedName.value)) {
+    } else if (importedName.isKeyword()) {
       reportExpectedError(null, PredefinedName.AS);
     }
     return new ImportSpecifierTree(getTreeLocation(start), importedName, destinationName);
@@ -481,8 +476,8 @@ public class Parser {
     } else if (isExportSpecifier) {
       for (ParseTree tree : exportSpecifierList) {
         IdentifierToken importedName = tree.asExportSpecifier().importedName;
-        if (isKeyword(importedName.value)) {
-          reportError(importedName, "cannot use keyword '%s' here.", importedName.value);
+        if (importedName.isKeyword()) {
+          reportError(importedName, "cannot use keyword '%s' here.", importedName);
         }
       }
     }
@@ -594,46 +589,30 @@ public class Parser {
     return false;
   }
 
-  private static class PartialClassElement {
-    final SourcePosition start;
-
-    boolean isStatic = false;
-    IdentifierToken name;
-    ParseTree nameExpr;
-
-    PartialClassElement(SourcePosition start) {
-      this.start = start;
-    }
-
-    void setName(@Nullable IdentifierToken name) {
-      this.name = name;
-    }
-
-    IdentifierToken getName() {
-      return name;
-    }
-
-    void setNameExpr(@Nullable ParseTree nameExpr) {
-      this.nameExpr = nameExpr;
-    }
-
-    ParseTree getNameExpr() {
-      return nameExpr;
-    }
-  }
-
-  private PartialClassElement getClassElementDefaults() {
-    return new PartialClassElement(getTreeStartLocation());
+  private ClassOrObjectElementInfo createObjectLiteralElementInfo() {
+    return ClassOrObjectElementInfo.createObjectLiteralElementInfo(getTreeStartLocation());
   }
 
   private ParseTree parseClassElement() {
     if (peek(TokenType.SEMI_COLON)) {
       return parseEmptyStatement();
-    } else {
-      PartialClassElement partialElement = getClassElementDefaults();
+    }
 
-      partialElement.isStatic = eatStaticIfNotElementName();
-      return parseClassElement(partialElement);
+    if (peekClassStaticInitializerBlock()) {
+      return parseClassStaticInitializerBlock();
+    }
+
+    ClassOrObjectElementInfo elementInfo =
+        ClassOrObjectElementInfo.createClassMemberInfo(
+            getTreeStartLocation(), eatStaticIfNotElementName());
+    if (peekGetAccessor()) {
+      return parseGetAccessor(elementInfo);
+    } else if (peekSetAccessor()) {
+      return parseSetAccessor(elementInfo);
+    } else if (peekAsyncMethod()) {
+      return parseAsyncMethod(elementInfo);
+    } else {
+      return parseClassMemberDeclaration(elementInfo);
     }
   }
 
@@ -647,20 +626,6 @@ public class Parser {
     return false;
   }
 
-  private ParseTree parseClassElement(PartialClassElement partialElement) {
-    if (peekGetAccessor()) {
-      return parseGetAccessor(partialElement);
-    } else if (peekSetAccessor()) {
-      return parseSetAccessor(partialElement);
-    } else if (peekAsyncMethod()) {
-      return parseAsyncMethod(partialElement);
-    } else if (peekClassStaticInitializerBlock()) {
-      return parseClassStaticInitializerBlock();
-    } else {
-      return parseClassMemberDeclaration(partialElement);
-    }
-  }
-
   private boolean peekAsyncMethod() {
     return peekPredefinedString(ASYNC)
         && !peekImplicitSemiColon(1)
@@ -672,12 +637,11 @@ public class Parser {
     return peek(TokenType.STATIC) && peek(1, TokenType.OPEN_CURLY);
   }
 
-  private PartialClassElement parseClassElementName(PartialClassElement partial) {
+  private void parseClassElementName(ClassOrObjectElementInfo elementInfo) {
     if (peekPropertyName(0)) {
       if (peekIdOrKeyword()) {
-        partial.setNameExpr(null);
-        partial.setName(eatIdOrKeywordAsId());
-        if (Keywords.isKeyword(partial.getName().value)) {
+        elementInfo.setName(eatIdOrKeywordAsId());
+        if (elementInfo.getName().isKeyword()) {
           recordFeatureUsed(Feature.KEYWORDS_AS_PROPERTIES);
         }
       } else {
@@ -685,81 +649,89 @@ public class Parser {
         // { 123() {} }
         // Treat these as if they were computed properties.
         // TODO(b/123769080): Stop making this assumption!
-        partial.setName(null);
-        partial.setNameExpr(parseLiteralExpression());
+        elementInfo.setNameExpr(parseLiteralExpression());
       }
     } else {
-      partial.setNameExpr(parseComputedPropertyName());
-      partial.setName(null);
+      elementInfo.setNameExpr(parseComputedPropertyName());
     }
-    return partial;
   }
 
-  private ParseTree parseFieldDefinition(PartialClassElement partial) {
+  private ParseTree parseFieldDefinition(ClassOrObjectElementInfo elementInfo) {
     ParseTree initializer = null;
     if (peek(TokenType.EQUAL)) {
       initializer = parseInitializer(Expression.NORMAL);
     }
 
     eatPossiblyImplicitSemiColon();
-    if (partial.getName() != null) {
-      checkState(partial.getNameExpr() == null);
+    if (elementInfo.hasName()) {
       return new FieldDeclarationTree(
-          getTreeLocation(partial.start), partial.getName(), partial.isStatic, initializer);
+          getTreeLocation(elementInfo.start),
+          elementInfo.getName(),
+          elementInfo.isStatic,
+          initializer);
     } else {
+      checkState(elementInfo.hasNameExpr());
       return new ComputedPropertyFieldTree(
-          getTreeLocation(partial.start), partial.getNameExpr(), partial.isStatic, initializer);
+          getTreeLocation(elementInfo.start),
+          elementInfo.getNameExpr(),
+          elementInfo.isStatic,
+          initializer);
     }
   }
 
-  private ParseTree parseMethodDefinition(PartialClassElement partial, boolean isGenerator) {
+  private ParseTree parseMethodDefinition(
+      ClassOrObjectElementInfo elementInfo, boolean isGenerator) {
     FunctionDeclarationTree.Kind kind;
-    if (partial.getNameExpr() == null) {
-      kind = FunctionDeclarationTree.Kind.MEMBER;
-    } else {
+    if (elementInfo.hasNameExpr()) {
       kind = FunctionDeclarationTree.Kind.EXPRESSION;
+    } else {
+      kind = FunctionDeclarationTree.Kind.MEMBER;
     }
 
     FunctionDeclarationTree.Builder builder =
         FunctionDeclarationTree.builder(kind)
-            .setName(partial.getName())
-            .setStatic(partial.isStatic);
+            .setIsClassMember(elementInfo.isClassMember)
+            .setStatic(elementInfo.isStatic);
+    if (elementInfo.hasName()) {
+      builder.setName(elementInfo.getName());
+    }
     parseFunctionTail(builder, isGenerator ? FunctionFlavor.GENERATOR : FunctionFlavor.NORMAL);
 
-    ParseTree function = builder.build(getTreeLocation(partial.start));
+    ParseTree function = builder.build(getTreeLocation(elementInfo.start));
     if (kind == FunctionDeclarationTree.Kind.MEMBER) {
       return function;
     } else {
+      checkState(elementInfo.hasNameExpr());
       return new ComputedPropertyMethodTree(
-          getTreeLocation(partial.start), partial.getNameExpr(), function);
+          getTreeLocation(elementInfo.start), elementInfo.getNameExpr(), function);
     }
   }
 
-  private ParseTree parseMethodDeclaration() {
-    return parseMethodDeclaration(new PartialClassElement(getTreeStartLocation()));
+  private ParseTree parseObjectLiteralMethodDeclaration() {
+    return parseMethodDeclaration(createObjectLiteralElementInfo());
   }
 
-  private ParseTree parseMethodDeclaration(PartialClassElement partial) {
+  private ParseTree parseMethodDeclaration(ClassOrObjectElementInfo elementInfo) {
     boolean isGenerator = eatOpt(TokenType.STAR) != null;
-    partial = parseClassElementName(partial);
-    return parseMethodDefinition(partial, isGenerator);
+    parseClassElementName(elementInfo);
+    return parseMethodDefinition(elementInfo, isGenerator);
   }
 
-  private ParseTree parseClassMemberDeclaration(PartialClassElement partial) {
+  private ParseTree parseClassMemberDeclaration(ClassOrObjectElementInfo elementInfo) {
     boolean isGenerator = eatOpt(TokenType.STAR) != null;
-    partial = parseClassElementName(partial);
+    parseClassElementName(elementInfo);
     if (peekType(0) == TokenType.OPEN_PAREN) {
-      return parseMethodDefinition(partial, isGenerator);
+      return parseMethodDefinition(elementInfo, isGenerator);
     } else {
-      return parseFieldDefinition(partial);
+      return parseFieldDefinition(elementInfo);
     }
   }
 
-  private ParseTree parseAsyncMethod() {
-    return parseAsyncMethod(getClassElementDefaults());
+  private ParseTree parseObjectLiteralAsyncMethod() {
+    return parseAsyncMethod(createObjectLiteralElementInfo());
   }
 
-  private ParseTree parseAsyncMethod(PartialClassElement partial) {
+  private ParseTree parseAsyncMethod(ClassOrObjectElementInfo elementInfo) {
     eatPredefinedString(ASYNC);
     boolean generator = peek(TokenType.STAR);
     if (generator) {
@@ -772,7 +744,8 @@ public class Parser {
             FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.MEMBER)
                 .setAsync(true)
                 .setGenerator(generator)
-                .setStatic(partial.isStatic)
+                .setIsClassMember(elementInfo.isClassMember)
+                .setStatic(elementInfo.isStatic)
                 .setName(name);
         parseFunctionTail(
             builder,
@@ -788,7 +761,8 @@ public class Parser {
             FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.EXPRESSION)
                 .setAsync(true)
                 .setGenerator(generator)
-                .setStatic(partial.isStatic);
+                .setIsClassMember(elementInfo.isClassMember)
+                .setStatic(elementInfo.isStatic);
         parseFunctionTail(
             builder,
             generator ? FunctionFlavor.ASYNCHRONOUS_GENERATOR : FunctionFlavor.ASYNCHRONOUS);
@@ -804,7 +778,8 @@ public class Parser {
           FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.EXPRESSION)
               .setAsync(true)
               .setGenerator(generator)
-              .setStatic(partial.isStatic);
+              .setIsClassMember(elementInfo.isClassMember)
+              .setStatic(elementInfo.isStatic);
       parseFunctionTail(
           builder, generator ? FunctionFlavor.ASYNCHRONOUS_GENERATOR : FunctionFlavor.ASYNCHRONOUS);
 
@@ -1105,59 +1080,58 @@ public class Parser {
 
   /** This function reflects the ECMA standard. Most places use peekStatement instead. */
   private boolean peekStatementStandard() {
-    switch (peekType()) {
-      case OPEN_CURLY:
-      case VAR:
-      case CONST:
-      case SEMI_COLON:
-      case IF:
-      case DO:
-      case WHILE:
-      case FOR:
-      case CONTINUE:
-      case BREAK:
-      case RETURN:
-      case WITH:
-      case SWITCH:
-      case THROW:
-      case TRY:
-      case DEBUGGER:
-      case YIELD:
-      case IDENTIFIER:
-      case TYPE:
-      case DECLARE:
-      case MODULE:
-      case NAMESPACE:
-      case THIS:
-      case CLASS:
-      case SUPER:
-      case NUMBER:
-      case BIGINT:
-      case STRING:
-      case NO_SUBSTITUTION_TEMPLATE:
-      case TEMPLATE_HEAD:
-      case NULL:
-      case TRUE:
-      case SLASH: // regular expression literal
-      case SLASH_EQUAL: // regular expression literal
-      case FALSE:
-      case OPEN_SQUARE:
-      case OPEN_PAREN:
-      case NEW:
-      case DELETE:
-      case VOID:
-      case TYPEOF:
-      case PLUS_PLUS:
-      case MINUS_MINUS:
-      case PLUS:
-      case MINUS:
-      case TILDE:
-      case BANG:
-      case IMPORT:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case OPEN_CURLY,
+          VAR,
+          CONST,
+          SEMI_COLON,
+          IF,
+          DO,
+          WHILE,
+          FOR,
+          CONTINUE,
+          BREAK,
+          RETURN,
+          WITH,
+          SWITCH,
+          THROW,
+          TRY,
+          DEBUGGER,
+          YIELD,
+          IDENTIFIER,
+          TYPE,
+          DECLARE,
+          MODULE,
+          NAMESPACE,
+          THIS,
+          CLASS,
+          SUPER,
+          NUMBER,
+          BIGINT,
+          STRING,
+          NO_SUBSTITUTION_TEMPLATE,
+          TEMPLATE_HEAD,
+          NULL,
+          TRUE,
+          SLASH, // regular expression literal
+          SLASH_EQUAL, // regular expression literal
+          FALSE,
+          OPEN_SQUARE,
+          OPEN_PAREN,
+          NEW,
+          DELETE,
+          VOID,
+          TYPEOF,
+          PLUS_PLUS,
+          MINUS_MINUS,
+          PLUS,
+          MINUS,
+          TILDE,
+          BANG,
+          IMPORT ->
+          true;
+      default -> false;
+    };
   }
 
   // 12.1 Block
@@ -1447,14 +1421,10 @@ public class Parser {
   }
 
   private boolean peekVariableDeclarationList() {
-    switch (peekType()) {
-      case VAR:
-      case CONST:
-      case LET:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case VAR, CONST, LET -> true;
+      default -> false;
+    };
   }
 
   // 12.6.3 The for Statement
@@ -1672,43 +1642,20 @@ public class Parser {
 
   // 11.1 Primary Expressions
   private ParseTree parsePrimaryExpression() {
-    switch (peekType()) {
-      case CLASS:
-        return parseClassExpression();
-      case SUPER:
-        return parseSuperExpression();
-      case THIS:
-        return parseThisExpression();
-      case IMPORT:
-        return parseDynamicImportExpression();
-      case IDENTIFIER:
-      case TYPE:
-      case DECLARE:
-      case MODULE:
-      case NAMESPACE:
-        return parseIdentifierExpression();
-      case NUMBER:
-      case STRING:
-      case BIGINT:
-      case TRUE:
-      case FALSE:
-      case NULL:
-        return parseLiteralExpression();
-      case NO_SUBSTITUTION_TEMPLATE:
-      case TEMPLATE_HEAD:
-        return parseTemplateLiteral(null);
-      case OPEN_SQUARE:
-        return parseArrayInitializer();
-      case OPEN_CURLY:
-        return parseObjectLiteral();
-      case OPEN_PAREN:
-        return parseCoverParenthesizedExpressionAndArrowParameterList();
-      case SLASH:
-      case SLASH_EQUAL:
-        return parseRegularExpressionLiteral();
-      default:
-        return parseMissingPrimaryExpression();
-    }
+    return switch (peekType()) {
+      case CLASS -> parseClassExpression();
+      case SUPER -> parseSuperExpression();
+      case THIS -> parseThisExpression();
+      case IMPORT -> parseDynamicImportExpression();
+      case IDENTIFIER, TYPE, DECLARE, MODULE, NAMESPACE -> parseIdentifierExpression();
+      case NUMBER, STRING, BIGINT, TRUE, FALSE, NULL -> parseLiteralExpression();
+      case NO_SUBSTITUTION_TEMPLATE, TEMPLATE_HEAD -> parseTemplateLiteral(null);
+      case OPEN_SQUARE -> parseArrayInitializer();
+      case OPEN_CURLY -> parseObjectLiteral();
+      case OPEN_PAREN -> parseCoverParenthesizedExpressionAndArrowParameterList();
+      case SLASH, SLASH_EQUAL -> parseRegularExpressionLiteral();
+      default -> parseMissingPrimaryExpression();
+    };
   }
 
   private SuperExpressionTree parseSuperExpression() {
@@ -1950,7 +1897,7 @@ public class Parser {
     eat(TokenType.OPEN_CURLY);
     Token commaToken = null;
     while (peek(TokenType.ELLIPSIS) || peekPropertyNameOrComputedProp(0) || peek(TokenType.STAR)) {
-      result.add(parsePropertyAssignment());
+      result.add(parseObjectLiteralPropertyAssignment());
       commaToken = eatOpt(TokenType.COMMA);
       if (commaToken == null) {
         break;
@@ -1983,21 +1930,16 @@ public class Parser {
 
   private boolean peekPropertyName(int tokenIndex) {
     TokenType type = peekType(tokenIndex);
-    switch (type) {
-      case IDENTIFIER:
-      case STRING:
-      case NUMBER:
-      case BIGINT:
-        return true;
-      default:
-        return Keywords.isKeyword(type);
-    }
+    return switch (type) {
+      case IDENTIFIER, STRING, NUMBER, BIGINT -> true;
+      default -> Keywords.isKeyword(type);
+    };
   }
 
-  private ParseTree parsePropertyAssignment() {
+  private ParseTree parseObjectLiteralPropertyAssignment() {
     TokenType type = peekType();
     if (type == TokenType.STAR) {
-      return parsePropertyAssignmentGenerator();
+      return parseObjectLiteralPropertyAssignmentGenerator();
     } else if (type == TokenType.ELLIPSIS) {
       recordFeatureUsed(Feature.OBJECT_LITERALS_WITH_SPREAD);
       SourcePosition start = getTreeStartLocation();
@@ -2010,15 +1952,15 @@ public class Parser {
         || type == TokenType.IDENTIFIER
         || Keywords.isKeyword(type)) {
       if (peekGetAccessor()) {
-        return parseGetAccessor();
+        return parseObjectLiteralGetAccessor();
       } else if (peekSetAccessor()) {
-        return parseSetAccessor();
+        return parseObjectLiteralSetAccessor();
       } else if (peekAsyncMethod()) {
-        return parseAsyncMethod();
+        return parseObjectLiteralAsyncMethod();
       } else if (peekType(1) == TokenType.OPEN_PAREN) {
-        return parseMethodDeclaration();
+        return parseObjectLiteralMethodDeclaration();
       } else {
-        return parsePropertyNameAssignment();
+        return parseObjectLiteralPropertyNameAssignment();
       }
     } else if (type == TokenType.OPEN_SQUARE) {
       SourcePosition start = getTreeStartLocation();
@@ -2040,14 +1982,14 @@ public class Parser {
     }
   }
 
-  private ParseTree parsePropertyAssignmentGenerator() {
+  private ParseTree parseObjectLiteralPropertyAssignmentGenerator() {
     TokenType type = peekType(1);
     if (type == TokenType.STRING
         || type == TokenType.NUMBER
         || type == TokenType.IDENTIFIER
         || Keywords.isKeyword(type)) {
       // parseMethodDeclaration will consume the '*'.
-      return parseMethodDeclaration();
+      return parseObjectLiteralMethodDeclaration();
     } else {
       SourcePosition start = getTreeStartLocation();
       eat(TokenType.STAR);
@@ -2080,7 +2022,7 @@ public class Parser {
 
   private @Nullable Token eatPredefinedString(String string) {
     Token token = eatId();
-    if (token == null || !token.asIdentifier().value.equals(string)) {
+    if (token == null || !token.asIdentifier().valueEquals(string)) {
       reportExpectedError(token, string);
       return null;
     }
@@ -2089,14 +2031,14 @@ public class Parser {
 
   private boolean peekPredefinedString(int index, String string) {
     return peek(index, TokenType.IDENTIFIER)
-        && ((IdentifierToken) peekToken(index)).value.equals(string);
+        && ((IdentifierToken) peekToken(index)).valueEquals(string);
   }
 
-  private ParseTree parseGetAccessor() {
-    return parseGetAccessor(getClassElementDefaults());
+  private ParseTree parseObjectLiteralGetAccessor() {
+    return parseGetAccessor(createObjectLiteralElementInfo());
   }
 
-  private ParseTree parseGetAccessor(PartialClassElement partial) {
+  private ParseTree parseGetAccessor(ClassOrObjectElementInfo elementInfo) {
     eatPredefinedString(PredefinedName.GET);
 
     if (peekPropertyName(0)) {
@@ -2106,7 +2048,11 @@ public class Parser {
       BlockTree body = parseFunctionBody();
       recordFeatureUsed(Feature.GETTER);
       return new GetAccessorTree(
-          getTreeLocation(partial.start), propertyName, partial.isStatic, body);
+          getTreeLocation(elementInfo.start),
+          propertyName,
+          elementInfo.isClassMember,
+          elementInfo.isStatic,
+          body);
     } else {
       ParseTree property = parseComputedPropertyName();
       eat(TokenType.OPEN_PAREN);
@@ -2114,7 +2060,7 @@ public class Parser {
       BlockTree body = parseFunctionBody();
       recordFeatureUsed(Feature.GETTER);
       return new ComputedPropertyGetterTree(
-          getTreeLocation(partial.start), property, partial.isStatic, body);
+          getTreeLocation(elementInfo.start), property, elementInfo.isStatic, body);
     }
   }
 
@@ -2122,11 +2068,11 @@ public class Parser {
     return peekPredefinedString(PredefinedName.SET) && peekPropertyNameOrComputedProp(1);
   }
 
-  private ParseTree parseSetAccessor() {
-    return parseSetAccessor(getClassElementDefaults());
+  private ParseTree parseObjectLiteralSetAccessor() {
+    return parseSetAccessor(createObjectLiteralElementInfo());
   }
 
-  private ParseTree parseSetAccessor(PartialClassElement partial) {
+  private ParseTree parseSetAccessor(ClassOrObjectElementInfo elementInfo) {
     eatPredefinedString(PredefinedName.SET);
     if (peekPropertyName(0)) {
       Token propertyName = eatObjectLiteralPropertyName();
@@ -2136,7 +2082,12 @@ public class Parser {
 
       recordFeatureUsed(Feature.SETTER);
       return new SetAccessorTree(
-          getTreeLocation(partial.start), propertyName, partial.isStatic, parameter, body);
+          getTreeLocation(elementInfo.start),
+          propertyName,
+          elementInfo.isClassMember,
+          elementInfo.isStatic,
+          parameter,
+          body);
     } else {
       ParseTree property = parseComputedPropertyName();
       FormalParameterListTree parameter = parseSetterParameterList();
@@ -2144,18 +2095,18 @@ public class Parser {
 
       recordFeatureUsed(Feature.SETTER);
       return new ComputedPropertySetterTree(
-          getTreeLocation(partial.start), property, partial.isStatic, parameter, body);
+          getTreeLocation(elementInfo.start), property, elementInfo.isStatic, parameter, body);
     }
   }
 
-  private ParseTree parsePropertyNameAssignment() {
+  private ParseTree parseObjectLiteralPropertyNameAssignment() {
     SourcePosition start = getTreeStartLocation();
     Token name = eatObjectLiteralPropertyName();
     Token colon = eatOpt(TokenType.COLON);
     if (colon == null) {
       if (name.type != TokenType.IDENTIFIER) {
         reportExpectedError(peekToken(), TokenType.COLON);
-      } else if (Keywords.isKeyword(name.asIdentifier().value)) {
+      } else if (name.asIdentifier().isKeyword()) {
         reportError(name, "Cannot use keyword in short object literal");
       } else if (peek(TokenType.EQUAL)) {
         IdentifierExpressionTree idTree =
@@ -2266,46 +2217,44 @@ public class Parser {
   }
 
   private boolean peekExpression() {
-    switch (peekType()) {
-      case BANG:
-      case CLASS:
-      case DELETE:
-      case FALSE:
-      case FUNCTION:
-      case IDENTIFIER:
-      case TYPE:
-      case DECLARE:
-      case MODULE:
-      case NAMESPACE:
-      case MINUS:
-      case MINUS_MINUS:
-      case NEW:
-      case NULL:
-      case NUMBER:
-      case BIGINT:
-      case OPEN_CURLY:
-      case OPEN_PAREN:
-      case OPEN_SQUARE:
-      case PLUS:
-      case PLUS_PLUS:
-      case SLASH: // regular expression literal
-      case SLASH_EQUAL:
-      case STRING:
-      case NO_SUBSTITUTION_TEMPLATE:
-      case TEMPLATE_HEAD:
-      case SUPER:
-      case THIS:
-      case TILDE:
-      case TRUE:
-      case TYPEOF:
-      case VOID:
-      case YIELD:
-        return true;
-      case IMPORT:
-        return peekImportCall() || peekImportDot();
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case BANG,
+          CLASS,
+          DELETE,
+          FALSE,
+          FUNCTION,
+          IDENTIFIER,
+          TYPE,
+          DECLARE,
+          MODULE,
+          NAMESPACE,
+          MINUS,
+          MINUS_MINUS,
+          NEW,
+          NULL,
+          NUMBER,
+          BIGINT,
+          OPEN_CURLY,
+          OPEN_PAREN,
+          OPEN_SQUARE,
+          PLUS,
+          PLUS_PLUS,
+          SLASH, // regular expression literal
+          SLASH_EQUAL, // regular expression literal
+          STRING,
+          NO_SUBSTITUTION_TEMPLATE,
+          TEMPLATE_HEAD,
+          SUPER,
+          THIS,
+          TILDE,
+          TRUE,
+          TYPEOF,
+          VOID,
+          YIELD ->
+          true;
+      case IMPORT -> peekImportCall() || peekImportDot();
+      default -> false;
+    };
   }
 
   private ParseTree parse(Expression expressionIn) {
@@ -2378,7 +2327,7 @@ public class Parser {
           partialExpression.asIdentifierExpression().identifierToken;
       // partialExpression is `async`
       // followed by `[no newline] bindingIdentifier [no newline] =>`
-      return identifierToken.value.equals(ASYNC)
+      return identifierToken.valueEquals(ASYNC)
           && !peekImplicitSemiColon(0)
           && peekId()
           && !peekImplicitSemiColon(1)
@@ -2390,7 +2339,7 @@ public class Parser {
       // partialExpression is `async [no newline] (parameters)`
       // followed by `[no newline] =>`
       return callee.type == ParseTreeType.IDENTIFIER_EXPRESSION
-          && callee.asIdentifierExpression().identifierToken.value.equals(ASYNC)
+          && callee.asIdentifierExpression().identifierToken.valueEquals(ASYNC)
           && callee.location.end.line == arguments.location.start.line
           && !peekImplicitSemiColon()
           && peek(TokenType.ARROW);
@@ -2533,16 +2482,15 @@ public class Parser {
    * transformed tree if it parses as a LeftHandSidePattern, otherwise it returns the original tree.
    */
   private ParseTree transformLeftHandSideExpression(ParseTree tree) {
-    switch (tree.type) {
-      case ARRAY_LITERAL_EXPRESSION:
-      case OBJECT_LITERAL_EXPRESSION:
+    return switch (tree.type) {
+      case ARRAY_LITERAL_EXPRESSION, OBJECT_LITERAL_EXPRESSION -> {
         resetScanner(tree);
         // If we fail to parse as an LeftHandSidePattern then
         // parseLeftHandSidePattern will take care reporting errors.
-        return parseLeftHandSidePattern();
-      default:
-        return tree;
-    }
+        yield parseLeftHandSidePattern();
+      }
+      default -> tree;
+    };
   }
 
   private ParseTree parseLeftHandSidePattern() {
@@ -2569,27 +2517,26 @@ public class Parser {
   }
 
   private boolean peekAssignmentOperator() {
-    switch (peekType()) {
-      case EQUAL:
-      case STAR_EQUAL:
-      case STAR_STAR_EQUAL:
-      case SLASH_EQUAL:
-      case PERCENT_EQUAL:
-      case PLUS_EQUAL:
-      case MINUS_EQUAL:
-      case LEFT_SHIFT_EQUAL:
-      case RIGHT_SHIFT_EQUAL:
-      case UNSIGNED_RIGHT_SHIFT_EQUAL:
-      case AMPERSAND_EQUAL:
-      case CARET_EQUAL:
-      case BAR_EQUAL:
-      case OR_EQUAL:
-      case AND_EQUAL:
-      case QUESTION_QUESTION_EQUAL:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case EQUAL,
+          STAR_EQUAL,
+          STAR_STAR_EQUAL,
+          SLASH_EQUAL,
+          PERCENT_EQUAL,
+          PLUS_EQUAL,
+          MINUS_EQUAL,
+          LEFT_SHIFT_EQUAL,
+          RIGHT_SHIFT_EQUAL,
+          UNSIGNED_RIGHT_SHIFT_EQUAL,
+          AMPERSAND_EQUAL,
+          CARET_EQUAL,
+          BAR_EQUAL,
+          OR_EQUAL,
+          AND_EQUAL,
+          QUESTION_QUESTION_EQUAL ->
+          true;
+      default -> false;
+    };
   }
 
   private boolean inGeneratorContext() {
@@ -2731,15 +2678,10 @@ public class Parser {
   }
 
   private boolean peekEqualityOperator() {
-    switch (peekType()) {
-      case EQUAL_EQUAL:
-      case NOT_EQUAL:
-      case EQUAL_EQUAL_EQUAL:
-      case NOT_EQUAL_EQUAL:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case EQUAL_EQUAL, NOT_EQUAL, EQUAL_EQUAL_EQUAL, NOT_EQUAL_EQUAL -> true;
+      default -> false;
+    };
   }
 
   // 11.8 Relational
@@ -2755,18 +2697,11 @@ public class Parser {
   }
 
   private boolean peekRelationalOperator(Expression expressionIn) {
-    switch (peekType()) {
-      case OPEN_ANGLE:
-      case CLOSE_ANGLE:
-      case GREATER_EQUAL:
-      case LESS_EQUAL:
-      case INSTANCEOF:
-        return true;
-      case IN:
-        return expressionIn == Expression.NORMAL;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case OPEN_ANGLE, CLOSE_ANGLE, GREATER_EQUAL, LESS_EQUAL, INSTANCEOF -> true;
+      case IN -> expressionIn == Expression.NORMAL;
+      default -> false;
+    };
   }
 
   // 11.7 Shift Expression
@@ -2782,14 +2717,10 @@ public class Parser {
   }
 
   private boolean peekShiftOperator() {
-    switch (peekType()) {
-      case LEFT_SHIFT:
-      case RIGHT_SHIFT:
-      case UNSIGNED_RIGHT_SHIFT:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case LEFT_SHIFT, RIGHT_SHIFT, UNSIGNED_RIGHT_SHIFT -> true;
+      default -> false;
+    };
   }
 
   // 11.6 Additive Expression
@@ -2805,13 +2736,10 @@ public class Parser {
   }
 
   private boolean peekAdditiveOperator() {
-    switch (peekType()) {
-      case PLUS:
-      case MINUS:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case PLUS, MINUS -> true;
+      default -> false;
+    };
   }
 
   // 11.5 Multiplicative Expression
@@ -2827,14 +2755,10 @@ public class Parser {
   }
 
   private boolean peekMultiplicativeOperator() {
-    switch (peekType()) {
-      case STAR:
-      case SLASH:
-      case PERCENT:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case STAR, SLASH, PERCENT -> true;
+      default -> false;
+    };
   }
 
   private ParseTree parseExponentiationExpression() {
@@ -2874,18 +2798,10 @@ public class Parser {
   }
 
   private boolean peekUnaryOperator() {
-    switch (peekType()) {
-      case DELETE:
-      case VOID:
-      case TYPEOF:
-      case PLUS:
-      case MINUS:
-      case TILDE:
-      case BANG:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case DELETE, VOID, TYPEOF, PLUS, MINUS, TILDE, BANG -> true;
+      default -> false;
+    };
   }
 
   private static final String AWAIT = "await";
@@ -2920,13 +2836,10 @@ public class Parser {
   }
 
   private boolean peekUpdateOperator() {
-    switch (peekType()) {
-      case PLUS_PLUS:
-      case MINUS_MINUS:
-        return true;
-      default:
-        return false;
-    }
+    return switch (peekType()) {
+      case PLUS_PLUS, MINUS_MINUS -> true;
+      default -> false;
+    };
   }
 
   private boolean peekImportCall() {
@@ -2964,8 +2877,8 @@ public class Parser {
     ParseTree operand = parseNewExpression();
 
     // this test is equivalent to is member expression
-    if (!(operand instanceof NewExpressionTree)
-        || ((NewExpressionTree) operand).arguments != null) {
+    if (!(operand instanceof NewExpressionTree newExpressionTree)
+        || newExpressionTree.arguments != null) {
       // We have a MemberExpression, but it may actually be just the first part of a CallExpression
       // Attempt to gather the rest of the CallExpression, if so.
       while (peekCallSuffix()) {
@@ -3027,7 +2940,7 @@ public class Parser {
                   getTreeLocation(start),
                   operand,
                   arguments,
-                  /* isStartOfOptionalChain = */ true,
+                  /* isStartOfOptionalChain= */ true,
                   arguments.hasTrailingComma);
           break;
         case OPEN_SQUARE:
@@ -3036,7 +2949,7 @@ public class Parser {
           eat(TokenType.CLOSE_SQUARE);
           operand =
               new OptionalMemberLookupExpressionTree(
-                  getTreeLocation(start), operand, member, /* isStartOfOptionalChain = */ true);
+                  getTreeLocation(start), operand, member, /* isStartOfOptionalChain= */ true);
           break;
         case NO_SUBSTITUTION_TEMPLATE:
         case TEMPLATE_HEAD:
@@ -3047,7 +2960,7 @@ public class Parser {
             IdentifierToken id = eatIdOrKeywordAsId();
             operand =
                 new OptionalMemberExpressionTree(
-                    getTreeLocation(start), operand, id, /* isStartOfOptionalChain = */ true);
+                    getTreeLocation(start), operand, id, /* isStartOfOptionalChain= */ true);
           } else {
             reportError("syntax error: %s not allowed in optional chain", peekType());
           }
@@ -3084,7 +2997,7 @@ public class Parser {
                   getTreeLocation(start),
                   optionalExpression,
                   id,
-                  /*isStartOfOptionalChain=*/ false);
+                  /* isStartOfOptionalChain= */ false);
           break;
         case OPEN_PAREN:
           ArgumentListTree arguments = parseArguments();
@@ -3093,7 +3006,7 @@ public class Parser {
                   getTreeLocation(start),
                   optionalExpression,
                   arguments,
-                  /* isStartOfOptionalChain = */ false,
+                  /* isStartOfOptionalChain= */ false,
                   arguments.hasTrailingComma);
           break;
         case OPEN_SQUARE:
@@ -3105,7 +3018,7 @@ public class Parser {
                   getTreeLocation(start),
                   optionalExpression,
                   member,
-                  /* isStartOfOptionalChain = */ false);
+                  /* isStartOfOptionalChain= */ false);
           break;
         default:
           throw new AssertionError("unexpected case: " + peekType());
@@ -3391,11 +3304,10 @@ public class Parser {
 
     Token name;
     if (peekIdOrKeyword()) {
-      name = eatIdOrKeywordAsId();
+      IdentifierToken idToken = eatIdOrKeywordAsId();
       if (!peek(TokenType.COLON)) {
-        IdentifierToken idToken = (IdentifierToken) name;
-        if (Keywords.isKeyword(idToken.value)) {
-          reportError("cannot use keyword '%s' here.", name);
+        if (idToken.isKeyword()) {
+          reportError("cannot use keyword '%s' here.", idToken);
         }
         if (peek(TokenType.EQUAL)) {
           IdentifierExpressionTree idTree =
@@ -3404,8 +3316,9 @@ public class Parser {
           ParseTree defaultValue = parseAssignmentExpression();
           return new DefaultParameterTree(getTreeLocation(start), idTree, defaultValue);
         }
-        return new PropertyNameAssignmentTree(getTreeLocation(start), name, null);
+        return new PropertyNameAssignmentTree(getTreeLocation(start), idToken, null);
       }
+      name = idToken;
     } else {
       name = parseLiteralExpression().literalToken;
     }

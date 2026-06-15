@@ -49,30 +49,32 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testDoesNotInlineMethodOnBaseClass() {
     String baseClassJs =
-        lines(
-            "class Base {",
-            "  constructor() {",
-            "    /** @const */",
-            "    this.prop_ =",
-            "        Math.random() > .5;",
-            "  }",
-            "  method() {",
-            "    return this.prop_;",
-            "  }",
-            "}");
+        """
+        class Base {
+          constructor() {
+            /** @const */
+            this.prop_ =
+                Math.random() > .5;
+          }
+          method() {
+            return this.prop_;
+          }
+        }
+        """;
 
     String derivedClassJS =
-        lines(
-            "class Derived extends Base {",
-            "  constructor() {",
-            "    super();",
-            "  }",
-            "  derivedMethod() {",
-            "    super.method();",
-            "  }",
-            "}",
-            "",
-            "(new Derived()).derivedMethod();");
+        """
+        class Derived extends Base {
+          constructor() {
+            super();
+          }
+          derivedMethod() {
+            super.method();
+          }
+        }
+
+        (new Derived()).derivedMethod();
+        """;
 
     String source = baseClassJs + derivedClassJS;
     testSame(source);
@@ -81,7 +83,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testSimpleInline1() {
     testWithPrefix(
-        "function Foo(){}" + "Foo.prototype.bar=function(){return this.baz};",
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(){return this.baz};
+        """,
         "var x=(new Foo).bar();var y=(new Foo).bar();",
         "var x=(new Foo).baz;var y=(new Foo).baz");
   }
@@ -89,7 +94,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testSimpleInline2() {
     testWithPrefix(
-        "function Foo(){}" + "Foo.prototype={bar:function(){return this.baz}};",
+        """
+        function Foo(){}
+        Foo.prototype={bar:function(){return this.baz}};
+        """,
         "var x=(new Foo).bar();var y=(new Foo).bar();",
         "var x=(new Foo).baz;var y=(new Foo).baz");
   }
@@ -98,34 +106,45 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   public void testSimpleGetterInline1() {
     // TODO(johnlenz): Support this case.
     testSame(
-        "function Foo(){}"
-            + "Foo.prototype={get bar(){return this.baz}};"
-            + "var x=(new Foo).bar;var y=(new Foo).bar");
+        """
+        function Foo(){}
+        Foo.prototype={get bar(){return this.baz}};
+        var x=(new Foo).bar;var y=(new Foo).bar
+        """);
     // Verify we are not confusing calling the result of an ES5 getter
     // with call the getter.
     testSame(
-        "function Foo(){}"
-            + "Foo.prototype={get bar(){return this.baz}};"
-            + "var x=(new Foo).bar();var y=(new Foo).bar()");
+        """
+        function Foo(){}
+        Foo.prototype={get bar(){return this.baz}};
+        var x=(new Foo).bar();var y=(new Foo).bar()
+        """);
   }
 
   @Test
   public void testSimpleSetterInline1() {
     // Verify 'get' and 'set' are not confused.
     testSame(
-        "function Foo(){}"
-            + "Foo.prototype={set bar(a){return this.baz}};"
-            + "var x=(new Foo).bar;var y=(new Foo).bar");
+        """
+        function Foo(){}
+        Foo.prototype={set bar(a){return this.baz}};
+        var x=(new Foo).bar;var y=(new Foo).bar
+        """);
     testSame(
-        "function Foo(){}"
-            + "Foo.prototype={set bar(a){return this.baz}};"
-            + "var x=(new Foo).bar();var y=(new Foo).bar()");
+        """
+        function Foo(){}
+        Foo.prototype={set bar(a){return this.baz}};
+        var x=(new Foo).bar();var y=(new Foo).bar()
+        """);
   }
 
   @Test
   public void testSelfInline() {
     testWithPrefix(
-        "function Foo(){}" + "Foo.prototype.bar=function(){return this.baz};",
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(){return this.baz};
+        """,
         "Foo.prototype.meth=function(){this.bar();}",
         "Foo.prototype.meth=function(){this.baz}");
   }
@@ -133,7 +152,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testCallWithArgs() {
     testWithPrefix(
-        "function Foo(){}" + "Foo.prototype.bar=function(){return this.baz};",
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(){return this.baz};
+        """,
         "var x=(new Foo).bar(3,new Foo)",
         "var x=(new Foo).bar(3,new Foo)");
   }
@@ -141,7 +163,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testCallWithConstArgs() {
     testWithPrefix(
-        "function Foo(){}" + "Foo.prototype.bar=function(a){return this.baz};",
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(a){return this.baz};
+        """,
         "var x=(new Foo).bar(3, 4)",
         "var x=(new Foo).baz");
   }
@@ -149,7 +174,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testNestedProperties() {
     testWithPrefix(
-        "function Foo(){}" + "Foo.prototype.bar=function(){return this.baz.ooka};",
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(){return this.baz.ooka};
+        """,
         "(new Foo).bar()",
         "(new Foo).baz.ooka");
   }
@@ -157,9 +185,11 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testSkipComplexMethods() {
     testWithPrefix(
-        "function Foo(){}"
-            + "Foo.prototype.bar=function(){return this.baz};"
-            + "Foo.prototype.condy=function(){return this.baz?this.baz:1};",
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(){return this.baz};
+        Foo.prototype.condy=function(){return this.baz?this.baz:1};
+        """,
         "var x=(new Foo).argy()",
         "var x=(new Foo).argy()");
   }
@@ -167,9 +197,11 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testSkipConflictingMethods() {
     testWithPrefix(
-        "function Foo(){}"
-            + "Foo.prototype.bar=function(){return this.baz};"
-            + "Foo.prototype.bar=function(){return this.bazz};",
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(){return this.baz};
+        Foo.prototype.bar=function(){return this.bazz};
+        """,
         "var x=(new Foo).bar()",
         "var x=(new Foo).bar()");
   }
@@ -177,29 +209,56 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testSameNamesDifferentDefinitions() {
     testWithPrefix(
-        "function A(){}"
-            + "A.prototype.g=function(){return this.a};"
-            + "function B(){}"
-            + "B.prototype.g=function(){return this.b};",
-        "var x=(new A).g();" + "var y=(new B).g();" + "var a=new A;" + "var ag=a.g();",
-        "var x=(new A).g();" + "var y=(new B).g();" + "var a=new A;" + "var ag=a.g()");
+        """
+        function A(){}
+        A.prototype.g=function(){return this.a};
+        function B(){}
+        B.prototype.g=function(){return this.b};
+        """,
+        """
+        var x=(new A).g();
+        var y=(new B).g();
+        var a=new A;
+        var ag=a.g();
+        """,
+        """
+        var x=(new A).g();
+        var y=(new B).g();
+        var a=new A;
+        var ag=a.g()
+        """);
   }
 
   @Test
   public void testSameNamesSameDefinitions() {
     testWithPrefix(
-        "function A(){}"
-            + "A.prototype.g=function(){return this.a};"
-            + "function B(){}"
-            + "B.prototype.g=function(){return this.a};",
-        "var x=(new A).g();" + "var y=(new B).g();" + "var a=new A;" + "var ag=a.g();",
-        "var x=(new A).a;" + "var y=(new B).a;" + "var a=new A;" + "var ag=a.a");
+        """
+        function A(){}
+        A.prototype.g=function(){return this.a};
+        function B(){}
+        B.prototype.g=function(){return this.a};
+        """,
+        """
+        var x=(new A).g();
+        var y=(new B).g();
+        var a=new A;
+        var ag=a.g();
+        """,
+        """
+        var x=(new A).a;
+        var y=(new B).a;
+        var a=new A;
+        var ag=a.a
+        """);
   }
 
   @Test
   public void testConfusingNames() {
     testWithPrefix(
-        "function Foo(){}" + "Foo.prototype.bar=function(){return this.baz};",
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(){return this.baz};
+        """,
         "function bar(){var bar=function(){};bar()}",
         "function bar(){var bar=function(){};bar()}");
   }
@@ -207,7 +266,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testConstantInline() {
     testWithPrefix(
-        "function Foo(){}" + "Foo.prototype.bar=function(){return 3};",
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(){return 3};
+        """,
         "var f=new Foo;var x=f.bar()",
         "var f=new Foo;var x=3");
   }
@@ -215,7 +277,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testConstantArrayInline() {
     testWithPrefix(
-        "function Foo(){}" + "Foo.prototype.bar=function(){return[3,4]};",
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(){return[3,4]};
+        """,
         "var f=new Foo;var x=f.bar()",
         "var f=new Foo;var x=[3,4]");
   }
@@ -223,7 +288,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testConstantInlineWithSideEffects() {
     testWithPrefix(
-        "function Foo(){}" + "Foo.prototype.bar=function(){return 3};",
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(){return 3};
+        """,
         "var x=(new Foo).bar()",
         "var x=(new Foo).bar()");
   }
@@ -239,7 +307,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testEmptyMethodInlineWithSideEffects() {
     testWithPrefix(
-        "function Foo(){}" + "Foo.prototype.bar=function(){};",
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(){};
+        """,
         "(new Foo).bar();var y=new Foo;y.bar(new Foo)",
         "(new Foo).bar();var y=new Foo;y.bar(new Foo)");
   }
@@ -247,7 +318,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testEmptyMethodInlineInAssign1() {
     testWithPrefix(
-        "function Foo(){}" + "Foo.prototype.bar=function(){};",
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(){};
+        """,
         "var x=new Foo;var y=x.bar()",
         "var x=new Foo;var y=void 0");
   }
@@ -255,7 +329,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testEmptyMethodInlineInAssign2() {
     testWithPrefix(
-        "function Foo(){}" + "Foo.prototype.bar=function(){};",
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(){};
+        """,
         "var x=new Foo;var y=x.bar().toString()",
         "var x=new Foo;var y=(void 0).toString()");
   }
@@ -263,7 +340,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testNormalMethod() {
     testWithPrefix(
-        "function Foo(){}" + "Foo.prototype.bar=function(){var x=1};",
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(){var x=1};
+        """,
         "var x=new Foo;x.bar()",
         "var x=new Foo;x.bar()");
   }
@@ -288,9 +368,11 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testNoInlineOfDangerousProperty() {
     testSame(
-        "function Foo(){this.bar=3}"
-            + "Foo.prototype.bar=function(){};"
-            + "var x=new Foo;var y=x.bar()");
+        """
+        function Foo(){this.bar=3}
+        Foo.prototype.bar=function(){};
+        var x=new Foo;var y=x.bar()
+        """);
   }
 
   // Don't warn about argument naming conventions (this is done in another pass)
@@ -299,37 +381,56 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testNoWarn() {
     testSame(
-        "function Foo(){}"
-            + "Foo.prototype.bar=function(opt_a,b){var x=1};"
-            + "var x=new Foo;x.bar()");
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(opt_a,b){var x=1};
+        var x=new Foo;x.bar()
+        """);
 
     testSame(
-        "function Foo(){}"
-            + "Foo.prototype.bar=function(var_args,b){var x=1};"
-            + "var x=new Foo;x.bar()");
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(var_args,b){var x=1};
+        var x=new Foo;x.bar()
+        """);
   }
 
   @Test
   public void testObjectLit() {
     testSame(
-        "Foo.prototype.bar=function(){return this.baz_};"
-            + "var blah={bar:function(){}};"
-            + "(new Foo).bar()");
+        """
+        Foo.prototype.bar=function(){return this.baz_};
+        var blah={bar:function(){}};
+        (new Foo).bar()
+        """);
   }
 
   @Test
   public void testObjectLit2() {
-    testSame("var blah={bar:function(){}};" + "(new Foo).bar()");
+    testSame(
+        """
+        var blah={bar:function(){}};
+        (new Foo).bar()
+        """);
   }
 
   @Test
   public void testObjectLit3() {
-    testSame("var blah={bar(){}};" + "(new Foo).bar()");
+    testSame(
+        """
+        var blah={bar(){}};
+        (new Foo).bar()
+        """);
   }
 
   @Test
   public void testObjectLit4() {
-    testSame("var key='bar';" + "var blah={[key]:a};" + "(new Foo).bar");
+    testSame(
+        """
+        var key='bar';
+        var blah={[key]:a};
+        (new Foo).bar
+        """);
   }
 
   @Test
@@ -354,7 +455,12 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   public void testExternFunction() {
     String externs = "function emptyFunction() {}";
     testSame(
-        externs(externs), srcs("function Foo(){this.empty=emptyFunction}" + "(new Foo).empty()"));
+        externs(externs),
+        srcs(
+            """
+            function Foo(){this.empty=emptyFunction}
+            (new Foo).empty()
+            """));
   }
 
   @Test
@@ -382,39 +488,41 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testEs6Issue1() {
     testSame(
-        lines(
-            "/** @constructor */",
-            "function OldClass() {}",
-            "",
-            "OldClass.prototype.foo = function() { return this.oldbar; };",
-            "",
-            "class NewClass {",
-            "  foo() { return this.newbar; }",
-            "}",
-            "",
-            "var x = new OldClass;",
-            "x.foo();",
-            "x = new NewClass;",
-            "x.foo();"));
+        """
+        /** @constructor */
+        function OldClass() {}
+
+        OldClass.prototype.foo = function() { return this.oldbar; };
+
+        class NewClass {
+          foo() { return this.newbar; }
+        }
+
+        var x = new OldClass;
+        x.foo();
+        x = new NewClass;
+        x.foo();
+        """);
   }
 
   @Test
   public void testEs6Issue2() {
     testSame(
-        lines(
-            "/** @constructor */",
-            "function OldClass() {}",
-            "",
-            "OldClass.prototype.foo = function() { return this.oldbar; };",
-            "",
-            "class NewClass {",
-            "  foo() { return this.newbar; }",
-            "}",
-            "",
-            "var x = new OldClass;",
-            "x.foo();",
-            "var y = new NewClass;",
-            "y.foo();"));
+        """
+        /** @constructor */
+        function OldClass() {}
+
+        OldClass.prototype.foo = function() { return this.oldbar; };
+
+        class NewClass {
+          foo() { return this.newbar; }
+        }
+
+        var x = new OldClass;
+        x.foo();
+        var y = new NewClass;
+        y.foo();
+        """);
   }
 
   @Test
@@ -423,15 +531,16 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
     // This is only an issue if ES6+ is being targeted,
     // because otherwise the arrow function is removed before this pass.
     testSame(
-        lines(
-            "class Holder {",
-            "    constructor() {",
-            "        this.val = {internal: true};",
-            "        this.context =  {getVal: () => this.val}",
-            "    }",
-            "}",
-            "",
-            "console.log(new Holder().context.getVal().internal);"));
+        """
+        class Holder {
+            constructor() {
+                this.val = {internal: true};
+                this.context =  {getVal: () => this.val}
+            }
+        }
+
+        console.log(new Holder().context.getVal().internal);
+        """);
   }
 
   @Test
@@ -458,23 +567,25 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
     test(
         externs("var esc;"),
         srcs(
-            lines(
-                "/** @constructor */",
-                "function Foo() {",
-                "  this.prop = 123;",
-                "}",
-                "Foo.prototype.m = function() {",
-                "  return this.prop;",
-                "}",
-                "(new Foo).m();",
-                "esc(Foo);")),
+            """
+            /** @constructor */
+            function Foo() {
+              this.prop = 123;
+            }
+            Foo.prototype.m = function() {
+              return this.prop;
+            }
+            (new Foo).m();
+            esc(Foo);
+            """),
         expected(
-            lines(
-                "/** @constructor */",
-                "function Foo(){this.prop=123}",
-                "Foo.prototype.m=function(){return this.prop}",
-                "(new Foo).m();",
-                "esc(Foo)")));
+            """
+            /** @constructor */
+            function Foo(){this.prop=123}
+            Foo.prototype.m=function(){return this.prop}
+            (new Foo).m();
+            esc(Foo)
+            """));
   }
 
   @Test
@@ -490,37 +601,56 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testStaticInitializationBlockDoesntCrash() {
+    testSame(
+        """
+        class C {
+          static {
+            alert('foo');
+          }
+        }
+        """);
+  }
+
+  @Test
   public void testNonStaticClassFieldArrowFunction() {
     testSame(
-        lines(
-            "class Foo {", //
-            "  a = 5;",
-            "  b = () => this.a;",
-            "}",
-            "new Foo().b()"));
+        """
+        class Foo {
+          a = 5;
+          b = () => this.a;
+        }
+        new Foo().b()
+        """);
   }
 
   @Test
   public void testStaticClassFieldFunctionDoesInline() {
     test(
-        lines(
-            "class Foo {", //
-            "  static a = 5;",
-            "  static b = function() { return this.a; };",
-            "}",
-            "Foo.b();"),
-        lines(
-            "class Foo {", //
-            "  static a = 5;",
-            "  static b = function() { return this.a; };",
-            "}",
-            "Foo.a;"));
+        """
+        class Foo {
+          static a = 5;
+          static b = function() { return this.a; };
+        }
+        Foo.b();
+        """,
+        """
+        class Foo {
+          static a = 5;
+          static b = function() { return this.a; };
+        }
+        Foo.a;
+        """);
   }
 
   @Test
   public void testNoInline() {
     testWithPrefix(
-        lines("class Foo {", " /** @noinline */ bar() { return 'hi'; }", "}"),
+        """
+        class Foo {
+         /** @noinline */ bar() { return 'hi'; }
+        }
+        """,
         "var x=new Foo;x.bar()",
         "var x=new Foo;x.bar()");
   }
@@ -528,11 +658,12 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Test
   public void testReflectObjectProperty() {
     testWithPrefix(
-        lines(
-            "class Foo {",
-            " bar() { return 'hi'; }",
-            "}",
-            "const c = goog.reflect.objectProperty('bar', Foo.prototype);"),
+        """
+        class Foo {
+         bar() { return 'hi'; }
+        }
+        const c = goog.reflect.objectProperty('bar', Foo.prototype);
+        """,
         "var x=new Foo;x.bar()",
         "var x=new Foo;x.bar()");
   }
@@ -541,62 +672,68 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   public void testNoInlineOfAsyncMethod_es5Style() {
     // Don't inline: the bar() call returns a Promise wrapping this.baz.
     testSame(
-        lines(
-            "function Foo(){}",
-            "Foo.prototype.bar = async function(){return this.baz};",
-            "var x = (new Foo).bar();",
-            "var y = (new Foo).bar();"));
+        """
+        function Foo(){}
+        Foo.prototype.bar = async function(){return this.baz};
+        var x = (new Foo).bar();
+        var y = (new Foo).bar();
+        """);
   }
 
   @Test
   public void testNoInlineOfAsyncMethod_es6Style() {
     // Don't inline: the bar() call returns a Promise wrapping this.baz.
     testSame(
-        lines(
-            "class Foo { async bar(){return this.baz} }",
-            "var x = (new Foo).bar();",
-            "var y = (new Foo).bar();"));
+        """
+        class Foo { async bar(){return this.baz} }
+        var x = (new Foo).bar();
+        var y = (new Foo).bar();
+        """);
   }
 
   @Test
   public void testNoInlineOfGeneratorMethod_es5Style() {
     // Don't inline: the bar() call returns a generator, not this.baz
     testSame(
-        lines(
-            "function Foo(){}",
-            "Foo.prototype.bar = function*(){return this.baz};",
-            "var x = (new Foo).bar();",
-            "var y = (new Foo).bar();"));
+        """
+        function Foo(){}
+        Foo.prototype.bar = function*(){return this.baz};
+        var x = (new Foo).bar();
+        var y = (new Foo).bar();
+        """);
   }
 
   @Test
   public void testNoInlineOfGeneratorMethod_es6Style() {
     // Don't inline: the bar() call returns a generator, not this.baz
     testSame(
-        lines(
-            "class Foo { *bar(){return this.baz} }",
-            "var x = (new Foo).bar();",
-            "var y = (new Foo).bar();"));
+        """
+        class Foo { *bar(){return this.baz} }
+        var x = (new Foo).bar();
+        var y = (new Foo).bar();
+        """);
   }
 
   @Test
   public void testNoInlineOfAsynceneratorMethod_es5Style() {
     // Don't inline: the bar() call returns an async generator, not this.baz
     testSame(
-        lines(
-            "function Foo(){}",
-            "Foo.prototype.bar = async function*(){return this.baz};",
-            "var x = (new Foo).bar();",
-            "var y =(new Foo).bar();"));
+        """
+        function Foo(){}
+        Foo.prototype.bar = async function*(){return this.baz};
+        var x = (new Foo).bar();
+        var y =(new Foo).bar();
+        """);
   }
 
   @Test
   public void testNoInlineOfAsyncGeneratorMethod_es6Style() {
     // Don't inline: the bar() call returns an async generator, not this.baz
     testSame(
-        lines(
-            "class Foo { async *bar(){return this.baz} }",
-            "var x = (new Foo).bar();",
-            "var y = (new Foo).bar();"));
+        """
+        class Foo { async *bar(){return this.baz} }
+        var x = (new Foo).bar();
+        var y = (new Foo).bar();
+        """);
   }
 }

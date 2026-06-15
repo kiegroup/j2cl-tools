@@ -1,7 +1,7 @@
 # Description:
 #   Thirdparty dependencies indirection for bazel.
 
-load("//build_defs:rules.bzl", "j2cl_alias", "j2cl_import", "j2cl_library")
+load("//build_defs:rules.bzl", "j2cl_import", "j2cl_library")
 
 package(
     default_visibility = ["//:__subpackages__"],
@@ -10,73 +10,60 @@ package(
 
 alias(
     name = "asm",
-    actual = "@org_ow2_asm_asm",
+    actual = "@google_bazel_common//third_party/java/asm",
 )
 
 alias(
     name = "guava",
-    actual = "@com_google_guava",
+    actual = "@google_bazel_common//third_party/java/guava",
 )
 
 alias(
     name = "jsr305_annotations",
-    actual = "@com_google_code_findbugs_jsr305",
+    actual = "@google_bazel_common//third_party/java/jsr305_annotations",
 )
 
 j2cl_import(
     name = "jsr305_annotations-j2cl",
-    jar = "@com_google_code_findbugs_jsr305//jar",
+    jar = ":jsr305_annotations",
 )
 
 alias(
     name = "j2objc_annotations",
-    actual = "@com_google_j2objc_annotations",
+    actual = "@maven//:com_google_j2objc_j2objc_annotations",
 )
 
 j2cl_import(
     name = "j2objc_annotations-j2cl",
-    jar = "@com_google_j2objc_annotations//jar",
+    jar = ":j2objc_annotations",
 )
 
 alias(
     name = "jspecify_annotations",
-    actual = "@org_jspecify",
+    actual = "@google_bazel_common//third_party/java/jspecify_annotations",
 )
 
 j2cl_import(
     name = "jspecify_annotations-j2cl",
-    jar = "@org_jspecify//jar",
+    jar = ":jspecify_annotations",
 )
 
 alias(
     name = "jscomp",
-    actual = "@io_bazel_rules_closure//closure/compiler",
+    actual = "@rules_closure//closure/compiler",
 )
 
 alias(
     name = "args4j",
-    actual = "@args4j",
+    actual = "@maven//:args4j_args4j",
 )
 
 java_library(
     name = "jdt-core",
     exports = [
-        "@org_eclipse_jdt_compiler_apt//jar",
-        "@org_eclipse_jdt_content_type//jar",
-        "@org_eclipse_jdt_core//jar",
-        "@org_eclipse_jdt_equinox_common//jar",
-        "@org_eclipse_jdt_equinox_preferences//jar",
-        "@org_eclipse_jdt_jobs//jar",
-        "@org_eclipse_jdt_osgi//jar",
-        "@org_eclipse_jdt_resources//jar",
-        "@org_eclipse_jdt_runtime//jar",
-        "@org_eclipse_jdt_text//jar",
+        "@maven//:org_eclipse_jdt_org_eclipse_jdt_core",
+        "@maven//:org_eclipse_platform_org_eclipse_equinox_common",
     ],
-)
-
-alias(
-    name = "javac",
-    actual = "@com_sun_tools_javac//jar",
 )
 
 alias(
@@ -86,52 +73,45 @@ alias(
 
 alias(
     name = "auto_value",
-    actual = "@com_google_auto_value",
+    actual = "@google_bazel_common//third_party/java/auto:value",
 )
 
 j2cl_import(
     name = "auto_value-j2cl",
-    jar = "@com_google_auto_value//jar",
+    jar = ":auto_value",
 )
 
-java_library(
+alias(
     name = "auto_service",
-    exported_plugins = [":auto_service_plugin"],
-    exports = ["@com_google_auto_service_annotations//jar"],
-)
-
-java_plugin(
-    name = "auto_service_plugin",
-    processor_class = "com.google.auto.service.processor.AutoServiceProcessor",
-    deps = [
-        ":auto_common",
-        ":guava",
-        "@com_google_auto_service//jar",
-        "@com_google_auto_service_annotations//jar",
-    ],
+    actual = "@google_bazel_common//third_party/java/auto:service",
 )
 
 alias(
     name = "auto_common",
-    actual = "@com_google_auto_common//jar",
+    actual = "@google_bazel_common//third_party/java/auto:common",
+)
+
+alias(
+    name = "error_prone_annotations",
+    actual = "@google_bazel_common//third_party/java/error_prone:annotations",
 )
 
 alias(
     name = "gson",
-    actual = "@com_google_code_gson",
+    actual = "@maven//:com_google_code_gson_gson",
 )
 
 java_library(
     name = "escapevelocity",
     exports = [
-        "@com_google_escapevelocity//jar",
+        "@maven//:com_google_escapevelocity_escapevelocity",
     ],
 )
 
 java_library(
     name = "junit",
     testonly = 1,
-    exports = ["@org_junit//jar"],
+    exports = ["@google_bazel_common//third_party/java/junit"],
 )
 
 j2cl_library(
@@ -143,19 +123,19 @@ j2cl_library(
 java_library(
     name = "mockito",
     testonly = 1,
-    exports = ["@org_mockito//jar"],
+    exports = ["@google_bazel_common//third_party/java/mockito"],
 )
 
 java_library(
     name = "truth",
     testonly = 1,
-    exports = ["@com_google_truth//jar"],
+    exports = ["@google_bazel_common//third_party/java/truth"],
 )
 
 java_library(
     name = "compile_testing",
     testonly = 1,
-    exports = ["@com_google_testing_compile//jar"],
+    exports = ["@maven//:com_google_testing_compile_compile_testing"],
 )
 
 alias(
@@ -165,32 +145,27 @@ alias(
 
 alias(
     name = "protobuf_util_json",
-    actual = "@com_google_protobuf//:protobuf_java_util",
-)
-
-alias(
-    name = "closure_asserts",
-    actual = "@com_google_javascript_closure_library//closure/goog/asserts",
+    actual = "@protobuf//:protobuf_java_util",
 )
 
 alias(
     name = "closure_math_long",
-    actual = "@com_google_javascript_closure_library//closure/goog/math:long",
+    actual = "@rules_closure//closure/library:long",
 )
 
 alias(
     name = "closure_reflect",
-    actual = "@com_google_javascript_closure_library//closure/goog/reflect",
+    actual = "@rules_closure//closure/library:reflect",
 )
 
 alias(
     name = "closure_testcase",
-    actual = "@com_google_javascript_closure_library//closure/goog/testing:testcase",
+    actual = "@rules_closure//closure/testing/library:testcase",
 )
 
 alias(
     name = "closure_testsuite",
-    actual = "@com_google_javascript_closure_library//closure/goog/testing:testsuite",
+    actual = "@rules_closure//closure/testing/library:testsuite",
 )
 
 alias(
@@ -198,14 +173,14 @@ alias(
     actual = "@com_google_jsinterop_annotations-j2cl//:jsinterop-annotations",
 )
 
-j2cl_alias(
+j2cl_import(
     name = "jsinterop-annotations-j2cl",
-    actual = "@com_google_jsinterop_annotations-j2cl//:jsinterop-annotations-j2cl",
+    jar = ":jsinterop-annotations",
 )
 
 alias(
     name = "jsinterop-annotations-j2cl_jar",
-    actual = "@com_google_jsinterop_annotations-j2cl//java/jsinterop/annotations:annotations-j2cl_jar",
+    actual = ":jsinterop-annotations",
     visibility = ["//jre/java:__pkg__"],
 )
 

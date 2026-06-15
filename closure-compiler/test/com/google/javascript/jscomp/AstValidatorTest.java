@@ -115,27 +115,28 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testValidGetPropAndGetElem() {
     valid(
-        lines(
-            "a.b;", //
-            "a['b'];"));
+        """
+        a.b;
+        a['b'];
+        """);
   }
 
   @Test
   public void testClass() {
     valid(
-        lines(
-            "class C {",
-            "  get m1() {return 1}",
-            "  set m1(a) {}",
-            "  m2(a) {}",
-            "}",
-            "",
-            "/** @dict */",
-            "class D {",
-            "  ['m2']() {}",
-            "  [m2]() {}",
-            "}",
-            ""));
+        """
+        class C {
+          get m1() {return 1}
+          set m1(a) {}
+          m2(a) {}
+        }
+
+        /** @dict */
+        class D {
+          ['m2']() {}
+          [m2]() {}
+        }
+        """);
 
     this.typeInfoValidationMode = TypeInfoValidation.NONE; // synthetic AST w/o types
 
@@ -168,12 +169,12 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("class C {x = 2;}");
     valid("class C {x; y;}");
     valid(
-        lines(
-            "class C {", //
-            "  x",
-            "  y",
-            "}",
-            ""));
+        """
+        class C {
+          x
+          y
+        }
+        """);
   }
 
   @Test
@@ -183,58 +184,65 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("class C {static x = 2;}");
     valid("class C {static x; static y;}");
     valid(
-        lines(
-            "class C {", //
-            "  static x",
-            "  static y",
-            "}",
-            ""));
+        """
+        class C {
+          static x
+          static y
+        }
+        """);
   }
 
   @Test
   public void testClassField_super() {
     valid(
-        lines(
-            "class B { static x = 2}",
-            "class C extends B {", //
-            "  static y = super.x;",
-            "}"));
+        """
+        class B { static x = 2}
+        class C extends B {
+          static y = super.x;
+        }
+        """);
     valid(
-        lines(
-            "class B { static x = 2}",
-            "class C extends B {", //
-            "  static y = super.x;",
-            "}"));
+        """
+        class B { static x = 2}
+        class C extends B {
+          static y = super.x;
+        }
+        """);
     valid(
-        lines(
-            "class B { static x = 2}",
-            "class C extends B {", //
-            "  static y = super.x + 2;",
-            "}"));
+        """
+        class B { static x = 2}
+        class C extends B {
+          static y = super.x + 2;
+        }
+        """);
     valid(
-        lines(
-            "class B { static x = 2 }",
-            "class C extends B {", //
-            "   static y = super.x + 2 + 4 + 6 - 8;",
-            "}"));
+        """
+        class B { static x = 2 }
+        class C extends B {
+           static y = super.x + 2 + 4 + 6 - 8;
+        }
+        """);
     valid(
-        lines(
-            "class B { static x = 2 }",
-            "/** @unrestricted */ class C extends B {", //
-            "   static ['y'] = super.x;",
-            "}"));
+        """
+        class B { static x = 2 }
+        /** @unrestricted */ class C extends B {
+           static ['y'] = super.x;
+        }
+        """);
     valid(
-        lines(
-            "class C { x=1;}", //
-            "class D extends C {",
-            "  y = () => super.x;",
-            "}"));
+        """
+        class C { x=1;}
+        class D extends C {
+          y = () => super.x;
+        }
+        """);
     invalid(
-        lines(
-            "class C { x=1;}", //
-            "class D extends C {",
-            "  y = function() { super.x; }",
-            "}"));
+        """
+        class C { x=1;}
+        class D extends C {
+          y = function() { super.x; }
+        }
+        """);
   }
 
   @Test
@@ -244,13 +252,13 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("/** @dict */ class C { 'x'=2; }");
     valid("/** @dict */ class C { 1=2; }");
     valid(
-        lines(
-            "/** @unrestricted */", //
-            "class C {",
-            "  [x]=2",
-            "  static y = 4",
-            "}",
-            ""));
+        """
+        /** @unrestricted */
+        class C {
+          [x]=2
+          static y = 4
+        }
+        """);
   }
 
   @Test
@@ -260,35 +268,35 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("/** @dict */ class C { static 'x'=2; }");
     valid("/** @dict */ class C { static 1=2; }");
     valid(
-        lines(
-            "/** @unrestricted */", //
-            "class C {",
-            "  static [x]=2",
-            "  static y = 4",
-            "}",
-            ""));
+        """
+        /** @unrestricted */
+        class C {
+          static [x]=2
+          static y = 4
+        }
+        """);
   }
 
   @Test
   public void testFeatureValidation_classField() {
     testFeatureValidation(
-        lines(
-            "class C {", //
-            "  x=2;",
-            "}",
-            ""),
+        """
+        class C {
+          x=2;
+        }
+        """,
         Feature.PUBLIC_CLASS_FIELDS);
   }
 
   @Test
   public void testFeatureValidation_classComputedField() {
     testFeatureValidation(
-        lines(
-            "/** @dict */", //
-            "class C {", //
-            "  [x]=2;",
-            "}",
-            ""),
+        """
+        /** @dict */
+        class C {
+          [x]=2;
+        }
+        """,
         Feature.PUBLIC_CLASS_FIELDS);
   }
 
@@ -296,12 +304,12 @@ public final class AstValidatorTest extends CompilerTestCase {
   public void testClassStaticBlock() {
 
     valid(
-        lines(
-            "class C {", //
-            "  static {",
-            "  }",
-            "}",
-            ""));
+        """
+        class C {
+          static {
+          }
+        }
+        """);
   }
 
   @Test
@@ -310,13 +318,13 @@ public final class AstValidatorTest extends CompilerTestCase {
     typeInfoValidationMode = TypeInfoValidation.NONE;
     disableTypeCheck();
     valid(
-        lines(
-            "class C {", //
-            "  static {",
-            "    this.prop = 4;",
-            "  }",
-            "}",
-            ""));
+        """
+        class C {
+          static {
+            this.prop = 4;
+          }
+        }
+        """);
   }
 
   @Test
@@ -325,16 +333,16 @@ public final class AstValidatorTest extends CompilerTestCase {
     typeInfoValidationMode = TypeInfoValidation.NONE;
     disableTypeCheck();
     valid(
-        lines(
-            "class D {",
-            "  static field;",
-            "}",
-            "class C extends D {",
-            "  static {",
-            "    if (Foo) { super.field = 'hello'; }",
-            "  }",
-            "}",
-            ""));
+        """
+        class D {
+          static field;
+        }
+        class C extends D {
+          static {
+            if (Foo) { super.field = 'hello'; }
+          }
+        }
+        """);
   }
 
   @Test
@@ -343,25 +351,25 @@ public final class AstValidatorTest extends CompilerTestCase {
     typeInfoValidationMode = TypeInfoValidation.NONE;
     disableTypeCheck();
     invalid(
-        lines(
-            "class D {}", //
-            "class C extends D {",
-            "  static {",
-            "    super();",
-            "  }",
-            "}",
-            ""));
+        """
+        class D {}
+        class C extends D {
+          static {
+            super();
+          }
+        }
+        """);
   }
 
   @Test
   public void testFeatureValidation_classStaticBlock() {
     testFeatureValidation(
-        lines(
-            "class C {", //
-            "  static {",
-            "  }",
-            "}",
-            ""),
+        """
+        class C {
+          static {
+          }
+        }
+        """,
         Feature.CLASS_STATIC_BLOCK);
   }
 
@@ -696,15 +704,15 @@ public final class AstValidatorTest extends CompilerTestCase {
     typeInfoValidationMode = TypeInfoValidation.NONE;
     Node scriptNode =
         parseValidScript(
-            lines(
-                "async function outer(){",
-                // `await` in a parameter default value is not allowed,
-                // regardless of whether the function with the parameter is an
-                // async function or enclosed in an async function.
-                "  async function inner(a = replaceWithAwait) {",
-                "  }",
-                "}",
-                ""));
+            """
+            async function outer(){
+            // `await` in a parameter default value is not allowed,
+            // regardless of whether the function with the parameter is an
+            // async function or enclosed in an async function.
+              async function inner(a = replaceWithAwait) {
+              }
+            }
+            """);
 
     Node awaitNode = new Node(Token.AWAIT);
     awaitNode.addChildToBack(IR.number(1));
@@ -724,15 +732,15 @@ public final class AstValidatorTest extends CompilerTestCase {
     typeInfoValidationMode = TypeInfoValidation.NONE;
     Node scriptNode =
         parseValidScript(
-            lines(
-                "function *outer(){",
-                // `yield` in a parameter default value is not allowed,
-                // regardless of whether the function with the parameter is a generator
-                // or is enclosed in a generator function.
-                "  function *inner(a = replaceWithYield) {",
-                "  }",
-                "}",
-                ""));
+            """
+            function *outer(){
+            // `yield` in a parameter default value is not allowed,
+            // regardless of whether the function with the parameter is a generator
+            // or is enclosed in a generator function.
+              function *inner(a = replaceWithYield) {
+              }
+            }
+            """);
 
     Node yieldNode = new Node(Token.YIELD);
     yieldNode.addChildToBack(IR.number(1));
@@ -965,16 +973,16 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testGetter() {
     valid(
-        lines(
-            "class C {", //
-            "  get m1() {return 1}",
-            "}",
-            "",
-            "/** @dict */",
-            "class D {", //
-            "  get ['m2']() {return 2}",
-            "}",
-            ""));
+        """
+        class C {
+          get m1() {return 1}
+        }
+
+        /** @dict */
+        class D {
+          get ['m2']() {return 2}
+        }
+        """);
 
     // Since we're modifying the AST by hand below, there won't be any types on it.
     typeInfoValidationMode = TypeInfoValidation.NONE;
@@ -1090,51 +1098,51 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testSuperInvalidInNonMemberFunction() {
     invalid(
-        lines(
-            "function nonMethod() {", //
-            "  return super.toString();",
-            "}",
-            ""));
+        """
+        function nonMethod() {
+          return super.toString();
+        }
+        """);
   }
 
   @Test
   public void testSuperPropReferenceIsValidInClassWithoutExtendsClause() {
     valid(
-        lines(
-            "class C {", //
-            "  method() {",
-            "    super.prop;",
-            "    super['prop'];",
-            "  }",
-            "}",
-            ""));
+        """
+        class C {
+          method() {
+            super.prop;
+            super['prop'];
+          }
+        }
+        """);
   }
 
   @Test
   public void testSuperPropReferenceIsValidInObjectLiteralMethod() {
     valid(
-        lines(
-            "const myObj = {", //
-            "  method() {",
-            "    super.prop;",
-            "    super['prop'];",
-            "  }",
-            "};",
-            ""));
+        """
+        const myObj = {
+          method() {
+            super.prop;
+            super['prop'];
+          }
+        };
+        """);
   }
 
   @Test
   public void testSuperInvalidAsAnExpression() {
     Node scriptNode =
         parseValidScript(
-            lines(
-                "class D {}", //
-                "class C extends D {",
-                "  method() {",
-                "    return replaceWithSuper;",
-                "  }",
-                "}",
-                ""));
+            """
+            class D {}
+            class C extends D {
+              method() {
+                return replaceWithSuper;
+              }
+            }
+            """);
 
     Node nodeToReplace =
         stream(NodeUtil.preOrderIterable(scriptNode))
@@ -1150,13 +1158,13 @@ public final class AstValidatorTest extends CompilerTestCase {
   public void testSuperInvalidIfTypeInfoIsMissing() {
     Node scriptNode =
         parseValidScript(
-            lines(
-                "class C {", //
-                "  method() {",
-                "    return super.toString();",
-                "  }",
-                "}",
-                ""));
+            """
+            class C {
+              method() {
+                return super.toString();
+              }
+            }
+            """);
 
     Node superNode =
         stream(NodeUtil.preOrderIterable(scriptNode)).filter(Node::isSuper).findFirst().get();
@@ -1169,66 +1177,66 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testValidSuperConstructorCall() {
     valid(
-        lines(
-            "class D {}", //
-            "class C extends D {",
-            "  constructor() {",
-            "    super();",
-            "  }",
-            "}",
-            ""));
+        """
+        class D {}
+        class C extends D {
+          constructor() {
+            super();
+          }
+        }
+        """);
   }
 
   @Test
   public void testInvalidSuperConstructorCallInNonConstructor() {
     invalid(
-        lines(
-            "class D {}", //
-            "class C extends D {",
-            "  nonConstructor() {",
-            "    super();",
-            "  }",
-            "}",
-            ""));
+        """
+        class D {}
+        class C extends D {
+          nonConstructor() {
+            super();
+          }
+        }
+        """);
   }
 
   @Test
   public void testSuperConstructorCallInvalidInClassWithoutExtendsClause() {
     invalid(
-        lines(
-            "class C {", //
-            "  constructor() {",
-            "    super();",
-            "  }",
-            "}",
-            ""));
+        """
+        class C {
+          constructor() {
+            super();
+          }
+        }
+        """);
   }
 
   @Test
   public void testSuperConstructorCallInvalidInObjectLiteralMethod() {
     invalid(
-        lines(
-            "const myObj = {", //
-            "  constructor() {",
-            "    return super();",
-            "  }",
-            "}",
-            ""));
+        """
+        const myObj = {
+          constructor() {
+            return super();
+          }
+        }
+        """);
   }
 
   @Test
   public void testSetter() {
     valid(
-        lines(
-            "class C {", //
-            "  set m1(value) {}",
-            "}",
-            "",
-            "/** @dict */",
-            "class D {", //
-            "  set ['m2'](value) {}",
-            "}",
-            ""));
+        """
+        class C {
+          set m1(value) {}
+        }
+
+        /** @dict */
+        class D {
+          set ['m2'](value) {}
+        }
+        """);
 
     // Since we're modifying the AST by hand below, there won't be types on some nodes that need
     // them.
@@ -1301,11 +1309,6 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testFeatureValidation_classExtends() {
-    testFeatureValidation("class B {} class C extends B {}", Feature.CLASS_EXTENDS);
-  }
-
-  @Test
   public void testFeatureValidation_arrowFunctions() {
     testFeatureValidation("var arrow = () => 3", Feature.ARROW_FUNCTIONS);
     testFeatureValidation("var asyncArrow = async () => 3", Feature.ARROW_FUNCTIONS);
@@ -1352,17 +1355,17 @@ public final class AstValidatorTest extends CompilerTestCase {
     testFeatureValidation("var x, {a, b} = {a: 1, b: 2};", Feature.OBJECT_DESTRUCTURING);
     testFeatureValidation("(x = 0, {a, b} = {a: 1, b: 2});", Feature.OBJECT_DESTRUCTURING);
     testFeatureValidation(
-        lines(
-            "/** @type {!Array<{a: string, b:string}>} */",
-            "const c = [];",
-            "for ({a, b} of c) {}",
-            ""),
+        """
+        /** @type {!Array<{a: string, b:string}>} */
+        const c = [];
+        for ({a, b} of c) {}
+        """,
         Feature.OBJECT_DESTRUCTURING);
     testFeatureValidation(
-        lines(
-            "/** @param {{a: string, b:string}} p1 */", //
-            "function f({a, b}) {}",
-            ""),
+        """
+        /** @param {{a: string, b:string}} p1 */
+        function f({a, b}) {}
+        """,
         Feature.OBJECT_DESTRUCTURING);
   }
 
@@ -1570,15 +1573,16 @@ public final class AstValidatorTest extends CompilerTestCase {
     typeInfoValidationMode = TypeInfoValidation.NONE;
 
     String switchStatement =
-        lines(
-            "function foo(x) {",
-            "  switch(x) {",
-            "    case 1: ",
-            "      var y = 5;",
-            "    case 2: ",
-            "      var y = 5;",
-            "  }",
-            "}");
+        """
+        function foo(x) {
+          switch(x) {
+            case 1:
+              var y = 5;
+            case 2:
+              var y = 5;
+          }
+        }
+        """;
 
     valid(switchStatement);
 
@@ -1686,5 +1690,34 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     script.putProp(Node.FEATURE_SET, currentFeatures.without(feature));
     expectInvalid(script, Check.SCRIPT);
+  }
+
+  @Test
+  public void testShadowContent_validatesSingularExpectedStructure() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    typeInfoValidationMode = TypeInfoValidation.NONE;
+
+    Node shadowHost = IR.name("f");
+    Node f = IR.exprResult(shadowHost);
+    expectValid(f, Check.STATEMENT);
+
+    shadowHost.setClosureUnawareShadow(IR.name("x"));
+    expectInvalid(f, Check.STATEMENT, "Shadow reference node is not a ROOT node");
+
+    shadowHost.setClosureUnawareShadow(IR.root());
+    expectInvalid(f, Check.STATEMENT, "Shadow root node's child is not a script node");
+
+    shadowHost.setClosureUnawareShadow(
+        IR.root(IR.script(IR.exprResult(IR.name("x")), IR.exprResult(IR.name("y")))));
+    expectInvalid(f, Check.STATEMENT, "Shadow SCRIPT node child has more than one child");
+
+    shadowHost.setClosureUnawareShadow(IR.root(this.parseValidScript("function foo(){}").detach()));
+    expectInvalid(f, Check.STATEMENT, "Shadow SCRIPT node child is not an expr result node");
+
+    shadowHost.setClosureUnawareShadow(IR.root(this.parseValidScript("(x++)").detach()));
+    expectInvalid(f, Check.STATEMENT, "Shadow node EXPR_RESULT child is not a function");
+
+    shadowHost.setClosureUnawareShadow(IR.root(this.parseValidScript("(function(){})").detach()));
+    expectValid(f, Check.STATEMENT);
   }
 }

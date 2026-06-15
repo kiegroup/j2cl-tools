@@ -29,25 +29,18 @@ import com.google.j2cl.transpiler.ast.TypeVariable
 import com.google.j2cl.transpiler.ast.Variable
 import com.google.j2cl.transpiler.backend.kotlin.ast.CompanionDeclaration
 import com.google.j2cl.transpiler.backend.kotlin.ast.Visibility as KtVisibility
-import com.google.j2cl.transpiler.backend.kotlin.common.camelCaseStartsWith
 import com.google.j2cl.transpiler.backend.kotlin.common.letIf
 import com.google.j2cl.transpiler.backend.kotlin.common.mapFirst
 import com.google.j2cl.transpiler.backend.kotlin.common.titleCased
 
 /** The names are mangled according to J2ObjC rules. */
-internal data class MethodObjCNames(val methodName: String, val parameterNames: List<String>)
+internal data class MethodObjCNames(val objCName: ObjCName, val parameterObjCNames: List<ObjCName>)
+
+/** ObjC name, together with its Swift counterpart. */
+internal data class ObjCName(val string: String, val swiftString: String? = null)
 
 internal val String.escapeObjCKeyword
   get() = letIf(objCKeywords.contains(this)) { it + "_" }
-
-internal fun String.escapeReservedObjCPrefixWith(newPrefix: String) =
-  letIf(objCReservedPrefixes.any { camelCaseStartsWith(it) }) { "$newPrefix$titleCased" }
-
-internal val String.escapeObjCProperty: String
-  get() = escapeObjCKeyword.escapeReservedObjCPrefixWith("do")
-
-internal val String.escapeObjCEnumProperty: String
-  get() = escapeObjCKeyword.escapeReservedObjCPrefixWith("the")
 
 internal val KtVisibility.needsObjCNameAnnotation
   get() = isPublic || isProtected
@@ -61,24 +54,25 @@ internal fun Method.toObjCNames(): MethodObjCNames? =
 internal fun Method.toConstructorObjCNames(): MethodObjCNames =
   descriptor.objectiveCName.let { objectiveCName ->
     MethodObjCNames(
-      "init",
+      ObjCName(string = "init"),
       if (
-        objectiveCName != null &&
-          (objectiveCName.contains(":") || objectiveCName.startsWith("initWith"))
-      ) {
-        objectiveCName.objCMethodParameterNames.mapFirst {
-          val prefix = "initWith"
-          if (it.startsWith(prefix)) {
-            it.substring(prefix.length)
-          } else {
-            parameters.first().objCName
+          objectiveCName != null &&
+            (objectiveCName.contains(":") || objectiveCName.startsWith("initWith"))
+        ) {
+          objectiveCName.objCMethodParameterNames.mapFirst {
+            val prefix = "initWith"
+            if (it.startsWith(prefix)) {
+              it.substring(prefix.length)
+            } else {
+              parameters.first().objCName
+            }
+          }
+        } else {
+          parameters.mapIndexed { index, parameter ->
+            parameter.objCName.letIf(index != 0) { "with$it" }
           }
         }
-      } else {
-        parameters.mapIndexed { index, parameter ->
-          parameter.objCName.letIf(index != 0) { "with$it" }
-        }
-      },
+        .map { ObjCName(string = it) },
     )
   }
 
@@ -86,8 +80,13 @@ internal fun Method.toNonConstructorObjCNames(): MethodObjCNames =
   descriptor.objectiveCName.let { objectiveCName ->
     if (objectiveCName == null || !objectiveCName.contains(":")) {
       MethodObjCNames(
-        objectiveCName ?: descriptor.ktName.escapeJ2ObjCKeyword,
-        parameters.map { "with${it.objCName}" },
+        ObjCName(
+          string = objectiveCName ?: descriptor.ktName.escapeJ2ObjCKeyword,
+          swiftString = swiftName,
+        ),
+        parameters.map {
+          ObjCName(string = it.objCParameterName, swiftString = swiftParameterName(it))
+        },
       )
     } else {
       val objCParameterNames = objectiveCName.objCMethodParameterNames
@@ -104,8 +103,8 @@ internal fun Method.toNonConstructorObjCNames(): MethodObjCNames =
           ?: firstObjCParameterName.indexOfLast { it.isUpperCase() }.takeIf { it > 0 }
           ?: firstObjCParameterName.length.div(2)
       MethodObjCNames(
-        firstObjCParameterName.substring(0, splitIndex),
-        objCParameterNames.mapFirst { it.substring(splitIndex) },
+        ObjCName(string = firstObjCParameterName.substring(0, splitIndex)),
+        objCParameterNames.mapFirst { it.substring(splitIndex) }.map { ObjCName(string = it) },
       )
     }
   }
@@ -113,10 +112,7 @@ internal fun Method.toNonConstructorObjCNames(): MethodObjCNames =
 private val String.objCMethodParameterNames: List<String>
   get() = letIf(lastOrNull() == ':') { dropLast(1) }.split(":")
 
-private const val OBJC_TYPE_NAME_PREFIX: String = "J2kt"
-
-internal val TypeDeclaration.objCName: String
-  get() = OBJC_TYPE_NAME_PREFIX + objCNameWithoutPrefix
+internal fun TypeDeclaration.objCName(prefix: String): String = prefix + objCNameWithoutPrefix
 
 internal val TypeDeclaration.objCNameWithoutPrefix: String
   get() = mappedObjCName ?: nonMappedObjCName
@@ -124,8 +120,8 @@ internal val TypeDeclaration.objCNameWithoutPrefix: String
 private val String.objCCompanionTypeName: String
   get() = this + "Companion"
 
-internal val CompanionDeclaration.objCName
-  get() = enclosingTypeDeclaration.objCName.objCCompanionTypeName
+internal fun CompanionDeclaration.objCName(prefix: String) =
+  enclosingTypeDeclaration.objCName(prefix).objCCompanionTypeName
 
 internal val CompanionDeclaration.objCNameWithoutPrefix
   get() = enclosingTypeDeclaration.objCNameWithoutPrefix.objCCompanionTypeName
@@ -214,24 +210,28 @@ private val ArrayTypeDescriptor.dimensionsSuffix: String
 private fun TypeVariable.variableObjCName(useId: Boolean): String =
   upperBoundTypeDescriptor.objCName(useId = useId)
 
-private val Variable.objCName: String
+internal val Variable.objCName: String
   get() = typeDescriptor.objCName(useId = true).titleCased
+
+internal val Variable.objCParameterName: String
+  get() = "with$objCName"
 
 internal val FieldDescriptor.objCName: String
   get() = name!!.objCName.escapeJ2ObjCKeyword.letIf(!isEnumConstant) { it + "_" }
 
 internal fun MethodObjCNames.escapeObjCMethod(isConstructor: Boolean): MethodObjCNames =
   copy(
-    methodName =
-      methodName
-        .letIf(parameterNames.isEmpty()) { it.escapeObjCKeyword }
-        .letIf(!isConstructor) { it.escapeReservedObjCPrefixWith("do") },
-    parameterNames = parameterNames.letIf(isConstructor) { it.mapFirst { "With$it" } },
+    objCName =
+      ObjCName(
+        string =
+          objCName.string
+            .letIf(parameterObjCNames.isEmpty()) { it.escapeObjCKeyword }
+      ),
+    parameterObjCNames =
+      parameterObjCNames.letIf(isConstructor) {
+        it.mapFirst { ObjCName(string = "With${it.string}") }
+      },
   )
-
-// Taken from GitHub:
-// "JetBrains/kotlin-native/backend.native/compiler/ir/backend.native/src/org/jetbrains/kotlin/backend/konan/objcexport/ObjCExportNamer.kt"
-private val objCReservedPrefixes = setOf("alloc", "copy", "mutableCopy", "new", "init")
 
 // Taken from GitHub:
 // "JetBrains/kotlin-native/backend.native/compiler/ir/backend.native/src/org/jetbrains/kotlin/backend/konan/CAdapterGenerator.kt"

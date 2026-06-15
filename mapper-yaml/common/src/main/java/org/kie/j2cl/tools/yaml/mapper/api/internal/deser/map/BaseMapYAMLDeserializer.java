@@ -23,19 +23,15 @@ import org.kie.j2cl.tools.yaml.mapper.api.node.YamlMapping;
 import org.kie.j2cl.tools.yaml.mapper.api.node.YamlNode;
 
 /**
- * Base {@link YAMLDeserializer} implementation for {@link java.util.Map}.
+ * Base {@link YAMLDeserializer} implementation for {@link Map}.
  *
- * @param <M> Type of the {@link java.util.Map}
- * @param <K> Type of the keys inside the {@link java.util.Map}
- * @param <V> Type of the values inside the {@link java.util.Map}
+ * @param <M> Type of the {@link Map}
+ * @param <V> Type of the values inside the {@link Map}
  * @author Nicolas Morel
  * @version $Id: $
  */
-public abstract class BaseMapYAMLDeserializer<M extends Map<K, V>, K, V>
+public abstract class BaseMapYAMLDeserializer<M extends Map<String, V>, V>
     implements YAMLDeserializer<M> {
-
-  /** {@link YAMLDeserializer} used to deserialize the keys. */
-  protected final YAMLDeserializer<K> keyDeserializer;
 
   /** {@link YAMLDeserializer} used to deserialize the values. */
   protected final YAMLDeserializer<V> valueDeserializer;
@@ -43,30 +39,34 @@ public abstract class BaseMapYAMLDeserializer<M extends Map<K, V>, K, V>
   /**
    * Constructor for BaseMapYAMLDeserializer.
    *
-   * @param keyDeserializer {@link YAMLDeserializer} used to deserialize the keys.
    * @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values.
    */
-  protected BaseMapYAMLDeserializer(
-      YAMLDeserializer<K> keyDeserializer, YAMLDeserializer<V> valueDeserializer) {
-    if (null == keyDeserializer) {
-      throw new IllegalArgumentException("keyDeserializer cannot be null");
-    }
+  protected BaseMapYAMLDeserializer(YAMLDeserializer<V> valueDeserializer) {
     if (null == valueDeserializer) {
       throw new IllegalArgumentException("valueDeserializer cannot be null");
     }
-    this.keyDeserializer = keyDeserializer;
     this.valueDeserializer = valueDeserializer;
   }
 
   /** {@inheritDoc} */
   @Override
   public M deserialize(YamlMapping yaml, String key, YAMLDeserializationContext ctx) {
-    throw new UnsupportedOperationException();
+    YamlNode node = yaml.getNode(key);
+    if (null == node) {
+      return null;
+    }
+    return deserialize(node, ctx);
   }
 
   @Override
   public M deserialize(YamlNode node, YAMLDeserializationContext ctx) {
-    throw new UnsupportedOperationException("Not implemented yet");
+    M map = newMap();
+    for (String key : node.asMapping().keys()) {
+      YamlNode temp = node.asMapping().getNode(key);
+      V value = valueDeserializer.deserialize(temp, ctx);
+      map.put(key, value);
+    }
+    return map;
   }
 
   /**

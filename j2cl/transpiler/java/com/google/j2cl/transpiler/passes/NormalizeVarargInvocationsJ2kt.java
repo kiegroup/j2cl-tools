@@ -45,8 +45,7 @@ public class NormalizeVarargInvocationsJ2kt extends NormalizationPass {
             Expression arrayExpression = Iterables.getLast(invocation.getArguments());
 
             // If the last argument is an array literal, unwrap it and pass arguments directly.
-            if (arrayExpression instanceof ArrayLiteral) {
-              ArrayLiteral arrayLiteral = (ArrayLiteral) arrayExpression;
+            if (arrayExpression instanceof ArrayLiteral arrayLiteral) {
               if (canUnwrapVarargArgument(invocation, arrayLiteral)) {
                 return Invocation.Builder.from(invocation)
                     .replaceVarargsArgument(arrayLiteral.getValueExpressions())
@@ -55,8 +54,14 @@ public class NormalizeVarargInvocationsJ2kt extends NormalizationPass {
             }
 
             // Otherwise, apply spread operator to the array.
+            // When an expression of an array type is passed explicitly to a varargs method it might
+            // be null, so not-null assertion is necessary.
+            if (arrayExpression.canBeNull()) {
+              arrayExpression = arrayExpression.postfixNotNullAssertion();
+            }
+
             return MethodCall.Builder.from(invocation)
-                .replaceVarargsArgument(arrayExpression.postfixNotNullAssertion().prefixSpread())
+                .replaceVarargsArgument(arrayExpression.prefixSpread())
                 .build();
           }
         });

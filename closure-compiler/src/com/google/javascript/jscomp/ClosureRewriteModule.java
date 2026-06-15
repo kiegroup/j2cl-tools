@@ -38,6 +38,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
@@ -139,7 +140,8 @@ final class ClosureRewriteModule implements CompilerPass {
   static final DiagnosticType ILLEGAL_MODULE_RENAMING_CONFLICT =
       DiagnosticType.error(
           "JSC_ILLEGAL_MODULE_RENAMING_CONFLICT",
-          "Internal compiler error: rewritten module global name {0} is already in use.");
+          "Internal compiler error: rewritten module global name {0} is already in use.\n"
+              + "Original definition: {1}");
 
   static final DiagnosticType ILLEGAL_STMT_OF_GOOG_REQUIRE_DYNAMIC_IN_AWAIT =
       DiagnosticType.error(
@@ -157,6 +159,8 @@ final class ClosureRewriteModule implements CompilerPass {
   private static final Node GOOG_MODULE = IR.getprop(IR.name("goog"), "module");
   private static final Node GOOG_MODULE_DECLARELEGACYNAMESPACE =
       IR.getprop(GOOG_MODULE, "declareLegacyNamespace");
+  private static final QualifiedName GOOG_MODULE_PREVENTMODULEEXPORTSEALING =
+      QualifiedName.of("goog.module.preventModuleExportSealing");
   private static final Node GOOG_MODULE_GET = IR.getprop(GOOG_MODULE.cloneTree(), "get");
   private static final Node GOOG_PROVIDE = IR.getprop(IR.name("goog"), "provide");
   private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), "require");
@@ -195,7 +199,7 @@ final class ClosureRewriteModule implements CompilerPass {
     final Node requireNode;
     final String namespaceId;
 
-    UnrecognizedRequire(Node requireNode, String namespaceId, boolean mustBeOrdered) {
+    UnrecognizedRequire(Node requireNode, String namespaceId) {
       this.requireNode = requireNode;
       this.namespaceId = namespaceId;
     }
@@ -376,7 +380,7 @@ final class ClosureRewriteModule implements CompilerPass {
           } else if (method.matchesQualifiedName(GOOG_PROVIDE)) {
             recordGoogProvide(t, n);
           } else if (method.matchesQualifiedName(GOOG_REQUIRE)) {
-            recordGoogRequire(t, n, /* mustBeOrdered= */ true);
+            recordGoogRequire(t, n);
           } else if (method.matchesQualifiedName(GOOG_REQUIRETYPE)) {
             recordGoogRequireType(t, n);
           } else if (method.matchesQualifiedName(GOOG_REQUIREDYNAMIC)) {
@@ -480,6 +484,8 @@ final class ClosureRewriteModule implements CompilerPass {
             updateGoogRequire(t, n);
           } else if (method.matchesQualifiedName(GOOG_FORWARDDECLARE) && !parent.isExprResult()) {
             updateGoogForwardDeclare(t, n);
+          } else if (GOOG_MODULE_PREVENTMODULEEXPORTSEALING.matches(method)) {
+            updateGoogPreventModuleExportsSealing(n);
           }
           break;
 
@@ -904,7 +910,7 @@ final class ClosureRewriteModule implements CompilerPass {
     updateLegacyScriptNamespacesAndPrefixes(namespaceId);
   }
 
-  private void recordGoogRequire(NodeTraversal t, Node call, boolean mustBeOrdered) {
+  private void recordGoogRequire(NodeTraversal t, Node call) {
     maybeSplitMultiVar(call);
 
     Node namespaceIdNode = call.getLastChild();
@@ -919,7 +925,7 @@ final class ClosureRewriteModule implements CompilerPass {
     boolean targetIsAModule = rewriteState.containsModule(namespaceId);
     boolean targetIsALegacyScript = rewriteState.providedNamespaces.contains(namespaceId);
     if (currentScript.isModule && !targetIsAModule && !targetIsALegacyScript) {
-      unrecognizedRequires.add(new UnrecognizedRequire(call, namespaceId, mustBeOrdered));
+      unrecognizedRequires.add(new UnrecognizedRequire(call, namespaceId));
     }
   }
 
@@ -933,7 +939,7 @@ final class ClosureRewriteModule implements CompilerPass {
     // For purposes of import collection, goog.requireType is the same as goog.require but
     // a goog.requireType call is not required to appear after the corresponding namespace
     // definition.
-    recordGoogRequire(t, call, /* mustBeOrdered= */ false);
+    recordGoogRequire(t, call);
   }
 
   private void recordGoogForwardDeclare(NodeTraversal t, Node call) {
@@ -943,13 +949,8 @@ final class ClosureRewriteModule implements CompilerPass {
       return;
     }
 
-    // modules already require that goog.forwardDeclare() and goog.module.get() occur in matched
-    // pairs. If a "missing module" error were to occur here it would also occur in the matching
-    // goog.module.get(). To avoid reporting the error twice suppress it here.
-    boolean mustBeOrdered = false;
-
     // For purposes of import collection, goog.forwardDeclare is the same as goog.require.
-    recordGoogRequire(t, call, mustBeOrdered);
+    recordGoogRequire(t, call);
   }
 
   private void recordGoogRequireDynamic(NodeTraversal t, Node call) {
@@ -962,8 +963,7 @@ final class ClosureRewriteModule implements CompilerPass {
     String namespaceId = namespaceIdNode.getString();
 
     if (!rewriteState.containsModule(namespaceId)) {
-      unrecognizedRequires.add(
-          new UnrecognizedRequire(call, namespaceId, /* mustBeOrdered= */ false));
+      unrecognizedRequires.add(new UnrecognizedRequire(call, namespaceId));
     }
     this.googRequireDynamicCalls.add(call);
   }
@@ -977,8 +977,7 @@ final class ClosureRewriteModule implements CompilerPass {
     String namespaceId = namespaceIdNode.getString();
 
     if (!rewriteState.containsModule(namespaceId)) {
-      unrecognizedRequires.add(
-          new UnrecognizedRequire(call, namespaceId, /* mustBeOrdered= */ false));
+      unrecognizedRequires.add(new UnrecognizedRequire(call, namespaceId));
     }
     this.googModuleGetCalls.add(call);
 
@@ -1062,7 +1061,6 @@ final class ClosureRewriteModule implements CompilerPass {
       currentScript.defaultExportLocalName = localName;
       recordExportToInline(defaultExport);
     }
-
   }
 
   private void updateModuleBodyEarly(Node moduleScopeRoot) {
@@ -1101,6 +1099,10 @@ final class ClosureRewriteModule implements CompilerPass {
   }
 
   private static void updateGoogDeclareLegacyNamespace(Node call) {
+    NodeUtil.getEnclosingStatement(call).detach();
+  }
+
+  private static void updateGoogPreventModuleExportsSealing(Node call) {
     NodeUtil.getEnclosingStatement(call).detach();
   }
 
@@ -1419,7 +1421,7 @@ final class ClosureRewriteModule implements CompilerPass {
       compiler.reportChangeToEnclosingScope(call);
       Node exportedNamespaceName =
           this.astFactory
-              .createQNameFromTypedScope(this.globalTypedScope, exportedNamespace)
+              .createQNameUsingJSTypeInfo(this.globalTypedScope, exportedNamespace)
               .srcrefTree(call);
       exportedNamespaceName.setJSType(rewriteState.getGoogModuleNamespaceType(namespaceId));
       exportedNamespaceName.setOriginalName(namespaceId);
@@ -1630,7 +1632,7 @@ final class ClosureRewriteModule implements CompilerPass {
     if (currentScript.declareLegacyNamespace) {
       Node legacyQname =
           this.astFactory
-              .createQName(this.globalTypedScope, currentScript.namespaceId)
+              .createQNameUsingJSTypeInfo(this.globalTypedScope, currentScript.namespaceId)
               .srcrefTree(n);
       legacyQname.setJSType(n.getJSType());
       n.replaceWith(legacyQname);
@@ -1892,7 +1894,7 @@ final class ClosureRewriteModule implements CompilerPass {
     Node nameParent = nameNode.getParent();
     Node newQualifiedName =
         this.astFactory
-            .createQNameFromTypedScope(this.globalTypedScope, newString)
+            .createQNameUsingJSTypeInfo(this.globalTypedScope, newString)
             .srcrefTree(nameNode);
     // Sometimes the typechecker gave `nameNode` the correct type, but we can't infer the right type
     // for `newQualifiedName`. If so, giving `newQualifiedName` the same type typechecking used for
@@ -2094,7 +2096,12 @@ final class ClosureRewriteModule implements CompilerPass {
 
     String name = n.getString();
     if (this.globalTypedScope.hasOwnSlot(name)) {
-      t.report(t.getCurrentScript(), ILLEGAL_MODULE_RENAMING_CONFLICT, name);
+      Node original = globalTypedScope.getOwnSlot(name).getNode();
+      t.report(
+          t.getCurrentScript(),
+          ILLEGAL_MODULE_RENAMING_CONFLICT,
+          name,
+          original != null ? original.toString() : "<unknown>");
     } else {
       JSType type = checkNotNull(n.getJSType());
       this.globalTypedScope.declare(name, n, type, t.getInput(), false);

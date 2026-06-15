@@ -15,6 +15,9 @@
  */
 package j2kt;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public class AccidentalOverride {
   abstract class SuperClass {
     public void accidentalOverride() {}
@@ -51,4 +54,17 @@ public class AccidentalOverride {
       super.accidentalOverride();
     }
   }
+}
+
+@NullMarked
+interface Parent {
+  <T extends String> void test(T t);
+}
+
+@NullMarked
+interface Child extends Parent {
+  // TODO(b/395588204): Uncomment when fixed.
+  // This method is valid override in Java, but in Kotlin it's accidental override.
+  // @Override
+  // void test(String s);
 }

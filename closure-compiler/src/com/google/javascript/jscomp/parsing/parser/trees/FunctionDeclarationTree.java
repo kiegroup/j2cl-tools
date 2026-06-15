@@ -35,6 +35,7 @@ public class FunctionDeclarationTree extends ParseTree {
   public final @Nullable IdentifierToken name;
   public final FormalParameterListTree formalParameterList;
   public final ParseTree functionBody;
+  public final boolean isClassMember;
   public final boolean isStatic;
   public final boolean isGenerator;
   public final boolean isOptional;
@@ -49,6 +50,7 @@ public class FunctionDeclarationTree extends ParseTree {
     super(ParseTreeType.FUNCTION_DECLARATION, builder.location);
 
     this.name = builder.name;
+    this.isClassMember = builder.isClassMember;
     this.isStatic = builder.isStatic;
     this.isGenerator = builder.isGenerator;
     this.isOptional = builder.isOptional;
@@ -58,15 +60,14 @@ public class FunctionDeclarationTree extends ParseTree {
     this.isAsync = builder.isAsync;
   }
 
-  /**
-   * Builds a {@link FunctionDeclarationTree}.
-   */
+  /** Builds a {@link FunctionDeclarationTree}. */
   public static class Builder {
     private final Kind kind;
 
     private @Nullable IdentifierToken name = null;
     private @Nullable FormalParameterListTree formalParameterList = null;
     private @Nullable ParseTree functionBody = null;
+    private boolean isClassMember = false;
     private boolean isStatic = false;
     private boolean isGenerator = false;
     private boolean isOptional = false;
@@ -103,9 +104,20 @@ public class FunctionDeclarationTree extends ParseTree {
     }
 
     /**
+     * Is the method an ES6 class member?
+     *
+     * <p>Default is {@code false}. Only relevant for class method member declarations.
+     */
+    @CanIgnoreReturnValue
+    public Builder setIsClassMember(boolean isClassMember) {
+      this.isClassMember = isClassMember;
+      return this;
+    }
+
+    /**
      * Is the method static?
      *
-     * <p>Default is {@code false}. Only relevant for method member declarations.
+     * <p>Default is {@code false}. Only relevant for class method member declarations.
      */
     @CanIgnoreReturnValue
     public Builder setStatic(boolean isStatic) {
@@ -149,8 +161,8 @@ public class FunctionDeclarationTree extends ParseTree {
     /**
      * Return a new {@link FunctionDeclarationTree}.
      *
-     * <p> The location is provided at this point because it cannot be correctly calculated
-     * until the whole function has been parsed.
+     * <p>The location is provided at this point because it cannot be correctly calculated until the
+     * whole function has been parsed.
      */
     public FunctionDeclarationTree build(SourceRange location) {
       this.location = location;

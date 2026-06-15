@@ -11,7 +11,7 @@ class $1_$1 extends j_l_Object {
  /** @protected @nodts */
  constructor() {
   super();
-  /**@type {$1} @nodts*/
+  /**@type {!$1} @nodts*/
   this.$outer_this__jsfunction_JsFunctionOptimization_1_1;
   /**@type {number} @nodts*/
   this.$captured_r__jsfunction_JsFunctionOptimization_1_1 = 0;
@@ -19,14 +19,14 @@ class $1_$1 extends j_l_Object {
   this.$captured_x__jsfunction_JsFunctionOptimization_1_1;
  }
  /** @nodts @return {!$1_$1} */
- static $create__jsfunction_JsFunctionOptimization_1__int__java_lang_String(/** $1 */ $outer_this, /** number */ $captured_r, /** ?string */ $captured_x) {
+ static $create__jsfunction_JsFunctionOptimization_1__int__java_lang_String(/** !$1 */ $outer_this, /** number */ $captured_r, /** ?string */ $captured_x) {
   $1_$1.$clinit();
   let $instance = new $1_$1();
   $instance.$ctor__jsfunction_JsFunctionOptimization_1_1__jsfunction_JsFunctionOptimization_1__int__java_lang_String__void($outer_this, $captured_r, $captured_x);
   return $instance;
  }
  /** @nodts */
- $ctor__jsfunction_JsFunctionOptimization_1_1__jsfunction_JsFunctionOptimization_1__int__java_lang_String__void(/** $1 */ $outer_this, /** number */ $captured_r, /** ?string */ $captured_x) {
+ $ctor__jsfunction_JsFunctionOptimization_1_1__jsfunction_JsFunctionOptimization_1__int__java_lang_String__void(/** !$1 */ $outer_this, /** number */ $captured_r, /** ?string */ $captured_x) {
   this.$outer_this__jsfunction_JsFunctionOptimization_1_1 = $outer_this;
   this.$captured_r__jsfunction_JsFunctionOptimization_1_1 = $captured_r;
   this.$captured_x__jsfunction_JsFunctionOptimization_1_1 = $captured_x;
@@ -35,14 +35,14 @@ class $1_$1 extends j_l_Object {
  /** @nodts */
  m_m__void_$pp_jsfunction() {
   let var_1 = 1;
-  let f = (/** ?string */ s) =>{
+  let f = /**  @return {?string}*/ ((/** ?string */ s) =>{
    let r1 = this.$captured_r__jsfunction_JsFunctionOptimization_1_1;
    let var1 = var_1;
    let x1 = this.$captured_x__jsfunction_JsFunctionOptimization_1_1;
-   return j_l_String.m_valueOf__java_lang_Object__java_lang_String(j_l_String.m_valueOf__int__java_lang_String(this.$captured_r__jsfunction_JsFunctionOptimization_1_1)) + j_l_String.m_valueOf__java_lang_Object__java_lang_String(s) + j_l_String.m_valueOf__java_lang_Object__java_lang_String(this.$captured_x__jsfunction_JsFunctionOptimization_1_1) + var_1 + j_l_String.m_valueOf__java_lang_Object__java_lang_String(((/** ?string */ s_1) =>{
+   return j_l_String.m_valueOf__java_lang_Object__java_lang_String(j_l_String.m_valueOf__int__java_lang_String(this.$captured_r__jsfunction_JsFunctionOptimization_1_1)) + j_l_String.m_valueOf__java_lang_Object__java_lang_String(s) + j_l_String.m_valueOf__java_lang_Object__java_lang_String(this.$captured_x__jsfunction_JsFunctionOptimization_1_1) + var_1 + j_l_String.m_valueOf__java_lang_Object__java_lang_String((/**  @return {?string}*/ ((/** ?string */ s_1) =>{
     return j_l_String.m_valueOf__java_lang_Object__java_lang_String(s_1) + r1 + j_l_String.m_valueOf__java_lang_Object__java_lang_String(x1) + var1;
-   })('hello'));
-  };
+   }))('hello'));
+  });
   let f2 = $2.$create__jsfunction_JsFunctionOptimization_1_1__int__int__java_lang_String(this, this.$captured_r__jsfunction_JsFunctionOptimization_1_1, var_1, this.$captured_x__jsfunction_JsFunctionOptimization_1_1);
  }
  /** @nodts */

@@ -34,33 +34,45 @@ public final class CustomNames {
   @ObjectiveCName("init3")
   public CustomNames(long i, String s) {}
 
-  @ObjectiveCName("custom")
+  @ObjectiveCName("customMethod")
   public void method() {}
 
-  @ObjectiveCName("customWithIndex:")
-  public void method(int i) {}
+  @ObjectiveCName("customIntMethodWithInt:")
+  public void intMethod(int i) {}
 
-  @ObjectiveCName("customWithIndex:name:")
-  public void method(int i, String s) {}
+  @ObjectiveCName("customIndexMethodWithIndex:")
+  public void indexMethod(int i) {}
 
-  @ObjectiveCName("custom")
-  public void method(long i) {}
+  @ObjectiveCName("customCountMethodWithCount:")
+  public void countMethod(int i) {}
 
-  @ObjectiveCName("custom")
-  public void method(long i, String s) {}
+  @ObjectiveCName("customStringMethodWithString:")
+  public void stringMethod(String s) {}
 
-  @ObjectiveCName("staticCustom")
+  @ObjectiveCName("customNameMethodWithName:")
+  public void nameMethod(String s) {}
+
+  @ObjectiveCName("customIntStringMethodWithIndex:name:")
+  public void intStringMethod(int i, String s) {}
+
+  @ObjectiveCName("customLongMethod")
+  public void longMethod(long i) {}
+
+  @ObjectiveCName("customLongStringMethod")
+  public void longStringMethod(long i, String s) {}
+
+  @ObjectiveCName("customStaticMethod")
   public static void staticMethod() {}
 
-  @ObjectiveCName("staticCustomWithIndex:")
-  public static void staticMethod(int i) {}
+  @ObjectiveCName("customStaticIntMethodWithIndex:")
+  public static void staticIntMethod(int i) {}
 
-  @ObjectiveCName("staticCustomWithIndex:name:")
-  public static void staticMethod(int i, String s) {}
+  @ObjectiveCName("customStaticIntStringMethodWithIndex:name:")
+  public static void staticIntStringMethod(int i, String s) {}
 
-  @ObjectiveCName("staticCustom2")
-  public static void staticMethod(long i) {}
+  @ObjectiveCName("customStaticLongMethod")
+  public static void staticLongMethod(long i) {}
 
-  @ObjectiveCName("staticCustom3")
-  public static void staticMethod(long i, String s) {}
+  @ObjectiveCName("customStaticLongStringMethod")
+  public static void staticLongStringMethod(long i, String s) {}
 }

@@ -15,7 +15,7 @@
  */
 package com.google.j2cl.tools.gwtincompatible;
 
-import com.google.j2cl.common.Problems;
+import com.google.j2cl.common.SourceUtils;
 import com.google.j2cl.common.bazel.BazelWorker;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -38,12 +38,21 @@ final class BazelGwtIncompatibleStripper extends BazelWorker {
   @Option(
       name = "-annotation",
       metaVar = "<annotation>",
-      usage = "The name of hte annotation to strip; defaults to 'GwtIncompatible'")
-  String annotation = "GwtIncompatible";
+      usage = "The name(s) of annotations to strip; defaults to 'GwtIncompatible'")
+  List<String> annotations = new ArrayList<>();
 
   @Override
-  protected void run(Problems problems) {
-    GwtIncompatibleStripper.strip(files, outputPath, problems, annotation);
+  protected void run() {
+    if (annotations.isEmpty()) {
+      annotations.add("GwtIncompatible");
+    }
+    Path sourceJarDir = SourceUtils.deriveDirectory(this.outputPath, "_source_jars");
+    GwtIncompatibleStripper.strip(
+        files.stream().map(workdir::resolve).map(Path::toString),
+        workdir.resolve(outputPath),
+        sourceJarDir,
+        problems,
+        annotations);
   }
 
   public static void main(String[] workerArgs) throws Exception {

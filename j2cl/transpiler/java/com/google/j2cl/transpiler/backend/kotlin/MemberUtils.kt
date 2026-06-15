@@ -15,7 +15,12 @@
  */
 package com.google.j2cl.transpiler.backend.kotlin
 
+import com.google.j2cl.transpiler.ast.AstUtils
+import com.google.j2cl.transpiler.ast.Field
 import com.google.j2cl.transpiler.ast.Method
+import com.google.j2cl.transpiler.ast.ReturnStatement
+import com.google.j2cl.transpiler.ast.Statement
+import com.google.j2cl.transpiler.ast.TypeDescriptors
 import com.google.j2cl.transpiler.backend.kotlin.source.Source
 
 internal val Method.inheritanceModifierSource
@@ -35,3 +40,37 @@ private val Method.needsFinalModifier: Boolean
     !descriptor.isOpen &&
       isJavaOverride &&
       descriptor.enclosingTypeDescriptor.typeDeclaration.isOpen
+
+internal val Method.renderedStatements: List<Statement>
+  get() {
+    if (!descriptor.isKtDisabled) {
+      return body.statements.filter { !AstUtils.isConstructorInvocationStatement(it) }
+    }
+
+    if (TypeDescriptors.isPrimitiveVoid(descriptor.returnTypeDescriptor)) {
+      return listOf()
+    }
+
+    return listOf(
+      ReturnStatement.newBuilder()
+        .setSourcePosition(sourcePosition)
+        .setExpression(descriptor.returnTypeDescriptor.defaultValue)
+        .build()
+    )
+  }
+
+internal val Field.isKtLateInit: Boolean
+  get() {
+    val isTestProperty =
+      descriptor.enclosingTypeDescriptor.typeDeclaration.let { enclosingTypeDeclaration ->
+        enclosingTypeDeclaration.isTestClass ||
+          enclosingTypeDeclaration.allSuperTypesIncludingSelf.any {
+            it.qualifiedSourceName == "junit.framework.TestCase" ||
+              it.qualifiedSourceName == "org.junit.TestCase"
+          }
+      }
+    return (descriptor.ktInfo.isUninitializedWarningSuppressed || isTestProperty) &&
+      !descriptor.isFinal &&
+      !descriptor.typeDescriptor.isNullable &&
+      !hasInitializer()
+  }

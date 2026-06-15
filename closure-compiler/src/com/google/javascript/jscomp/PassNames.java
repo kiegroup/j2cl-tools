@@ -35,12 +35,14 @@ public final class PassNames {
   public static final String BEFORE_MAIN_OPTIMIZATIONS = "beforeMainOptimizations";
   public static final String BEFORE_TYPE_CHECKING = "beforeTypeChecking";
   public static final String BEFORE_SERIALIZATION = "beforeSerialization";
+  public static final String BEFORE_VARIABLE_RENAMING = "beforeVariableRenaming";
+  public static final String BEFORE_EXTRACT_PROTOTYPE_MEMBER_DECLARATIONS =
+      "beforeExtractPrototypeMemberDeclarations";
   public static final String CHECK_CONFORMANCE = "checkConformance";
   public static final String CHECK_REG_EXP = "checkRegExp";
   public static final String CHECK_TYPES = "checkTypes";
   public static final String CHECK_VARIABLE_REFERENCES = "checkVariableReferences";
   public static final String CHECK_VARS = "checkVars";
-  public static final String CLOSURE_REWRITE_CLASS = "closureRewriteClass";
   public static final String COALESCE_VARIABLE_NAMES = "coalesceVariableNames";
   public static final String COLLAPSE_ANONYMOUS_FUNCTIONS = "collapseAnonymousFunctions";
   public static final String COLLAPSE_OBJECT_LITERALS = "collapseObjectLiterals";
@@ -77,6 +79,7 @@ public final class PassNames {
   public static final String LINT_CHECKS = "lintChecks";
   public static final String MARK_UNNORMALIZED = "markUnnormalized";
   public static final String NORMALIZE = "normalize";
+  public static final String OPTIMIZATIONS_HALFWAY_POINT = "optimizationsHalfwayPoint";
   public static final String OPTIMIZE_CALLS = "optimizeCalls";
   public static final String PARSE_INPUTS = "parseInputs";
   public static final String PEEPHOLE_OPTIMIZATIONS = "peepholeOptimizations";
@@ -88,6 +91,7 @@ public final class PassNames {
   public static final String RESOLVE_TYPES = "resolveTypes";
   public static final String REWRITE_FUNCTION_EXPRESSIONS = "rewriteFunctionExpressions";
   public static final String RENAME_PROPERTIES = "renameProperties";
+  public static final String BEFORE_RENAME_PROPERTIES = "beforeRenameProperties";
   public static final String STRIP_SIDE_EFFECT_PROTECTION = "stripSideEffectProtection";
   public static final String WIZ_PASS = "wizPass";
 

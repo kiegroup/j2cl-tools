@@ -18,7 +18,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import elemental2.core.JsWeakSet;
-import org.kie.j2cl.tools.utils.GwtIncompatible;
+import org.kie.j2cl.tools.di.core.internal.GwtIncompatible;
 
 public class WeakSet<T> {
 

@@ -45,11 +45,19 @@ public class NativeTopLevel<O> {
   @KtName("renamedField")
   public int fieldToRename;
 
+  int nonPublicField;
+
   @KtName("renamedMethod")
   public native int methodToRename();
 
   @KtProperty
   public native int getMethodAsProperty();
+
+  @KtProperty
+  public native int getUPPERCASEPREFIXMethodAsProperty();
+
+  @KtProperty
+  public native int getUPPERCASEMETHODASPROPERTY();
 
   @KtProperty
   public native int nonGetMethodAsProperty();
@@ -74,6 +82,8 @@ public class NativeTopLevel<O> {
   public NativeTopLevel(O o) {}
 
   public native O instanceMethod(O o);
+
+  native void nonPublicMethod();
 
   public static native <S> S staticMethod(S s);
 }

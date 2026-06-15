@@ -13,6 +13,16 @@
 )
 
 ;;; Code for jstype.SomeJsType [type definition]
+(type $jstype.SomeJsType (sub $java.lang.Object (struct
+ (field $vtable (ref $jstype.SomeJsType.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $packageField@jstype.SomeJsType (mut i32))
+ (field $privateField@jstype.SomeJsType (mut i32))
+ (field $protectedField@jstype.SomeJsType (mut i32))
+ (field $publicField@jstype.SomeJsType (mut i32))
+ ))
+)
 (type $jstype.SomeJsType.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -22,16 +32,6 @@
  (field $m_protectedMethod__void (ref $function.m_protectedMethod__void))
  (field $m_publicMethod__void (ref $function.m_publicMethod__void))
  (field $m_useFieldsAndMethods__void (ref $function.m_useFieldsAndMethods__void))
- ))
-)
-(type $jstype.SomeJsType (sub $java.lang.Object (struct
- (field $vtable (ref $jstype.SomeJsType.vtable))
- (field $itable (ref $itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
- (field $packageField@jstype.SomeJsType (mut i32))
- (field $privateField@jstype.SomeJsType (mut i32))
- (field $protectedField@jstype.SomeJsType (mut i32))
- (field $publicField@jstype.SomeJsType (mut i32))
  ))
 )
 
@@ -162,7 +162,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/jstype/readable-j2wasm.js/jstype/SomeJsType.java:23:13
   (call $$clinit__void_<once>_@jstype.SomeJsType )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/jstype/readable-j2wasm.js/jstype/SomeJsType.java:23:13
-  (local.set $$instance (struct.new $jstype.SomeJsType (ref.as_non_null (global.get $jstype.SomeJsType.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0)))
+  (local.set $$instance (struct.new $jstype.SomeJsType (global.get $jstype.SomeJsType.vtable) (global.get $itable.empty) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/jstype/readable-j2wasm.js/jstype/SomeJsType.java:23:13
   (call $$ctor__void_$p_jstype_SomeJsType@jstype.SomeJsType (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/jstype/readable-j2wasm.js/jstype/SomeJsType.java:23:13

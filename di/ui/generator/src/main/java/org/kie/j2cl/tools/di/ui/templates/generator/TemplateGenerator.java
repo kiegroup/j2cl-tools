@@ -320,8 +320,7 @@ public class TemplateGenerator extends IOCGenerator<BeanDefinition> {
                             .getAnnotation(ForEvent.class).value();
                     String clazz = iocContext.getGenerationContext().getTypes()
                             .erasure(eventHandlerInfo.getMethod().getParameters().get(0).asType()).toString();
-                    String mangleName = j2CLUtils.createFieldDescriptor(eventHandlerInfo.getInfo().getField(),
-                            beanDefinition.getType()).getMangledName();
+                    String mangleName = j2CLUtils.getVariableMangledName(eventHandlerInfo.getInfo().getField());
                     String call = methodCallGenerator.generate(beanDefinition.getType(),
                             eventHandlerInfo.getMethod(), List.of("e"));
                     Event event = new Event(eventTypes, mangleName, clazz, call);
@@ -428,7 +427,7 @@ public class TemplateGenerator extends IOCGenerator<BeanDefinition> {
                                TemplateDefinition templateDefinition) {
         templateContext.getRoot().getAttributes().stream()
                 .map(attr -> new org.kie.j2cl.tools.di.ui.templates.generator.dto.Attribute(attr.getKey(),
-                        attr.getValue()))
+                        attr.getValue().replaceAll("\\s+", " ").trim()))
                 .forEach(a -> templateDefinition.getAttributes().add(a));
     }
 

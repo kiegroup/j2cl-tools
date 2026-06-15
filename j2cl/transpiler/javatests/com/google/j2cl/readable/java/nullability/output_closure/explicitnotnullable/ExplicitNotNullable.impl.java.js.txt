@@ -47,7 +47,7 @@ class ExplicitNotNullable extends j_l_Object {
   this.f_f9__nullability_explicitnotnullable_ExplicitNotNullable_;
   /**@type {Array<string>} @nodts*/
   this.f_f10__nullability_explicitnotnullable_ExplicitNotNullable_;
-  /**@type {void} @nodts*/
+  /**@type {?void} @nodts*/
   this.f_f11__nullability_explicitnotnullable_ExplicitNotNullable_;
   /**@type {!*} @nodts*/
   this.f_f12__nullability_explicitnotnullable_ExplicitNotNullable_;
@@ -124,7 +124,7 @@ class ExplicitNotNullable extends j_l_Object {
  /** @nodts @template T */
  m_methodWithNonNullableBound__void_$pp_nullability_explicitnotnullable() {}
  /** @nodts @template N */
- static m_genericNullableMethod__nullability_explicitnotnullable_ExplicitNotNullable_ParameterizedNullable__java_lang_Object__void(/** !ParameterizedNullable<N> */ o, /** N */ n) {
+ static m_genericNullableMethod__nullability_explicitnotnullable_ExplicitNotNullable_ParameterizedNullable__java_lang_Object__void(/** !ParameterizedNullable<N> */ o, /** ?N */ n) {
   ExplicitNotNullable.$clinit();
   o.m_setNullable__java_lang_Object__void_$pp_nullability_explicitnotnullable(n);
   o.m_setNonNull__java_lang_Object__void_$pp_nullability_explicitnotnullable(n);
@@ -300,23 +300,23 @@ class ExplicitNotNullable extends j_l_Object {
  /** @nodts */
  static m_testLambdaNullability__void() {
   ExplicitNotNullable.$clinit();
-  let lambda = Consumer.$adapt((s) =>{
+  let lambda = Consumer.$adapt((/** string */ s) =>{
    let s_1 = /**@type {string}*/ ($Casts.$to(s, j_l_String));
   });
-  let nullable = Consumer.$adapt((arg0) =>{
+  let nullable = Consumer.$adapt((/** string */ arg0) =>{
    let arg0_1 = /**@type {string}*/ ($Casts.$to(arg0, j_l_String));
    DefaultNullable.m_nullableAccept__java_lang_String__void(arg0_1);
   });
-  let nonNullable = Consumer.$adapt((arg0_2) =>{
+  let nonNullable = Consumer.$adapt((/** string */ arg0_2) =>{
    let arg0_3 = /**@type {string}*/ ($Casts.$to(arg0_2, j_l_String));
    ExplicitNotNullable.m_nonNullableAccept__java_lang_String__void(arg0_3);
   });
-  let newObject = Supplier.$adapt(() =>{
+  let newObject = Supplier.$adapt(/**  @return {!*}*/ (() =>{
    return j_l_Object.$create__();
-  });
-  let newArray = IntFunction.$adapt((/** number */ arg0_4) =>{
+  }));
+  let newArray = IntFunction.$adapt(/**  @return {!Array<!*>}*/ ((/** number */ arg0_4) =>{
    return new Array(arg0_4);
-  });
+  }));
  }
  /** @nodts */
  static m_nonNullableAccept__java_lang_String__void(/** string */ s) {
@@ -355,7 +355,7 @@ class ExplicitNotNullable extends j_l_Object {
   return /**@type {string}*/ ($Casts.$to(f.m_apply__java_lang_Object__java_lang_Object(localString), j_l_String));
  }
  /** @nodts @template T @return {T} */
- static m_assertNotNull__java_lang_Object__java_lang_Object(/** T */ nullable) {
+ static m_assertNotNull__java_lang_Object__java_lang_Object(/** ?T */ nullable) {
   ExplicitNotNullable.$clinit();
   if ($Equality.$same(nullable, null)) {
    throw $Exceptions.toJs(NullPointerException.$create__());
@@ -368,12 +368,12 @@ class ExplicitNotNullable extends j_l_Object {
   let nonNull = /**@type {?string}*/ ($Casts.$to(ExplicitNotNullable.m_assertNotNull__java_lang_Object__java_lang_Object(nullable), j_l_String));
  }
  /** @nodts @template T */
- static m_testAssertNotNull_notNullBounds__java_lang_Object__void(/** T */ nullable) {
+ static m_testAssertNotNull_notNullBounds__java_lang_Object__void(/** ?T */ nullable) {
   ExplicitNotNullable.$clinit();
   let notNull = ExplicitNotNullable.m_assertNotNull__java_lang_Object__java_lang_Object(nullable);
  }
  /** @nodts @template T */
- static m_testAssertNotNull_nullableBounds__java_lang_Object__void(/** T */ nullable) {
+ static m_testAssertNotNull_nullableBounds__java_lang_Object__void(/** ?T */ nullable) {
   ExplicitNotNullable.$clinit();
   let notNull = ExplicitNotNullable.m_assertNotNull__java_lang_Object__java_lang_Object(nullable);
  }
@@ -382,35 +382,35 @@ class ExplicitNotNullable extends j_l_Object {
   this.f_f1__nullability_explicitnotnullable_ExplicitNotNullable_ = 'Hello';
   this.f_f2__nullability_explicitnotnullable_ExplicitNotNullable_ = null;
   this.f_f3__nullability_explicitnotnullable_ExplicitNotNullable_ = null;
-  this.f_f4__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!ArrayList<?string>}*/ (ArrayList.$create__());
-  this.f_f5__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!ArrayList<?string>}*/ (ArrayList.$create__());
-  this.f_f6__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!ArrayList<?string>}*/ (ArrayList.$create__());
+  this.f_f4__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!ArrayList<?string>}*/ (ArrayList.$create__()));
+  this.f_f5__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!ArrayList<?string>}*/ (ArrayList.$create__()));
+  this.f_f6__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!ArrayList<?string>}*/ (ArrayList.$create__()));
   this.f_f7__nullability_explicitnotnullable_ExplicitNotNullable_ = null;
-  this.f_f8__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<string>}*/ ($Arrays.$create([0], j_l_String));
-  this.f_f9__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<?string>}*/ ($Arrays.$create([0], j_l_String));
-  this.f_f10__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<string>}*/ ($Arrays.$create([0], j_l_String));
+  this.f_f8__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<string>}*/ ($Arrays.$create([0], j_l_String)));
+  this.f_f9__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<?string>}*/ ($Arrays.$create([0], j_l_String)));
+  this.f_f10__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<string>}*/ ($Arrays.$create([0], j_l_String)));
   this.f_f11__nullability_explicitnotnullable_ExplicitNotNullable_ = null;
   this.f_f12__nullability_explicitnotnullable_ExplicitNotNullable_ = j_l_Object.$create__();
-  this.f_f15__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<!Array<string>>}*/ ($Arrays.$create([0, null], j_l_String));
-  this.f_f16__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<Array<string>>}*/ ($Arrays.$create([0, null], j_l_String));
-  this.f_f17__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<!Array<string>>}*/ ($Arrays.$create([0, null], j_l_String));
-  this.f_f18__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<Array<string>>}*/ ($Arrays.$create([0, null], j_l_String));
-  this.f_f19__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<!Array<?string>>}*/ ($Arrays.$create([0, null], j_l_String));
-  this.f_f20__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<Array<?string>>}*/ ($Arrays.$create([0, null], j_l_String));
-  this.f_f21__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<!Array<?string>>}*/ ($Arrays.$create([0, null], j_l_String));
-  this.f_f22__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<Array<?string>>}*/ ($Arrays.$create([0, null], j_l_String));
-  this.f_f23__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<!Array<number>>}*/ ($Arrays.$create([0, null], $$char));
-  this.f_f24__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<Array<number>>}*/ ($Arrays.$create([0, null], $$char));
-  this.f_f25__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<!Array<number>>}*/ ($Arrays.$create([0, null], $$char));
-  this.f_f26__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<Array<number>>}*/ ($Arrays.$create([0, null], $$char));
-  this.f_f27__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<string>}*/ ($Arrays.$create([1], j_l_String));
-  this.f_f28__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<?string>}*/ ($Arrays.$create([1], j_l_String));
-  this.f_f29__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<string>}*/ ($Arrays.$create([1], j_l_String));
-  this.f_f30__nullability_explicitnotnullable_ExplicitNotNullable_ = /**@type {!Array<?string>}*/ ($Arrays.$create([1], j_l_String));
-  this.f_i__nullability_explicitnotnullable_ExplicitNotNullable = ExplicitNotNullable_Function.$adapt((s) =>{
+  this.f_f15__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<!Array<string>>}*/ ($Arrays.$create([0, null], j_l_String)));
+  this.f_f16__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<Array<string>>}*/ ($Arrays.$create([0, null], j_l_String)));
+  this.f_f17__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<!Array<string>>}*/ ($Arrays.$create([0, null], j_l_String)));
+  this.f_f18__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<Array<string>>}*/ ($Arrays.$create([0, null], j_l_String)));
+  this.f_f19__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<!Array<?string>>}*/ ($Arrays.$create([0, null], j_l_String)));
+  this.f_f20__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<Array<?string>>}*/ ($Arrays.$create([0, null], j_l_String)));
+  this.f_f21__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<!Array<?string>>}*/ ($Arrays.$create([0, null], j_l_String)));
+  this.f_f22__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<Array<?string>>}*/ ($Arrays.$create([0, null], j_l_String)));
+  this.f_f23__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<!Array<number>>}*/ ($Arrays.$create([0, null], $$char)));
+  this.f_f24__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<Array<number>>}*/ ($Arrays.$create([0, null], $$char)));
+  this.f_f25__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<!Array<number>>}*/ ($Arrays.$create([0, null], $$char)));
+  this.f_f26__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<Array<number>>}*/ ($Arrays.$create([0, null], $$char)));
+  this.f_f27__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<string>}*/ ($Arrays.$create([1], j_l_String)));
+  this.f_f28__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<?string>}*/ ($Arrays.$create([1], j_l_String)));
+  this.f_f29__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<string>}*/ ($Arrays.$create([1], j_l_String)));
+  this.f_f30__nullability_explicitnotnullable_ExplicitNotNullable_ = (/**@type {!Array<?string>}*/ ($Arrays.$create([1], j_l_String)));
+  this.f_i__nullability_explicitnotnullable_ExplicitNotNullable = ExplicitNotNullable_Function.$adapt(/**  @return {string}*/ ((/** string */ s) =>{
    let s_1 = /**@type {string}*/ ($Casts.$to(s, j_l_String));
    return s_1;
-  });
+  }));
  }
  /** @nodts */
  static $clinit() {

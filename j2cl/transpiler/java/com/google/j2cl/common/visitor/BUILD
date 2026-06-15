@@ -1,19 +1,17 @@
 load("@rules_java//java:defs.bzl", "java_library")
+load("@google_bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 package(
     default_applicable_licenses = ["//:j2cl_license"],
     licenses = ["notice"],
-    default_visibility = ["//visibility:public"], #TODO evaluate if still needed
 )
-load("//build_defs:rules.bzl", "j2cl_import")
-load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 java_library(
     name = "visitor",
     exported_plugins = ["//transpiler/java/com/google/j2cl/common/visitor/generator:visitor-apt-processor"],
     visibility = [
-        "@com_google_jsinterop_generator//:__subpackages__",
-        "//transpiler:__subpackages__",
+        # Do not use. Temporary visible to workaround https://github.com/bazelbuild/bazel/issues/25214.
+        "//visibility:public",
     ],
     exports = [":visitor-internal"],
 )
@@ -23,12 +21,9 @@ java_library(
     srcs = glob(["*.java"]),
     visibility = ["//transpiler/java/com/google/j2cl/common/visitor/generator:__pkg__"],
 )
+
 javadoc_library(
     name = "visitor-internal-javadoc",
     srcs = glob(["*.java"]),
 )
 
-#j2cl_import(  # possibly no longer necessary
-#    name = "visitor-j2cl",
-#    jar = ":visitor",
-#)

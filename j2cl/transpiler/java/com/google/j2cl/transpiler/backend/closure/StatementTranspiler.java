@@ -200,7 +200,8 @@ public class StatementTranspiler {
           jsDocs.add("@type");
         }
         jsDocs.add("{" + typeJsDoc + "}");
-        if (declaration.isDeprecated()) {
+        if (declaration.getFieldDescriptor().hasAnnotation("java.lang.Deprecated")
+            || declaration.getFieldDescriptor().hasAnnotation("kotlin.Deprecated")) {
           jsDocs.add("@deprecated");
         }
         if (!declaration.getFieldDescriptor().canBeReferencedExternally()) {
@@ -257,11 +258,13 @@ public class StatementTranspiler {
       @Override
       public boolean enterSwitchCase(SwitchCase switchCase) {
         if (switchCase.isDefault()) {
-          builder.append("default: ");
+          builder.append("default:");
         } else {
-          builder.append("case ");
-          renderExpression(switchCase.getCaseExpression());
-          builder.append(": ");
+          for (Expression expression : switchCase.getCaseExpressions()) {
+            builder.append("case ");
+            renderExpression(expression);
+            builder.append(":");
+          }
         }
         builder.indent();
         renderStatements(switchCase.getStatements());

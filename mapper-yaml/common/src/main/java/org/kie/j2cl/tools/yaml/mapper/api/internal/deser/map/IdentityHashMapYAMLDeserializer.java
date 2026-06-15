@@ -20,44 +20,37 @@ import java.util.IdentityHashMap;
 import org.kie.j2cl.tools.yaml.mapper.api.YAMLDeserializer;
 
 /**
- * Default {@link YAMLDeserializer} implementation for {@link java.util.IdentityHashMap}.
+ * Default {@link YAMLDeserializer} implementation for {@link IdentityHashMap}.
  *
  * <p>Cannot be overriden. Use {@link BaseMapYAMLDeserializer}.
  *
- * @param <K> Type of the keys inside the {@link java.util.IdentityHashMap}
- * @param <V> Type of the values inside the {@link java.util.IdentityHashMap}
+ * @param <V> Type of the values inside the {@link IdentityHashMap}
  * @author Nicolas Morel
  * @version $Id: $
  */
-public final class IdentityHashMapYAMLDeserializer<K, V>
-    extends BaseMapYAMLDeserializer<IdentityHashMap<K, V>, K, V> {
+public final class IdentityHashMapYAMLDeserializer<V>
+    extends BaseMapYAMLDeserializer<IdentityHashMap<String, V>, V> {
 
-  /**
-   * @param keyDeserializer {@link YAMLDeserializer} used to deserialize the keys.
-   * @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values.
-   */
-  private IdentityHashMapYAMLDeserializer(
-      YAMLDeserializer<K> keyDeserializer, YAMLDeserializer<V> valueDeserializer) {
-    super(keyDeserializer, valueDeserializer);
+  /** @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values. */
+  private IdentityHashMapYAMLDeserializer(YAMLDeserializer<V> valueDeserializer) {
+    super(valueDeserializer);
   }
 
   /**
    * newInstance
    *
-   * @param keyDeserializer {@link YAMLDeserializer} used to deserialize the keys.
    * @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values.
-   * @param <K> Type of the keys inside the {@link java.util.IdentityHashMap}
-   * @param <V> Type of the values inside the {@link java.util.IdentityHashMap}
+   * @param <V> Type of the values inside the {@link IdentityHashMap}
    * @return a new instance of {@link IdentityHashMapYAMLDeserializer}
    */
-  public static <K, V> IdentityHashMapYAMLDeserializer<K, V> newInstance(
-      YAMLDeserializer<K> keyDeserializer, YAMLDeserializer<V> valueDeserializer) {
-    return new IdentityHashMapYAMLDeserializer<>(keyDeserializer, valueDeserializer);
+  public static <K, V> IdentityHashMapYAMLDeserializer<V> newInstance(
+      YAMLDeserializer<V> valueDeserializer) {
+    return new IdentityHashMapYAMLDeserializer<>(valueDeserializer);
   }
 
   /** {@inheritDoc} */
   @Override
-  protected IdentityHashMap<K, V> newMap() {
+  protected IdentityHashMap<String, V> newMap() {
     return new IdentityHashMap<>();
   }
 }

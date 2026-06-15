@@ -17,6 +17,7 @@ package com.google.j2cl.transpiler.passes;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.j2cl.transpiler.ast.AstUtils.isAnnotatedWithWasm;
 
 import com.google.j2cl.transpiler.ast.AbstractRewriter;
 import com.google.j2cl.transpiler.ast.ArrayAccess;
@@ -124,9 +125,10 @@ public class ImplementArraysAsClasses extends NormalizationPass {
 
           @Override
           public Expression rewriteArrayLiteral(ArrayLiteral arrayLiteral) {
-            return new ArrayLiteral(
-                markArrayTypeDescriptorAsNative(arrayLiteral.getTypeDescriptor()),
-                arrayLiteral.getValueExpressions());
+            return arrayLiteral.toBuilder()
+                .setTypeDescriptor(
+                    markArrayTypeDescriptorAsNative(arrayLiteral.getTypeDescriptor()))
+                .build();
           }
 
           @Override
@@ -161,8 +163,8 @@ public class ImplementArraysAsClasses extends NormalizationPass {
           }
 
           private boolean isNativeMethodParameter() {
-            return getParent() instanceof Method
-                && ((Method) getParent()).getDescriptor().getWasmInfo() != null;
+            return getParent() instanceof Method method
+                && isAnnotatedWithWasm(method.getDescriptor());
           }
         });
   }
@@ -202,7 +204,7 @@ public class ImplementArraysAsClasses extends NormalizationPass {
           @Override
           public MethodCall rewriteMethodCall(MethodCall methodCall) {
             MethodDescriptor target = methodCall.getTarget();
-            if (target.getWasmInfo() == null) {
+            if (!isAnnotatedWithWasm(target)) {
               return methodCall;
             }
             if (target.getParameterTypeDescriptors().stream().noneMatch(this::isNonNativeArray)) {
@@ -223,8 +225,7 @@ public class ImplementArraysAsClasses extends NormalizationPass {
           }
 
           private boolean isNonNativeArray(TypeDescriptor descriptor) {
-            return descriptor instanceof ArrayTypeDescriptor
-                && !((ArrayTypeDescriptor) descriptor).isNativeWasmArray();
+            return descriptor instanceof ArrayTypeDescriptor && !descriptor.isNativeWasmArray();
           }
 
           private boolean needsNativeArray(MethodCall call, Expression expression) {
@@ -279,7 +280,7 @@ public class ImplementArraysAsClasses extends NormalizationPass {
                     TypeDescriptors.getWasmArrayType(arrayTypeDescriptor)
                         .getMethodDescriptor("newWithLiteral", nativeArrayTypeDescriptor))
                 .setArguments(
-                    new ArrayLiteral(nativeArrayTypeDescriptor, arrayLiteral.getValueExpressions()))
+                    arrayLiteral.toBuilder().setTypeDescriptor(nativeArrayTypeDescriptor).build())
                 .build();
           }
         });

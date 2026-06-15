@@ -166,11 +166,8 @@ IIterableResult.prototype.value;
  */
 function Iterable() {}
 
-// TODO(johnlenz): remove the suppression when the compiler understands
-// "symbol" natively
 /**
  * @return {!Iterator<T, ?, *>}
- * @suppress {externsValidation}
  */
 Iterable.prototype[Symbol.iterator] = function() {};
 
@@ -228,6 +225,9 @@ IArrayLike.prototype.length;
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/arguments
  */
 function Arguments() {}
+
+/** @override */
+Arguments.prototype[Symbol.iterator] = function() {};
 
 /**
  * @type {Function}
@@ -642,11 +642,9 @@ Function.prototype.toString = function() {};
  */
 function ReadonlyArray() {}
 
-// TODO(johnlenz): remove the suppression when the compiler understands
-// "symbol" natively
 /**
- * @return {Iterator<T>}
- * @suppress {externsValidation}
+ * @return {!IteratorIterable<T>}
+ * @override
  */
 ReadonlyArray.prototype[Symbol.iterator] = function() {};
 
@@ -822,8 +820,7 @@ ReadonlyArray.prototype.length;
 function Array(var_args) {}
 
 /**
- * @return {Iterator<T>}
- * @suppress {externsValidation}
+ * @return {!IteratorIterable<T>}
  * @override
  */
 Array.prototype[Symbol.iterator] = function() {};
@@ -1969,6 +1966,11 @@ Date.prototype.valueOf;
 function String(opt_str) {}
 
 /**
+ * @override
+ */
+String.prototype[Symbol.iterator] = function() {};
+
+/**
  * @param {...number} var_args
  * @return {string}
  * @nosideeffects
@@ -2584,7 +2586,7 @@ Error.captureStackTrace = function(error, opt_constructor){};
 
 /**
  * New in ES 2022, adds a cause to the error which is useful for chaining errors
- * @type {?Error}
+ * @type {*}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause
  */
 Error.prototype.cause;

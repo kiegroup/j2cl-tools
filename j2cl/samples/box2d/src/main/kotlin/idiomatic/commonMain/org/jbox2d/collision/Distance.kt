@@ -121,10 +121,9 @@ class Distance {
       proxyA: DistanceProxy,
       transformA: Transform,
       proxyB: DistanceProxy,
-      transformB: Transform
+      transformB: Transform,
     ) {
-      // assert is not supported in KMP.
-      // assert(cache.count <= 3)
+      assert(cache.count <= 3)
 
       // Copy data from cache.
       count = cache.count
@@ -183,7 +182,7 @@ class Distance {
           e12.set(v2.w).subLocal(v1.w)
           // use out for a temp variable real quick
           out.set(v1.w).negateLocal()
-          val sgn = Vec2.cross(e12, out)
+          val sgn = e12 cross out
           if (sgn > 0f) {
             // Origin is left of e12.
             Vec2.crossToOutUnsafe(1f, e12, out)
@@ -193,23 +192,17 @@ class Distance {
           }
         }
         else -> {
-          // assert is not supported in KMP.
-          // assert(false)
+          assert(false)
           out.setZero()
         }
       }
     }
 
-    /**
-     * this returns pooled objects. don't keep or modify them
-     *
-     * @return
-     */
+    /** this returns pooled objects. don't keep or modify them */
     fun getClosestPoint(out: Vec2) {
       when (count) {
         0 -> {
-          // assert is not supported in KMP.
-          // assert(false)
+          assert(false)
           out.setZero()
         }
         1 -> {
@@ -224,8 +217,7 @@ class Distance {
           out.setZero()
         }
         else -> {
-          // assert is not supported in KMP.
-          // assert(false)
+          assert(false)
           out.setZero()
         }
       }
@@ -234,8 +226,7 @@ class Distance {
     fun getWitnessPoints(pA: Vec2, pB: Vec2) {
       when (count) {
         0 -> {
-          // assert is not supported in KMP.
-          // assert(false)
+          assert(false)
         }
         1 -> {
           pA.set(v1.wA)
@@ -257,8 +248,7 @@ class Distance {
           pB.set(pA)
         }
         else -> {
-          // assert is not supported in KMP.
-          // assert(false)
+          assert(false)
         }
       }
     }
@@ -267,8 +257,7 @@ class Distance {
     fun getMetric(): Float {
       when (count) {
         0 -> {
-          // assert is not supported in KMP.
-          // assert(false)
+          assert(false)
           return 0.0f
         }
         1 -> return 0.0f
@@ -277,11 +266,10 @@ class Distance {
           case3.set(v2.w).subLocal(v1.w)
           case33.set(v3.w).subLocal(v1.w)
           // return Vec2.cross(m_v2.w - m_v1.w, m_v3.w - m_v1.w);
-          return Vec2.cross(case3, case33)
+          return case3 cross case33
         }
         else -> {
-          // assert is not supported in KMP.
-          // assert(false)
+          assert(false)
           return 0.0f
         }
       }
@@ -318,7 +306,7 @@ class Distance {
       e12.set(w2).subLocal(w1)
 
       // w1 region
-      val d12_2 = -Vec2.dot(w1, e12)
+      val d12_2 = -(w1 dot e12)
       if (d12_2 <= 0.0f) {
         // a2 <= 0, so we clamp it to 0
         v1.a = 1.0f
@@ -327,7 +315,7 @@ class Distance {
       }
 
       // w2 region
-      val d12_1 = Vec2.dot(w2, e12)
+      val d12_1 = w2 dot e12
       if (d12_1 <= 0.0f) {
         // a1 <= 0, so we clamp it to 0
         v2.a = 1.0f
@@ -360,8 +348,8 @@ class Distance {
       // [w1.e12 w2.e12][a2] = [0]
       // a3 = 0
       e12.set(w2).subLocal(w1)
-      val w1e12 = Vec2.dot(w1, e12)
-      val w2e12 = Vec2.dot(w2, e12)
+      val w1e12 = w1 dot e12
+      val w2e12 = w2 dot e12
       val d12_2 = -w1e12
 
       // Edge13
@@ -369,8 +357,8 @@ class Distance {
       // [w1.e13 w3.e13][a3] = [0]
       // a2 = 0
       e13.set(w3).subLocal(w1)
-      val w1e13 = Vec2.dot(w1, e13)
-      val w3e13 = Vec2.dot(w3, e13)
+      val w1e13 = w1 dot e13
+      val w3e13 = w3 dot e13
       val d13_2 = -w1e13
 
       // Edge23
@@ -378,15 +366,15 @@ class Distance {
       // [w2.e23 w3.e23][a3] = [0]
       // a1 = 0
       e23.set(w3).subLocal(w2)
-      val w2e23 = Vec2.dot(w2, e23)
-      val w3e23 = Vec2.dot(w3, e23)
+      val w2e23 = w2 dot e23
+      val w3e23 = w3 dot e23
       val d23_2 = -w2e23
 
       // Triangle123
-      val n123 = Vec2.cross(e12, e13)
-      val d123_1 = n123 * Vec2.cross(w2, w3)
-      val d123_2 = n123 * Vec2.cross(w3, w1)
-      val d123_3 = n123 * Vec2.cross(w1, w2)
+      val n123 = e12 cross e13
+      val d123_1 = n123 * (w2 cross w3)
+      val d123_2 = n123 * (w3 cross w1)
+      val d123_3 = n123 * (w1 cross w2)
 
       // w1 region
       if (d12_2 <= 0.0f && d13_2 <= 0.0f) {
@@ -456,7 +444,7 @@ class Distance {
    * @author daniel
    */
   class DistanceProxy {
-    val vertices: Array<Vec2> = Array<Vec2>(Settings.MAX_POLYGON_VERTICES) { Vec2() }
+    val vertices: Array<Vec2> by lazy { Array<Vec2>(Settings.MAX_POLYGON_VERTICES) { Vec2() } }
 
     var count: Int = 0
     var radius: Float = 0f
@@ -484,8 +472,7 @@ class Distance {
         }
         ShapeType.CHAIN -> {
           val chain = shape as ChainShape
-          // assert is not supported in KMP.
-          // assert(0 <= index && index < chain.m_count)
+          assert(0 <= index && index < chain.count)
           buffer[0] = chain.vertices!![index]
           if (index + 1 < chain.count) {
             buffer[1] = chain.vertices!![index + 1]
@@ -507,17 +494,12 @@ class Distance {
       }
     }
 
-    /**
-     * Get the supporting vertex index in the given direction.
-     *
-     * @param d
-     * @return
-     */
+    /** Get the supporting vertex index in the given direction. */
     fun getSupport(d: Vec2): Int {
       var bestIndex = 0
-      var bestValue = Vec2.dot(vertices[0], d)
+      var bestValue = vertices[0] dot d
       for (i in 1 until count) {
-        val value = Vec2.dot(vertices[i], d)
+        val value = vertices[i] dot d
         if (value > bestValue) {
           bestIndex = i
           bestValue = value
@@ -526,17 +508,12 @@ class Distance {
       return bestIndex
     }
 
-    /**
-     * Get the supporting vertex in the given direction.
-     *
-     * @param d
-     * @return
-     */
+    /** Get the supporting vertex in the given direction. */
     fun getSupportVertex(d: Vec2): Vec2 {
       var bestIndex = 0
-      var bestValue = Vec2.dot(vertices[0], d)
+      var bestValue = vertices[0] dot d
       for (i in 1 until count) {
-        val value = Vec2.dot(vertices[i], d)
+        val value = vertices[i] dot d
         if (value > bestValue) {
           bestIndex = i
           bestValue = value
@@ -550,10 +527,6 @@ class Distance {
    * Compute the closest points between two shapes. Supports any combination of: CircleShape and
    * PolygonShape. The simplex cache is input/output. On the first call set SimplexCache.count to
    * zero.
-   *
-   * @param output
-   * @param cache
-   * @param input
    */
   fun distance(output: DistanceOutput, cache: SimplexCache, input: DistanceInput) {
     GJK_CALLS++
@@ -589,8 +562,7 @@ class Distance {
         2 -> simplex.solve2()
         3 -> simplex.solve3()
         else -> {
-          // assert is not supported in KMP.
-          // assert(false)
+          assert(false)
         }
       }
 

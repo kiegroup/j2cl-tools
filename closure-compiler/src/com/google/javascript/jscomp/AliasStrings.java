@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Math.min;
 
 import com.google.javascript.jscomp.CompilerOptions.AliasStringsMode;
@@ -92,6 +93,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
     this.compiler = compiler;
     this.chunkGraph = chunkGraph;
     this.outputStringUsage = outputStringUsage;
+    checkState(aliasStringsMode != AliasStringsMode.NONE);
     this.aliasStringsMode = aliasStringsMode;
   }
 
@@ -115,18 +117,16 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
   @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-    switch (n.getToken()) {
-      case TEMPLATELIT:
-      case TAGGED_TEMPLATELIT:
-      case TEMPLATELIT_SUB: // technically redundant, since it must be a child of the others
-        // TODO(bradfordcsmith): Consider replacing long and/or frequently occurring substrings
-        // within template literals with template substitutions.
-        return false;
-      case CALL:
-        return !ReplaceMessagesConstants.isProtectedMessage(n);
-      default:
-        return true;
-    }
+    return switch (n.getToken()) {
+      case TEMPLATELIT,
+          TAGGED_TEMPLATELIT,
+          TEMPLATELIT_SUB -> // technically redundant, since it must be a child of the others
+          // TODO(bradfordcsmith): Consider replacing long and/or frequently occurring substrings
+          // within template literals with template substitutions.
+          false;
+      case CALL -> !ReplaceMessagesConstants.isProtectedMessage(n);
+      default -> true;
+    };
   }
 
   @Override
@@ -224,7 +224,12 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
    * @param str The string literal
    * @param info Accumulated information about a string
    */
-  private static boolean shouldReplaceWithAlias(String str, StringInfo info) {
+  private boolean shouldReplaceWithAlias(String str, StringInfo info) {
+    // Always alias strings if the mode is ALL_AGGRESSIVE.
+    if (aliasStringsMode == AliasStringsMode.ALL_AGGRESSIVE) {
+      return true;
+    }
+
     // Optimize for code size.  Are aliases smaller than strings?
     //
     // This logic optimizes for the size of uncompressed code, but it tends to

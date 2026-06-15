@@ -28,11 +28,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.j2cl.common.ThreadLocalInterner;
 import com.google.j2cl.common.visitor.Processor;
 import com.google.j2cl.common.visitor.Visitable;
 import com.google.j2cl.transpiler.ast.TypeDescriptors.BootstrapType;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -56,7 +56,7 @@ import javax.annotation.Nullable;
 @Visitable
 @AutoValue
 public abstract class TypeDeclaration
-    implements HasJsNameInfo, HasReadableDescription, HasUnusableByJsSuppression {
+    implements HasJsNameInfo, HasReadableDescription, HasAnnotations {
 
   /** Kind of type declaration. */
   public enum Kind {
@@ -90,10 +90,7 @@ public abstract class TypeDeclaration
 
   @Override
   public final boolean equals(Object o) {
-    if (o instanceof TypeDeclaration) {
-      return getUniqueId().equals(((TypeDeclaration) o).getUniqueId());
-    }
-    return false;
+    return o instanceof TypeDeclaration other && getUniqueId().equals(other.getUniqueId());
   }
 
   @Memoized
@@ -312,20 +309,12 @@ public abstract class TypeDeclaration
   /** Returns whether the described type is a functional interface (JLS 9.8). */
   public abstract boolean isFunctionalInterface();
 
-  /** Returns whether the described type has the @FunctionalInterface annotation. */
-  public abstract boolean isAnnotatedWithFunctionalInterface();
-
-  /** Returns whether the described type has the @AutoValue annotation. */
-  public abstract boolean isAnnotatedWithAutoValue();
-
-  /** Returns whether the described type has the @AutoValue.Builder annotation. */
-  public abstract boolean isAnnotatedWithAutoValueBuilder();
-
-  /**
-   * Returns whether the described type is a test class, i.e. has the JUnit @RunWith annotation
-   * or @RunParameterized annotation.
-   */
-  public abstract boolean isTestClass();
+  /** Gets a list of annotations present on the declaration. */
+  @Override
+  @Memoized
+  public ImmutableList<Annotation> getAnnotations() {
+    return getAnnotationsFactory().get();
+  }
 
   @Memoized
   public boolean isJsFunctionImplementation() {
@@ -358,9 +347,6 @@ public abstract class TypeDeclaration
   @Nullable
   public abstract JsEnumInfo getJsEnumInfo();
 
-  @Nullable
-  public abstract String getWasmInfo();
-
   public boolean isKtNative() {
     return getKtTypeInfo() != null;
   }
@@ -371,7 +357,11 @@ public abstract class TypeDeclaration
   @Nullable
   abstract KtObjcInfo getKtObjcInfo();
 
-  public abstract boolean isDeprecated();
+  public boolean isProtobuf() {
+    return getAllSuperTypesIncludingSelf().stream()
+        .map(TypeDeclaration::getPackageName)
+        .anyMatch(it -> it.equals("com.google.protobuf"));
+  }
 
   public boolean isJsEnum() {
     return getJsEnumInfo() != null;
@@ -689,15 +679,9 @@ public abstract class TypeDeclaration
 
   @Memoized
   public Set<TypeDeclaration> getAllSuperTypesIncludingSelf() {
-    Set<TypeDeclaration> allSupertypesIncludingSelf = new LinkedHashSet<>();
-    allSupertypesIncludingSelf.add(this);
-    toDescriptor()
-        .getSuperTypesStream()
-        .forEach(
-            t ->
-                allSupertypesIncludingSelf.addAll(
-                    t.getTypeDeclaration().getAllSuperTypesIncludingSelf()));
-    return allSupertypesIncludingSelf;
+    return toDescriptor().getAllSuperTypesIncludingSelf().stream()
+        .map(DeclaredTypeDescriptor::getTypeDeclaration)
+        .collect(toImmutableSet());
   }
 
   @Memoized
@@ -808,6 +792,8 @@ public abstract class TypeDeclaration
   @Nullable
   abstract Supplier<ImmutableList<TypeDeclaration>> getMemberTypeDeclarationsFactory();
 
+  abstract Supplier<ImmutableList<Annotation>> getAnnotationsFactory();
+
   abstract Builder toBuilder();
 
   public static Builder newBuilder() {
@@ -823,15 +809,10 @@ public abstract class TypeDeclaration
         .setCapturingEnclosingInstance(false)
         .setFinal(false)
         .setFunctionalInterface(false)
-        .setAnnotatedWithFunctionalInterface(false)
-        .setAnnotatedWithAutoValue(false)
-        .setAnnotatedWithAutoValueBuilder(false)
-        .setTestClass(false)
+        .setAnnotationsFactory(ImmutableList::of)
         .setJsFunctionInterface(false)
         .setJsType(false)
         .setLocal(false)
-        .setUnusableByJsSuppressed(false)
-        .setDeprecated(false)
         .setNullMarked(false)
         .setTypeParameterDescriptors(ImmutableList.of())
         .setDeclaredMethodDescriptorsFactory(() -> ImmutableList.of())
@@ -898,27 +879,16 @@ public abstract class TypeDeclaration
 
     public abstract Builder setFunctionalInterface(boolean isFunctionalInterface);
 
-    public abstract Builder setAnnotatedWithFunctionalInterface(boolean isAnnotated);
-
     public abstract Builder setOrigin(Origin origin);
 
-    public abstract Builder setAnnotatedWithAutoValue(boolean annotatedWithAutoValue);
-
-    public abstract Builder setAnnotatedWithAutoValueBuilder(boolean annotatedWithAutoValueBuilder);
-
-    public abstract Builder setTestClass(boolean isTestClass);
+    public abstract Builder setAnnotationsFactory(
+        Supplier<ImmutableList<Annotation>> annotationsFactory);
 
     public abstract Builder setJsFunctionInterface(boolean isJsFunctionInterface);
 
     public abstract Builder setJsType(boolean isJsType);
 
     public abstract Builder setJsEnumInfo(JsEnumInfo jsEnumInfo);
-
-    public abstract Builder setWasmInfo(String wasmInfo);
-
-    public abstract Builder setUnusableByJsSuppressed(boolean isUnusableByJsSuppressed);
-
-    public abstract Builder setDeprecated(boolean isDeprecated);
 
     public abstract Builder setLocal(boolean local);
 
@@ -939,6 +909,7 @@ public abstract class TypeDeclaration
 
     private String qualifiedSourceName;
 
+    @CanIgnoreReturnValue
     public Builder setQualifiedSourceName(String qualifiedSourceName) {
       this.qualifiedSourceName = qualifiedSourceName;
       return this;
@@ -948,7 +919,7 @@ public abstract class TypeDeclaration
 
     public abstract Builder setCustomizedJsNamespace(String jsNamespace);
 
-    public abstract Builder setObjectiveCNamePrefix(String objectiveCNamePreifx);
+    public abstract Builder setObjectiveCNamePrefix(String objectiveCNamePrefix);
 
     public abstract Builder setNullMarked(boolean isNullMarked);
 
@@ -1049,12 +1020,12 @@ public abstract class TypeDeclaration
         setClassComponents(qualifiedSourceName.substring(lastDot + 1));
       }
 
-      if (!getPackage().isPresent()) {
+      if (getPackage().isEmpty()) {
         // If no package is set, enclosing type is mandatory where we can get the package from.
         setPackage(getEnclosingTypeDeclaration().get().getPackage());
       }
 
-      if (!getSimpleJsName().isPresent()) {
+      if (getSimpleJsName().isEmpty()) {
         setSimpleJsName(AstUtils.getSimpleSourceName(getClassComponents().get()));
       }
 

@@ -48,7 +48,6 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -58,7 +57,6 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeUtil.AllVarsDeclaredInFunction;
 import com.google.javascript.jscomp.NodeUtil.GoogRequire;
 import com.google.javascript.jscomp.base.Tri;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -73,7 +71,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -694,6 +692,33 @@ public final class NodeUtilTest {
       checkState(nameNode.isName(), nameNode);
 
       assertThat(NodeUtil.isNamespaceDecl(nameNode)).isTrue();
+    }
+
+    @Test
+    public void testTypedefNamespace() {
+      Node statements =
+          parse(
+              """
+              /** @typedef */ const obj = {};
+              /** @const */ obj.a = {};
+              /** @typedef @const */ obj.b = {};
+              /** @typedef */ obj.c = {};
+              /** @typedef @const */ obj.d = function() {};
+              """);
+      LinkedHashSet<String> namespaceNames = new LinkedHashSet<>();
+      LinkedHashSet<String> nonNamespaceNames = new LinkedHashSet<>();
+      for (Node statement : statements.children()) {
+        Node name =
+            statement.isExprResult() ? statement.getFirstFirstChild() : statement.getFirstChild();
+        checkState(name.isName() || name.isGetProp(), name);
+        if (NodeUtil.isNamespaceDecl(name)) {
+          namespaceNames.add(name.getQualifiedName());
+        } else {
+          nonNamespaceNames.add(name.getQualifiedName());
+        }
+      }
+      assertThat(namespaceNames).containsExactly("obj", "obj.a", "obj.b");
+      assertThat(nonNamespaceNames).containsExactly("obj.c", "obj.d");
     }
 
     private void assertGetNameResult(Node function, String name) {
@@ -1783,7 +1808,7 @@ public final class NodeUtilTest {
 
       // Literals
       assertThat(NodeUtil.getNumberValue(parseExpr("1"))).isEqualTo(1.0);
-      assertThat(NodeUtil.getNumberValue(parseExpr("1n"))).isEqualTo(null);
+      assertThat(NodeUtil.getNumberValue(parseExpr("1n"))).isNull();
       assertThat(NodeUtil.getNumberValue(parseExpr("-1"))).isEqualTo(-1.0);
       assertThat(NodeUtil.getNumberValue(parseExpr("+1"))).isEqualTo(1.0);
       assertThat(NodeUtil.getNumberValue(parseExpr("22"))).isEqualTo(22.0);
@@ -1839,7 +1864,7 @@ public final class NodeUtilTest {
 
       // Literals
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("1"))).isEqualTo(1.0);
-      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("1n"))).isEqualTo(null);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("1n"))).isNull();
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("-1"))).isEqualTo(-1.0);
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("+1"))).isEqualTo(1.0);
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("22"))).isEqualTo(22.0);
@@ -4098,11 +4123,9 @@ public final class NodeUtilTest {
       Node ast = parse(js);
       Node moduleNode = parseFirst(MODULE_BODY, js);
       Scope globalScope = Scope.createGlobalScope(ast);
-      Map<String, Var> allVariables = new LinkedHashMap<>();
-      List<Var> orderedVars = new ArrayList<>();
-      NodeUtil.getAllVarsDeclaredInModule(
-          moduleNode, allVariables, orderedVars, compiler, scopeCreator, globalScope);
-      assertThat(allVariables.keySet()).containsExactly("g", "h");
+      Set<String> allVariables =
+          NodeUtil.getAllVarNamesDeclaredInModule(moduleNode, compiler, scopeCreator, globalScope);
+      assertThat(allVariables).containsExactly("g", "h");
     }
 
     @Test
@@ -4114,19 +4137,16 @@ public final class NodeUtilTest {
       SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
       Node ast = parse(js);
       Scope globalScope = Scope.createGlobalScope(ast);
-      Map<String, Var> allVariables = new LinkedHashMap<>();
-      List<Var> orderedVars = new ArrayList<>();
-      try {
-        NodeUtil.getAllVarsDeclaredInModule(
-            ast, allVariables, orderedVars, compiler, scopeCreator, globalScope);
-        throw new RuntimeException("getAllVarsDeclaredInModule should throw an exception");
-      } catch (IllegalStateException e) {
-        assertThat(e)
-            .hasMessageThat()
-            .isEqualTo("getAllVarsDeclaredInModule expects a module body node");
-      }
-      assertThat(allVariables).isEmpty();
-      assertThat(orderedVars).isEmpty();
+      Exception ex =
+          assertThrows(
+              IllegalStateException.class,
+              () ->
+                  NodeUtil.getAllVarNamesDeclaredInModule(
+                      ast, compiler, scopeCreator, globalScope));
+
+      assertThat(ex)
+          .hasMessageThat()
+          .isEqualTo("getAllVarsDeclaredInModule expects a module body node");
     }
 
     @Test
@@ -4152,12 +4172,14 @@ public final class NodeUtilTest {
     @Test
     public void testGetAllVars2() {
       String fnString =
-          "function g(x, y) "
-              + "{var z; "
-              + "{let a = (no1, no2) => { let no6, no7; }; "
-              + "const b = 1} "
-              + "let c} "
-              + "function u(h) {let e}";
+          """
+          function g(x, y)
+          {var z;
+          {let a = (no1, no2) => { let no6, no7; };
+          const b = 1}
+          let c}
+          function u(h) {let e}
+          """;
 
       Compiler compiler = new Compiler();
       compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
@@ -4730,7 +4752,10 @@ public final class NodeUtilTest {
               GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar", true)
             },
             {
-              "goog.module('a.b.c'); const {Bar: BarLocal} =" + " goog.require('d.Foo');",
+              """
+              goog.module('a.b.c'); const {Bar: BarLocal} =
+               goog.require('d.Foo');
+              """,
               "Bar",
               null
             },
@@ -4843,8 +4868,7 @@ public final class NodeUtilTest {
                       exprToUsesReceiver.forEach(
                           (expr, usesReceiver) -> {
                             String caseSrc =
-                                SimpleFormat.format(
-                                    outerTemplate, SimpleFormat.format(innerTemplate, expr));
+                                String.format(outerTemplate, String.format(innerTemplate, expr));
                             cases.add(
                                 new Object[] {
                                   caseSrc,
@@ -5084,16 +5108,16 @@ public final class NodeUtilTest {
       assertThat(
               NodeUtil.estimateNumLines(
                   parse(
-                      lines(
-                          "/* some",
-                          "long",
-                          "multi",
-                          "line",
-                          "comment",
-                          "*/",
-                          "const x = 1;",
-                          "const y = 2;",
-                          ""))))
+                      """
+                      /* some
+                      long
+                      multi
+                      line
+                      comment
+                      */
+                      const x = 1;
+                      const y = 2;
+                      """)))
           .isEqualTo(9);
     }
   }
@@ -5211,9 +5235,5 @@ public final class NodeUtilTest {
 
   private static boolean isValidQualifiedName(String s) {
     return NodeUtil.isValidQualifiedName(FeatureSet.ES3, s);
-  }
-
-  private static String lines(String... lines) {
-    return Joiner.on('\n').join(lines);
   }
 }

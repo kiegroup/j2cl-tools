@@ -1,15 +1,15 @@
 ;;; Code for systemgetproperty.Main [type definition]
+(type $systemgetproperty.Main (sub $java.lang.Object (struct
+ (field $vtable (ref $systemgetproperty.Main.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $systemgetproperty.Main.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
  (field $m_hashCode__int (ref $function.m_hashCode__int))
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
- ))
-)
-(type $systemgetproperty.Main (sub $java.lang.Object (struct
- (field $vtable (ref $systemgetproperty.Main.vtable))
- (field $itable (ref $itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
 
@@ -50,7 +50,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/systemgetproperty/readable-j2wasm.js/systemgetproperty/Main.java:18:13
   (call $$clinit__void_<once>_@systemgetproperty.Main )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/systemgetproperty/readable-j2wasm.js/systemgetproperty/Main.java:18:13
-  (local.set $$instance (struct.new $systemgetproperty.Main (ref.as_non_null (global.get $systemgetproperty.Main.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $systemgetproperty.Main (global.get $systemgetproperty.Main.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/systemgetproperty/readable-j2wasm.js/systemgetproperty/Main.java:18:13
   (call $$ctor__void_$p_systemgetproperty_Main@systemgetproperty.Main (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/systemgetproperty/readable-j2wasm.js/systemgetproperty/Main.java:18:13

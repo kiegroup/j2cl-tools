@@ -126,17 +126,10 @@ public final class ModuleMetadataMap {
 
     /** Whether this is a module (with it's own local scope). */
     public boolean isModule() {
-      switch (moduleType()) {
-        case GOOG_PROVIDE:
-        case SCRIPT:
-          return false;
-        case COMMON_JS:
-        case ES6_MODULE:
-        case GOOG_MODULE:
-        case LEGACY_GOOG_MODULE:
-          return true;
-      }
-      throw new AssertionError(moduleType());
+      return switch (moduleType()) {
+        case GOOG_PROVIDE, SCRIPT -> false;
+        case COMMON_JS, ES6_MODULE, GOOG_MODULE, LEGACY_GOOG_MODULE -> true;
+      };
     }
 
     /**
@@ -227,6 +220,7 @@ public final class ModuleMetadataMap {
     // Use reference equality to prevent bad HashSet<ModuleMetadata> performance on GWT.
     // GatherModuleMetadata is guaranteed to create exactly one ModuleMetadata instance for each
     // input module.
+    // NOTE(user): consider removing this override now that GWT & J2CL builds are gone.
     @Override
     public final boolean equals(Object other) {
       return super.equals(other);

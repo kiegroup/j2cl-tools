@@ -87,7 +87,7 @@ public final class EnumElementType extends ObjectType {
   }
 
   @Override
-  public HasPropertyKind getPropertyKind(String propertyName, boolean autobox) {
+  public HasPropertyKind getPropertyKind(Property.Key propertyName, boolean autobox) {
     return primitiveType.getPropertyKind(propertyName, autobox);
   }
 
@@ -116,6 +116,11 @@ public final class EnumElementType extends ObjectType {
   @Override
   public boolean matchesObjectContext() {
     return primitiveType.matchesObjectContext();
+  }
+
+  @Override
+  public boolean matchesSymbolContext() {
+    return primitiveType.matchesSymbolContext();
   }
 
   @Override
@@ -188,8 +193,8 @@ public final class EnumElementType extends ObjectType {
   }
 
   @Override
-  boolean defineProperty(String propertyName, JSType type,
-      boolean inferred, Node propertyNode) {
+  boolean defineProperty(
+      Property.Key propertyName, JSType type, boolean inferred, Node propertyNode) {
     // nothing
     return true;
   }
@@ -200,7 +205,7 @@ public final class EnumElementType extends ObjectType {
   }
 
   @Override
-  protected JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
+  protected JSType findPropertyTypeWithoutConsideringTemplateTypes(Property.Key propertyName) {
     return primitiveType.findPropertyType(propertyName);
   }
 

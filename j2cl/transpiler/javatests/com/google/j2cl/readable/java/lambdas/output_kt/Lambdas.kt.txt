@@ -1,5 +1,4 @@
 // Generated from "lambdas/Lambdas.java"
-@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -19,11 +18,9 @@
 package lambdas
 
 import javaemul.lang.*
-import java.lang.Integer
-import java.lang.Long
 import java.lang.RuntimeException
 import java.lang.Void
-import javaemul.lang.JavaIterable
+import javaemul.lang.MutableIterableJvm
 import jsinterop.annotations.JsFunction
 import jsinterop.annotations.JsMethod
 import jsinterop.annotations.JsPackage
@@ -34,191 +31,197 @@ import kotlin.Enum
 import kotlin.Error
 import kotlin.Int
 import kotlin.Number
-import kotlin.OptIn
 import kotlin.String
 import kotlin.Suppress
 import kotlin.Throwable
 import kotlin.collections.MutableIterable
-import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.JvmField
 import kotlin.jvm.JvmStatic
 import kotlin.let
-import kotlin.native.ObjCName
 
-@ObjCName("J2ktLambdasLambdas", exact = true)
 open class Lambdas {
  @JvmField
- @ObjCName("field_")
  var field: Int = 100
 
- @ObjCName("call")
- open fun call(
-  @ObjCName("withLambdasLambdas_FunctionalInterface") intf: Lambdas.FunctionalInterface?,
-  @ObjCName("withInt") n: Int
- ): Int {
+ open fun call(intf: FunctionalInterface?, n: Int): Int {
   return this.field + intf!!.m(n)
  }
 
- @ObjCName("testLambdaExpressionStyle")
  open fun testLambdaExpressionStyle() {
-  this.call(Lambdas.FunctionalInterface { i: Int ->
-   return@FunctionalInterface i + 1
-  }, 10)
+  this.call(
+   FunctionalInterface { i: Int ->
+    return@FunctionalInterface i + 1
+   },
+   10,
+  )
  }
 
- @ObjCName("testLambdaBlockStyle")
  open fun testLambdaBlockStyle() {
-  this.call(Lambdas.FunctionalInterface { i: Int ->
-   return@FunctionalInterface i + 2
-  }, 10)
+  this.call(
+   FunctionalInterface { i: Int ->
+    return@FunctionalInterface i + 2
+   },
+   10,
+  )
  }
 
- @ObjCName("testLambdaCaptureField")
  open fun testLambdaCaptureField() {
-  this.call(Lambdas.FunctionalInterface { i: Int ->
-   return@FunctionalInterface this.field + i + 1
-  }, 10)
+  this.call(
+   FunctionalInterface { i: Int ->
+    return@FunctionalInterface this.field + i + 1
+   },
+   10,
+  )
  }
 
- @ObjCName("testLambdaCaptureLocal")
  open fun testLambdaCaptureLocal() {
   val x: Int = 1
-  this.call(Lambdas.FunctionalInterface { i: Int ->
-   return@FunctionalInterface x + i + 1
-  }, 10)
+  this.call(
+   FunctionalInterface { i: Int ->
+    return@FunctionalInterface x + i + 1
+   },
+   10,
+  )
  }
 
- @ObjCName("testLambdaCaptureFieldAndLocal")
  open fun testLambdaCaptureFieldAndLocal() {
   val x: Int = 1
-  this.call(Lambdas.FunctionalInterface { i: Int ->
-   val y: Int = 1
-   return@FunctionalInterface x + y + this.field + i + 1
-  }, 10)
+  this.call(
+   FunctionalInterface { i: Int ->
+    val y: Int = 1
+    return@FunctionalInterface x + y + this.field + i + 1
+   },
+   10,
+  )
  }
 
- @ObjCName("funOuter")
  open fun funOuter() {}
 
- @ObjCName("testLambdaCallOuterFunction")
  open fun testLambdaCallOuterFunction() {
-  this.call(Lambdas.FunctionalInterface { i: Int ->
-   this.funOuter()
-   this.funOuter()
-   this@Lambdas.funOuter()
-   return@FunctionalInterface i + 2
-  }, 10)
+  this.call(
+   FunctionalInterface { i: Int ->
+    this.funOuter()
+    this.funOuter()
+    this@Lambdas.funOuter()
+    return@FunctionalInterface i + 2
+   },
+   10,
+  )
  }
 
- @ObjCName("testNestedLambdas")
  open fun testNestedLambdas() {
-  this.call(Lambdas.FunctionalInterface { i: Int ->
-   return@FunctionalInterface this.call(Lambdas.FunctionalInterface { j: Int ->
-    return@FunctionalInterface j
-   }, 20)
-  }, 10)
+  this.call(
+   FunctionalInterface { i: Int ->
+    return@FunctionalInterface this.call(
+     FunctionalInterface { j: Int ->
+      return@FunctionalInterface j
+     },
+     20,
+    )
+   },
+   10,
+  )
  }
 
- @ObjCName("testReturnLabelNameConflictKotlin")
  open fun testReturnLabelNameConflictKotlin() {
-  this.call(Lambdas.FunctionalInterface { i: Int ->
-   return@FunctionalInterface i
-  }, 10)
+  this.call(
+   FunctionalInterface { i: Int ->
+    return@FunctionalInterface i
+   },
+   10,
+  )
  }
 
- @ObjCName("testInstanceMethodTypeVariableThroughLambda")
  open fun <T> testInstanceMethodTypeVariableThroughLambda() {
-  val wrapped: Lambdas.Functional<T>? = Lambdas.Functional<T> { f: Lambdas.Functional<T>? ->
-   return@Functional object : Lambdas.Functional<T> {
-    override fun wrap(f: Lambdas.Functional<T>?): Lambdas.Functional<T>? {
+  val wrapped: Functional<T> = Functional { f: Functional<T>? ->
+   return@Functional object : Functional<T> {
+    override fun wrap(f: Functional<T>?): Functional<T>? {
      return null
     }
    }
   }
  }
 
- @ObjCName("callWithTypeVariable")
- open fun <T> callWithTypeVariable(
-  @ObjCName("withLambdasLambdas_GenericFunctionalInterface") intf: Lambdas.GenericFunctionalInterface<T>?,
-  @ObjCName("withId") e: T
- ): T {
+ open fun <T> callWithTypeVariable(intf: GenericFunctionalInterface<T>?, e: T): T {
   return intf!!.m(e)
  }
 
- @ObjCName("callParameterized")
- open fun callParameterized(
-  @ObjCName("withLambdasLambdas_GenericFunctionalInterface") intf: Lambdas.GenericFunctionalInterface<Error?>?,
-  @ObjCName("withJavaLangError") e: Error?
- ): Error? {
+ open fun callParameterized(intf: GenericFunctionalInterface<Error?>?, e: Error?): Error? {
   return intf!!.m(e)
  }
 
- internal open fun <T> callWithBiFunction_pp_lambdas(fn: Lambdas.BiFunction<T, String?, Double?>?): Lambdas.GenericFunctionalInterface<T>? {
+ internal open fun <T> callWithBiFunction_pp_lambdas(fn: BiFunction<T, String?, Double?>?): GenericFunctionalInterface<T>? {
   return null
  }
 
- @ObjCName("testLambdaWithGenerics")
  open fun <T: Enum<T>> testLambdaWithGenerics() {
-  this.callWithTypeVariable<Error?>(Lambdas.GenericFunctionalInterface<Error?> { i: Error? ->
-   return@GenericFunctionalInterface i
-  }, java.lang.Error())
-  this.callParameterized(Lambdas.GenericFunctionalInterface<Error?> { i_1: Error? ->
-   return@GenericFunctionalInterface i_1
-  }, java.lang.Error())
-  Lambdas.callTypeVariableWithBounds<T>(Lambdas.GenericFunctionalInterface<Enum<T>?> { i_2: Enum<T>? ->
-   return@GenericFunctionalInterface i_2
-  }, null as Enum<T>?)
-  this.callWithBiFunction_pp_lambdas<Any?>(Lambdas.BiFunction<Any?, String?, Double?> { x: Any?, y: String? ->
-   throw RuntimeException()
-  })
-  this.callWithBiFunction_pp_lambdas<Any?>(Lambdas.BiFunction<Any?, String?, Double?> { x_1: Any?, y_1: String? ->
-   return@BiFunction java.lang.Double.valueOf(3.0)
-  })
-  val f: Lambdas.Function<in T, *>? = Lambdas.Function { item: T ->
-   return@Function Long.valueOf(1L)
+  this.callWithTypeVariable<Error?>(
+   GenericFunctionalInterface { i: Error? ->
+    return@GenericFunctionalInterface i
+   },
+   java.lang.Error(),
+  )
+  this.callParameterized(
+   GenericFunctionalInterface { i_1: Error? ->
+    return@GenericFunctionalInterface i_1
+   },
+   java.lang.Error(),
+  )
+  Lambdas.callTypeVariableWithBounds<T>(
+   GenericFunctionalInterface { i_2: Enum<T>? ->
+    return@GenericFunctionalInterface i_2
+   } as GenericFunctionalInterface<Enum<T>?>?,
+   null as Enum<T>?,
+  )
+  this.callWithBiFunction_pp_lambdas<Any?>(
+   BiFunction { x: Any?, y: String? ->
+    throw RuntimeException()
+   },
+  )
+  this.callWithBiFunction_pp_lambdas<Any?>(
+   BiFunction { x_1: Any?, y_1: String? ->
+    return@BiFunction 3.0
+   },
+  )
+  val f: Function<in T, *> = Function { item: T ->
+   return@Function 1L
   }
-  val f2: Lambdas.Function<Lambdas.Wrapper<String?>?, String?>? = Lambdas.Function<Lambdas.Wrapper<String?>?, String?> { item_1: Lambdas.Wrapper<String?>? ->
+  val f2: Function<Wrapper<String?>?, String?> = Function { item_1: Wrapper<String?>? ->
    return@Function item_1!!.wrapped_pp_lambdas
   }
  }
 
- @ObjCName("testLambdaReturningVoidAsExpression")
  open fun testLambdaReturningVoidAsExpression() {
-  val runner: Lambdas.FunctionalInterfaceWithMethodReturningVoid? = Lambdas.FunctionalInterfaceWithMethodReturningVoid {
+  val runner: FunctionalInterfaceWithMethodReturningVoid = FunctionalInterfaceWithMethodReturningVoid {
    Any()
   }
  }
 
- @ObjCName("testAnonymousInsideLambda")
  open fun testAnonymousInsideLambda() {
-  val runner: Lambdas.FunctionalInterfaceWithMethodReturningVoid? = Lambdas.FunctionalInterfaceWithMethodReturningVoid {
+  val runner: FunctionalInterfaceWithMethodReturningVoid = FunctionalInterfaceWithMethodReturningVoid {
    object : Any() {}
   }
  }
 
- @ObjCName("testDefaultMethodsInIntersectionAdaptor")
  open fun testDefaultMethodsInIntersectionAdaptor() {
-  val o: Any? = (Lambdas.BiFunction<String?, String?, String?> { t: String?, u: String? ->
+  val o: Any = (BiFunction { t: String?, u: String? ->
    return@BiFunction null
-  }).let { it as Lambdas.BiFunction<String?, String?, String?>; it as Lambdas.MarkerWithDefaultMethod; it }
+  }).let { it as BiFunction<String?, String?, String?>; it as MarkerWithDefaultMethod; it }
  }
 
- @ObjCName("J2ktLambdasLambdasCompanion", exact = true)
  companion object {
   @JvmStatic
-  @ObjCName("testLambdaInStaticContext")
   fun testLambdaInStaticContext() {
-   val f: Lambdas.FunctionalInterface? = Lambdas.FunctionalInterface { i: Int ->
+   val f: FunctionalInterface = FunctionalInterface { i: Int ->
     return@FunctionalInterface i
    }
   }
 
   @JvmStatic
-  @ObjCName("testStaticMethodTypeVariableThroughLambda")
   fun <T> testStaticMethodTypeVariableThroughLambda() {
-   val wrapped: Lambdas.Functional<T>? = Lambdas.Functional<T> { f: Lambdas.Functional<T>? ->
-    return@Functional object : Lambdas.Functional<T> {
-     override fun wrap(f: Lambdas.Functional<T>?): Lambdas.Functional<T>? {
+   val wrapped: Functional<T> = Functional { f: Functional<T>? ->
+    return@Functional object : Functional<T> {
+     override fun wrap(f: Functional<T>?): Functional<T>? {
       return null
      }
     }
@@ -226,170 +229,129 @@ open class Lambdas {
   }
 
   @JvmStatic
-  @ObjCName("callTypeVariableWithBounds")
-  fun <T: Enum<T>> callTypeVariableWithBounds(
-   @ObjCName("withLambdasLambdas_GenericFunctionalInterface") intf: Lambdas.GenericFunctionalInterface<Enum<T>?>?,
-   @ObjCName("withJavaLangEnum") e: Enum<T>?
-  ): Enum<T>? {
+  fun <T: Enum<T>> callTypeVariableWithBounds(intf: GenericFunctionalInterface<Enum<T>?>?, e: Enum<T>?): Enum<T>? {
    return intf!!.m(e)
   }
 
   @JvmStatic
-  @ObjCName("m")
   fun m(): Any? {
    return null
   }
 
   @JvmStatic
-  @ObjCName("testLambdaCallingStaticMethod")
   fun testLambdaCallingStaticMethod() {
-   val f: Lambdas.Function<Any?, *>? = Lambdas.Function { l: Any? ->
+   val f: Function<Any?, *> = Function { l: Any? ->
     return@Function Lambdas.m()
    }
   }
 
-  private var identityFunction: Lambdas.IdentityFunction? = null
+  private var identityFunction: IdentityFunction? = null
 
   @JvmStatic
-  @ObjCName("identity")
-  fun <E> identity(): Lambdas.GenericJsFunction<E, E>? {
+  fun <E> identity(): GenericJsFunction<E, E>? {
    if (Lambdas.identityFunction == null) {
-    Lambdas.identityFunction = Lambdas.IdentityFunction()
+    Lambdas.identityFunction = IdentityFunction()
    }
-   return Lambdas.identityFunction as Lambdas.GenericJsFunction<E, E>?
+   return Lambdas.identityFunction as GenericJsFunction<E, E>?
   }
 
   @JvmStatic
-  @ObjCName("testJsInteropLambdas")
   fun testJsInteropLambdas() {
-   val thenable: Lambdas.Thenable<String?>? = Lambdas.Thenable<String?> { f1: Lambdas.GenericJsFunction<Void?, String?>?, f2: Lambdas.GenericJsFunction<Void?, Throwable?>? ->
+   val thenable: Thenable<String?> = Thenable { f1: GenericJsFunction<Void?, String?>?, f2: GenericJsFunction<Void?, Throwable?>? ->
     f1!!.apply(null)
    }
-   val otherThenable: Lambdas.AnotherThenable<String?>? = Lambdas.AnotherThenable<String?> { f1_1: Lambdas.GenericJsFunction<Void?, String?>?, f2_1: Lambdas.GenericJsFunction<Void?, Throwable?>? ->
+   val otherThenable: AnotherThenable<String?> = AnotherThenable { f1_1: GenericJsFunction<Void?, String?>?, f2_1: GenericJsFunction<Void?, Throwable?>? ->
     f1_1!!.apply(null)
    }
-   val stringJsSupplier: Lambdas.JsSupplier<Int?>? = Lambdas.JsSupplier<Int?> {
-    return@JsSupplier Integer.valueOf(1)
+   val stringJsSupplier: JsSupplier<Int?> = JsSupplier {
+    return@JsSupplier 1
    }
-   stringJsSupplier!!.get()
-   val equals: Lambdas.Equals<Any?>? = stringJsSupplier as Lambdas.Equals<Any?>?
-   equals!!.equals(null)
-   equals!!.get()
+   stringJsSupplier.get()
+   val equals: Equals<Any?> = stringJsSupplier as Equals<Any?>
+   equals.equals(null)
+   equals.get()
   }
 
   @JvmStatic
-  @ObjCName("testIntersectionTyping")
   fun <U, V> testIntersectionTyping() {
-   var o: Any? = (Lambdas.GenericFunctionalInterface<String?> { x: String? ->
+   var o: Any = (GenericFunctionalInterface { x: String? ->
     return@GenericFunctionalInterface x
-   }).let { it as Lambdas.GenericFunctionalInterface<String?>; it as Lambdas.JustADefaultT<Number?>; it }
-   o = (Lambdas.GenericFunctionalInterface<String?> { x_1: String? ->
+   }).let { it as GenericFunctionalInterface<String?>; it as JustADefaultT<Number?>; it }
+   o = (GenericFunctionalInterface { x_1: String? ->
     return@GenericFunctionalInterface x_1
-   }).let { it as Lambdas.GenericFunctionalInterface<String?>; it as Lambdas.JustADefaultS<Number?>; it }
-   o = (Lambdas.GenericFunctionalInterface<U> { x_2: U ->
+   }).let { it as GenericFunctionalInterface<String?>; it as JustADefaultS<Number?>; it }
+   o = (GenericFunctionalInterface { x_2: U ->
     return@GenericFunctionalInterface x_2
-   }).let { it as Lambdas.GenericFunctionalInterface<U>; it as Lambdas.JustADefaultS<V>; it }
+   }).let { it as GenericFunctionalInterface<U>; it as JustADefaultS<V>; it }
   }
 
   @JvmStatic
-  @ObjCName("testIterable")
-  fun <T> testIterable(
-   @ObjCName("withJavaLangIterable") iterable: MutableIterable<T>?
-  ) {
-   val lambda: MutableIterable<T>? = JavaIterable<T> {
-    return@JavaIterable iterable!!.iterator()
+  fun <T> testIterable(iterable: MutableIterable<T>?) {
+   val lambda: MutableIterable<T> = MutableIterableJvm {
+    return@MutableIterableJvm iterable!!.iterator()
    }
   }
+
+  @JvmStatic
+  private fun <T> acceptsSupplier(supplier: Supplier<T>?) {}
  }
 
- @ObjCName("J2ktLambdasLambdas_FunctionalInterface", exact = true)
  fun interface FunctionalInterface {
-  @ObjCName("m")
-  fun m(
-   @ObjCName("withInt") i: Int
-  ): Int
+  fun m(i: Int): Int
  }
 
- @ObjCName("J2ktLambdasLambdas_Functional", exact = true)
  fun interface Functional<T> {
-  @ObjCName("wrap")
-  fun wrap(
-   @ObjCName("withLambdasLambdas_Functional") f: Lambdas.Functional<T>?
-  ): Lambdas.Functional<T>?
+  fun wrap(f: Functional<T>?): Functional<T>?
  }
 
- @ObjCName("J2ktLambdasLambdas_GenericFunctionalInterface", exact = true)
  fun interface GenericFunctionalInterface<T> {
-  @ObjCName("m")
-  fun m(
-   @ObjCName("withId") i: T
-  ): T
+  fun m(i: T): T
  }
 
- @ObjCName("J2ktLambdasLambdas_BiFunction", exact = true)
  fun interface BiFunction<T, U, R> {
-  @ObjCName("apply")
-  fun apply(
-   @ObjCName("withId") t: T,
-   @ObjCName("withId") u: U
-  ): R
+  fun apply(t: T, u: U): R
 
-  @ObjCName("andThen")
-  fun <V> andThen(
-   @ObjCName("withLambdasLambdas_Function") after: Lambdas.Function<in R, out V>?
-  ): Lambdas.BiFunction<T, U, V>? {
-   return Lambdas.BiFunction<T, U, V> { t: T, u: U ->
-    return@BiFunction after!!.apply(this.apply(t, u))
+  fun <V> andThen(after: Function<in R, out V>?): BiFunction<T, U, V>? {
+   return BiFunction { t: T, u: U ->
+    return@BiFunction after!!.apply(
+     this.apply(t, u),
+    )
    }
   }
  }
 
- @ObjCName("J2ktLambdasLambdas_Function", exact = true)
  fun interface Function<T, R> {
-  @ObjCName("apply")
-  fun apply(
-   @ObjCName("withId") t: T
-  ): R
+  fun apply(t: T): R
 
-  @ObjCName("J2ktLambdasLambdas_FunctionCompanion", exact = true)
   companion object {
    @JvmStatic
-   @ObjCName("identity")
-   fun <T> identity(): Lambdas.Function<T, T>? {
-    return Lambdas.Function<T, T> { t: T ->
+   fun <T> identity(): Function<T, T>? {
+    return Function { t: T ->
      return@Function t
     }
    }
   }
  }
 
- @ObjCName("J2ktLambdasLambdas_Wrapper", exact = true)
  open class Wrapper<T> internal constructor() {
   @JvmField
   internal var wrapped_pp_lambdas: T = null as T
  }
 
- @ObjCName("J2ktLambdasLambdas_FunctionalInterfaceWithMethodReturningVoid", exact = true)
  fun interface FunctionalInterfaceWithMethodReturningVoid {
-  @ObjCName("run")
   fun run()
  }
 
- @ObjCName("J2ktLambdasLambdas_Parent", exact = true)
  open class Parent internal constructor() {
   @JvmField
-  @ObjCName("fieldInParent_")
   var fieldInParent: Int = 0
 
-  @ObjCName("funInParent")
   open fun funInParent() {}
  }
 
- @ObjCName("J2ktLambdasLambdas_LambdaInSubClass", exact = true)
- open class LambdaInSubClass internal constructor(): Lambdas.Parent() {
-  @ObjCName("testLambdaInSubclass")
+ open class LambdaInSubClass internal constructor(): Parent() {
   open fun testLambdaInSubclass() {
-   val l: Lambdas.FunctionalInterface? = Lambdas.FunctionalInterface { i: Int ->
+   val l: FunctionalInterface = FunctionalInterface { i: Int ->
     this.funInParent()
     this.funInParent()
     this@LambdaInSubClass.funInParent()
@@ -401,148 +363,112 @@ open class Lambdas {
   }
  }
 
- @ObjCName("J2ktLambdasLambdas_GenericJsFunction", exact = true)
  @JsFunction
  fun interface GenericJsFunction<R, T> {
-  @ObjCName("apply")
-  fun apply(
-   @ObjCName("withId") t: T
-  ): R
+  fun apply(t: T): R
  }
 
- @ObjCName("J2ktLambdasLambdas_Thenable", exact = true)
  @JsType(name = "?", namespace = JsPackage.GLOBAL, isNative = true)
  fun interface Thenable<T> {
-  @ObjCName("then")
-  fun then(
-   @ObjCName("withLambdasLambdas_GenericJsFunction") f1: Lambdas.GenericJsFunction<Void?, T>?,
-   @ObjCName("withLambdasLambdas_GenericJsFunction") f2: Lambdas.GenericJsFunction<Void?, Throwable?>?
-  )
+  fun then(f1: GenericJsFunction<Void?, T>?, f2: GenericJsFunction<Void?, Throwable?>?)
  }
 
- @ObjCName("J2ktLambdasLambdas_AnotherThenable", exact = true)
  @JsType(name = "?", namespace = JsPackage.GLOBAL, isNative = true)
  fun interface AnotherThenable<T> {
-  @ObjCName("then")
-  fun then(
-   @ObjCName("withLambdasLambdas_GenericJsFunction") f1: Lambdas.GenericJsFunction<Void?, T>?,
-   @ObjCName("withLambdasLambdas_GenericJsFunction") f2: Lambdas.GenericJsFunction<Void?, Throwable?>?
-  )
+  fun then(f1: GenericJsFunction<Void?, T>?, f2: GenericJsFunction<Void?, Throwable?>?)
  }
 
- @ObjCName("J2ktLambdasLambdas_IdentityFunction", exact = true)
- class IdentityFunction internal constructor(): Lambdas.GenericJsFunction<Any?, Any?> {
+ class IdentityFunction internal constructor(): GenericJsFunction<Any?, Any?> {
   override fun apply(o: Any?): Any? {
    return o
   }
  }
 
- @ObjCName("J2ktLambdasLambdas_Equals", exact = true)
  interface Equals<T> {
-  @ObjCName("get")
   fun get(): T {
    return null as T
   }
  }
 
- @ObjCName("J2ktLambdasLambdas_JsSupplier", exact = true)
- fun interface JsSupplier<T: Number?>: Lambdas.Equals<T> {
+ fun interface JsSupplier<T: Number?>: Equals<T> {
   @JsMethod
   override fun get(): T
  }
 
- @ObjCName("J2ktLambdasLambdas_JustADefaultT", exact = true)
  interface JustADefaultT<T> {
-  @ObjCName("method")
-  fun method(
-   @ObjCName("withId") t: T
-  ) {}
+  fun method(t: T) {}
  }
 
- @ObjCName("J2ktLambdasLambdas_JustADefaultS", exact = true)
  interface JustADefaultS<S> {
-  @ObjCName("method")
-  fun method(
-   @ObjCName("withId") t: S
-  ) {}
+  fun method(t: S) {}
  }
 
- @ObjCName("J2ktLambdasLambdas_MarkerWithDefaultMethod", exact = true)
  interface MarkerWithDefaultMethod {
-  @ObjCName("defaultMethod")
   fun defaultMethod() {}
  }
 
- @ObjCName("J2ktLambdasLambdas_Runnable", exact = true)
  fun interface Runnable {
-  @ObjCName("run")
   fun run()
  }
 
- @ObjCName("J2ktLambdasLambdas_Outer", exact = true)
  open inner class Outer internal constructor() {
   internal open fun m_pp_lambdas() {}
 
   internal open fun n_pp_lambdas() {
-   val r: Lambdas.Runnable? = Lambdas.Runnable {
+   val r: Runnable = Runnable {
     this.m_pp_lambdas()
    }
   }
  }
 
- @ObjCName("J2ktLambdasLambdas_Super", exact = true)
  open inner class Super internal constructor() {
   internal open fun m_pp_lambdas() {}
  }
 
- @ObjCName("J2ktLambdasLambdas_Sub", exact = true)
  open inner class Sub internal constructor(): Lambdas.Super() {
   internal open fun n_pp_lambdas() {
-   val r: Lambdas.Runnable? = object : Lambdas.Runnable {
+   val r: Runnable = object : Runnable {
     override fun run() {
-     super<Lambdas.Super>@Sub.m_pp_lambdas()
+     super<Super>@Sub.m_pp_lambdas()
     }
    }
   }
  }
 
- @ObjCName("J2ktLambdasLambdas_SubWithLambda", exact = true)
  open inner class SubWithLambda internal constructor(): Lambdas.Super() {
   internal open fun n_pp_lambdas() {
-   val r: Lambdas.Runnable? = Lambdas.Runnable {
-    super<Lambdas.Super>.m_pp_lambdas()
+   val r: Runnable = Runnable {
+    super<Super>.m_pp_lambdas()
    }
   }
  }
 
- @ObjCName("J2ktLambdasLambdas_EmptyInterface", exact = true)
- interface EmptyInterface {}
+ interface EmptyInterface
 
- @ObjCName("J2ktLambdasLambdas_EmptyInterfaceProvider", exact = true)
  fun interface EmptyInterfaceProvider {
-  @ObjCName("provide")
-  fun provide(): Lambdas.EmptyInterface?
+  fun provide(): EmptyInterface?
  }
 
- @ObjCName("J2ktLambdasLambdas_ProviderHolder", exact = true)
  open class ProviderHolder internal constructor() {
-  @ObjCName("J2ktLambdasLambdas_ProviderHolderCompanion", exact = true)
   companion object {
    @JvmField
-   @ObjCName("emptyInterface_")
-   val emptyInterface: Lambdas.EmptyInterface? = object : Lambdas.EmptyInterface {}
+   val emptyInterface: EmptyInterface? = object : EmptyInterface {}
 
    @JvmField
-   @ObjCName("provideFromField_")
-   val provideFromField: Lambdas.EmptyInterfaceProvider? = Lambdas.EmptyInterfaceProvider {
-    return@EmptyInterfaceProvider Lambdas.ProviderHolder.emptyInterface
+   val provideFromField: EmptyInterfaceProvider? = EmptyInterfaceProvider {
+    return@EmptyInterfaceProvider ProviderHolder.emptyInterface
    }
 
    @JvmField
-   @ObjCName("provideFromAnonImpl_")
-   val provideFromAnonImpl: Lambdas.EmptyInterfaceProvider? = Lambdas.EmptyInterfaceProvider {
-    return@EmptyInterfaceProvider object : Lambdas.EmptyInterface {}
+   val provideFromAnonImpl: EmptyInterfaceProvider? = EmptyInterfaceProvider {
+    return@EmptyInterfaceProvider object : EmptyInterface {}
    }
   }
  }
+
+ fun interface Supplier<T> {
+  fun get(): T
+ }
+
+ annotation class J2ktIncompatible
 }

@@ -27,11 +27,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.io.FilterOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -411,7 +408,7 @@ public final class PerformanceTracker {
             (entry) -> {
               String key = entry.getKey();
               Stats stats = entry.getValue();
-              return SimpleFormat.format(
+              return String.format(
                   "%s,%d,%d,%d,%d,%d,%d,%d",
                   key,
                   stats.runtime,
@@ -430,19 +427,18 @@ public final class PerformanceTracker {
             "Log:",
             "pass,runtime,allocMem,codeChanged,astReduction,reduction,gzReduction,astSize,size,gzSize"));
     for (Stats stats : this.log) {
-      output.print(
-          SimpleFormat.format(
-              "%s,%d,%d,%b,%d,%d,%d,%d,%d,%d\n",
-              stats.pass,
-              stats.runtime,
-              stats.allocMem,
-              stats.changes == 1,
-              stats.astDiff,
-              stats.diff,
-              stats.gzDiff,
-              stats.astSize,
-              stats.size,
-              stats.gzSize));
+      output.printf(
+          "%s,%d,%d,%b,%d,%d,%d,%d,%d,%d\n",
+          stats.pass,
+          stats.runtime,
+          stats.allocMem,
+          stats.changes == 1,
+          stats.astDiff,
+          stats.diff,
+          stats.gzDiff,
+          stats.astSize,
+          stats.size,
+          stats.gzSize);
     }
 
     if (this.astManifest != null) {
@@ -452,22 +448,15 @@ public final class PerformanceTracker {
               "Input AST Manifest:",
               "token,count"));
       this.astManifest.entrySet().stream()
-          .map((e) -> SimpleFormat.format("%s,%d", e.getElement(), e.getCount()))
+          .map((e) -> String.format("%s,%d", e.getElement(), e.getCount()))
           .sorted()
           .forEach(output::println);
     }
 
     output.println();
-
     // this.output can be System.out, so don't close it to not lose subsequent
     // error messages. Flush to ensure that you will see the tracer report.
-    try {
-      // TODO(johnlenz): Remove this cast and try/catch.
-      // This is here to workaround GWT http://b/30943295
-      ((FilterOutputStream) output).flush();
-    } catch (IOException e) {
-      throw new RuntimeException("Unreachable.", e);
-    }
+    output.flush();
   }
 
   /**

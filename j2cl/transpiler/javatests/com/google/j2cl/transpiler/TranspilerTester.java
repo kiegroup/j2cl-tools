@@ -15,19 +15,20 @@ package com.google.j2cl.transpiler;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.io.MoreFiles;
 import com.google.common.truth.Correspondence;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.j2cl.common.Problems;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -39,6 +40,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -60,7 +63,7 @@ public class TranspilerTester {
         .setClassPathArg("transpiler/javatests/com/google/j2cl/transpiler/jre_bundle_deploy.jar");
   }
 
-  /** Creates a new transpiler tester initialized with Kotlin defaults. */
+  /** Creates a new transpiler tester initialized with Kotlin (frontend) defaults. */
   public static TranspilerTester newTesterWithKotlinDefaults() {
     return newTester()
         .addArgs("-frontend", "KOTLIN")
@@ -71,15 +74,24 @@ public class TranspilerTester {
         // JVM target.
         // Note: For Bazel compilation, this is provided through toolchain defaults.
         .addArgs("-kotlincOptions", "-jvm-target=11")
-        // TODO(b/317551802): Remove this flag once we support 2.0.
-        .addArgs("-kotlincOptions", "-language-version=1.9")
+        .addArgs("-kotlincOptions", "-language-version=2.1")
         .setClassPathArg(
             "transpiler/javatests/com/google/j2cl/transpiler/ktstdlib_bundle_deploy.jar");
+  }
+
+  /** Creates a new transpiler tester initialized with Kotlin (backend) defaults. */
+  public static TranspilerTester newTesterWithJ2ktDefaults() {
+    return newTester()
+        .addArgs("-backend", "KOTLIN")
+        .setClassPathArg(
+            "transpiler/javatests/com/google/j2cl/transpiler/jre_bundle-j2kt_deploy.jar");
   }
 
   /** Creates a new transpiler tester initialized with WASM defaults. */
   public static TranspilerTester newTesterWithWasmDefaults() {
     return newTester()
+        // TODO(b/395921769): Remove this after the test are ported to modular WASM.
+        .noAssertDelayedCancelChecks()
         .addArgs("-backend", "WASM")
         .setClassPathArg(
             "transpiler/javatests/com/google/j2cl/transpiler/jre_bundle-j2wasm_deploy.jar")
@@ -192,39 +204,37 @@ public class TranspilerTester {
   private List<String> args = new ArrayList<>();
   private String temporaryDirectoryPrefix = "transpile_tester";
   private Path outputPath;
+  private boolean assertDelayedCancelChecks = true;
 
-  public TranspilerTester addCompilationUnit(String qualifiedCompilationUnitName, String... code) {
-    List<String> content = Lists.newArrayList(code);
-
+  @CanIgnoreReturnValue
+  public TranspilerTester addCompilationUnit(String qualifiedCompilationUnitName, String code) {
     String packageName = getPackageName(qualifiedCompilationUnitName);
     if (!packageName.isEmpty()) {
-      content.add(0, "package " + packageName + ";");
+      code = "package " + packageName + ";\n" + code;
     }
-
-    return addFileUsingQualifiedName(
-        qualifiedCompilationUnitName, ".java", content.toArray(new String[0]));
+    return addFileUsingQualifiedName(qualifiedCompilationUnitName, ".java", code);
   }
 
+  @CanIgnoreReturnValue
   public TranspilerTester addKotlinCompilationUnit(
-      String qualifiedCompilationUnitName, String... code) {
-    List<String> content = Lists.newArrayList(code);
-
+      String qualifiedCompilationUnitName, String code) {
     String packageName = getPackageName(qualifiedCompilationUnitName);
     if (!packageName.isEmpty()) {
-      content.add(0, "package " + packageName + "");
+      code = "package " + packageName + "\n" + code;
     }
 
-    return addFileUsingQualifiedName(
-        qualifiedCompilationUnitName, ".kt", content.toArray(new String[0]));
+    return addFileUsingQualifiedName(qualifiedCompilationUnitName, ".kt", code);
   }
 
+  @CanIgnoreReturnValue
   public TranspilerTester addNativeJsForCompilationUnit(
-      String qualifiedCompilationUnitName, String... code) {
+      String qualifiedCompilationUnitName, String code) {
     return addFileUsingQualifiedName(qualifiedCompilationUnitName, ".native.js", code);
   }
 
+  @CanIgnoreReturnValue
   private TranspilerTester addFileUsingQualifiedName(
-      String qualifiedCompilationUnitName, String ext, String... code) {
+      String qualifiedCompilationUnitName, String ext, String code) {
     return addFile(
         getPackageRelativePath(qualifiedCompilationUnitName)
             .resolve(getSimpleUnitName(qualifiedCompilationUnitName) + ext),
@@ -248,26 +258,29 @@ public class TranspilerTester {
         qualifiedCompilationUnitName.lastIndexOf('.') + 1);
   }
 
-  public TranspilerTester addFile(String filename, String... code) {
+  @CanIgnoreReturnValue
+  public TranspilerTester addFile(String filename, String code) {
     return addFile(Paths.get(filename), code);
   }
 
-  public TranspilerTester addFile(Path path, String... code) {
-    this.filesByPath.put(path, new SourceFile(path, Joiner.on('\n').join(code)));
+  @CanIgnoreReturnValue
+  public TranspilerTester addFile(Path path, String code) {
+    this.filesByPath.put(path, new SourceFile(path, code));
     return this;
   }
 
-  public TranspilerTester addFileToZipFile(String zipfilename, String filename, String... code) {
+  @CanIgnoreReturnValue
+  public TranspilerTester addFileToZipFile(String zipfilename, String filename, String code) {
     addFileToZipFile(Paths.get(zipfilename), Paths.get(filename), code);
     return this;
   }
 
-  public TranspilerTester addFileToZipFile(Path zipfilePath, Path filePath, String... code) {
+  @CanIgnoreReturnValue
+  public TranspilerTester addFileToZipFile(Path zipfilePath, Path filePath, String code) {
     if (!filesByPath.containsKey(zipfilePath)) {
       filesByPath.put(zipfilePath, new ZipFile(zipfilePath));
     }
-    ((ZipFile) filesByPath.get(zipfilePath))
-        .addFile(new SourceFile(filePath, Joiner.on('\n').join(code)));
+    ((ZipFile) filesByPath.get(zipfilePath)).addFile(new SourceFile(filePath, code));
     return this;
   }
 
@@ -284,7 +297,16 @@ public class TranspilerTester {
   }
 
   private static String toTestPath(String path) {
-    return "" + path;
+    return resolvePathToRunfiles(path).toString();
+  }
+
+  public static Path resolvePathToRunfiles(String path) {
+    try {
+      return Paths.get(
+          com.google.devtools.build.runfiles.Runfiles.create().rlocation("j2cl/" + path));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public TranspilerTester setArgs(String... args) {
@@ -311,14 +333,33 @@ public class TranspilerTester {
     return this;
   }
 
+  @CanIgnoreReturnValue
+  public TranspilerTester noAssertDelayedCancelChecks() {
+    this.assertDelayedCancelChecks = false;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public TranspilerTester addNullableAnnotation() {
+    return addCompilationUnit(
+        "org.jspecify.annotations.Nullable",
+        """
+        @java.lang.annotation.Target(java.lang.annotation.ElementType.TYPE_USE)
+        public @interface Nullable {}
+        """);
+  }
+
   public TranspilerTester addNullMarkPackageInfo(String pkg) {
     var unused =
         addCompilationUnit(
             "org.jspecify.annotations.NullMarked", "public @interface NullMarked {}");
     return addFile(
         Path.of(pkg.replace('.', '/'), "package-info.java"),
-        "@org.jspecify.annotations.NullMarked",
-        "package " + pkg + ";");
+        """
+        @org.jspecify.annotations.NullMarked
+        package %s;
+        """
+            .formatted(pkg));
   }
 
   public TranspileResult assertTranspileSucceeds() {
@@ -327,6 +368,13 @@ public class TranspilerTester {
 
   public TranspileResult assertTranspileFails() {
     return transpile().assertHasErrors();
+  }
+
+  public void assertTranspileWithCancellation(int cancelDelayMs) throws IOException {
+    noAssertDelayedCancelChecks(); // Not compatible.
+    var result = transpile(cancelDelayMs);
+    result.assertNoErrors();
+    assertThat(MoreFiles.listFiles(result.getOutputPath())).isEmpty();
   }
 
   /** A bundle of data recording the results of a transpile operation. */
@@ -353,10 +401,12 @@ public class TranspilerTester {
       return Files.readAllLines(outputFilePath);
     }
 
+    @CanIgnoreReturnValue
     public TranspileResult assertNoWarnings() {
       return assertWarningsWithoutSourcePosition();
     }
 
+    @CanIgnoreReturnValue
     public TranspileResult assertWarningsWithoutSourcePosition(String... expectedWarnings) {
       assertThat(getProblems().getWarnings())
           .comparingElementsUsing(ERROR_WITHOUT_SOURCE_POSITION_COMPARATOR)
@@ -364,22 +414,26 @@ public class TranspilerTester {
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TranspileResult assertWarningsWithSourcePosition(String... expectedWarnings) {
       assertThat(getProblems().getWarnings())
           .containsExactlyElementsIn(Arrays.asList(expectedWarnings));
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TranspileResult assertNoErrors() {
       assertThat(getProblems().getErrors()).isEmpty();
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TranspileResult assertHasErrors() {
       assertThat(getProblems().getErrors()).isNotEmpty();
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TranspileResult assertErrorsWithoutSourcePosition(String... expectedErrors) {
       assertThat(getProblems().getErrors())
           .comparingElementsUsing(ERROR_WITHOUT_SOURCE_POSITION_COMPARATOR)
@@ -387,11 +441,13 @@ public class TranspilerTester {
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TranspileResult assertErrorsWithSourcePosition(String... expectedErrors) {
       assertThat(getProblems().getErrors()).containsExactlyElementsIn(expectedErrors);
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TranspileResult assertLastMessage(String expectedMessage) {
       List<String> allMsgs = getProblems().getMessages();
       String lastMessage = Iterables.getLast(allMsgs, "");
@@ -399,14 +455,17 @@ public class TranspilerTester {
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TranspileResult assertErrorsContainsSnippets(String... snippets) {
       return assertContainsSnippets(getProblems().getErrors(), snippets);
     }
 
+    @CanIgnoreReturnValue
     public TranspileResult assertInfoMessagesContainsSnippets(String... snippets) {
       return assertContainsSnippets(getProblems().getInfoMessages(), snippets);
     }
 
+    @CanIgnoreReturnValue
     private TranspileResult assertContainsSnippets(List<String> problems, String... snippets) {
       assertThat(problems)
           .comparingElementsUsing(Correspondence.from(String::contains, "contained within"))
@@ -414,18 +473,21 @@ public class TranspilerTester {
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TranspileResult assertOutputFilesExist(String... fileNames) {
       Arrays.stream(fileNames)
           .forEach(fileName -> Assert.assertTrue(Files.exists(outputPath.resolve(fileName))));
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TranspileResult assertOutputFilesDoNotExist(String... fileNames) {
       Arrays.stream(fileNames)
           .forEach(fileName -> Assert.assertFalse(Files.exists(outputPath.resolve(fileName))));
       return this;
     }
 
+    @CanIgnoreReturnValue
     public TranspileResult assertOutputFilesAreSame(TranspileResult other) throws IOException {
       List<Path> actualPaths =
           ImmutableList.copyOf(MoreFiles.fileTraverser().depthFirstPreOrder(outputPath));
@@ -473,27 +535,86 @@ public class TranspilerTester {
     }
   }
 
-  private static TranspileResult invokeTranspiler(List<String> args, Path outputPath) {
-    try {
-      return new TranspileResult(transpile(args), outputPath);
-    } catch (Exception e) {
-      e.printStackTrace();
-      Problems problems = new Problems();
-      problems.error("%s", e.toString());
-      return new TranspileResult(problems, outputPath);
-    }
-  }
+  /** Do not automatically cancel the transpiler. */
+  private static final int NO_CANCEL = -1;
 
-  private static Problems transpile(Iterable<String> args) throws Exception {
-    // J2clCommandLineRunner.run is hidden since we don't want it to be used as an entry point. As a
-    // result we use reflection here to invoke it.
-    Method transpileMethod =
-        J2clCommandLineRunner.class.getDeclaredMethod("runForTest", String[].class);
-    transpileMethod.setAccessible(true);
-    return (Problems) transpileMethod.invoke(null, (Object) Iterables.toArray(args, String.class));
+  /**
+   * The maximum delay (in ms) that we allow for calls to #isCancelled(). Note that we have a much
+   * lower delay but this number should be high enough to cover random GC events.
+   */
+  private static final int MAX_DELAY = 250;
+
+  @SuppressWarnings("FutureReturnValueIgnored")
+  private static Problems transpile(
+      ImmutableList<String> args, boolean assertDelayedCancelChecks, int cancelDelayMs) {
+    List<String> delayedCalls = new ArrayList<>();
+    List<String> slightlyDelayedCalls = new ArrayList<>();
+    Problems problems =
+        assertDelayedCancelChecks
+            ? new Problems() {
+              long lastCall = System.nanoTime();
+
+              @Override
+              public boolean isCancelled() {
+                long delay = (System.nanoTime() - lastCall) / 1_000_000;
+                if (delay > MAX_DELAY) {
+                  var stackTrace =
+                      Throwables.getStackTraceAsString(new Throwable("Delay: " + delay));
+                  if (delay > MAX_DELAY * 2) {
+                    delayedCalls.add(stackTrace);
+                  } else {
+                    slightlyDelayedCalls.add(stackTrace);
+                  }
+                }
+                lastCall = System.nanoTime();
+                return false;
+              }
+            }
+            : new Problems();
+
+    J2clCommandLineRunner runner = new J2clCommandLineRunner(problems);
+    // Make sure a new thread is spawned to run the transpiler for Thread locals. See
+    // J2clCommandLineRunner.run for the details.
+    ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
+    try {
+      executorService.execute(() -> runner.executeForTesting(args));
+      if (cancelDelayMs != NO_CANCEL) {
+        executorService.schedule(problems::requestCancellation, cancelDelayMs, MILLISECONDS);
+      }
+    } finally {
+      MoreExecutors.shutdownAndAwaitTermination(executorService, 60, SECONDS);
+    }
+    assertThat(Thread.currentThread().isInterrupted()).isFalse();
+
+    final String[] knownDelayedCalls = {
+      "com.google.j2cl.transpiler.frontend.javac.JavacParser.parseFiles",
+      // Kotlin frontend is currently missing a lot of checks in between large chunks of works.
+      "com.google.j2cl.transpiler.frontend.kotlin.KotlinParser.parseFiles",
+    };
+    for (String knownDelayedCall : knownDelayedCalls) {
+      delayedCalls.removeIf(t -> t.contains(knownDelayedCall));
+      // Remove from slightly delayed calls as well since they are a subset.
+      slightlyDelayedCalls.removeIf(t -> t.contains(knownDelayedCall));
+    }
+    assertThat(delayedCalls).isEmpty();
+
+    final String[] knownSlightlyDelayedCalls = {
+      // Jdt is slow to do the check and we can't do much about it.
+      "org.eclipse.core.runtime.SubMonitor.isCanceled",
+    };
+    for (String knownSlightlyDelayedCall : knownSlightlyDelayedCalls) {
+      slightlyDelayedCalls.removeIf(t -> t.contains(knownSlightlyDelayedCall));
+    }
+    assertThat(slightlyDelayedCalls).isEmpty();
+
+    return problems;
   }
 
   private TranspileResult transpile() {
+    return transpile(NO_CANCEL);
+  }
+
+  private TranspileResult transpile(int cancelDelayMs) {
     try {
       Path tempDir = Files.createTempDirectory(temporaryDirectoryPrefix);
 
@@ -505,7 +626,8 @@ public class TranspilerTester {
       ImmutableList.Builder<String> commandLineArgsBuilder =
           ImmutableList.<String>builder()
               // Output dir
-              .add("-d", outputPath.toAbsolutePath().toString());
+              .add("-d", outputPath.toAbsolutePath().toString())
+              .add("-libraryinfooutput", Files.createTempFile("libraryinfo", ".bin").toString());
 
       if (!filesByPath.isEmpty()) {
         // 1. Create an input directory
@@ -538,7 +660,9 @@ public class TranspilerTester {
       // Passthru explicitly defined args
       commandLineArgsBuilder.addAll(args);
 
-      return invokeTranspiler(commandLineArgsBuilder.build(), outputPath);
+      return new TranspileResult(
+          transpile(commandLineArgsBuilder.build(), assertDelayedCancelChecks, cancelDelayMs),
+          outputPath);
     } catch (IOException e) {
       throw new AssertionError(e);
     }

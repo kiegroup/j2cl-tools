@@ -30,6 +30,7 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -55,8 +56,10 @@ public class J2cl {
                             }
                             return file.getAbsolutePath();
                         })
-                        .collect(Collectors.toUnmodifiableList())
+                        .toList()
                 )
+                //.setSystem(bootstrap.getAbsolutePath())
+                .setNullMarkedSupported(true)
                 .setEmitReadableLibraryInfo(false)
                 .setEmitReadableSourceMap(false)
                 .setGenerateKytheIndexingMetadata(false)
@@ -71,9 +74,11 @@ public class J2cl {
                     .setOutput(output)
                     .setSources(sourcesToCompile)
                     .setNativeSources(nativeSources)
-                    //.setKotlinCommonSources(Collections.emptyList())
+                    //.setNullMarkedSupported(false)
                     .setKotlincOptions(ImmutableList.of())
                     .setWasmEntryPointStrings(ImmutableList.of())
+                    .setObjCNamePrefix("J2kt")
+                    .setJavacOptions(Collections.emptyList())
                     .build(problems);
 
             log.debug(options.toString());

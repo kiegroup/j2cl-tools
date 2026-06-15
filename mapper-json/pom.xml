@@ -7,7 +7,7 @@
     <groupId>org.kie.j2cl.tools.json.mapper</groupId>
     <artifactId>mapper-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.6.0</version>
+    <version>0.7</version>
     <modules>
         <module>json-impl</module>
         <module>common</module>
@@ -55,23 +55,23 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
 
         <maven.compiler.version>3.8.0</maven.compiler.version>
         <maven.source.version>3.2.1</maven.source.version>
         <maven.fmt.plugin>2.9</maven.fmt.plugin>
         <maven.license.plugin>3.0</maven.license.plugin>
-        <maven.shade.plugin>3.2.4</maven.shade.plugin>
+        <maven.shade.plugin>3.5.1</maven.shade.plugin>
         <maven.deploy.plugin>2.8.2</maven.deploy.plugin>
         <maven.gpg.plugin>1.6</maven.gpg.plugin>
         <maven.javadoc.plugin>3.2.0</maven.javadoc.plugin>
         <maven.source.plugin>3.2.1</maven.source.plugin>
-        <maven.j2cl.plugin>0.23.1</maven.j2cl.plugin>
         <maven.release.plugin>2.5.3</maven.release.plugin>
         <maven.surfire.plugin>3.0.0-M1</maven.surfire.plugin>
         <maven.nexus.staging.plugin>1.6.8</maven.nexus.staging.plugin>
         <maven.scm.provider.gitexe>1.9.5</maven.scm.provider.gitexe>
+        <maven.flatten.plugin>1.5.0</maven.flatten.plugin>
 
         <!-- generation related deps -->
         <javaparser.core.version>3.13.1</javaparser.core.version>
@@ -80,40 +80,25 @@
         <auto.service.version>1.1.1</auto.service.version>
 
         <!-- J2CL deps -->
-        <gwt.jakarta.version>0.5</gwt.jakarta.version>
-
-        <!-- J2CL deps -->
-        <com.google.jsinterop.base.version>1.0.0</com.google.jsinterop.base.version>
-        <elemental2.version>1.2.3</elemental2.version>
-        <j2cl.version>v20241110-1</j2cl.version>
-
-        <!-- Testing -->
-        <junit.version>4.13.1</junit.version>
+        <jakarta4g.version>0.7</jakarta4g.version>
+        <j2cl.platform.version>20251001-1</j2cl.platform.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.kie.j2cl.tools.jakarta</groupId>
+                <groupId>org.treblereel.gwt.jakarta</groupId>
                 <artifactId>bom</artifactId>
-                <version>${gwt.jakarta.version}</version>
+                <version>${jakarta4g.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>com.google.elemental2</groupId>
-                <artifactId>elemental2-core</artifactId>
-                <version>${elemental2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.elemental2</groupId>
-                <artifactId>elemental2-dom</artifactId>
-                <version>${elemental2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.jsinterop</groupId>
-                <artifactId>base</artifactId>
-                <version>${com.google.jsinterop.base.version}</version>
+                <groupId>org.treblereel.j2cl.platform</groupId>
+                <artifactId>bom</artifactId>
+                <version>${j2cl.platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>com.google.auto</groupId>
@@ -129,13 +114,6 @@
                 <groupId>com.github.javaparser</groupId>
                 <artifactId>javaparser-core</artifactId>
                 <version>${javaparser.core.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
-                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -304,17 +282,25 @@
     </build>
 
     <profiles>
-        <!-- release profile to create sources, javadoc, and sign all artifacts before uploading -->
         <profile>
             <id>release</id>
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <configuration>
-                            <failOnError>false</failOnError>
-                        </configuration>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -324,7 +310,6 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <!-- see http://central.sonatype.org/pages/working-with-pgp-signatures.html for more detail -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
@@ -360,13 +345,8 @@
         <repository>
             <id>jboss-public-repository-group</id>
             <name>JBoss Public Repository Group</name>
-            <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
+            <url>https://repository.jboss.org/nexus/repository/releases/</url>
         </repository>
-        <snapshotRepository>
-            <id>jboss-snapshots-repository</id>
-            <name>JBoss Snapshot Repository</name>
-            <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
-        </snapshotRepository>
     </distributionManagement>
 
 </project>

@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.debugging.sourcemap.Base64;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -115,8 +116,8 @@ class ReplaceIdGenerators implements CompilerPass {
       for (Entry<String, RenamingMap> gen : idGens.entrySet()) {
         String name = gen.getKey();
         RenamingMap map = gen.getValue();
-        if (map instanceof RenamingToken) {
-          switch ((RenamingToken) map) {
+        if (map instanceof RenamingToken renamingToken) {
+          switch (renamingToken) {
             case DISABLE:
               nameGenerators.put(name, null);
               continue; // don't put an entry in idGeneratorsMap
@@ -161,7 +162,7 @@ class ReplaceIdGenerators implements CompilerPass {
         RenameStrategy renameStrategy, BiMap<String, String> previousMappings) {
       this.previousMappings = previousMappings.inverse();
       this.generator =
-          new DefaultNameGenerator(previousMappings.keySet(), "", null);
+          new DefaultNameGenerator(previousMappings.keySet(), "", ImmutableSet.<Character>of());
       this.renameStrategy = renameStrategy;
     }
 
@@ -411,8 +412,7 @@ class ReplaceIdGenerators implements CompilerPass {
                 IR.templateLiteralString(rename, rename).srcrefIfMissing(child));
           } else {
             newTemplateLit.addChildToBack(
-                IR.templateLiteralSubstitution(child.getFirstChild().detach())
-                    .srcrefIfMissing(child));
+                IR.templateLiteralSubstitution(child.removeFirstChild()).srcrefIfMissing(child));
           }
         }
         arg.replaceWith(newTemplateLit);

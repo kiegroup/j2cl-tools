@@ -24,6 +24,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
@@ -57,6 +58,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
@@ -70,8 +72,7 @@ import org.junit.Before;
  * don't have to get the syntax exactly correct to the spacing.
  */
 public abstract class CompilerTestCase {
-
-  protected static final Joiner LINE_JOINER = Joiner.on('\n');
+  private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   // The file name is included in the AST display string attached to each node.
   // Consistently using the same name for src or externs generated files avoids spurious differences
@@ -116,7 +117,7 @@ public abstract class CompilerTestCase {
   /** Whether to rewrite Closure code before the test is run. */
   private boolean rewriteClosureCode;
 
-  private boolean rewriteModulesAfterTypechecking;
+  private boolean rewriteModulesAfterTypechecking = true;
 
   /** Whether to rewrite Closure code before the test is run. */
   private boolean rewriteClosureProvides;
@@ -241,412 +242,28 @@ public abstract class CompilerTestCase {
    * A minimal set of externs, consisting of only those needed for the typechecker not to blow up.
    */
   protected static final String MINIMAL_EXTERNS =
-      lines(
-          "/** @type {undefined} */",
-          "var undefined;",
-          "/**",
-          " * @constructor",
-          " * @param {*=} opt_value",
-          " * @return {!Object}",
-          " */",
-          "function Object(opt_value) {}",
-          "/**",
-          " * @constructor",
-          " * @param {...*} var_args",
-          " */",
-          "function Function(var_args) {}",
-          "/**",
-          " * @constructor",
-          " * @implements {Iterable<string>}",
-          " * @param {*=} arg",
-          " * @return {string}",
-          " */",
-          "function String(arg) {}",
-          "/**",
-          " * @record",
-          " * @template TYield",
-          " */",
-          "function IIterableResult() {};",
-          "/** @type {boolean} */",
-          "IIterableResult.prototype.done;",
-          "/** @type {TYield} */",
-          "IIterableResult.prototype.value;",
-          "/**",
-          " * @interface",
-          " * @template T, TReturn, TNext",
-          " */",
-          "function Iterable() {}",
-          "/**",
-          " * @interface",
-          " * @template T, TReturn, TNext",
-          " */",
-          "function Iterator() {}",
-          "/**",
-          " * @param {T=} value",
-          " * @return {!IIterableResult<T>}",
-          " */",
-          "Iterator.prototype.next;",
-          "/**",
-          " * @interface",
-          " * @extends {Iterator<T, ?, *>}",
-          " * @extends {Iterable<T, ?, *>}",
-          " * @template T, TReturn, TNext",
-          " */",
-          "function IteratorIterable() {}",
-          "/**",
-          " * @interface",
-          " * @template KEY1, VALUE1",
-          " */",
-          "function IObject() {};",
-          "/**",
-          " * @record",
-          " * @extends IObject<number, VALUE2>",
-          " * @template VALUE2",
-          " */",
-          "function IArrayLike() {};",
-          "/**",
-          " * @template T",
-          " * @record",
-          " * @extends {IArrayLike<T>}",
-          " * @extends {Iterable<T>}",
-          " */",
-          "function ReadonlyArray() {}",
-          "/**",
-          " * @template T",
-          " * @constructor",
-          " * @implements {ReadonlyArray<T>}",
-          " * @implements {IArrayLike<T>}",
-          " * @implements {Iterable<T>}",
-          " * @param {...*} var_args",
-          " * @return {!Array<?>}",
-          " */",
-          "function Array(var_args) {}");
+      new TestExternsBuilder()
+          .addArray()
+          .addIterable()
+          .addObject()
+          .addUndefined()
+          .addFunction()
+          .addString()
+          .build();
 
   /** A default set of externs for testing. */
   protected static final String DEFAULT_EXTERNS =
-      lines(
-          MINIMAL_EXTERNS,
-          "/**",
-          " * @type{number}",
-          " */",
-          "IArrayLike.prototype.length;",
-          "/** @type {?Object} */ Object.prototype.__proto__;",
-          "/** @return {string} */",
-          "Object.prototype.toString = function() {};",
-          "/**",
-          " * @param {*} propertyName",
-          " * @return {boolean}",
-          " */",
-          "Object.prototype.hasOwnProperty = function(propertyName) {};",
-          "/** @type {?Function} */ Object.prototype.constructor;",
-          "Object.defineProperties = function(obj, descriptors) {};",
-          "/** @type {!Function} */ Function.prototype.apply;",
-          "/** @type {!Function} */ Function.prototype.bind;",
-          "/** @type {!Function} */ Function.prototype.call;",
-          "/** @type {number} */",
-          "Function.prototype.length;",
-          "/** @type {string} */",
-          "Function.prototype.name;",
-          "/** @param {number} sliceArg */",
-          "String.prototype.slice = function(sliceArg) {};",
-          "/**",
-          " * @this {?String|string}",
-          " * @param {?} regex",
-          " * @param {?} str",
-          " * @param {string=} opt_flags",
-          " * @return {string}",
-          " */",
-          "String.prototype.replace = function(regex, str, opt_flags) {};",
-          "/** @type {number} */ String.prototype.length;",
-          "/**",
-          " * @constructor",
-          " * @param {*=} arg",
-          " * @return {number}",
-          " */",
-          "function Number(arg) {}",
-          "/**",
-          " * @constructor",
-          " * @param {*=} arg",
-          " * @return {boolean}",
-          " */",
-          "function Boolean(arg) {}",
-          "/**",
-          " * @override",
-          " * @type {number}",
-          " */",
-          "Array.prototype.length;",
-          "/**",
-          " * @param {*} arr",
-          " * @return {boolean}",
-          " */",
-          "Array.isArray = function(arr) {};",
-          "/** @type {number} */ ReadonlyArray.prototype.length;",
-          "/**",
-          " * @param {?function(this:S, T, number, !Array<T>): ?} callback",
-          " * @param {S=} opt_thisobj",
-          " * @this {?IArrayLike<T>|string}",
-          " * @template T,S",
-          " * @return {undefined}",
-          " */",
-          "ReadonlyArray.prototype.forEach = function(callback, opt_thisobj) {};",
-          "/**",
-          " * @param {?function(this:S, T, number, !Array<T>): ?} callback",
-          " * @param {S=} opt_thisobj",
-          " * @return {!Array<T>}",
-          " * @this {?IArrayLike<T>|string}",
-          " * @template T,S",
-          " */",
-          "ReadonlyArray.prototype.filter = function(callback, opt_thisobj) {};",
-          "/**",
-          " * @param {...T} var_args",
-          " * @return {number} The new length of the array.",
-          " * @this {IArrayLike<T>}",
-          " * @template T",
-          " * @modifies {this}",
-          " */",
-          "Array.prototype.push = function(var_args) {};",
-          "/**",
-          " * @this {IArrayLike<T>}",
-          " * @return {T}",
-          " * @template T",
-          " */",
-          "Array.prototype.shift = function() {};",
-          "/**",
-          " * @override",
-          " * @param {?function(this:S, T, number, !Array<T>): ?} callback",
-          " * @param {S=} opt_thisobj",
-          " * @this {?IArrayLike<T>|string}",
-          " * @template T,S",
-          " * @return {undefined}",
-          " */",
-          "Array.prototype.forEach = function(callback, opt_thisobj) {};",
-          "/**",
-          " * @override",
-          " * @param {?function(this:S, T, number, !Array<T>): ?} callback",
-          " * @param {S=} opt_thisobj",
-          " * @return {!Array<T>}",
-          " * @this {?IArrayLike<T>|string}",
-          " * @template T,S",
-          " */",
-          "Array.prototype.filter = function(callback, opt_thisobj) {};",
-          "/**",
-          " * @constructor",
-          " * @template T",
-          " * @implements {IArrayLike<T>}",
-          " */",
-          "function Arguments() {}",
-          "/** @type {number} */",
-          "Arguments.prototype.length;",
-          "/**",
-          " * @constructor",
-          " * @param {*=} opt_pattern",
-          " * @param {*=} opt_flags",
-          " * @return {!RegExp}",
-          " * @nosideeffects",
-          " */",
-          "function RegExp(opt_pattern, opt_flags) {}",
-          "/**",
-          " * @param {*} str The string to search.",
-          " * @return {?Array<string>}",
-          " */",
-          "RegExp.prototype.exec = function(str) {};",
-          "/**",
-          " * @constructor",
-          " */",
-          "function ObjectPropertyDescriptor() {}",
-          "/** @type {*} */",
-          "ObjectPropertyDescriptor.prototype.value;",
-          "/**",
-          " * @param {!Object} obj",
-          " * @param {string} prop",
-          " * @return {!ObjectPropertyDescriptor|undefined}",
-          " * @nosideeffects",
-          " */",
-          "Object.getOwnPropertyDescriptor = function(obj, prop) {};",
-          "/**",
-          " * @param {!Object} obj",
-          " * @param {string} prop",
-          " * @param {!Object} descriptor",
-          " * @return {!Object}",
-          " */",
-          "Object.defineProperty = function(obj, prop, descriptor) {};",
-          "/**",
-          " * @param {?Object} proto",
-          " * @param {?Object=} opt_properties",
-          " * @return {!Object}",
-          " */",
-          "Object.create = function(proto, opt_properties) {};",
-          "/**",
-          " * @param {!Object} obj",
-          " * @param {?} proto",
-          " * @return {!Object}",
-          " */",
-          "Object.setPrototypeOf = function(obj, proto) {};",
-          "/** @type {?} */ var unknown;", // For producing unknowns in tests.
-          "/**",
-          " * @constructor",
-          " * @param {*=} opt_description",
-          " * @return {symbol}",
-          " */",
-          "function Symbol(opt_description) {}",
-          "/** @const {!symbol} */ Symbol.iterator;",
-          "/**",
-          " * @return {!Iterator<T, ?, *>}",
-          " * @suppress {externsValidation}",
-          " */",
-          "Iterable.prototype[Symbol.iterator] = function() {};",
-          "/** @type {number} */ var NaN;",
-          "/**",
-          " * @interface",
-          " * @extends {IteratorIterable<T, ?, *>}",
-          " * @template T, TReturn, TNext",
-          " */",
-          "function Generator() {}",
-          "/**",
-          " * @param {?=} opt_value",
-          " * @return {!IIterableResult<T>}",
-          " * @override",
-          " */",
-          "Generator.prototype.next = function(opt_value) {};",
-          "/**",
-          " * @typedef {{then: ?}}",
-          " */",
-          "var Thenable;",
-          "/**",
-          " * @interface",
-          " * @template TYPE",
-          " */",
-          "function IThenable() {}",
-          "/**",
-          " * @param {?(function(TYPE):VALUE)=} opt_onFulfilled",
-          " * @param {?(function(*): *)=} opt_onRejected",
-          " * @return {RESULT}",
-          " * @template VALUE",
-          " * @template RESULT := type('IThenable',",
-          " *     cond(isUnknown(VALUE), unknown(),",
-          " *       mapunion(VALUE, (V) =>",
-          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
-          " *           templateTypeOf(V, 0),",
-          " *           cond(sub(V, 'Thenable'),",
-          " *              unknown(),",
-          " *              V)))))",
-          " * =:",
-          " */",
-          "IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};",
-          "/**",
-          " * @param {function(",
-          " *             function((TYPE|IThenable<TYPE>|Thenable|null)=),",
-          " *             function(*=))} resolver",
-          " * @constructor",
-          " * @implements {IThenable<TYPE>}",
-          " * @template TYPE",
-          " */",
-          "function Promise(resolver) {}",
-          "/**",
-          " * @param {VALUE=} opt_value",
-          " * @return {RESULT}",
-          " * @template VALUE",
-          " * @template RESULT := type('Promise',",
-          " *     cond(isUnknown(VALUE), unknown(),",
-          " *       mapunion(VALUE, (V) =>",
-          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
-          " *           templateTypeOf(V, 0),",
-          " *           cond(sub(V, 'Thenable'),",
-          " *              unknown(),",
-          " *              V)))))",
-          " * =:",
-          " */",
-          "Promise.resolve = function(opt_value) {};",
-          "/**",
-          " * @param {*=} opt_error",
-          " * @return {!Promise<?>}",
-          " */",
-          "Promise.reject = function(opt_error) {};",
-          "/**",
-          " * @param {!Iterable<VALUE>} iterable",
-          " * @return {!Promise<!Array<RESULT>>}",
-          " * @template VALUE",
-          " * @template RESULT := mapunion(VALUE, (V) =>",
-          " *     cond(isUnknown(V),",
-          " *         unknown(),",
-          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
-          " *             templateTypeOf(V, 0),",
-          " *             cond(sub(V, 'Thenable'), unknown(), V))))",
-          " * =:",
-          " */",
-          "Promise.all = function(iterable) {};",
-          "/**",
-          " * @param {!Iterable<VALUE>} iterable",
-          " * @return {!Promise<RESULT>}",
-          " * @template VALUE",
-          " * @template RESULT := mapunion(VALUE, (V) =>",
-          " *     cond(isUnknown(V),",
-          " *         unknown(),",
-          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
-          " *             templateTypeOf(V, 0),",
-          " *             cond(sub(V, 'Thenable'), unknown(), V))))",
-          " * =:",
-          " */",
-          "Promise.race = function(iterable) {};",
-          "/**",
-          " * @param {?(function(this:void, TYPE):VALUE)=} opt_onFulfilled",
-          " * @param {?(function(this:void, *): *)=} opt_onRejected",
-          " * @return {RESULT}",
-          " * @template VALUE",
-          " * @template RESULT := type('Promise',",
-          " *     cond(isUnknown(VALUE), unknown(),",
-          " *       mapunion(VALUE, (V) =>",
-          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
-          " *           templateTypeOf(V, 0),",
-          " *           cond(sub(V, 'Thenable'),",
-          " *              unknown(),",
-          " *              V)))))",
-          " * =:",
-          " * @override",
-          " */",
-          "Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};",
-          "/**",
-          " * @param {function(*): RESULT} onRejected",
-          " * @return {!Promise<RESULT>}",
-          " * @template RESULT",
-          " */",
-          "Promise.prototype.catch = function(onRejected) {};",
-          "/**",
-          " * @constructor",
-          " * @extends {Array<string>}",
-          " */",
-          "function ITemplateArray() {}",
-          "/**",
-          " * @interface",
-          " * @extends {Iterable<K|V>}",
-          " * @template K, V",
-          " */",
-          "function ReadonlyMap() {}",
-          "/**",
-          " * @return {!IteratorIterable<K|V>}",
-          " */",
-          "ReadonlyMap.prototype.entries = function() {};",
-          "/**",
-          " * @constructor @struct",
-          " * @param {?Iterable<!Array<K|V>>|!Array<!Array<K|V>>=} opt_iterable",
-          " * @implements {ReadonlyMap<K, V>}",
-          " * @template K, V",
-          " */",
-          "function Map(opt_iterable) {}",
-          "/**",
-          " * @override",
-          " * @return {!IteratorIterable<K|V>}",
-          " */",
-          "Map.prototype.entries = function() {};",
-          lines(
-              "/**",
-              " * @param {string} progId",
-              " * @param {string=} opt_location",
-              " * @constructor",
-              " * @see http://msdn.microsoft.com/en-us/library/7sw4ddf8.aspx",
-              " */",
-              "function ActiveXObject(progId, opt_location) {}"),
-          new TestExternsBuilder().addClosureExterns().build());
+      new TestExternsBuilder()
+          .addArray()
+          .addIterable()
+          .addObject()
+          .addUndefined()
+          .addFunction()
+          .addString()
+          .addPromise()
+          .addClosureExterns()
+          .addITemplateArray()
+          .build();
 
   /**
    * Constructs a test.
@@ -664,7 +281,6 @@ public abstract class CompilerTestCase {
     this("");
   }
 
-  @SuppressWarnings("MissingOverride")
   public String getName() {
     return this.getClass().getSimpleName();
   }
@@ -705,7 +321,9 @@ public abstract class CompilerTestCase {
     this.polymerPass = false;
     this.processCommonJsModules = false;
     this.rewriteClosureCode = false;
-    this.rewriteModulesAfterTypechecking = false;
+    // default to true: this doesn't have any effect unless rewriteClosureCode is enabled. The
+    // default matches options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf.
+    this.rewriteModulesAfterTypechecking = true;
     this.runTypeCheckAfterProcessing = false;
     this.rewriteEsModulesEnabled = false;
     this.transpileEnabled = false;
@@ -985,6 +603,11 @@ public abstract class CompilerTestCase {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     enableRewriteClosureCode();
     this.rewriteModulesAfterTypechecking = true;
+  }
+
+  protected final void disableRewriteModulesAfterTypechecking() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.rewriteModulesAfterTypechecking = false;
   }
 
   /** Rewrite goog.provides */
@@ -1279,14 +902,14 @@ public abstract class CompilerTestCase {
    */
   protected void testWarning(String js, DiagnosticType warning, String description) {
     assertThat(warning).isNotNull();
-    test(srcs(js), warning(warning).withMessage(description));
+    test(srcs(js), warning(warning).withMessage(description.trim()));
   }
 
   /** Verifies that the compiler generates the given warning for the given input. */
   protected void testWarning(
       Externs externs, Sources srcs, DiagnosticType warning, String description) {
     assertThat(warning).isNotNull();
-    test(externs, srcs, warning(warning).withMessage(description));
+    test(externs, srcs, warning(warning).withMessage(description.trim()));
   }
 
   /**
@@ -1348,11 +971,11 @@ public abstract class CompilerTestCase {
 
     CompilerOptions options = getOptions();
 
-    if (inputs instanceof FlatSources) {
+    if (inputs instanceof FlatSources flatSources) {
       // TODO(bradfordcsmith): Why do we set this only for the non-module case?
       //     I extracted this method from testInternal().
       options.setCheckTypes(parseTypeInfo || this.typeCheckEnabled);
-      compiler.init(externs.externs, ((FlatSources) inputs).sources, options);
+      compiler.init(externs.externs, flatSources.sources, options);
     } else {
       compiler.initChunks(externs.externs, ((ChunkSources) inputs).chunks, getOptions());
     }
@@ -1423,7 +1046,7 @@ public abstract class CompilerTestCase {
       List<Diagnostic> diagnostics,
       List<Postcondition> postconditions) {
     List<SourceFile> inputs =
-        (inputsObj instanceof FlatSources) ? ((FlatSources) inputsObj).sources : null;
+        (inputsObj instanceof FlatSources flatSources) ? flatSources.sources : null;
     List<SourceFile> expected = expectedObj != null ? expectedObj.expected : null;
     ImmutableList<Diagnostic> expectedErrors =
         diagnostics.stream().filter(d -> d.level == CheckLevel.ERROR).collect(toImmutableList());
@@ -1503,7 +1126,6 @@ public abstract class CompilerTestCase {
         if (rewriteClosureCode && i == 0) {
           new CheckClosureImports(compiler, compiler.getModuleMetadataMap())
               .process(externsRoot, mainRoot);
-          new ClosureRewriteClass(compiler).process(externsRoot, mainRoot);
           ScopedAliases.builder(compiler).build().process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
@@ -1704,8 +1326,15 @@ public abstract class CompilerTestCase {
       } else {
         assertWithMessage("symbol table errors").that(stErrors).isEmpty();
       }
+      LightweightMessageFormatter formatter = new LightweightMessageFormatter(compiler);
       if (expectedWarnings.isEmpty()) {
-        assertWithMessage("aggregate warnings").that(aggregateWarnings).isEmpty();
+        assertWithMessage(
+                "aggregate warnings: "
+                    + aggregateWarnings.stream()
+                        .map(formatter::formatWarning)
+                        .collect(joining("\n")))
+            .that(aggregateWarnings)
+            .isEmpty();
       } else {
         assertWithMessage(
                 "There should be "
@@ -1795,7 +1424,8 @@ public abstract class CompilerTestCase {
               throw new RuntimeException("failed to get source code", e);
             }
           }
-          assertThat(compiler.toSource(mainRoot)).isEqualTo(Joiner.on("").join(expectedSources));
+          assertThat(compiler.toSource(mainRoot).replaceAll(" +\n", "\n"))
+              .isEqualTo(Joiner.on("").join(expectedSources));
         }
       }
 
@@ -1831,7 +1461,7 @@ public abstract class CompilerTestCase {
       for (JSError error : compiler.getErrors()) {
         validateSourceLocation(error);
         assertWithMessage("Some placeholders in the error message were not replaced")
-            .that(error.getDescription())
+            .that(error.description())
             .doesNotContainMatch("\\{\\d\\}");
       }
     }
@@ -1898,7 +1528,7 @@ public abstract class CompilerTestCase {
   private void validateSourceLocation(JSError jserror) {
     // Make sure that source information is always provided.
     if (!allowSourcelessWarnings) {
-      final String sourceName = jserror.getSourceName();
+      final String sourceName = jserror.sourceName();
       assertWithMessage("Missing source file name in warning: " + jserror)
           .that(sourceName != null && !sourceName.isEmpty())
           .isTrue();
@@ -1907,10 +1537,10 @@ public abstract class CompilerTestCase {
           .that(scriptNode)
           .isNotNull();
       assertWithMessage("Missing line number in warning: " + jserror)
-          .that(-1 != jserror.getLineNumber())
+          .that(jserror.lineno() != -1)
           .isTrue();
       assertWithMessage("Missing char number in warning: " + jserror)
-          .that(-1 != jserror.getCharno())
+          .that(jserror.charno() != -1)
           .isTrue();
     }
   }
@@ -1972,7 +1602,6 @@ public abstract class CompilerTestCase {
     }
 
     if (rewriteClosureCode) {
-      new ClosureRewriteClass(compiler).process(externsRoot, mainRoot);
       new ClosureRewriteModule(compiler, null, null).process(externsRoot, mainRoot);
       ScopedAliases.builder(compiler).build().process(externsRoot, mainRoot);
     }
@@ -2003,8 +1632,8 @@ public abstract class CompilerTestCase {
       Externs externs, Sources inputs, Expected expectedExtern, Diagnostic... warnings) {
     Compiler compiler = createCompiler();
     CompilerOptions options = getOptions();
-    if (inputs instanceof FlatSources) {
-      compiler.init(externs.externs, ((FlatSources) inputs).sources, options);
+    if (inputs instanceof FlatSources flatSources) {
+      compiler.init(externs.externs, flatSources.sources, options);
     } else {
       compiler.initChunks(externs.externs, ((ChunkSources) inputs).chunks, getOptions());
     }
@@ -2069,7 +1698,7 @@ public abstract class CompilerTestCase {
     if (warnings != null) {
       StringBuilder warningBuilder = new StringBuilder();
       for (JSError actualWarning : compiler.getWarnings()) {
-        warningBuilder.append(actualWarning.getDescription()).append("\n");
+        warningBuilder.append(actualWarning.description()).append("\n");
       }
       String warningMessage = warningBuilder.toString();
       assertWithMessage("There should be " + warnings.length + " warnings. " + warningMessage)
@@ -2078,7 +1707,7 @@ public abstract class CompilerTestCase {
       for (int i = 0; i < warnings.length; i++) {
         DiagnosticType warning = warnings[i].diagnostic;
         assertWithMessage(warningMessage)
-            .that(compiler.getWarnings().get(i).getType())
+            .that(compiler.getWarnings().get(i).type())
             .isEqualTo(warning);
       }
     }
@@ -2149,14 +1778,6 @@ public abstract class CompilerTestCase {
       }
     }
     return null;
-  }
-
-  public static String lines(String line) {
-    return line;
-  }
-
-  public static String lines(String... lines) {
-    return LINE_JOINER.join(lines);
   }
 
   protected static Sources srcs(String srcText) {
@@ -2264,21 +1885,21 @@ public abstract class CompilerTestCase {
     List<Diagnostic> diagnostics = new ArrayList<>();
     List<Postcondition> postconditions = new ArrayList<>();
     for (TestPart part : parts) {
-      if (part instanceof Externs) {
+      if (part instanceof Externs ext) {
         checkState(externs == null);
-        externs = (Externs) part;
-      } else if (part instanceof Sources) {
+        externs = ext;
+      } else if (part instanceof Sources sources) {
         checkState(srcs == null);
-        srcs = (Sources) part;
-      } else if (part instanceof Expected) {
+        srcs = sources;
+      } else if (part instanceof Expected exp) {
         checkState(expected == null);
-        expected = (Expected) part;
-      } else if (part instanceof Diagnostic) {
-        diagnostics.add((Diagnostic) part);
-      } else if (part instanceof Postcondition) {
-        postconditions.add((Postcondition) part);
+        expected = exp;
+      } else if (part instanceof Diagnostic diagnostic) {
+        diagnostics.add(diagnostic);
+      } else if (part instanceof Postcondition postcondition) {
+        postconditions.add(postcondition);
       } else {
-        throw new IllegalStateException("unexepected " + part.getClass().getName());
+        throw new IllegalStateException("unexpected " + part.getClass().getName());
       }
     }
     if (EXPECTED_SAME.equals(expected)) {
@@ -2291,10 +1912,10 @@ public abstract class CompilerTestCase {
   }
 
   private static Expected fromSources(Sources srcs) {
-    if (srcs instanceof FlatSources) {
-      return expected(((FlatSources) srcs).sources);
-    } else if (srcs instanceof ChunkSources) {
-      ChunkSources modules = ((ChunkSources) srcs);
+    if (srcs instanceof FlatSources flatSources) {
+      return expected(flatSources.sources);
+    } else if (srcs instanceof ChunkSources chunkSources) {
+      ChunkSources modules = chunkSources;
       return expected(modules.chunks.toArray(new JSChunk[0]));
     } else {
       throw new IllegalStateException("unexpected");
@@ -2363,32 +1984,61 @@ public abstract class CompilerTestCase {
     final CheckLevel level;
     final DiagnosticType diagnostic;
     final NamedPredicate<String> messagePredicate;
+    final int line;
+    final int charno;
+    final int length;
 
     Diagnostic(
         CheckLevel level,
         DiagnosticType diagnostic,
         @Nullable NamedPredicate<String> messagePredicate) {
+      this(level, diagnostic, messagePredicate, -1, -1, -1);
+    }
+
+    Diagnostic(
+        CheckLevel level,
+        DiagnosticType diagnostic,
+        @Nullable NamedPredicate<String> messagePredicate,
+        int line,
+        int charno,
+        int length) {
       this.level = level;
       this.diagnostic = diagnostic;
       this.messagePredicate = messagePredicate;
+      this.line = line;
+      this.charno = charno;
+      this.length = length;
     }
 
-    private boolean matches(JSError error) {
-      return Objects.equals(diagnostic, error.getType())
-          && (messagePredicate == null || messagePredicate.apply(error.getDescription()));
-    }
-
-    private String formatDiff(JSError error) {
-      if (!Objects.equals(diagnostic, error.getType())) {
-        return "diagnostic type " + error.getType().key + " did not match";
+    private Optional<String> formatDiff(JSError error) {
+      if (!Objects.equals(diagnostic, error.type())) {
+        return Optional.of(
+            String.format(
+                "diagnostic type <%s> did not match <%s>", error.type().key, diagnostic.key));
       }
-      return "message \"" + error.getDescription() + "\" was not " + messagePredicate;
+      if (messagePredicate != null && !messagePredicate.apply(error.description())) {
+        return Optional.of(
+            String.format("message <%s> was not <%s>", error.description(), messagePredicate));
+      }
+      if (line != -1 && error.lineno() != line) {
+        return Optional.of(String.format("line <%d> did not match <%d>", error.lineno(), line));
+      }
+      if (charno != -1 && error.charno() != charno) {
+        return Optional.of(String.format("charno <%d> did not match <%d>", error.charno(), charno));
+      }
+      if (length != -1 && error.length() != length) {
+        return Optional.of(String.format("length <%d> did not match <%d>", error.length(), length));
+      }
+      return Optional.empty();
     }
 
-    public Diagnostic withMessage(final String expected) {
+    public Diagnostic withMessage(final String expectedRaw) {
+      String expected = expectedRaw.trim();
       checkState(messagePredicate == null);
       return new Diagnostic(
-          level, diagnostic, NamedPredicate.of(expected::equals, "\"" + expected + "\""));
+          level,
+          diagnostic,
+          NamedPredicate.of(actual -> actual.trim().equals(expected), "\"" + expected + "\""));
     }
 
     public Diagnostic withMessageContaining(final String substring) {
@@ -2398,6 +2048,10 @@ public abstract class CompilerTestCase {
           diagnostic,
           NamedPredicate.of(
               message -> message.contains(substring), "containing \"" + substring + "\""));
+    }
+
+    public Diagnostic withLocation(int line, int charno, int length) {
+      return new Diagnostic(level, diagnostic, messagePredicate, line, charno, length);
     }
 
     @Override
@@ -2420,9 +2074,9 @@ public abstract class CompilerTestCase {
 
   private static final Correspondence<JSError, Diagnostic> DIAGNOSTIC_CORRESPONDENCE =
       Correspondence.from(
-              (JSError actual, Diagnostic expected) -> expected.matches(actual),
+              (JSError actual, Diagnostic expected) -> expected.formatDiff(actual).isEmpty(),
               "is a JSError matching")
-          .formattingDiffsUsing((actual, expected) -> expected.formatDiff(actual));
+          .formattingDiffsUsing((actual, expected) -> expected.formatDiff(actual).get());
 
   private static class NamedPredicate<T> implements Predicate<T> {
     final Predicate<T> delegate;

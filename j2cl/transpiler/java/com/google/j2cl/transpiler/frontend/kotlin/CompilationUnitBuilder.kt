@@ -50,6 +50,7 @@ import com.google.j2cl.transpiler.ast.Label
 import com.google.j2cl.transpiler.ast.LabeledStatement
 import com.google.j2cl.transpiler.ast.Literal
 import com.google.j2cl.transpiler.ast.LocalClassDeclarationStatement
+import com.google.j2cl.transpiler.ast.LocalFunctionDeclarationStatement
 import com.google.j2cl.transpiler.ast.Member
 import com.google.j2cl.transpiler.ast.Method
 import com.google.j2cl.transpiler.ast.MethodCall
@@ -62,6 +63,8 @@ import com.google.j2cl.transpiler.ast.NullLiteral
 import com.google.j2cl.transpiler.ast.NumberLiteral
 import com.google.j2cl.transpiler.ast.PrefixExpression
 import com.google.j2cl.transpiler.ast.PrefixOperator
+import com.google.j2cl.transpiler.ast.PrimitiveTypes
+import com.google.j2cl.transpiler.ast.Reference
 import com.google.j2cl.transpiler.ast.ReturnStatement
 import com.google.j2cl.transpiler.ast.RuntimeMethods
 import com.google.j2cl.transpiler.ast.Statement
@@ -76,7 +79,6 @@ import com.google.j2cl.transpiler.ast.TryStatement
 import com.google.j2cl.transpiler.ast.Type
 import com.google.j2cl.transpiler.ast.TypeDescriptor
 import com.google.j2cl.transpiler.ast.TypeDescriptors
-import com.google.j2cl.transpiler.ast.TypeLiteral
 import com.google.j2cl.transpiler.ast.Variable
 import com.google.j2cl.transpiler.ast.VariableDeclarationExpression
 import com.google.j2cl.transpiler.ast.VariableDeclarationFragment
@@ -92,11 +94,13 @@ import com.google.j2cl.transpiler.frontend.kotlin.ir.getTypeSubstitutionMap
 import com.google.j2cl.transpiler.frontend.kotlin.ir.hasVoidReturn
 import com.google.j2cl.transpiler.frontend.kotlin.ir.isAdaptedFunctionReference
 import com.google.j2cl.transpiler.frontend.kotlin.ir.isClinit
+import com.google.j2cl.transpiler.frontend.kotlin.ir.isFunctionOrSuspendFunction
+import com.google.j2cl.transpiler.frontend.kotlin.ir.isKFunctionOrKSuspendFunction
 import com.google.j2cl.transpiler.frontend.kotlin.ir.isSuperCall
 import com.google.j2cl.transpiler.frontend.kotlin.ir.isSynthetic
 import com.google.j2cl.transpiler.frontend.kotlin.ir.isUnitInstanceReference
-import com.google.j2cl.transpiler.frontend.kotlin.ir.javaName
 import com.google.j2cl.transpiler.frontend.kotlin.ir.resolveLabel
+import com.google.j2cl.transpiler.frontend.kotlin.ir.sanitizedName
 import com.google.j2cl.transpiler.frontend.kotlin.ir.typeSubstitutionMap
 import com.google.j2cl.transpiler.frontend.kotlin.ir.unfoldExpression
 import com.google.j2cl.transpiler.frontend.kotlin.lower.IrForInLoop
@@ -112,6 +116,7 @@ import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclaration
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
 import org.jetbrains.kotlin.ir.declarations.IrField
 import org.jetbrains.kotlin.ir.declarations.IrFile
@@ -172,27 +177,27 @@ import org.jetbrains.kotlin.ir.symbols.IrValueSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.IrTypeProjection
+import org.jetbrains.kotlin.ir.types.classOrFail
 import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.impl.makeTypeProjection
 import org.jetbrains.kotlin.ir.types.isNullable
-import org.jetbrains.kotlin.ir.types.isPrimitiveType
 import org.jetbrains.kotlin.ir.types.makeNotNull
 import org.jetbrains.kotlin.ir.types.makeNullable
 import org.jetbrains.kotlin.ir.types.typeWithArguments
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.dump
 import org.jetbrains.kotlin.ir.util.fqNameWhenAvailable
-import org.jetbrains.kotlin.ir.util.isAnnotationClass
 import org.jetbrains.kotlin.ir.util.isFunction
-import org.jetbrains.kotlin.ir.util.isKFunction
 import org.jetbrains.kotlin.ir.util.isPrimitiveArray
+import org.jetbrains.kotlin.ir.util.isSuspend
 import org.jetbrains.kotlin.ir.util.parentAsClass
 import org.jetbrains.kotlin.ir.util.render
 import org.jetbrains.kotlin.ir.util.statements
 import org.jetbrains.kotlin.name.SpecialNames
+import org.jetbrains.kotlin.progress.ProgressIndicatorAndCompilationCanceledStatus
 
 /** Creates a J2CL Java AST from Kotlin IR. */
-class CompilationUnitBuilder(
+internal class CompilationUnitBuilder(
   private val environment: KotlinEnvironment,
   private val intrinsicMethods: IntrinsicMethods,
 ) : AbstractCompilationUnitBuilder() {
@@ -216,7 +221,6 @@ class CompilationUnitBuilder(
 
     irFile.declarations
       .filterIsInstance<IrClass>()
-      .filterNot(IrClass::isAnnotationClass)
       .map(::convertClass)
       .forEach(compilationUnit::addType)
 
@@ -226,6 +230,8 @@ class CompilationUnitBuilder(
   private fun convertClass(irClass: IrClass): Type {
     val type = Type(getNameSourcePosition(irClass), environment.getDeclarationForType(irClass))
     processEnclosedBy(type) {
+      ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
+
       // Skip synthetic declarations. Kotlinc adds synthetic declarations like (fake) override
       // members
       // to help with bridge synthesis and the resolution phase.
@@ -235,14 +241,10 @@ class CompilationUnitBuilder(
 
       declarations
         .filter { it !is IrClass && !it.isClinit }
-        .mapNotNull(::convertDeclaration)
+        .map(::convertDeclaration)
         .forEach(type::addMembers)
 
-      declarations
-        .filterIsInstance<IrClass>()
-        .filterNot(IrClass::isAnnotationClass)
-        .mapNotNull(::convertClass)
-        .forEach(type::addType)
+      declarations.filterIsInstance<IrClass>().map(::convertClass).forEach(type::addType)
 
       declarations
         .find { it.isClinit }
@@ -251,8 +253,9 @@ class CompilationUnitBuilder(
     return type
   }
 
-  private fun convertDeclaration(irDeclaration: IrDeclaration): List<Member> =
-    when (irDeclaration) {
+  private fun convertDeclaration(irDeclaration: IrDeclaration): List<Member> {
+    ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
+    return when (irDeclaration) {
       is IrEnumEntry -> listOf(convertEnumEntry(irDeclaration))
       is IrProperty -> convertProperty(irDeclaration)
       // Lowering passes can add field on object classes.
@@ -261,6 +264,7 @@ class CompilationUnitBuilder(
       is IrAnonymousInitializer -> listOf(convertAnonymousInitializer(irDeclaration))
       else -> throw NotImplementedError("Declaration not yet supported: $irDeclaration")
     }
+  }
 
   private fun convertEnumEntry(irEnumEntry: IrEnumEntry): Field {
     val initializerExpression = requireNotNull(irEnumEntry.initializerExpression).expression
@@ -305,15 +309,30 @@ class CompilationUnitBuilder(
       } else {
         irField.initializer?.let { convertExpression(it.expression) }
       }
+
+    val sourcePosition: SourcePosition
+    val nameSourcePosition: SourcePosition
+
+    if (irField.origin == IrDeclarationOrigin.FIELD_FOR_OBJECT_INSTANCE) {
+      // The synthetic IrField storing the unique instance of an object class does not have source
+      // position. In this case, we will use the name position of the object class.
+      val objectNameSourcePosition = getNameSourcePosition(irField.type.classOrFail.owner)
+      sourcePosition = objectNameSourcePosition
+      nameSourcePosition = objectNameSourcePosition
+    } else {
+      sourcePosition = getSourcePosition(irField)
+      nameSourcePosition = getNameSourcePosition(irField)
+    }
+
     return Field.Builder.from(declaredFieldDescriptor)
-      .setSourcePosition(getSourcePosition(irField))
-      .setNameSourcePosition(getNameSourcePosition(irField))
+      .setSourcePosition(sourcePosition)
+      .setNameSourcePosition(nameSourcePosition)
       .setInitializer(initializer)
       .build()
   }
 
   private fun convertFunction(irFunction: IrFunction): Method {
-    val parameters = irFunction.getParameters().map(this::createVariable)
+    val parameters = convertParameters(irFunction)
     val methodDescriptor = environment.getDeclaredMethodDescriptor(irFunction)
     val body =
       when {
@@ -329,6 +348,25 @@ class CompilationUnitBuilder(
       .setBodySourcePosition(body.sourcePosition)
       .addStatements(body.statements)
       .build()
+  }
+
+  private fun convertParameters(irFunction: IrFunction): List<Variable> = buildList {
+    if (irFunction.isSuspend) {
+      // Add the implicit continuation parameter as the first parameter. The call site will be
+      // patched in a backend desugaring pass.
+      add(
+        Variable.newBuilder()
+          .setName("\$continuation")
+          .setParameter(true)
+          .setTypeDescriptor(
+            TypeDescriptors.get()
+              .kotlinCoroutinesContinuation!!
+              .withTypeArguments(ImmutableList.of(TypeDescriptors.getUnknownType()))
+          )
+          .build()
+      )
+    }
+    addAll(irFunction.getParameters().map(this@CompilationUnitBuilder::createVariable))
   }
 
   private fun convertBody(body: IrBody): Block =
@@ -358,6 +396,7 @@ class CompilationUnitBuilder(
       is IrInstanceInitializerCall ->
         throw IllegalStateException("IrInstanceInitializerCall statements should have been lowered")
       is IrClass -> convertLocalClass(irStatement)
+      is IrFunction -> convertLocalFunction(irStatement)
       is IrContainerExpression -> convertContainer(irStatement)
       is IrVariable -> convertVariableStatement(irStatement)
       is IrWhen -> convertWhenStatement(irStatement)
@@ -374,7 +413,15 @@ class CompilationUnitBuilder(
     }
 
   private fun convertLocalClass(irClass: IrClass): Statement =
-    LocalClassDeclarationStatement(convertClass(irClass), getSourcePosition(irClass))
+    LocalClassDeclarationStatement(convertClass(irClass), getNameSourcePosition(irClass))
+
+  private fun convertLocalFunction(irFunction: IrFunction): Statement =
+    LocalFunctionDeclarationStatement.newBuilder()
+      .setMethodDescriptor(environment.getDeclaredMethodDescriptor(irFunction))
+      .setSourcePosition(getSourcePosition(irFunction))
+      .setParameters(convertParameters(irFunction))
+      .setBody(convertBody(irFunction.body!!))
+      .build()
 
   private fun convertContainer(irBlock: IrContainerExpression): Block =
     Block.newBuilder()
@@ -567,10 +614,7 @@ class CompilationUnitBuilder(
     }
 
     return SwitchCase.newBuilder()
-      .setCaseExpressions(
-        irSwitchCase.caseExpression?.let { ImmutableList.of(convertExpression(it)) }
-          ?: ImmutableList.of()
-      )
+      .setCaseExpressions(convertExpressions(irSwitchCase.caseExpressions))
       .setStatements(statements)
       .build()
   }
@@ -596,7 +640,7 @@ class CompilationUnitBuilder(
       is IrSetValue -> convertSetValue(irExpression)
       is IrSetField -> convertSetField(irExpression)
       is IrGetField -> convertGetField(irExpression)
-      is IrConst<*> -> convertConstant(irExpression)
+      is IrConst -> convertConstant(irExpression)
       is IrTypeOperatorCall -> convertTypeOperatorCall(irExpression)
       is IrGetEnumValue -> convertGetEnumValue(irExpression)
       is IrFunctionAccessExpression -> convertFunctionAccessExpression(irExpression)
@@ -687,7 +731,6 @@ class CompilationUnitBuilder(
       irCall.isDataClassArrayMemberToString -> convertDataClassArrayMemberCall(irCall, "toString")
       irCall.isAnyToString -> convertAnyToStringCall(irCall)
       irCall.isCheckNotNullCall -> convertCheckNotNullCall(irCall)
-      irCall.isNoWhenBranchMatchedException -> convertNoWhenBranchMatchedException(irCall)
       irCall.isJavaClassPropertyReference -> convertJavaClassPropertyReference(irCall)
       irCall.isKClassJavaPropertyReference ->
         convertKClassJavaPropertyReference(irCall, wrapPrimitives = false)
@@ -699,8 +742,18 @@ class CompilationUnitBuilder(
       irCall.isEqualsOperator -> convertEqualsOperator(irCall)
       irCall.isReferenceEqualsOperator -> convertReferenceEqualsOperator(irCall)
       irCall.isIeee754EqualsOperator -> convertIeee754EqualsOperator(irCall)
+      irCall.isGetJsUndefinedCall -> convertGetJsUndefinedCall(irCall)
       else -> convertFunctionCall(irCall)
     }
+
+  private fun convertGetJsUndefinedCall(irCall: IrCall): Expression =
+    // Wrap the original call in an unchecked cast. This is particularly useful when we're using
+    // undefined to stand-in for a primitive type. Otherwise the the boxed type would be used and we
+    // would attempt to auto unbox undefined.
+    JsDocCastExpression.newBuilder()
+      .setCastTypeDescriptor(environment.getTypeDescriptor(irCall.type))
+      .setExpression(convertFunctionCall(irCall))
+      .build()
 
   private fun convertJavaClassPropertyReference(irCall: IrCall): Expression =
     convertToGetClass(
@@ -717,7 +770,7 @@ class CompilationUnitBuilder(
     return when (receiver) {
       // CLASS_REFERENCE is a literal class reference on a type, ex: Foo::class.
       is IrClassReference ->
-        toTypeLiteral(receiver.classType, getSourcePosition(irCall), wrapPrimitives)
+        environment.createTypeLiteral(receiver.classType, getSourcePosition(irCall), wrapPrimitives)
       // GET_CLASS is a literal class reference on an instance, ex: Foo()::class.
       is IrGetClass ->
         convertToGetClass(receiver.argument, getSourcePosition(irCall), wrapPrimitives)
@@ -737,37 +790,17 @@ class CompilationUnitBuilder(
       return MultiExpression.newBuilder()
         .addExpressions(
           convertedReceiver,
-          toTypeLiteral(receiver.type, sourcePosition, wrapPrimitives),
+          environment.createTypeLiteral(receiver.type, sourcePosition, wrapPrimitives),
         )
         .build()
     }
     return RuntimeMethods.createGetClassMethodCall(convertedReceiver)
   }
 
-  private fun toTypeLiteral(
-    irType: IrType,
-    sourcePosition: SourcePosition,
-    wrapPrimitives: Boolean,
-  ): TypeLiteral {
-    val typeDescriptor =
-      environment.getReferenceTypeDescriptor(irType).run {
-        // "Nothing" is a special case as we thread it through the J2CL AST as a stubbed type. In
-        // the context of Nothing::class it should be treated Void.
-        if (TypeDescriptors.isKotlinNothing(this)) {
-          TypeDescriptors.get().javaLangVoid
-        } else if (TypeDescriptors.isBoxedType(this) && irType.isPrimitiveType(nullable = false)) {
-          if (wrapPrimitives) toBoxedType() else toUnboxedType()
-        } else {
-          this
-        }
-      }
-    return TypeLiteral(sourcePosition, typeDescriptor)
-  }
-
   private fun convertClassReference(expression: IrClassReference): Expression {
     val sourcePosition = getSourcePosition(expression)
     return RuntimeMethods.createKClassCall(
-      toTypeLiteral(expression.classType, sourcePosition, wrapPrimitives = false)
+      environment.createTypeLiteral(expression.classType, sourcePosition, wrapPrimitives = false)
     )
   }
 
@@ -780,7 +813,11 @@ class CompilationUnitBuilder(
     if (argument.typeDescriptor.isPrimitive) {
       val createKClassCall =
         RuntimeMethods.createKClassCall(
-          toTypeLiteral(expression.argument.type, sourcePosition, wrapPrimitives = false)
+          environment.createTypeLiteral(
+            expression.argument.type,
+            sourcePosition,
+            wrapPrimitives = false,
+          )
         )
       // Since we're not getting the class from the result of the argument, construct a
       // MultiExpression that executes the argument. This is to ensure any side effects still occur.
@@ -904,35 +941,54 @@ class CompilationUnitBuilder(
     var lhs = convertExpression(irCall.getValueArgument(0)!!)
     var rhs = convertExpression(irCall.getValueArgument(1)!!)
 
-    val floatToNumberMethodDescriptor =
-      TypeDescriptors.get()
-        .javaLangFloat
-        .getMethodDescriptor("toDouble", TypeDescriptors.get().javaLangFloat)
-    // This operation is only applicable to floats and doubles, and we take advantage that
-    // float, double and Double have exactly the same representation as a number. Therefore, it is
-    // only necessary to handle Float, and for that we use a utility method that returns its
-    // floating point value or null.
-    if (TypeDescriptors.isJavaLangFloat(lhs.typeDescriptor)) {
-      lhs = MethodCall.Builder.from(floatToNumberMethodDescriptor).setArguments(lhs).build()
-    }
+    // This operation is only applicable to floats and doubles, convert floats to doubles if
+    // necessary.
+    return RuntimeMethods.createEqualityMethodCall(
+      "\$sameNumber",
+      convertToDouble(lhs),
+      convertToDouble(rhs),
+    )
+  }
 
-    if (TypeDescriptors.isJavaLangFloat(rhs.typeDescriptor)) {
-      rhs = MethodCall.Builder.from(floatToNumberMethodDescriptor).setArguments(rhs).build()
+  private fun convertToDouble(expression: Expression): Expression {
+    val typeDescriptor = expression.typeDescriptor
+    when {
+      // Handle j.l.Float using a utility method that returns its floating point value or null.
+      TypeDescriptors.isJavaLangFloat(typeDescriptor) -> {
+        val floatToNumberMethodDescriptor =
+          TypeDescriptors.get()
+            .javaLangFloat
+            .getMethodDescriptor("toDouble", TypeDescriptors.get().javaLangFloat)
+        return MethodCall.Builder.from(floatToNumberMethodDescriptor)
+          .setArguments(expression)
+          .build()
+      }
+      // Cast primitive float to double to keep the AST consistent since their representations are
+      // the same.
+      TypeDescriptors.isPrimitiveFloat(typeDescriptor) ->
+        return CastExpression.newBuilder()
+          .setExpression(expression)
+          .setCastTypeDescriptor(PrimitiveTypes.DOUBLE)
+          .build()
+      // j.l.Double and primitive double also have the same representation in JS.
+      else -> return expression
     }
-
-    return RuntimeMethods.createEqualityMethodCall("\$sameNumber", lhs, rhs)
   }
 
   private fun convertReferenceEqualsOperator(irCall: IrCall): Expression {
-    val lhs = convertExpression(irCall.getValueArgument(0)!!)
+    var lhs = convertExpression(irCall.getValueArgument(0)!!)
     var rhs = convertExpression(irCall.getValueArgument(1)!!)
-    // In Kotlin === is almost equivalent to Java ==. The only difference is that if the lhs
-    // is a reference type, then the rhs is boxed if it is a primitive type. In Java, however, the
-    // operation unboxes if either side is a primitive.
 
-    if (!lhs.typeDescriptor.isPrimitive && rhs.typeDescriptor.isPrimitive) {
-      // Boxing semantics due to the lhs being a reference type, so force the boxing using a cast
-      // to j.l.Object.
+    // Kotlin leaves the semantics of reference equality between boxed and unboxed types as
+    // unspecified (KLS §8.9.1), but in practice will box primitive types if the LHS xor RHS side is
+    // a primitive. It will only compare primitives if both sides are primitive.
+    if (lhs.typeDescriptor.isPrimitive && !rhs.typeDescriptor.isPrimitive) {
+      lhs =
+        CastExpression.newBuilder()
+          .setCastTypeDescriptor(TypeDescriptors.get().javaLangObject)
+          .setExpression(lhs)
+          .build()
+    } else if (rhs.typeDescriptor.isPrimitive && !lhs.typeDescriptor.isPrimitive) {
       rhs =
         CastExpression.newBuilder()
           .setCastTypeDescriptor(TypeDescriptors.get().javaLangObject)
@@ -956,19 +1012,6 @@ class CompilationUnitBuilder(
     }
   }
 
-  private fun convertNoWhenBranchMatchedException(irCall: IrCall): Expression {
-    require(irCall.valueArgumentsCount == 0) {
-      "throwNoWhenBranchMatchedException should have no arguments"
-    }
-    return MethodCall.Builder.from(
-        TypeDescriptors.get()
-          .kotlinJvmInternalIntrinsics!!
-          .getMethodDescriptor("throwNoWhenBranchMatchedException")
-      )
-      .setSourcePosition(getSourcePosition(irCall))
-      .build()
-  }
-
   private fun convertPrefixOperation(irCall: IrCall): Expression {
     val prefixOperator = requireNotNull(intrinsicMethods.getPrefixOperator(irCall.symbol))
 
@@ -979,6 +1022,18 @@ class CompilationUnitBuilder(
     require(irCall.valueArgumentsCount == 1 || irCall.dispatchReceiver != null)
 
     val operand = convertQualifier(irCall) ?: convertExpression(irCall.getValueArgument(0)!!)
+
+    // Kotlin will always represent !== and != as !(===) and !(==), respectively. The origin will
+    // tell us if Kotlin internally did this and if so, we can rewrite the operand directly to be
+    // !=.
+    if (
+      (irCall.origin == IrStatementOrigin.EXCLEQEQ || irCall.origin == IrStatementOrigin.EXCLEQ) &&
+        operand is BinaryExpression &&
+        operand.operator == BinaryOperator.EQUALS
+    ) {
+      check(prefixOperator == PrefixOperator.NOT)
+      return operand.leftOperand.infixNotEquals(operand.rightOperand)
+    }
 
     // Create the appropriate expression with the same semantic of the intrinsic call.
     if (prefixOperator.hasSideEffect()) {
@@ -1178,12 +1233,41 @@ class CompilationUnitBuilder(
     convertValueAccessExpression(irGetValue)
 
   private fun convertSetValue(irSetValue: IrSetValue): Expression {
-    val variableReference = convertValueAccessExpression(irSetValue)
+    val lhs = convertValueAccessExpression(irSetValue)
+    var rhs = convertExpression(irSetValue.value)
+    var operator = BinaryOperator.ASSIGN
+
+    fun hasSameTarget(left: Expression, right: Expression) =
+      left is Reference<*> && right is Reference<*> && left.target == right.target
+
+    // If the LHS and RHS are primitives, try to reconstruct the original binary assignment
+    // operation. We also require that the LHS and RHS be a reference to the same target, which can
+    // skew from inlining.
+    if (
+      lhs.typeDescriptor.isPrimitive &&
+        rhs.typeDescriptor.isPrimitive &&
+        rhs is BinaryExpression &&
+        hasSameTarget(lhs, rhs.leftOperand)
+    ) {
+      val newOperator =
+        when (irSetValue.origin) {
+          IrStatementOrigin.PLUSEQ -> BinaryOperator.PLUS_ASSIGN
+          IrStatementOrigin.MINUSEQ -> BinaryOperator.MINUS_ASSIGN
+          IrStatementOrigin.PERCEQ -> BinaryOperator.REMAINDER_ASSIGN
+          IrStatementOrigin.DIVEQ -> BinaryOperator.DIVIDE_ASSIGN
+          IrStatementOrigin.MULTEQ -> BinaryOperator.TIMES_ASSIGN
+          else -> null
+        }
+      if (newOperator != null) {
+        operator = newOperator
+        rhs = rhs.rightOperand
+      }
+    }
 
     return BinaryExpression.newBuilder()
-      .setOperator(BinaryOperator.ASSIGN)
-      .setLeftOperand(variableReference)
-      .setRightOperand(convertExpression(irSetValue.value))
+      .setOperator(operator)
+      .setLeftOperand(lhs)
+      .setRightOperand(rhs)
       .build()
   }
 
@@ -1207,7 +1291,7 @@ class CompilationUnitBuilder(
     throw IllegalStateException("Unknown value ${target.render()}")
   }
 
-  private fun convertConstant(irConst: IrConst<*>): Expression =
+  private fun convertConstant(irConst: IrConst): Expression =
     environment.getTypeDescriptor(irConst.type).let { typeDescriptor ->
       if (irConst.kind == IrConstKind.Null) typeDescriptor.nullValue
       else Literal.fromValue(irConst.value, typeDescriptor)
@@ -1271,19 +1355,15 @@ class CompilationUnitBuilder(
       if (typeDescriptor.isTypeVariable) typeDescriptor.toRawTypeDescriptor() else typeDescriptor
 
     if (expressionTypeDescriptor.isPrimitive) {
-      // Kotlin only allows non-nullable primitive instanceOf type if the type is assignable, hence
-      // only if the instanceOf is true. `1 is Int` is valid but `1 is Double` is rejected by the
-      // compiler. However after inlining inline function with reified type parameters, the program
-      // can contain this kind of instanceOf expression.
-      // Ex:
-      // inline fun <reified T> instanceOf(o: Any) = o is T
-      // The following call site:
-      // val b = instanceOf<String>(1)
-      // is inlined as:
-      // val b = 1 is String
-      return BooleanLiteral.get(
-        expressionTypeDescriptor.toBoxedType().isAssignableTo(testTypeDescriptor)
-      )
+      // If the expression is a primitive we can statically compute the instanceof result rather
+      // than box it.
+      val result =
+        BooleanLiteral.get(
+          expressionTypeDescriptor.toBoxedType().isAssignableTo(testTypeDescriptor)
+        )
+      return MultiExpression.newBuilder()
+        .addExpressions(convertExpression(expression), result)
+        .build()
     }
     return InstanceOfExpression.newBuilder()
       .setExpression(convertExpression(expression))
@@ -1360,14 +1440,16 @@ class CompilationUnitBuilder(
     typeDescriptor: TypeDescriptor,
     irFunctionExpression: IrFunctionExpression,
   ): FunctionExpression {
+    check(typeDescriptor.isFunctionalInterface)
     val irFunction = irFunctionExpression.function
-    val parameters = irFunction.getParameters().map(this::createVariable)
+    val parameters = convertParameters(irFunction)
     val body =
       irFunction.body?.let { convertBody(it) }
         ?: Block.newBuilder().setSourcePosition(getSourcePosition(irFunction)).build()
 
     return FunctionExpression.newBuilder()
       .setTypeDescriptor(typeDescriptor)
+      .setJsAsync(typeDescriptor.functionalInterface!!.singleAbstractMethodDescriptor!!.isJsAsync)
       .setParameters(parameters)
       .setStatements(body.statements)
       .setSourcePosition(getSourcePosition(irFunction))
@@ -1381,10 +1463,10 @@ class CompilationUnitBuilder(
       .build()
 
   private fun convertVararg(vararg: IrVararg): Expression =
-    ArrayLiteral(
-      environment.getTypeDescriptor(vararg.type) as ArrayTypeDescriptor,
-      vararg.elements.map(::convertVarargElement),
-    )
+    ArrayLiteral.newBuilder()
+      .setTypeDescriptor(environment.getTypeDescriptor(vararg.type) as ArrayTypeDescriptor)
+      .setValueExpressions(vararg.elements.map(::convertVarargElement))
+      .build()
 
   private fun convertVarargElement(varargElement: IrVarargElement): Expression =
     when (varargElement) {
@@ -1401,21 +1483,24 @@ class CompilationUnitBuilder(
     }
 
   private fun convertFunctionReference(irExpression: IrFunctionReference): Expression {
-    // Function references are resolved in the IR as fictitious `KFunction{N}` interfaces that do
-    // not exist at runtime (`N` being the arity of the referenced function). Kotlin/JVM maps any
-    // `KFunction{N}` type to the existing interface `KFunction`. Then it introduces a cast to
-    // `Function{N}` at `invoke()` function call sites as this function is specific to that
-    // interface.  For more information, please refer to
+    // Function references are resolved in the IR as fictitious `KFunction{N}` or
+    // `KSuspendFunction{N}` interfaces that do not exist at runtime (`N` being the arity of the
+    // referenced function). Kotlin/JVM maps any `KFunction{N}` or `KSuspendFunction{N}` type to the
+    // existing interfaces `KFunction` or `KSuspendFunction`. Then it introduces a cast to
+    // `kotlin.Function{N}` or `kotlin.coroutines.SuspendFunction{N}` at `invoke()` function call
+    // sites as this function is specific to those interfaces.  For more information, please refer
+    // to:
     // https://github.com/JetBrains/kotlin/blob/master/spec-docs/function-types.md#how-this-will-help-reflection
     //
-    // In J2CL, we are only supporting the api of `Function{N}` for now. To avoid casts at invoke()
-    // function call sites, we will type our MethodReference as `Function{N}`. Any call to the
-    // `KFunction` API will be rejected by the compiler.
+    // In J2CL, we are only supporting the api of `Function{N}` and `SuspendFunction{N}`for now. To
+    // avoid casts at `invoke()` function call sites, we will type our MethodReference as
+    // `Function{N}` or `SuspendFunction{N}`. Any call to the `KFunction` or `KSuspendFunction` API
+    // will be rejected by the compiler.
     //
     // Note about varargs and function reference: A function with varargs can be used in a context
     // of a function type without varargs. In this case, Kotlin compiler creates an extra function
     // adapter and the reference we see here is the reference to the adapter function. The type
-    // of the `IrFunctionReference` is directly `Function{N}`
+    // of the `IrFunctionReference` is directly `Function{N}` or `SuspendFunction{N}`
     // ex:
     // ```
     //  fun foo(varargs String s): String = s.joinToString()
@@ -1428,14 +1513,15 @@ class CompilationUnitBuilder(
       check(irExpression.type.isFunction())
       functionNType = irExpression.type as IrSimpleType
     } else {
-      check(irExpression.type.isKFunction())
+      check(irExpression.type.isKFunctionOrKSuspendFunction())
       val kFunctionNType = irExpression.type as IrSimpleType
 
-      // In the Kotlin type system, `KFunction{N}` does not directly extend `Function{N}` but the
+      // In the Kotlin type system, `KFunction{N}`  does not directly extend `Function{N}` but the
       // `KFunction{N}.invoke()` is declared as overriding `Function{N}.invoke()`. This is possible
       // because `KFunction{N}` is a synthetic interfaces.
       // The simplest way to find the Function{N} type is to look at the enclosing class of the
       // single overridden function of `KFunction{N}.invoke` that must be `Function{N}.invoke`.
+      // Same comment applies for `KSuspendFunction{N}` and `SuspendFunction{N}`
       functionNType =
         checkNotNull(kFunctionNType.classOrNull)
           .owner
@@ -1445,9 +1531,8 @@ class CompilationUnitBuilder(
           .owner
           .parentAsClass
           .symbol
-          // specialize Function{N} with the arguments of KFunction{N}
           .typeWithArguments(kFunctionNType.arguments)
-      check(functionNType.isFunction())
+      check(functionNType.isFunctionOrSuspendFunction())
     }
 
     val functionNTypeDescriptor =
@@ -1633,7 +1718,7 @@ class CompilationUnitBuilder(
   private fun createVariable(irValueDeclaration: IrValueDeclaration): Variable {
     val variable =
       Variable.newBuilder()
-        .setName(irValueDeclaration.javaName)
+        .setName(irValueDeclaration.sanitizedName)
         .setTypeDescriptor(environment.getTypeDescriptor(irValueDeclaration.type))
         .setParameter(irValueDeclaration is IrValueParameter)
         .setFinal(irValueDeclaration is IrVariable && !irValueDeclaration.isVar)
@@ -1702,8 +1787,8 @@ class CompilationUnitBuilder(
   private val IrCall.isCheckNotNullCall: Boolean
     get() = intrinsicMethods.isCheckNotNull(this)
 
-  private val IrCall.isNoWhenBranchMatchedException: Boolean
-    get() = intrinsicMethods.isNoWhenBranchMatchedException(this)
+  private val IrCall.isGetJsUndefinedCall: Boolean
+    get() = intrinsicMethods.isGetJsUndefinedCall(this)
 
   private val IrCall.isJavaClassPropertyReference: Boolean
     get() = intrinsicMethods.isJavaClassProperty(this)

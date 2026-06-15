@@ -1,4 +1,12 @@
-goog.provide('expect.assertions');
+goog.module('expect.assertions');
+
+const jre = goog.require('jre');
 
 /** @define {string} */
-expect.assertions.armed = goog.define('expect.assertions.armed', 'false');
+const armed = goog.define('expect.assertions.armed', 'false');
+
+jre.addSystemPropertyFromGoogDefine('expect.assertions.armed', armed);
+
+exports = {
+    armed,
+};

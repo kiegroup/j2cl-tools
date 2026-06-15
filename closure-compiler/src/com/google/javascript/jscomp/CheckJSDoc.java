@@ -160,6 +160,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     validateReturnJsDoc(n, info);
     validateTsType(n, info);
     validateJsDocTypeNames(info);
+    validateIsUsedViaDotConstructor(n, info);
   }
 
   private void validateSuppress(Node n, JSDocInfo info) {
@@ -226,9 +227,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       return;
     }
     Node lvalue = NodeUtil.isNameDeclaration(n) || n.isAssign() ? n.getFirstChild() : n;
-    // Static properties for goog.defineClass are rewritten to qualified names before typechecking
-    // runs and are valid as @typedefs.
-    if (!lvalue.isQualifiedName() && !isGoogDefineClassStatic(lvalue)) {
+    if (!lvalue.isQualifiedName()) {
       reportMisplaced(
           n,
           "typedef",
@@ -239,14 +238,6 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
           "typedef",
           "@typedef is not allowed on instance or prototype properties. Did you mean @type?");
     }
-  }
-
-  /** Whether this is a property in this object: {@code goog.defineClass(superClass, {statics: {} */
-  private boolean isGoogDefineClassStatic(Node n) {
-    return n.isStringKey()
-        && n.getParent().isObjectLit()
-        && n.getGrandparent().isStringKey()
-        && n.getGrandparent().getString().equals("statics");
   }
 
   private void validateTemplates(Node n, JSDocInfo info) {
@@ -283,13 +274,6 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
 
     if (n.isAssign() && n.getFirstChild().isQualifiedName() && n.getLastChild().isFunction()) {
       return n.getLastChild();
-    }
-
-    if (n.isStringKey()
-        && n.getGrandparent() != null
-        && ClosureRewriteClass.isGoogDefineClass(n.getGrandparent())
-        && n.getFirstChild().isFunction()) {
-      return n.getFirstChild();
     }
 
     if (n.isGetterDef() || n.isSetterDef()) {
@@ -388,13 +372,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       return;
     }
 
-    // TODO(b/124020008): Delete this case when `goog.defineClass` is dropped.
-    boolean isGoogDefineClassConstructor =
-        n.getParent().isObjectLit()
-            && (n.isMemberFunctionDef() || n.isStringKey())
-            && "constructor".equals(n.getString());
-    if (NodeUtil.isEs6ConstructorMemberFunctionDef(n) || isGoogDefineClassConstructor) {
-      // @abstract annotation on an ES6 or goog.defineClass constructor
+    if (NodeUtil.isEs6ConstructorMemberFunctionDef(n)) {
+      // @abstract annotation on an ES6 constructor
       report(n, MISPLACED_ANNOTATION, "@abstract", "constructors cannot be abstract");
       return;
     }
@@ -533,8 +512,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       return;
     }
 
-    boolean hasNonDescMsgTag =
-        info.isHidden() || info.getMeaning() != null || info.getAlternateMessageId() != null;
+    boolean hasNonDescMsgTag = info.getMeaning() != null || info.getAlternateMessageId() != null;
 
     if (hasNonDescMsgTag
         // Don't error on TS gencode using @desc on a non-message. There's a lot of code that
@@ -836,6 +814,17 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
           || ClosureRewriteModule.isModuleContent(rootOfType)) {
         typeRefNode.setString("UnrecognizedType_" + typeName);
       }
+    }
+  }
+
+  /** Checks that @usedViaDotConstructor is only used on constructors. */
+  private void validateIsUsedViaDotConstructor(Node n, JSDocInfo info) {
+    if (info == null || !info.isUsedViaDotConstructor()) {
+      return;
+    }
+    if (!(n.isFunction() && info.isConstructor())
+        && !NodeUtil.isEs6ConstructorMemberFunctionDef(n)) {
+      report(n, MISPLACED_ANNOTATION, "usedViaDotConstructor", "must be on a constructor");
     }
   }
 }

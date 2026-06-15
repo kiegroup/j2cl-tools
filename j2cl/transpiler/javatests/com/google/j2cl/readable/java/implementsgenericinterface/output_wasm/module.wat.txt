@@ -9,6 +9,12 @@
 )
 
 ;;; Code for implementsgenericinterface.GenericInterfaceGenericImpl [type definition]
+(type $implementsgenericinterface.GenericInterfaceGenericImpl (sub $java.lang.Object (struct
+ (field $vtable (ref $implementsgenericinterface.GenericInterfaceGenericImpl.vtable))
+ (field $itable (ref $implementsgenericinterface.GenericInterfaceGenericImpl.itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $implementsgenericinterface.GenericInterfaceGenericImpl.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -16,25 +22,19 @@
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  ))
 )
-(type $implementsgenericinterface.GenericInterfaceGenericImpl (sub $java.lang.Object (struct
- (field $vtable (ref $implementsgenericinterface.GenericInterfaceGenericImpl.vtable))
- (field $itable (ref $implementsgenericinterface.GenericInterfaceGenericImpl.itable))
+
+;;; Code for implementsgenericinterface.GenericInterfaceImpl [type definition]
+(type $implementsgenericinterface.GenericInterfaceImpl (sub $java.lang.Object (struct
+ (field $vtable (ref $implementsgenericinterface.GenericInterfaceImpl.vtable))
+ (field $itable (ref $implementsgenericinterface.GenericInterfaceImpl.itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for implementsgenericinterface.GenericInterfaceImpl [type definition]
 (type $implementsgenericinterface.GenericInterfaceImpl.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
  (field $m_hashCode__int (ref $function.m_hashCode__int))
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
- ))
-)
-(type $implementsgenericinterface.GenericInterfaceImpl (sub $java.lang.Object (struct
- (field $vtable (ref $implementsgenericinterface.GenericInterfaceImpl.vtable))
- (field $itable (ref $implementsgenericinterface.GenericInterfaceImpl.itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
 
@@ -181,7 +181,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/implementsgenericinterface/readable-j2wasm.js/implementsgenericinterface/GenericInterfaceImpl.java:22:6
   (call $$clinit__void_<once>_@implementsgenericinterface.GenericInterfaceGenericImpl )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/implementsgenericinterface/readable-j2wasm.js/implementsgenericinterface/GenericInterfaceImpl.java:22:6
-  (local.set $$instance (struct.new $implementsgenericinterface.GenericInterfaceGenericImpl (ref.as_non_null (global.get $implementsgenericinterface.GenericInterfaceGenericImpl.vtable)) (ref.as_non_null (global.get $implementsgenericinterface.GenericInterfaceGenericImpl.itable)) (i32.const 0)))
+  (local.set $$instance (struct.new $implementsgenericinterface.GenericInterfaceGenericImpl (global.get $implementsgenericinterface.GenericInterfaceGenericImpl.vtable) (global.get $implementsgenericinterface.GenericInterfaceGenericImpl.itable) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/implementsgenericinterface/readable-j2wasm.js/implementsgenericinterface/GenericInterfaceImpl.java:22:6
   (call $$ctor__void_$p_implementsgenericinterface_GenericInterfaceGenericImpl@implementsgenericinterface.GenericInterfaceGenericImpl (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/implementsgenericinterface/readable-j2wasm.js/implementsgenericinterface/GenericInterfaceImpl.java:22:6
@@ -255,7 +255,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/implementsgenericinterface/readable-j2wasm.js/implementsgenericinterface/GenericInterfaceImpl.java:24:13
   (call $$clinit__void_<once>_@implementsgenericinterface.GenericInterfaceImpl )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/implementsgenericinterface/readable-j2wasm.js/implementsgenericinterface/GenericInterfaceImpl.java:24:13
-  (local.set $$instance (struct.new $implementsgenericinterface.GenericInterfaceImpl (ref.as_non_null (global.get $implementsgenericinterface.GenericInterfaceImpl.vtable)) (ref.as_non_null (global.get $implementsgenericinterface.GenericInterfaceImpl.itable)) (i32.const 0)))
+  (local.set $$instance (struct.new $implementsgenericinterface.GenericInterfaceImpl (global.get $implementsgenericinterface.GenericInterfaceImpl.vtable) (global.get $implementsgenericinterface.GenericInterfaceImpl.itable) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/implementsgenericinterface/readable-j2wasm.js/implementsgenericinterface/GenericInterfaceImpl.java:24:13
   (call $$ctor__void_$p_implementsgenericinterface_GenericInterfaceImpl@implementsgenericinterface.GenericInterfaceImpl (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/implementsgenericinterface/readable-j2wasm.js/implementsgenericinterface/GenericInterfaceImpl.java:24:13

@@ -2,7 +2,7 @@
 #   j2cl/jre: JRE subset for transpilation.
 #
 
-load("@io_bazel_rules_closure//closure:defs.bzl", "closure_js_library")
+load("@rules_closure//closure:defs.bzl", "closure_js_library")
 load("//build_defs:rules.bzl", "j2cl_import", "j2cl_library", "j2wasm_library")
 load("//build_defs/internal_do_not_use:j2cl_common.bzl", "DEFAULT_J2CL_JAVAC_OPTS")
 load("//build_defs/internal_do_not_use:j2wasm_common.bzl", "DEFAULT_J2WASM_JAVAC_OPTS")
@@ -30,17 +30,15 @@ JRE_JAVAC_OPTS = [
     "-Xep:ShouldNotSubclass:OFF",
     # Remove crv since we don't want to dep on ErrorProne annotations from JRE.
     "-Xep:CheckReturnValue:OFF",
+    "-Xep:MixedArrayDimensions:OFF",  # See go/lsc-mixedarraydimensions
 ]
 
 java_library(
     name = "javaemul_internal_annotations",
     srcs = glob(["javaemul/internal/annotations/*.java"]),
     visibility = [
-        "//benchmarking/java:__subpackages__",
-        "//jre/javatests:__subpackages__",
-        "@com_google_jsinterop_base//:__subpackages__",
-        "//transpiler/javatests:__subpackages__",
-        "//junit/generator/java/com/google/j2cl/junit/runtime:__pkg__",
+        # Do not use. Temporary visible to workaround https://github.com/bazelbuild/bazel/issues/25214.
+        "//visibility:public",
     ],
 )
 
@@ -48,12 +46,8 @@ j2cl_import(
     name = "javaemul_internal_annotations-j2cl",
     jar = ":javaemul_internal_annotations",
     visibility = [
-        "//benchmarking/java:__subpackages__",
-        "//jre/javatests:__subpackages__",
-        "//junit/generator/java/com/google/j2cl/junit/runtime:__pkg__",
-        "@com_google_j2cl_proto//java/com/google/protobuf/contrib/j2cl/runtime:__pkg__",
-        "@com_google_jsinterop_base//:__subpackages__",
-        "//transpiler/javatests:__subpackages__",
+        # Do not use. Temporary visible to workaround https://github.com/bazelbuild/bazel/issues/25214.
+        "//visibility:public",
     ],
 )
 
@@ -112,10 +106,7 @@ j2wasm_library(
         ":jre_java_files-j2wasm",
     ] + glob(["super-wasm/*.js"]),
     javacopts = JRE_JAVAC_OPTS,
-    visibility = [
-        "//build_defs/internal_do_not_use:__pkg__",
-        "//transpiler/javatests/com/google/j2cl/transpiler:__pkg__",
-    ],
+    visibility = ["//build_defs/internal_do_not_use:__pkg__"],
     deps = [
         ":javaemul_internal_annotations-j2wasm",
         "//third_party:jsinterop-annotations-j2wasm",
@@ -129,10 +120,7 @@ j2cl_library(
         ":jre_native_files",
     ],
     javacopts = JRE_JAVAC_OPTS,
-    visibility = [
-        "//:__pkg__",
-        "//transpiler/javatests/com/google/j2cl/transpiler:__pkg__",
-    ],
+    visibility = ["//:__pkg__"],
     exports = [
         # J2CL transpiler optimizations to AutoValue may add this dependency.
         "//third_party:closure_reflect",
@@ -173,11 +161,11 @@ java_library(
 j2cl_java_toolchain(
     name = "j2cl_java_toolchain",
     bootclasspath = ":jre_bootclasspath",
-    visibility = ["//build_defs/internal_do_not_use:__pkg__"],
+    visibility = ["//build_defs:toolchain_users"],
 )
 
 j2cl_java_toolchain(
     name = "j2wasm_java_toolchain",
     bootclasspath = ":jre_bootclasspath-j2wasm",
-    visibility = ["//build_defs/internal_do_not_use:__pkg__"],
+    visibility = ["//build_defs:toolchain_users"],
 )

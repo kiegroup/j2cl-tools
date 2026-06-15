@@ -2,38 +2,117 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-
-  <parent>
+    <modelVersion>4.0.0</modelVersion>
     <groupId>org.kie.j2cl.tools</groupId>
-    <artifactId>j2cl-parent</artifactId>
-    <version>v20241110-1</version>
-  </parent>
-  <artifactId>bootstrap</artifactId>
-  <packaging>pom</packaging>
-  <description>
-    This project more or less consists of the bits of closure that are required in a j2cl-based app,
-    plus the various parts of j2cl's js bootstrap that are not yet included in the jre.js.zip, like
-    jre.js, primitives, nativebootstrap, and and vmbootstrap.
-  </description>
+    <artifactId>bootstrap</artifactId>
+    <packaging>pom</packaging>
+    <version>v20251027-1</version>
 
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>3.1.0</version>
-          <executions>
-            <execution>
-              <phase>prepare-package</phase>
-              <goals><goal>single</goal></goals>
-            </execution>
-          </executions>
-        <configuration>
-          <descriptors>
-            <descriptor>assembly.xml</descriptor>
-          </descriptors>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+    <name>J2CL Backend Bootstrap</name>
+    <description>
+        This project more or less consists of the bits of closure that are required in a j2cl-based app,
+        plus the various parts of j2cl's js bootstrap that are not yet included in the jre.js.zip, like
+        jre.js, primitives, nativebootstrap, and and vmbootstrap.
+    </description>
+    <url>https://github.com/vertispan/j2cl</url>
+    <inceptionYear>2015</inceptionYear>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>J2CL team</name>
+            <organization>Google</organization>
+            <organizationUrl>https://www.google.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Colin Alworth</name>
+            <email>colin@vertispan.com</email>
+            <organization>Vertispan LLC</organization>
+            <organizationUrl>https://www.vertispan.com/</organizationUrl>
+        </developer>
+    </developers>
+
+    <issueManagement>
+        <url>https://github.com/vertispan/j2cl/issues</url>
+        <system>GitHub Issues</system>
+    </issueManagement>
+
+    <scm>
+        <connection>scm:git:https://github.com/vertispan/j2cl.git</connection>
+        <developerConnection>scm:git:git@github.com:vertispan/j2cl.git</developerConnection>
+        <url>https://github.com/vertispan/j2cl</url>
+    </scm>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <descriptors>
+                        <descriptor>assembly.xml</descriptor>
+                    </descriptors>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.5</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    <repositories>
+        <repository>
+            <id>jboss</id>
+            <name>JBoss Public Repo</name>
+            <url>https://repository.jboss.org/nexus/content/groups/public</url>
+        </repository>
+        <repository>
+            <id>sonatype-public</id>
+            <name>Sonatype Public Snapshots Repo</name>
+            <url>https://oss.sonatype.org/content/repositories/public</url>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Repository Group</name>
+            <url>https://repository.jboss.org/nexus/repository/releases/</url>
+        </repository>
+    </distributionManagement>
 </project>

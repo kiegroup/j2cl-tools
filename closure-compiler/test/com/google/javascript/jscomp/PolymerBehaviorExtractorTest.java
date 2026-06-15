@@ -52,41 +52,42 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testArrayBehavior() {
     parseAndInitializeExtractor(
-        lines(
-            "/** @polymerBehavior */",
-            "var FunBehavior = {",
-            "  properties: {",
-            "    isFun: Boolean",
-            "  },",
-            "  /** @param {string} funAmount */",
-            "  doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },",
-            "  /** @override */",
-            "  created: function() {}",
-            "};",
-            "/** @polymerBehavior */",
-            "var RadBehavior = {",
-            "  properties: {",
-            "    howRad: Number",
-            "  },",
-            "  /** @param {number} radAmount */",
-            "  doSomethingRad: function(radAmount) { alert('Something ' + radAmount + ' rad!'); },",
-            "  /** @override */",
-            "  ready: function() {}",
-            "};",
-            "/** @polymerBehavior */",
-            "var SuperCoolBehaviors = [FunBehavior, RadBehavior];",
-            "/** @polymerBehavior */",
-            "var BoringBehavior = {",
-            "  properties: {",
-            "    boringString: String",
-            "  },",
-            "  /** @param {boolean} boredYet */",
-            "  doSomething: function(boredYet) { alert(boredYet + ' ' + this.boringString); },",
-            "};",
-            "var A = Polymer({",
-            "  is: 'x-element',",
-            "  behaviors: [ SuperCoolBehaviors, BoringBehavior ],",
-            "});"));
+        """
+        /** @polymerBehavior */
+        var FunBehavior = {
+          properties: {
+            isFun: Boolean
+          },
+          /** @param {string} funAmount */
+          doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },
+          /** @override */
+          created: function() {}
+        };
+        /** @polymerBehavior */
+        var RadBehavior = {
+          properties: {
+            howRad: Number
+          },
+          /** @param {number} radAmount */
+          doSomethingRad: function(radAmount) { alert('Something ' + radAmount + ' rad!'); },
+          /** @override */
+          ready: function() {}
+        };
+        /** @polymerBehavior */
+        var SuperCoolBehaviors = [FunBehavior, RadBehavior];
+        /** @polymerBehavior */
+        var BoringBehavior = {
+          properties: {
+            boringString: String
+          },
+          /** @param {boolean} boredYet */
+          doSomething: function(boredYet) { alert(boredYet + ' ' + this.boringString); },
+        };
+        var A = Polymer({
+          is: 'x-element',
+          behaviors: [ SuperCoolBehaviors, BoringBehavior ],
+        });
+        """);
 
     ImmutableList<BehaviorDefinition> defs = extractor.extractBehaviors(behaviorArray, null);
     assertThat(defs).hasSize(3);
@@ -97,43 +98,44 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testArrayBehavior_fromGoogProvide() {
     parseAndInitializeExtractor(
-        lines(
-            "goog.provide('my.project.RadBehavior');",
-            "goog.provide('my.project.FunBehavior');",
-            "/** @polymerBehavior */",
-            "my.project.FunBehavior = {",
-            "  properties: {",
-            "    isFun: Boolean",
-            "  },",
-            "  /** @param {string} funAmount */",
-            "  doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },",
-            "  /** @override */",
-            "  created: function() {}",
-            "};",
-            "/** @polymerBehavior */",
-            "my.project.RadBehavior = {",
-            "  properties: {",
-            "    howRad: Number",
-            "  },",
-            "  /** @param {number} radAmount */",
-            "  doSomethingRad: function(radAmount) { alert('Something ' + radAmount + ' rad!'); },",
-            "  /** @override */",
-            "  ready: function() {}",
-            "};",
-            "/** @polymerBehavior */",
-            "var SuperCoolBehaviors = [my.project.FunBehavior, my.project.RadBehavior];",
-            "/** @polymerBehavior */",
-            "var BoringBehavior = {",
-            "  properties: {",
-            "    boringString: String",
-            "  },",
-            "  /** @param {boolean} boredYet */",
-            "  doSomething: function(boredYet) { alert(boredYet + ' ' + this.boringString); },",
-            "};",
-            "var A = Polymer({",
-            "  is: 'x-element',",
-            "  behaviors: [ SuperCoolBehaviors, BoringBehavior ],",
-            "});"));
+        """
+        goog.provide('my.project.RadBehavior');
+        goog.provide('my.project.FunBehavior');
+        /** @polymerBehavior */
+        my.project.FunBehavior = {
+          properties: {
+            isFun: Boolean
+          },
+          /** @param {string} funAmount */
+          doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },
+          /** @override */
+          created: function() {}
+        };
+        /** @polymerBehavior */
+        my.project.RadBehavior = {
+          properties: {
+            howRad: Number
+          },
+          /** @param {number} radAmount */
+          doSomethingRad: function(radAmount) { alert('Something ' + radAmount + ' rad!'); },
+          /** @override */
+          ready: function() {}
+        };
+        /** @polymerBehavior */
+        var SuperCoolBehaviors = [my.project.FunBehavior, my.project.RadBehavior];
+        /** @polymerBehavior */
+        var BoringBehavior = {
+          properties: {
+            boringString: String
+          },
+          /** @param {boolean} boredYet */
+          doSomething: function(boredYet) { alert(boredYet + ' ' + this.boringString); },
+        };
+        var A = Polymer({
+          is: 'x-element',
+          behaviors: [ SuperCoolBehaviors, BoringBehavior ],
+        });
+        """);
 
     ImmutableList<BehaviorDefinition> defs = extractor.extractBehaviors(behaviorArray, null);
     assertThat(defs).hasSize(3);
@@ -142,10 +144,11 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehaviorDeclaredAndUsedWithinModule() {
     parseAndInitializeExtractor(
-        lines(
-            "goog.module('modules.rad');",
-            createBehaviorDefinition("RadBehavior"),
-            createBehaviorUsage("RadBehavior")));
+        """
+        goog.module('modules.rad');
+        """
+            + createBehaviorDefinition("RadBehavior")
+            + createBehaviorUsage("RadBehavior"));
 
     assertSingleBehaviorExtractionSucceeds(
         moduleMetadataMap.getModulesByGoogNamespace().get("modules.rad"));
@@ -156,11 +159,19 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_propertyOnGlobalSetInModule() {
     parseAndInitializeExtractor(
-        "function Polymer() {}",
-        createBehaviorDefinition("RadBehavior") + "export {RadBehavior};",
+        """
+        function Polymer() {}
+        """,
+        createBehaviorDefinition("RadBehavior")
+            + """
+            export {RadBehavior};
+            """,
         // Verify that we can resolve 'RadBehavior' when we see the 'Polymer.RadBehavior' assignment
         // despite the assignment being 'global', not module-level.
-        "import {RadBehavior} from './testcode1'; Polymer.RadBehavior = RadBehavior;",
+        """
+        import {RadBehavior} from './testcode1';
+        Polymer.RadBehavior = RadBehavior;
+        """,
         createBehaviorUsage("Polymer.RadBehavior"));
 
     assertSingleBehaviorExtractionSucceeds(moduleMetadataMap.getModulesByPath().get("testcode4"));
@@ -171,12 +182,14 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_esExport_namedImport() {
     parseAndInitializeExtractor(
-        lines(
-            createBehaviorDefinition("RadBehaviorLocal"),
-            "export {RadBehaviorLocal as RadBehavior};"),
-        lines(
-            "import {RadBehavior} from './testcode0'", //
-            createBehaviorUsage("RadBehavior")));
+        createBehaviorDefinition("RadBehaviorLocal")
+            + """
+            export {RadBehaviorLocal as RadBehavior};
+            """,
+        """
+        import {RadBehavior} from './testcode0'
+        """
+            + createBehaviorUsage("RadBehavior"));
 
     assertSingleBehaviorExtractionSucceeds(moduleMetadataMap.getModulesByPath().get("testcode1"));
   }
@@ -184,10 +197,13 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_esExport_invalidNamedImport() {
     parseAndInitializeExtractor(
-        "export const NotABehavior = {};",
-        lines(
-            "import {NotABehavior} from './testcode0'", //
-            createBehaviorUsage("NotABehavior")));
+        """
+        export const NotABehavior = {};
+        """,
+        """
+        import {NotABehavior} from './testcode0'
+        """
+            + createBehaviorUsage("NotABehavior"));
 
     extractor.extractBehaviors(
         behaviorArray, moduleMetadataMap.getModulesByPath().get("testcode1"));
@@ -197,13 +213,15 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_esExport_namedImport_ofArray() {
     parseAndInitializeExtractor(
-        lines(
-            createBehaviorDefinition("RadBehaviorLocal"),
-            "/** @polymerBehavior */",
-            "export const RadBehavior = [ RadBehaviorLocal ];"),
-        lines(
-            "import {RadBehavior} from './testcode0'", //
-            createBehaviorUsage("RadBehavior")));
+        createBehaviorDefinition("RadBehaviorLocal")
+            + """
+            /** @polymerBehavior */
+            export const RadBehavior = [ RadBehaviorLocal ];
+            """,
+        """
+        import {RadBehavior} from './testcode0'
+        """
+            + createBehaviorUsage("RadBehavior"));
 
     assertSingleBehaviorExtractionSucceeds(moduleMetadataMap.getModulesByPath().get("testcode1"));
   }
@@ -211,15 +229,17 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_esExport_exportDeclaration() {
     parseAndInitializeExtractor(
-        lines(
-            "/** @polymerBehavior */",
-            "export const RadBehavior = {",
-            "  /** @param {number} radAmount */",
-            "  doSomethingRad: function(radAmount) { alert('Something ' + radAmount + ' rad!'); },",
-            "};"),
-        lines(
-            "import {RadBehavior} from './testcode0'", //
-            createBehaviorUsage("RadBehavior")));
+        """
+        /** @polymerBehavior */
+        export const RadBehavior = {
+          /** @param {number} radAmount */
+          doSomethingRad: function(radAmount) { alert('Something ' + radAmount + ' rad!'); },
+        };
+        """,
+        """
+        import {RadBehavior} from './testcode0'
+        """
+            + createBehaviorUsage("RadBehavior"));
 
     assertSingleBehaviorExtractionSucceeds(moduleMetadataMap.getModulesByPath().get("testcode1"));
   }
@@ -229,10 +249,14 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_esExport_defaultExport() {
     parseAndInitializeExtractor(
-        lines(createBehaviorDefinition("RadBehavior"), "export default RadBehavior"),
-        lines(
-            "import RadBehaviorImported from './testcode0'",
-            createBehaviorUsage("RadBehaviorImported")));
+        createBehaviorDefinition("RadBehavior")
+            + """
+            export default RadBehavior
+            """,
+        """
+        import RadBehaviorImported from './testcod
+        """
+            + createBehaviorUsage("RadBehaviorImported"));
 
     assertSingleBehaviorExtractionSucceeds(moduleMetadataMap.getModulesByPath().get("testcode1"));
   }
@@ -240,12 +264,14 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_esExport_importStar() {
     parseAndInitializeExtractor(
-        lines(
-            createBehaviorDefinition("RadBehaviorLocal"),
-            "export {RadBehaviorLocal as RadBehavior};"),
-        lines(
-            "import * as mod from './testcode0'", //
-            createBehaviorUsage("mod.RadBehavior")));
+        createBehaviorDefinition("RadBehaviorLocal")
+            + """
+            export {RadBehaviorLocal as RadBehavior};
+            """,
+        """
+        import * as mod from './testcode0'
+        """
+            + createBehaviorUsage("mod.RadBehavior"));
 
     assertSingleBehaviorExtractionSucceeds(moduleMetadataMap.getModulesByPath().get("testcode1"));
   }
@@ -253,13 +279,15 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_esExport_invalidImportStar() {
     parseAndInitializeExtractor(
-        lines(
-            createBehaviorDefinition("RadBehaviorLocal"),
-            "export {RadBehaviorLocal as RadBehavior};"),
-        lines(
-            "import * as mod from './testcode0'", //
+        createBehaviorDefinition("RadBehaviorLocal")
+            + """
+            export {RadBehaviorLocal as RadBehavior};
+            """,
+        """
+        import * as mod from './testcode0'
+        """
             // Try using 'mod' instead of 'mod.RadBehavior'.
-            createBehaviorUsage("mod")));
+            + createBehaviorUsage("mod"));
 
     extractor.extractBehaviors(
         behaviorArray, moduleMetadataMap.getModulesByPath().get("testcode1"));
@@ -269,12 +297,16 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_esExport_PropOnImportStar() {
     parseAndInitializeExtractor(
-        lines(
-            createBehaviorDefinition("RadBehaviorLocal"),
-            "const ns = {};",
-            "ns.RadBehavior = RadBehaviorLocal;",
-            "export {ns};"),
-        lines("import * as mod from './testcode0'", createBehaviorUsage("mod.ns.RadBehavior")));
+        createBehaviorDefinition("RadBehaviorLocal")
+            + """
+            const ns = {};
+            ns.RadBehavior = RadBehaviorLocal;
+            export {ns};
+            """,
+        """
+        import * as mod from './testcode0'
+        """
+            + createBehaviorUsage("mod.ns.RadBehavior"));
 
     assertSingleBehaviorExtractionSucceeds(moduleMetadataMap.getModulesByPath().get("testcode1"));
   }
@@ -284,11 +316,15 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_defaultGoogProvideImport() {
     parseAndInitializeExtractor(
-        lines("goog.provide('rad.RadBehavior');", createBehaviorDefinition("rad.RadBehavior")),
-        lines(
-            "goog.module('a');",
-            "const RadBehaviorLocal = goog.require('rad.RadBehavior');",
-            createBehaviorUsage("RadBehaviorLocal")));
+        """
+        goog.provide('rad.RadBehavior');
+        """
+            + createBehaviorDefinition("rad.RadBehavior"),
+        """
+        goog.module('a');
+        const RadBehaviorLocal = goog.require('rad.RadBehavior');
+        """
+            + createBehaviorUsage("RadBehaviorLocal"));
 
     assertSingleBehaviorExtractionSucceeds(moduleMetadataMap.getModulesByGoogNamespace().get("a"));
   }
@@ -296,15 +332,17 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_destructuringGoogProvideImport() {
     parseAndInitializeExtractor(
-        lines(
-            "goog.provide('rad');",
-            "/** @const */",
-            "rad.behaviors = {};",
-            createBehaviorDefinition("rad.behaviors.RadBehavior")),
-        lines(
-            "goog.module('a');",
-            "const {behaviors: b} = goog.require('rad');",
-            createBehaviorUsage("b.RadBehavior")));
+        """
+        goog.provide('rad');
+        /** @const */
+        rad.behaviors = {};
+        """
+            + createBehaviorDefinition("rad.behaviors.RadBehavior"),
+        """
+        goog.module('a');
+        const {behaviors: b} = goog.require('rad');
+        """
+            + createBehaviorUsage("b.RadBehavior"));
 
     assertSingleBehaviorExtractionSucceeds(moduleMetadataMap.getModulesByGoogNamespace().get("a"));
   }
@@ -314,14 +352,18 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_legacyGoogModuleNamedExportOfLocalName() {
     parseAndInitializeExtractor(
-        lines(
-            "goog.module('modules.rad');",
-            "goog.module.declareLegacyNamespace();",
-            createBehaviorDefinition("RadBehavior"),
-            "exports = {RadBehavior};"),
-        lines(
-            "goog.require('modules.rad');", //
-            createBehaviorUsage("modules.rad.RadBehavior")));
+        """
+        goog.module('modules.rad');
+        goog.module.declareLegacyNamespace();
+        """
+            + createBehaviorDefinition("RadBehavior")
+            + """
+            exports = {RadBehavior};
+            """,
+        """
+        goog.require('modules.rad');
+        """
+            + createBehaviorUsage("modules.rad.RadBehavior"));
 
     assertSingleBehaviorExtractionSucceeds();
   }
@@ -329,16 +371,20 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_legacyGoogModuleNamedExport_inLoadModuleCall() {
     parseAndInitializeExtractor(
-        lines(
-            "goog.loadModule(function(exports) {",
-            "  goog.module('modules.rad');",
-            "  goog.module.declareLegacyNamespace();",
-            createBehaviorDefinition("exports.RadBehavior"),
-            "  return exports;",
-            "});"),
-        lines(
-            "goog.require('modules.rad');", //
-            createBehaviorUsage("modules.rad.RadBehavior")));
+        """
+        goog.loadModule(function(exports) {
+        goog.module('modules.rad');
+        goog.module.declareLegacyNamespace();
+        """
+            + createBehaviorDefinition("exports.RadBehavior")
+            + """
+              return exports;
+            });
+            """,
+        """
+        goog.require('modules.rad');
+        """
+            + createBehaviorUsage("modules.rad.RadBehavior"));
 
     assertSingleBehaviorExtractionSucceeds();
   }
@@ -346,14 +392,18 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_defaultLegacyGoogModuleExport_exportsLocalVariable() {
     parseAndInitializeExtractor(
-        lines(
-            "goog.module('modules.rad.RadBehavior');",
-            "goog.module.declareLegacyNamespace();",
-            createBehaviorDefinition("RadBehavior"),
-            "exports = RadBehavior;"),
-        lines(
-            "goog.require('rad.RadBehavior');", //
-            createBehaviorUsage("modules.rad.RadBehavior")));
+        """
+        goog.module('modules.rad.RadBehavior');
+        goog.module.declareLegacyNamespace();
+        """
+            + createBehaviorDefinition("RadBehavior")
+            + """
+            exports = RadBehavior;
+            """,
+        """
+        goog.require('rad.RadBehavior');
+        """
+            + createBehaviorUsage("modules.rad.RadBehavior"));
 
     assertSingleBehaviorExtractionSucceeds();
   }
@@ -361,23 +411,25 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_defaultLegacyGoogModuleExport_assignedDirectly() {
     parseAndInitializeExtractor(
-        lines(
-            "goog.module('modules.rad.RadBehavior');",
-            "goog.module.declareLegacyNamespace();",
-            "/** @polymerBehavior */",
-            "exports = {",
-            "  properties: {",
-            "    howRad: Number",
-            "  },",
-            "  /** @param {number} radAmount */",
-            "  doSomethingRad:",
-            "    function(radAmount) { alert('Something ' + radAmount + 'rad!'); },",
-            "  /** @override */",
-            "  ready: function() {}",
-            "};"),
-        lines(
-            "goog.require('modules.rad.RadBehavior');", //
-            createBehaviorUsage("modules.rad.RadBehavior")));
+        """
+        goog.module('modules.rad.RadBehavior');
+        goog.module.declareLegacyNamespace();
+        /** @polymerBehavior */
+        exports = {
+          properties: {
+            howRad: Number
+          },
+          /** @param {number} radAmount */
+          doSomethingRad:
+            function(radAmount) { alert('Something ' + radAmount + 'rad!'); },
+          /** @override */
+          ready: function() {}
+        };
+        """,
+        """
+        goog.require('modules.rad.RadBehavior');
+        """
+            + createBehaviorUsage("modules.rad.RadBehavior"));
 
     assertSingleBehaviorExtractionSucceeds();
   }
@@ -385,10 +437,14 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_nonLegacyGoogModuleDoesNotResolve() {
     parseAndInitializeExtractor(
-        lines("goog.module('modules.rad');", createBehaviorDefinition("exports.RadBehavior")),
-        lines(
-            "goog.require('modules.rad');", //
-            createBehaviorUsage("modules.rad.RadBehavior")));
+        """
+        goog.module('modules.rad');
+        """
+            + createBehaviorDefinition("exports.RadBehavior"),
+        """
+        goog.require('modules.rad');
+        """
+            + createBehaviorUsage("modules.rad.RadBehavior"));
 
     extractor.extractBehaviors(behaviorArray, null);
     assertThat(compiler.getErrors()).hasSize(1);
@@ -399,14 +455,18 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_googRequireDefaultGoogModuleExport() {
     parseAndInitializeExtractor(
-        lines(
-            "goog.module('rad.RadBehavior');",
-            createBehaviorDefinition("RadBehaviorLocal"),
-            "exports = RadBehaviorLocal;"),
-        lines(
-            "goog.module('a');",
-            "const RadBehaviorImported = goog.require('rad.RadBehavior');",
-            createBehaviorUsage("RadBehaviorImported")));
+        """
+        goog.module('rad.RadBehavior');
+        """
+            + createBehaviorDefinition("RadBehaviorLocal")
+            + """
+            exports = RadBehaviorLocal;
+            """,
+        """
+        goog.module('a');
+        const RadBehaviorImported = goog.require('rad.RadBehavior');
+        """
+            + createBehaviorUsage("RadBehaviorImported"));
 
     assertSingleBehaviorExtractionSucceeds(moduleMetadataMap.getModulesByGoogNamespace().get("a"));
   }
@@ -414,17 +474,21 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_googRequireDefaultGoogModuleExportInLoadModule() {
     parseAndInitializeExtractor(
-        lines(
-            "goog.loadModule(function(exports) {",
-            "  goog.module('rad.RadBehavior');",
-            createBehaviorDefinition("RadBehaviorLocal"),
-            "  exports = RadBehaviorLocal;",
-            "  return exports;",
-            "});"),
-        lines(
-            "goog.module('a');",
-            "const RadBehaviorImported = goog.require('rad.RadBehavior');",
-            createBehaviorUsage("RadBehaviorImported")));
+        """
+        goog.loadModule(function(exports) {
+          goog.module('rad.RadBehavior');
+        """
+            + createBehaviorDefinition("RadBehaviorLocal")
+            + """
+              exports = RadBehaviorLocal;
+              return exports;
+            });
+            """,
+        """
+        goog.module('a');
+        const RadBehaviorImported = goog.require('rad.RadBehavior');
+        """
+            + createBehaviorUsage("RadBehaviorImported"));
 
     assertSingleBehaviorExtractionSucceeds(moduleMetadataMap.getModulesByGoogNamespace().get("a"));
   }
@@ -432,14 +496,18 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_defaultGoogRequire_ofNamedExport() {
     parseAndInitializeExtractor(
-        lines(
-            "goog.module('rad');",
-            createBehaviorDefinition("RadBehaviorLocal"),
-            "exports = {RadBehavior: RadBehaviorLocal};"),
-        lines(
-            "goog.module('a');",
-            "const rad = goog.require('rad');",
-            createBehaviorUsage("rad.RadBehavior")));
+        """
+        goog.module('rad');
+        """
+            + createBehaviorDefinition("RadBehaviorLocal")
+            + """
+            exports = {RadBehavior: RadBehaviorLocal};
+            """,
+        """
+        goog.module('a');
+        const rad = goog.require('rad');
+        """
+            + createBehaviorUsage("rad.RadBehavior"));
 
     assertSingleBehaviorExtractionSucceeds(moduleMetadataMap.getModulesByGoogNamespace().get("a"));
   }
@@ -447,14 +515,18 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_destructuringGoogRequire() {
     parseAndInitializeExtractor(
-        lines(
-            "goog.module('rad');",
-            createBehaviorDefinition("RadBehaviorLocal"),
-            "exports = {RadBehavior: RadBehaviorLocal};"),
-        lines(
-            "goog.module('a');",
-            "const {RadBehavior: RadBehaviorImported} = goog.require('rad');",
-            createBehaviorUsage("RadBehaviorImported")));
+        """
+        goog.module('rad');
+        """
+            + createBehaviorDefinition("RadBehaviorLocal")
+            + """
+            exports = {RadBehavior: RadBehaviorLocal};
+            """,
+        """
+        goog.module('a');
+        const {RadBehavior: RadBehaviorImported} = goog.require('rad');
+        """
+            + createBehaviorUsage("RadBehaviorImported"));
 
     assertSingleBehaviorExtractionSucceeds(moduleMetadataMap.getModulesByGoogNamespace().get("a"));
   }
@@ -464,15 +536,19 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   // at the moment it's uncommon enough to not seem worthwhile.
   public void testBehavior_propertyOnDefaultExportOfGoogModule() {
     parseAndInitializeExtractor(
-        lines(
-            "goog.module('rad.SomeClass');",
-            "class SomeClass {}",
-            createBehaviorDefinition("SomeClass.RadBehavior"),
-            "exports = SomeClass;"),
-        lines(
-            "goog.module('a');",
-            "const SomeClass = goog.require('rad.SomeClass');",
-            createBehaviorUsage("SomeClass.RadBehavior")));
+        """
+        goog.module('rad.SomeClass');
+        class SomeClass {}
+        """
+            + createBehaviorDefinition("SomeClass.RadBehavior")
+            + """
+            exports = SomeClass;
+            """,
+        """
+        goog.module('a');
+        const SomeClass = goog.require('rad.SomeClass');
+        """
+            + createBehaviorUsage("SomeClass.RadBehavior"));
 
     assertSingleBehaviorExtractionSucceeds(moduleMetadataMap.getModulesByGoogNamespace().get("a"));
   }
@@ -482,14 +558,20 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_googModuleGetOfModule_DirectUsage() {
     parseAndInitializeExtractor(
-        lines(
-            "goog.module('rad');", //
-            createBehaviorDefinition("RadBehaviorLocal"),
-            "exports = RadBehaviorLocal;"),
-        lines(
-            "(function() {", //
-            createBehaviorUsage("goog.module.get('rad')"),
-            "})();"));
+        """
+        goog.module('rad');
+        """
+            + createBehaviorDefinition("RadBehaviorLocal")
+            + """
+            exports = RadBehaviorLocal;
+            """,
+        """
+        (function() {
+        """
+            + createBehaviorUsage("goog.module.get('rad')")
+            + """
+            })();
+            """);
 
     ImmutableList<BehaviorDefinition> defs = extractor.extractBehaviors(behaviorArray, null);
     assertThat(compiler.getErrors()).isEmpty();
@@ -499,13 +581,17 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testBehavior_googModuleGetOfProvide_DirectUsage() {
     parseAndInitializeExtractor(
-        lines(
-            "goog.provide('rad');", //
-            createBehaviorDefinition("rad")),
-        lines(
-            "(function() {", //
-            createBehaviorUsage("goog.module.get('rad')"),
-            "})();"));
+        """
+        goog.provide('rad');
+        """
+            + createBehaviorDefinition("rad"),
+        """
+        (function() {
+        """
+            + createBehaviorUsage("goog.module.get('rad')")
+            + """
+            })();
+            """);
 
     ImmutableList<BehaviorDefinition> defs = extractor.extractBehaviors(behaviorArray, null);
     assertThat(compiler.getErrors()).isEmpty();
@@ -519,15 +605,21 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
     // global or module-scoped. In theory the PolymerPass could be extended to understand other
     // locals but it hasn't been necessary thus far.
     parseAndInitializeExtractor(
-        lines(
-            "goog.module('rad');",
-            createBehaviorDefinition("RadBehaviorLocal"),
-            "exports = RadBehaviorLocal;"),
-        lines(
-            "(function() {",
-            "const rad = goog.module.get('rad');",
-            createBehaviorUsage("rad"),
-            "})();"));
+        """
+        goog.module('rad');
+        """
+            + createBehaviorDefinition("RadBehaviorLocal")
+            + """
+            exports = RadBehaviorLocal;
+            """,
+        """
+        (function() {
+        const rad = goog.module.get('rad');
+        """
+            + createBehaviorUsage("rad")
+            + """
+            })();
+            """);
 
     ImmutableList<BehaviorDefinition> defs = extractor.extractBehaviors(behaviorArray, null);
     assertThat(compiler.getErrors()).hasSize(1);
@@ -536,11 +628,15 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
 
   @Test
   public void testBehavior_invalidGoogModuleGet() {
+    // There is no module named 'rud'.
     parseAndInitializeExtractor(
-        lines(
-            "(function() {",
-            createBehaviorUsage("goog.module.get('rud')"), // oops, no such module.
-            "})();"));
+        """
+        (function() {
+        """
+            + createBehaviorUsage("goog.module.get('rud')")
+            + """
+            })();
+            """);
 
     ImmutableList<BehaviorDefinition> defs = extractor.extractBehaviors(behaviorArray, null);
     assertThat(compiler.getErrors()).hasSize(1);
@@ -550,26 +646,30 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   private String createBehaviorDefinition(String name) {
     // Either `qualified.name` or `var simpleName`
     String lhs = name.indexOf('.') != -1 ? name : "var " + name;
-    return lines(
-        "/** @polymerBehavior */",
-        lhs + " = {",
-        "  properties: {",
-        "    howRad: Number",
-        "  },",
-        "  /** @param {number} radAmount */",
-        "  doSomethingRad:",
-        "    function(radAmount) { alert('Something ' + radAmount + 'rad!'); },",
-        "  /** @override */",
-        "  ready: function() {}",
-        "};");
+    return """
+    /** @polymerBehavior */
+    LHS = {
+      properties: {
+        howRad: Number
+      },
+      /** @param {number} radAmount */
+      doSomethingRad:
+        function(radAmount) { alert('Something ' + radAmount + 'rad!'); },
+      /** @override */
+      ready: function() {}
+    };
+    """
+        .replace("LHS", lhs);
   }
 
   private String createBehaviorUsage(String behaviorName) {
-    return lines(
-        "var A = Polymer({", //
-        "  is: 'x-element',",
-        "  behaviors: [ " + behaviorName + " ],",
-        "});");
+    return """
+    var A = Polymer({
+      is: 'x-element',
+      behaviors: [ BEHAVIOR_NAME ],
+    });
+    """
+        .replace("BEHAVIOR_NAME", behaviorName);
   }
 
   /** Tests that the behaviorArray resolves to exactly one behavior without error */
@@ -590,31 +690,32 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testInlineLiteralBehavior() {
     parseAndInitializeExtractor(
-        lines(
-            "/** @polymerBehavior */",
-            "var FunBehavior = {",
-            "  properties: {",
-            "    isFun: Boolean",
-            "  },",
-            "  /** @param {string} funAmount */",
-            "  doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },",
-            "  /** @override */",
-            "  created: function() {}",
-            "};",
-            "/** @polymerBehavior */",
-            "var SuperCoolBehaviors = [FunBehavior, {",
-            "  properties: {",
-            "    howRad: Number",
-            "  },",
-            "  /** @param {number} radAmount */",
-            "  doSomethingRad: function(radAmount) { alert('Something ' + radAmount + ' rad!'); },",
-            "  /** @override */",
-            "  ready: function() {}",
-            "}];",
-            "var A = Polymer({",
-            "  is: 'x-element',",
-            "  behaviors: [ SuperCoolBehaviors ],",
-            "});"));
+        """
+        /** @polymerBehavior */
+        var FunBehavior = {
+          properties: {
+            isFun: Boolean
+          },
+          /** @param {string} funAmount */
+          doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },
+          /** @override */
+          created: function() {}
+        };
+        /** @polymerBehavior */
+        var SuperCoolBehaviors = [FunBehavior, {
+          properties: {
+            howRad: Number
+          },
+          /** @param {number} radAmount */
+          doSomethingRad: function(radAmount) { alert('Something ' + radAmount + ' rad!'); },
+          /** @override */
+          ready: function() {}
+        }];
+        var A = Polymer({
+          is: 'x-element',
+          behaviors: [ SuperCoolBehaviors ],
+        });
+        """);
 
     ImmutableList<BehaviorDefinition> defs = extractor.extractBehaviors(behaviorArray, null);
     assertThat(defs).hasSize(2);
@@ -625,19 +726,20 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
   @Test
   public void testIsPropInBehavior() {
     parseAndInitializeExtractor(
-        lines(
-            "/** @polymerBehavior */",
-            "var FunBehavior = {",
-            "  is: 'fun-behavior',",
-            "",
-            "  properties: {",
-            "    isFun: Boolean",
-            "  },",
-            "};",
-            "var A = Polymer({",
-            "  is: 'x-element',",
-            "  behaviors: [ FunBehavior ],",
-            "});"));
+        """
+        /** @polymerBehavior */
+        var FunBehavior = {
+          is: 'fun-behavior',
+
+          properties: {
+            isFun: Boolean
+          },
+        };
+        var A = Polymer({
+          is: 'x-element',
+          behaviors: [ FunBehavior ],
+        });
+        """);
     extractor.extractBehaviors(behaviorArray, null);
 
     assertThat(compiler.getErrors()).hasSize(1);

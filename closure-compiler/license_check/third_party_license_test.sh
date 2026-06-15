@@ -2,6 +2,16 @@
 
 set -e
 
-ROOT_DIR=${TEST_SRCDIR}/com_google_javascript_jscomp/third_party/
+if ! python3 -c "import requests"; then
+  if python3 -m pip --version; then
+    echo Installing \"requests\" package.
+    python3 -m pip install requests
+  else
+    echo Error: \"requests\" package is not available. \
+      Cannot install automatically since \"pip\" is also not available.
+    echo Please manually install \"requests\" or \"pip\" package.
+    exit 1
+  fi
+fi
 
-python3 ${ROOT_DIR}/third_party_license_test.py ${ROOT_DIR}/maven_artifacts.bzl ${ROOT_DIR}/THIRD_PARTY_NOTICES "${@:2}"
+python3 license_check/third_party_license_test.py ${@}

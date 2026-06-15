@@ -22,10 +22,8 @@ import java.util.List;
 import junit.framework.TestCase;
 import org.junit.function.ThrowingRunnable;
 
-/**
- * A common base class for emulation tests.
- */
-public class EmulTestBase extends GWTTestCase {
+/** A common base class for emulation tests. */
+public class EmulTestBase extends TestCase {
 
   public static void assertEquals(Object[] x, Object[] y) {
     assertEquals(x.length, y.length);
@@ -59,13 +57,7 @@ public class EmulTestBase extends GWTTestCase {
         Arrays.equals(expected, actual));
   }
 
-<<<<<<< HEAD
   public static void assertThrowsNullPointerException(ThrowingRunnable runnable) {
     assertThrows(NullPointerException.class, runnable);
-=======
-  @Override
-  public String getModuleName() {
-    return "com.google.gwt.emultest.EmulSuite";
->>>>>>> 67956f054c (Revert "Remove GWTTestCase from J2CL unit tests.")
   }
 }

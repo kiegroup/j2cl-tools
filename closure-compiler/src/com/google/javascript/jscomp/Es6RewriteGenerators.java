@@ -969,7 +969,8 @@ final class Es6RewriteGenerators implements CompilerPass {
 
       // Are all "switch" cases unmarked?
       boolean hasGeneratorMarker = false;
-      for (Node caseSection = n.getSecondChild();
+      Node switchBody = n.getSecondChild();
+      for (Node caseSection = switchBody.getFirstChild();
           caseSection != null;
           caseSection = caseSection.getNext()) {
         if (caseSection.isGeneratorMarker()) {
@@ -1000,7 +1001,7 @@ final class Es6RewriteGenerators implements CompilerPass {
 
       // We don't have to transpile unmarked cases at the beginning of "switch".
       boolean canSkipUnmarkedCases = true;
-      for (Node caseSection = n.getSecondChild();
+      for (Node caseSection = switchBody.getFirstChild();
           caseSection != null;
           caseSection = caseSection.getNext()) {
         if (!caseSection.isDefaultCase() && caseSection.getFirstChild().isGeneratorMarker()) {
@@ -1046,6 +1047,7 @@ final class Es6RewriteGenerators implements CompilerPass {
 
       // Transpile the barebone of original "switch" statement
       n.setGeneratorMarker(false);
+      switchBody.setGeneratorMarker(false);
       transpileUnmarkedNode(n);
       context.writeJumpTo(endCase, n); // TODO(skill): do not always add this.
 
@@ -1069,7 +1071,7 @@ final class Es6RewriteGenerators implements CompilerPass {
     }
 
     /** Finds the only YIELD node in a tree. */
-    private class YieldFinder extends NodeTraversal.AbstractPreOrderCallback {
+    private static class YieldFinder extends NodeTraversal.AbstractPreOrderCallback {
 
       private Node yieldNode;
 
@@ -1102,19 +1104,11 @@ final class Es6RewriteGenerators implements CompilerPass {
       if (!block.hasChildren()) {
         return false;
       }
-      switch (block.getLastChild().getToken()) {
-        case BLOCK:
-          return isEndOfBlockUnreachable(block.getLastChild());
-
-        case RETURN:
-        case THROW:
-        case CONTINUE:
-        case BREAK:
-          return true;
-
-        default:
-          return false;
-      }
+      return switch (block.getLastChild().getToken()) {
+        case BLOCK -> isEndOfBlockUnreachable(block.getLastChild());
+        case RETURN, THROW, CONTINUE, BREAK -> true;
+        default -> false;
+      };
     }
 
     /** State machine context that is used during generator function transpilation. */
@@ -1145,8 +1139,12 @@ final class Es6RewriteGenerators implements CompilerPass {
        */
       Case currentCase;
 
+      // A counter for the number of finally blocks we are currently inside.
+      // This value is used for two purposes:
+      // 1. At COMPILE-TIME, to determine if a break/continue is inside a finally block.
+      // 2. At RUNTIME, its value is emitted into the generated code to manage the
+      //    exception-handling stack.
       int nestedFinallyBlockCount = 0;
-
       boolean thisReferenceFound;
       boolean argumentsReferenceFound;
 
@@ -1359,10 +1357,11 @@ final class Es6RewriteGenerators implements CompilerPass {
         Node switchNode =
             IR.switchNode(getContextField(generatorBody, "nextAddress")).srcref(generatorBody);
         generatorBody.addChildToBack(switchNode);
+        Node switchBody = switchNode.getSecondChild().srcref(generatorBody);
 
         // Populate "switch" statement with "case"s.
         for (Case currentCase : allCases) {
-          switchNode.addChildToBack(currentCase.createCaseNode());
+          switchBody.addChildToBack(currentCase.createCaseNode());
         }
         allCases.clear();
       }
@@ -1519,7 +1518,11 @@ final class Es6RewriteGenerators implements CompilerPass {
       /** Converts "break" and "continue" statements into state machine jumps. */
       void replaceBreakContinueWithJump(Node sourceNode, Case section, int breakSuppressors) {
         final String jumpMethod;
-        if (finallyCases.isEmpty() || finallyCases.getFirst().id < section.id) {
+        if (nestedFinallyBlockCount > 0) {
+          // If we are in a finally block, we need to use jumpThroughFinallyBlocks to ensure that
+          // the finally block is correctly exited.
+          jumpMethod = "jumpThroughFinallyBlocks";
+        } else if (finallyCases.isEmpty() || finallyCases.getFirst().id < section.id) {
           // There are no finally blocks that should be exectuted pior to jumping
           jumpMethod = "jumpTo";
         } else {
@@ -1535,7 +1538,14 @@ final class Es6RewriteGenerators implements CompilerPass {
                   type(StandardColors.NULL_OR_VOID),
                   section.getNumber(sourceNode))
               .insertBefore(sourceNode);
-          sourceNode.replaceWith(createBreakNodeFor(sourceNode));
+          if (nestedFinallyBlockCount == 0) {
+            sourceNode.replaceWith(createBreakNodeFor(sourceNode));
+          } else {
+            // If we are in a finally block, we need to detach the source node to prevent an extra
+            // break from being generated. The break is not needed because the
+            // jumpThroughFinallyBlocks call will handle the control flow.
+            sourceNode.detach();
+          }
         } else {
           // "break;" inside a loop or swtich statement:
           // for (...) {
@@ -2205,7 +2215,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       /** Reprasents a catch case that is used by try/catch transpilation */
-      class CatchCase {
+      static class CatchCase {
         final Case catchCase;
 
         /**
@@ -2220,7 +2230,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       /** Stores "break" and "continue" case sections assosiated with a label. */
-      class LabelCases {
+      static class LabelCases {
 
         final Case breakCase;
 

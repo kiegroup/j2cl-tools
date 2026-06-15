@@ -20,44 +20,37 @@ import java.util.LinkedHashMap;
 import org.kie.j2cl.tools.yaml.mapper.api.YAMLDeserializer;
 
 /**
- * Default {@link YAMLDeserializer} implementation for {@link java.util.LinkedHashMap}.
+ * Default {@link YAMLDeserializer} implementation for {@link LinkedHashMap}.
  *
  * <p>Cannot be overriden. Use {@link BaseMapYAMLDeserializer}.
  *
- * @param <K> Type of the keys inside the {@link java.util.LinkedHashMap}
- * @param <V> Type of the values inside the {@link java.util.LinkedHashMap}
+ * @param <V> Type of the values inside the {@link LinkedHashMap}
  * @author Nicolas Morel
  * @version $Id: $
  */
-public final class LinkedHashMapYAMLDeserializer<K, V>
-    extends BaseMapYAMLDeserializer<LinkedHashMap<K, V>, K, V> {
+public final class LinkedHashMapYAMLDeserializer<V>
+    extends BaseMapYAMLDeserializer<LinkedHashMap<String, V>, V> {
 
-  /**
-   * @param keyDeserializer {@link YAMLDeserializer} used to deserialize the keys.
-   * @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values.
-   */
-  private LinkedHashMapYAMLDeserializer(
-      YAMLDeserializer<K> keyDeserializer, YAMLDeserializer<V> valueDeserializer) {
-    super(keyDeserializer, valueDeserializer);
+  /** @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values. */
+  private LinkedHashMapYAMLDeserializer(YAMLDeserializer<V> valueDeserializer) {
+    super(valueDeserializer);
   }
 
   /**
    * newInstance
    *
-   * @param keyDeserializer {@link YAMLDeserializer} used to deserialize the keys.
    * @param valueDeserializer {@link YAMLDeserializer} used to deserialize the values.
-   * @param <K> Type of the keys inside the {@link java.util.LinkedHashMap}
-   * @param <V> Type of the values inside the {@link java.util.LinkedHashMap}
+   * @param <V> Type of the values inside the {@link LinkedHashMap}
    * @return a new instance of {@link LinkedHashMapYAMLDeserializer}
    */
-  public static <K, V> LinkedHashMapYAMLDeserializer<K, V> newInstance(
-      YAMLDeserializer<K> keyDeserializer, YAMLDeserializer<V> valueDeserializer) {
-    return new LinkedHashMapYAMLDeserializer<>(keyDeserializer, valueDeserializer);
+  public static <K, V> LinkedHashMapYAMLDeserializer<V> newInstance(
+      YAMLDeserializer<V> valueDeserializer) {
+    return new LinkedHashMapYAMLDeserializer<>(valueDeserializer);
   }
 
   /** {@inheritDoc} */
   @Override
-  protected LinkedHashMap<K, V> newMap() {
+  protected LinkedHashMap<String, V> newMap() {
     return new LinkedHashMap<>();
   }
 }

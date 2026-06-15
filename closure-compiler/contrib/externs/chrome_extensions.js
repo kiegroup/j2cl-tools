@@ -2660,6 +2660,7 @@ chrome.enterprise.reportingPrivate.PasswordProtectionTrigger = {
  *   onFileAttachedProviders: (!Array<string>|undefined),
  *   onFileDownloadedProviders: (!Array<string>|undefined),
  *   onBulkDataEntryProviders: (!Array<string>|undefined),
+ *   onPrintProviders: (!Array<string>|undefined),
  *   onSecurityEventProviders: (!Array<string>|undefined),
  *   realtimeUrlCheckMode: chrome.enterprise.reportingPrivate.RealtimeUrlCheckMode,
  *   browserVersion: string,
@@ -2667,11 +2668,10 @@ chrome.enterprise.reportingPrivate.PasswordProtectionTrigger = {
  *   siteIsolationEnabled: (!boolean|undefined),
  *   builtInDnsClientEnabled: (!boolean|undefined),
  *   passwordProtectionWarningTrigger: chrome.enterprise.reportingPrivate.PasswordProtectionTrigger,
- *   chromeCleanupEnabled: (!boolean|undefined),
  *   chromeRemoteDesktopAppBlocked: (!boolean|undefined),
- *   thirdPartyBlockingEnabled: (!boolean|undefined),
  *   osFirewall: chrome.enterprise.reportingPrivate.SettingValue,
  *   systemDnsServers: (!Array<string>|undefined),
+ *   enterpriseProfileId: (!string|undefined),
  * }}
  */
 chrome.enterprise.reportingPrivate.ContextInfo;
@@ -2722,6 +2722,15 @@ chrome.enterprise.reportingPrivate.reportDataMaskingEvent = function(
     event, callback) {};
 
 /**
+ * @since Chrome 139.
+ * Calls a callback when a data masking rule is triggered.
+ * @param {function(!Array<!chrome.enterprise.reportingPrivate.DataMaskingRules>):
+ *     void} callback Called back with the response.
+ */
+chrome.enterprise.reportingPrivate.onDataMaskingRulesTriggered = function(
+    callback) {};
+
+/**
  * Data masking event.
  * @typedef {?{
  *   url: string,
@@ -2731,6 +2740,16 @@ chrome.enterprise.reportingPrivate.reportDataMaskingEvent = function(
  * }}
  */
 chrome.enterprise.reportingPrivate.DataMaskingEvent;
+
+/**
+ * Data masking rule.
+ * @typedef {?{
+ *   url: string,
+ *   triggeredRuleInfo:
+ * Array<chrome.enterprise.reportingPrivate.TriggeredRuleInfo>,
+ * }}
+ */
+chrome.enterprise.reportingPrivate.DataMaskingRules;
 
 /**
  * Triggered rule info.
@@ -2747,10 +2766,52 @@ chrome.enterprise.reportingPrivate.TriggeredRuleInfo;
  * @typedef {?{
  *   detectorId: string,
  *   displayName: string,
- *   detectorType: string,
+ *   detectorType: (!string|undefined),
+ *   maskType: (!string|undefined),
+ *   pattern: (!string|undefined),
  * }}
  */
 chrome.enterprise.reportingPrivate.DetectorInfo;
+
+/**
+ * Returns the anti-virus signals.
+ * Since Chrome 105.
+ * @param {!chrome.enterprise.reportingPrivate.UserContext} userContext The
+ *     current user context.
+ * @param {(function(!chrome.enterprise.reportingPrivate.AntiVirusSignal): void)}
+ *     callback Called back with the response.
+ */
+chrome.enterprise.reportingPrivate.getAvInfo = function(
+    userContext, callback) {};
+
+/**
+ * User context.
+ * @typedef {?{
+ *   userId: string,
+ * }}
+ */
+chrome.enterprise.reportingPrivate.UserContext;
+
+/**
+ * Possible states for the Anti-virus product state.
+ * @enum {number}
+ */
+chrome.enterprise.reportingPrivate.AntiVirusProductState = {
+  ON: 0,
+  OFF: 1,
+  SNOOZED: 2,
+  EXPIRED: 3,
+};
+
+/**
+ * Type of the object returned by getAvInfo.
+ * @typedef {?{
+ *   displayName: string,
+ *   productId: string,
+ *   state: chrome.enterprise.reportingPrivate.AntiVirusProductState,
+ * }}
+ */
+chrome.enterprise.reportingPrivate.AntiVirusSignal;
 
 /**
  * @see https://developer.chrome.com/extensions/extension.html
@@ -7397,7 +7458,7 @@ chrome.system.display.Bounds;
 
 /**
  * @enum {string}
- * @see TODO(user): link to docs once published
+ * @see https://developer.chrome.com/docs/extensions/reference/api/system/display#type-ActiveState
  */
 chrome.system.display.ActiveState = {
   ACTIVE: '',

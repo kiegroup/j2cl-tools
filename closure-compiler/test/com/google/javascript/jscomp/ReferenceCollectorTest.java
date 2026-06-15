@@ -98,6 +98,57 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClass() {
+    testBehavior(
+        """
+        class Foo {}
+        """,
+        (NodeTraversal t, ReferenceMap rm) -> {
+          if (t.getScope().isGlobal()) {
+            ReferenceCollection x = rm.getReferences(t.getScope().getVar("Foo"));
+
+            assertThat(x.isAssignedOnceInLifetime()).isTrue();
+            assertThat(x.isWellDefined()).isTrue();
+            assertThat(x).comparingElementsUsing(IS_DECLARATION).containsExactly(true).inOrder();
+          }
+        });
+  }
+
+  @Test
+  public void testClass_withPrototype() {
+    testBehavior(
+        """
+        class Foo {}
+        Foo.prototype.bar = 1;
+        """,
+        (NodeTraversal t, ReferenceMap rm) -> {
+          if (t.getScope().isGlobal()) {
+            ReferenceCollection x = rm.getReferences(t.getScope().getVar("Foo"));
+
+            assertThat(x.isAssignedOnceInLifetime()).isTrue();
+            assertThat(x.isWellDefined()).isFalse(); // TODO(b/435019132): Should be true.
+          }
+        });
+  }
+
+  @Test
+  public void testClass_referencedAfterDeclaration() {
+    testBehavior(
+        """
+        class Foo {}
+        const x = Foo;
+        """,
+        (NodeTraversal t, ReferenceMap rm) -> {
+          if (t.getScope().isGlobal()) {
+            ReferenceCollection x = rm.getReferences(t.getScope().getVar("Foo"));
+
+            assertThat(x.isAssignedOnceInLifetime()).isTrue();
+            assertThat(x.isWellDefined()).isFalse(); // TODO(b/435019132): Should be true.
+          }
+        });
+  }
+
+  @Test
   public void testImport1() {
     testBehavior(
         "import x from '/m';",
@@ -179,7 +230,15 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   @Test
   public void testVarInBlock() {
     testBehavior(
-        lines("function f(x) {", "  if (true) {", "    var y = x;", "    y;", "    y;", "  }", "}"),
+        """
+        function f(x) {
+          if (true) {
+            var y = x;
+            y;
+            y;
+          }
+        }
+        """,
         new Behavior() {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
@@ -305,15 +364,38 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
           }
         };
     testBehavior(
-        lines("try {", "} catch (e) {", "  var y = e;", "  g();", "  y;y;", "}"), behavior);
+        """
+        try {
+        } catch (e) {
+          var y = e;
+          g();
+          y;y;
+        }
+        """,
+        behavior);
     testBehavior(
-        lines("try {", "} catch (e) {", "  var y; y = e;", "  g();", "  y;y;", "}"), behavior);
+        """
+        try {
+        } catch (e) {
+          var y; y = e;
+          g();
+          y;y;
+        }
+        """,
+        behavior);
   }
 
   @Test
   public void testLetAssignedOnceInLifetime1() {
     testBehavior(
-        lines("try {", "} catch (e) {", "  let y = e;", "  g();", "  y;y;", "}"),
+        """
+        try {
+        } catch (e) {
+          let y = e;
+          g();
+          y;y;
+        }
+        """,
         new Behavior() {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
@@ -331,7 +413,14 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   @Test
   public void testLetAssignedOnceInLifetime2() {
     testBehavior(
-        lines("try {", "} catch (e) {", "  let y; y = e;", "  g();", "  y;y;", "}"),
+        """
+        try {
+        } catch (e) {
+          let y; y = e;
+          g();
+          y;y;
+        }
+        """,
         new Behavior() {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
@@ -349,7 +438,13 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   @Test
   public void testBasicBlocks() {
     testBehavior(
-        lines("var x = 0;", "switch (x) {", "  case 0:", "    x;", "}"),
+        """
+        var x = 0;
+        switch (x) {
+          case 0:
+            x;
+        }
+        """,
         new Behavior() {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
@@ -367,7 +462,12 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   @Test
   public void testBasicBlocksInConditionals() {
     testBehavior(
-        lines("var x = 0;", "x || 3;", "3 || x;", "const [y = (x = 1)] = [];"),
+        """
+        var x = 0;
+        x || 3;
+        3 || x;
+        const [y = (x = 1)] = [];
+        """,
         new Behavior() {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
@@ -426,16 +526,17 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   @Test
   public void testThis() {
     testBehavior(
-        lines(
-            "/** @constructor */",
-            "function C() {}",
-            "",
-            "C.prototype.m = function m() {",
-            "  var self = this;",
-            "  if (true) {",
-            "    alert(self);",
-            "  }",
-            "};"),
+        """
+        /** @constructor */
+        function C() {}
+
+        C.prototype.m = function m() {
+          var self = this;
+          if (true) {
+            alert(self);
+          }
+        };
+        """,
         new Behavior() {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {

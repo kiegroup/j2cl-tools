@@ -1,4 +1,11 @@
 ;;; Code for instanceinnerclass.InstanceInnerClass [type definition]
+(type $instanceinnerclass.InstanceInnerClass (sub $java.lang.Object (struct
+ (field $vtable (ref $instanceinnerclass.InstanceInnerClass.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $instanceField@instanceinnerclass.InstanceInnerClass (mut i32))
+ ))
+)
 (type $instanceinnerclass.InstanceInnerClass.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -8,23 +15,8 @@
  (field $m_test__void (ref $function.m_test__void))
  ))
 )
-(type $instanceinnerclass.InstanceInnerClass (sub $java.lang.Object (struct
- (field $vtable (ref $instanceinnerclass.InstanceInnerClass.vtable))
- (field $itable (ref $itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
- (field $instanceField@instanceinnerclass.InstanceInnerClass (mut i32))
- ))
-)
 
 ;;; Code for instanceinnerclass.InstanceInnerClass.InnerClass [type definition]
-(type $instanceinnerclass.InstanceInnerClass.InnerClass.vtable (sub $java.lang.Object.vtable (struct
- (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
- (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
- (field $m_hashCode__int (ref $function.m_hashCode__int))
- (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
- (field $m_funInner__void (ref $function.m_funInner__void))
- ))
-)
 (type $instanceinnerclass.InstanceInnerClass.InnerClass (sub $java.lang.Object (struct
  (field $vtable (ref $instanceinnerclass.InstanceInnerClass.InnerClass.vtable))
  (field $itable (ref $itable))
@@ -32,6 +24,14 @@
  (field $$outer_this@instanceinnerclass.InstanceInnerClass.InnerClass (mut (ref null $instanceinnerclass.InstanceInnerClass)))
  (field $enclosingInstance@instanceinnerclass.InstanceInnerClass.InnerClass (mut (ref null $instanceinnerclass.InstanceInnerClass)))
  (field $field@instanceinnerclass.InstanceInnerClass.InnerClass (mut i32))
+ ))
+)
+(type $instanceinnerclass.InstanceInnerClass.InnerClass.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
+ (field $m_funInner__void (ref $function.m_funInner__void))
  ))
 )
 
@@ -99,7 +99,7 @@
  (local $$instance (ref null $instanceinnerclass.InstanceInnerClass))
  (block
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/instanceinnerclass/readable-j2wasm.js/instanceinnerclass/InstanceInnerClass.java:18:13
-  (local.set $$instance (struct.new $instanceinnerclass.InstanceInnerClass (ref.as_non_null (global.get $instanceinnerclass.InstanceInnerClass.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (i32.const 0)))
+  (local.set $$instance (struct.new $instanceinnerclass.InstanceInnerClass (global.get $instanceinnerclass.InstanceInnerClass.vtable) (global.get $itable.empty) (i32.const 0) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/instanceinnerclass/readable-j2wasm.js/instanceinnerclass/InstanceInnerClass.java:18:13
   (call $$ctor__void_$p_instanceinnerclass_InstanceInnerClass@instanceinnerclass.InstanceInnerClass (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/instanceinnerclass/readable-j2wasm.js/instanceinnerclass/InstanceInnerClass.java:18:13
@@ -200,7 +200,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/instanceinnerclass/readable-j2wasm.js/instanceinnerclass/InstanceInnerClass.java:23:15
   (call $$clinit__void_<once>_@instanceinnerclass.InstanceInnerClass.InnerClass )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/instanceinnerclass/readable-j2wasm.js/instanceinnerclass/InstanceInnerClass.java:23:15
-  (local.set $$instance (struct.new $instanceinnerclass.InstanceInnerClass.InnerClass (ref.as_non_null (global.get $instanceinnerclass.InstanceInnerClass.InnerClass.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (ref.null $instanceinnerclass.InstanceInnerClass) (ref.null $instanceinnerclass.InstanceInnerClass) (i32.const 0)))
+  (local.set $$instance (struct.new $instanceinnerclass.InstanceInnerClass.InnerClass (global.get $instanceinnerclass.InstanceInnerClass.InnerClass.vtable) (global.get $itable.empty) (i32.const 0) (ref.null $instanceinnerclass.InstanceInnerClass) (ref.null $instanceinnerclass.InstanceInnerClass) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/instanceinnerclass/readable-j2wasm.js/instanceinnerclass/InstanceInnerClass.java:23:15
   (call $$ctor__instanceinnerclass_InstanceInnerClass__void_$p_instanceinnerclass_InstanceInnerClass_InnerClass@instanceinnerclass.InstanceInnerClass.InnerClass (ref.as_non_null (local.get $$instance))(local.get $$outer_this))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/instanceinnerclass/readable-j2wasm.js/instanceinnerclass/InstanceInnerClass.java:23:15

@@ -1,9 +1,11 @@
 """Helpers to create a JDK system module."""
 
-load("@rules_java//java:defs.bzl", "java_common")
+load("@rules_java//java:defs.bzl", "JavaInfo", "java_common")
 
 def _jdk_system(ctx):
+    # TODO(goktug): Use header jar for open-source when Bazel with new Turbine is available.
     bootclasspath = ctx.file.bootclasspath
+
     system = ctx.actions.declare_directory("%s" % ctx.label.name)
     java_runtime = ctx.attr._runtime[java_common.JavaRuntimeInfo]
     zip_tool = ctx.executable._zip
@@ -37,10 +39,16 @@ def _jdk_system(ctx):
         ]),
     )
 
+    # Collect the dependency jars for bootclasspath, skipping the first element which is the
+    # bootclasspath jar itself.
+    # Bootclasspath deps are needed downstream to resolve annotations.
+    deps = ctx.attr.bootclasspath[JavaInfo].transitive_compile_time_jars.to_list()[1:]
+
     return [
         java_common.BootClassPathInfo(
             system = system,
             bootclasspath = [bootclasspath],
+            auxiliary = deps,
         ),
         DefaultInfo(files = depset([system, bootclasspath])),
     ]
@@ -51,6 +59,7 @@ jdk_system = rule(
         "bootclasspath": attr.label(
             cfg = "target",
             allow_single_file = True,
+            providers = [JavaInfo],
         ),
         "_runtime": attr.label(
             default = Label("@bazel_tools//tools/jdk:current_host_java_runtime"),

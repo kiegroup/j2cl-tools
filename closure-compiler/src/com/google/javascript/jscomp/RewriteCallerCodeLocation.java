@@ -35,9 +35,9 @@ import java.util.Objects;
  * <p>When a function is called without providing the optional `here` argument, we will rewrite the
  * function call to include the code location.
  *
- * <p>i.e. `signal(0,goog.xid(path/to/file.ts:lineno:charno))`
+ * <p>i.e. `signal(0, goog.callerLocationIdInternalDoNotCallOrElse(path/to/file.ts:lineno:charno))`
  */
-class RewriteCallerCodeLocation implements CompilerPass {
+public final class RewriteCallerCodeLocation implements CompilerPass {
 
   static final DiagnosticType JSC_CALLER_LOCATION_POSITION_ERROR =
       DiagnosticType.error(
@@ -61,7 +61,7 @@ class RewriteCallerCodeLocation implements CompilerPass {
           "Do not use goog.callerLocation in an anonymous functions. Functions that use"
               + " goog.callerLocation should be named.");
 
-  private static final QualifiedName GOOG_CALLER_LOCATION_QUALIFIED_NAME =
+  public static final QualifiedName GOOG_CALLER_LOCATION_QUALIFIED_NAME =
       QualifiedName.of("goog.callerLocation");
 
   private final AbstractCompiler compiler;
@@ -84,9 +84,17 @@ class RewriteCallerCodeLocation implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, new FindCallerLocationFunctions());
+    // Find all functions that have goog.callerLocation as a default parameter. We want to traverse
+    // the root node as well as the externs because the function that contains `goog.callerLocation`
+    // parameter could be an
+    // .i.js file in the externs node subtree
+    NodeTraversal.traverse(compiler, compiler.getRoot(), new FindCallerLocationFunctions());
     if (!callerLocationFunctionNames.isEmpty()) {
-      NodeTraversal.traverse(compiler, root, new RewriteCallerLocationFunctionCalls());
+      // Rewrite call-sites of functions that have goog.callerLocation as a default parameter. We
+      // want to traverse the root node as well as the externs to ensure the scope of the call-site
+      // is the same scope as the function with the `goog.callerLocation` parameter.
+      NodeTraversal.traverse(
+          compiler, compiler.getRoot(), new RewriteCallerLocationFunctionCalls());
     }
   }
 
@@ -120,7 +128,7 @@ class RewriteCallerCodeLocation implements CompilerPass {
 
       // Check for misuse of goog.callerLocation.
       if (parent.isCall() && parent.getParent().isDefaultValue()) {
-        if (parent.getParent().getParent().isStringKey()) {
+        if (parent.getGrandparent().isStringKey()) {
           // Throw an error when `goog.callerLocation` is used in an object literal.
           // E.g:
           // function foo({val1, val2, here = goog.callerLocation()}) {}
@@ -139,9 +147,9 @@ class RewriteCallerCodeLocation implements CompilerPass {
         return false;
       }
 
-      if (n.getSourceFileName().contains("javascript/closure/base.js")) {
-        // This is the definition of the debug build runtime implementation of goog.callerLocation.
-        // This is not a misuse.
+      if (parent.isAssign() && n.getNext() != null && n.getNext().isFunction()) {
+        // This is the definition of goog.callerLocation, so this is not a misuse.
+        // i.e: `goog.callerLocation = function(...) { ... }`
         return false;
       }
 
@@ -216,7 +224,8 @@ class RewriteCallerCodeLocation implements CompilerPass {
      * Visits call expression nodes and checks if they require transformations. If they do, it
      * rewrites the call expression node to include the code location.
      *
-     * <p>E.g: `signal(0)` will be rewritten to `signal(0, goog.xid(path/to/file.ts:lineno:charno))`
+     * <p>E.g: `signal(0)` will be rewritten to `signal(0,
+     * goog.callerLocationIdInternalDoNotCallOrElse(path/to/file.ts:lineno:charno))`
      *
      * @param n call node
      */
@@ -249,7 +258,9 @@ class RewriteCallerCodeLocation implements CompilerPass {
 
       Var callerLocationFunction = functionVarAndPosition.getFunctionVar();
       Var calleeFunction = t.getScope().getVar(moduleContentsName);
-      if (!Objects.equals(calleeFunction, callerLocationFunction)) {
+      if (callerLocationFunction == null
+          || calleeFunction == null
+          || !Objects.equals(callerLocationFunction.getNameNode(), calleeFunction.getNameNode())) {
         return;
       }
 
@@ -272,28 +283,33 @@ class RewriteCallerCodeLocation implements CompilerPass {
         return;
       }
 
-      // create the goog.xid(path/to/file.ts:lineno:charno) and add it as the last parameter.
+      // create the goog.callerLocationIdInternalDoNotCallOrElse(path/to/file.ts:lineno:charno) and
+      // add it as the last parameter.
       Node xidCall = createGoogXidFilePathNode(n);
       compiler.reportChangeToEnclosingScope(n);
       n.addChildToBack(xidCall);
     }
 
     /**
-     * Creates a call node for "goog.xid(path/to/file.ts:lineno:charno)"
+     * Creates a call node for
+     * "goog.callerLocationIdInternalDoNotCallOrElse(path/to/file.ts:lineno:charno)"
      *
      * @param n call node of a function that needs to be rewritten to include the code location
-     * @return call node including code location i.e. "goog.xid(path/to/file.ts:lineno:charno)"
+     * @return call node including code location i.e.
+     *     "goog.callerLocationIdInternalDoNotCallOrElse(path/to/file.ts:lineno:charno)"
      */
     private Node createGoogXidFilePathNode(Node n) {
       // googNode is "goog"
       Node googNode = IR.name("goog");
       googNode.srcrefIfMissing(n);
 
-      // googXid is "goog.xid" node
-      Node googXid = astFactory.createGetPropWithUnknownType(googNode, "xid");
+      // googXid is "goog.callerLocationIdInternalDoNotCallOrElse" node
+      Node googXid =
+          astFactory.createGetPropWithUnknownType(
+              googNode, "callerLocationIdInternalDoNotCallOrElse");
       googXid.srcrefIfMissing(n);
 
-      // callNode is "goog.xid()" node
+      // callNode is "goog.callerLocationIdInternalDoNotCallOrElse()" node
       Node callNode = astFactory.createCallWithUnknownType(googXid);
       callNode.srcrefIfMissing(n);
 
@@ -303,7 +319,8 @@ class RewriteCallerCodeLocation implements CompilerPass {
               n.getSourceFileName() + ":" + n.getLineno() + ":" + n.getCharno());
       stringNode.srcrefIfMissing(n);
 
-      // turns callNode from "goog.xid()" to "goog.xid(path/to/file.ts:lineno:charno)"
+      // turns callNode from "goog.callerLocationIdInternalDoNotCallOrElse()" to
+      // "goog.callerLocationIdInternalDoNotCallOrElse(path/to/file.ts:lineno:charno)"
       callNode.addChildToBack(stringNode);
 
       return callNode;

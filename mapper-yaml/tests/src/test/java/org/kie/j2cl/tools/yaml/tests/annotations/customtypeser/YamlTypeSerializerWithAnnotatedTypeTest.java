@@ -19,12 +19,29 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.j2cl.junit.apt.J2clTestInput;
 import java.io.IOException;
+import java.util.Arrays;
 import org.junit.Test;
 
 @J2clTestInput(YamlTypeSerializerWithAnnotatedTypeTest.class)
 public class YamlTypeSerializerWithAnnotatedTypeTest {
 
   private static final Tested_YamlMapperImpl mapper = Tested_YamlMapperImpl.INSTANCE;
+
+  private static final String YAML =
+      "value: ZZZ\n"
+          + "values:\n"
+          + "  - '111'\n"
+          + "  - '222'\n"
+          + "listOfValues:\n"
+          + "  - '333'\n"
+          + "  - '444'\n"
+          + "oneMoreValueHolder: BLA-BLA\n"
+          + "oneMoreValueHolders:\n"
+          + "  - XXX\n"
+          + "  - YYY\n"
+          + "listOfOneMoreValueHolders:\n"
+          + "  - AAA\n"
+          + "  - BBB";
 
   @Test
   public void test() {
@@ -34,10 +51,20 @@ public class YamlTypeSerializerWithAnnotatedTypeTest {
 
   @Test
   public void test2() throws IOException {
-    ValueHolder valueHolder = new ValueHolder("zzz");
     Tested tested = new Tested();
-    tested.setValue(valueHolder);
-    assertEquals("value: ZZZ", mapper.write(tested));
+    tested.setValues(new ValueHolder[] {new ValueHolder("111"), new ValueHolder("222")});
+    tested.setListOfValues(Arrays.asList(new ValueHolder("333"), new ValueHolder("444")));
+    tested.setValue(new ValueHolder("zzz"));
+
+    tested.setOneMoreValueHolder(new OneMoreValueHolder("bla-bla"));
+    tested.setOneMoreValueHolders(
+        new OneMoreValueHolder[] {new OneMoreValueHolder("xxx"), new OneMoreValueHolder("yyy")});
+    tested.setListOfOneMoreValueHolders(
+        Arrays.asList(new OneMoreValueHolder("aaa"), new OneMoreValueHolder("bbb")));
+
+    assertEquals(YAML, mapper.write(tested));
+    assertEquals(YAML, mapper.write(mapper.read(mapper.write(tested))));
     assertEquals("zzz", mapper.read(mapper.write(tested)).getValue().getValue());
+    assertEquals("bla-bla", mapper.read(mapper.write(tested)).getOneMoreValueHolder().getValue());
   }
 }

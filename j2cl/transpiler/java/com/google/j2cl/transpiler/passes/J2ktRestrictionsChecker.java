@@ -15,24 +15,33 @@
  */
 package com.google.j2cl.transpiler.passes;
 
+import static com.google.common.base.Predicates.not;
+import static com.google.j2cl.transpiler.ast.J2ktAstUtils.isSubtypeOfJ2ktMonitor;
+import static com.google.j2cl.transpiler.ast.J2ktAstUtils.isValidSynchronizedStatementExpressionTypeDescriptor;
 import static com.google.j2cl.transpiler.ast.TypeDescriptors.isPrimitiveVoid;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.j2cl.common.Problems;
+import com.google.j2cl.common.SourcePosition;
 import com.google.j2cl.transpiler.ast.AbstractVisitor;
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
 import com.google.j2cl.transpiler.ast.Field;
 import com.google.j2cl.transpiler.ast.FieldDescriptor;
+import com.google.j2cl.transpiler.ast.HasSourcePosition;
 import com.google.j2cl.transpiler.ast.Library;
 import com.google.j2cl.transpiler.ast.Member;
 import com.google.j2cl.transpiler.ast.MemberDescriptor;
 import com.google.j2cl.transpiler.ast.Method;
+import com.google.j2cl.transpiler.ast.MethodCall;
 import com.google.j2cl.transpiler.ast.MethodDescriptor;
+import com.google.j2cl.transpiler.ast.SynchronizedStatement;
+import com.google.j2cl.transpiler.ast.ThisReference;
 import com.google.j2cl.transpiler.ast.Type;
 import com.google.j2cl.transpiler.ast.TypeDeclaration;
 import com.google.j2cl.transpiler.ast.TypeDeclaration.Kind;
 import com.google.j2cl.transpiler.ast.TypeDescriptor;
+import com.google.j2cl.transpiler.ast.TypeDescriptors;
 import com.google.j2cl.transpiler.ast.Visibility;
 
 /** Checks and throws errors for constructs which can not be transpiled to Kotlin. */
@@ -42,26 +51,44 @@ public final class J2ktRestrictionsChecker {
   public static void check(Library library, Problems problems) {
     library.accept(
         new AbstractVisitor() {
+          private SourcePosition getClosestSourcePosition() {
+            HasSourcePosition hasSourcePosition =
+                (HasSourcePosition) getParent(HasSourcePosition.class::isInstance);
+            return hasSourcePosition != null
+                ? hasSourcePosition.getSourcePosition()
+                : SourcePosition.NONE;
+          }
+
           @Override
-          public boolean enterMethod(Method method) {
+          public void exitMethod(Method method) {
             checkNotGenericConstructor(method);
             checkReferencedTypeVisibilities(method);
             checkKtProperty(method);
-            return true;
           }
 
           @Override
-          public boolean enterField(Field field) {
+          public void exitField(Field field) {
             checkReferencedTypeVisibilities(field);
-            return true;
+            checkFieldShadowing(field);
           }
 
           @Override
-          public boolean enterType(Type type) {
+          public void exitType(Type type) {
+            problems.abortIfCancelled();
             checkNullMarked(type);
             checkSuperTypeVisibilities(type);
             checkInterfaceTypeVisibilities(type);
-            return true;
+            checkSynchronizedMethods(type);
+          }
+
+          @Override
+          public void exitSynchronizedStatement(SynchronizedStatement synchronizedStatement) {
+            checkSynchronizedStatement(synchronizedStatement);
+          }
+
+          @Override
+          public void exitMethodCall(MethodCall methodCall) {
+            checkExplicitQualifierInConstructorCall(methodCall);
           }
 
           private void checkNotGenericConstructor(Method method) {
@@ -94,6 +121,15 @@ public final class J2ktRestrictionsChecker {
                     referencedTypeDescriptor.getReadableDescription(),
                     getDescription(referencedVisibility));
               }
+            }
+          }
+
+          private void checkFieldShadowing(Field field) {
+            if (shadowsAnySuperTypeField(field.getDescriptor())) {
+              problems.error(
+                  field.getSourcePosition(),
+                  "Field '%s' cannot shadow a super type field.",
+                  field.getReadableDescription());
             }
           }
 
@@ -131,17 +167,48 @@ public final class J2ktRestrictionsChecker {
             if (isFromJ2clReadableOrIntegrationTest(type)) {
               return;
             }
-            // Allow tolerance of some types not being null marked:
-            //   - Annotations are not propagated by J2KT anyway.
-            //   - Enums
-            if (!type.getDeclaration().isNullMarked()
-                && !type.getDeclaration().isAnnotation()
-                && !type.isEnum()) {
-              problems.warning(
-                  type.getSourcePosition(),
-                  "Type '%s' must be directly or indirectly @NullMarked.",
-                  type.getDeclaration().getQualifiedSourceName());
+
+            if (!type.getDeclaration().isNullMarked() && !isExemptFromNullMarked(type)) {
+              if (Boolean.getBoolean(
+                  "com.google.j2cl.transpiler.passes.J2ktRestrictionsChecker.treatMissingNullMarkedAsWarning")) {
+                problems.warning(
+                    type.getSourcePosition(),
+                    "Type '%s' must be directly or indirectly @NullMarked.",
+                    type.getDeclaration().getQualifiedSourceName());
+              } else {
+                problems.error(
+                    type.getSourcePosition(),
+                    "Type '%s' must be directly or indirectly @NullMarked.",
+                    type.getDeclaration().getQualifiedSourceName());
+              }
             }
+          }
+
+          private boolean isExemptFromNullMarked(Type type) {
+            // Annotations are not propagated by J2KT anyway.
+            if (type.getDeclaration().isAnnotation()) {
+              return true;
+            }
+
+            // We're pretty relaxed about enums as they generally don't have nullness issues.
+            if (type.getDeclaration().isEnum()) {
+              return true;
+            }
+
+            // Exclude empty marker classes. These generally only exist to drive code generation
+            // and don't have any practical use on their own.
+            if (type.getMembers().isEmpty()
+                && type.getTypes().isEmpty()
+                && hasNoExplicitSuperType(type)) {
+              return true;
+            }
+
+            return false;
+          }
+
+          private boolean hasNoExplicitSuperType(Type type) {
+            return type.getSuperTypeDescriptor() == null
+                || TypeDescriptors.isJavaLangObject(type.getSuperTypeDescriptor());
           }
 
           private void checkSuperTypeVisibilities(Type type) {
@@ -193,20 +260,70 @@ public final class J2ktRestrictionsChecker {
               }
             }
           }
+
+          private void checkSynchronizedMethods(Type type) {
+            boolean hasSynchronizedMethods =
+                type.getMethods().stream().anyMatch(it -> it.getDescriptor().isSynchronized());
+            if (!hasSynchronizedMethods) {
+              return;
+            }
+
+            if (isSubtypeOfJ2ktMonitor(type.getTypeDescriptor())) {
+              return;
+            }
+
+            problems.error(
+                type.getSourcePosition(),
+                "Type '%s' does not support synchronized methods as it does not extend '%s' or is"
+                    + " not a direct subclass of '%s'.",
+                type.getReadableDescription(),
+                TypeDescriptors.get().javaemulLangJ2ktMonitor.getReadableDescription(),
+                TypeDescriptors.get().javaLangObject.getReadableDescription());
+          }
+
+          private void checkSynchronizedStatement(SynchronizedStatement synchronizedStatement) {
+            TypeDescriptor expressionTypeDescriptor =
+                synchronizedStatement.getExpression().getTypeDescriptor();
+            if (isValidSynchronizedStatementExpressionTypeDescriptor(expressionTypeDescriptor)) {
+              return;
+            }
+
+            // TODO(b/381246369): Remove this check when the bug is fixed.
+            if (isInstanceOf(expressionTypeDescriptor, "com.google.common.base.XplatMonitor")) {
+              return;
+            }
+
+            problems.error(
+                synchronizedStatement.getSourcePosition(),
+                "Synchronized statement is valid only on instances of '%s' or '%s'.",
+                TypeDescriptors.get().javaLangClass.toRawTypeDescriptor().getReadableDescription(),
+                TypeDescriptors.get()
+                    .javaemulLangJ2ktMonitor
+                    .toRawTypeDescriptor()
+                    .getReadableDescription());
+          }
+
+          private void checkExplicitQualifierInConstructorCall(MethodCall methodCall) {
+            if (methodCall.getTarget().isConstructor()
+                && methodCall.getQualifier() != null
+                && !(methodCall.getQualifier() instanceof ThisReference)) {
+              problems.error(
+                  getClosestSourcePosition(),
+                  "Explicit qualifier in constructor call is not supported.");
+            }
+          }
         });
   }
 
   private static Iterable<TypeDescriptor> getReferencedTypeDescriptors(
       MemberDescriptor memberDescriptor) {
-    if (memberDescriptor instanceof MethodDescriptor) {
-      MethodDescriptor methodDescriptor = (MethodDescriptor) memberDescriptor;
+    if (memberDescriptor instanceof MethodDescriptor methodDescriptor) {
       return Iterables.concat(
           methodDescriptor.getParameterTypeDescriptors(),
           ImmutableList.of(methodDescriptor.getReturnTypeDescriptor()));
     }
 
-    if (memberDescriptor instanceof FieldDescriptor) {
-      FieldDescriptor fieldDescriptor = (FieldDescriptor) memberDescriptor;
+    if (memberDescriptor instanceof FieldDescriptor fieldDescriptor) {
       return ImmutableList.of(fieldDescriptor.getTypeDescriptor());
     }
 
@@ -222,17 +339,12 @@ public final class J2ktRestrictionsChecker {
   }
 
   private static String getDescription(Visibility visibility) {
-    switch (visibility) {
-      case PUBLIC:
-        return "public";
-      case PROTECTED:
-        return "protected";
-      case PACKAGE_PRIVATE:
-        return "default";
-      case PRIVATE:
-        return "private";
-    }
-    throw new AssertionError();
+    return switch (visibility) {
+      case PUBLIC -> "public";
+      case PROTECTED -> "protected";
+      case PACKAGE_PRIVATE -> "default";
+      case PRIVATE -> "private";
+    };
   }
 
   /**
@@ -250,11 +362,9 @@ public final class J2ktRestrictionsChecker {
    * the inferred visibility of its enclosing type (if present).
    */
   private static Visibility getRequiredVisibility(TypeDescriptor typeDescriptor) {
-    if (typeDescriptor instanceof DeclaredTypeDescriptor) {
-      DeclaredTypeDescriptor declaredTypeDescriptor = (DeclaredTypeDescriptor) typeDescriptor;
-      Visibility typeVisibility = declaredTypeDescriptor.getTypeDeclaration().getVisibility();
-      DeclaredTypeDescriptor enclosingTypeDescriptor =
-          declaredTypeDescriptor.getEnclosingTypeDescriptor();
+    if (typeDescriptor instanceof DeclaredTypeDescriptor descriptor) {
+      Visibility typeVisibility = descriptor.getTypeDeclaration().getVisibility();
+      DeclaredTypeDescriptor enclosingTypeDescriptor = descriptor.getEnclosingTypeDescriptor();
       return enclosingTypeDescriptor == null
           ? typeVisibility
           : getNarrowestOf(typeVisibility, getRequiredVisibility(enclosingTypeDescriptor));
@@ -268,5 +378,40 @@ public final class J2ktRestrictionsChecker {
     return sourceFilePath != null
         && (sourceFilePath.contains("javatests/com/google/j2cl/integration")
             || sourceFilePath.contains("javatests/com/google/j2cl/readable"));
+  }
+
+  private static boolean isInstanceOf(TypeDescriptor typeDescriptor, String qualifiedSourceName) {
+    if (typeDescriptor instanceof DeclaredTypeDescriptor descriptor) {
+      return descriptor.getTypeDeclaration().getAllSuperTypesIncludingSelf().stream()
+          .map(TypeDeclaration::getQualifiedSourceName)
+          .anyMatch(it -> it.equals(qualifiedSourceName));
+    }
+    return false;
+  }
+
+  private static boolean shadowsAnySuperTypeField(FieldDescriptor fieldDescriptor) {
+    TypeDeclaration typeDeclaration =
+        fieldDescriptor.getEnclosingTypeDescriptor().getTypeDeclaration();
+    return !typeDeclaration.isInterface()
+        && !fieldDescriptor.isStatic()
+        && typeDeclaration.getAllSuperTypesIncludingSelf().stream()
+            .filter(not(typeDeclaration::equals))
+            .filter(not(TypeDeclaration::isInterface))
+            .flatMap(td -> td.getDeclaredFieldDescriptors().stream())
+            .filter(fd -> !fd.isStatic())
+            .filter(fd -> fd.getName().equals(fieldDescriptor.getName()))
+            .anyMatch(fd -> shadowsSuperTypeField(fieldDescriptor, fd));
+  }
+
+  private static boolean shadowsSuperTypeField(
+      FieldDescriptor fieldDescriptor, FieldDescriptor superFieldDescriptor) {
+    return switch (superFieldDescriptor.getVisibility()) {
+      case PUBLIC, PROTECTED -> true;
+      case PACKAGE_PRIVATE ->
+          fieldDescriptor
+              .getEnclosingTypeDescriptor()
+              .isInSamePackage(superFieldDescriptor.getEnclosingTypeDescriptor());
+      case PRIVATE -> false;
+    };
   }
 }

@@ -3,6 +3,7 @@
     "http://gwtproject.org/doctype/2.8.2/gwt-module.dtd">
 <module>
   <inherits name="com.google.gwt.user.User"/>
+  <inherits name="org.treblereel.gwt.emul.Stdlib"/>
   <inherits name="org.kie.j2cl.tools.xml.mapper.Common"/>
   <inherits name='elemental2.dom.Dom'/>
   <source path="api" />

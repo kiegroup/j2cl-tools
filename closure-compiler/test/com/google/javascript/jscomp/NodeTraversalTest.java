@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
@@ -82,7 +81,7 @@ public final class NodeTraversalTest {
         .traverse(new Node(Token.EMPTY));
 
     assertThat(errors).hasSize(1);
-    assertThat(errors.get(0).getDescription()).isEqualTo("Foo, Bar - Hello");
+    assertThat(errors.get(0).description()).isEqualTo("Foo, Bar - Hello");
   }
 
   @Test
@@ -126,16 +125,16 @@ public final class NodeTraversalTest {
               protected void printSummary() {}
             });
     compiler.initCompilerOptionsIfTesting();
-    String code = lines("a.b.c;");
+    String code = "a.b.c;";
     Node tree = parse(compiler, code);
 
     NodeTraversal.builder().setCompiler(compiler).setCallback(callback).traverse(tree);
 
     assertThat(errors).hasSize(1);
     JSError error = errors.get(0);
-    assertThat(error.getDescription()).isEqualTo("Foo, Bar - Hello");
+    assertThat(error.description()).isEqualTo("Foo, Bar - Hello");
     assertThat(error.getNodeSourceOffset()).isEqualTo(0);
-    assertThat(error.getLength()).isEqualTo(5);
+    assertThat(error.length()).isEqualTo(5);
   }
 
   private static final String TEST_EXCEPTION = "test me";
@@ -165,7 +164,13 @@ public final class NodeTraversalTest {
   @Test
   public void testGetScopeRoot() {
     Compiler compiler = new Compiler();
-    String code = lines("var a;", "function foo() {", "  var b", "}");
+    String code =
+        """
+        var a;
+        function foo() {
+          var b
+        }
+        """;
     Node tree = parse(compiler, code);
     NodeTraversal.traverse(
         compiler,
@@ -197,9 +202,10 @@ public final class NodeTraversalTest {
   public void testGetScopeRoot_inEsModule() {
     Compiler compiler = new Compiler();
     String code =
-        lines(
-            "const x = 0;", //
-            "export {x};");
+        """
+        const x = 0;
+        export {x};
+        """;
     Node tree = parse(compiler, code);
     NodeTraversal.traverse(
         compiler,
@@ -226,11 +232,12 @@ public final class NodeTraversalTest {
   public void testGetScopeRoot_inGoogModule() {
     Compiler compiler = new Compiler();
     String code =
-        lines(
-            "goog.module('a.b');", //
-            "function foo() {",
-            "  var b",
-            "}");
+        """
+        goog.module('a.b');
+        function foo() {
+          var b
+        }
+        """;
     Node tree = parse(compiler, code);
     NodeTraversal.traverse(
         compiler,
@@ -256,7 +263,12 @@ public final class NodeTraversalTest {
   @Test
   public void testGetHoistScopeRoot() {
     Compiler compiler = new Compiler();
-    String code = lines("function foo() {", "  if (true) { var XXX; }", "}");
+    String code =
+        """
+        function foo() {
+          if (true) { var XXX; }
+        }
+        """;
     Node tree = parse(compiler, code);
     NodeTraversal.traverse(
         compiler,
@@ -300,25 +312,51 @@ public final class NodeTraversalTest {
 
   @Test
   public void testReportChange1() {
-    String code = lines("var change;", "function foo() {", "  var b", "}");
+    String code =
+        """
+        var change;
+        function foo() {
+          var b
+        }
+        """;
     assertChangesRecorded(code, new NameChangingCallback());
   }
 
   @Test
   public void testReportChange2() {
-    String code = lines("var a;", "function foo() {", "  var change", "}");
+    String code =
+        """
+        var a;
+        function foo() {
+          var change
+        }
+        """;
     assertChangesRecorded(code, new NameChangingCallback());
   }
 
   @Test
   public void testReportChange3() {
-    String code = lines("var a;", "function foo() {", "  var b", "}", "var change");
+    String code =
+        """
+        var a;
+        function foo() {
+          var b
+        }
+        var change
+        """;
     assertChangesRecorded(code, new NameChangingCallback());
   }
 
   @Test
   public void testReportChange4() {
-    String code = lines("function foo() {", "  function bar() {", "    var change", "  }", "}");
+    String code =
+        """
+        function foo() {
+          function bar() {
+            var change
+          }
+        }
+        """;
     assertChangesRecorded(code, new NameChangingCallback());
   }
 
@@ -343,7 +381,13 @@ public final class NodeTraversalTest {
             .setCallback(callback)
             .setScopeCreator(creator);
 
-    String code = lines("var a;", "function foo() {", "  var b;", "}");
+    String code =
+        """
+        var a;
+        function foo() {
+          var b;
+        }
+        """;
 
     Node tree = parse(compiler, code);
     Scope topScope = (Scope) creator.createScope(tree, null);
@@ -380,7 +424,14 @@ public final class NodeTraversalTest {
             .setCallback(callback)
             .setScopeCreator(creator);
 
-    String code = lines("function foo() {", "  if (bar) {", "    let x;", "  }", "}");
+    String code =
+        """
+        function foo() {
+          if (bar) {
+            let x;
+          }
+        }
+        """;
 
     Node tree = parse(compiler, code);
     Scope topScope = creator.createScope(tree, null);
@@ -412,8 +463,14 @@ public final class NodeTraversalTest {
             .setScopeCreator(creator);
 
     String code =
-        lines(
-            "function foo() {", "  var b = [0];", "  for (let a of b) {", "    let x;", "  }", "}");
+        """
+        function foo() {
+          var b = [0];
+          for (let a of b) {
+            let x;
+          }
+        }
+        """;
 
     Node tree = parse(compiler, code);
     Scope topScope = creator.createScope(tree, null);
@@ -448,15 +505,16 @@ public final class NodeTraversalTest {
             .setScopeCreator(creator);
 
     String code =
-        lines(
-            "function foo() {",
-            "  var b = [0];",
-            "  switch(b) {",
-            "    case 1:",
-            "       return b;",
-            "    case 2:",
-            "  }",
-            "}");
+        """
+        function foo() {
+          var b = [0];
+          switch(b) {
+            case 1:
+               return b;
+            case 2:
+          }
+        }
+        """;
 
     Node tree = parse(compiler, code);
     Scope topScope = creator.createScope(tree, null);
@@ -465,7 +523,8 @@ public final class NodeTraversalTest {
         tree // script
             .getFirstChild() // function
             .getLastChild() // function body
-            .getSecondChild(); // switch (first child is var b)
+            .getSecondChild() // switch (first child is var b)
+            .getSecondChild(); // switch block
 
     Scope blockScope = creator.createScope(innerBlock, topScope);
     callback.expect(innerBlock, innerBlock);
@@ -486,7 +545,12 @@ public final class NodeTraversalTest {
             .setCallback(callback)
             .setScopeCreator(creator);
 
-    String code = lines("goog.module('example.module');", "", "var x;");
+    String code =
+        """
+        goog.module('example.module');
+
+        var x;
+        """;
 
     Node tree = parse(compiler, code);
     Scope globalScope = creator.createScope(tree, null);
@@ -513,13 +577,14 @@ public final class NodeTraversalTest {
             .setScopeCreator(creator);
 
     String code =
-        lines(
-            "class Foo {", //
-            "  a = this.a;",
-            "}",
-            "class Bar extends Foo {",
-            "  b = super.a;",
-            "}");
+        """
+        class Foo {
+          a = this.a;
+        }
+        class Bar extends Foo {
+          b = super.a;
+        }
+        """;
 
     Node tree = parse(compiler, code);
     Scope globalScope = creator.createScope(tree, null);
@@ -559,11 +624,12 @@ public final class NodeTraversalTest {
             .setScopeCreator(creator);
 
     String code =
-        lines(
-            "class Foo {", //
-            "  x = 'hi';",
-            "  [this.x] = this.x;",
-            "}");
+        """
+        class Foo {
+          x = 'hi';
+          [this.x] = this.x;
+        }
+        """;
 
     Node tree = parse(compiler, code);
     Scope globalScope = creator.createScope(tree, null);
@@ -583,11 +649,12 @@ public final class NodeTraversalTest {
   public void testTraverseFieldDefScopeRootsInOrder() {
     Compiler compiler = new Compiler();
     String code =
-        lines(
-            "class Foo {", //
-            "  x = 'hi';",
-            "  [this.x] = this.x;",
-            "}");
+        """
+        class Foo {
+          x = 'hi';
+          [this.x] = this.x;
+        }
+        """;
     Node tree = parse(compiler, code);
     TokenAccumulator callback = new TokenAccumulator();
     NodeTraversal.traverse(compiler, tree, callback);
@@ -610,10 +677,11 @@ public final class NodeTraversalTest {
             .setScopeCreator(creator);
 
     String code =
-        lines(
-            "class Foo {", //
-            "  [this.x] = true;",
-            "}");
+        """
+        class Foo {
+          [this.x] = true;
+        }
+        """;
 
     Node tree = parse(compiler, code);
     Scope globalScope = creator.createScope(tree, null);
@@ -645,17 +713,18 @@ public final class NodeTraversalTest {
 
     // variables are hoisted to their enclosing scope
     String code =
-        lines(
-            "var varDefinedInScript;",
-            "var foo = function(param) {",
-            "  var varDefinedInFoo;",
-            "  var baz = function() {",
-            "    var varDefinedInBaz;",
-            "  }",
-            "}",
-            "var bar = function() {",
-            "  var varDefinedInBar;",
-            "}");
+        """
+        var varDefinedInScript;
+        var foo = function(param) {
+          var varDefinedInFoo;
+          var baz = function() {
+            var varDefinedInBaz;
+          }
+        }
+        var bar = function() {
+          var varDefinedInBar;
+        }
+        """;
 
     // the function scope should have access to all variables defined before and in the function
     // scope
@@ -680,15 +749,16 @@ public final class NodeTraversalTest {
 
     // let and const variables are block scoped
     code =
-        lines(
-            "var foo = function() {",
-            "  var varDefinedInFoo;",
-            "  var baz = function() {",
-            "    var varDefinedInBaz;",
-            "    let varDefinedInFoo;", // shadows parent scope
-            "  }",
-            "  let bar = 1;",
-            "}");
+        """
+        var foo = function() {
+          var varDefinedInFoo;
+          var baz = function() {
+            var varDefinedInBaz;
+            let varDefinedInFoo; // shadows parent scope
+          }
+          let bar = 1;
+        }
+        """;
 
     // the baz block scope has access to variables in its scope and parent scopes
     tree = parse(compiler, code);
@@ -718,16 +788,17 @@ public final class NodeTraversalTest {
     StringAccumulator callback = new StringAccumulator();
 
     String code =
-        lines(
-            "function foo() {",
-            "  'string in foo';",
-            "  function baz() {",
-            "    'string nested in baz';",
-            "  }",
-            "}",
-            "function bar() {",
-            "  'string in bar';",
-            "}");
+        """
+        function foo() {
+          'string in foo';
+          function baz() {
+            'string nested in baz';
+          }
+        }
+        function bar() {
+          'string in bar';
+        }
+        """;
 
     Node tree = parse(compiler, code);
     Node fooFunction = tree.getFirstChild();
@@ -750,17 +821,18 @@ public final class NodeTraversalTest {
     LexicallyScopedVarsAccumulator callback = new LexicallyScopedVarsAccumulator();
 
     String code =
-        lines(
-            "var varDefinedInScript;",
-            "var foo = function() {",
-            "  var varDefinedInFoo;",
-            "  var baz = function() {",
-            "    var varDefinedInBaz;",
-            "  }",
-            "}",
-            "var bar = function() {",
-            "  var varDefinedInBar;",
-            "}");
+        """
+        var varDefinedInScript;
+        var foo = function() {
+          var varDefinedInFoo;
+          var baz = function() {
+            var varDefinedInBaz;
+          }
+        }
+        var bar = function() {
+          var varDefinedInBar;
+        }
+        """;
 
     Node tree = parse(compiler, code);
     Node fooFunction = tree.getSecondChild().getFirstFirstChild();
@@ -930,13 +1002,14 @@ public final class NodeTraversalTest {
     StringAccumulator callback = new StringAccumulator();
 
     String code =
-        lines(
-            "class Foo {",
-            "  ['in field lhs'] = 'in field rhs';",
-            "  ['in method lhs']() {",
-            "    'nested in method';",
-            "  }",
-            "}");
+        """
+        class Foo {
+          ['in field lhs'] = 'in field rhs';
+          ['in method lhs']() {
+            'nested in method';
+          }
+        }
+        """;
 
     Node tree = parse(compiler, code);
 

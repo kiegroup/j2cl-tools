@@ -174,8 +174,8 @@ public final class NamedType extends ProxyObjectType {
   }
 
   @Override
-  boolean defineProperty(String propertyName, JSType type,
-      boolean inferred, Node propertyNode) {
+  boolean defineProperty(
+      Property.Key propertyName, JSType type, boolean inferred, Node propertyNode) {
     if (!isResolved()) {
       // If this is an unresolved object type, we need to save all its
       // properties and define them when it is resolved.
@@ -377,8 +377,8 @@ public final class NamedType extends ProxyObjectType {
 
   private void checkEnumElementCycle(ErrorReporter reporter) {
     JSType referencedType = getReferencedType();
-    if (referencedType instanceof EnumElementType
-        && identical(this, ((EnumElementType) referencedType).getPrimitiveType())) {
+    if (referencedType instanceof EnumElementType enumElementType
+        && identical(this, enumElementType.getPrimitiveType())) {
       handleTypeCycle(reporter);
     }
   }
@@ -449,16 +449,13 @@ public final class NamedType extends ProxyObjectType {
 
   /** Store enough information to define a property at a later time. */
   private static final class PropertyContinuation {
-    private final String propertyName;
+    private final Property.Key propertyName;
     private final JSType type;
     private final boolean inferred;
     private final Node propertyNode;
 
     private PropertyContinuation(
-        String propertyName,
-        JSType type,
-        boolean inferred,
-        Node propertyNode) {
+        Property.Key propertyName, JSType type, boolean inferred, Node propertyNode) {
       this.propertyName = propertyName;
       this.type = type;
       this.inferred = inferred;
@@ -466,8 +463,7 @@ public final class NamedType extends ProxyObjectType {
     }
 
     void commit(ObjectType target) {
-      target.defineProperty(
-          propertyName, type, inferred, propertyNode);
+      target.defineProperty(propertyName, type, inferred, propertyNode);
     }
   }
 

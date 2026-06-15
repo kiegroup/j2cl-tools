@@ -20,10 +20,12 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.extension.memoized.Memoized;
+import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.j2cl.common.ThreadLocalInterner;
 import com.google.j2cl.common.visitor.Processor;
 import com.google.j2cl.common.visitor.Visitable;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -55,9 +57,6 @@ public abstract class FieldDescriptor extends MemberDescriptor {
   public abstract boolean isEnumConstant();
 
   @Override
-  public abstract boolean isDeprecated();
-
-  @Override
   public abstract FieldOrigin getOrigin();
 
   /** Whether this field originates in the source code or is synthetic. */
@@ -72,14 +71,10 @@ public abstract class FieldDescriptor extends MemberDescriptor {
 
     @Override
     public String getPrefix() {
-      switch (this) {
-          // User written methods and bridges need to be mangled the same way.
-        case SOURCE:
-          return "f_";
-          // Don't prefix the rest, they all start with "$"
-        default:
-          return "";
-      }
+      return switch (this) {
+        case SOURCE -> "f_"; // User written methods and bridges need to be mangled the same way.
+        default -> ""; // Don't prefix the rest, they all start with "$"
+      };
     }
 
     @Override
@@ -234,12 +229,11 @@ public abstract class FieldDescriptor extends MemberDescriptor {
         .setVisibility(Visibility.PUBLIC)
         .setOriginalJsInfo(JsInfo.NONE)
         .setOriginalKtInfo(KtInfo.NONE)
+        .setAnnotations(ImmutableList.of())
         .setCompileTimeConstant(false)
         .setStatic(false)
         .setFinal(false)
         .setSynthetic(false)
-        .setUnusableByJsSuppressed(false)
-        .setDeprecated(false)
         .setEnumConstant(false)
         .setOrigin(FieldOrigin.SOURCE);
   }
@@ -285,9 +279,7 @@ public abstract class FieldDescriptor extends MemberDescriptor {
 
     public abstract Builder setOriginalKtInfo(KtInfo ktInfo);
 
-    public abstract Builder setUnusableByJsSuppressed(boolean isUnusableByJsSuppressed);
-
-    public abstract Builder setDeprecated(boolean isDeprecated);
+    public abstract Builder setAnnotations(List<Annotation> annotations);
 
     public abstract Builder setOrigin(FieldOrigin fieldOrigin);
 

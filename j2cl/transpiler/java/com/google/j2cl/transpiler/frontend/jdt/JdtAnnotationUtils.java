@@ -15,7 +15,7 @@
  */
 package com.google.j2cl.transpiler.frontend.jdt;
 
-import static com.google.j2cl.transpiler.frontend.jdt.KtInteropAnnotationUtils.getSuppressWarningsAnnotation;
+import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.SUPPRESS_WARNINGS_ANNOTATION_NAME;
 import static java.util.Arrays.stream;
 
 import com.google.common.base.Predicate;
@@ -29,6 +29,7 @@ import javax.annotation.Nullable;
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.IAnnotationBinding;
 import org.eclipse.jdt.core.dom.IBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.internal.compiler.impl.BooleanConstant;
 import org.eclipse.jdt.internal.compiler.impl.IntConstant;
@@ -38,6 +39,14 @@ import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
 
 /** Utility functions to process JDT annotations. */
 public final class JdtAnnotationUtils {
+  @Nullable
+  static IAnnotationBinding findAnnotationBindingByName(IBinding binding, String name) {
+    if (!shouldReadAnnotations(binding)) {
+      return null;
+    }
+    return findAnnotationBindingByName(binding.getAnnotations(), name);
+  }
+
   @Nullable
   static IAnnotationBinding findAnnotationBindingByName(
       IAnnotationBinding[] annotations, String name) {
@@ -68,9 +77,7 @@ public final class JdtAnnotationUtils {
 
   /** Returns true if the binding is annotated with {@code annotationSourceName}. */
   static boolean hasAnnotation(IBinding binding, String annotationSourceName) {
-    return JdtAnnotationUtils.findAnnotationBindingByName(
-            binding.getAnnotations(), annotationSourceName)
-        != null;
+    return JdtAnnotationUtils.findAnnotationBindingByName(binding, annotationSourceName) != null;
   }
 
   @SuppressWarnings("unchecked")
@@ -100,16 +107,14 @@ public final class JdtAnnotationUtils {
   }
 
   private static Object convertValue(Object value) {
-    if (value instanceof StringConstant) {
-      return ((StringConstant) value).stringValue();
-    } else if (value instanceof BooleanConstant) {
-      return ((BooleanConstant) value).booleanValue();
-    } else if (value instanceof IntConstant) {
-      return ((IntConstant) value).intValue();
-    } else if (value instanceof Object[]) {
-      return Arrays.stream((Object[]) value)
-          .map(JdtAnnotationUtils::convertValue)
-          .toArray(Object[]::new);
+    if (value instanceof StringConstant constant) {
+      return constant.stringValue();
+    } else if (value instanceof BooleanConstant constant) {
+      return constant.booleanValue();
+    } else if (value instanceof IntConstant constant) {
+      return constant.intValue();
+    } else if (value instanceof Object[] constant) {
+      return Arrays.stream(constant).map(JdtAnnotationUtils::convertValue).toArray(Object[]::new);
     }
     throw new IllegalStateException("Unexpected annotation attribute value type.");
   }
@@ -136,6 +141,7 @@ public final class JdtAnnotationUtils {
     }
   }
 
+  @Nullable
   public static IAnnotationBinding getAnnotationBinding(
       PackageDeclaration packageDeclaration, Predicate<IAnnotationBinding> whichAnnotation) {
     List<Annotation> packageAnnotations =
@@ -153,9 +159,17 @@ public final class JdtAnnotationUtils {
     return annotationBinding.orElse(null);
   }
 
-  public static boolean isWarningSuppressed(
-      IAnnotationBinding[] annotationBindings, String warning) {
-    IAnnotationBinding annotationBinding = getSuppressWarningsAnnotation(annotationBindings);
+  @Nullable
+  public static IAnnotationBinding getAnnotationBinding(
+      ITypeBinding binding, Predicate<IAnnotationBinding> whichAnnotation) {
+    if (!shouldReadAnnotations(binding)) {
+      return null;
+    }
+    return Arrays.stream(binding.getAnnotations()).filter(whichAnnotation).findFirst().orElse(null);
+  }
+
+  public static boolean isWarningSuppressed(IBinding binding, String warning) {
+    IAnnotationBinding annotationBinding = getSuppressWarningsAnnotation(binding);
     if (annotationBinding == null) {
       return false;
     }
@@ -164,11 +178,37 @@ public final class JdtAnnotationUtils {
     return stream(suppressions).anyMatch(warning::equals);
   }
 
-  public static boolean isNullMarked(PackageDeclaration packageDeclaration) {
+  public static IAnnotationBinding getSuppressWarningsAnnotation(IBinding binding) {
+    return findAnnotationBindingByName(binding, SUPPRESS_WARNINGS_ANNOTATION_NAME);
+  }
+
+  public static boolean hasNullMarkedAnnotation(PackageDeclaration packageDeclaration) {
     return getAnnotationBinding(
             packageDeclaration,
             (a) -> Nullability.isNullMarkedAnnotation(a.getAnnotationType().getQualifiedName()))
         != null;
+  }
+
+  public static boolean hasNullMarkedAnnotation(ITypeBinding typeBinding) {
+    return getAnnotationBinding(
+            typeBinding,
+            (a) -> Nullability.isNullMarkedAnnotation(a.getAnnotationType().getQualifiedName()))
+        != null;
+  }
+
+  static boolean shouldReadAnnotations(IBinding binding) {
+    // TODO(b/399417397) Determine if we should handle annotations on all annotation types. Remove
+    // this method if necessary.
+    if (binding instanceof ITypeBinding typeBinding) {
+      if (typeBinding.isAnnotation() && !typeBinding.isFromSource()) {
+        // Not all annotations are present in all compilations; in particular, Kotlin annotations
+        // that on JsInterop annotations are only present when compiling their sources. As a
+        // workaround here, annotations on annotations are only populated when compiling their
+        // sources.
+        return false;
+      }
+    }
+    return true;
   }
 
   private JdtAnnotationUtils() {}

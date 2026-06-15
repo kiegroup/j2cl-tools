@@ -17,6 +17,7 @@ package com.google.j2cl.transpiler.ast;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.j2cl.common.visitor.Processor;
 import com.google.j2cl.common.visitor.Visitable;
 import java.util.List;
@@ -27,14 +28,15 @@ import javax.annotation.Nullable;
  */
 @Visitable
 public class NewInstance extends Invocation {
-  @Visitable @Nullable Type anonymousInnerClass = null;
+  @Visitable @Nullable Type anonymousInnerClass;
 
   private NewInstance(
       Expression qualifier,
       MethodDescriptor constructorMethodDescriptor,
       List<Expression> arguments,
+      List<TypeDescriptor> typeArguments,
       Type anonymousInnerClass) {
-    super(qualifier, constructorMethodDescriptor, arguments);
+    super(qualifier, constructorMethodDescriptor, arguments, typeArguments);
     this.anonymousInnerClass = anonymousInnerClass;
   }
 
@@ -62,7 +64,11 @@ public class NewInstance extends Invocation {
     // so.
     checkState(anonymousInnerClass == null);
     return new NewInstance(
-        AstUtils.clone(qualifier), getTarget(), AstUtils.clone(arguments), anonymousInnerClass);
+        AstUtils.clone(qualifier),
+        getTarget(),
+        AstUtils.clone(arguments),
+        typeArguments,
+        anonymousInnerClass);
   }
 
   @Override
@@ -98,6 +104,7 @@ public class NewInstance extends Invocation {
       return builder;
     }
 
+    @CanIgnoreReturnValue
     public Builder setAnonymousInnerClass(Type anonymousInnerClass) {
       this.anonymousInnerClass = anonymousInnerClass;
       return this;
@@ -105,7 +112,8 @@ public class NewInstance extends Invocation {
 
     @Override
     public NewInstance build() {
-      return new NewInstance(getQualifier(), getTarget(), getArguments(), anonymousInnerClass);
+      return new NewInstance(
+          getQualifier(), getTarget(), getArguments(), getTypeArguments(), anonymousInnerClass);
     }
 
     private Builder(NewInstance newInstance) {

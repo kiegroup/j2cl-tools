@@ -407,6 +407,7 @@ ArrayBuffer.isView = function(arg) {};
 
 /**
  * @constructor
+ * @template TArrayBuffer (unused)
  */
 function ArrayBufferView() {}
 
@@ -445,12 +446,18 @@ SharedArrayBuffer.prototype.slice = function(begin, end) {};
  */
 var BufferSource;
 
+/**
+ * @typedef {!ArrayBuffer|!ArrayBufferView}
+ */
+var AllowSharedBufferSource;
+
 
 /**
  * @constructor
  * @implements {IArrayLike<number>}
  * @implements {Iterable<number>}
  * @extends {ArrayBufferView}
+ * @template TArrayBuffer (unused)
  */
 function TypedArray() {};
 
@@ -729,6 +736,7 @@ TypedArray.prototype[Symbol.iterator] = function() {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -775,6 +783,7 @@ Int8Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -811,6 +820,7 @@ Uint8Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -856,6 +866,7 @@ var CanvasPixelArray;
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -892,6 +903,7 @@ Int16Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -928,6 +940,7 @@ Uint16Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -964,6 +977,7 @@ Int32Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -1000,6 +1014,7 @@ Uint32Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -1036,6 +1051,7 @@ Float32Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -1072,6 +1088,7 @@ Float64Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} byteOffset
  * @param {number=} bufferLength
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -1108,6 +1125,7 @@ BigInt64Array.of = function(var_args) {};
  *         for readability and detection of programmer errors.
  * @param {number=} byteOffset
  * @param {number=} bufferLength
+ * @template TArrayBuffer (unused)
  * @constructor
  * @extends {TypedArray}
  * @throws {Error}
@@ -1327,7 +1345,7 @@ var Thenable;
  * and respective type inference where available.
  * {@see goog.Thenable} inherits from this making all promises
  * interoperate.
- * @interface
+ * @record
  * @struct
  * @template TYPE
  */
@@ -1357,12 +1375,22 @@ IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 
 
 /**
+ * NOTE: For consistency with TypeScript, prefer `PromiseLike` over `IThenable`.
+ * @record
+ * @struct
+ * @template TYPE
+ * @extends {IThenable<TYPE>}
+ */
+function PromiseLike() {}
+
+
+/**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
  * @param {function(
  *             function((TYPE|IThenable<TYPE>|Thenable|null)=),
  *             function(*=))} resolver
  * @constructor
- * @implements {IThenable<TYPE>}
+ * @implements {PromiseLike<TYPE>}
  * @template TYPE
  */
 function Promise(resolver) {}
@@ -2426,3 +2454,111 @@ SuppressedError.prototype.error;
  * @type {?}
  */
 SuppressedError.prototype.suppressed;
+
+
+/**
+ * @record
+ */
+function Disposable() {}
+
+/**
+ * @return {void}
+ */
+Disposable.prototype[Symbol.dispose] = function() {};
+
+/**
+ * A DisposableStack is an object that can be used to contain one or more
+ * resources that should be disposed together.
+ *
+ * @constructor
+ */
+function DisposableStack() {}
+
+/**
+ * @type {boolean}
+ */
+DisposableStack.prototype.disposed;
+
+/**
+ * @return {void}
+ */
+DisposableStack.prototype.dispose = function() {};
+/**
+ * @return {void}
+ */
+DisposableStack.prototype[Symbol.dispose] = function () {};
+/**
+ * @param {!Disposable|null|undefined} disposable
+ * @return {!Disposable|null|undefined}
+ */
+DisposableStack.prototype.use = function(disposable) {};
+/**
+ * @template T
+ * @param {T} value
+ * @param {function(T)} onDispose
+ * @return {T}
+ */
+DisposableStack.prototype.adopt = function(value, onDispose) {};
+/**
+ * @param {function(): void} onDispose
+ * @return {void}
+ */
+DisposableStack.prototype.defer = function(onDispose) {};
+/**
+ * @return {!DisposableStack}
+ */
+DisposableStack.prototype.move = function() {};
+
+/**
+ * @record
+ */
+function AsyncDisposable() {}
+
+/**
+ * @return {!Promise<void>}
+ */
+AsyncDisposable.prototype[Symbol.asyncDispose] = function() {};
+
+/**
+ * An AsyncDisposableStack is an object that can be used to contain one or more
+ * resources that should be disposed of together. The resources may be disposed
+ * of asynchronously.
+ *
+ * @constructor
+ */
+function AsyncDisposableStack() {}
+
+/**
+ * @type {boolean}
+ */
+AsyncDisposableStack.prototype.disposed;
+
+/**
+ * @return {!Promise<void>}
+ */
+AsyncDisposableStack.prototype.disposeAsync = function() {};
+/**
+ * @return {!Promise<void>}
+ */
+AsyncDisposableStack.prototype[Symbol.asyncDispose] = function () {};
+/**
+ * @param {!AsyncDisposable|!Disposable|null|undefined} disposable
+ * @return {!AsyncDisposable|!Disposable|null|undefined}
+ */
+AsyncDisposableStack.prototype.use = function(disposable) {};
+/**
+ * @template T
+ * @param {T} value
+ * @param {function(T): (void|!Promise<void>)} onDispose
+ * @return {T}
+ */
+AsyncDisposableStack.prototype.adopt = function(value, onDispose) {};
+/**
+ * @param {function(): (void|!Promise<void>)} onDispose
+ * @return {void}
+ */
+AsyncDisposableStack.prototype.defer = function(onDispose) {};
+/**
+ * @return {!AsyncDisposableStack}
+ */
+AsyncDisposableStack.prototype.move = function() {};

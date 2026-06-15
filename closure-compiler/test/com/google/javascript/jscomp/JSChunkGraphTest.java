@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static java.util.Collections.shuffle;
 import static org.junit.Assert.assertThrows;
 
@@ -454,11 +453,12 @@ public final class JSChunkGraphTest {
 
   // NOTE: The newline between the @provideGoog comment and the var statement is required.
   private static final String BASEJS =
-      lines(
-          "/** @fileoverview",
-          " * @provideGoog */",
-          "var COMPILED = false;",
-          "var goog = goog || {}");
+      """
+      /** @fileoverview
+       * @provideGoog */
+      var COMPILED = false;
+      var goog = goog || {}
+      """;
 
   @Test
   public void testManageDependenciesSortOnlyImpl() throws Exception {
@@ -972,12 +972,11 @@ public final class JSChunkGraphTest {
             : graph.getDeepestCommonDependency(m1, m2);
     if (actual != expected) {
       assertWithMessage(
-              String.format(
-                  "Deepest common dep of %s and %s should be %s but was %s",
-                  m1.getName(),
-                  m2.getName(),
-                  expected == null ? "null" : expected.getName(),
-                  actual == null ? "null" : actual.getName()))
+              "Deepest common dep of %s and %s should be %s but was %s",
+              m1.getName(),
+              m2.getName(),
+              expected == null ? "null" : expected.getName(),
+              actual == null ? "null" : actual.getName())
           .fail();
     }
   }

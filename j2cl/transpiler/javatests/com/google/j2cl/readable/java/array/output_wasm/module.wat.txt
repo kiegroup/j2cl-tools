@@ -1,15 +1,21 @@
 ;;; Code for array.Arrays.NativeType.$Overlay [type definition]
-(type $array.Arrays.NativeType.$Overlay.vtable (sub (struct
- (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
- ))
-)
 (type $array.Arrays.NativeType.$Overlay (sub (struct
  (field $vtable (ref $array.Arrays.NativeType.$Overlay.vtable))
  (field $itable (ref $itable))
  ))
 )
+(type $array.Arrays.NativeType.$Overlay.vtable (sub (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ ))
+)
 
 ;;; Code for array.Arrays [type definition]
+(type $array.Arrays (sub $java.lang.Object (struct
+ (field $vtable (ref $array.Arrays.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $array.Arrays.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -28,21 +34,8 @@
  (field $m_testStringArrays__void_$pp_array (ref $function.m_testStringArrays__void_$pp_array))
  ))
 )
-(type $array.Arrays (sub $java.lang.Object (struct
- (field $vtable (ref $array.Arrays.vtable))
- (field $itable (ref $itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
- ))
-)
 
 ;;; Code for array.Arrays.SomeObject [type definition]
-(type $array.Arrays.SomeObject.vtable (sub $java.lang.Object.vtable (struct
- (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
- (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
- (field $m_hashCode__int (ref $function.m_hashCode__int))
- (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
- ))
-)
 (type $array.Arrays.SomeObject (sub $java.lang.Object (struct
  (field $vtable (ref $array.Arrays.SomeObject.vtable))
  (field $itable (ref $itable))
@@ -50,22 +43,29 @@
  (field $$outer_this@array.Arrays.SomeObject (mut (ref null $array.Arrays)))
  ))
 )
-
-;;; Code for array.Arrays.NativeType [type definition]
-
-;;; Code for array.Arrays.ArrayContainer [type definition]
-(type $array.Arrays.ArrayContainer.vtable (sub $java.lang.Object.vtable (struct
+(type $array.Arrays.SomeObject.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
  (field $m_hashCode__int (ref $function.m_hashCode__int))
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  ))
 )
+
+;;; Code for array.Arrays.NativeType [type definition]
+
+;;; Code for array.Arrays.ArrayContainer [type definition]
 (type $array.Arrays.ArrayContainer (sub $java.lang.Object (struct
  (field $vtable (ref $array.Arrays.ArrayContainer.vtable))
  (field $itable (ref $itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  (field $data@array.Arrays.ArrayContainer (mut (ref null $javaemul.internal.WasmArray.OfObject)))
+ ))
+)
+(type $array.Arrays.ArrayContainer.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  ))
 )
 
@@ -215,7 +215,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/array/readable-j2wasm.js/array/Arrays.java:24:13
   (call $$clinit__void_<once>_@array.Arrays )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/array/readable-j2wasm.js/array/Arrays.java:24:13
-  (local.set $$instance (struct.new $array.Arrays (ref.as_non_null (global.get $array.Arrays.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $array.Arrays (global.get $array.Arrays.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/array/readable-j2wasm.js/array/Arrays.java:24:13
   (call $$ctor__void_$p_array_Arrays@array.Arrays (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/array/readable-j2wasm.js/array/Arrays.java:24:13
@@ -613,7 +613,7 @@
  (local $$instance (ref null $array.Arrays.SomeObject))
  (block
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/array/readable-j2wasm.js/array/Arrays.java:44:16
-  (local.set $$instance (struct.new $array.Arrays.SomeObject (ref.as_non_null (global.get $array.Arrays.SomeObject.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (ref.null $array.Arrays)))
+  (local.set $$instance (struct.new $array.Arrays.SomeObject (global.get $array.Arrays.SomeObject.vtable) (global.get $itable.empty) (i32.const 0) (ref.null $array.Arrays)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/array/readable-j2wasm.js/array/Arrays.java:44:16
   (call $$ctor__array_Arrays__void_$p_array_Arrays_SomeObject@array.Arrays.SomeObject (ref.as_non_null (local.get $$instance))(local.get $$outer_this))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/array/readable-j2wasm.js/array/Arrays.java:44:16
@@ -690,7 +690,7 @@
  (local $$instance (ref null $array.Arrays.ArrayContainer))
  (block
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/array/readable-j2wasm.js/array/Arrays.java:187:23
-  (local.set $$instance (struct.new $array.Arrays.ArrayContainer (ref.as_non_null (global.get $array.Arrays.ArrayContainer.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (ref.null $javaemul.internal.WasmArray.OfObject)))
+  (local.set $$instance (struct.new $array.Arrays.ArrayContainer (global.get $array.Arrays.ArrayContainer.vtable) (global.get $itable.empty) (i32.const 0) (ref.null $javaemul.internal.WasmArray.OfObject)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/array/readable-j2wasm.js/array/Arrays.java:187:23
   (call $$ctor__void_$p_array_Arrays_ArrayContainer@array.Arrays.ArrayContainer (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/array/readable-j2wasm.js/array/Arrays.java:187:23

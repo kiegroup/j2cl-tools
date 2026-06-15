@@ -1,4 +1,10 @@
 ;;; Code for labelstatement.LabeledStatement [type definition]
+(type $labelstatement.LabeledStatement (sub $java.lang.Object (struct
+ (field $vtable (ref $labelstatement.LabeledStatement.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $labelstatement.LabeledStatement.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -12,27 +18,21 @@
  (field $m_switchStatement__void (ref $function.m_switchStatement__void))
  ))
 )
-(type $labelstatement.LabeledStatement (sub $java.lang.Object (struct
- (field $vtable (ref $labelstatement.LabeledStatement.vtable))
- (field $itable (ref $itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
- ))
-)
 
 ;;; Code for labelstatement.LabeledStatement.1 [type definition]
+(type $labelstatement.LabeledStatement.1 (sub $java.lang.Object (struct
+ (field $vtable (ref $labelstatement.LabeledStatement.1.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ (field $$outer_this@labelstatement.LabeledStatement.1 (mut (ref null $labelstatement.LabeledStatement)))
+ ))
+)
 (type $labelstatement.LabeledStatement.1.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
  (field $m_hashCode__int (ref $function.m_hashCode__int))
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  (field $m_m__void_$pp_labelstatement (ref $function.m_m__void_$pp_labelstatement))
- ))
-)
-(type $labelstatement.LabeledStatement.1 (sub $java.lang.Object (struct
- (field $vtable (ref $labelstatement.LabeledStatement.1.vtable))
- (field $itable (ref $itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
- (field $$outer_this@labelstatement.LabeledStatement.1 (mut (ref null $labelstatement.LabeledStatement)))
  ))
 )
 
@@ -94,7 +94,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/labelstatement/readable-j2wasm.js/labelstatement/LabeledStatement.java:18:13
   (call $$clinit__void_<once>_@labelstatement.LabeledStatement )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/labelstatement/readable-j2wasm.js/labelstatement/LabeledStatement.java:18:13
-  (local.set $$instance (struct.new $labelstatement.LabeledStatement (ref.as_non_null (global.get $labelstatement.LabeledStatement.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $labelstatement.LabeledStatement (global.get $labelstatement.LabeledStatement.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/labelstatement/readable-j2wasm.js/labelstatement/LabeledStatement.java:18:13
   (call $$ctor__void_$p_labelstatement_LabeledStatement@labelstatement.LabeledStatement (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/labelstatement/readable-j2wasm.js/labelstatement/LabeledStatement.java:18:13
@@ -353,7 +353,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/labelstatement/readable-j2wasm.js/labelstatement/LabeledStatement.java:87:19
   (call $$clinit__void_<once>_@labelstatement.LabeledStatement.1 )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/labelstatement/readable-j2wasm.js/labelstatement/LabeledStatement.java:87:19
-  (local.set $$instance (struct.new $labelstatement.LabeledStatement.1 (ref.as_non_null (global.get $labelstatement.LabeledStatement.1.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (ref.null $labelstatement.LabeledStatement)))
+  (local.set $$instance (struct.new $labelstatement.LabeledStatement.1 (global.get $labelstatement.LabeledStatement.1.vtable) (global.get $itable.empty) (i32.const 0) (ref.null $labelstatement.LabeledStatement)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/labelstatement/readable-j2wasm.js/labelstatement/LabeledStatement.java:87:19
   (call $$ctor__labelstatement_LabeledStatement__void_$p_labelstatement_LabeledStatement_1@labelstatement.LabeledStatement.1 (ref.as_non_null (local.get $$instance))(local.get $$outer_this))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/labelstatement/readable-j2wasm.js/labelstatement/LabeledStatement.java:87:19

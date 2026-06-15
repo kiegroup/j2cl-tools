@@ -106,7 +106,6 @@ public class TranspilationPasses {
       passes.maybeAdd(rewriteNullishCoalesceOperator);
     }
 
-
     // NOTE: This needs to be _before_ await and yield are transpiled away.
     if (options.getInstrumentAsyncContext()) {
       passes.maybeAdd(instrumentAsyncContext);
@@ -198,6 +197,9 @@ public class TranspilationPasses {
                         compiler,
                         compiler.getOptions().getBrowserFeaturesetYearObject(),
                         compiler.getOptions().getOutputFeatureSet()));
+                if (compiler.getOptions().needsTranspilationOf(Feature.PRIVATE_CLASS_PROPERTIES)) {
+                  peepholeTranspilations.add(new RewritePrivateClassProperties(compiler));
+                }
                 if (compiler.getOptions().needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
                   peepholeTranspilations.add(new RewriteCatchWithNoBinding(compiler));
                 }
@@ -289,12 +291,6 @@ public class TranspilationPasses {
         .build();
   }
 
-  static final PassFactory es6RenameVariablesInParamLists =
-      PassFactory.builder()
-          .setName("Es6RenameVariablesInParamLists")
-          .setInternalFactory(Es6RenameVariablesInParamLists::new)
-          .build();
-
   static final PassFactory es6RewriteArrowFunction =
       PassFactory.builder()
           .setName("Es6RewriteArrowFunction")
@@ -309,7 +305,8 @@ public class TranspilationPasses {
                   new RewritePolyfills(
                       compiler,
                       compiler.getOptions().getRewritePolyfills(),
-                      compiler.getOptions().getIsolatePolyfills()))
+                      compiler.getOptions().getIsolatePolyfills(),
+                      compiler.getOptions().getInjectPolyfillsNewerThan()))
           .build();
 
   static final PassFactory instrumentAsyncContext =
@@ -323,12 +320,6 @@ public class TranspilationPasses {
                           .getOptions()
                           .getOutputFeatureSet()
                           .contains(Feature.ASYNC_FUNCTIONS)))
-          .build();
-
-  static final PassFactory es6SplitVariableDeclarations =
-      PassFactory.builder()
-          .setName("Es6SplitVariableDeclarations")
-          .setInternalFactory(Es6SplitVariableDeclarations::new)
           .build();
 
   static final PassFactory es6ConvertSuper =

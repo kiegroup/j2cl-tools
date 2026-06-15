@@ -206,6 +206,12 @@ var x=42;
 A pre-compiled release of the compiler is also available via
 [Maven](https://mvnrepository.com/artifact/com.google.javascript/closure-compiler).
 
+### Web-based tooling
+
+https://jscompressor.treblereel.dev/ is a web-based UI and REST API for Closure
+Compiler, developed and maintained by at
+https://github.com/treblereel/jscompressor.
+
 ### Basic usage
 
 The Closure Compiler has many options for reading input from a file, writing
@@ -386,7 +392,7 @@ To build the compiler yourself, you will need the following:
 
 Prerequisite                                                               | Description
 -------------------------------------------------------------------------- | -----------
-[Java 11 or later](https://java.com)                                       | Used to compile the compiler's source code.
+[Java 21 or later](https://java.com)                                       | Used to compile the compiler's source code.
 [NodeJS](https://nodejs.org)                                               | Used to generate resources used by Java compilation
 [Git](https://git-scm.com/)                                                | Used by Bazel to download dependencies.
 [Bazelisk](https://bazel.build/install/bazelisk) | Used to build the various compiler targets.

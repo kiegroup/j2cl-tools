@@ -38,4 +38,6 @@ public interface YamlMapping extends YamlNode {
   YamlSequence addSequenceNode(String key);
 
   YamlMapping addMappingNode(String key);
+
+  boolean containsNode(String key);
 }

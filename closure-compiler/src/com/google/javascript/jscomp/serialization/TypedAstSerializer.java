@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.javascript.jscomp.AbstractCompiler;
@@ -39,7 +38,6 @@ import java.util.LinkedHashMap;
 import org.jspecify.annotations.Nullable;
 
 /** Transforms a compiler AST into a serialized TypedAst object. */
-@GwtIncompatible("protobuf.lite")
 final class TypedAstSerializer {
 
   private final AbstractCompiler compiler;
@@ -104,7 +102,7 @@ final class TypedAstSerializer {
     }
 
     return builder
-        .addAllRuntimeLibraryToInject(serializationMode.getRuntimeLibraries())
+        .addAllRuntimeLibraryToInject(serializationMode.runtimeLibraries())
         .setTypePool(typeSerializer.generateTypePool())
         .setStringPool(this.stringPool.build().toProto())
         .setSourceFilePool(sourceFiles)
@@ -164,6 +162,19 @@ final class TypedAstSerializer {
 
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       builder.addChild(visit(child));
+    }
+    Node shadowedCode = n.getClosureUnawareShadow();
+    if (shadowedCode != null) {
+      // For Closure shadow hosts, the ASTNode will get a boolean property bit set
+      // (CLOSURE_UNAWARE_SHADOW) that indicates this child ASTNode is not a normal child, but is
+      // the contents of the shadow.
+      // Shadow roots are structured as
+      // ROOT -> SCRIPT -> EXPR_RESULT -> FUNCTION
+      // We avoid including the ROOT -> SCRIPT -> EXPR_RESULT structure in the serialization as it
+      // is all synthetic code that would unnecessarily bloat the TypedAST and is instead recreated
+      // upon deserialization.
+      // The child ASTNode is just the FUNCTION.
+      builder.addChild(visit(shadowedCode.getFirstFirstChild().getFirstChild()));
     }
 
     if (sourceFile != 0) {
@@ -531,6 +542,8 @@ final class TypedAstSerializer {
         return NodeKind.OBJECT_REST;
       case OBJECT_SPREAD:
         return NodeKind.OBJECT_SPREAD;
+      case SWITCH_BODY:
+        return NodeKind.SWITCH_BODY;
 
         // Explicitly unsupported token types. Not serialized.
       case ROOT:

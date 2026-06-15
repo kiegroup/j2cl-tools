@@ -16,10 +16,12 @@ package com.google.j2cl.tools.gwtincompatible;
 import static com.google.j2cl.common.SourceUtils.checkSourceFiles;
 
 import com.google.j2cl.common.CommandLineTool;
-import com.google.j2cl.common.Problems;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -41,24 +43,27 @@ public final class GwtIncompatibleStripperCommandLineRunner extends CommandLineT
   @Option(
       name = "-annotation",
       metaVar = "<annotation>",
-      usage = "The name of hte annotation to strip; defaults to 'GwtIncompatible'")
-  String annotation = "GwtIncompatible";
+      usage = "The name(s) of annotations to strip; defaults to 'GwtIncompatible'")
+  List<String> annotations = new ArrayList<>();
 
   private GwtIncompatibleStripperCommandLineRunner() {
     super("gwt-incompatible-stripper");
   }
 
   @Override
-  protected void run(Problems problems) {
+  protected void run() {
+    if (annotations.isEmpty()) {
+      annotations.add("GwtIncompatible");
+    }
     checkSourceFiles(problems, files, ".java", ".srcjar", ".jar");
-    GwtIncompatibleStripper.strip(files, outputPath, problems, annotation);
+    GwtIncompatibleStripper.strip(files.stream(), outputPath, tempDir, problems, annotations);
   }
 
-  public static int run(String[] args) {
-    return new GwtIncompatibleStripperCommandLineRunner().execute(args);
+  public static int run(Collection<String> args, PrintStream stdErr) {
+    return new GwtIncompatibleStripperCommandLineRunner().execute(args, stdErr);
   }
 
   public static void main(String[] args) {
-    System.exit(run(args));
+    System.exit(run(Arrays.asList(args), System.err));
   }
 }

@@ -17,6 +17,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_PROPERTY;
+import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_UNION_PROPERTY;
+import static com.google.javascript.jscomp.TypeCheckTestCase.TypeTestBuilder.newTest;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,16 +26,18 @@ import org.junit.runners.JUnit4;
 
 /** Tests {@link TypeCheck}. */
 @RunWith(JUnit4.class)
-public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
+public final class TypeCheckCovarianceTest {
 
   @Test
   public void testIterableCovariant() {
     newTest()
         .addSource(
-            "function f(/** !Iterable<(number|string)>*/ x){};",
-            "function g(/** !Iterable<number> */ arr) {",
-            "    f(arr);",
-            "}")
+            """
+            function f(/** !Iterable<(number|string)>*/ x){};
+            function g(/** !Iterable<number> */ arr) {
+                f(arr);
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -42,18 +46,21 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testLocalShadowOfIterableNotCovariant() {
     newTest()
         .addSource(
-            "/** @template T */",
-            "class Iterable {}",
-            "function f(/** !Iterable<(number|string)>*/ x) {};",
-            "function g(/** !Iterable<number> */ arr) {",
-            "    f(arr);",
-            "}",
-            "export {};")
+            """
+            /** @template T */
+            class Iterable {}
+            function f(/** !Iterable<(number|string)>*/ x) {};
+            function g(/** !Iterable<number> */ arr) {
+                f(arr);
+            }
+            export {};
+            """)
         .addDiagnostic(
-            lines(
-                "actual parameter 1 of f does not match formal parameter",
-                "found   : Iterable<number>",
-                "required: Iterable<(number|string)>"))
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : Iterable<number>
+            required: Iterable<(number|string)>
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -62,15 +69,18 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testIterableNotContravariant() {
     newTest()
         .addSource(
-            "function f(/** !Iterable<number>*/ x){};",
-            "function g(/** !Iterable<(number|string)> */ arr) {",
-            "    f(arr);",
-            "}")
+            """
+            function f(/** !Iterable<number>*/ x){};
+            function g(/** !Iterable<(number|string)> */ arr) {
+                f(arr);
+            }
+            """)
         .addDiagnostic(
-            lines(
-                "actual parameter 1 of f does not match formal parameter",
-                "found   : Iterable<(number|string),?,?>",
-                "required: Iterable<number,?,?>"))
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : Iterable<(number|string),?,?>
+            required: Iterable<number,?,?>
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -79,16 +89,22 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testIterableCovariantWhenComparingToSubtype() {
     newTest()
         .addExterns(
-            "/** @constructor",
-            " * @implements {Iterable<T>}",
-            " * @template T",
-            " */",
-            "function Set() {}")
+            """
+            /** @constructor
+             * @implements {Iterable<T>}
+             * @template T
+             */
+            function Set() {}
+            /** @override */
+            Set.prototype[Symbol.iterator] = function() {};
+            """)
         .addSource(
-            "function f(/** !Iterable<(number|string)>*/ x){};",
-            "function g(/** !Set<number> */ arr) {",
-            "    f(arr);",
-            "}")
+            """
+            function f(/** !Iterable<(number|string)>*/ x){};
+            function g(/** !Set<number> */ arr) {
+                f(arr);
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -97,10 +113,12 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testIteratorCovariant() {
     newTest()
         .addSource(
-            "function f(/** !Iterator<(string|number)>*/ x){};",
-            "function g(/** !Iterator<number> */ arr) {",
-            "    f(arr);",
-            "}")
+            """
+            function f(/** !Iterator<(string|number)>*/ x){};
+            function g(/** !Iterator<number> */ arr) {
+                f(arr);
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -109,10 +127,12 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testIteratorIterableCovariant() {
     newTest()
         .addSource(
-            "function f(/** !IteratorIterable<(string|number)>*/ x){};",
-            "function g(/** !IteratorIterable<number> */ arr) {",
-            "    f(arr);",
-            "}")
+            """
+            function f(/** !IteratorIterable<(string|number)>*/ x){};
+            function g(/** !IteratorIterable<number> */ arr) {
+                f(arr);
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -121,10 +141,12 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testIIterableResultCovariant() {
     newTest()
         .addSource(
-            "function f(/** !IIterableResult<(string|number)>*/ x){};",
-            "function g(/** !IIterableResult<number> */ arr) {",
-            "    f(arr);",
-            "}")
+            """
+            function f(/** !IIterableResult<(string|number)>*/ x){};
+            function g(/** !IIterableResult<number> */ arr) {
+                f(arr);
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -133,10 +155,12 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testGeneratorCovariant() {
     newTest()
         .addSource(
-            "function f(/** !Generator<(string|number)>*/ x){};",
-            "function g(/** !Generator<number> */ arr) {",
-            "    f(arr);",
-            "}")
+            """
+            function f(/** !Generator<(string|number)>*/ x){};
+            function g(/** !Generator<number> */ arr) {
+                f(arr);
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -145,21 +169,30 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testIterableImplementorInvariant() {
     newTest()
         .addExterns(
-            "/** @constructor",
-            " * @implements {Iterable<T>}",
-            " * @template T",
-            " */",
-            "function Set() {}")
+            """
+            /**
+             * @constructor
+             * @implements {Iterable<T>}
+             * @template T
+             */
+            function Set() {}
+            /** @override */
+            Set.prototype[Symbol.iterator] = function() {};
+            """)
+        .includeDefaultExterns()
         .addSource(
-            "function f(/** !Set<(string|number)>*/ x){};",
-            "function g(/** !Set<number> */ arr) {",
-            "    f(arr);",
-            "}")
+            """
+            function f(/** !Set<(string|number)>*/ x){};
+            function g(/** !Set<number> */ arr) {
+                f(arr);
+            }
+            """)
         .addDiagnostic(
-            lines(
-                "actual parameter 1 of f does not match formal parameter",
-                "found   : Set<number>",
-                "required: Set<(number|string)>"))
+            """
+            actual parameter 1 of f does not match formal parameter
+            found   : Set<number>
+            required: Set<(number|string)>
+            """)
         .run();
   }
 
@@ -167,10 +200,12 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testIArrayLikeCovariant1() {
     newTest()
         .addSource(
-            "function f(/** !IArrayLike<(string|number)>*/ x){};",
-            "function g(/** !IArrayLike<number> */ arr) {",
-            "    f(arr);",
-            "}")
+            """
+            function f(/** !IArrayLike<(string|number)>*/ x){};
+            function g(/** !IArrayLike<number> */ arr) {
+                f(arr);
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -179,10 +214,12 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testIArrayLikeCovariant2() {
     newTest()
         .addSource(
-            "function f(/** !IArrayLike<(string|number)>*/ x){};",
-            "function g(/** !Array<number> */ arr) {",
-            "    f(arr);",
-            "}")
+            """
+            function f(/** !IArrayLike<(string|number)>*/ x){};
+            function g(/** !Array<number> */ arr) {
+                f(arr);
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -191,10 +228,12 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testIArrayLikeBivaraint() {
     newTest()
         .addSource(
-            "function f(/** !IArrayLike<number>*/ x){};",
-            "function g(/** !IArrayLike<(string|number)> */ arr) {",
-            "    f(arr);",
-            "}")
+            """
+            function f(/** !IArrayLike<number>*/ x){};
+            function g(/** !IArrayLike<(string|number)> */ arr) {
+                f(arr);
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -203,18 +242,22 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType1() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function C() {}",
-            "/** @constructor ",
-            "  * @extends {C} ",
-            "  */",
-            "function C2() {}")
+            """
+            /** @constructor */
+            function C() {}
+            /** @constructor
+              * @extends {C}
+              */
+            function C2() {}
+            """)
         .addSource(
-            "/** @type {{prop: C}} */",
-            "var r1;",
-            "/** @type {{prop: C2}} */",
-            "var r2;",
-            "r1 = r2;")
+            """
+            /** @type {{prop: C}} */
+            var r1;
+            /** @type {{prop: C2}} */
+            var r2;
+            r1 = r2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -223,18 +266,22 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType2() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function C() {}",
-            "/** @constructor ",
-            "  * @extends {C} ",
-            "  */",
-            "function C2() {}")
+            """
+            /** @constructor */
+            function C() {}
+            /** @constructor
+              * @extends {C}
+              */
+            function C2() {}
+            """)
         .addSource(
-            "/** @type {{prop: C, prop2: C}} */",
-            "var r1;",
-            "/** @type {{prop: C2, prop2: C}} */",
-            "var r2;",
-            "r1 = r2;")
+            """
+            /** @type {{prop: C, prop2: C}} */
+            var r1;
+            /** @type {{prop: C2, prop2: C}} */
+            var r2;
+            r1 = r2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -243,16 +290,20 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType3() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function C() {}",
-            "/** @constructor @extends {C} */",
-            "function C2() {}")
+            """
+            /** @constructor */
+            function C() {}
+            /** @constructor @extends {C} */
+            function C2() {}
+            """)
         .addSource(
-            "/** @type {{prop: C}} */",
-            "var r1;",
-            "/** @type {{prop: C2, prop2: C}} */",
-            "var r2;",
-            "r1 = r2;")
+            """
+            /** @type {{prop: C}} */
+            var r1;
+            /** @type {{prop: C2, prop2: C}} */
+            var r2;
+            r1 = r2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -261,23 +312,31 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType4() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function C() {}",
-            "/** @constructor @extends {C} */",
-            "function C2() {}")
+            """
+            /** @constructor */
+            function C() {}
+            /** @constructor @extends {C} */
+            function C2() {}
+            """)
         .addSource(
-            "/** @type {{prop: C, prop2: C}} */",
-            "var r1;",
-            "/** @type {{prop: C2}} */",
-            "var r2;",
-            "r1 = r2;")
+            """
+            /** @type {{prop: C, prop2: C}} */
+            var r1;
+            /** @type {{prop: C2}} */
+            var r2;
+            r1 = r2;
+            """)
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : {prop: (C2|null)}",
-                "required: {\n  prop: (C|null),\n  prop2: (C|null)\n}",
-                "missing : [prop2]",
-                "mismatch: []"))
+            """
+            assignment
+            found   : {prop: (C2|null)}
+            required: {
+              prop: (C|null),
+              prop2: (C|null)
+            }
+            missing : [prop2]
+            mismatch: []
+            """)
         .run();
   }
 
@@ -285,23 +344,28 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType5() {
     newTest()
         .addExterns(
-            "/** @constructor */", //
-            "function C() {}",
-            "/** @constructor */",
-            "function C2() {}")
+            """
+            /** @constructor */
+            function C() {}
+            /** @constructor */
+            function C2() {}
+            """)
         .addSource(
-            "/** @type {{prop: C}} */",
-            "var r1;",
-            "/** @type {{prop: C2}} */",
-            "var r2;",
-            "r1 = r2;")
+            """
+            /** @type {{prop: C}} */
+            var r1;
+            /** @type {{prop: C2}} */
+            var r2;
+            r1 = r2;
+            """)
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : {prop: (C2|null)}",
-                "required: {prop: (C|null)}",
-                "missing : []",
-                "mismatch: [prop]"))
+            """
+            assignment
+            found   : {prop: (C2|null)}
+            required: {prop: (C|null)}
+            missing : []
+            mismatch: [prop]
+            """)
         .run();
   }
 
@@ -309,23 +373,28 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType6() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function C() {}",
-            "/** @constructor @extends {C} */",
-            "function C2() {}")
+            """
+            /** @constructor */
+            function C() {}
+            /** @constructor @extends {C} */
+            function C2() {}
+            """)
         .addSource(
-            "/** @type {{prop: C2}} */",
-            "var r1;",
-            "/** @type {{prop: C}} */",
-            "var r2;",
-            "r1 = r2;")
+            """
+            /** @type {{prop: C2}} */
+            var r1;
+            /** @type {{prop: C}} */
+            var r2;
+            r1 = r2;
+            """)
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : {prop: (C|null)}",
-                "required: {prop: (C2|null)}",
-                "missing : []",
-                "mismatch: [prop]"))
+            """
+            assignment
+            found   : {prop: (C|null)}
+            required: {prop: (C2|null)}
+            missing : []
+            mismatch: [prop]
+            """)
         .run();
   }
 
@@ -333,23 +402,34 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType7() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function C() {}",
-            "/** @constructor @extends {C} */",
-            "function C2() {}")
+            """
+            /** @constructor */
+            function C() {}
+            /** @constructor @extends {C} */
+            function C2() {}
+            """)
         .addSource(
-            "/** @type {{prop: C2, prop2: C2}} */",
-            "var r1;",
-            "/** @type {{prop: C2, prop2: C}} */",
-            "var r2;",
-            "r1 = r2;")
+            """
+            /** @type {{prop: C2, prop2: C2}} */
+            var r1;
+            /** @type {{prop: C2, prop2: C}} */
+            var r2;
+            r1 = r2;
+            """)
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : {\n  prop: (C2|null),\n  prop2: (C|null)\n}",
-                "required: {\n  prop: (C2|null),\n  prop2: (C2|null)\n}",
-                "missing : []",
-                "mismatch: [prop2]"))
+            """
+            assignment
+            found   : {
+              prop: (C2|null),
+              prop2: (C|null)
+            }
+            required: {
+              prop: (C2|null),
+              prop2: (C2|null)
+            }
+            missing : []
+            mismatch: [prop2]
+            """)
         .run();
   }
 
@@ -357,19 +437,23 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType8() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function Foo(){}",
-            "/** @type {number} */",
-            "Foo.prototype.x = 5",
-            "/** @type {string} */",
-            "Foo.prototype.y = 'str'")
+            """
+            /** @constructor */
+            function Foo(){}
+            /** @type {number} */
+            Foo.prototype.x = 5
+            /** @type {string} */
+            Foo.prototype.y = 'str'
+            """)
         .addSource(
-            "/** @type {{x: number, y: string}} */",
-            "var r1 = {x: 1, y: 'value'};",
-            "",
-            "/** @type {!Foo} */",
-            "var f = new Foo();",
-            "r1 = f;")
+            """
+            /** @type {{x: number, y: string}} */
+            var r1 = {x: 1, y: 'value'};
+
+            /** @type {!Foo} */
+            var f = new Foo();
+            r1 = f;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -378,24 +462,32 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType9() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function Foo(){}",
-            "/** @type {number} */",
-            "Foo.prototype.x1 = 5",
-            "/** @type {string} */",
-            "Foo.prototype.y = 'str'")
+            """
+            /** @constructor */
+            function Foo(){}
+            /** @type {number} */
+            Foo.prototype.x1 = 5
+            /** @type {string} */
+            Foo.prototype.y = 'str'
+            """)
         .addSource(
-            "/** @type {{x: number, y: string}} */",
-            "var r1 = {x: 1, y: 'value'};",
-            "",
-            "/** @type {!Foo} */",
-            "var f = new Foo();",
-            "f = r1;")
+            """
+            /** @type {{x: number, y: string}} */
+            var r1 = {x: 1, y: 'value'};
+
+            /** @type {!Foo} */
+            var f = new Foo();
+            f = r1;
+            """)
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : {\n  x: number,\n  y: string\n}",
-                "required: Foo"))
+            """
+            assignment
+            found   : {
+              x: number,
+              y: string
+            }
+            required: Foo
+            """)
         .run();
   }
 
@@ -403,24 +495,29 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType10() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function Foo() {}",
-            "/** @type {{x: !Foo}} */",
-            "Foo.prototype.x = {x: new Foo()};")
+            """
+            /** @constructor */
+            function Foo() {}
+            /** @type {{x: !Foo}} */
+            Foo.prototype.x = {x: new Foo()};
+            """)
         .addSource(
-            "/** @type {!Foo} */",
-            "var o = new Foo();",
-            "",
-            "/** @type {{x: !Foo}} */",
-            "var r = {x : new Foo()};",
-            "r = o;")
+            """
+            /** @type {!Foo} */
+            var o = new Foo();
+
+            /** @type {{x: !Foo}} */
+            var r = {x : new Foo()};
+            r = o;
+            """)
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : Foo",
-                "required: {x: Foo}",
-                "missing : []",
-                "mismatch: [x]"))
+            """
+            assignment
+            found   : Foo
+            required: {x: Foo}
+            missing : []
+            mismatch: [x]
+            """)
         .run();
   }
 
@@ -428,22 +525,26 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType11() {
     newTest()
         .addExterns(
-            "/** @interface */",
-            "function Foo() {}",
-            "/** @constructor @implements {Foo} */",
-            "function Bar1() {}",
-            "/** @return {number} */",
-            "Bar1.prototype.y = function(){return 1;};",
-            "/** @constructor @implements {Foo} */",
-            "function Bar() {}",
-            "/** @return {string} */",
-            "Bar.prototype.y = function(){return 'test';};")
+            """
+            /** @interface */
+            function Foo() {}
+            /** @constructor @implements {Foo} */
+            function Bar1() {}
+            /** @return {number} */
+            Bar1.prototype.y = function(){return 1;};
+            /** @constructor @implements {Foo} */
+            function Bar() {}
+            /** @return {string} */
+            Bar.prototype.y = function(){return 'test';};
+            """)
         .addSource(
-            "function fun(/** Foo */f) {", //
-            "  f.y();",
-            "}",
-            "fun(new Bar1())",
-            "fun(new Bar());")
+            """
+            function fun(/** Foo */f) {
+              f.y();
+            }
+            fun(new Bar1())
+            fun(new Bar());
+            """)
         .addDiagnostic(STRICT_INEXISTENT_PROPERTY)
         .run();
   }
@@ -452,18 +553,22 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType12() {
     newTest()
         .addExterns(
-            "/** @interface */",
-            "function Foo() {}",
-            "/** @constructor @implements {Foo} */",
-            "function Bar1() {}",
-            "/** @constructor @implements {Foo} */",
-            "function Bar() {}",
-            "/** @return {undefined} */",
-            "Bar.prototype.y = function(){};")
+            """
+            /** @interface */
+            function Foo() {}
+            /** @constructor @implements {Foo} */
+            function Bar1() {}
+            /** @constructor @implements {Foo} */
+            function Bar() {}
+            /** @return {undefined} */
+            Bar.prototype.y = function(){};
+            """)
         .addSource(
-            "/** @type{Foo} */", //
-            "var f = new Bar1();",
-            "f.y();")
+            """
+            /** @type{Foo} */
+            var f = new Bar1();
+            f.y();
+            """)
         .addDiagnostic(STRICT_INEXISTENT_PROPERTY)
         .run(); // Only if strict warnings are enabled.
   }
@@ -472,16 +577,20 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType13() {
     newTest()
         .addExterns(
-            "/** @interface */",
-            "function I() {}",
-            "/** @constructor @implements {I} */",
-            "function C() {}",
-            "/** @return {undefined} */",
-            "C.prototype.y = function(){};")
+            """
+            /** @interface */
+            function I() {}
+            /** @constructor @implements {I} */
+            function C() {}
+            /** @return {undefined} */
+            C.prototype.y = function(){};
+            """)
         .addSource(
-            "/** @type{{x: {obj: I}}} */", //
-            "var ri;",
-            "ri.x.obj.y();")
+            """
+            /** @type{{x: {obj: I}}} */
+            var ri;
+            ri.x.obj.y();
+            """)
         .addDiagnostic(STRICT_INEXISTENT_PROPERTY)
         .run(); // Only if strict warnings are enabled.
   }
@@ -489,20 +598,24 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   @Test
   public void testCovarianceForRecordType14a() {
     // Verify loose property check behavior
-    disableStrictMissingPropertyChecks();
     newTest()
         .addExterns(
-            "/** @interface */",
-            "function I() {}",
-            "/** @constructor */",
-            "function C() {}",
-            "/** @return {undefined} */",
-            "C.prototype.y = function(){};")
+            """
+            /** @interface */
+            function I() {}
+            /** @constructor */
+            function C() {}
+            /** @return {undefined} */
+            C.prototype.y = function(){};
+            """)
         .addSource(
-            "/** @type{({x: {obj: I}}|{x: {obj: C}})} */", //
-            "var ri;",
-            "ri.x.obj.y();")
+            """
+            /** @type{({x: {obj: I}}|{x: {obj: C}})} */
+            var ri;
+            ri.x.obj.y();
+            """)
         .includeDefaultExterns()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -511,16 +624,20 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
     newTest()
         .includeDefaultExterns()
         .addExterns(
-            "/** @interface */",
-            "function I() {}",
-            "/** @constructor */",
-            "function C() {}",
-            "/** @return {undefined} */",
-            "C.prototype.y = function(){};")
+            """
+            /** @interface */
+            function I() {}
+            /** @constructor */
+            function C() {}
+            /** @return {undefined} */
+            C.prototype.y = function(){};
+            """)
         .addSource(
-            "/** @type{({x: {obj: I}}|{x: {obj: C}})} */", //
-            "var ri;",
-            "ri.x.obj.y();")
+            """
+            /** @type{({x: {obj: I}}|{x: {obj: C}})} */
+            var ri;
+            ri.x.obj.y();
+            """)
         .addDiagnostic("Property y not defined on all member types of (I|C)")
         .run();
   }
@@ -528,23 +645,27 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   @Test
   public void testCovarianceForRecordType15() {
     // Verify loose property check behavior
-    disableStrictMissingPropertyChecks();
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function C() {}",
-            "/** @return {undefined} */",
-            "C.prototype.y1 = function(){};",
-            "/** @constructor */",
-            "function C1() {}",
-            "/** @return {undefined} */",
-            "C1.prototype.y = function(){};")
+            """
+            /** @constructor */
+            function C() {}
+            /** @return {undefined} */
+            C.prototype.y1 = function(){};
+            /** @constructor */
+            function C1() {}
+            /** @return {undefined} */
+            C1.prototype.y = function(){};
+            """)
         .addSource(
-            "/** @type{({x: {obj: C}}|{x: {obj: C1}})} */",
-            "var ri;",
-            "ri.x.obj.y1();",
-            "ri.x.obj.y();")
+            """
+            /** @type{({x: {obj: C}}|{x: {obj: C1}})} */
+            var ri;
+            ri.x.obj.y1();
+            ri.x.obj.y();
+            """)
         .includeDefaultExterns()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -552,18 +673,22 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType16() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function C() {}",
-            "/** @return {number} */",
-            "C.prototype.y = function(){return 1;};",
-            "/** @constructor */",
-            "function C1() {}",
-            "/** @return {string} */",
-            "C1.prototype.y = function(){return 'test';};")
+            """
+            /** @constructor */
+            function C() {}
+            /** @return {number} */
+            C.prototype.y = function(){return 1;};
+            /** @constructor */
+            function C1() {}
+            /** @return {string} */
+            C1.prototype.y = function(){return 'test';};
+            """)
         .addSource(
-            "/** @type{({x: {obj: C}}|{x: {obj: C1}})} */", //
-            "var ri;",
-            "ri.x.obj.y();")
+            """
+            /** @type{({x: {obj: C}}|{x: {obj: C1}})} */
+            var ri;
+            ri.x.obj.y();
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -572,62 +697,74 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType17() {
     newTest()
         .addExterns(
-            "/** @interface */",
-            "function Foo() {}",
-            "/** @constructor @implements {Foo} */",
-            "function Bar1() {}",
-            "Bar1.prototype.y = function(){return {};};",
-            "/** @constructor @implements {Foo} */",
-            "function Bar() {}",
-            "/** @return {number} */",
-            "Bar.prototype.y = function(){return 1;};")
+            """
+            /** @interface */
+            function Foo() {}
+            /** @constructor @implements {Foo} */
+            function Bar1() {}
+            Bar1.prototype.y = function(){return {};};
+            /** @constructor @implements {Foo} */
+            function Bar() {}
+            /** @return {number} */
+            Bar.prototype.y = function(){return 1;};
+            """)
         .addSource(
-            "/** @type {Foo} */ var f;", //
-            "f.y();")
+            """
+            /** @type {Foo} */ var f;
+            f.y();
+            """)
         .addDiagnostic(STRICT_INEXISTENT_PROPERTY)
         .run();
   }
 
   @Test
   public void testCovarianceForRecordType18() {
-    disableStrictMissingPropertyChecks();
     newTest()
         .addExterns(
-            "/** @constructor*/",
-            "function Bar1() {}",
-            "/** @type {{x: number}} */",
-            "Bar1.prototype.prop;",
-            "/** @constructor */",
-            "function Bar() {}",
-            "/** @type {{x: number, y: number}} */",
-            "Bar.prototype.prop;")
+            """
+            /** @constructor*/
+            function Bar1() {}
+            /** @type {{x: number}} */
+            Bar1.prototype.prop;
+            /** @constructor */
+            function Bar() {}
+            /** @type {{x: number, y: number}} */
+            Bar.prototype.prop;
+            """)
         .addSource(
-            "/** @type {{x: number}} */ var f;", //
-            "f.z;")
+            """
+            /** @type {{x: number}} */ var f;
+            f.z;
+            """)
         .includeDefaultExterns()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
   @Test
   public void testCovarianceForRecordType19a() {
     // Verify loose property check behavior
-    disableStrictMissingPropertyChecks();
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function Bar1() {}",
-            "/** @type {number} */",
-            "Bar1.prototype.prop;",
-            "/** @type {number} */",
-            "Bar1.prototype.prop1;",
-            "/** @constructor */",
-            "function Bar2() {}",
-            "/** @type {number} */",
-            "Bar2.prototype.prop;")
+            """
+            /** @constructor */
+            function Bar1() {}
+            /** @type {number} */
+            Bar1.prototype.prop;
+            /** @type {number} */
+            Bar1.prototype.prop1;
+            /** @constructor */
+            function Bar2() {}
+            /** @type {number} */
+            Bar2.prototype.prop;
+            """)
         .addSource(
-            "/** @type {(Bar1|Bar2)} */ var b;", //
-            "var x = b.prop1")
+            """
+            /** @type {(Bar1|Bar2)} */ var b;
+            var x = b.prop1
+            """)
         .includeDefaultExterns()
+        .suppress(DiagnosticGroups.STRICT_MISSING_PROPERTIES)
         .run();
   }
 
@@ -636,19 +773,23 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
     newTest()
         .includeDefaultExterns()
         .addExterns(
-            "/** @constructor */",
-            "function Bar1() {}",
-            "/** @type {number} */",
-            "Bar1.prototype.prop;",
-            "/** @type {number} */",
-            "Bar1.prototype.prop1;",
-            "/** @constructor */",
-            "function Bar2() {}",
-            "/** @type {number} */",
-            "Bar2.prototype.prop;")
+            """
+            /** @constructor */
+            function Bar1() {}
+            /** @type {number} */
+            Bar1.prototype.prop;
+            /** @type {number} */
+            Bar1.prototype.prop1;
+            /** @constructor */
+            function Bar2() {}
+            /** @type {number} */
+            Bar2.prototype.prop;
+            """)
         .addSource(
-            "/** @type {(Bar1|Bar2)} */ var b;", //
-            "var x = b.prop1")
+            """
+            /** @type {(Bar1|Bar2)} */ var b;
+            var x = b.prop1
+            """)
         .addDiagnostic("Property prop1 not defined on all member types of (Bar1|Bar2)")
         .run();
   }
@@ -658,20 +799,24 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
     newTest()
         .includeDefaultExterns()
         .addExterns(
-            "/** @constructor */",
-            "function Bar1() {}",
-            "/** @type {number} */",
-            "Bar1.prototype.prop;",
-            "/** @type {number} */",
-            "Bar1.prototype.prop1;",
-            "/** @type {number} */",
-            "Bar1.prototype.prop2;")
+            """
+            /** @constructor */
+            function Bar1() {}
+            /** @type {number} */
+            Bar1.prototype.prop;
+            /** @type {number} */
+            Bar1.prototype.prop1;
+            /** @type {number} */
+            Bar1.prototype.prop2;
+            """)
         .addSource(
-            "/** @type {{prop2:number}} */ var c;",
-            "/** @type {(Bar1|{prop:number, prop2: number})} */ var b;",
+            """
+            /** @type {{prop2:number}} */ var c;
+            /** @type {(Bar1|{prop:number, prop2: number})} */ var b;
             // there should be no warning saying that
             // prop2 is not defined on b;
-            "var x = b.prop2")
+            var x = b.prop2
+            """)
         .run();
   }
 
@@ -680,12 +825,14 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
     newTest()
         .includeDefaultExterns()
         .addSource(
-            "/** @type {{prop2:number}} */ var c;",
-            "/** @type {({prop:number, prop1: number, prop2: number}|",
-            "{prop:number, prop2: number})} */ var b;",
+            """
+            /** @type {{prop2:number}} */ var c;
+            /** @type {({prop:number, prop1: number, prop2: number}|
+            {prop:number, prop2: number})} */ var b;
             // there should be no warning saying that
             // prop2 is not defined on b;
-            "var x = b.prop2")
+            var x = b.prop2
+            """)
         .run();
   }
 
@@ -694,15 +841,17 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
     newTest()
         .addExterns("")
         .addSource(
-            "/** @constructor */",
-            "function Bar1() {};",
-            "/** @type {number} */",
-            "Bar1.prototype.propName;",
-            "/** @type {number} */",
-            "Bar1.prototype.propName1;",
-            "/** @type {{prop2:number}} */ var c;",
-            "/** @type {(Bar1|{propName:number, propName1: number})} */ var b;",
-            "var x = b.prop2;")
+            """
+            /** @constructor */
+            function Bar1() {};
+            /** @type {number} */
+            Bar1.prototype.propName;
+            /** @type {number} */
+            Bar1.prototype.propName1;
+            /** @type {{prop2:number}} */ var c;
+            /** @type {(Bar1|{propName:number, propName1: number})} */ var b;
+            var x = b.prop2;
+            """)
         .addDiagnostic("Property prop2 never defined on b")
         .run();
   }
@@ -711,33 +860,37 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType23() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function A() {}",
-            "/** @constructor @extends{A} */",
-            "function B() {}",
-            "",
-            "/** @constructor */",
-            "function C() {}",
-            "/** @type {B} */",
-            "C.prototype.prop2;",
-            "/** @type {number} */",
-            "C.prototype.prop3;",
-            "",
-            "/** @constructor */",
-            "function D() {}",
-            "/** @type {number} */",
-            "D.prototype.prop;",
-            "/** @type {number} */",
-            "D.prototype.prop1;",
-            "/** @type {B} */",
-            "D.prototype.prop2;")
+            """
+            /** @constructor */
+            function A() {}
+            /** @constructor @extends{A} */
+            function B() {}
+
+            /** @constructor */
+            function C() {}
+            /** @type {B} */
+            C.prototype.prop2;
+            /** @type {number} */
+            C.prototype.prop3;
+
+            /** @constructor */
+            function D() {}
+            /** @type {number} */
+            D.prototype.prop;
+            /** @type {number} */
+            D.prototype.prop1;
+            /** @type {B} */
+            D.prototype.prop2;
+            """)
         .addSource(
-            "/** @type {{prop2: A}} */ var record;",
-            "var xhr = new C();",
-            "if (true) { xhr = new D(); }",
+            """
+            /** @type {{prop2: A}} */ var record;
+            var xhr = new C();
+            if (true) { xhr = new D(); }
             // there should be no warning saying that
             // prop2 is not defined on b;
-            "var x = xhr.prop2")
+            var x = xhr.prop2
+            """)
         .run();
   }
 
@@ -745,25 +898,29 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType24() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function C() {}",
-            "",
-            "/** @type {!Function} */",
-            "C.prototype.abort = function() {};",
-            "",
-            "/** @type{number} */",
-            "C.prototype.test2 = 1;")
+            """
+            /** @constructor */
+            function C() {}
+
+            /** @type {!Function} */
+            C.prototype.abort = function() {};
+
+            /** @type{number} */
+            C.prototype.test2 = 1;
+            """)
         .addSource(
-            "function f() {",
-            "  /** @type{{abort: !Function, count: number}} */",
-            "  var x;",
-            "}",
-            "",
-            "function f2() {",
-            "  /** @type{(C|{abort: Function})} */",
-            "  var y;",
-            "  y.abort();",
-            "}")
+            """
+            function f() {
+              /** @type{{abort: !Function, count: number}} */
+              var x;
+            }
+
+            function f2() {
+              /** @type{(C|{abort: Function})} */
+              var y;
+              y.abort();
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -772,27 +929,31 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType25() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function C() {}",
-            "",
-            "/** @type {!Function} */",
-            "C.prototype.abort = function() {};",
-            "",
-            "/** @type{number} */",
-            "C.prototype.test2 = 1;")
+            """
+            /** @constructor */
+            function C() {}
+
+            /** @type {!Function} */
+            C.prototype.abort = function() {};
+
+            /** @type{number} */
+            C.prototype.test2 = 1;
+            """)
         .addSource(
-            "function f() {",
-            "  /** @type{!Function} */ var f;",
-            "  var x = {abort: f, count: 1}",
-            "  return x;",
-            "}",
-            "",
-            "function f2() {",
-            "  /** @type{(C|{test2: number})} */",
-            "  var y;",
-            "  y.abort();",
-            "}")
-        .addDiagnostic(STRICT_INEXISTENT_PROPERTY)
+            """
+            function f() {
+              /** @type{!Function} */ var f;
+              var x = {abort: f, count: 1}
+              return x;
+            }
+
+            function f2() {
+              /** @type{(C|{test2: number})} */
+              var y;
+              y.abort();
+            }
+            """)
+        .addDiagnostic(STRICT_INEXISTENT_UNION_PROPERTY)
         .run();
   }
 
@@ -800,24 +961,28 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType26() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function C() {}",
-            "",
-            "C.prototype.abort = function() {};",
-            "",
-            "/** @type{number} */",
-            "C.prototype.test2 = 1;")
+            """
+            /** @constructor */
+            function C() {}
+
+            C.prototype.abort = function() {};
+
+            /** @type{number} */
+            C.prototype.test2 = 1;
+            """)
         .addSource(
-            "function f() {",
-            "  /** @type{{abort: !Function}} */",
-            "  var x;",
-            "}",
-            "",
-            "function f2() {",
-            "  /** @type{(C|{test2: number})} */",
-            "  var y;",
-            "  /** @type {C} */ (y).abort();",
-            "}")
+            """
+            function f() {
+              /** @type{{abort: !Function}} */
+              var x;
+            }
+
+            function f2() {
+              /** @type{(C|{test2: number})} */
+              var y;
+              /** @type {C} */ (y).abort();
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -826,23 +991,27 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType26AndAHalf() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function C() {}",
-            "",
-            "C.prototype.abort = function() {};",
-            "",
-            "/** @type{number} */",
-            "C.prototype.test2 = 1;",
-            "var g = function /** !C */(){};")
+            """
+            /** @constructor */
+            function C() {}
+
+            C.prototype.abort = function() {};
+
+            /** @type{number} */
+            C.prototype.test2 = 1;
+            var g = function /** !C */(){};
+            """)
         .addSource(
-            "function f() {",
-            "  /** @type{{abort: !Function}} */",
-            "  var x;",
-            "}",
-            "function f2() {",
-            "  var y = g();",
-            "  y.abort();",
-            "}")
+            """
+            function f() {
+              /** @type{{abort: !Function}} */
+              var x;
+            }
+            function f2() {
+              var y = g();
+              y.abort();
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -851,15 +1020,19 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType27() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function C(){}",
-            "/** @constructor @extends {C} */",
-            "function C2() {}")
+            """
+            /** @constructor */
+            function C(){}
+            /** @constructor @extends {C} */
+            function C2() {}
+            """)
         .addSource(
-            "/** @type {{prop2:C}} */ var c;",
-            "/** @type {({prop:number, prop1: number, prop2: C}|",
-            "{prop:number, prop1: number, prop2: number})} */ var b;",
-            "var x = b.prop2;")
+            """
+            /** @type {{prop2:C}} */ var c;
+            /** @type {({prop:number, prop1: number, prop2: C}|
+            {prop:number, prop1: number, prop2: number})} */ var b;
+            var x = b.prop2;
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -868,29 +1041,33 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType28() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function XMLHttpRequest() {}",
-            "/**",
-            " * @return {undefined}",
-            " */",
-            "XMLHttpRequest.prototype.abort = function() {};",
-            "",
-            "/** @constructor */",
-            "function XDomainRequest() {}",
-            "",
-            "XDomainRequest.prototype.abort = function() {};")
+            """
+            /** @constructor */
+            function XMLHttpRequest() {}
+            /**
+             * @return {undefined}
+             */
+            XMLHttpRequest.prototype.abort = function() {};
+
+            /** @constructor */
+            function XDomainRequest() {}
+
+            XDomainRequest.prototype.abort = function() {};
+            """)
         .addSource(
-            "/**",
-            " * @typedef {{abort: !Function, close: !Function}}",
-            " */",
-            "var WritableStreamSink;",
-            "function sendCrossOrigin() {",
-            "  var xhr = new XMLHttpRequest;",
-            "  xhr = new XDomainRequest;",
-            "  return function() {",
-            "    xhr.abort();",
-            "  };",
-            "}")
+            """
+            /**
+             * @typedef {{abort: !Function, close: !Function}}
+             */
+            var WritableStreamSink;
+            function sendCrossOrigin() {
+              var xhr = new XMLHttpRequest;
+              xhr = new XDomainRequest;
+              return function() {
+                xhr.abort();
+              };
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -899,31 +1076,35 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType29() {
     newTest()
         .addExterns(
-            "/** @constructor */",
-            "function XMLHttpRequest() {}",
-            "/**",
-            " * @type {!Function}",
-            " */",
-            "XMLHttpRequest.prototype.abort = function() {};",
-            "",
-            "/** @constructor */",
-            "function XDomainRequest() {}",
-            "/**",
-            " * @type {!Function}",
-            " */",
-            "XDomainRequest.prototype.abort = function() {};")
+            """
+            /** @constructor */
+            function XMLHttpRequest() {}
+            /**
+             * @type {!Function}
+             */
+            XMLHttpRequest.prototype.abort = function() {};
+
+            /** @constructor */
+            function XDomainRequest() {}
+            /**
+             * @type {!Function}
+             */
+            XDomainRequest.prototype.abort = function() {};
+            """)
         .addSource(
-            "/**",
-            " * @typedef {{close: !Function, abort: !Function}}",
-            " */",
-            "var WritableStreamSink;",
-            "function sendCrossOrigin() {",
-            "  var xhr = new XMLHttpRequest;",
-            "  xhr = new XDomainRequest;",
-            "  return function() {",
-            "    xhr.abort();",
-            "  };",
-            "}")
+            """
+            /**
+             * @typedef {{close: !Function, abort: !Function}}
+             */
+            var WritableStreamSink;
+            function sendCrossOrigin() {
+              var xhr = new XMLHttpRequest;
+              xhr = new XDomainRequest;
+              return function() {
+                xhr.abort();
+              };
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -932,25 +1113,30 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType30() {
     newTest()
         .addExterns(
-            "/** @constructor */", //
-            "function A() {}")
+            """
+            /** @constructor */
+            function A() {}
+            """)
         .addSource(
-            "/**",
-            " * @type {{prop1: (A)}}",
-            " */",
-            "var r1;",
-            "/**",
-            " * @type {{prop1: (A|undefined)}}",
-            " */",
-            "var r2;",
-            "r1 = r2")
+            """
+            /**
+             * @type {{prop1: (A)}}
+             */
+            var r1;
+            /**
+             * @type {{prop1: (A|undefined)}}
+             */
+            var r2;
+            r1 = r2
+            """)
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : {prop1: (A|null|undefined)}",
-                "required: {prop1: (A|null)}",
-                "missing : []",
-                "mismatch: [prop1]"))
+            """
+            assignment
+            found   : {prop1: (A|null|undefined)}
+            required: {prop1: (A|null)}
+            missing : []
+            mismatch: [prop1]
+            """)
         .run();
   }
 
@@ -958,25 +1144,30 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType31() {
     newTest()
         .addExterns(
-            "/** @constructor */", //
-            "function A() {}")
+            """
+            /** @constructor */
+            function A() {}
+            """)
         .addSource(
-            "/**",
-            " * @type {{prop1: (A|null)}}",
-            " */",
-            "var r1;",
-            "/**",
-            " * @type {{prop1: (A|null|undefined)}}",
-            " */",
-            "var r2;",
-            "r1 = r2")
+            """
+            /**
+             * @type {{prop1: (A|null)}}
+             */
+            var r1;
+            /**
+             * @type {{prop1: (A|null|undefined)}}
+             */
+            var r2;
+            r1 = r2
+            """)
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : {prop1: (A|null|undefined)}",
-                "required: {prop1: (A|null)}",
-                "missing : []",
-                "mismatch: [prop1]"))
+            """
+            assignment
+            found   : {prop1: (A|null|undefined)}
+            required: {prop1: (A|null)}
+            missing : []
+            mismatch: [prop1]
+            """)
         .run();
   }
 
@@ -984,10 +1175,12 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovariantIThenable1() {
     newTest()
         .addSource(
-            "/** @type {!IThenable<string|number>} */ var x;",
-            "function fn(/** !IThenable<string> */ a ) {",
-            "  x = a;",
-            "}")
+            """
+            /** @type {!IThenable<string|number>} */ var x;
+            function fn(/** !IThenable<string> */ a ) {
+              x = a;
+            }
+            """)
         .run();
   }
 
@@ -995,15 +1188,18 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovariantIThenable2() {
     newTest()
         .addSource(
-            "/** @type {!IThenable<string>} */ var x;",
-            "function fn(/** !IThenable<string|number> */ a ) {",
-            "  x = a;",
-            "}")
+            """
+            /** @type {!IThenable<string>} */ var x;
+            function fn(/** !IThenable<string|number> */ a ) {
+              x = a;
+            }
+            """)
         .addDiagnostic(
-            lines(
-                "assignment",
-                "found   : IThenable<(number|string)>",
-                "required: IThenable<string>"))
+            """
+            assignment
+            found   : IThenable<(number|string)>
+            required: IThenable<string>
+            """)
         .run();
   }
 
@@ -1011,10 +1207,12 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovariantIThenable3() {
     newTest()
         .addSource(
-            "/** @type {!Promise<string|number>} */ var x;",
-            "function fn(/** !Promise<string> */ a ) {",
-            "  x = a;",
-            "}")
+            """
+            /** @type {!Promise<string|number>} */ var x;
+            function fn(/** !Promise<string> */ a ) {
+              x = a;
+            }
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1023,15 +1221,18 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovariantIThenable4() {
     newTest()
         .addSource(
-            "/** @type {!Promise<string>} */ var x;",
-            "function fn(/** !Promise<string|number> */ a ) {",
-            "  x = a;",
-            "}")
+            """
+            /** @type {!Promise<string>} */ var x;
+            function fn(/** !Promise<string|number> */ a ) {
+              x = a;
+            }
+            """)
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : Promise<(number|string)>",
-                "required: Promise<string>"))
+            """
+            assignment
+            found   : Promise<(number|string)>
+            required: Promise<string>
+            """)
         .includeDefaultExterns()
         .run();
   }
@@ -1040,15 +1241,18 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovariantIThenableNonThenable1() {
     newTest()
         .addSource(
-            "/** @type {!Array<string>} */ var x;",
-            "function fn(/** !IThenable<string> */ a ) {",
-            "  x = a;",
-            "}")
+            """
+            /** @type {!Array<string>} */ var x;
+            function fn(/** !IThenable<string> */ a ) {
+              x = a;
+            }
+            """)
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : IThenable<string>",
-                "required: Array<string>"))
+            """
+            assignment
+            found   : IThenable<string>
+            required: Array<string>
+            """)
         .run();
   }
 
@@ -1056,15 +1260,18 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovariantIThenableNonThenable2() {
     newTest()
         .addSource(
-            "/** @type {!IThenable<string>} */ var x;",
-            "function fn(/** !Array<string> */ a ) {",
-            "  x = a;",
-            "}")
+            """
+            /** @type {!IThenable<string>} */ var x;
+            function fn(/** !Array<string> */ a ) {
+              x = a;
+            }
+            """)
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : Array<string>",
-                "required: IThenable<string>"))
+            """
+            assignment
+            found   : Array<string>
+            required: IThenable<string>
+            """)
         .run();
   }
 
@@ -1072,20 +1279,23 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovariantIThenableNonThenable3() {
     newTest()
         .addSource(
-            "/** ",
-            "  @constructor",
-            "  @template T",
-            " */",
-            "function C() {}",
-            "/** @type {!C<string>} */ var x;",
-            "function fn(/** !IThenable<string> */ a ) {",
-            "  x = a;",
-            "}")
+            """
+            /**
+              @constructor
+              @template T
+             */
+            function C() {}
+            /** @type {!C<string>} */ var x;
+            function fn(/** !IThenable<string> */ a ) {
+              x = a;
+            }
+            """)
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : IThenable<string>",
-                "required: C<string>"))
+            """
+            assignment
+            found   : IThenable<string>
+            required: C<string>
+            """)
         .run();
   }
 
@@ -1093,20 +1303,23 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovariantIThenableNonThenable4() {
     newTest()
         .addSource(
-            "/** ",
-            "  @constructor",
-            "  @template T",
-            " */",
-            "function C() {}",
-            "/** @type {!IThenable<string>} */ var x;",
-            "function fn(/** !C<string> */ a ) {",
-            "  x = a;",
-            "}")
+            """
+            /**
+              @constructor
+              @template T
+             */
+            function C() {}
+            /** @type {!IThenable<string>} */ var x;
+            function fn(/** !C<string> */ a ) {
+              x = a;
+            }
+            """)
         .addDiagnostic(
-            lines(
-                "assignment", //
-                "found   : C<string>",
-                "required: IThenable<string>"))
+            """
+            assignment
+            found   : C<string>
+            required: IThenable<string>
+            """)
         .run();
   }
 
@@ -1114,15 +1327,17 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testCovariantIThenableNonNativeSubclass() {
     newTest()
         .addSource(
-            "/**",
-            " * @implements {IThenable<T>}",
-            " * @template T",
-            " */",
-            "class CustomPromise {}",
-            "/** @type {!CustomPromise<(number|string)>} */ var x;",
-            "function fn(/** !CustomPromise<string> */ a ) {",
-            "  x = a;",
-            "}")
+            """
+            /**
+             * @implements {IThenable<T>}
+             * @template T
+             */
+            class CustomPromise {}
+            /** @type {!CustomPromise<(number|string)>} */ var x;
+            function fn(/** !CustomPromise<string> */ a ) {
+              x = a;
+            }
+            """)
         .run();
   }
 
@@ -1130,11 +1345,13 @@ public final class TypeCheckCovarianceTest extends TypeCheckTestCase {
   public void testReadonlyArrayCovariant() {
     newTest()
         .addSource(
-            "function f(/** !ReadonlyArray<(number|string)>*/ x) {};",
-            "function g(/** !ReadonlyArray<number> */ arr) {",
-            "    f(arr);",
-            "}",
-            "export {};")
+            """
+            function f(/** !ReadonlyArray<(number|string)>*/ x) {};
+            function g(/** !ReadonlyArray<number> */ arr) {
+                f(arr);
+            }
+            export {};
+            """)
         .includeDefaultExterns()
         .run();
   }

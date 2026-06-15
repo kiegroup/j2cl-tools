@@ -18,42 +18,30 @@ package com.google.j2cl.transpiler.frontend.kotlin
 import com.google.devtools.kotlin.common.AutoFriends
 import com.google.devtools.kotlin.common.BzlLabel
 import com.google.devtools.kotlin.common.KtManifest
-import java.io.BufferedInputStream
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.jar.JarInputStream
-import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
+import com.intellij.openapi.vfs.VirtualFile
+import java.util.jar.JarFile
+import java.util.jar.Manifest
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
-import org.jetbrains.kotlin.load.kotlin.ModuleVisibilityManager
 
-internal fun ModuleVisibilityManager.addEligibleFriends(configuration: CompilerConfiguration) {
-  val friendPaths = configuration.getList(JVMConfigurationKeys.FRIEND_PATHS)
-  for (path in friendPaths) {
-    this.addFriendPath(path)
-  }
-}
-
-internal fun K2JVMCompilerArguments.setEligibleFriends(currentTarget: String?) {
+internal fun CompilerConfiguration.setEligibleFriends(
+  classpath: List<VirtualFile>,
+  currentTarget: String?,
+) {
   if (currentTarget == null) return
 
   val currentLabel = BzlLabel.parseOrThrow(currentTarget)
-
-  this.friendPaths =
-    this.classpath
-      .orEmpty()
-      .split(":")
+  this.put(
+    JVMConfigurationKeys.FRIEND_PATHS,
+    classpath
       .filter {
-        val depPath = Path.of(it)
-        val depLabel = useManifestFast(depPath) { it.targetLabel } ?: return@filter false
+        val mf = it.findFileByRelativePath(JarFile.MANIFEST_NAME)
+        val depLabel = mf?.let { Manifest(mf.inputStream).targetLabel } ?: return@filter false
         AutoFriends.isEligibleFriend(currentLabel, depLabel)
       }
-      .toTypedArray()
+      .map { it.path.substringBefore("!/") },
+  )
 }
 
-private fun <T> useManifestFast(path: Path, block: (KtManifest) -> T): T? {
-  return JarInputStream(BufferedInputStream(Files.newInputStream(path)), /* verify= */ false).use {
-    jar ->
-    jar.manifest?.let { block(KtManifest(it)) }
-  }
-}
+private val Manifest.targetLabel: BzlLabel?
+  get() = KtManifest(this).targetLabel

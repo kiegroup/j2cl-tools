@@ -121,6 +121,18 @@ MediaList.prototype.length;
 MediaList.prototype.item = function(index) {};
 
 /**
+ * @param {string} medium
+ * @return {undefined}
+ */
+MediaList.prototype.appendMedium = function(medium) {};
+
+/**
+ * @param {string} medium
+ * @return {undefined}
+ */
+MediaList.prototype.deleteMedium = function(medium) {};
+
+/**
  * @interface
  * @see http://www.w3.org/TR/DOM-Level-2-Style/stylesheets.html#StyleSheets-LinkStyle
  */
@@ -297,6 +309,50 @@ CSSRule.FONT_FACE_RULE;
  */
 CSSRule.PAGE_RULE;
 
+/** @const {number} */ CSSRule.NAMESPACE_RULE;
+/** @const {number} */ CSSRule.KEYFRAMES_RULE;
+/** @const {number} */ CSSRule.KEYFRAME_RULE;
+/** @const {number} */ CSSRule.SUPPORTS_RULE;
+/** @const {number} */ CSSRule.COUNTER_STYLE_RULE;
+/** @const {number} */ CSSRule.FONT_FEATURE_VALUES_RULE;
+
+/**
+ * @constructor
+ * @extends {StylePropertyMapReadOnly}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMap
+ */
+function StylePropertyMap() {}
+
+/**
+ * @param {string} property
+ * @param {...(CSSStyleValue|string)} values
+
+ * @return {undefined}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMap/append
+ */
+StylePropertyMap.prototype.append = function(property, values) {};
+
+/**
+ * @return {undefined}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMap/clear
+ */
+StylePropertyMap.prototype.clear = function() {};
+
+/**
+ * @param {string} property
+ * @return {undefined}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMap/delete
+ */
+StylePropertyMap.prototype.delete = function(property) {};
+
+/**
+ * @param {string} property
+ * @param {...(CSSStyleValue|string)} values
+ * @return {undefined}
+ * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMap/set
+ */
+StylePropertyMap.prototype.set = function(property, values) {};
+
 /**
  * @constructor
  * @extends {CSSRule}
@@ -315,6 +371,12 @@ CSSStyleRule.prototype.selectorText;
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleRule-style
  */
 CSSStyleRule.prototype.style;
+
+/**
+ * @type {!StylePropertyMap}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSStyleRule/styleMap
+ */
+CSSStyleRule.prototype.styleMap;
 
 /**
  * @constructor
@@ -424,6 +486,12 @@ CSSImportRule.prototype.media;
  */
 CSSImportRule.prototype.styleSheet;
 
+/** @type {?string} */
+CSSImportRule.prototype.layerName;
+
+/** @type {?string} */
+CSSImportRule.prototype.supportsText;
+
 /**
  * @constructor
  * @extends {CSSRule}
@@ -446,6 +514,147 @@ function CSSUnknownRule() {}
 
 /**
  * @constructor
+ * @extends {CSSRule}
+ */
+function CSSViewTransitionRule() {}
+
+/** @type {string} */
+CSSViewTransitionRule.prototype.navigation;
+
+/** @type {!ReadonlyArray<string>} */
+CSSViewTransitionRule.prototype.types;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSGroupingRule() {}
+
+/** @type {!CSSRuleList} */
+CSSGroupingRule.prototype.cssRules;
+
+/**
+ * @param {number} index
+ * @return {undefined}
+ */
+CSSGroupingRule.prototype.deleteRule = function(index) {}
+
+/**
+ * @param {string} rule
+ * @param {number=} index
+ * @return {number}
+ */
+CSSGroupingRule.prototype.insertRule = function(rule, index) {}
+
+/**
+ * @constructor
+ * @extends {CSSGroupingRule}
+ */
+function CSSConditionRule() {}
+
+/** @type {string} */
+CSSConditionRule.prototype.conditionText;
+
+/**
+ * @constructor
+ * @extends {CSSConditionRule}
+ */
+function CSSContainerRule() {}
+
+/** @type {string} */ CSSContainerRule.prototype.containerName;
+/** @type {string} */ CSSContainerRule.prototype.containerQuery;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSCounterStyleRule() {}
+
+/** @type {string} */ CSSCounterStyleRule.prototype.additiveSymbols;
+/** @type {string} */ CSSCounterStyleRule.prototype.fallback;
+/** @type {string} */ CSSCounterStyleRule.prototype.name;
+/** @type {string} */ CSSCounterStyleRule.prototype.negative;
+/** @type {string} */ CSSCounterStyleRule.prototype.pad;
+/** @type {string} */ CSSCounterStyleRule.prototype.prefix;
+/** @type {string} */ CSSCounterStyleRule.prototype.range;
+/** @type {string} */ CSSCounterStyleRule.prototype.speakAs;
+/** @type {string} */ CSSCounterStyleRule.prototype.suffix;
+/** @type {string} */ CSSCounterStyleRule.prototype.symbols;
+/** @type {string} */ CSSCounterStyleRule.prototype.system;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSFontFeatureValuesRule() {}
+
+/** @type {string} */ CSSFontFeatureValuesRule.prototype.fontFamily;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSFontPaletteValuesRule() {}
+
+/** @type {string} */ CSSFontPaletteValuesRule.prototype.basePalette;
+/** @type {string} */ CSSFontPaletteValuesRule.prototype.fontFamily;
+/** @type {string} */ CSSFontPaletteValuesRule.prototype.name;
+/** @type {string} */ CSSFontPaletteValuesRule.prototype.overrideColors;
+
+/**
+ * @constructor
+ * @extends {CSSGroupingRule}
+ */
+function CSSLayerBlockRule() {}
+
+/** @type {string} */ CSSLayerBlockRule.prototype.name;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSLayerStatementRule() {}
+
+/** @type {!ReadonlyArray<string>} */
+CSSLayerStatementRule.prototype.nameList;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSNamespaceRule() {}
+
+/** @type {string} */ CSSNamespaceRule.prototype.namespaceURI;
+/** @type {string} */ CSSNamespaceRule.prototype.prefix;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ */
+function CSSPropertyRule() {}
+
+/** @type {boolean} */ CSSPropertyRule.prototype.inherits;
+/** @type {?string} */ CSSPropertyRule.prototype.initialValue;
+/** @type {string}  */ CSSPropertyRule.prototype.name;
+/** @type {string}  */ CSSPropertyRule.prototype.syntax;
+
+/**
+ * @constructor
+ * @extends {CSSGroupingRule}
+ */
+function CSSScopeRule() {}
+
+/** @type {?string} */ CSSScopeRule.prototype.end;
+/** @type {?string} */ CSSScopeRule.prototype.start;
+
+/**
+ * @constructor
+ * @extends {CSSGroupingRule}
+ */
+function CSSStartingStyleRule() {}
+
+/**
+ * @constructor
  * @extends {CSSProperties}
  * @implements {IObject<(string|number), string>}
  * @implements {IArrayLike<string>}
@@ -453,6 +662,9 @@ function CSSUnknownRule() {}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration
  */
 function CSSStyleDeclaration() {}
+
+/** @override */
+CSSStyleDeclaration.prototype[Symbol.iterator] = function() {};
 
 /**
  * @type {string}
@@ -576,6 +788,199 @@ CSSStyleDeclaration.prototype.setAttribute = function(
 CSSStyleDeclaration.prototype.setExpression = function(
     name, expr, opt_language) {};
 
+/**
+ * Some properties are declared on CSSProperties. Here are the missing ones.
+ * @see https://developer.mozilla.org/docs/Web/CSS
+ */
+/** @type {string} */ CSSStyleDeclaration.prototype.accentColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.alignmentBaseline;
+/** @type {string} */ CSSStyleDeclaration.prototype.animationComposition;
+/** @type {string} */ CSSStyleDeclaration.prototype.appearance;
+/** @type {string} */ CSSStyleDeclaration.prototype.backgroundClip;
+/** @type {string} */ CSSStyleDeclaration.prototype.backgroundOrigin;
+/** @type {string} */ CSSStyleDeclaration.prototype.baselineShift;
+/** @type {string} */ CSSStyleDeclaration.prototype.baselineSource;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlock;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockEndColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockEndStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockEndWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockStartColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockStartStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockStartWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderBlockWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderEndEndRadius;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderEndStartRadius;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInline;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineEndColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineEndStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineEndWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineStartColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineStartStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineStartWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderInlineWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderStartEndRadius;
+/** @type {string} */ CSSStyleDeclaration.prototype.borderStartStartRadius;
+/** @type {string} */ CSSStyleDeclaration.prototype.breakAfter;
+/** @type {string} */ CSSStyleDeclaration.prototype.breakBefore;
+/** @type {string} */ CSSStyleDeclaration.prototype.breakInside;
+/** @type {string} */ CSSStyleDeclaration.prototype.caretColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.clipRule;
+/** @type {string} */ CSSStyleDeclaration.prototype.colorInterpolation;
+/** @type {string} */ CSSStyleDeclaration.prototype.colorInterpolationFilters;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnCount;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnFill;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnGap;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnRule;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnRuleColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnRuleStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnRuleWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnSpan;
+/** @type {string} */ CSSStyleDeclaration.prototype.columnWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.columns;
+/** @type {string} */ CSSStyleDeclaration.prototype.containIntrinsicBlockSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.containIntrinsicHeight;
+/** @type {string} */ CSSStyleDeclaration.prototype.containIntrinsicInlineSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.containIntrinsicSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.containIntrinsicWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.container;
+/** @type {string} */ CSSStyleDeclaration.prototype.counterSet;
+/** @type {string} */ CSSStyleDeclaration.prototype.dominantBaseline;
+/** @type {string} */ CSSStyleDeclaration.prototype.float;
+/** @type {string} */ CSSStyleDeclaration.prototype.floodColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.floodOpacity;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontFeatureSettings;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontKerning;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontOpticalSizing;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontPalette;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontSynthesis;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontSynthesisSmallCaps;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontSynthesisStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontSynthesisWeight;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontVariantAlternates;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontVariantCaps;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontVariantEastAsian;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontVariantLigatures;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontVariantNumeric;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontVariantPosition;
+/** @type {string} */ CSSStyleDeclaration.prototype.fontVariationSettings;
+/** @type {string} */ CSSStyleDeclaration.prototype.forcedColorAdjust;
+/** @type {string} */ CSSStyleDeclaration.prototype.gridColumnGap;
+/** @type {string} */ CSSStyleDeclaration.prototype.gridGap;
+/** @type {string} */ CSSStyleDeclaration.prototype.gridRowGap;
+/** @type {string} */ CSSStyleDeclaration.prototype.hyphenateCharacter;
+/** @type {string} */ CSSStyleDeclaration.prototype.hyphens;
+/** @type {string} */ CSSStyleDeclaration.prototype.imageRendering;
+/** @type {string} */ CSSStyleDeclaration.prototype.justifyItems;
+/** @type {string} */ CSSStyleDeclaration.prototype.justifySelf;
+/** @type {string} */ CSSStyleDeclaration.prototype.lightingColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.lineBreak;
+/** @type {string} */ CSSStyleDeclaration.prototype.marginBlock;
+/** @type {string} */ CSSStyleDeclaration.prototype.marginBlockEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.marginBlockStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.marginInline;
+/** @type {string} */ CSSStyleDeclaration.prototype.marginInlineEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.marginInlineStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.marker;
+/** @type {string} */ CSSStyleDeclaration.prototype.markerEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.markerMid;
+/** @type {string} */ CSSStyleDeclaration.prototype.markerStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.mask;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskClip;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskComposite;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskMode;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskOrigin;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskPosition;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskRepeat;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.maskType;
+/** @type {string} */ CSSStyleDeclaration.prototype.mathDepth;
+/** @type {string} */ CSSStyleDeclaration.prototype.mathStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.maxBlockSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.maxInlineSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.minBlockSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.minInlineSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.offsetAnchor;
+/** @type {string} */ CSSStyleDeclaration.prototype.offsetDistance;
+/** @type {string} */ CSSStyleDeclaration.prototype.offsetPath;
+/** @type {string} */ CSSStyleDeclaration.prototype.offsetPosition;
+/** @type {string} */ CSSStyleDeclaration.prototype.offsetRotate;
+/** @type {string} */ CSSStyleDeclaration.prototype.overflowAnchor;
+/** @type {string} */ CSSStyleDeclaration.prototype.overflowClipMargin;
+/** @type {string} */ CSSStyleDeclaration.prototype.overscrollBehaviorBlock;
+/** @type {string} */ CSSStyleDeclaration.prototype.overscrollBehaviorInline;
+/** @type {string} */ CSSStyleDeclaration.prototype.overscrollBehaviorX;
+/** @type {string} */ CSSStyleDeclaration.prototype.overscrollBehaviorY;
+/** @type {string} */ CSSStyleDeclaration.prototype.paddingBlock;
+/** @type {string} */ CSSStyleDeclaration.prototype.paddingBlockEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.paddingBlockStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.paddingInline;
+/** @type {string} */ CSSStyleDeclaration.prototype.paddingInlineEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.paddingInlineStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.paintOrder;
+/** @type {string} */ CSSStyleDeclaration.prototype.placeContent;
+/** @type {string} */ CSSStyleDeclaration.prototype.placeItems;
+/** @type {string} */ CSSStyleDeclaration.prototype.placeSelf;
+/** @type {string} */ CSSStyleDeclaration.prototype.printColorAdjust;
+/** @type {string} */ CSSStyleDeclaration.prototype.rowGap;
+/** @type {string} */ CSSStyleDeclaration.prototype.rubyAlign;
+/** @type {string} */ CSSStyleDeclaration.prototype.rubyPosition;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollBehavior;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMargin;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginBlock;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginBlockEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginBlockStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginBottom;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginInline;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginInlineEnd;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginInlineStart;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginLeft;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginRight;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollMarginTop;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollSnapAlign;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollSnapStop;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollSnapType;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollbarColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollbarGutter;
+/** @type {string} */ CSSStyleDeclaration.prototype.scrollbarWidth;
+/** @type {string} */ CSSStyleDeclaration.prototype.shapeImageThreshold;
+/** @type {string} */ CSSStyleDeclaration.prototype.shapeMargin;
+/** @type {string} */ CSSStyleDeclaration.prototype.shapeOutside;
+/** @type {string} */ CSSStyleDeclaration.prototype.shapeRendering;
+/** @type {string} */ CSSStyleDeclaration.prototype.stopColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.stopOpacity;
+/** @type {string} */ CSSStyleDeclaration.prototype.tabSize;
+/** @type {string} */ CSSStyleDeclaration.prototype.textAlignLast;
+/** @type {string} */ CSSStyleDeclaration.prototype.textAnchor;
+/** @type {string} */ CSSStyleDeclaration.prototype.textBox;
+/** @type {string} */ CSSStyleDeclaration.prototype.textBoxEdge;
+/** @type {string} */ CSSStyleDeclaration.prototype.textBoxTrim;
+/** @type {string} */ CSSStyleDeclaration.prototype.textCombineUpright;
+/** @type {string} */ CSSStyleDeclaration.prototype.textDecorationSkipInk;
+/** @type {string} */ CSSStyleDeclaration.prototype.textDecorationThickness;
+/** @type {string} */ CSSStyleDeclaration.prototype.textEmphasis;
+/** @type {string} */ CSSStyleDeclaration.prototype.textEmphasisColor;
+/** @type {string} */ CSSStyleDeclaration.prototype.textEmphasisPosition;
+/** @type {string} */ CSSStyleDeclaration.prototype.textEmphasisStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.textOrientation;
+/** @type {string} */ CSSStyleDeclaration.prototype.textRendering;
+/** @type {string} */ CSSStyleDeclaration.prototype.textUnderlineOffset;
+/** @type {string} */ CSSStyleDeclaration.prototype.textUnderlinePosition;
+/** @type {string} */ CSSStyleDeclaration.prototype.textWrap;
+/** @type {string} */ CSSStyleDeclaration.prototype.textWrapMode;
+/** @type {string} */ CSSStyleDeclaration.prototype.textWrapStyle;
+/** @type {string} */ CSSStyleDeclaration.prototype.transformBox;
+/** @type {string} */ CSSStyleDeclaration.prototype.transitionBehavior;
+/** @type {string} */ CSSStyleDeclaration.prototype.vectorEffect;
+/** @type {string} */ CSSStyleDeclaration.prototype.whiteSpaceCollapse;
+/** @type {string} */ CSSStyleDeclaration.prototype.wordBreak;
 
 /**
  * @constructor
@@ -1295,6 +1700,12 @@ CSSProperties.prototype.color;
 
 /**
  * @type {string}
+ * @see https://drafts.csswg.org/css-color-adjust/#color-scheme-prop
+ */
+CSSProperties.prototype.colorScheme;
+
+/**
+ * @type {string}
  * @see http://www.w3.org/TR/css-contain-2/#contain-property
  */
 CSSProperties.prototype.contain;
@@ -1432,6 +1843,12 @@ CSSProperties.prototype.fontVariant;
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-fontWeight
  */
 CSSProperties.prototype.fontWeight;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-align-3/#propdef-gap
+ */
+CSSProperties.prototype.gap;
 
 /**
  * @type {string}
@@ -1717,6 +2134,36 @@ CSSProperties.prototype.overflow;
 
 /**
  * @type {string}
+ * @see https://drafts.csswg.org/css-scroll-anchoring/#exclusion-api
+ */
+CSSProperties.prototype.overflowAnchor;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-overflow/#overflow-clip-margin
+ */
+CSSProperties.prototype.overflowClipMargin;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-text/#overflow-wrap-property
+ */
+CSSProperties.prototype.overflowWrap;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-overflow/#overflow-properties
+ */
+CSSProperties.prototype.overflowX;
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-overflow/#overflow-properties
+ */
+CSSProperties.prototype.overflowY;
+
+/**
+ * @type {string}
  * @see https://www.w3.org/TR/css-overscroll-1/#propdef-overscroll-behavior
  */
 CSSProperties.prototype.overscrollBehavior;
@@ -1961,6 +2408,9 @@ CSSProperties.prototype.unicodeBidi;
  */
 CSSProperties.prototype.verticalAlign;
 
+/** @type {string} */
+CSSProperties.prototype.viewTransitionClass;
+
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-visibility
@@ -2016,6 +2466,9 @@ CSSProperties.prototype.wordWrap;
 CSSProperties.prototype.zIndex;
 
 // CSS 3 properties
+
+/** @type {string} */
+CSSProperties.prototype.boxDecorationBreak;
 
 /**
  * @type {string}
@@ -2178,6 +2631,26 @@ CSSProperties.prototype.transitionTimingFunction;
  * @see http://www.w3.org/TR/SVG11/interact.html#PointerEventsProperty
  */
 CSSProperties.prototype.pointerEvents;
+
+// CSS Compositing 1
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/compositing-1/#mix-blend-mode
+ */
+CSSProperties.prototype.mixBlendMode;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/compositing-1/#isolation
+ */
+CSSProperties.prototype.isolation;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/compositing-1/#background-blend-mode
+ */
+CSSProperties.prototype.backgroundBlendMode;
 
 
 // CSS Flexbox 1
@@ -2719,6 +3192,15 @@ CaretPosition.prototype.offsetNode;
  */
 CaretPosition.prototype.offset;
 
+/**
+ * @return {?DOMRect}
+ */
+CaretPosition.prototype.getClientRect = function() {};
+
+/**
+ * @type {!StylePropertyMap}
+ */
+Element.prototype.attributeStyleMap;
 
 // http://www.w3.org/TR/cssom-view/#extensions-to-the-element-interface
 
@@ -2864,6 +3346,12 @@ Element.prototype.clientWidth;
 Element.prototype.clientHeight;
 
 /**
+ * @type {number}
+ * @see https://drafts.csswg.org/cssom-view/#dom-element-currentcsszoom
+ */
+Element.prototype.currentCSSZoom;
+
+/**
  * @record
  * @see https://drafts.csswg.org/cssom-view/#dictdef-checkvisibilityoptions
  */
@@ -2874,6 +3362,15 @@ CheckVisibilityOptions.prototype.checkOpacity;
 
 /** @type {(boolean|undefined)} */
 CheckVisibilityOptions.prototype.checkVisibilityCSS;
+
+/** @type {(boolean|undefined)} */
+CheckVisibilityOptions.prototype.contentVisibilityAuto;
+
+/** @type {(boolean|undefined)} */
+CheckVisibilityOptions.prototype.opacityProperty;
+
+/** @type {(boolean|undefined)} */
+CheckVisibilityOptions.prototype.visibilityProperty;
 
 /**
  * @param {CheckVisibilityOptions=} options
@@ -3061,9 +3558,413 @@ var PropertyDefinition;
 CSSInterface.prototype.registerProperty = function(propertyDefinition) {};
 
 /**
- * TODO(nicksantos): This suppress tag probably isn't needed, and
- * should be removed.
- * @suppress {duplicate}
+ * @constructor
+ * @param {...!Range} initialRanges
+ */
+function Highlight(initialRanges) {}
+
+/** @type {number} */
+Highlight.prototype.priority;
+
+/** @type {string} */
+Highlight.prototype.type;
+
+/**
+ * @param {function(!Range, !Range, !Highlight): void} callbackfn
+ * @param {?=} thisArg
+ * @return {undefined}
+ */
+Highlight.prototype.forEach = function(callbackfn, thisArg) {};
+
+/**
+ * @interface
+ */
+function HighlightRegistry () {}
+
+/**
+ * @param {function(!Highlight, string, !HighlightRegistry): void} callbackfn
+ * @param {?=} thisArg
+ * @return {undefined}
+ */
+HighlightRegistry.prototype.forEach = function(callbackfn, thisArg) {};
+
+
+/** @type {!HighlightRegistry} */
+CSSInterface.prototype.highlights;
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.Hz = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.Q = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cap = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.ch = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cm = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cqb = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cqh = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cqi = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cqmax = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cqmin = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.cqw = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.deg = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dpcm = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dpi = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dppx = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dvb = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dvh = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dvi = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dvmax = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dvmin = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.dvw = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.em = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.ex = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.fr = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.grad = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.ic = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.kHz = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.lh = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.lvb = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.lvh = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.lvi = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.lvmax = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.lvmin = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.lvw = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.mm = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.ms = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.number = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.pc = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.percent = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.pt = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.px = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.rad = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.rcap = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.rch = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.rem = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.rex = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.ric = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.rlh = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.s = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.svb = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.svh = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.svi = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.svmax = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.svmin = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.svw = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.turn = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.vb = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.vh = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.vi = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.vmax = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.vmin = function(value) {};
+
+/**
+ * @param {number} value
+ * @return {CSSUnitValue}
+ */
+CSSInterface.prototype.vw = function(value) {};
+
+/**
  * @type {CSSInterface}
  */
 var CSS;
@@ -3382,6 +4283,31 @@ TransitionEvent.prototype.elapsedTime;
  * @see https://www.w3.org/TR/css-transitions-1/#Events-TransitionEvent-pseudoElement
  */
 TransitionEvent.prototype.pseudoElement;
+
+/**
+ * @record
+ * @extends {EventInit}
+ */
+function ContentVisibilityAutoStateChangeEventInit() {}
+
+/**
+ * @type {boolean|undefined}
+ */
+ContentVisibilityAutoStateChangeEventInit.prototype.skipped;
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {!ContentVisibilityAutoStateChangeEventInit=} eventInitDict
+ * @see https://developer.mozilla.org/docs/Web/API/ContentVisibilityAutoStateChangeEvent
+ */
+function ContentVisibilityAutoStateChangeEvent(type, eventInitDict) {}
+
+/**
+ * @type {boolean}
+ */
+ContentVisibilityAutoStateChangeEvent.prototype.skipped;
 
 /**
  * @constructor

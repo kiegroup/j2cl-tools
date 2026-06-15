@@ -100,7 +100,7 @@ public class FunctionExpression extends Expression implements MethodLike {
            */
           private boolean isDeclaredWithinFunctionExpression(TypeDeclaration typeDeclaration) {
             Predicate<Object> matchesTypeDeclaration =
-                n -> n instanceof Type && ((Type) n).getDeclaration() == typeDeclaration;
+                n -> n instanceof Type t && t.getDeclaration() == typeDeclaration;
             return getParent(matchesTypeDeclaration) != null;
           }
         });
@@ -114,6 +114,10 @@ public class FunctionExpression extends Expression implements MethodLike {
 
   public boolean isJsAsync() {
     return isJsAsync;
+  }
+
+  public boolean isSuspendFunction() {
+    return getDescriptor().isSuspendFunction();
   }
 
   @Override

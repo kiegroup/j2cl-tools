@@ -19,11 +19,9 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.io.CharSource;
@@ -46,7 +44,6 @@ import org.jspecify.annotations.Nullable;
  * implementing the {@code level} function. Warnings are defined by the name of the JS file and the
  * first line of warnings description.
  */
-@GwtIncompatible("java.io, java.util.regex")
 public class AllowlistWarningsGuard extends WarningsGuard {
   private static final Splitter LINE_SPLITTER = Splitter.on('\n');
 
@@ -98,7 +95,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
 
   @Override
   public @Nullable CheckLevel level(JSError error) {
-    if (error.getDefaultLevel().equals(CheckLevel.ERROR)) {
+    if (error.defaultLevel().equals(CheckLevel.ERROR)) {
       return null;
     }
     if (!allowlist.isEmpty() && containWarning(formatWarning(error))) {
@@ -181,11 +178,11 @@ public class AllowlistWarningsGuard extends WarningsGuard {
    */
   protected String formatWarning(JSError error, boolean withMetaData) {
     StringBuilder sb = new StringBuilder();
-    sb.append(normalizeSourceName(error.getSourceName())).append(":");
+    sb.append(normalizeSourceName(error.sourceName())).append(":");
     if (withMetaData) {
       sb.append(error.getLineNumber());
     }
-    List<String> lines = LINE_SPLITTER.splitToList(error.getDescription());
+    List<String> lines = LINE_SPLITTER.splitToList(error.description());
     sb.append("  ").append(lines.get(0));
 
     // Add the rest of the message as a comment.
@@ -246,7 +243,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
 
     @Override
     public void report(CheckLevel level, JSError error) {
-      if (error.getDefaultLevel().equals(CheckLevel.ERROR)) {
+      if (error.defaultLevel().equals(CheckLevel.ERROR)) {
         // ERROR-level diagnostics are ignored by AllowlistWarningsGuard (c.f. above getLevel).
         return;
       }
@@ -288,7 +285,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
 
       Multimap<DiagnosticType, String> warningsByType = TreeMultimap.create();
       for (JSError warning : warnings) {
-        warningsByType.put(warning.getType(), formatWarning(warning, true /* withLineNumber */));
+        warningsByType.put(warning.type(), formatWarning(warning, true /* withLineNumber */));
       }
 
       for (DiagnosticType type : warningsByType.keySet()) {
@@ -299,7 +296,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
         out.append("\n# Warning ")
             .append(type.key)
             .append(": ")
-            .println(Iterables.get(LINE_SPLITTER.split(type.format), 0));
+            .println(LINE_SPLITTER.split(type.format).iterator().next());
 
         for (String warning : warningsByType.get(type)) {
           out.println(warning);

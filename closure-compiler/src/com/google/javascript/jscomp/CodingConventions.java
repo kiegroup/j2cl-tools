@@ -26,11 +26,8 @@ import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -199,57 +196,13 @@ public final class CodingConventions {
     }
 
     @Override
-    public DelegateRelationship getDelegateRelationship(Node callNode) {
-      return nextConvention.getDelegateRelationship(callNode);
-    }
-
-    @Override
-    public void applyDelegateRelationship(
-        NominalTypeBuilder delegateSuperclass,
-        NominalTypeBuilder delegateBase,
-        NominalTypeBuilder delegator,
-        ObjectType delegateProxy,
-        FunctionType findDelegate) {
-      nextConvention.applyDelegateRelationship(
-          delegateSuperclass, delegateBase, delegator, delegateProxy, findDelegate);
-    }
-
-    @Override
-    public String getDelegateSuperclassName() {
-      return nextConvention.getDelegateSuperclassName();
-    }
-
-    @Override
-    public void checkForCallingConventionDefinitions(
-        Node n, Map<String, String> delegateCallingConventions) {
-      nextConvention.checkForCallingConventionDefinitions(
-          n, delegateCallingConventions);
-    }
-
-    @Override
-    public void defineDelegateProxyPrototypeProperties(
-        JSTypeRegistry registry,
-        List<NominalTypeBuilder> delegateProxies,
-        Map<String, String> delegateCallingConventions) {
-      nextConvention.defineDelegateProxyPrototypeProperties(
-          registry, delegateProxies, delegateCallingConventions);
-    }
-
-    @Override
     public Collection<AssertionFunctionSpec> getAssertionFunctions() {
       return nextConvention.getAssertionFunctions();
     }
 
     @Override
-    public Bind describeFunctionBind(Node n) {
-      return describeFunctionBind(n, false, false);
-    }
-
-    @Override
-    public Bind describeFunctionBind(
-        Node n, boolean callerChecksTypes, boolean iCheckTypes) {
-      return nextConvention
-          .describeFunctionBind(n, callerChecksTypes, iCheckTypes);
+    public Bind describeFunctionBind(Node n, boolean checkTypes) {
+      return nextConvention.describeFunctionBind(n, checkTypes);
     }
 
     @Override
@@ -429,40 +382,6 @@ public final class CodingConventions {
     }
 
     @Override
-    public DelegateRelationship getDelegateRelationship(Node callNode) {
-      return null;
-    }
-
-    @Override
-    public void applyDelegateRelationship(
-        NominalTypeBuilder delegateSuperclass,
-        NominalTypeBuilder delegateBase,
-        NominalTypeBuilder delegator,
-        ObjectType delegateProxy,
-        FunctionType findDelegate) {
-      // do nothing.
-    }
-
-    @Override
-    public String getDelegateSuperclassName() {
-      return null;
-    }
-
-    @Override
-    public void checkForCallingConventionDefinitions(Node n,
-        Map<String, String> delegateCallingConventions) {
-      // do nothing.
-    }
-
-    @Override
-    public void defineDelegateProxyPrototypeProperties(
-        JSTypeRegistry registry,
-        List<NominalTypeBuilder> delegateProxies,
-        Map<String, String> delegateCallingConventions) {
-      // do nothing.
-    }
-
-    @Override
     public boolean isPropertyTestFunction(Node call) {
       // Avoid building the qualified name and check for
       // "goog.isArray"
@@ -503,17 +422,11 @@ public final class CodingConventions {
               .build());
     }
 
-    @Override
-    public Bind describeFunctionBind(Node n) {
-      return describeFunctionBind(n, false, false);
-    }
-
     private static final QualifiedName FUNCTION_PROTOTYPE_BIND_CALL =
         QualifiedName.of("Function.prototype.bind.call");
 
     @Override
-    public @Nullable Bind describeFunctionBind(
-        Node n, boolean callerChecksTypes, boolean iCheckTypes) {
+    public @Nullable Bind describeFunctionBind(Node n, boolean checkTypes) {
       if (!n.isCall()) {
         return null;
       }
@@ -536,12 +449,12 @@ public final class CodingConventions {
         Node maybeFn = callTarget.getFirstChild();
         JSType maybeFnType = maybeFn.getJSType();
         FunctionType fnType = null;
-        if (iCheckTypes && maybeFnType != null) {
+        if (checkTypes && maybeFnType != null) {
           fnType = maybeFnType.restrictByNotNullOrUndefined()
               .toMaybeFunctionType();
         }
 
-        if (fnType != null || callerChecksTypes || maybeFn.isFunction()) {
+        if (fnType != null || maybeFn.isFunction()) {
           // (function(){}).bind(self, args...);
           Node thisValue = callTarget.getNext();
           Node parameters = safeNext(thisValue);

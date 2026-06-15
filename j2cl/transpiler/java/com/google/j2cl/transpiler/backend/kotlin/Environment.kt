@@ -15,7 +15,7 @@
  */
 package com.google.j2cl.transpiler.backend.kotlin
 
-import com.google.j2cl.transpiler.ast.AstUtils
+import com.google.j2cl.transpiler.ast.AstUtils.isJsEnumCustomValueField
 import com.google.j2cl.transpiler.ast.FieldDescriptor
 import com.google.j2cl.transpiler.ast.HasName
 import com.google.j2cl.transpiler.ast.MemberDescriptor
@@ -40,8 +40,11 @@ import com.google.j2cl.transpiler.backend.kotlin.ast.withWidestScopeOrNull
  *   name without import
  * @property privateAsKtInternalDeclarationMemberDescriptorSet a set of private declaration member
  *   descriptors which should be rendered as internal in Kotlin.
+ * @property captureIndices mutable map of capture indices, used for rendering capture types
+ * @property isJ2ObjCInteropEnabled whether to enable J2ObjC interop
  */
 internal data class Environment(
+  val hiddenFromObjCMapping: HiddenFromObjCMapping,
   private val nameToIdentifierMap: Map<HasName, String> = emptyMap(),
   private val identifierSet: Set<String> = emptySet(),
   private val importedSimpleNameToQualifiedNameMutableMap: MutableMap<String, String> =
@@ -49,6 +52,7 @@ internal data class Environment(
   private val importedOptInQualifiedNamesMutableSet: MutableSet<String> = mutableSetOf(),
   private val privateAsKtInternalDeclarationMemberDescriptorSet: Set<MemberDescriptor> = setOf(),
   private val captureIndices: MutableMap<TypeVariable, Int> = mutableMapOf(),
+  internal val isJ2ObjCInteropEnabled: Boolean = false,
 ) {
   /**
    * Returns identifier for the given named node. Use "_MISSING" prefix for missing names, to help
@@ -156,8 +160,13 @@ internal data class Environment(
 
   /** Kotlin mangled name for this member descriptor. */
   fun ktMangledName(memberDescriptor: MemberDescriptor): String =
-    if (AstUtils.isJsEnumCustomValueField(memberDescriptor)) memberDescriptor.name!!
-    else memberDescriptor.ktName + ktNameSuffix(memberDescriptor)
+    memberDescriptor.explicitKtName
+      ?: when {
+        isJsEnumCustomValueField(memberDescriptor) -> memberDescriptor.name!!
+        memberDescriptor.enclosingTypeDescriptor.typeDeclaration.isKtNative ->
+          memberDescriptor.ktName
+        else -> memberDescriptor.ktName + ktNameSuffix(memberDescriptor)
+      }
 
   /** Kotlin name suffix for this member descriptor. */
   private fun ktNameSuffix(memberDescriptor: MemberDescriptor): String =

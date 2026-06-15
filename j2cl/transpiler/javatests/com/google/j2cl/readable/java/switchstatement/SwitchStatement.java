@@ -61,7 +61,23 @@ public class SwitchStatement {
       default:
         return;
     }
+
+    // Switch with compile-time constants.
+    short s = 1;
+    switch (s) {
+      case (short) 1L:
+        s++;
+        break;
+      case CONST:
+        s++;
+        break;
+      case CONST * 4:
+        s++;
+        break;
+    }
   }
+
+  static final short CONST = 3;
 
   @SuppressWarnings("unused")
   private static void testSwitchVariableDeclarations() {
@@ -427,6 +443,52 @@ public class SwitchStatement {
         foo(2);
         break;
     }
+  }
+
+  private void testNonExhaustive_foldableFallThrough(int i) {
+    switch (i) {
+      case 1: // can fold into 3;
+      case 2:
+      case 3:
+        break;
+      case 4: // can fold into default;
+      default:
+        break;
+      case 5: // can be dropped;
+      case 6: // can be dropped;
+    }
+  }
+
+  private static void testSwitchStatement_withRules() {
+    int o = 0;
+    switch (1) {
+      default -> {}
+      case 2 -> {}
+    }
+  }
+
+  private static int testDefaultNotLast_withRules(int i, boolean doBreak) {
+    int result = 0;
+    switch (i) {
+      case 1 -> {
+        result = 1;
+        if (doBreak) {
+          break;
+        }
+        result = 2;
+      }
+      case 2 -> {}
+      default -> {}
+      case 3 -> {
+        result = 3;
+      }
+      case 4 -> foo();
+    }
+    return result;
+  }
+
+  private static int foo() {
+    return 1;
   }
 
   private void foo(int i) {}

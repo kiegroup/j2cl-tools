@@ -50,13 +50,7 @@ class BroadPhase(private val tree: BroadPhaseStrategy) : TreeCallback {
   private var pairCount = 0
   private var queryProxyId: Int = NULL_PROXY
 
-  /**
-   * Create a proxy with an initial AABB. Pairs are not reported until updatePairs is called.
-   *
-   * @param aabb
-   * @param userData
-   * @return
-   */
+  /** Create a proxy with an initial AABB. Pairs are not reported until updatePairs is called. */
   fun createProxy(aabb: AABB, userData: Any): Int {
     val proxyId = tree.createProxy(aabb, userData)
     ++proxyCount
@@ -64,11 +58,7 @@ class BroadPhase(private val tree: BroadPhaseStrategy) : TreeCallback {
     return proxyId
   }
 
-  /**
-   * Destroy a proxy. It is up to the client to remove any pairs.
-   *
-   * @param proxyId
-   */
+  /** Destroy a proxy. It is up to the client to remove any pairs. */
   fun destroyProxy(proxyId: Int) {
     unbufferMove(proxyId)
     --proxyCount
@@ -108,11 +98,7 @@ class BroadPhase(private val tree: BroadPhaseStrategy) : TreeCallback {
     tree.drawTree(argDraw)
   }
 
-  /**
-   * Update the pairs. This results in pair callbacks. This can only add pairs.
-   *
-   * @param callback
-   */
+  /** Update the pairs. This results in pair callbacks. This can only add pairs. */
   fun updatePairs(callback: PairCallback) {
     // log.debug("beginning to update pairs");
     // Reset pair buffer
@@ -144,9 +130,9 @@ class BroadPhase(private val tree: BroadPhaseStrategy) : TreeCallback {
     // Send the pairs back to the client.
     var i = 0
     while (i < pairCount) {
-      val primaryPair = pairBuffer[i]
-      val userDataA = tree.getUserData(primaryPair.proxyIdA)
-      val userDataB = tree.getUserData(primaryPair.proxyIdB)
+      val (primaryPairA, primaryPairB) = pairBuffer[i]
+      val userDataA = tree.getUserData(primaryPairA)
+      val userDataB = tree.getUserData(primaryPairB)
 
       // log.debug("returning pair: "+userDataA+", "+userDataB);
       callback.addPair(userDataA, userDataB)
@@ -155,7 +141,7 @@ class BroadPhase(private val tree: BroadPhaseStrategy) : TreeCallback {
       // Skip any duplicate pairs.
       while (i < pairCount) {
         val pair = pairBuffer[i]
-        if (pair.proxyIdA != primaryPair.proxyIdA || pair.proxyIdB != primaryPair.proxyIdB) {
+        if (pair.proxyIdA != primaryPairA || pair.proxyIdB != primaryPairB) {
           break
         }
         // log.debug("skipping duplicate");
@@ -170,9 +156,6 @@ class BroadPhase(private val tree: BroadPhaseStrategy) : TreeCallback {
   /**
    * Query an AABB for overlapping proxies. The callback class is called for each proxy that
    * overlaps the supplied AABB.
-   *
-   * @param callback
-   * @param aabb
    */
   fun query(callback: TreeCallback, aabb: AABB) {
     tree.query(callback, aabb)
@@ -191,11 +174,7 @@ class BroadPhase(private val tree: BroadPhaseStrategy) : TreeCallback {
     tree.raycast(callback, input)
   }
 
-  /**
-   * Get the height of the embedded tree.
-   *
-   * @return
-   */
+  /** Get the height of the embedded tree. */
   fun getTreeHeight(): Int = tree.computeHeight()
 
   fun getTreeBalance(): Int = tree.getMaxBalance()

@@ -20,8 +20,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -63,6 +63,8 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
   // Use a LinkedHashMap because the goog.provides must be processed in a deterministic order.
   private final Map<String, ProvidedName> providedNames = new LinkedHashMap<>();
 
+  private final Set<String> exportedVariables = new LinkedHashSet<>();
+
   // If this is true, rewriting will not remove any goog.provide or goog.require calls
   private final boolean preserveGoogProvidesAndRequires;
   private final List<Node> requiresToBeRemoved = new ArrayList<>();
@@ -84,6 +86,10 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     rewriteProvidesAndRequires(externs, root);
+  }
+
+  Set<String> getExportedVariableNames() {
+    return exportedVariables;
   }
 
   /** Collects all `goog.provide`s in the given namespace and warns on invalid code */
@@ -153,6 +159,19 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
               // when we see a provides/requires, and don't worry about
               // reporting the change when we actually do the replacement.
               switch (left.getString()) {
+                case "exportSymbol":
+                  // Note: exportSymbol is allowed in local scope
+                  Node arg = n.getSecondChild();
+                  if (arg.isStringLit()) {
+                    String argString = arg.getString();
+                    int dot = argString.indexOf('.');
+                    if (dot == -1) {
+                      exportedVariables.add(argString);
+                    } else {
+                      exportedVariables.add(argString.substring(0, dot));
+                    }
+                  }
+                  break;
                 case "require":
                 case "requireType":
                   if (isValidPrimitiveCall(t, n)) {
@@ -429,6 +448,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     private boolean fromLegacyModule;
     private boolean hasImplicitInitialization;
 
+    @CanIgnoreReturnValue
     ProvidedNameBuilder setNamespace(String namespace) {
       this.namespace = namespace;
       return this;
@@ -438,11 +458,13 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
      * @param node Can be null (for GOOG or an implicit name), an EXPR_RESULT for a goog.provide, or
      *     an EXPR_RESULT or name declaration for a previously provided name.
      */
+    @CanIgnoreReturnValue
     ProvidedNameBuilder setNode(@Nullable Node node) {
       this.node = node;
       return this;
     }
 
+    @CanIgnoreReturnValue
     ProvidedNameBuilder setChunk(@Nullable JSChunk chunk) {
       this.chunk = chunk;
       return this;
@@ -451,6 +473,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     /**
      * @param explicit Whether this came from an actual goog.provide('a.b.c'); call
      */
+    @CanIgnoreReturnValue
     ProvidedNameBuilder setExplicit(boolean explicit) {
       this.explicit = explicit;
       return this;
@@ -459,12 +482,14 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     /**
      * @param alreadyInitialized Whether this came from an actual goog.provide('a.b.c'); call
      */
+    @CanIgnoreReturnValue
     ProvidedNameBuilder setHasImplicitInitialization(boolean alreadyInitialized) {
       this.hasImplicitInitialization = alreadyInitialized;
       return this;
     }
 
     /** Whether this comes from a legacy goog.module */
+    @CanIgnoreReturnValue
     ProvidedNameBuilder setFromLegacyModule(boolean fromLegacyModule) {
       this.fromLegacyModule = fromLegacyModule;
       return this;
@@ -835,7 +860,6 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     }
 
     @Override
-    @GwtIncompatible("Unnecessary") // This is just for debugging in an IDE.
     public String toString() {
       String explicitOrImplicit = isExplicitlyProvided() ? "explicit" : "implicit";
       return String.format("ProvidedName: %s, %s", namespace, explicitOrImplicit);

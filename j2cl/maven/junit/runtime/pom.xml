@@ -7,13 +7,56 @@
     <parent>
         <groupId>org.kie.j2cl.tools</groupId>
         <artifactId>j2cl-parent</artifactId>
-        <version>v20241110-1</version>
+        <version>v20250822-1</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <artifactId>junit-runtime</artifactId>
     <packaging>pom</packaging>
 
-    
+
+    <name>J2CL Junit runtime</name>
+    <description>
+        J2CL is a powerful, simple and lightweight transpiler from Java to Closure style JavaScript.
+        The project is designed, implemented, and maintained by the J2CL team at Google.
+        This distribution is slightly modified from the original and packaged for Maven Central by Vertispan LLC.
+        The links and references in this pom.xml will reference the Vertispan fork, to ensure that any error introduced
+        by our packaging are not incorrectly blamed on the upstream Google repository.
+    </description>
+    <url>https://github.com/vertispan/j2cl</url>
+    <inceptionYear>2015</inceptionYear>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>J2CL team</name>
+            <organization>Google</organization>
+            <organizationUrl>https://www.google.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Colin Alworth</name>
+            <email>colin@vertispan.com</email>
+            <organization>Vertispan LLC</organization>
+            <organizationUrl>https://www.vertispan.com/</organizationUrl>
+        </developer>
+    </developers>
+
+    <issueManagement>
+        <url>https://github.com/vertispan/j2cl/issues</url>
+        <system>GitHub Issues</system>
+    </issueManagement>
+
+    <scm>
+        <connection>scm:git:https://github.com/vertispan/j2cl.git</connection>
+        <developerConnection>scm:git:git@github.com:vertispan/j2cl.git</developerConnection>
+        <url>https://github.com/vertispan/j2cl</url>
+    </scm>
 
     <build>
         <plugins>
@@ -21,17 +64,19 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.1.0</version>
                 <executions>
-                  <execution>
-                    <phase>prepare-package</phase>
-                    <goals><goal>single</goal></goals>
-                  </execution>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
                 </executions>
                 <configuration>
-                  <descriptors>
-                    <descriptor>assembly.xml</descriptor>
-                  </descriptors>
+                    <descriptors>
+                        <descriptor>assembly.xml</descriptor>
+                    </descriptors>
                 </configuration>
-              </plugin>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -46,16 +91,22 @@
                         <configuration>
                             <artifacts>
                                 <artifact>
-                                    <file>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/runtime/libjsunit_helpers_internal_assumption_violated_exception-j2cl.jar</file>
+                                    <file>
+                                        ../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/runtime/libjunit_runtime.jar
+                                    </file>
                                     <type>jar</type>
                                 </artifact>
                                 <artifact>
-                                    <file>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/runtime/libjsunit_helpers_internal_assumption_violated_exception-j2cl-src.jar</file>
+                                    <file>
+                                        ../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/runtime/libjunit_runtime-src.jar
+                                    </file>
                                     <type>jar</type>
                                     <classifier>sources</classifier>
                                 </artifact>
                                 <artifact>
-                                    <file>../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/runtime/jsunit_helpers_internal_assumption_violated_exception-javadoc.jar</file>
+                                    <file>
+                                        ../../../bazel-bin/junit/generator/java/com/google/j2cl/junit/runtime/junit_runtime-javadoc.jar
+                                    </file>
                                     <type>jar</type>
                                     <classifier>javadoc</classifier>
                                 </artifact>

@@ -45,14 +45,10 @@ public class BasicTypeFieldDefinition extends FieldDefinition {
   @Override
   public Expression getFieldSerializer(PropertyDefinition field, CompilationUnit cu) {
     ObjectCreationExpr expression =
-        new ObjectCreationExpr()
-            .setType(
-                context
-                    .getTypeRegistry()
-                    .getSerializer(context.getProcessingEnv().getTypeUtils().erasure(bean))
-                    .toString());
+        new ObjectCreationExpr().setType(context.getTypeRegistry().getSerializer(bean).toString());
 
-    if (field.hasYamlTypeSerializer()) {
+    if (field.hasYamlTypeSerializer()
+        || context.getTypeRegistry().containsSerializer(field.getBean())) {
       expression.addArgument(
           field.getFieldYamlTypeSerializerCreationExpr(
               field.getProperty().getAnnotation(YamlTypeSerializer.class)));

@@ -1,5 +1,4 @@
 // Generated from "jsdoctypemappings/JsDocTypeMappings.java"
-@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -32,14 +31,10 @@ import kotlin.Double
 import kotlin.Float
 import kotlin.Int
 import kotlin.Long
-import kotlin.OptIn
 import kotlin.Short
 import kotlin.String
 import kotlin.Suppress
-import kotlin.experimental.ExperimentalObjCName
-import kotlin.native.ObjCName
 
-@ObjCName("J2ktJsdoctypemappingsJsDocTypeMappings", exact = true)
 open class JsDocTypeMappings {
  internal open fun returnComparatorWildcard_pp_jsdoctypemappings(): Comparator<*>? {
   return null
@@ -114,7 +109,7 @@ open class JsDocTypeMappings {
  }
 
  internal open fun returnChar_pp_jsdoctypemappings(): Char {
-  return '\u0000'
+  return 0.toChar()
  }
 
  internal open fun returnBoolean_pp_jsdoctypemappings(): Boolean {
@@ -123,11 +118,11 @@ open class JsDocTypeMappings {
 
  internal open fun returnVoid_pp_jsdoctypemappings() {}
 
- internal open fun returnNativeFunction_pp_jsdoctypemappings(): JsDocTypeMappings.NativeFunction? {
+ internal open fun returnNativeFunction_pp_jsdoctypemappings(): NativeFunction? {
   return null
  }
 
- internal open fun returnNativeType_pp_jsdoctypemappings(): JsDocTypeMappings.NativeType? {
+ internal open fun returnNativeType_pp_jsdoctypemappings(): NativeType? {
   return null
  }
 
@@ -139,82 +134,70 @@ open class JsDocTypeMappings {
   return null as MethodTypeParameter
  }
 
- internal open fun returnNativeNumber_pp_jsdoctypemappings(): JsDocTypeMappings.NativeNumber? {
+ internal open fun returnNativeNumber_pp_jsdoctypemappings(): NativeNumber? {
   return null
  }
 
- internal open fun returnNativeBoolean_pp_jsdoctypemappings(): JsDocTypeMappings.NativeBoolean? {
+ internal open fun returnNativeBoolean_pp_jsdoctypemappings(): NativeBoolean? {
   return null
  }
 
- internal open fun returnNativeString_pp_jsdoctypemappings(): JsDocTypeMappings.NativeString? {
+ internal open fun returnNativeString_pp_jsdoctypemappings(): NativeString? {
   return null
  }
 
- internal open fun returnNativeNull_pp_jsdoctypemappings(): JsDocTypeMappings.NativeNull? {
+ internal open fun returnNativeNull_pp_jsdoctypemappings(): NativeNull? {
   return null
  }
 
- internal open fun returnNativeUndefined_pp_jsdoctypemappings(): JsDocTypeMappings.NativeUndefined? {
+ internal open fun returnNativeUndefined_pp_jsdoctypemappings(): NativeUndefined? {
   return null
  }
 
- internal open fun returnNativeVoid_pp_jsdoctypemappings(): JsDocTypeMappings.NativeVoid? {
+ internal open fun returnNativeVoid_pp_jsdoctypemappings(): NativeVoid? {
   return null
  }
 
- internal open fun returnStar_pp_jsdoctypemappings(): JsDocTypeMappings.NativeStar? {
+ internal open fun returnStar_pp_jsdoctypemappings(): NativeStar? {
   return null
  }
 
- internal open fun returnNativeWildcard_pp_jsdoctypemappings(): JsDocTypeMappings.NativeWildcard? {
+ internal open fun returnNativeWildcard_pp_jsdoctypemappings(): NativeWildcard? {
   return null
  }
 
- @ObjCName("J2ktJsdoctypemappingsJsDocTypeMappings_NativeFunction", exact = true)
  @JsFunction
  fun interface NativeFunction {
-  @ObjCName("f")
   fun f()
  }
 
- @ObjCName("J2ktJsdoctypemappingsJsDocTypeMappings_NativeType", exact = true)
  @JsType(name = "Array", namespace = JsPackage.GLOBAL, isNative = true)
- open class NativeType internal constructor() {}
+ open class NativeType internal constructor()
 
- @ObjCName("J2ktJsdoctypemappingsJsDocTypeMappings_ExportedType", exact = true)
  @JsType(name = "ExportedTypeNewName")
- open inner class ExportedType internal constructor() {}
+ open inner class ExportedType internal constructor()
 
- @ObjCName("J2ktJsdoctypemappingsJsDocTypeMappings_NativeNumber", exact = true)
  @JsType(name = "number", namespace = JsPackage.GLOBAL, isNative = true)
- interface NativeNumber {}
+ interface NativeNumber
 
- @ObjCName("J2ktJsdoctypemappingsJsDocTypeMappings_NativeBoolean", exact = true)
  @JsType(name = "boolean", namespace = JsPackage.GLOBAL, isNative = true)
- interface NativeBoolean {}
+ interface NativeBoolean
 
- @ObjCName("J2ktJsdoctypemappingsJsDocTypeMappings_NativeString", exact = true)
  @JsType(name = "string", namespace = JsPackage.GLOBAL, isNative = true)
- interface NativeString {}
+ interface NativeString
 
- @ObjCName("J2ktJsdoctypemappingsJsDocTypeMappings_NativeNull", exact = true)
  @JsType(name = "null", namespace = JsPackage.GLOBAL, isNative = true)
- interface NativeNull {}
+ interface NativeNull
 
- @ObjCName("J2ktJsdoctypemappingsJsDocTypeMappings_NativeUndefined", exact = true)
  @JsType(name = "undefined", namespace = JsPackage.GLOBAL, isNative = true)
- interface NativeUndefined {}
+ interface NativeUndefined
 
- @ObjCName("J2ktJsdoctypemappingsJsDocTypeMappings_NativeVoid", exact = true)
  @JsType(name = "void", namespace = JsPackage.GLOBAL, isNative = true)
- interface NativeVoid {}
+ interface NativeVoid
 
- @ObjCName("J2ktJsdoctypemappingsJsDocTypeMappings_NativeStar", exact = true)
  @JsType(name = "*", namespace = JsPackage.GLOBAL, isNative = true)
- interface NativeStar {}
+ interface NativeStar
 
- @ObjCName("J2ktJsdoctypemappingsJsDocTypeMappings_NativeWildcard", exact = true)
  @JsType(name = "?", namespace = JsPackage.GLOBAL, isNative = true)
- interface NativeWildcard {}
+ interface NativeWildcard
 }

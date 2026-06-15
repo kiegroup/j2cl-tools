@@ -4,12 +4,13 @@
 #   J2CL.
 
 load("@rules_java//java:defs.bzl", "java_binary", "java_library")
+load("//transpiler/java/com/google/j2cl/common/bazel:jvm_flags.bzl", "JVM_FLAGS")
+load("@google_bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 package(
     default_applicable_licenses = ["//:j2cl_license"],
     licenses = ["notice"],
 )
-load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 java_library(
     name = "gwtincompatible_lib",
@@ -34,16 +35,18 @@ javadoc_library(
         exclude = ["BazelGwtIncompatibleStripper.java"],
     ),
     deps = [
-        ":gwtincompatible_lib",
+        "//third_party:args4j",
+        "//third_party:guava",
+        "//third_party:jdt-core",
+        "//transpiler/java/com/google/j2cl/common",
+        "//transpiler/java/com/google/j2cl/transpiler/frontend/jdt",
     ],
 )
 
 java_binary(
     name = "GwtIncompatibleStripper",
-    jvm_flags = [
-        "-Dj2cl.deterministicTimestamps=true",
-    ],
     main_class = "com.google.j2cl.tools.gwtincompatible.GwtIncompatibleStripperCommandLineRunner",
+    use_launcher = False,
     runtime_deps = [":gwtincompatible_lib"],
 )
 
@@ -60,10 +63,9 @@ java_library(
 
 java_binary(
     name = "GwtIncompatibleStripper_worker",
-    jvm_flags = [
-        "-Dj2cl.deterministicTimestamps=true",
-    ],
+    jvm_flags = JVM_FLAGS,
     main_class = "com.google.j2cl.tools.gwtincompatible.BazelGwtIncompatibleStripper",
-    visibility = ["//build_defs/internal_do_not_use:__pkg__"],
+    use_launcher = False,
+    visibility = ["//build_defs:toolchain_users"],
     runtime_deps = [":gwtincompatible_worker_lib"],
 )

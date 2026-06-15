@@ -15,20 +15,17 @@
  */
 package j2kt;
 
-import jsinterop.annotations.JsNonNull;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 @NullMarked
 public class DefinitelyNotNull {
   interface NotNullSupplier<T extends @Nullable Object> {
-    @JsNonNull
-    T getNotNull();
+    @NonNull T getNotNull();
   }
 
   static String testNotNullSupplier(NotNullSupplier<? extends @Nullable String> supplier) {
-    // TODO(b/361088311): It fails to compile in Kotlin because of:
-    //  https://youtrack.jetbrains.com/issue/KT-70814
     // The type of {@code supplier.getNonNull()} expression is inferred as {@code String?} in
     // Kotlin, so J2KT needs to generate a non-null assertion to match {@code String} return type.
     return supplier.getNotNull();
@@ -44,6 +41,34 @@ public class DefinitelyNotNull {
       // See: b/268006049, b/272714235.
       return ordering.reverse();
     }
+
+    <S extends T> Ordering<@Nullable S> nullsLast() {
+      throw new RuntimeException();
+    }
+  }
+
+  final class NullsFirstOrdering<T extends @Nullable Object> extends Ordering<@Nullable T> {
+    @SuppressWarnings("nullness")
+    final Ordering<? super T> ordering;
+
+    NullsFirstOrdering(Ordering<? super T> ordering) {
+      this.ordering = ordering;
+    }
+
+    // TODO(b/268006049): Uncomment when fixed.
+    // @Override
+    // public <S extends @Nullable T> Ordering<S> reverse() {
+    //   // Type inference problem detected in Guava.
+    //   return ordering.reverse().nullsLast();
+    // }
+
+    // TODO(b/268006049): Uncomment when fixed.
+    // @Override
+    // @SuppressWarnings("nullness") // probably a bug in our checker?
+    // public <S extends @Nullable T> Ordering<@Nullable S> nullsLast() {
+    //   // Type inference problem detected in Guava.
+    //   return ordering.nullsLast();
+    // }
   }
 
   // Reproduction of Guava code with immutable lists.
@@ -53,9 +78,14 @@ public class DefinitelyNotNull {
     }
 
     @SuppressWarnings("nullness")
-    public static <E extends @Nullable Object> ImmutableList<E> copyOfNullable(
+    public static <E extends @Nullable Object> ImmutableList<E> copyOfNullableWithInvalidBounds(
         Iterable<E> iterable) {
-      return ImmutableList.copyOf((Iterable<@JsNonNull E>) iterable);
+      return ImmutableList.copyOf(iterable);
+    }
+
+    public static <E extends @Nullable Object>
+        ImmutableList<@NonNull E> copyOfNullableWithCorrectBounds(Iterable<@NonNull E> iterable) {
+      return ImmutableList.copyOf(iterable);
     }
   }
 
@@ -64,7 +94,7 @@ public class DefinitelyNotNull {
   }
 
   public static <T extends @Nullable Object> boolean testEquivalence(
-      Equivalence<? super @JsNonNull T> equivalence, @Nullable T a, @Nullable T b) {
+      Equivalence<? super @NonNull T> equivalence, @Nullable T a, @Nullable T b) {
     return equivalence.equivalent(a, b);
   }
 }

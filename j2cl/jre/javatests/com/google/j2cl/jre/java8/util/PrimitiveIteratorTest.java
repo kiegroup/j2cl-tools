@@ -27,9 +27,7 @@ import java.util.function.LongConsumer;
 import junit.framework.TestCase;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Tests for PrimitiveIterator JRE emulation.
- */
+/** Tests for PrimitiveIterator JRE emulation. */
 public class PrimitiveIteratorTest extends TestCase {
 
   public void testForEachRemainingDoubleConsumer() {

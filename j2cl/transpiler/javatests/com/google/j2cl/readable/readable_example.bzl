@@ -12,20 +12,20 @@ readable_example(
 
 """
 
+load("@rules_cc//cc:objc_library.bzl", "objc_library")
+load("//third_party/bazel_rules/rules_kotlin/kotlin/native:kt_ios.bzl", "kt_ios_build_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load(
     "//build_defs:rules.bzl",
     "J2CL_OPTIMIZED_DEFS",
     "j2cl_library",
-    "j2kt_apple_framework",
     "j2wasm_application",
 )
 load("//build_defs/internal_do_not_use:j2cl_common.bzl", "j2cl_common")
 load("//build_defs/internal_do_not_use:j2kt_web_transition.bzl", "j2kt_web_transition")
 load("//build_defs/internal_do_not_use:provider.bzl", "J2clInfo")
-load("@bazel_tools//tools/build_defs/apple:ios.bzl", "ios_build_test")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("@io_bazel_rules_closure//closure:defs.bzl", "js_binary")
+load("@rules_closure//closure:defs.bzl", "closure_js_binary")
 
 JAVAC_FLAGS = [
     "-XepDisableAllChecks",
@@ -43,12 +43,12 @@ def readable_example(
         generate_readable_source_maps = False,
         generate_wasm_readables = True,
         generate_wasm_imports = False,
-        use_modular_pipeline = True,
         wasm_entry_points = [],
         generate_kt_readables = True,
         generate_kt_web_readables = False,
         build_kt_readables = True,
         build_kt_native_readables = True,
+        j2kt_j2objc_interop_enabled = False,
         **kwargs):
     """Macro that confirms the JS compilability of some transpiled Java.
 
@@ -63,7 +63,7 @@ def readable_example(
       **kwargs: passes to j2cl_library
     """
 
-    if any([src for src in srcs if src.endswith(".kt")]):
+    if "readable/kotlin" in native.package_name():
         # J2KT doesn't make sense for Kotlin Frontend.
         generate_kt_readables = False
 
@@ -87,6 +87,7 @@ def readable_example(
         generate_j2kt_jvm_library = None if generate_kt_readables else False,
         generate_j2kt_native_library = None if build_kt_native_readables else False,
         generate_j2wasm_library = None if generate_wasm_readables else False,
+        j2kt_j2objc_interop_enabled = j2kt_j2objc_interop_enabled,
         **kwargs
     )
 
@@ -104,7 +105,6 @@ def readable_example(
             name = "readable_wasm",
             deps = [":readable-j2wasm"],
             entry_points = wasm_entry_points,
-            use_modular_pipeline = use_modular_pipeline,
         )
 
         _readable_diff_test(
@@ -144,34 +144,26 @@ def readable_example(
             )
 
         if build_kt_native_readables:
-            j2kt_apple_framework(
-                testonly = 1,
-                name = "readable_j2kt_test_framework",
-                deps = [":readable-j2kt-native"],
-                tags = ["j2kt", "ios", "manual"],
-            )
-
             # Generate a objective library to force parsing of the header file.
             write_file(
                 name = "ParseHeaders_m",
                 out = "ParseHeaders.m",
-                content = ["""#import "%s/%s.h" """ % (native.package_name(), src[:-5]) for src in srcs],
+                content = ["""#import "%s/%s.h" """ % (native.package_name(), src[:-5]) for src in srcs if src.endswith(".java")],
                 tags = ["j2kt", "ios", "manual"],
             )
-
-            native.objc_library(
+            objc_library(
                 name = "ios_parse_headers",
                 testonly = 1,
                 srcs = ["ParseHeaders.m"],
                 tags = ["j2kt", "ios", "manual"],
                 deps = [
-                    ":readable_j2kt_test_framework",
+                    ":readable-j2kt-native",
                 ],
             )
 
-            ios_build_test(
+            kt_ios_build_test(
                 name = "readable_j2kt_native_build_test",
-                targets = [":readable_j2kt_test_framework", ":ios_parse_headers"],
+                targets = [":ios_parse_headers"],
                 minimum_os_version = "12.0",
                 tags = ["manual", "j2kt", "ios"],
             )
@@ -199,7 +191,7 @@ def _js_readable_targets(readable_target, dir_out, defs):
     )
 
     # Verify compatibility of generated JS.
-    js_binary(
+    closure_js_binary(
         name = "%s_binary" % readable_target,
         defs = J2CL_OPTIMIZED_DEFS + [
             "--conformance_config=transpiler/javatests/com/google/j2cl/readable/conformance_proto.txt",

@@ -98,8 +98,16 @@ Headers.prototype.set = function(name, value) {};
 /** @return {!Iterator<string>} */
 Headers.prototype.values = function() {};
 
-/** @return {!Iterator<!Array<string>>} */
+/**
+ * @return {!Iterator<!Array<string>>}
+ * @override
+ */
 Headers.prototype[Symbol.iterator] = function() {};
+
+/**
+ * @return {!Array<string>}
+ */
+Headers.prototype.getSetCookie = function() {};
 
 
 /**
@@ -131,6 +139,9 @@ Body.prototype.arrayBuffer = function() {};
 
 /** @return {!Promise<!Blob>} */
 Body.prototype.blob = function() {};
+
+/** @return {!Promise<!Uint8Array>} */
+Body.prototype.bytes = function() {};
 
 /** @return {!Promise<!FormData>} */
 Body.prototype.formData = function() {};
@@ -166,6 +177,9 @@ Request.prototype.arrayBuffer = function() {};
 
 /** @override */
 Request.prototype.blob = function() {};
+
+/** @override */
+Request.prototype.bytes = function() {};
 
 /** @override */
 Request.prototype.formData = function() {};
@@ -343,6 +357,9 @@ Response.prototype.arrayBuffer = function() {};
 
 /** @override */
 Response.prototype.blob = function() {};
+
+/** @override */
+Response.prototype.bytes = function() {};
 
 /** @override */
 Response.prototype.formData = function() {};

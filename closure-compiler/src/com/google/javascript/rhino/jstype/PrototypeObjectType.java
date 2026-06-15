@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -196,19 +197,17 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  boolean defineProperty(String name, JSType type, boolean inferred,
-      Node propertyNode) {
+  boolean defineProperty(Property.Key name, JSType type, boolean inferred, Node propertyNode) {
     if (hasOwnDeclaredProperty(name)) {
       return false;
     }
-    Property newProp = new Property(
-        name, type, inferred, propertyNode);
+    Property newProp = new Property(name, type, inferred, propertyNode);
     properties.putProperty(name, newProp);
     return true;
   }
 
   @Override
-  public void setPropertyJSDocInfo(String propertyName, JSDocInfo info) {
+  public void setPropertyJSDocInfo(Property.Key propertyName, JSDocInfo info) {
     if (info != null) {
       if (properties.getOwnProperty(propertyName) == null) {
         // If docInfo was attached, but the type of the property
@@ -228,7 +227,7 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public void setPropertyNode(String propertyName, Node defSite) {
+  public void setPropertyNode(Property.Key propertyName, Node defSite) {
     Property property = properties.getOwnProperty(propertyName);
     if (property != null) {
       property.setNode(defSite);
@@ -286,6 +285,46 @@ public class PrototypeObjectType extends ObjectType {
     return true;
   }
 
+  private record PropertyForPrettyPrinting(Property.Key key, JSType type) {
+    private void appendTo(TypeStringBuilder sb) {
+      switch (key.kind()) {
+        case STRING:
+          sb.append(key.humanReadableName());
+          break;
+        case SYMBOL:
+          sb.append("[");
+          sb.append(key.humanReadableName());
+          sb.append("]");
+          break;
+      }
+      sb.append(": ").appendNonNull(type);
+    }
+  }
+
+  private static final Comparator<PropertyForPrettyPrinting> PROP_COMPARATOR =
+      (thisProp, otherProp) -> {
+        // Handle the easy case where the property names are distinct.
+        if (!thisProp.key().humanReadableName().equals(otherProp.key().humanReadableName())) {
+          return thisProp.key().humanReadableName().compareTo(otherProp.key().humanReadableName());
+        }
+        return switch (thisProp.key().kind()) {
+          case STRING ->
+              switch (otherProp.key().kind()) {
+                case STRING -> thisProp.key().string().compareTo(otherProp.key().string());
+                case SYMBOL -> -1; // order string keys before symbol keys
+              };
+          case SYMBOL ->
+              switch (otherProp.key().kind()) {
+                case STRING -> 1; // order string keys before symbol keys.
+                case SYMBOL ->
+                    // Given two symbol keys with the same human-readable name, compare them by
+                    // their type string. This should be rare, so it's not a big performance hit to
+                    // do the extra toString()s.
+                    thisProp.type().toString().compareTo(otherProp.type().toString());
+              };
+        };
+      };
+
   @Override
   void appendTo(TypeStringBuilder sb) {
     if (hasReferenceName()) {
@@ -298,20 +337,27 @@ public class PrototypeObjectType extends ObjectType {
       return;
     }
 
-    // Use a tree set so that the properties are sorted.
-    Set<String> propertyNames = new TreeSet<>();
-    for (ObjectType current = this; current != null; current = current.getImplicitPrototype()) {
-      if (current.isNativeObjectType() || propertyNames.size() > MAX_PRETTY_PRINTED_PROPERTIES) {
-        break;
-      }
-
-      propertyNames.addAll(current.getOwnPropertyNames());
-    }
-
     // Don't pretty print recursively. It would cause infinite recursion.
     this.prettyPrint = false;
 
-    boolean multiline = !sb.isForAnnotations() && propertyNames.size() > 1;
+    // Use a tree set so that the properties are sorted.
+    Set<PropertyForPrettyPrinting> properties = new TreeSet<>(PROP_COMPARATOR);
+    for (ObjectType current = this; current != null; current = current.getImplicitPrototype()) {
+      if (current.isNativeObjectType() || properties.size() > MAX_PRETTY_PRINTED_PROPERTIES) {
+        break;
+      }
+
+      for (String stringKey : current.getOwnPropertyNames()) {
+        var key = new Property.StringKey(stringKey);
+        properties.add(new PropertyForPrettyPrinting(key, current.getPropertyType(key)));
+      }
+      for (KnownSymbolType symbolKey : current.getOwnPropertyKnownSymbols()) {
+        var key = new Property.SymbolKey(symbolKey);
+        properties.add(new PropertyForPrettyPrinting(key, current.getPropertyType(key)));
+      }
+    }
+
+    boolean multiline = !sb.isForAnnotations() && properties.size() > 1;
     sb.append("{")
         .indent(
             () -> {
@@ -320,7 +366,7 @@ public class PrototypeObjectType extends ObjectType {
               }
 
               int i = 0;
-              for (String property : propertyNames) {
+              for (PropertyForPrettyPrinting property : properties) {
                 i++;
 
                 if (!sb.isForAnnotations() && i > MAX_PRETTY_PRINTED_PROPERTIES) {
@@ -328,8 +374,8 @@ public class PrototypeObjectType extends ObjectType {
                   break;
                 }
 
-                sb.append(property).append(": ").appendNonNull(this.getPropertyType(property));
-                if (i < propertyNames.size()) {
+                property.appendTo(sb);
+                if (i < properties.size()) {
                   sb.append(",");
                   if (multiline) {
                     sb.breakLineAndIndent();

@@ -18,6 +18,9 @@
 package com.google.j2cl.transpiler.frontend.kotlin
 
 import com.google.common.collect.ImmutableList
+import com.google.j2cl.common.SourcePosition
+import com.google.j2cl.transpiler.ast.Annotation
+import com.google.j2cl.transpiler.ast.ArrayConstant
 import com.google.j2cl.transpiler.ast.ArrayTypeDescriptor
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor
 import com.google.j2cl.transpiler.ast.FieldDescriptor
@@ -33,47 +36,51 @@ import com.google.j2cl.transpiler.ast.TypeDeclaration.SourceLanguage.KOTLIN
 import com.google.j2cl.transpiler.ast.TypeDescriptor
 import com.google.j2cl.transpiler.ast.TypeDescriptors
 import com.google.j2cl.transpiler.ast.TypeDescriptors.SingletonBuilder
+import com.google.j2cl.transpiler.ast.TypeDescriptors.isKotlinNothing
+import com.google.j2cl.transpiler.ast.TypeLiteral
 import com.google.j2cl.transpiler.ast.TypeVariable
 import com.google.j2cl.transpiler.ast.Visibility
-import com.google.j2cl.transpiler.frontend.jdt.PackageAnnotationsResolver
+import com.google.j2cl.transpiler.frontend.common.SupportedAnnotations
 import com.google.j2cl.transpiler.frontend.kotlin.ir.enumEntries
 import com.google.j2cl.transpiler.frontend.kotlin.ir.fqnOrFail
 import com.google.j2cl.transpiler.frontend.kotlin.ir.fromQualifiedBinaryName
+import com.google.j2cl.transpiler.frontend.kotlin.ir.getAllAnnotations
 import com.google.j2cl.transpiler.frontend.kotlin.ir.getAllTypeParameters
 import com.google.j2cl.transpiler.frontend.kotlin.ir.getJsEnumInfo
 import com.google.j2cl.transpiler.frontend.kotlin.ir.getJsInfo
 import com.google.j2cl.transpiler.frontend.kotlin.ir.getJsMemberAnnotationInfo
 import com.google.j2cl.transpiler.frontend.kotlin.ir.getParameters
 import com.google.j2cl.transpiler.frontend.kotlin.ir.getTypeSubstitutionMap
-import com.google.j2cl.transpiler.frontend.kotlin.ir.getWasmInfo
 import com.google.j2cl.transpiler.frontend.kotlin.ir.hasVoidReturn
 import com.google.j2cl.transpiler.frontend.kotlin.ir.isAbstract
 import com.google.j2cl.transpiler.frontend.kotlin.ir.isArrayType
 import com.google.j2cl.transpiler.frontend.kotlin.ir.isCapturingEnclosingInstance
 import com.google.j2cl.transpiler.frontend.kotlin.ir.isClassType
-import com.google.j2cl.transpiler.frontend.kotlin.ir.isDeprecated
-import com.google.j2cl.transpiler.frontend.kotlin.ir.isDoNotAutobox
 import com.google.j2cl.transpiler.frontend.kotlin.ir.isFinal
 import com.google.j2cl.transpiler.frontend.kotlin.ir.isFunctionalInterface
 import com.google.j2cl.transpiler.frontend.kotlin.ir.isJsFunction
 import com.google.j2cl.transpiler.frontend.kotlin.ir.isJsOptional
 import com.google.j2cl.transpiler.frontend.kotlin.ir.isJsType
 import com.google.j2cl.transpiler.frontend.kotlin.ir.isNativeJsField
-import com.google.j2cl.transpiler.frontend.kotlin.ir.isStubbedPrimitiveIteratorClass
-import com.google.j2cl.transpiler.frontend.kotlin.ir.isStubbedPrimitiveRangeClass
-import com.google.j2cl.transpiler.frontend.kotlin.ir.isUncheckedCast
-import com.google.j2cl.transpiler.frontend.kotlin.ir.j2clIsAnnotation
 import com.google.j2cl.transpiler.frontend.kotlin.ir.j2clKind
 import com.google.j2cl.transpiler.frontend.kotlin.ir.j2clVisibility
-import com.google.j2cl.transpiler.frontend.kotlin.ir.javaName
 import com.google.j2cl.transpiler.frontend.kotlin.ir.methods
+import com.google.j2cl.transpiler.frontend.kotlin.ir.overriddenSpecialBridgeSignatures
+import com.google.j2cl.transpiler.frontend.kotlin.ir.resolveName
+import com.google.j2cl.transpiler.frontend.kotlin.ir.sanitizedName
 import com.google.j2cl.transpiler.frontend.kotlin.ir.simpleSourceName
 import com.google.j2cl.transpiler.frontend.kotlin.ir.singleAbstractMethod
 import com.google.j2cl.transpiler.frontend.kotlin.ir.typeSubstitutionMap
+import org.jetbrains.kotlin.backend.common.defaultArgumentsOriginalFunction
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.jvm.JvmBackendContext
+import org.jetbrains.kotlin.backend.jvm.SpecialBridge
+import org.jetbrains.kotlin.backend.jvm.ir.collectVisibleTypeParameters
 import org.jetbrains.kotlin.backend.jvm.ir.constantValue
+import org.jetbrains.kotlin.backend.jvm.ir.eraseToScope
 import org.jetbrains.kotlin.backend.jvm.lower.getFileClassInfo
+import org.jetbrains.kotlin.descriptors.Visibilities
+import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrDeclaration
@@ -83,8 +90,15 @@ import org.jetbrains.kotlin.ir.declarations.IrField
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrPackageFragment
+import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
+import org.jetbrains.kotlin.ir.expressions.IrClassReference
+import org.jetbrains.kotlin.ir.expressions.IrConst
+import org.jetbrains.kotlin.ir.expressions.IrConstantArray
+import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
+import org.jetbrains.kotlin.ir.expressions.IrExpression
+import org.jetbrains.kotlin.ir.expressions.IrVararg
 import org.jetbrains.kotlin.ir.symbols.IrTypeParameterSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrStarProjection
@@ -107,8 +121,11 @@ import org.jetbrains.kotlin.ir.types.typeOrNull
 import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.dump
+import org.jetbrains.kotlin.ir.util.eraseTypeParameters
 import org.jetbrains.kotlin.ir.util.file
 import org.jetbrains.kotlin.ir.util.hasAnnotation
+import org.jetbrains.kotlin.ir.util.isAnnotation
+import org.jetbrains.kotlin.ir.util.isAnnotationClass
 import org.jetbrains.kotlin.ir.util.isAnonymousObject
 import org.jetbrains.kotlin.ir.util.isFakeOverride
 import org.jetbrains.kotlin.ir.util.isFromJava
@@ -117,22 +134,25 @@ import org.jetbrains.kotlin.ir.util.isKFunction
 import org.jetbrains.kotlin.ir.util.isLocal
 import org.jetbrains.kotlin.ir.util.isReal
 import org.jetbrains.kotlin.ir.util.isStatic
+import org.jetbrains.kotlin.ir.util.isSuspend
 import org.jetbrains.kotlin.ir.util.isTypeParameter
 import org.jetbrains.kotlin.ir.util.isVararg
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.packageFqName
+import org.jetbrains.kotlin.ir.util.parentAsClass
 import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import org.jetbrains.kotlin.ir.util.resolveFakeOverrideMaybeAbstractOrFail
 import org.jetbrains.kotlin.ir.util.superTypes
+import org.jetbrains.kotlin.load.java.JvmAnnotationNames.ENHANCED_NULLABILITY_ANNOTATION
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.FqNameUnsafe
 import org.jetbrains.kotlin.types.Variance
 
 /** Utility functions to interact with the Kotlin compiler internal representations. */
-class KotlinEnvironment(
+internal class KotlinEnvironment(
   private val pluginContext: IrPluginContext,
-  private val packageAnnotationsResolver: PackageAnnotationsResolver,
+  private val packageInfoCache: PackageInfoCache,
   private val jvmBackendContext: JvmBackendContext,
 ) {
   private val builtinsResolver = BuiltinsResolver(pluginContext, jvmBackendContext)
@@ -190,8 +210,12 @@ class KotlinEnvironment(
   }
 
   private fun getWellKnownTypeDescriptor(qualifiedBinaryName: String): DeclaredTypeDescriptor? {
+    // Note: We disable declaration-site variance when resolving type descriptors of the well
+    // known types because the variance is not needed we creating a reference to a type and using
+    // variance would require resolving java.lang.Object via TypeDescriptors.get() during
+    // TypeDescriptors initialization, causing a cycle.
     return pluginContext.referenceClass(ClassId.fromQualifiedBinaryName(qualifiedBinaryName))?.let {
-      getDeclaredTypeDescriptor(it.defaultType.makeNullable())
+      getDeclaredTypeDescriptor(it.defaultType.makeNullable(), useDeclarationVariance = false)
     }
   }
 
@@ -199,23 +223,13 @@ class KotlinEnvironment(
     irClass ?: return null
 
     return typeDeclarationByIrClass.getOrPut(irClass) {
-
-      // TODO(b/259156400): Remove when the original stdlib file compiles with `-Xserialize-ir`
-      // flag.
-      val packageName =
-        when {
-          irClass.isStubbedPrimitiveIteratorClass() -> FqName("kotlin.collections")
-          irClass.isStubbedPrimitiveRangeClass() -> FqName("kotlin.ranges")
-          else -> irClass.packageFqName!!
-        }
-
       TypeDeclaration.newBuilder()
         .setClassComponents(irClass.getClassComponents())
         .setKind(irClass.j2clKind)
-        .setAnnotation(irClass.j2clIsAnnotation)
+        .setAnnotation(irClass.isAnnotationClass)
         .setSourceLanguage(if (irClass.isFromJava()) JAVA else KOTLIN)
         .setOriginalSimpleSourceName(irClass.simpleSourceName)
-        .setPackage(createPackageDeclaration(packageName.asString()))
+        .setPackage(createPackageDeclaration(irClass.packageFqName!!.asString()))
         .setVisibility(irClass.j2clVisibility)
         .setEnclosingTypeDeclaration(getDeclarationForType(irClass.parentClassOrNull))
         .setDeclaredMethodDescriptorsFactory { _ ->
@@ -256,26 +270,92 @@ class KotlinEnvironment(
         .setFinal(irClass.isFinal)
         .setLocal(irClass.isLocal && !irClass.isAnonymousObject)
         .setAnonymous(irClass.isAnonymousObject)
-        .setDeprecated(irClass.isDeprecated)
         .setJsType(irClass.isJsType)
         .setJsFunctionInterface(irClass.isJsFunction)
         .setJsEnumInfo(irClass.getJsEnumInfo())
-        .setWasmInfo(irClass.getWasmInfo())
         .apply {
           val jsMemberAnnotation = irClass.getJsMemberAnnotationInfo()
           setCustomizedJsNamespace(jsMemberAnnotation?.namespace)
           setSimpleJsName(jsMemberAnnotation?.name)
           setNative(jsMemberAnnotation?.isNative ?: false)
         }
+        .setAnnotationsFactory { createAnnotations(irClass) }
         .build()
     }
+  }
+
+  private fun createAnnotations(irAnnotationContainer: IrAnnotationContainer) =
+    ImmutableList.Builder<Annotation>()
+      .apply {
+        for (annotationCtorCall in irAnnotationContainer.getAllAnnotations()) {
+          val ctor = annotationCtorCall.symbol.owner
+          val typeDescriptor =
+            checkNotNull(getEnclosingTypeDescriptor(ctor)) {
+              "No enclosing type for ${ctor.dump()}"
+            }
+          if (!SupportedAnnotations.isSupportedAnnotation(typeDescriptor.qualifiedSourceName)) {
+            continue
+          }
+          add(
+            Annotation.newBuilder()
+              .setTypeDescriptor(typeDescriptor)
+              .addAnnotationValues(annotationCtorCall)
+              .build()
+          )
+        }
+      }
+      .build()
+
+  private fun Annotation.Builder.addAnnotationValues(
+    annotationCtorCall: IrConstructorCall
+  ): Annotation.Builder {
+    fun IrExpression?.toAnnotationValue(): Literal? {
+      fun createArrayConstant(type: IrType, values: List<IrExpression>): ArrayConstant? {
+        val translatedValues = values.map { it.toAnnotationValue() }
+        // TODO(b/397460318, b/395716783): Remove this null check once we handle all member value
+        // types. We don't expect null unless it's an unhandled value type.
+        if (translatedValues.contains(null)) {
+          return null
+        }
+        return ArrayConstant.newBuilder()
+          .setTypeDescriptor(createArrayTypeDescriptor(type))
+          .setValueExpressions(translatedValues)
+          .build()
+      }
+
+      return when (this) {
+        is IrConst -> Literal.fromValue(value, getTypeDescriptor(type))
+        is IrClassReference ->
+          createTypeLiteral(classType, SourcePosition.NONE, wrapPrimitives = false)
+        is IrConstantArray -> createArrayConstant(type, elements)
+        is IrVararg ->
+          createArrayConstant(
+            type,
+            elements.map {
+              // Spread operator should be lowered by this point since only compile-time constants
+              // are allowed, so we will only see IrExpression here.
+              it as IrExpression
+            },
+          )
+        // TODO(b/397460318, b/395716783): Implement various member value types, then throw an
+        // exception here if unhandled.
+        else -> null
+      }
+    }
+
+    for (i in 0 until annotationCtorCall.valueArgumentsCount) {
+      val name = annotationCtorCall.symbol.owner.valueParameters[i].sanitizedName
+      val translatedValue = annotationCtorCall.getValueArgument(i).toAnnotationValue() ?: continue
+      addValue(name, translatedValue)
+    }
+    return this
   }
 
   private fun createPackageDeclaration(packageName: String) =
     // Caching is left to PackageDeclaration.Builder since construction is trivial.
     PackageDeclaration.newBuilder()
       .setName(packageName)
-      .setCustomizedJsNamespace(packageAnnotationsResolver.getJsNameSpace(packageName))
+      .setCustomizedJsNamespace(packageInfoCache.getJsNamespace(packageName))
       .build()
 
   /**
@@ -287,10 +367,13 @@ class KotlinEnvironment(
   private fun getSuperTypeDescriptor(irType: IrType): DeclaredTypeDescriptor =
     getDeclaredType(irType as IrSimpleType, useDeclarationVariance = false)
 
-  fun getDeclaredTypeDescriptor(irType: IrType): DeclaredTypeDescriptor =
-    getTypeDescriptor(irType) as DeclaredTypeDescriptor
+  fun getDeclaredTypeDescriptor(
+    irType: IrType,
+    useDeclarationVariance: Boolean = true,
+  ): DeclaredTypeDescriptor =
+    getTypeDescriptor(irType, useDeclarationVariance) as DeclaredTypeDescriptor
 
-  fun getTypeDescriptor(irType: IrType): TypeDescriptor {
+  fun getTypeDescriptor(irType: IrType, useDeclarationVariance: Boolean = true): TypeDescriptor {
     var typeDescriptor =
       typeDescriptorByIrType.getOrPut(irType) {
         when {
@@ -299,7 +382,7 @@ class KotlinEnvironment(
             getTypeVariable(typeParameter, !typeParameter.isFromJava() && irType.isMarkedNullable())
           }
           irType.isArrayType() -> createArrayTypeDescriptor(irType)
-          irType is IrSimpleType -> getDeclaredType(irType, useDeclarationVariance = true)
+          irType is IrSimpleType -> getDeclaredType(irType, useDeclarationVariance)
           else -> TODO("Not supported type $irType")
         }
       }
@@ -312,9 +395,17 @@ class KotlinEnvironment(
     // TODO(b/365133427): Annotations are not accounted for hashcode and equals so the logic is
     // moved outside of cache. We should move it back once the bug is fixed.
     val annotations = irType.annotations
-    if (!annotations.isEmpty() && annotations.hasAnnotation(FqName("kotlin.UnsafeVariance"))) {
+    if (annotations.isNotEmpty() && annotations.hasAnnotation(FqName("kotlin.UnsafeVariance"))) {
       typeDescriptor = typeDescriptor.toRawTypeDescriptor()
     }
+
+    // If we mapped to a primitive type but the kotlin type was annotated with @EnhancedNullability
+    // that means we're interoping with a non-nullable Java boxed type. Kotlin cannot represent this
+    // in their type system so we need to be mindful to box the type again.
+    if (typeDescriptor.isPrimitive && irType.hasAnnotation(ENHANCED_NULLABILITY_ANNOTATION)) {
+      typeDescriptor = typeDescriptor.toBoxedType()
+    }
+
     return typeDescriptor
   }
 
@@ -356,7 +447,7 @@ class KotlinEnvironment(
       }
 
     return TypeVariable.newBuilder()
-      .setName(irTypeParameter.name.asString())
+      .setName(irTypeParameter.sanitizedName)
       .setUniqueKey(irTypeParameter.uniqueKey)
       .setUpperBoundTypeDescriptorFactory(upperBoundFactory)
       .setNullabilityAnnotation(
@@ -394,7 +485,7 @@ class KotlinEnvironment(
   ): DeclaredTypeDescriptor {
     // Adjust nullability.
     var td = if (irType.isNullable()) toNullable() else toNonNullable()
-    if (!irType.arguments.isEmpty()) {
+    if (irType.arguments.isNotEmpty()) {
       // Adjust type arguments.
       val subsitutionMap =
         irType.getTypeSubstitutionMap(useDeclarationVariance).toTypeDescriptorByTypeVariableMap()
@@ -485,11 +576,37 @@ class KotlinEnvironment(
     return cumulativeTypeArgumentsByTypeParameter
   }
 
+  /**
+   * For functions coming from Java, computes the specialized bridge needed to satisfy JRE types.
+   *
+   * This is useful for reverse mapping APIs from Kotlin standard library types to the types that
+   * actually exist in the JRE.
+   */
+  private fun computeSpecialBridgeIfNeeded(irFunction: IrFunction): SpecialBridge? {
+    if (irFunction !is IrSimpleFunction || !irFunction.isFromJava()) return null
+    val specialBridge =
+      jvmBackendContext.bridgeLoweringCache.computeSpecialBridge(irFunction) ?: return null
+
+    // If our signature matches one of the overridden signatures, we don't need a bridge.
+    if (
+      specialBridge.signature in overriddenSpecialBridgeSignatures(jvmBackendContext, irFunction)
+    ) {
+      return null
+    }
+
+    return specialBridge
+  }
+
   fun getDeclaredMethodDescriptor(irFunction: IrFunction): MethodDescriptor {
     return methodDescriptorByIrFunction.getOrPut(irFunction) {
       val resolvedSymbol = builtinsResolver.resolveFunctionSymbol(irFunction.symbol)
       if (resolvedSymbol != irFunction.symbol)
         return@getOrPut getDeclaredMethodDescriptor(resolvedSymbol.owner)
+
+      // Check if a bridge would be need for this special function if it's coming from Java. If so
+      // we'll use it to reverse compute the types that actually exist in the Java method.
+      val specialBridge = computeSpecialBridgeIfNeeded(irFunction)
+      val visibleTypeParameters = collectVisibleTypeParameters(irFunction)
 
       val enclosingTypeDescriptor =
         checkNotNull(getEnclosingTypeDescriptor(irFunction)) {
@@ -499,13 +616,42 @@ class KotlinEnvironment(
       val isConstructor = irFunction is IrConstructor
       val parameterDescriptors = ImmutableList.builder<MethodDescriptor.ParameterDescriptor>()
 
-      val parameters = irFunction.getParameters()
-      parameters.withIndex().forEach { (index, param) ->
+      if (irFunction.isSuspend) {
+        // Add the implicit continuation parameter so our type model is correct.
         parameterDescriptors.add(
           MethodDescriptor.ParameterDescriptor.newBuilder()
-            .setTypeDescriptor(getTypeDescriptor(param.type))
+            .setTypeDescriptor(
+              TypeDescriptors.get()
+                .kotlinCoroutinesContinuation!!
+                .withTypeArguments(ImmutableList.of(TypeDescriptors.getUnknownType()))
+            )
+            .build()
+        )
+      }
+
+      val parameters =
+        if (specialBridge == null) irFunction.getParameters()
+        else specialBridge.overridden.getParameters()
+
+      parameters.withIndex().forEach { (index, param) ->
+        var type = param.type
+        if (specialBridge != null) {
+          // If there's a known type to use that, but erase be mindful of captured type parameters.
+          // Otherwise, erase all type parameters to match the original JRE types.
+          val substitutedType =
+            specialBridge.substitutedParameterTypes?.get(param.indexInParameters)
+          type = substitutedType?.eraseToScope(visibleTypeParameters) ?: type.eraseTypeParameters()
+        }
+        parameterDescriptors.add(
+          MethodDescriptor.ParameterDescriptor.newBuilder()
+            .setTypeDescriptor(getTypeDescriptor(type))
+            // A parameter is only considered optional if it has a default initializer AND it's
+            // default bridge function.
+            .setOptional(
+              param.defaultValue != null && irFunction.defaultArgumentsOriginalFunction != null
+            )
             .setJsOptional(param.isJsOptional)
-            .setDoNotAutobox(param.isDoNotAutobox)
+            .setAnnotations(createAnnotations(param))
             .setVarargs(index == parameters.lastIndex && param.isVararg)
             .build()
         )
@@ -513,22 +659,33 @@ class KotlinEnvironment(
 
       val visibility = irFunction.j2clVisibility
       val isStatic = (irFunction.isStatic || irFunction.parent !is IrDeclaration) && !isConstructor
-
       val isNative =
         irFunction.isExternal ||
           (!irFunction.getJsInfo().isJsOverlay &&
             enclosingTypeDescriptor.isNative &&
             irFunction.isAbstract)
+      val isLocal = irFunction.visibility.delegate == Visibilities.Local
+      val enclosingMethodDescriptor =
+        if (isLocal) getDeclaredMethodDescriptor(irFunction.parent as IrFunction) else null
 
       MethodDescriptor.newBuilder()
         .setEnclosingTypeDescriptor(enclosingTypeDescriptor)
-        .setName(irFunction.javaName(jvmBackendContext))
+        .setEnclosingMethodDescriptor(enclosingMethodDescriptor)
+        .setName(irFunction.resolveName(jvmBackendContext))
         .setParameterDescriptors(parameterDescriptors.build())
         .setReturnTypeDescriptor(
           if (irFunction.hasVoidReturn) {
             PrimitiveTypes.VOID
           } else {
-            getTypeDescriptor(irFunction.returnType)
+            var returnType = irFunction.returnType
+            if (specialBridge != null) {
+              // If there's a known type to use that, but erase be mindful of captured type
+              // parameters. Otherwise, erase all type parameters to match the original JRE types.
+              returnType =
+                specialBridge.substitutedReturnType?.eraseToScope(irFunction.parentAsClass)
+                  ?: specialBridge.overridden.returnType.eraseTypeParameters()
+            }
+            getTypeDescriptor(returnType)
           }
         )
         .setVisibility(visibility)
@@ -544,10 +701,9 @@ class KotlinEnvironment(
             !isStatic
         )
         .setTypeParameterTypeDescriptors(irFunction.typeParameters.map(::getTypeVariable))
-        .setDeprecated(irFunction.isDeprecated)
         .setOriginalJsInfo(irFunction.getJsInfo())
-        .setUncheckedCast(irFunction.isUncheckedCast)
-        .setWasmInfo(irFunction.getWasmInfo())
+        .setAnnotations(createAnnotations(irFunction))
+        .setSuspendFunction(irFunction.isSuspend)
         .build()
     }
   }
@@ -587,7 +743,7 @@ class KotlinEnvironment(
 
       FieldDescriptor.newBuilder()
         .setEnclosingTypeDescriptor(getEnclosingTypeDescriptor(irField))
-        .setName(irField.name.asString())
+        .setName(irField.sanitizedName)
         .setTypeDescriptor(fieldTypeDescriptor)
         .setVisibility(irField.j2clVisibility)
         .setCompileTimeConstant(constantValue != null)
@@ -599,8 +755,8 @@ class KotlinEnvironment(
         // already enforced the final semantics.
         .setFinal(irField.isFinal && !irField.isNativeJsField)
         .setStatic(irField.isStatic || irField.parent !is IrDeclaration)
-        .setDeprecated(irField.isDeprecated)
         .setOriginalJsInfo(irField.getJsInfo())
+        .setAnnotations(createAnnotations(irField))
         .build()
     }
   }
@@ -608,14 +764,14 @@ class KotlinEnvironment(
   fun getDeclaredFieldDescriptor(irEnumEntry: IrEnumEntry): FieldDescriptor =
     FieldDescriptor.newBuilder()
       .setEnclosingTypeDescriptor(getEnclosingTypeDescriptor(irEnumEntry))
-      .setName(irEnumEntry.name.asString())
+      .setName(irEnumEntry.sanitizedName)
       .setTypeDescriptor(getEnclosingTypeDescriptor(irEnumEntry)!!.toNonNullable())
       .setVisibility(Visibility.PUBLIC)
       .setFinal(true)
       .setStatic(true)
       .setEnumConstant(true)
-      .setDeprecated(irEnumEntry.isDeprecated)
       .setOriginalJsInfo(irEnumEntry.getJsInfo())
+      .setAnnotations(createAnnotations(irEnumEntry))
       .build()
 
   private fun getEnclosingTypeDescriptor(irDeclaration: IrDeclaration): DeclaredTypeDescriptor? =
@@ -623,13 +779,34 @@ class KotlinEnvironment(
       getDeclaredTypeDescriptor(it.defaultType.makeNullable())
     }
 
+  fun createTypeLiteral(
+    irType: IrType,
+    sourcePosition: SourcePosition,
+    wrapPrimitives: Boolean,
+  ): TypeLiteral =
+    TypeLiteral(
+      sourcePosition,
+      getTypeDescriptor(irType).let {
+        when {
+          // "Nothing" is a special case as we thread it through the J2CL AST as a stubbed type. In
+          // the context of Nothing::class it should be treated Void.
+          TypeDescriptors.isKotlinNothing(it) -> TypeDescriptors.get().javaLangVoid
+          it.isPrimitive && wrapPrimitives -> it.toBoxedType()
+          else -> it
+        }
+      },
+    )
+
   private val IrType.superClass: IrType?
     get() {
       // In Kotlin, interfaces extends Any, but conceptually they do not have super class.
       // Any is the root of the Kotlin class hierarchy and do not have super class.
       // As we currently map Any to j.l.Object, we need to special case j.l.Object to not have Any
       // as super type and avoid a loop in type hierarchy.
-      if (isInterface() || isAny() || isClassType(FqNameUnsafe("java.lang.Object"))) {
+      // Annotations are not interfaces in Kotlin but they are in our model.
+      if (
+        isInterface() || isAnnotation() || isAny() || isClassType(FqNameUnsafe("java.lang.Object"))
+      ) {
         return null
       }
       // As interfaces extend Any, a class implementing interfaces does not have Any in its direct
@@ -767,6 +944,10 @@ class KotlinEnvironment(
       fields += jvmBackendContext.cachedDeclarations.getFieldForObjectInstance(companion)
     }
 
+    if (isFromJava()) {
+      // Fields from Java class are represented as Kotlin properties.
+      fields += declarations.filterIsInstance<IrProperty>().mapNotNull(IrProperty::backingField)
+    }
     return fields
   }
 }

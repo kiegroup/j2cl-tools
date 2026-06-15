@@ -15,8 +15,6 @@
  */
 package org.kie.j2cl.tools.yaml.mapper;
 
-import static java.util.Objects.isNull;
-
 import com.google.auto.common.MoreElements;
 import com.google.auto.common.MoreTypes;
 import java.lang.annotation.Annotation;
@@ -29,7 +27,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -41,6 +41,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -50,6 +51,8 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.lang.model.util.Types;
+import org.kie.j2cl.tools.yaml.mapper.api.annotation.YamlGetter;
+import org.kie.j2cl.tools.yaml.mapper.api.annotation.YamlSetter;
 import org.kie.j2cl.tools.yaml.mapper.context.GenerationContext;
 import org.kie.j2cl.tools.yaml.mapper.exception.GenerationException;
 
@@ -61,22 +64,18 @@ import org.kie.j2cl.tools.yaml.mapper.exception.GenerationException;
  */
 public class TypeUtils {
 
-  /** Constant <code>BEAN_JSON_SERIALIZER_IMPL="BeanXMLSerializerImpl"</code> */
   public static final String BEAN_YAML_SERIALIZER_IMPL = "_YamlSerializerImpl";
-  /** Constant <code>BEAN_JSON_DESERIALIZER_IMPL="BeanJsonDeserializerImpl"</code> */
   public static final String BEAN_YAML_DESERIALIZER_IMPL = "_YamlDeserializerImpl";
-
-  private static final int FIRST_ARGUMENT = 0;
-  private static final int SECOND_ARGUMENT = 1;
-
   private final Types types;
   private final Elements elements;
   private final TypeRegistry typeRegistry;
+  private final TypeUtils typeUtils;
 
   public TypeUtils(GenerationContext context) {
     this.types = context.getProcessingEnv().getTypeUtils();
     this.elements = context.getProcessingEnv().getElementUtils();
     this.typeRegistry = context.getTypeRegistry();
+    this.typeUtils = context.getTypeUtils();
   }
 
   /**
@@ -85,8 +84,9 @@ public class TypeUtils {
    * @param type a {@link TypeMirror} object.
    * @return a object.
    */
-  public static String wrapperType(TypeMirror type) {
+  public String wrapperType(TypeMirror type) {
     if (isPrimitive(type)) {
+      type = types.getPrimitiveType(type.getKind());
       if ("boolean".equals(type.toString())) {
         return Boolean.class.getSimpleName();
       } else if ("byte".equals(type.toString())) {
@@ -104,11 +104,13 @@ public class TypeUtils {
       } else if ("double".equals(type.toString())) {
         return Double.class.getSimpleName();
       } else {
-        return Void.class.getSimpleName();
+        throw new IllegalArgumentException("Unknown primitive type: " + type.toString());
       }
     } else if (type.getKind().equals(TypeKind.ARRAY)) {
       ArrayType arrayType = (ArrayType) type;
       return arrayType.toString();
+    } else if (type.getKind().equals(TypeKind.DECLARED)) {
+      return MoreTypes.asTypeElement(type).getQualifiedName().toString();
     } else {
       return MoreTypes.asElement(type).toString();
     }
@@ -144,17 +146,6 @@ public class TypeUtils {
   }
 
   /**
-   * deepArrayComponentType.
-   *
-   * @param typeMirror a {@link TypeMirror} object.
-   * @return a {@link TypeMirror} object.
-   */
-  public static TypeMirror deepArrayComponentType(TypeMirror typeMirror) {
-    TypeMirror type = ((ArrayType) typeMirror).getComponentType();
-    return isArray(type) ? arrayComponentType(type) : type;
-  }
-
-  /**
    * isArray.
    *
    * @param typeMirror a {@link TypeMirror} object.
@@ -172,280 +163,6 @@ public class TypeUtils {
    */
   public static TypeMirror arrayComponentType(TypeMirror typeMirror) {
     return ((ArrayType) typeMirror).getComponentType();
-  }
-
-  /**
-   * isEnum.
-   *
-   * @param typeMirror a {@link TypeMirror} object.
-   * @return a boolean.
-   */
-  public static boolean isEnum(TypeMirror typeMirror) {
-    return !isNull(MoreTypes.asElement(typeMirror))
-        && !TypeUtils.isPrimitive(typeMirror)
-        && !TypeUtils.isPrimitiveArray(typeMirror)
-        && ElementKind.ENUM.compareTo(MoreTypes.asElement(typeMirror).getKind()) == 0;
-  }
-
-  /**
-   * firstTypeArgument.
-   *
-   * @param typeMirror a {@link TypeMirror} object.
-   * @return a {@link TypeMirror} object.
-   */
-  public static TypeMirror firstTypeArgument(TypeMirror typeMirror) {
-    return ((DeclaredType) typeMirror).getTypeArguments().get(FIRST_ARGUMENT);
-  }
-
-  /**
-   * secondTypeArgument.
-   *
-   * @param typeMirror a {@link TypeMirror} object.
-   * @return a {@link TypeMirror} object.
-   */
-  public static TypeMirror secondTypeArgument(TypeMirror typeMirror) {
-    return ((DeclaredType) typeMirror).getTypeArguments().get(SECOND_ARGUMENT);
-  }
-
-  /**
-   * Check if given TypeMirror has wildcards
-   *
-   * @param type {@link TypeMirror} to be checked
-   * @return true if given TypeMirror has wildcards
-   */
-  public static boolean hasWildcards(TypeMirror type) {
-    return type.accept(
-        new SimpleTypeVisitor8<Boolean, Void>() {
-          @Override
-          public Boolean visitPrimitive(PrimitiveType t, Void p) {
-            return false;
-          }
-
-          @Override
-          public Boolean visitArray(ArrayType t, Void p) {
-            return visit(t.getComponentType(), p);
-          }
-
-          @Override
-          public Boolean visitDeclared(DeclaredType t, Void p) {
-            return t.getTypeArguments().stream()
-                .map(typeArg -> visit(typeArg, p))
-                .filter(b -> b)
-                .findFirst()
-                .orElse(false);
-          }
-
-          @Override
-          public Boolean visitTypeVariable(TypeVariable t, Void p) {
-            return false;
-          }
-
-          @Override
-          public Boolean visitWildcard(WildcardType t, Void p) {
-            return true;
-          }
-        },
-        null);
-  }
-
-  /**
-   * Check if given TypeMirror is a generic Java type
-   *
-   * @param type {@link TypeMirror} to be checked
-   * @return true if given TypeMirror is a generic type
-   */
-  public static boolean isGenericType(TypeMirror type) {
-    return type.accept(
-        new SimpleTypeVisitor8<Boolean, Void>() {
-          @Override
-          public Boolean visitPrimitive(PrimitiveType t, Void p) {
-            return false;
-          }
-
-          @Override
-          public Boolean visitArray(ArrayType t, Void p) {
-            return visit(t.getComponentType(), p);
-          }
-
-          @Override
-          public Boolean visitDeclared(DeclaredType t, Void p) {
-            return !t.getTypeArguments().isEmpty();
-          }
-
-          @Override
-          public Boolean visitTypeVariable(TypeVariable t, Void p) {
-            return true;
-          }
-
-          @Override
-          public Boolean visitWildcard(WildcardType t, Void p) {
-            return true;
-          }
-        },
-        null);
-  }
-
-  /**
-   * Check if given TypeMirror has type parameter(s).
-   *
-   * @param type {@link TypeMirror} object to be checked
-   * @return true if given TypeMirror has type parameter(s)
-   */
-  public static boolean hasTypeParameter(TypeMirror type) {
-    return type.accept(
-        new SimpleTypeVisitor8<Boolean, Void>() {
-          @Override
-          public Boolean visitPrimitive(PrimitiveType t, Void p) {
-            return false;
-          }
-
-          @Override
-          public Boolean visitArray(ArrayType t, Void p) {
-            return visit(t.getComponentType(), p);
-          }
-
-          @Override
-          public Boolean visitDeclared(DeclaredType t, Void p) {
-            return t.getTypeArguments().stream()
-                .map(typeArg -> visit(typeArg, p))
-                .filter(b -> b)
-                .findFirst()
-                .orElse(false);
-          }
-
-          @Override
-          public Boolean visitTypeVariable(TypeVariable t, Void p) {
-            return true;
-          }
-
-          @Override
-          public Boolean visitWildcard(WildcardType t, Void p) {
-            return t.getExtendsBound() != null
-                ? visit(t.getExtendsBound(), p)
-                : t.getSuperBound() != null ? visit(t.getSuperBound(), p) : false;
-          }
-        },
-        null);
-  }
-
-  /**
-   * Iterate over JsonSubTypes.Type annotations and converts them to a map
-   *
-   * @param element
-   * @return map of JsonSubTypes.Type.name (as String) and JsonSubTypes.Type.value (as TypeMirror)
-   */
-  // Retrieving Class<?> from Annotation can be tricky in an annotation processor
-  // See
-  // https://area-51.blog/2009/02/13/getting-class-values-from-annotations-in-an-annotationprocessor/
-  @SuppressWarnings("unchecked")
-  private static Map<String, TypeMirror> getSubtypeTypeMirrors(Element element) {
-    List<? extends AnnotationMirror> subTypes =
-        element.getAnnotationMirrors().stream()
-            .filter(
-                am ->
-                    am.getAnnotationType()
-                        .asElement()
-                        .getSimpleName()
-                        .toString()
-                        .equals("JsonSubTypes")) // Get JsonSubType annotation mirror
-            .flatMap(
-                am ->
-                    am.getElementValues().entrySet()
-                        .stream()) // do a flat map for JsonSubType element values map entries
-            .filter(
-                entry ->
-                    entry
-                        .getKey()
-                        .getSimpleName()
-                        .toString()
-                        .equals("value")) // find the "value" element of JsonSubType
-            .flatMap(
-                entry ->
-                    ((List<AnnotationMirror>) entry.getValue().getValue())
-                        .stream()) // treat JsonSubType.value() as list of annotation mirrors of
-            // JsonSubType.Type
-            .collect(Collectors.toList());
-
-    return subTypes.stream()
-        .collect(
-            Collectors.toMap(
-                am ->
-                    am.getElementValues().entrySet()
-                        .stream() // create a stream from all element values map entries for a given
-                        // JsonSubType.Type
-                        .filter(
-                            entry ->
-                                entry
-                                    .getKey()
-                                    .getSimpleName()
-                                    .toString()
-                                    .equals("name")) // find "name" element
-                        .map(
-                            entry ->
-                                (String)
-                                    entry
-                                        .getValue()
-                                        .getValue()) // get the value from "name" element, which is
-                        // a String
-                        .findFirst()
-                        .orElse(null),
-                am ->
-                    am.getElementValues().entrySet()
-                        .stream() // create a stream from all element values map entries for a given
-                        // JsonSubType.Type
-                        .filter(
-                            entry ->
-                                entry
-                                    .getKey()
-                                    .getSimpleName()
-                                    .toString()
-                                    .equals("value")) // find "name" element
-                        .map(entry -> (TypeMirror) entry.getValue().getValue())
-                        .findFirst()
-                        .orElse(null)));
-  }
-
-  /**
-   * Check if given type has type argument containing unbounded wildcard
-   *
-   * @param type{@link javax.lang.model.type.TypeMirror} to be checked
-   * @return true if given type has type argument containing unbounded wildcard
-   */
-  public static boolean hasUnboundedWildcards(TypeMirror type) {
-    return type.accept(
-        new SimpleTypeVisitor8<Boolean, Void>() {
-          @Override
-          public Boolean visitPrimitive(PrimitiveType t, Void p) {
-            return false;
-          }
-
-          @Override
-          public Boolean visitArray(ArrayType t, Void p) {
-            return visit(t.getComponentType(), p);
-          }
-
-          @Override
-          public Boolean visitDeclared(DeclaredType t, Void p) {
-            return t.getTypeArguments().stream()
-                .map(typeArg -> visit(typeArg, p))
-                .filter(b -> b)
-                .findFirst()
-                .orElse(false);
-          }
-
-          @Override
-          public Boolean visitTypeVariable(TypeVariable t, Void p) {
-            return false;
-          }
-
-          @Override
-          public Boolean visitWildcard(WildcardType t, Void p) {
-            return t.getExtendsBound() != null
-                ? visit(t.getExtendsBound(), p)
-                : t.getSuperBound() != null ? visit(t.getSuperBound(), p) : true;
-          }
-        },
-        null);
   }
 
   /**
@@ -531,7 +248,7 @@ public class TypeUtils {
         new SimpleTypeVisitor8<TypeMirror, Void>() {
           @Override
           public TypeMirror visitPrimitive(PrimitiveType t, Void p) {
-            return t;
+            return types.getPrimitiveType(t.getKind());
           }
 
           @Override
@@ -620,47 +337,79 @@ public class TypeUtils {
    * @return a {@link String} containing string representation of given TypeMirror
    */
   public String stringifyTypeWithPackage(TypeMirror type) {
+    TypeKind kind = type.getKind();
+
+    if (kind.isPrimitive()) {
+      return types.getPrimitiveType(kind).toString();
+    }
+
+    if (type.getKind().equals(TypeKind.ARRAY)) {
+      return stringifyTypeWithPackage(((ArrayType) type).getComponentType()) + "[]";
+    }
     return stringifyType(type, true);
   }
 
   private String stringifyType(TypeMirror type, boolean appendPackage) {
-    return (appendPackage ? !getPackage(type).isEmpty() ? getPackage(type) + "." : "" : "")
-        + type.accept(
-            new SimpleTypeVisitor8<String, Void>() {
-              @Override
-              public String visitPrimitive(PrimitiveType t, Void p) {
-                return t.toString();
-              }
+    return type.accept(
+        new SimpleTypeVisitor8<String, Void>() {
 
-              @Override
-              public String visitArray(ArrayType t, Void p) {
-                return visit(t.getComponentType(), p) + "[]";
-              }
+          @Override
+          public String visitPrimitive(PrimitiveType t, Void p) {
+            return t.toString();
+          }
 
-              @Override
-              public String visitDeclared(DeclaredType t, Void p) {
-                return t.asElement().getSimpleName()
-                    + ((!t.getTypeArguments().isEmpty())
-                        ? "_"
-                            + t.getTypeArguments().stream()
-                                .map(type -> visit(type, p))
-                                .collect(Collectors.joining("_"))
-                        : "");
-              }
+          @Override
+          public String visitArray(ArrayType t, Void p) {
+            return visit(t.getComponentType(), p) + "[]";
+          }
 
-              @Override
-              public String visitTypeVariable(TypeVariable t, Void p) {
-                return t.toString();
-              }
+          @Override
+          public String visitDeclared(DeclaredType t, Void p) {
+            String packageName = appendPackage ? getPackage(t) : "";
+            String prefix = (!packageName.isEmpty()) ? packageName + "." : "";
 
-              @Override
-              public String visitWildcard(WildcardType t, Void p) {
-                return (t.getExtendsBound() != null)
-                    ? "extends_" + visit(t.getExtendsBound(), p)
-                    : (t.getSuperBound() != null) ? "super_" + visit(t.getSuperBound(), p) : "";
-              }
-            },
-            null);
+            String simpleName = t.asElement().getSimpleName().toString();
+
+            if (!t.getTypeArguments().isEmpty()) {
+              String typeArgs =
+                  t.getTypeArguments().stream()
+                      .map(arg -> visit(arg, p))
+                      .collect(Collectors.joining(", "));
+              return prefix + simpleName + "<" + typeArgs + ">";
+            }
+
+            return prefix + simpleName;
+          }
+
+          @Override
+          public String visitTypeVariable(TypeVariable t, Void p) {
+            return t.toString();
+          }
+
+          @Override
+          public String visitWildcard(WildcardType t, Void p) {
+            if (t.getExtendsBound() != null) {
+              return "? extends " + visit(t.getExtendsBound(), p);
+            }
+            if (t.getSuperBound() != null) {
+              return "? super " + visit(t.getSuperBound(), p);
+            }
+            return "?";
+          }
+
+          @Override
+          public String visitIntersection(IntersectionType t, Void p) {
+            return t.getBounds().stream()
+                .map(bound -> visit(bound, p))
+                .collect(Collectors.joining(" & "));
+          }
+
+          @Override
+          protected String defaultAction(TypeMirror e, Void p) {
+            return e.toString();
+          }
+        },
+        null);
   }
 
   /**
@@ -765,15 +514,31 @@ public class TypeUtils {
   }
 
   public ExecutableElement getGetter(VariableElement variable) {
-    List<String> method = compileGetterMethodName(variable);
-    return MoreElements.asType(variable.getEnclosingElement()).getEnclosedElements().stream()
-        .filter(e -> e.getKind().equals(ElementKind.METHOD))
-        .filter(e -> method.contains(e.getSimpleName().toString()))
-        .filter(e -> !e.getModifiers().contains(Modifier.PRIVATE))
-        .filter(e -> !e.getModifiers().contains(Modifier.STATIC))
-        .map(MoreElements::asExecutable)
-        .filter(elm -> elm.getParameters().isEmpty())
-        .filter(elm -> types.isSameType(elm.getReturnType(), variable.asType()))
+    List<String> getterNames = compileGetterMethodName(variable);
+    List<ExecutableElement> methods =
+        ElementFilter.methodsIn(variable.getEnclosingElement().getEnclosedElements());
+
+    TypeMirror type = variable.asType();
+
+    Predicate<ExecutableElement> isCandidate =
+        e ->
+            !e.getModifiers().contains(Modifier.PRIVATE)
+                && !e.getModifiers().contains(Modifier.STATIC)
+                && e.getParameters().isEmpty()
+                && types.isSameType(e.getReturnType(), type);
+
+    Predicate<ExecutableElement> matchByName =
+        e -> getterNames.contains(e.getSimpleName().toString());
+
+    Predicate<ExecutableElement> matchByAnnotation =
+        e -> {
+          YamlGetter yg = e.getAnnotation(YamlGetter.class);
+          return yg != null && yg.value().equals(variable.getSimpleName().toString());
+        };
+
+    return Stream.concat(
+            methods.stream().filter(isCandidate.and(matchByName)),
+            methods.stream().filter(isCandidate.and(matchByAnnotation)))
         .findFirst()
         .orElseThrow(
             () ->
@@ -804,13 +569,29 @@ public class TypeUtils {
   }
 
   public ExecutableElement getSetter(VariableElement variable) {
-    String method = compileSetterMethodName(variable);
-    return ElementFilter.methodsIn(variable.getEnclosingElement().getEnclosedElements()).stream()
-        .filter(e -> !e.getModifiers().contains(Modifier.PRIVATE))
-        .filter(e -> !e.getModifiers().contains(Modifier.STATIC))
-        .filter(e -> method.equals(e.getSimpleName().toString()))
-        .filter(elm -> elm.getParameters().size() == 1)
-        .filter(elm -> types.isSameType(elm.getParameters().get(0).asType(), variable.asType()))
+    String setterName = compileSetterMethodName(variable);
+
+    List<ExecutableElement> methods =
+        ElementFilter.methodsIn(variable.getEnclosingElement().getEnclosedElements());
+
+    Predicate<ExecutableElement> isCandidate =
+        e ->
+            !e.getModifiers().contains(Modifier.PRIVATE)
+                && !e.getModifiers().contains(Modifier.STATIC)
+                && e.getParameters().size() == 1
+                && types.isSameType(e.getParameters().get(0).asType(), variable.asType());
+
+    Predicate<ExecutableElement> matchByName = e -> setterName.equals(e.getSimpleName().toString());
+
+    Predicate<ExecutableElement> matchByAnnotation =
+        e -> {
+          YamlSetter ys = e.getAnnotation(YamlSetter.class);
+          return ys != null && ys.value().equals(variable.getSimpleName().toString());
+        };
+
+    return Stream.concat(
+            methods.stream().filter(isCandidate.and(matchByName)),
+            methods.stream().filter(isCandidate.and(matchByAnnotation)))
         .findFirst()
         .orElseThrow(
             () ->

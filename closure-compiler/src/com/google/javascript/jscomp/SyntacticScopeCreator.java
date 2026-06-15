@@ -151,7 +151,7 @@ public final class SyntacticScopeCreator implements ScopeCreator {
         case FOR_OF:
         case FOR_AWAIT_OF:
         case FOR_IN:
-        case SWITCH:
+        case SWITCH_BODY:
           scanVars(n, null, scope);
           return;
 
@@ -309,7 +309,7 @@ public final class SyntacticScopeCreator implements ScopeCreator {
 
       // Variables can only occur in statement-level nodes, so
       // we only need to traverse children in a couple special cases.
-      if (NodeUtil.isControlStructure(n) || NodeUtil.isStatementBlock(n)) {
+      if (NodeUtil.isShallowStatementTree(n)) {
         for (Node child = n.getFirstChild(); child != null;) {
           Node next = child.getNext();
           scanVars(child, hoistScope, enteringNewBlock ? null : blockScope);

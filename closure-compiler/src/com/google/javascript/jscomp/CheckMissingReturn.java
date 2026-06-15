@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-
-import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.graph.CheckPathsBetweenNodes;
@@ -43,28 +41,27 @@ class CheckMissingReturn extends NodeTraversal.AbstractCfgCallback {
   private final CodingConvention convention;
 
   /* Skips all exception edges and impossible edges. */
-  private static final Predicate<DiGraphEdge<Node, ControlFlowGraph.Branch>>
-      GOES_THROUGH_TRUE_CONDITION_PREDICATE =
-          (DiGraphEdge<Node, ControlFlowGraph.Branch> input) -> {
-            // First skill all exceptions.
-            Branch branch = input.getValue();
-            if (branch == Branch.ON_EX) {
-              return false;
-            } else if (branch.isConditional()) {
-              Node condition = NodeUtil.getConditionExpression(input.getSource().getValue());
-              // TODO(user): We CAN make this bit smarter just looking at
-              // constants. We DO have a full blown ReverseAbstractInterupter and
-              // type system that can evaluate some impressions' boolean value but
-              // for now we will keep this pass lightweight.
-              if (condition != null) {
-                Tri val = NodeUtil.getBooleanValue(condition);
-                if (val != Tri.UNKNOWN) {
-                  return val.toBoolean(true) == (Branch.ON_TRUE == branch);
-                }
-              }
-            }
-            return true;
-          };
+  private static boolean goesThroughTrueCondition(
+      DiGraphEdge<Node, ControlFlowGraph.Branch> input) {
+    // First skill all exceptions.
+    Branch branch = input.getValue();
+    if (branch == Branch.ON_EX) {
+      return false;
+    } else if (branch.isConditional()) {
+      Node condition = NodeUtil.getConditionExpression(input.getSource().getValue());
+      // TODO(user): We CAN make this bit smarter just looking at
+      // constants. We DO have a full blown ReverseAbstractInterupter and
+      // type system that can evaluate some impressions' boolean value but
+      // for now we will keep this pass lightweight.
+      if (condition != null) {
+        Tri val = NodeUtil.getBooleanValue(condition);
+        if (val != Tri.UNKNOWN) {
+          return val.toBoolean(true) == (branch == Branch.ON_TRUE);
+        }
+      }
+    }
+    return true;
+  }
 
   CheckMissingReturn(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -78,12 +75,6 @@ class CheckMissingReturn extends NodeTraversal.AbstractCfgCallback {
 
     if (returnType == null) {
       // No return value is expected, so nothing to check.
-      return;
-    }
-
-    if (n.isGeneratorFunction()) {
-      // Generator functions always return a Generator. No need to check return statements.
-      // TODO(b/73387406): Investigate adding a warning for generators with no yields.
       return;
     }
 
@@ -106,7 +97,7 @@ class CheckMissingReturn extends NodeTraversal.AbstractCfgCallback {
             cfg.getEntry(),
             cfg.getImplicitReturn(),
             (Node input) -> input != null && input.isReturn(),
-            GOES_THROUGH_TRUE_CONDITION_PREDICATE);
+            CheckMissingReturn::goesThroughTrueCondition);
 
     if (!test.allPathsSatisfyPredicate()) {
       compiler.report(
@@ -181,6 +172,9 @@ class CheckMissingReturn extends NodeTraversal.AbstractCfgCallback {
     if (scopeRoot.isAsyncFunction()) {
       // Unwrap the declared return type (e.g. "!Promise<number>" becomes "number")
       returnType = Promises.getTemplateTypeOfThenable(compiler.getTypeRegistry(), returnType);
+    } else if (scopeRoot.isGeneratorFunction()) {
+      // Unwrap the declared return type (e.g. "!Generator<string, number>" becomes "number")
+      returnType = JsIterables.getReturnElementType(returnType, compiler.getTypeRegistry());
     }
 
     if (!isVoidOrUnknown(returnType)) {

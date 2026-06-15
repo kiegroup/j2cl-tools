@@ -21,6 +21,7 @@ import static java.util.stream.Collectors.joining;
 
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.extension.memoized.Memoized;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.j2cl.common.ThreadLocalInterner;
@@ -65,7 +66,7 @@ public abstract class IntersectionTypeDescriptor extends TypeDescriptor {
    */
   @Memoized
   public TypeDescriptor getFirstType() {
-    return getIntersectionTypeDescriptors().get(0);
+    return getIntersectionTypeDescriptors().getFirst();
   }
 
   @Override
@@ -209,6 +210,16 @@ public abstract class IntersectionTypeDescriptor extends TypeDescriptor {
   }
 
   @Override
+  @Nullable
+  public DeclaredTypeDescriptor findSupertype(TypeDeclaration supertypeDeclaration) {
+    return getIntersectionTypeDescriptors().stream()
+        .map(td -> td.findSupertype(supertypeDeclaration))
+        .filter(Predicates.notNull())
+        .findFirst()
+        .orElse(null);
+  }
+
+  @Override
   boolean isDenotable(ImmutableSet<TypeVariable> seen) {
     return false;
   }
@@ -217,6 +228,13 @@ public abstract class IntersectionTypeDescriptor extends TypeDescriptor {
   boolean hasReferenceTo(TypeVariable typeVariable, ImmutableSet<TypeVariable> seen) {
     return getIntersectionTypeDescriptors().stream()
         .anyMatch(it -> it.hasReferenceTo(typeVariable, seen));
+  }
+
+  @Override
+  String toStringInternal(ImmutableSet<TypeVariable> seen) {
+    return getIntersectionTypeDescriptors().stream()
+        .map(t -> t.toStringInternal(seen))
+        .collect(joining(" & ", "(", ")"));
   }
 
   @Override

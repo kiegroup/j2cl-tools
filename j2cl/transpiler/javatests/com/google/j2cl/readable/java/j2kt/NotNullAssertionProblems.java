@@ -22,6 +22,7 @@ import org.jspecify.annotations.Nullable;
 @NullMarked
 public class NotNullAssertionProblems {
   public void testArrayLiteral(String string, @Nullable String nullableString) {
+    @Nullable String[] array0 = {null};
     @Nullable String[] array1 = {string, null};
     @Nullable String[] array2 = {string, nullableString};
     @Nullable String[] array3 = {null, string};
@@ -29,6 +30,7 @@ public class NotNullAssertionProblems {
   }
 
   public void testNewArray(String string, @Nullable String nullableString) {
+    @Nullable String[] array0 = new @Nullable String[] {null};
     @Nullable String[] array1 = new @Nullable String[] {string, null};
     @Nullable String[] array2 = new @Nullable String[] {string, nullableString};
     @Nullable String[] array3 = new @Nullable String[] {null, string};
@@ -133,6 +135,14 @@ public class NotNullAssertionProblems {
     acceptVararg(string, wildcardSupplier.getValue());
   }
 
+  public static void testImplicitInvocationTypeArguments_rawTypes(
+      Supplier nonNull, @Nullable Supplier nullable) {
+    accept2(nonNull, nullable);
+    accept2(nullable, nonNull);
+    acceptVararg(nonNull, nullable);
+    acceptVararg(nullable, nonNull);
+  }
+
   public static void testImplicitConstructorTypeArguments_wildcards(
       String string, Supplier<?> wildcardSupplier) {
     // Non-null assertion should not be inserted for {@code supplier.getValue()}.
@@ -155,6 +165,75 @@ public class NotNullAssertionProblems {
     new VarargConsumer<>(string, null).accept(null);
   }
 
+  public static <T> void testUnsafeNull() {
+    // This line should not throw NPE, as the bound is nullable.
+    Object x = getUnsafeNull();
+
+    if (x != null) {
+      // It should be safe to use `x` since there's explicit null-check.
+      accept1(x.hashCode());
+    }
+  }
+
+  public static <C extends @Nullable String> void testNullableAcceptNullable2Vararg(C nonNull) {
+    C localNonNull = nonNull;
+    acceptNullable2Vararg(localNonNull, nonNull, nonNull);
+  }
+
+  public static <C extends String> void testNonNullAcceptNullable2Vararg(C nonNull) {
+    C localNonNull = nonNull;
+    acceptNullable2Vararg(localNonNull, nonNull, nonNull);
+  }
+
+  public static <C extends String> void testNonNullAcceptNonNull2Vararg(C nonNull) {
+    C localNonNull = nonNull;
+    acceptNonNull2Vararg(localNonNull, nonNull, nonNull);
+  }
+
+  public static <U extends String, C extends U>
+      void testNonNullParametericBoundAcceptNullable2Vararg(C nonNull) {
+    C localNonNull = nonNull;
+    acceptNullable2Vararg(localNonNull, nonNull, nonNull);
+  }
+
+  public interface Class1 {}
+
+  public interface Interface1 {}
+
+  public interface Interface2 {}
+
+  public static <C extends Class1 & Interface1>
+      void testNonNullClassInterfaceIntersectionAcceptNullable2Vararg(C nonNull) {
+    C localNonNull = nonNull;
+    acceptNullable2Vararg(localNonNull, nonNull, nonNull);
+  }
+
+  public static <C extends Interface1 & Interface2>
+      void testNonNullInterfaceInterfaceIntersectionAcceptNullable2Vararg(C nonNull) {
+    C localNonNull = nonNull;
+    acceptNullable2Vararg(localNonNull, nonNull, nonNull);
+  }
+
+  public static <T extends @Nullable Object> T getUnsafeNull() {
+    return null;
+  }
+
+  public static <T> void testDefaultValue(@Nullable Object value) {
+    if (value != null) {
+      // This line should not throw NPE, even though the return type has non-null bound.
+      Object x = getDefaultValue(value.getClass());
+
+      if (x != null) {
+        // It should be safe to use `x` since there's explicit null-check.
+        accept1(x.hashCode());
+      }
+    }
+  }
+
+  public static <T> T getDefaultValue(Class<T> cls) {
+    return getUnsafeNull();
+  }
+
   public static <T extends @Nullable Object> void accept1(T t) {}
 
   public static <T extends @Nullable Object> void accept2(T t1, T t2) {}
@@ -165,6 +244,10 @@ public class NotNullAssertionProblems {
   public static <T extends @Nullable Object> void acceptGeneric(Supplier<T> t1, T t2) {}
 
   public static <T extends @Nullable Object> void acceptVararg(T... varargs) {}
+
+  public static <T extends @Nullable Object> void acceptNullable2Vararg(T t1, T t2, T... varargs) {}
+
+  public static <T> void acceptNonNull2Vararg(T t1, T t2, T... varargs) {}
 
   public static class Consumer<T extends @Nullable Object> {
     public Consumer(T t) {}
@@ -202,5 +285,14 @@ public class NotNullAssertionProblems {
 
   public interface Supplier<V extends @Nullable Object> {
     V getValue();
+  }
+
+  public static void testNullWildcardInLambda() {
+    Supplier<?> supplier = wrap(() -> null);
+    supplier.getValue();
+  }
+
+  public static <T extends @Nullable Object> Supplier<T> wrap(Supplier<? extends T> supplier) {
+    return () -> supplier.getValue();
   }
 }

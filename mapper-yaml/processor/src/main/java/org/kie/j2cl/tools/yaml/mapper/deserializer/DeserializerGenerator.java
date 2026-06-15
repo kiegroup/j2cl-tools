@@ -33,12 +33,12 @@ import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
+import com.google.auto.common.MoreElements;
 import java.util.HashMap;
 import java.util.Map;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
-import org.kie.j2cl.tools.yaml.mapper.TypeUtils;
 import org.kie.j2cl.tools.yaml.mapper.api.YAMLDeserializer;
 import org.kie.j2cl.tools.yaml.mapper.api.annotation.YamlTypeDeserializer;
 import org.kie.j2cl.tools.yaml.mapper.api.internal.deser.YAMLDeserializationContext;
@@ -232,15 +232,15 @@ public class DeserializerGenerator extends AbstractGenerator {
     body.addStatement(new ReturnStmt(instanceBuilder));
   }
 
-  private ClassOrInterfaceType getWrappedType(VariableElement field) {
+  private ClassOrInterfaceType getWrappedType(Element field) {
     ClassOrInterfaceType typeArg =
-        new ClassOrInterfaceType().setName(TypeUtils.wrapperType(field.asType()));
+        new ClassOrInterfaceType().setName(context.getTypeUtils().wrapperType(field.asType()));
     if (field.asType() instanceof DeclaredType) {
       if (!((DeclaredType) field.asType()).getTypeArguments().isEmpty()) {
         NodeList<Type> types = new NodeList<>();
         ((DeclaredType) field.asType())
             .getTypeArguments()
-            .forEach(t -> types.add(new ClassOrInterfaceType().setName(TypeUtils.wrapperType(t))));
+            .forEach(t -> types.add(new ClassOrInterfaceType().setName(t.toString())));
         typeArg.setTypeArguments(types);
       }
     }
@@ -348,10 +348,13 @@ public class DeserializerGenerator extends AbstractGenerator {
   }
 
   private Expression getFieldAccessor(PropertyDefinition field) {
-    if (typeUtils.hasSetter(field.getProperty())) {
+    if (typeUtils.hasSetter(MoreElements.asVariable(field.getProperty()))) {
       return new MethodCallExpr(
               new NameExpr("bean"),
-              typeUtils.getSetter(field.getProperty()).getSimpleName().toString())
+              typeUtils
+                  .getSetter(MoreElements.asVariable(field.getProperty()))
+                  .getSimpleName()
+                  .toString())
           .addArgument("value");
     } else {
       return new AssignExpr()

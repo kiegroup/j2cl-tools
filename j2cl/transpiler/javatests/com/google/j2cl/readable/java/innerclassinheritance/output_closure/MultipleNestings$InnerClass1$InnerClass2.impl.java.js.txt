@@ -9,20 +9,20 @@ class InnerClass2 extends Parent {
  /** @protected @nodts */
  constructor() {
   super();
-  /**@type {InnerClass1} @nodts*/
+  /**@type {!InnerClass1} @nodts*/
   this.$outer_this__innerclassinheritance_MultipleNestings_InnerClass1_InnerClass2;
  }
  /** @nodts @return {!InnerClass2} */
- static $create__innerclassinheritance_MultipleNestings_InnerClass1(/** InnerClass1 */ $outer_this) {
+ static $create__innerclassinheritance_MultipleNestings_InnerClass1(/** !InnerClass1 */ $outer_this) {
   InnerClass2.$clinit();
   let $instance = new InnerClass2();
   $instance.$ctor__innerclassinheritance_MultipleNestings_InnerClass1_InnerClass2__innerclassinheritance_MultipleNestings_InnerClass1__void($outer_this);
   return $instance;
  }
  /** @nodts */
- $ctor__innerclassinheritance_MultipleNestings_InnerClass1_InnerClass2__innerclassinheritance_MultipleNestings_InnerClass1__void(/** InnerClass1 */ $outer_this) {
+ $ctor__innerclassinheritance_MultipleNestings_InnerClass1_InnerClass2__innerclassinheritance_MultipleNestings_InnerClass1__void(/** !InnerClass1 */ $outer_this) {
   this.$outer_this__innerclassinheritance_MultipleNestings_InnerClass1_InnerClass2 = $outer_this;
-  this.$ctor__innerclassinheritance_MultipleNestings_Parent__innerclassinheritance_MultipleNestings__void(this.$outer_this__innerclassinheritance_MultipleNestings_InnerClass1_InnerClass2.$outer_this__innerclassinheritance_MultipleNestings_InnerClass1);
+  this.$ctor__innerclassinheritance_MultipleNestings_Parent__innerclassinheritance_MultipleNestings__void($outer_this.$outer_this__innerclassinheritance_MultipleNestings_InnerClass1);
  }
  /** @nodts */
  m_funInI2__void() {}

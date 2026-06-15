@@ -1,6 +1,6 @@
 load("//build_defs:rules.bzl", "j2cl_library")
 load("@rules_java//java:defs.bzl", "java_library", "java_plugin")
-load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
+load("@google_bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 package(
     default_applicable_licenses = ["//:j2cl_license"],
@@ -13,10 +13,6 @@ j2cl_library(
     srcs = ["J2clTestInput.java"],
     exported_plugins = [":junit_processor_plugin"],
     visibility = ["//build_defs/internal_do_not_use:__pkg__"],
-)
-javadoc_library(
-    name = "internal_junit_annotations-javadoc",
-    srcs = ["J2clTestInput.java"],
 )
 
 java_plugin(
@@ -44,8 +40,8 @@ java_library(
         "//third_party:jsr305_annotations",
         "//third_party:junit",
     ],
-    plugins = [":autoservice_plugin"],
 )
+
 javadoc_library(
     name = "junit_processor-javadoc",
     testonly = 1,
@@ -55,12 +51,7 @@ javadoc_library(
     ],
 )
 
-java_plugin(
-    name = "autoservice_plugin",
-    processor_class = "com.google.auto.service.processor.AutoServiceProcessor",
-    deps = [
-        "//third_party:auto_service",
-        "//third_party:guava",
-        "//third_party:auto_common",
-    ],
+javadoc_library(
+    name = "internal_junit_annotations-javadoc",
+    srcs = ["J2clTestInput.java"],
 )

@@ -36,7 +36,6 @@ def j2wasm_generate_jsunit_suite(
         deps,
         tags = [],
         optimize = False,
-        use_magic_string_imports = False,
         defines = {}):
     """Macro for cross compiling a JUnit Suite to .wasm file.
 
@@ -67,9 +66,10 @@ def j2wasm_generate_jsunit_suite(
         deps = deps + [
             Label("//build_defs/internal_do_not_use:internal_junit_annotations-j2wasm"),
             Label("//build_defs/internal_do_not_use:internal_junit_runtime-j2wasm"),
+            Label("//build_defs/internal_do_not_use:closure_testcase"),
         ],
-        javacopts = ["-AtestPlatform=WASM"],
         testonly = 1,
+        javacopts = ["-AtestPlatform=WASM"],
         tags = tags,
     )
 
@@ -99,7 +99,6 @@ def j2wasm_generate_jsunit_suite(
         ],
         testonly = 1,
         tags = tags + ["manual", "notap"],
-        use_magic_string_imports = use_magic_string_imports,
     )
 
     # Re-expose the target as "_dep" for test infra to depend on.
@@ -123,13 +122,16 @@ def j2wasm_generate_jsunit_suite(
         srcs = [out_jar],
         outs = [name + ".js.zip"],
         cmd = "\n".join([
-            "unzip -q $(location %s) *.testsuite *.json -d zip_out/" % out_jar,
-            "cd zip_out/",
+            "TMP=$$(mktemp -d)",
+            "WD=$$(pwd)",
+            "unzip -q $(location %s) *.testsuite *.json -d $$TMP" % out_jar,
+            "cd $$TMP",
             "for f in $$(find . -name *.testsuite); do" +
             " sed -i -e 's/REPLACEMENT_MODULE_NAME_PLACEHOLDER/%s/' $$f ;" % wasm_module_name +
             " sed -i -e 's/REPLACEMENT_BUILD_PATH_PLACEHOLDER/%s/' $$f ;" % processed_wasm_path +
             " mv $$f $${f/.testsuite/.js}; done",
-            "zip -q -r ../$@ .",
+            "zip -q -r $$WD/$@ .",
+            "rm -rf $$TMP",
         ]),
         testonly = 1,
         tags = tags + ["manual", "notap"],

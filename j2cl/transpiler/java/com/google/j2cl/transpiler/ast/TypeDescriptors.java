@@ -29,6 +29,7 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.j2cl.common.InternalCompilerError;
 import com.google.j2cl.transpiler.ast.TypeDeclaration.Kind;
 import java.lang.annotation.ElementType;
@@ -49,6 +50,7 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /** Utility class holding type descriptors that need to be referenced directly. */
+@SuppressWarnings("ReferenceEquality")
 public class TypeDescriptors {
   // Boxed types.
   public DeclaredTypeDescriptor javaLangBoolean;
@@ -70,6 +72,9 @@ public class TypeDescriptors {
   public DeclaredTypeDescriptor javaLangEnum;
   public DeclaredTypeDescriptor javaLangIterable;
 
+  @QualifiedBinaryName("java.lang.annotation.Annotation")
+  public DeclaredTypeDescriptor javaLangAnnotation;
+
   @QualifiedBinaryName("java.lang.NullPointerException")
   public DeclaredTypeDescriptor javaLangNullPointerException;
 
@@ -86,7 +91,17 @@ public class TypeDescriptors {
   public DeclaredTypeDescriptor javaUtilArrays;
   public DeclaredTypeDescriptor javaUtilCollection;
   public DeclaredTypeDescriptor javaUtilMap;
+  public DeclaredTypeDescriptor javaUtilList;
   public DeclaredTypeDescriptor javaUtilObjects;
+  public DeclaredTypeDescriptor javaUtilOptional;
+
+  @Nullable
+  @QualifiedBinaryName("java.util.ReadonlyCollection")
+  public DeclaredTypeDescriptor javaUtilReadonlyCollection;
+
+  @Nullable
+  @QualifiedBinaryName("java.util.ReadonlyMap")
+  public DeclaredTypeDescriptor javaUtilReadonlyMap;
 
   public DeclaredTypeDescriptor javaIoSerializable;
 
@@ -155,6 +170,10 @@ public class TypeDescriptors {
   @Nullable public DeclaredTypeDescriptor javaemulInternalPlatform;
   public DeclaredTypeDescriptor javaemulInternalExceptions;
 
+  @Nullable
+  @QualifiedBinaryName("javaemul.internal.Ref")
+  public DeclaredTypeDescriptor javaemulInternalRef;
+
   public ArrayTypeDescriptor javaLangObjectArray;
 
   // Common browser native types.
@@ -166,6 +185,10 @@ public class TypeDescriptors {
       createGlobalNativeTypeDescriptor("TypeError");
 
   // Kotlin-specific types
+  @Nullable
+  @QualifiedBinaryName("kotlin.coroutines.Continuation")
+  public DeclaredTypeDescriptor kotlinCoroutinesContinuation;
+
   @Nullable
   @QualifiedBinaryName("kotlin.jvm.internal.NothingStub")
   public DeclaredTypeDescriptor kotlinNothing;
@@ -248,23 +271,23 @@ public class TypeDescriptors {
   }
 
   public static boolean isPrimitiveBoolean(TypeDescriptor typeDescriptor) {
-    return PrimitiveTypes.BOOLEAN.equals(typeDescriptor);
+    return typeDescriptor == PrimitiveTypes.BOOLEAN;
   }
 
   public static boolean isPrimitiveByte(TypeDescriptor typeDescriptor) {
-    return PrimitiveTypes.BYTE.equals(typeDescriptor);
+    return typeDescriptor == PrimitiveTypes.BYTE;
   }
 
   public static boolean isPrimitiveChar(TypeDescriptor typeDescriptor) {
-    return PrimitiveTypes.CHAR.equals(typeDescriptor);
+    return typeDescriptor == PrimitiveTypes.CHAR;
   }
 
   public static boolean isPrimitiveDouble(TypeDescriptor typeDescriptor) {
-    return PrimitiveTypes.DOUBLE.equals(typeDescriptor);
+    return typeDescriptor == PrimitiveTypes.DOUBLE;
   }
 
   public static boolean isPrimitiveFloat(TypeDescriptor typeDescriptor) {
-    return PrimitiveTypes.FLOAT.equals(typeDescriptor);
+    return typeDescriptor == PrimitiveTypes.FLOAT;
   }
 
   public static boolean isPrimitiveFloatOrDouble(TypeDescriptor typeDescriptor) {
@@ -272,19 +295,19 @@ public class TypeDescriptors {
   }
 
   public static boolean isPrimitiveInt(TypeDescriptor typeDescriptor) {
-    return PrimitiveTypes.INT.equals(typeDescriptor);
+    return typeDescriptor == PrimitiveTypes.INT;
   }
 
   public static boolean isPrimitiveLong(TypeDescriptor typeDescriptor) {
-    return PrimitiveTypes.LONG.equals(typeDescriptor);
+    return typeDescriptor == PrimitiveTypes.LONG;
   }
 
   public static boolean isPrimitiveShort(TypeDescriptor typeDescriptor) {
-    return PrimitiveTypes.SHORT.equals(typeDescriptor);
+    return typeDescriptor == PrimitiveTypes.SHORT;
   }
 
   public static boolean isPrimitiveVoid(TypeDescriptor typeDescriptor) {
-    return PrimitiveTypes.VOID.equals(typeDescriptor);
+    return typeDescriptor == PrimitiveTypes.VOID;
   }
 
   public static boolean isPrimitiveBooleanOrDouble(TypeDescriptor typeDescriptor) {
@@ -363,6 +386,10 @@ public class TypeDescriptors {
     return typeDescriptor.isSameBaseType(get().javaLangEnum);
   }
 
+  public static boolean isJavaLangAnnotation(TypeDescriptor typeDescriptor) {
+    return typeDescriptor.isSameBaseType(get().javaLangAnnotation);
+  }
+
   public static boolean isJavaLangIterable(TypeDescriptor typeDescriptor) {
     return typeDescriptor.isSameBaseType(get().javaLangIterable);
   }
@@ -420,9 +447,8 @@ public class TypeDescriptors {
   }
 
   public static boolean isWasmArraySubtype(TypeDescriptor typeDescriptor) {
-    if (typeDescriptor instanceof DeclaredTypeDescriptor) {
-      DeclaredTypeDescriptor superTypeDescriptor =
-          ((DeclaredTypeDescriptor) typeDescriptor).getSuperTypeDescriptor();
+    if (typeDescriptor instanceof DeclaredTypeDescriptor descriptor) {
+      DeclaredTypeDescriptor superTypeDescriptor = descriptor.getSuperTypeDescriptor();
       return get().javaemulInternalWasmArray.isSameBaseType(superTypeDescriptor);
     }
     return false;
@@ -577,33 +603,24 @@ public class TypeDescriptors {
       return TypeDescriptors.get().javaemulInternalWasmArrayOfObject;
     }
 
-    switch (((PrimitiveTypeDescriptor) componentTypeDescriptor).getSimpleSourceName()) {
-      case "boolean":
-        return TypeDescriptors.get().javaemulInternalWasmArrayOfBoolean;
-      case "short":
-        return TypeDescriptors.get().javaemulInternalWasmArrayOfShort;
-      case "char":
-        return TypeDescriptors.get().javaemulInternalWasmArrayOfChar;
-      case "byte":
-        return TypeDescriptors.get().javaemulInternalWasmArrayOfByte;
-      case "int":
-        return TypeDescriptors.get().javaemulInternalWasmArrayOfInt;
-      case "long":
-        return TypeDescriptors.get().javaemulInternalWasmArrayOfLong;
-      case "float":
-        return TypeDescriptors.get().javaemulInternalWasmArrayOfFloat;
-      case "double":
-        return TypeDescriptors.get().javaemulInternalWasmArrayOfDouble;
-      default:
-        throw new AssertionError("Unsupported primitive type: " + componentTypeDescriptor);
-    }
+    return switch (((PrimitiveTypeDescriptor) componentTypeDescriptor).getSimpleSourceName()) {
+      case "boolean" -> TypeDescriptors.get().javaemulInternalWasmArrayOfBoolean;
+      case "short" -> TypeDescriptors.get().javaemulInternalWasmArrayOfShort;
+      case "char" -> TypeDescriptors.get().javaemulInternalWasmArrayOfChar;
+      case "byte" -> TypeDescriptors.get().javaemulInternalWasmArrayOfByte;
+      case "int" -> TypeDescriptors.get().javaemulInternalWasmArrayOfInt;
+      case "long" -> TypeDescriptors.get().javaemulInternalWasmArrayOfLong;
+      case "float" -> TypeDescriptors.get().javaemulInternalWasmArrayOfFloat;
+      case "double" -> TypeDescriptors.get().javaemulInternalWasmArrayOfDouble;
+      default -> throw new AssertionError("Unsupported primitive type: " + componentTypeDescriptor);
+    };
   }
 
   /** Builder for TypeDescriptors. */
   public static class SingletonBuilder {
 
     private final TypeDescriptors typeDescriptors = new TypeDescriptors();
-    private Map<String, DeclaredTypeDescriptor> knownTypesByQualifiedName = new HashMap<>();
+    private final Map<String, DeclaredTypeDescriptor> knownTypesByQualifiedName = new HashMap<>();
     private final Set<String> requiredTypes = new HashSet<>(requiredWellKnownTypes);
 
     public void buildSingleton() {
@@ -624,6 +641,7 @@ public class TypeDescriptors {
               .build();
     }
 
+    @CanIgnoreReturnValue
     public SingletonBuilder addReferenceType(DeclaredTypeDescriptor referenceType) {
       checkArgument(
           !referenceType.isPrimitive(),
@@ -642,9 +660,9 @@ public class TypeDescriptors {
       return this;
     }
 
-    private TypeDescriptor addBoxedTypeMapping(
+    private void addBoxedTypeMapping(
         PrimitiveTypeDescriptor primitiveType, DeclaredTypeDescriptor boxedType) {
-      return typeDescriptors.boxedTypeByPrimitiveType.put(primitiveType, boxedType);
+      typeDescriptors.boxedTypeByPrimitiveType.put(primitiveType, boxedType);
     }
   }
 
@@ -697,4 +715,3 @@ public class TypeDescriptors {
     String value();
   }
 }
-

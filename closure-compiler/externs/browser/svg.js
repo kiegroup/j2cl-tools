@@ -6167,92 +6167,43 @@ function SVGMissingGlyphElement(){}
  * @extends {SVGElement}
  * @implements {SVGFilterPrimitiveStandardAttributes}
  */
-function SVGFEBlendElement(){}
+function SVGFEBlendElement() {}
 
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_UNKNOWN;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_NORMAL;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_MULTIPLY;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_SCREEN;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_DARKEN;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_LIGHTEN;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_OVERLAY;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_COLOR_DODGE;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_COLOR_BURN;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_HARD_LIGHT;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_SOFT_LIGHT;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_DIFFERENCE;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_EXCLUSION;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_HUE;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_SATURATION;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_COLOR;
+/** @const {number} */ SVGFEBlendElement.SVG_FEBLEND_MODE_LUMINOSITY;
 
-/**
- * @const
- * @type {number}
- */
-SVGFEBlendElement.SVG_FEBLEND_MODE_UNKNOWN;
-
-
-/**
- * @const
- * @type {number}
- */
-SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_UNKNOWN;
-
-
-/**
- * @const
- * @type {number}
- */
-SVGFEBlendElement.SVG_FEBLEND_MODE_NORMAL;
-
-
-/**
- * @const
- * @type {number}
- */
-SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_NORMAL;
-
-
-/**
- * @const
- * @type {number}
- */
-SVGFEBlendElement.SVG_FEBLEND_MODE_MULTIPLY;
-
-
-/**
- * @const
- * @type {number}
- */
-SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_MULTIPLY;
-
-
-/**
- * @const
- * @type {number}
- */
-SVGFEBlendElement.SVG_FEBLEND_MODE_SCREEN;
-
-
-/**
- * @const
- * @type {number}
- */
-SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_SCREEN;
-
-
-/**
- * @const
- * @type {number}
- */
-SVGFEBlendElement.SVG_FEBLEND_MODE_DARKEN;
-
-
-/**
- * @const
- * @type {number}
- */
-SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_DARKEN;
-
-
-/**
- * @const
- * @type {number}
- */
-SVGFEBlendElement.SVG_FEBLEND_MODE_LIGHTEN;
-
-
-/**
- * @const
- * @type {number}
- */
-SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_LIGHTEN;
-
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_UNKNOWN;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_NORMAL;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_MULTIPLY;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_SCREEN;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_DARKEN;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_LIGHTEN;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_OVERLAY;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_COLOR_DODGE;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_COLOR_BURN;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_HARD_LIGHT;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_SOFT_LIGHT;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_DIFFERENCE;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_EXCLUSION;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_HUE;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_SATURATION;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_COLOR;
+/** @const {number} */ SVGFEBlendElement.prototype.SVG_FEBLEND_MODE_LUMINOSITY;
 
 /**
  * @type {!SVGAnimatedString}
@@ -8632,6 +8583,16 @@ SVGElement.prototype.tabIndex;
 
 
 /**
+ * @typedef {{
+ *   clipped: (boolean|undefined),
+ *   fill: (boolean|undefined),
+ *   markers: (boolean|undefined),
+ *   stroke: (boolean|undefined)
+ * }}
+ */
+var SVGBoundingBoxOptions;
+
+/**
  * @constructor
  * @extends {SVGElement}
  *
@@ -8647,9 +8608,10 @@ SVGGraphicsElement.prototype.transform;
 
 
 /**
+ * @param {!SVGBoundingBoxOptions=} options
  * @return {!DOMRect}
  */
-SVGGraphicsElement.prototype.getBBox = function() {};
+SVGGraphicsElement.prototype.getBBox = function(options) {};
 
 
 /**
@@ -8662,6 +8624,36 @@ SVGGraphicsElement.prototype.getCTM = function() {};
  * @return {!Object}
  */
 SVGGraphicsElement.prototype.getScreenCTM = function() {};
+
+
+/**
+ * @constructor
+ * @extends {SVGGraphicsElement}
+ * @see https://developer.mozilla.org/docs/Web/API/SVGGeometryElement
+ */
+function SVGGeometryElement() {}
+
+/**
+ * @type {!SVGAnimatedNumber}
+ */
+SVGGeometryElement.prototype.pathLength;
+
+/**
+ * @param {number} distance
+ * @return {!DOMPoint}
+ */
+SVGGeometryElement.prototype.getPointAtLength = function(distance) {};
+
+/**
+ * @return {number}
+ */
+SVGGeometryElement.prototype.getTotalLength = function() {};
+
+/**
+ * @param {!DOMPointInit|undefined} point
+ * @return {boolean}
+ */
+SVGGeometryElement.prototype.isPointInFill = function(point) {};
 
 
 /**

@@ -16,45 +16,90 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Strings.emptyToNull;
+import static java.util.Objects.requireNonNull;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.errorprone.annotations.InlineMe;
 import com.google.javascript.rhino.Node;
 import java.io.Serializable;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/** Compile error description. */
-@AutoValue
-public abstract class JSError implements Serializable {
+/**
+ * Compile error description.
+ *
+ * @param type A type of the error.
+ * @param description Description of the error.
+ * @param sourceName Name of the source
+ * @param lineno One-indexed line number of the error location.
+ * @param charno Zero-indexed character number of the error location.
+ * @param length Length of the error region.
+ * @param node Node where the warning occurred.
+ * @param defaultLevel The default level, before any of the {@code WarningsGuard}s are applied.
+ * @param requirement Requirement that fails in the case of conformance violations.
+ */
+public record JSError(
+    DiagnosticType type,
+    String description,
+    @Nullable String sourceName,
+    int lineno,
+    int charno,
+    int length,
+    @Nullable Node node,
+    CheckLevel defaultLevel,
+    @Nullable Requirement requirement)
+    implements Serializable {
+  public JSError {
+    requireNonNull(type, "type");
+    requireNonNull(description, "description");
+    requireNonNull(defaultLevel, "defaultLevel");
+  }
 
-  /** A type of the error. */
-  public abstract DiagnosticType getType();
+  @InlineMe(replacement = "this.type()")
+  public DiagnosticType getType() {
+    return type();
+  }
 
-  /** Description of the error. */
-  public abstract String getDescription();
+  @InlineMe(replacement = "this.description()")
+  public String getDescription() {
+    return description();
+  }
 
-  /** Name of the source */
-  public abstract @Nullable String getSourceName();
+  @InlineMe(replacement = "this.sourceName()")
+  public @Nullable String getSourceName() {
+    return sourceName();
+  }
 
-  /** One-indexed line number of the error location. */
-  public abstract int getLineno();
+  @InlineMe(replacement = "this.lineno()")
+  public int getLineno() {
+    return lineno();
+  }
 
-  /** Zero-indexed character number of the error location. */
-  public abstract int getCharno();
+  @InlineMe(replacement = "this.charno()")
+  public int getCharno() {
+    return charno();
+  }
 
-  /** Length of the error region. */
-  public abstract int getLength();
+  @InlineMe(replacement = "this.length()")
+  public int getLength() {
+    return length();
+  }
 
-  /** Node where the warning occurred. */
-  public abstract @Nullable Node getNode();
+  @InlineMe(replacement = "this.node()")
+  public @Nullable Node getNode() {
+    return node();
+  }
 
-  /** The default level, before any of the {@code WarningsGuard}s are applied. */
-  public abstract CheckLevel getDefaultLevel();
+  @InlineMe(replacement = "this.defaultLevel()")
+  public CheckLevel getDefaultLevel() {
+    return defaultLevel();
+  }
 
-  /** Requirement that fails in the case of conformance violations. */
-  public abstract @Nullable Requirement getRequirement();
+  @InlineMe(replacement = "this.requirement()")
+  public @Nullable Requirement getRequirement() {
+    return requirement();
+  }
 
   private static final int DEFAULT_LINENO = -1;
   private static final int DEFAULT_CHARNO = -1;
@@ -159,6 +204,7 @@ public abstract class JSError implements Serializable {
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setNodeRange(Node start, Node end) {
       Preconditions.checkState(
           Objects.equals(DEFAULT_SOURCENAME, this.sourceName),
@@ -215,7 +261,7 @@ public abstract class JSError implements Serializable {
     }
 
     JSError build() {
-      return new AutoValue_JSError(
+      return new JSError(
           type, type.format(args), sourceName, lineno, charno, length, n, level, requirement);
     }
   }
@@ -234,15 +280,15 @@ public abstract class JSError implements Serializable {
   @Override
   public final String toString() {
     String sourceName =
-        emptyToNull(this.getSourceName()) != null ? this.getSourceName() : "(unknown source)";
+        emptyToNull(this.sourceName()) != null ? this.sourceName() : "(unknown source)";
     String lineno =
-        this.getLineno() != DEFAULT_LINENO ? String.valueOf(this.getLineno()) : "(unknown line)";
+        this.lineno() != DEFAULT_LINENO ? String.valueOf(this.lineno()) : "(unknown line)";
     String charno =
-        this.getCharno() != DEFAULT_CHARNO ? String.valueOf(this.getCharno()) : "(unknown column)";
+        this.charno() != DEFAULT_CHARNO ? String.valueOf(this.charno()) : "(unknown column)";
 
-    return this.getType().key
+    return this.type().key
         + ". "
-        + this.getDescription()
+        + this.description()
         + " at "
         + sourceName
         + " line "
@@ -257,29 +303,21 @@ public abstract class JSError implements Serializable {
    * @return the formatted message or {@code null}
    */
   public final @Nullable String format(CheckLevel level, MessageFormatter formatter) {
-    switch (level) {
-      case ERROR:
-        return formatter.formatError(this);
-
-      case WARNING:
-        return formatter.formatWarning(this);
-
-      default:
-        return null;
-    }
+    return switch (level) {
+      case ERROR -> formatter.formatError(this);
+      case WARNING -> formatter.formatWarning(this);
+      default -> null;
+    };
   }
 
   /** @return the offset of the region the Error applies to, or -1 if the offset is unknown. */
   public final int getNodeSourceOffset() {
-    return this.getNode() != null ? this.getNode().getSourceOffset() : -1;
+    return this.node() != null ? this.node().getSourceOffset() : -1;
   }
 
   /** Alias for {@link #getLineno()}. */
   public final int getLineNumber() {
-    return this.getLineno();
+    return this.lineno();
   }
 
-  JSError() {
-    // Package private.
-  }
 }

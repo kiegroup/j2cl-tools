@@ -21,6 +21,7 @@ import static com.google.j2cl.integration.testing.Asserts.assertThrowsNullPointe
 import static com.google.j2cl.integration.testing.Asserts.assertTrue;
 import static com.google.j2cl.integration.testing.Asserts.fail;
 import static com.google.j2cl.integration.testing.TestUtils.getUndefined;
+import static com.google.j2cl.integration.testing.TestUtils.isJ2Kt;
 import static com.google.j2cl.integration.testing.TestUtils.isJavaScript;
 import static com.google.j2cl.integration.testing.TestUtils.isJvm;
 
@@ -49,6 +50,8 @@ public class Main {
     testUnbox_byParameter();
     testUnbox_byAssignment();
     testUnbox_byOperator();
+    testUnbox_byOperator_throwsNPE();
+    testUnbox_byOperator_throwsCCE();
     testUnbox_fromTypeVariable();
     testUnbox_fromIntersectionType();
     testUnbox_conditionals();
@@ -372,7 +375,14 @@ public class Main {
     assertTrue((!boxB.booleanValue()));
     assertTrue((b3));
 
-    // Unboxing can cause NPE.
+    // Should not throw since it should be converted into a string using String.valueOf(Object) and
+    // thus does not require an erasure casts (the JLS requires just enough erasure casts to
+    // make the program type safe).
+    Ref<Integer> booleanInIntegerRef = (Ref) new Ref<Boolean>(true);
+    String unusedS = "" + booleanInIntegerRef.field;
+  }
+
+  private static void testUnbox_byOperator_throwsNPE() {
     Boolean b = null;
     assertThrowsNullPointerException(
         () -> {
@@ -394,13 +404,20 @@ public class Main {
         () -> {
           Object unused = -n;
         });
+  }
+
+  private static void testUnbox_byOperator_throwsCCE() {
+    // TODO(b/420648962): These do not work on J2KT, because of missing erasure type safety casts.
+    // On Kotlin/Native they lead to heap pollution: https://youtrack.jetbrains.com/issue/KT-40613
+    if (isJ2Kt()) {
+      return;
+    }
 
     Ref<Integer> shortInIntegerRef = (Ref) new Ref<Short>((short) 1);
     Ref<Integer> booleanInIntegerRef = (Ref) new Ref<Boolean>(true);
     Ref<Boolean> integerInBooleanRef = (Ref) new Ref<Integer>(1);
     Ref<String> integerInStringRef = (Ref) new Ref<Integer>(1);
 
-    // Unboxing can cause ClassCastException.
     assertThrowsClassCastException(() -> booleanInIntegerRef.field++, Integer.class);
 
     assertThrowsClassCastException(
@@ -449,11 +466,6 @@ public class Main {
         Integer.class);
 
     assertThrowsClassCastException(() -> acceptsInt(shortInIntegerRef.field), Integer.class);
-
-    // Should not throw since it should be converted into a string using String.valueOf(Object) and
-    // thus does not require an erasure casts (the JLS requires just enough erasure casts to
-    // make the program type safe).
-    String unusedS = "" + booleanInIntegerRef.field;
   }
 
   private static void acceptsInt(int x) {}

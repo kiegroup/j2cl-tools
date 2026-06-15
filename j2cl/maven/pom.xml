@@ -2,330 +2,394 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.kie.j2cl.tools</groupId>
-  <artifactId>j2cl-parent</artifactId>
-  <version>v20241110-1</version>
-  <packaging>pom</packaging>
+    <groupId>org.kie.j2cl.tools</groupId>
+    <artifactId>j2cl-parent</artifactId>
+    <version>v20250822-1</version>
+    <packaging>pom</packaging>
 
-  <name>J2CL</name>
-  <description>
-    J2CL is a powerful, simple and lightweight transpiler from Java to Closure style JavaScript.
-    The project is designed, implemented, and maintained by the J2CL team at Google.
-    This distribution is slightly modified from the original and packaged for Maven Central by Vertispan LLC.
-    The links and references in this pom.xml will reference the Vertispan fork, to ensure that any error introduced
-    by our packaging are not incorrectly blamed on the upstream Google repository.
-  </description>
-  <url>https://github.com/vertispan/j2cl</url>
-  <inceptionYear>2015</inceptionYear>
-
-  <licenses>
-    <license>
-      <name>The Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-
-  <developers>
-    <developer>
-      <name>J2CL team</name>
-      <organization>Google</organization>
-      <organizationUrl>https://www.google.com</organizationUrl>
-    </developer>
-    <developer>
-      <name>Colin Alworth</name>
-      <email>colin@vertispan.com</email>
-      <organization>Vertispan LLC</organization>
-      <organizationUrl>https://www.vertispan.com/</organizationUrl>
-    </developer>
-  </developers>
-
-  <issueManagement>
-    <url>https://github.com/vertispan/j2cl/issues</url>
-    <system>GitHub Issues</system>
-  </issueManagement>
-
-  <scm>
-    <connection>scm:git:https://github.com/vertispan/j2cl.git</connection>
-    <developerConnection>scm:git:git@github.com:vertispan/j2cl.git</developerConnection>
+    <name>J2CL parent</name>
+    <description>
+        J2CL is a powerful, simple and lightweight transpiler from Java to Closure style JavaScript.
+        The project is designed, implemented, and maintained by the J2CL team at Google.
+        This distribution is slightly modified from the original and packaged for Maven Central by Vertispan LLC.
+        The links and references in this pom.xml will reference the Vertispan fork, to ensure that any error introduced
+        by our packaging are not incorrectly blamed on the upstream Google repository.
+    </description>
     <url>https://github.com/vertispan/j2cl</url>
-  </scm>
+    <inceptionYear>2015</inceptionYear>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
-  </properties>
+    <developers>
+        <developer>
+            <name>J2CL team</name>
+            <organization>Google</organization>
+            <organizationUrl>https://www.google.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Colin Alworth</name>
+            <email>colin@vertispan.com</email>
+            <organization>Vertispan LLC</organization>
+            <organizationUrl>https://www.vertispan.com/</organizationUrl>
+        </developer>
+    </developers>
 
-  <modules>
-    <module>external</module>
-    <module>common</module>
-    <module>common-visitor</module>
+    <issueManagement>
+        <url>https://github.com/vertispan/j2cl/issues</url>
+        <system>GitHub Issues</system>
+    </issueManagement>
 
-    <!-- the next block should all be prefixed transpiler, but aren't -->
-    <module>ast</module>
-    <module>frontend</module>
-    <module>frontend-common</module>
-    <module>frontend-jdt</module>
-    <module>frontend-javac</module>
+    <scm>
+        <connection>scm:git:https://github.com/vertispan/j2cl.git</connection>
+        <developerConnection>scm:git:git@github.com:vertispan/j2cl.git</developerConnection>
+        <url>https://github.com/vertispan/j2cl</url>
+    </scm>
 
-    <module>backend</module>
-    <module>backend-closure</module>
-    <module>backend-common</module>
-    <module>backend-kotlin</module>
-    <module>backend-kotlin-objc</module>
-    <module>backend-kotlin-common</module>
-    <module>backend-kotlin-source</module>
-    <module>backend-kotlin-ast</module>
-    <module>backend-libraryinfo</module>
-    <module>backend-libraryinfo-proto</module>
-    <module>backend-wasm</module>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
 
-<!--    <module>generator</module>-->
-    <module>transpiler</module>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
 
-    <module>passes</module>
+    <modules>
+        <module>common</module>
+        <module>common-visitor</module>
 
-    <module>gwt-incompatible-stripper</module>
-    <module>minifier</module>
+        <!-- the next block should all be prefixed transpiler, but aren't -->
+        <module>ast</module>
+        <module>frontend</module>
+        <module>frontend-common</module>
+        <module>frontend-jdt</module>
+        <module>frontend-javac</module>
 
-    <module>gwt-internal-annotations</module>
-    <module>jre</module>
+        <module>backend</module>
+        <module>backend-closure</module>
+        <module>backend-common</module>
+        <module>backend-kotlin</module>
+        <module>backend-kotlin-objc</module>
+        <module>backend-kotlin-common</module>
+        <module>backend-kotlin-source</module>
+        <module>backend-kotlin-ast</module>
+        <module>backend-libraryinfo</module>
+        <module>backend-libraryinfo-proto</module>
+        <module>backend-wasm</module>
 
-    <module>bootstrap</module>
+        <module>transpiler</module>
 
-    <module>javac-bootstrap-classpath</module>
+        <module>passes</module>
 
-    <module>junit/closure-test</module>
-    <module>junit/emul</module>
-    <module>junit/gwttestcase</module>
-    <module>junit/annotations</module>
-    <module>junit/async</module>
-    <module>junit/processor/unshaded-pom.xml</module>
-    <module>junit/processor</module>
-    <module>junit/runtime</module>
-  </modules>
+        <module>gwt-incompatible-stripper</module>
+        <module>minifier</module>
 
-  <distributionManagement>
-    <repository>
-      <id>jboss-public-repository-group</id>
-      <name>JBoss Public Repository Group</name>
-      <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
-    </repository>
-    <snapshotRepository>
-      <id>jboss-snapshots-repository</id>
-      <name>JBoss Snapshot Repository</name>
-      <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
-    </snapshotRepository>
-  </distributionManagement>
+        <module>gwt-internal-annotations</module>
+        <module>jre</module>
 
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.5.1</version>
-          <configuration>
-            <source>${maven.compiler.source}</source>
-            <target>${maven.compiler.target}</target>
-          </configuration>
-        </plugin>
+        <module>bootstrap</module>
 
-        <!-- https://maven.apache.org/enforcer/enforcer-rules/dependencyConvergence.html -->
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-enforcer-plugin</artifactId>
-          <version>1.4.1</version>
-          <executions>
-            <execution>
-              <id>enforce</id>
-              <configuration>
-                <rules>
-                  <dependencyConvergence/>
-                </rules>
-              </configuration>
-              <goals>
-                <goal>enforce</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>32.1.1-jre</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>com.google.auto.value</groupId>
-        <artifactId>auto-value</artifactId>
-        <version>1.6</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.code.findbugs</groupId>
-        <artifactId>jsr305</artifactId>
-        <version>3.0.1</version>
-        <!-- 3.0.2 is available -->
-      </dependency>
-<!--      <dependency>-->
-<!--        <groupId>org.apache.commons</groupId>-->
-<!--        <artifactId>commons-lang3</artifactId>-->
-<!--        <version>3.6</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.commons</groupId>-->
-<!--        <artifactId>commons-text</artifactId>-->
-<!--        <version>1.2</version>-->
-<!--        <exclusions>-->
-<!--          <exclusion>-->
-<!--            <groupId>org.apache.commons</groupId>-->
-<!--            <artifactId>commons-lang3</artifactId>-->
-<!--          </exclusion>-->
-<!--        </exclusions>-->
-<!--      </dependency>-->
-      <dependency>
-        <groupId>args4j</groupId>
-        <artifactId>args4j</artifactId>
-        <version>2.33</version><!-- at this time, j2cl transitively picks up 2.0.26 from closure -->
-      </dependency>
+        <module>javac-bootstrap-classpath</module>
 
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java-util</artifactId>
-        <version>3.15.3</version>
-        <!--<type>bundle</type>-->
-        <exclusions>
-          <!-- conflicts with above -->
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>com.google.code.gson</groupId>
-        <artifactId>gson</artifactId>
-        <version>2.8.6</version><!-- at this time, j2cl specifies 2.7, but protobuf-java-util (used by libraryinfo) uses 2.8.6 -->
-      </dependency>
-      <dependency>
-        <groupId>com.google.auto</groupId>
-        <artifactId>auto-common</artifactId>
-        <version>1.1.2</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.auto.service</groupId>
-        <artifactId>auto-service</artifactId>
-        <version>1.0</version>
-      </dependency>
-<!--      <dependency>-->
-<!--        <groupId>org.apache.velocity</groupId>-->
-<!--        <artifactId>velocity</artifactId>-->
-<!--        <version>1.7</version>-->
-<!--      </dependency>-->
-      <dependency>
-        <groupId>com.google.escapevelocity</groupId>
-        <artifactId>escapevelocity</artifactId>
-        <version>1.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.kie.j2cl.tools.external</groupId>
-        <artifactId>org.eclipse.jdt.core</artifactId>
-        <version>${project.version}</version>
-      </dependency>
+        <module>junit/closure-test</module>
+        <module>junit/emul</module>
+        <module>junit/gwttestcase</module>
+        <module>junit/annotations</module>
+        <module>junit/async</module>
+	    <module>junit/processor/unshaded-pom.xml</module>
+        <module>junit/processor</module>
+        <module>junit/runtime</module>
+    </modules>
 
-      <dependency>
-        <groupId>org.kie.j2cl.tools</groupId>
-        <artifactId>closure-compiler-unshaded</artifactId>
-        <version>v20241106-1</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.elemental2</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.5.1</version>
+                    <configuration>
+                        <source>${maven.compiler.source}</source>
+                        <target>${maven.compiler.target}</target>
+                    </configuration>
+                </plugin>
 
-          <exclusion>
-            <groupId>com.google.errorprone</groupId>
-            <artifactId>error_prone_annotations</artifactId>
-          </exclusion>
+                <!-- https://maven.apache.org/enforcer/enforcer-rules/dependencyConvergence.html -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>1.4.1</version>
+                    <executions>
+                        <execution>
+                            <id>enforce</id>
+                            <configuration>
+                                <rules>
+                                    <dependencyConvergence/>
+                                </rules>
+                            </configuration>
+                            <goals>
+                                <goal>enforce</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>33.3.1-jre</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.code.findbugs</groupId>
+                        <artifactId>jsr305</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.google.auto.value</groupId>
+                <artifactId>auto-value</artifactId>
+                <version>1.6</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>3.0.1</version>
+                <!-- 3.0.2 is available -->
+            </dependency>
+            <dependency>
+                <groupId>args4j</groupId>
+                <artifactId>args4j</artifactId>
+                <version>2.33</version><!-- at this time, j2cl transitively picks up 2.0.26 from closure -->
+            </dependency>
 
-          <exclusion>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>4.31.0</version>
+            </dependency>
 
-      <dependency>
-        <groupId>org.jspecify</groupId>
-        <artifactId>jspecify</artifactId>
-        <version>0.3.0</version>
-      </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java-util</artifactId>
+                <version>3.15.3</version>
+                <!--<type>bundle</type>-->
+                <exclusions>
+                    <!-- conflicts with above -->
+                    <exclusion>
+                        <groupId>com.google.guava</groupId>
+                        <artifactId>guava</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>2.8.6
+                </version><!-- at this time, j2cl specifies 2.7, but protobuf-java-util (used by libraryinfo) uses 2.8.6 -->
+            </dependency>
+            <dependency>
+                <groupId>com.google.auto</groupId>
+                <artifactId>auto-common</artifactId>
+                <version>1.1.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.auto.service</groupId>
+                <artifactId>auto-service</artifactId>
+                <version>1.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.escapevelocity</groupId>
+                <artifactId>escapevelocity</artifactId>
+                <version>1.1</version>
+            </dependency>
 
-      <dependency>
-        <groupId>com.google.errorprone</groupId>
-        <artifactId>error_prone_annotations</artifactId>
-        <version>2.3.4</version><!-- this version is specified to resolve the conflict between guava and protobuf -->
-      </dependency>
+            <dependency>
+                <groupId>org.eclipse.jdt</groupId>
+                <artifactId>org.eclipse.jdt.core</artifactId>
+                <version>3.22.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.core.commands</artifactId>
+                <version>3.12.300</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.core.contenttype</artifactId>
+                <version>3.9.600</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.core.expressions</artifactId>
+                <version>3.9.400</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.core.filesystem</artifactId>
+                <version>1.11.200</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.core.jobs</artifactId>
+                <version>3.15.600</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.core.resources</artifactId>
+                <version>3.22.200</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.core.runtime</artifactId>
+                <version>3.33.100</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.equinox.app</artifactId>
+                <version>1.7.400</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.equinox.common</artifactId>
+                <version>3.20.100</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.equinox.preferences</artifactId>
+                <version>3.11.400</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.equinox.registry</artifactId>
+                <version>3.12.400</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.osgi</artifactId>
+                <version>3.23.100</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.platform</groupId>
+                <artifactId>org.eclipse.text</artifactId>
+                <version>3.14.300</version>
+            </dependency>
 
-      <dependency>
-        <groupId>com.google.jsinterop</groupId>
-        <artifactId>jsinterop-annotations</artifactId>
-        <version>2.1.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.j2objc</groupId>
-        <artifactId>j2objc-annotations</artifactId>
-        <version>1.3</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.errorprone</groupId>
-        <artifactId>javac</artifactId>
-        <version>9+181-r4173-1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jetbrains.kotlin</groupId>
-        <artifactId>kotlin-compiler</artifactId>
-        <version>1.6.10</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
+            <dependency>
+                <groupId>org.osgi</groupId>
+                <artifactId>org.osgi.service.prefs</artifactId>
+                <version>1.1.2</version>
+            </dependency>
 
-  <profiles>
-    <profile>
-      <id>release</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.5</version>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
+            <dependency>
+                <groupId>org.kie.j2cl.tools</groupId>
+                <artifactId>closure-compiler-unshaded</artifactId>
+                <version>v20250903-1</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.elemental2</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+
+                    <exclusion>
+                        <groupId>com.google.errorprone</groupId>
+                        <artifactId>error_prone_annotations</artifactId>
+                    </exclusion>
+
+                    <exclusion>
+                        <groupId>com.google.protobuf</groupId>
+                        <artifactId>protobuf-java</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jspecify</groupId>
+                <artifactId>jspecify</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>2.3.4
+                </version><!-- this version is specified to resolve the conflict between guava and protobuf -->
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.jsinterop</groupId>
+                <artifactId>jsinterop-annotations</artifactId>
+                <version>2.1.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.j2objc</groupId>
+                <artifactId>j2objc-annotations</artifactId>
+                <version>1.3</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>javac</artifactId>
+                <version>9+181-r4173-1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-compiler</artifactId>
+                <version>1.6.10</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.5</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    <repositories>
+        <repository>
+            <id>jboss</id>
+            <name>JBoss Public Repo</name>
+            <url>https://repository.jboss.org/nexus/content/groups/public</url>
+        </repository>
+        <repository>
+            <id>sonatype-public</id>
+            <name>Sonatype Public Snapshots Repo</name>
+            <url>https://oss.sonatype.org/content/repositories/public</url>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Repository Group</name>
+            <url>https://repository.jboss.org/nexus/repository/releases/</url>
+        </repository>
+    </distributionManagement>
 </project>

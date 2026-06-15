@@ -21,6 +21,7 @@ import com.vertispan.j2cl.build.Project;
 import com.vertispan.j2cl.build.TaskRegistry;
 import com.vertispan.j2cl.build.provided.SkipAptTask;
 import com.vertispan.j2cl.build.task.OutputTypes;
+import com.vertispan.j2cl.config.BuildConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.artifact.Artifact;
@@ -78,7 +79,7 @@ public abstract class AbstractBuildMojo extends AbstractCacheMojo {
     @Parameter(defaultValue = "org.kie.j2cl.tools:jre:zip:jszip:" + Versions.J2CL_VERSION, required = true)
     protected String jreJsZip;
 
-    @Parameter(defaultValue = "org.kie.j2cl.tools:bootstrap:zip:jszip:" + Versions.J2CL_VERSION, required = true)
+    @Parameter(defaultValue = "org.kie.j2cl.tools:bootstrap:zip:jszip:" + BuildConfig.J2CL_BASE_VERSION, required = true)
     protected String bootstrapJsZip;
 
     @Parameter(defaultValue = "org.kie.j2cl.tools:closure-test:zip:jszip:" + Versions.J2CL_VERSION, required = true)
@@ -87,7 +88,7 @@ public abstract class AbstractBuildMojo extends AbstractCacheMojo {
     @Parameter(defaultValue = "org.kie.j2cl.tools:gwt-internal-annotations:" + Versions.J2CL_VERSION, required = true)
     protected String internalAnnotationsJar;
 
-    @Parameter(defaultValue = "com.google.jsinterop:jsinterop-annotations:2.0.0", required = true)
+    @Parameter(defaultValue = "com.google.jsinterop:jsinterop-annotations:2.1.0", required = true)
     protected String jsinteropAnnotationsJar;
 
     @Parameter(defaultValue = "org.kie.j2cl.tools:junit-annotations:" + Versions.J2CL_VERSION, required = true)
@@ -99,7 +100,7 @@ public abstract class AbstractBuildMojo extends AbstractCacheMojo {
     @Parameter(defaultValue = "org.kie.j2cl.tools:junit-runtime:zip:jszip:" + Versions.J2CL_VERSION, required = true)
     protected String runtimeJsZip;
 
-    @Parameter(defaultValue = "org.jspecify:jspecify:0.3.0", required = true)
+    @Parameter(defaultValue = "org.jspecify:jspecify:1.0.0", required = true)
     protected String jspecify;
 
     // optional, if not specified, we'll use the defaults
@@ -113,8 +114,12 @@ public abstract class AbstractBuildMojo extends AbstractCacheMojo {
     private boolean incrementalEnabled;
 
     private List<DependencyReplacement> defaultDependencyReplacements = Arrays.asList(
-            new DependencyReplacement("com.google.jsinterop:base", "org.kie.j2cl.tools.jsinterop:base:" + Versions.VERTISPAN_JSINTEROP_BASE_VERSION),
-            new DependencyReplacement("org.realityforge.com.google.jsinterop:base", "org.kie.j2cl.tools.jsinterop:base:" + Versions.VERTISPAN_JSINTEROP_BASE_VERSION),
+            new DependencyReplacement("com.google.jsinterop:base", "org.kie.j2cl.tools.jsinterop:jsinterop-base:" + Versions.VERTISPAN_JSINTEROP_BASE_VERSION),
+            // New GWT groupId since GWT 2.10
+            new DependencyReplacement("org.gwtproject:gwt-user", null),
+            new DependencyReplacement("org.gwtproject:gwt-dev", null),
+            new DependencyReplacement("org.gwtproject:gwt-servlet", null),
+            // Old GWT groupId before GWT 2.10
             new DependencyReplacement("com.google.gwt:gwt-user", null),
             new DependencyReplacement("com.google.gwt:gwt-dev", null),
             new DependencyReplacement("com.google.gwt:gwt-servlet", null)
@@ -354,7 +359,9 @@ public abstract class AbstractBuildMojo extends AbstractCacheMojo {
             Dependency dep = new Dependency();
             dep.setProject(child);
             dep.setScope(translateScope(mavenDependency.getScope()));
-            dependencies.add(dep);
+            // Although this new dependency is generally unique, the replacement mechanism may introduce a duplicate
+            // dependency if several original artifacts are replaced with the same final artifact.
+            addDependencyResolveDuplicate(dep, dependencies); // ensures we don't introduce duplicates (important for J2CL)
         }
         project.setDependencies(dependencies);
 
@@ -379,6 +386,23 @@ public abstract class AbstractBuildMojo extends AbstractCacheMojo {
         builtProjects.put(key, project);
 
         return project;
+    }
+
+    private static void addDependencyResolveDuplicate(Dependency newDep, List<Dependency> dependencies) {
+        // We check if there is already an existing dependency in the list with the same project
+        for (int i = 0; i < dependencies.size(); i++) {
+            Dependency existingDep = dependencies.get(i);
+            if (Objects.equals(newDep.getProject(), existingDep.getProject())) {
+                // If we found one, we must keep only 1 dependency. The 2 can differ only by the scope, which has only 2
+                // possible values here: COMPILE or BOTH. BOTH is the one to keep in case of duplicates.
+                if (newDep.getScope() == Dependency.Scope.BOTH) {
+                    dependencies.set(i, newDep);
+                }
+                return;
+            }
+        }
+        // If we reach this point, it means there was no existing dependency with the same project in the list
+        dependencies.add(newDep); // So we can add it
     }
 
     private MavenProject resolveNonReactorProjectForArtifact(ProjectBuilder projectBuilder, ProjectBuildingRequest request, Artifact mavenDependency) throws ProjectBuildingException {

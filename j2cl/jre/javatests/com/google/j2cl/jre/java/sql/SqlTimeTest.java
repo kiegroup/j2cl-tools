@@ -17,22 +17,14 @@ package com.google.j2cl.jre.java.sql;
 
 import com.google.j2cl.jre.testing.J2ktIncompatible;
 import java.sql.Time;
+import junit.framework.TestCase;
 
 /**
- * Tests {@link java.sql.Time}. We assume that the underlying
- * {@link java.util.Date} implementation is correct and concentrate only on the
- * differences between the two.
+ * Tests {@link java.sql.Time}. We assume that the underlying {@link java.util.Date} implementation
+ * is correct and concentrate only on the differences between the two.
  */
 @SuppressWarnings("deprecation")
-public class SqlTimeTest extends GWTTestCase {
-
-  /**
-   * Sets module name so that javascript compiler can operate.
-   */
-  @Override
-  public String getModuleName() {
-    return "com.google.gwt.emultest.EmulSuite";
-  }
+public class SqlTimeTest extends TestCase {
 
   @SuppressWarnings("DoNotCall")
   public void testUnimplementedFunctions() {

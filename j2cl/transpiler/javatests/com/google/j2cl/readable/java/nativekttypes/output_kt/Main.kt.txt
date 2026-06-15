@@ -1,5 +1,4 @@
 // Generated from "nativekttypes/Main.java"
-@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -23,14 +22,12 @@ import java.lang.Class
 import kotlin.Any
 import kotlin.Boolean
 import kotlin.Int
-import kotlin.OptIn
 import kotlin.String
 import kotlin.Suppress
-import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.JvmField
 import kotlin.jvm.javaObjectType
-import kotlin.native.ObjCName
 import nativekttypes.Fn
+import nativekttypes.NativeDefaultName
 import nativekttypes.nativekt.KBridge
 import nativekttypes.nativekt.KCompanionObject
 import nativekttypes.nativekt.KFunctionalInterfaceBridge
@@ -43,72 +40,68 @@ import nativekttypes.nativekt.KTopLevel.KInner
 import nativekttypes.nativekt.KTopLevel.KNested
 import nativekttypes.nativekt.KWithCompanionObject
 
-@ObjCName("J2ktNativekttypesMain", exact = true)
 open class Main {
  @JvmField
- @ObjCName("topLevelField_")
+ var nativeDefaultName: NativeDefaultName? = null
+
+ @JvmField
  var topLevelField: KTopLevel<String?>? = null
 
  @JvmField
- @ObjCName("nestedField_")
  var nestedField: KNested<String?>? = null
 
  @JvmField
- @ObjCName("innerField_")
  var innerField: KTopLevel<String?>.KInner<String?>? = null
 
- @ObjCName("methodArguments")
- open fun methodArguments(
-  @ObjCName("withNativekttypesNativeTopLevel") foo: KTopLevel<String?>?,
-  @ObjCName("withNativekttypesNativeTopLevel_Nested") nested: KNested<String?>?,
-  @ObjCName("withNativekttypesNativeTopLevel_Inner") inner: KTopLevel<String?>.KInner<String?>?
- ) {}
+ open fun methodArguments(foo: KTopLevel<String?>?, nested: KNested<String?>?, inner: KTopLevel<String?>.KInner<String?>?) {}
 
- @ObjCName("memberAccess")
  open fun memberAccess() {
-  val topLevel: KTopLevel<String?>? = KTopLevel<String?>("foo")
-  val fooInstanceMethod: String? = topLevel!!.instanceMethod("foo")
+  val topLevel: KTopLevel<String?> = KTopLevel<String?>("foo")
+  val fooInstanceMethod: String? = topLevel.instanceMethod("foo")
   val fooStaticMethod: String? = KTopLevel.staticMethod<String?>("foo")
-  val fooInstanceField: String? = topLevel!!.instanceField
-  topLevel!!.instanceField = "foo"
+  val fooInstanceField: String? = topLevel.instanceField
+  topLevel.instanceField = "foo"
   val fooStaticField: Any? = KTopLevel.staticField
   KTopLevel.staticField = "foo"
-  val i1: Int = topLevel!!.renamedField
-  val i2: Int = topLevel!!.renamedMethod()
-  val i3: Int = topLevel!!.methodAsProperty
-  val i4: Int = topLevel!!.nonGetMethodAsProperty
-  val i5: Int = topLevel!!.renamedMethodAsProperty
-  val i6: Boolean = topLevel!!.isRenamedField
-  val i7: Boolean = topLevel!!.isMethodAsProperty
-  val i8: Int = topLevel!!.getstartingmethodAsProperty
-  val nested: KNested<String?>? = KNested<String?>("foo")
-  val nestedInstanceMethod: String? = nested!!.instanceMethod("foo")
+  topLevel.nonPublicField = 0
+  val fieldToRename: Int = topLevel.renamedField
+  val methodToRename: Int = topLevel.renamedMethod()
+  val methodAsProperty: Int = topLevel.methodAsProperty
+  val uppercaseprefixMethodAsProperty: Int = topLevel.uppercaseprefixMethodAsProperty
+  val uppercasemethodasproperty: Int = topLevel.uppercasemethodasproperty
+  val nonGetMethodAsProperty: Int = topLevel.nonGetMethodAsProperty
+  val methodToRenameAsProperty: Int = topLevel.renamedMethodAsProperty
+  val isFieldToRename: Boolean = topLevel.isRenamedField
+  val isMethodAsProperty: Boolean = topLevel.isMethodAsProperty
+  val getstartingmethodAsProperty: Int = topLevel.getstartingmethodAsProperty
+  topLevel.nonPublicMethod()
+  val nested: KNested<String?> = KNested<String?>("foo")
+  val nestedInstanceMethod: String? = nested.instanceMethod("foo")
   val nestedStaticMethod: String? = KNested.staticMethod<String?>("foo")
-  val nestedInstanceField: String? = nested!!.instanceField
-  nested!!.instanceField = "foo"
+  val nestedInstanceField: String? = nested.instanceField
+  nested.instanceField = "foo"
   val nestedStaticField: Any? = KNested.staticField
   KNested.staticField = "foo"
-  val nestedAnonynous: KNested<String?>? = object : KNested<String?>("foo") {}
-  val inner: KTopLevel<String?>.KInner<String?>? = topLevel!!.KInner<String?>("foo")
-  val subclass: Subclass<String?>? = Subclass<String?>("foo")
-  val i9: Int = subclass!!.renamedMethod()
-  val i10: Int = subclass!!.interfaceMethod("foo")
-  val i11: Int = subclass!!.renamedInterfaceMethod("foo")
-  val interfaceAnonymousSubclass: KFunctionalInterface? = object : KFunctionalInterface {
+  val nestedAnonynous: KNested<String?> = object : KNested<String?>("foo") {}
+  val inner: KTopLevel<String?>.KInner<String?> = topLevel.KInner<String?>("foo")
+  val subclass: Subclass<String?> = Subclass<String?>("foo")
+  val subclassMethodToRename: Int = subclass.renamedMethod()
+  val subclassInterfaceMethod: Int = subclass.interfaceMethod("foo")
+  val subclassInterfaceMethodToRename: Int = subclass.renamedInterfaceMethod("foo")
+  val interfaceAnonymousSubclass: KFunctionalInterface = object : KFunctionalInterface {
    override fun run() {}
   }
-  val interfaceExpression: KFunctionalInterface? = KFunctionalInterface {
+  val interfaceExpression: KFunctionalInterface = KFunctionalInterface {
    return@KFunctionalInterface
   }
  }
 
- @ObjCName("bridges")
  open fun bridges() {
-  var o: KRequiringBridge? = KBridge()
+  var o: KRequiringBridge = KBridge()
   o = object : KBridge() {}
   o = BridgeSubclass()
   var fi: KFunctionalInterfaceRequiringBridge<String?>? = null
-  fi = KFunctionalInterfaceBridge<String?> { s: String? ->
+  fi = KFunctionalInterfaceBridge { s: String? ->
    return@KFunctionalInterfaceBridge s
   }
   fi = object : KFunctionalInterfaceBridge<String?> {
@@ -120,88 +113,58 @@ open class Main {
   val instanceofCheck: Boolean = o is KRequiringBridge
  }
 
- @ObjCName("casts")
  open fun casts() {
   val o1: KTopLevel<String?>? = null as KTopLevel<String?>?
   val o2: KNested<String?>? = null as KNested<String?>?
   val o3: KTopLevel<String?>.KInner<String?>? = null as KTopLevel<String?>.KInner<String?>?
  }
 
- @ObjCName("companionObject")
  open fun companionObject() {
-  val o: KWithCompanionObject? = KWithCompanionObject()
-  val i1: Int = o!!.instanceField
-  o!!.instanceMethod()
+  val o: KWithCompanionObject = KWithCompanionObject()
+  val i1: Int = o.instanceField
+  o.instanceMethod()
   KCompanionObject.staticMethod()
   val i2: Int = KCompanionObject.staticField
   KCompanionObject.staticField = i2
  }
 
- @ObjCName("typeLiterals")
  open fun typeLiterals() {
-  val c1: Class<*>? = KTopLevel::class.javaObjectType
-  val c2: Class<*>? = KNested::class.javaObjectType
-  val c3: Class<*>? = KInner::class.javaObjectType
+  val c1: Class<*> = KTopLevel::class.javaObjectType as Class<*>
+  val c2: Class<*> = KNested::class.javaObjectType as Class<*>
+  val c3: Class<*> = KInner::class.javaObjectType as Class<*>
  }
 
- @ObjCName("disabledVoidMethod")
  open fun disabledVoidMethod() {}
 
- @ObjCName("disabledNonVoidMethod")
  open fun disabledNonVoidMethod(): Boolean {
   return false
  }
 
- @ObjCName("acceptFn_generic")
- open fun <I, O> acceptFn_generic(
-  @ObjCName("withNativekttypesFn") f: Fn<I, O>?,
-  @ObjCName("withId") i: I
- ): O {
+ open fun <I, O> acceptFn_generic(f: Fn<I, O>?, i: I): O {
   return f!!.apply(i)
  }
 
- @ObjCName("acceptFn_parametrized")
- open fun acceptFn_parametrized(
-  @ObjCName("withNativekttypesFn") f: Fn<String?, String?>?,
-  @ObjCName("withNSString") i: String?
- ): String? {
+ open fun acceptFn_parametrized(f: Fn<String?, String?>?, i: String?): String? {
   return f!!.apply(i)
  }
 
- @ObjCName("acceptFn_genericWildcard")
- open fun <I, O> acceptFn_genericWildcard(
-  @ObjCName("withNativekttypesFn") f: Fn<I, O>?,
-  @ObjCName("withId") i: I
- ): O {
+ open fun <I, O> acceptFn_genericWildcard(f: Fn<I, O>?, i: I): O {
   return f!!.apply(i)
  }
 
- @ObjCName("acceptFn_parametrizedWildcard")
- open fun acceptFn_parametrizedWildcard(
-  @ObjCName("withNativekttypesFn") f: Fn<String?, String?>?,
-  @ObjCName("withNSString") i: String?
- ): String? {
+ open fun acceptFn_parametrizedWildcard(f: Fn<String?, String?>?, i: String?): String? {
   return f!!.apply(i)
  }
 
- @ObjCName("acceptFn_unboundWildcard")
- open fun acceptFn_unboundWildcard(
-  @ObjCName("withNativekttypesFn") f: Fn<*, *>?,
-  @ObjCName("withId") i: Any?
- ): Any? {
+ open fun acceptFn_unboundWildcard(f: Fn<*, *>?, i: Any?): Any? {
   return (f as Fn<Any?, Any?>?)!!.apply(i)
  }
 
- @ObjCName("acceptFn_raw")
- open fun acceptFn_raw(
-  @ObjCName("withNativekttypesFn") f: Fn<Any?, Any?>?,
-  @ObjCName("withId") i: Any?
- ): Any? {
+ open fun acceptFn_raw(f: Fn<Any?, Any?>?, i: Any?): Any? {
   return f!!.apply(i)
  }
 }
 
-@ObjCName("J2ktNativekttypesSubclass", exact = true)
 open class Subclass<V>: KTopLevel<V>, KInterface<V> {
  internal constructor(v: V): super(v)
 
@@ -212,6 +175,16 @@ open class Subclass<V>: KTopLevel<V>, KInterface<V> {
  override val methodAsProperty: Int
   get() {
    return super<KTopLevel>.methodAsProperty
+  }
+
+ override val uppercaseprefixMethodAsProperty: Int
+  get() {
+   return super<KTopLevel>.uppercaseprefixMethodAsProperty
+  }
+
+ override val uppercasemethodasproperty: Int
+  get() {
+   return super<KTopLevel>.uppercasemethodasproperty
   }
 
  override val nonGetMethodAsProperty: Int
@@ -258,7 +231,6 @@ open class Subclass<V>: KTopLevel<V>, KInterface<V> {
   }
 }
 
-@ObjCName("J2ktNativekttypesSubsubclass", exact = true)
 open class Subsubclass<V>: Subclass<V> {
  internal constructor(v: V): super(v)
 
@@ -269,6 +241,16 @@ open class Subsubclass<V>: Subclass<V> {
  override val methodAsProperty: Int
   get() {
    return super<Subclass>.methodAsProperty
+  }
+
+ override val uppercaseprefixMethodAsProperty: Int
+  get() {
+   return super<Subclass>.uppercaseprefixMethodAsProperty
+  }
+
+ override val uppercasemethodasproperty: Int
+  get() {
+   return super<Subclass>.uppercasemethodasproperty
   }
 
  override val nonGetMethodAsProperty: Int
@@ -315,7 +297,6 @@ open class Subsubclass<V>: Subclass<V> {
   }
 }
 
-@ObjCName("J2ktNativekttypesBridgeSubclass", exact = true)
 open class BridgeSubclass internal constructor(): KBridge() {
  override fun method() {
   super<KBridge>.method()

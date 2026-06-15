@@ -60,6 +60,7 @@ import com.google.j2cl.transpiler.backend.wasm.WasmGeneratorStage;
 import com.google.j2cl.transpiler.frontend.jdt.JdtEnvironment;
 import com.google.j2cl.transpiler.frontend.jdt.JdtParser;
 import com.google.j2cl.transpiler.passes.RewriteReferenceEqualityOperations;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -118,16 +119,12 @@ final class BazelJ2wasmBundler extends BazelWorker {
   Map<String, String> defines = new HashMap<>();
 
   @Override
-  protected void run(Problems problems) {
-    createBundle(problems);
+  protected void run() {
+    emitModuleFile();
+    emitJsImportsFile();
   }
 
-  private void createBundle(Problems problems) {
-    emitModuleFile(problems);
-    emitJsImportsFile(problems);
-  }
-
-  private void emitModuleFile(Problems problems) {
+  private void emitModuleFile() {
     var typeGraph = new TypeGraph(getSummaries());
 
     // Create an environment to initialize the well known type descriptors to be able to synthesize
@@ -135,7 +132,7 @@ final class BazelJ2wasmBundler extends BazelWorker {
     // TODO(b/294284380): consider removing JDT and manually synthesizing required types.
     var classPathEntries = Splitter.on(File.pathSeparatorChar).splitToList(this.classPath);
     new JdtEnvironment(
-        new JdtParser(classPathEntries, problems), TypeDescriptors.getWellKnownTypeNames());
+        new JdtParser(problems), classPathEntries, TypeDescriptors.getWellKnownTypeNames());
 
     var referencedSystemProperties =
         getSummaries()
@@ -150,7 +147,7 @@ final class BazelJ2wasmBundler extends BazelWorker {
             .values();
 
     // Synthesize globals and methods for string literals.
-    synthesizeStringLiteralGetters(referencedSystemProperties, problems);
+    synthesizeStringLiteralGetters(referencedSystemProperties);
 
     var generatorStage = new WasmGeneratorStage(library, problems);
 
@@ -163,7 +160,9 @@ final class BazelJ2wasmBundler extends BazelWorker {
 
     ImmutableList<String> moduleContents =
         Streams.concat(
-                Stream.of("(module (rec"),
+                Stream.of("(module "),
+                streamDedupedValues(Summary::getNativeArrayTypeSnippetsList),
+                Stream.of("(rec"),
                 getModuleParts("types"),
                 streamDedupedValues(Summary::getTypeSnippetsList),
                 Stream.of(typeGraph.getTopLevelItableStructDeclaration()),
@@ -198,7 +197,7 @@ final class BazelJ2wasmBundler extends BazelWorker {
   }
 
   private void synthesizeStringLiteralGetters(
-      Collection<SystemPropertyInfo> referencedSystemProperties, Problems problems) {
+      Collection<SystemPropertyInfo> referencedSystemProperties) {
 
     var stringLiteralHolder =
         new com.google.j2cl.transpiler.ast.Type(
@@ -549,7 +548,7 @@ final class BazelJ2wasmBundler extends BazelWorker {
     }
   }
 
-  private void emitJsImportsFile(Problems problems) {
+  private void emitJsImportsFile() {
     var requiredModules =
         getSummaries()
             .flatMap(s -> s.getJsImportRequiresList().stream())
@@ -579,7 +578,8 @@ final class BazelJ2wasmBundler extends BazelWorker {
   }
 
   private static Summary readSummary(Path summaryPath) throws IOException {
-    try (InputStream inputStream = java.nio.file.Files.newInputStream(summaryPath)) {
+    try (InputStream inputStream =
+        new BufferedInputStream(java.nio.file.Files.newInputStream(summaryPath))) {
       return Summary.parseFrom(inputStream);
     }
   }
@@ -592,7 +592,7 @@ final class BazelJ2wasmBundler extends BazelWorker {
     try {
       Files.asCharSink(new File(filePath), UTF_8).writeLines(contents);
     } catch (IOException e) {
-      problems.fatal(FatalError.CANNOT_WRITE_FILE, e.toString());
+      problems.fatal(FatalError.CANNOT_WRITE_FILE, e.getMessage());
     }
   }
 

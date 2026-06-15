@@ -56,8 +56,7 @@ import javax.annotation.Nullable;
 /** A usage-site reference to a declared type, i.e. a class, an interface or an enum. */
 @Visitable
 @AutoValue
-public abstract class DeclaredTypeDescriptor extends TypeDescriptor
-    implements HasUnusableByJsSuppression {
+public abstract class DeclaredTypeDescriptor extends TypeDescriptor {
 
   /** The actual type declaration this descriptor is referencing. */
   public abstract TypeDeclaration getTypeDeclaration();
@@ -76,6 +75,11 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
   }
 
   @Override
+  public boolean isAnnotation() {
+    return getTypeDeclaration().isAnnotation();
+  }
+
+  @Override
   public boolean isEnum() {
     return getTypeDeclaration().isEnum();
   }
@@ -83,11 +87,6 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
   @Override
   public boolean isFunctionalInterface() {
     return getTypeDeclaration().isFunctionalInterface();
-  }
-
-  @Override
-  public boolean isAnnotatedWithFunctionalInterface() {
-    return getTypeDeclaration().isAnnotatedWithFunctionalInterface();
   }
 
   @Override
@@ -135,6 +134,25 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
     return getTypeDeclaration().isNoopCast();
   }
 
+  @Override
+  public boolean isKotlinCompanionClass() {
+    if (getTypeDeclaration().getSourceLanguage() != SourceLanguage.KOTLIN) {
+      return false;
+    }
+
+    // We use the following heuristic to find if a type represent a Kotlin companion object class:
+    // - The type should be a static nested final class named `Companion`
+    // - The enclosing class should have a static field named `Companion` of the same type.
+    // TODO(b/335000000): Add the ability to mark class as Kotlin companion.
+    return isClass()
+        && isFinal()
+        && getSimpleSourceName().equals("Companion")
+        && getEnclosingTypeDescriptor() != null
+        && getEnclosingTypeDescriptor().getDeclaredFieldDescriptors().stream()
+            .anyMatch(
+                f -> f.getName().equals("Companion") && f.getTypeDescriptor().isSameBaseType(this));
+  }
+
   /**
    * Returns true if the given type descriptor is a Kotlin companion object class that can be
    * optimized. In order to be optimizable, the companion object should not extend any class nor
@@ -142,40 +160,11 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
    */
   @Override
   public boolean isOptimizableKotlinCompanion() {
-    // TODO(b/337362819): Uncomment this when the Java frontend is correctly settings SourceLanguage
-    // for Kotlin deps.
-    // if (getTypeDeclaration().getSourceLanguage() != KOTLIN) {
-    //   return false;
-    // }
-
-    // We use the following heuristic to find if a type represent a Kotlin companion object class:
-    // - The type should be a static nested final class named `Companion`
-    // - The enclosing class should have a static field named `Companion` of the same type.
-    // TODO(b/335000000): Add the ability to mark class as Kotlin companion.
-    if (!isClass()
-        || !isFinal()
-        || !getSimpleSourceName().equals("Companion")
-        || getEnclosingTypeDescriptor() == null
-        || getEnclosingTypeDescriptor().getDeclaredFieldDescriptors().stream()
-            .noneMatch(
-                f ->
-                    f.getName().equals("Companion")
-                        && f.getTypeDescriptor().isSameBaseType(this))) {
-      return false;
-    }
     // In order to be able to optimize the companion object, it should not extend any class nor
     // implement any interface.
-    return TypeDescriptors.isJavaLangObject(getSuperTypeDescriptor())
+    return isKotlinCompanionClass()
+        && TypeDescriptors.isJavaLangObject(getSuperTypeDescriptor())
         && getInterfaceTypeDescriptors().isEmpty();
-  }
-
-  @Override
-  public boolean isUnusableByJsSuppressed() {
-    return getTypeDeclaration().isUnusableByJsSuppressed();
-  }
-
-  public boolean isDeprecated() {
-    return getTypeDeclaration().isDeprecated();
   }
 
   @Override
@@ -295,18 +284,14 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
           || isSameBaseType(that)
           || (getJsEnumInfo().supportsComparable() && TypeDescriptors.isJavaLangComparable(that));
     }
-    TypeDescriptor thatRawTypeDescriptor = that.toRawTypeDescriptor();
-    return thatRawTypeDescriptor instanceof DeclaredTypeDescriptor
-        && isSubtypeOf((DeclaredTypeDescriptor) thatRawTypeDescriptor);
+    return that.toRawTypeDescriptor() instanceof DeclaredTypeDescriptor thatRawTypeDescriptor
+        && isSubtypeOf(thatRawTypeDescriptor);
   }
 
   @Override
   public boolean isSameBaseType(TypeDescriptor other) {
-    if (!(other instanceof DeclaredTypeDescriptor)) {
-      return false;
-    }
-    DeclaredTypeDescriptor otherDeclaredType = (DeclaredTypeDescriptor) other;
-    return getTypeDeclaration().equals(otherDeclaredType.getTypeDeclaration());
+    return other instanceof DeclaredTypeDescriptor otherDeclaredType
+        && getTypeDeclaration().equals(otherDeclaredType.getTypeDeclaration());
   }
 
   public boolean isSubtypeOf(DeclaredTypeDescriptor that) {
@@ -497,11 +482,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
     return FieldDescriptor.newBuilder()
         .setEnclosingTypeDescriptor(getDeclarationDescriptor())
         .setName("$outer_this")
-        .setTypeDescriptor(
-            getEnclosingTypeDescriptor()
-                // Consider the outer instance type to be nullable to be make the type consistent
-                // across all places where it is used (backing field and constructor parameters).
-                .toNullable())
+        .setTypeDescriptor(getEnclosingTypeDescriptor().toNonNullable())
         .setFinal(true)
         .setSynthetic(true)
         .setOrigin(FieldOrigin.SYNTHETIC_OUTER_FIELD)
@@ -765,7 +746,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
       MethodDescriptor newBridge =
           createBridgeMethodDescriptor(
               MethodOrigin.GENERALIZING_BRIDGE, currentTarget, targetImplementation);
-      checkState(newBridge.isGeneralizingdBridge());
+      checkState(newBridge.isGeneralizingBridge());
       methodsByMangledName.put(newBridge.getMangledName(), newBridge);
     }
 
@@ -781,7 +762,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
 
   /** Whether mangled name already has the actual method that handles that name. */
   private static boolean isCorrectTarget(MethodDescriptor method, MethodDescriptor newTarget) {
-    if (method.isGeneralizingdBridge()) {
+    if (method.isGeneralizingBridge()) {
       // Generalizing bridges always dispatch to the right target by construction, but they might
       // do so indirectly.
       return true;
@@ -989,7 +970,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
             && getSuperTypeDescriptor() != null
             && getSuperTypeDescriptor().getPolymorphicMethods().stream()
                 // TODO(b/280121371): cleanup and choose better names for .getSimpleJsName() and
-                // getMandleName() to avoid confusions.
+                // getMangledName() to avoid confusions.
                 // Compare with .getMangledName() instead of with .getSimpleJsName() because
                 // .getSimpleJsName() computes the potential jsname for any member which will not
                 // be the JavaScript property name for non JsMethods.
@@ -1065,7 +1046,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
    * type it is emitted. This is not a problem for parameters since the parameter types are all in
    * agreement.
    *
-   * <p>However, return types of the overridden methods might differ (only for jsmethodsm where we
+   * <p>However, return types of the overridden methods might differ (only for jsmethods where we
    * allow specialized returns to use the same name). The return type that needs to be selected is
    * the more specific of the return types of the overridden methods (which at this point we only
    * have access to one of them). Luckily the return type of the bridged implementation target would
@@ -1146,7 +1127,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
       return true;
     }
 
-    if (getTypeDeclaration().getWasmInfo() != null) {
+    if (AstUtils.isAnnotatedWithWasm(getTypeDeclaration())) {
       return true;
     }
 
@@ -1162,11 +1143,9 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
       if (AstUtils.isNonNativeJsEnum(typeArgument)) {
         return true;
       }
-      if (typeArgument instanceof DeclaredTypeDescriptor) {
-        DeclaredTypeDescriptor declaredTypeDescriptor = (DeclaredTypeDescriptor) typeArgument;
-        if (declaredTypeDescriptor.isParameterizedByNonNativeJsEnum()) {
+      if (typeArgument instanceof DeclaredTypeDescriptor declaredTypeDescriptor
+          && declaredTypeDescriptor.isParameterizedByNonNativeJsEnum()) {
           return true;
-        }
       }
     }
     return false;
@@ -1215,15 +1194,14 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
         .filter(Predicates.notNull());
   }
 
-  /** Returns all the supertypes of this type. */
+  /** Returns all the supertypes of this type including itself. */
   @Memoized
-  ImmutableSet<DeclaredTypeDescriptor> getTransitiveSuperTypes() {
-    var superTypes = ImmutableSet.<DeclaredTypeDescriptor>builder();
-    getSuperTypesStream().forEach(superTypes::add);
+  public Set<DeclaredTypeDescriptor> getAllSuperTypesIncludingSelf() {
+    Set<DeclaredTypeDescriptor> allSupertypesIncludingSelf = new LinkedHashSet<>();
+    allSupertypesIncludingSelf.add(this);
     getSuperTypesStream()
-        .flatMap(t -> t.getTransitiveSuperTypes().stream())
-        .forEach(superTypes::add);
-    return superTypes.build();
+        .forEach(t -> allSupertypesIncludingSelf.addAll(t.getAllSuperTypesIncludingSelf()));
+    return allSupertypesIncludingSelf;
   }
 
   /**
@@ -1263,7 +1241,7 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
     // leave a reference however JavaScript stack will detect that.
     // Note that this limitation is acceptable since in practice user shouldn't refer to AutoValue
     // generated classes (this is where this functionality is currently only used) other than a few
-    // trival scenarios. What we have here is already an overkill in practice for well formed code.
+    // trivial scenarios. What we have here is already an overkill in practice for well formed code.
     return this;
   }
 
@@ -1292,6 +1270,15 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
 
   public DeclaredTypeDescriptor withTypeArguments(Iterable<TypeDescriptor> typeArguments) {
     return toBuilder().setTypeArgumentDescriptors(typeArguments).build();
+  }
+
+  @Override
+  @Nullable
+  public DeclaredTypeDescriptor findSupertype(TypeDeclaration supertypeDeclaration) {
+    return getAllSuperTypesIncludingSelf().stream()
+        .filter(supertype -> supertype.getTypeDeclaration().equals(supertypeDeclaration))
+        .findFirst()
+        .orElse(null);
   }
 
   @Override
@@ -1325,6 +1312,17 @@ public abstract class DeclaredTypeDescriptor extends TypeDescriptor
   boolean hasReferenceTo(TypeVariable typeVariable, ImmutableSet<TypeVariable> seen) {
     return getTypeArgumentDescriptors().stream()
         .anyMatch(it -> it.hasReferenceTo(typeVariable, seen));
+  }
+
+  @Override
+  String toStringInternal(ImmutableSet<TypeVariable> seen) {
+    return getQualifiedSourceName()
+        + (getTypeArgumentDescriptors().isEmpty()
+            ? ""
+            : getTypeArgumentDescriptors().stream()
+                .map(t -> t.toStringInternal(seen))
+                .collect(joining(",", "<", ">")))
+        + (isNullable() ? "?" : "");
   }
 
   @Override

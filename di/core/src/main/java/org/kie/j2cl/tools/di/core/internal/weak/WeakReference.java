@@ -15,7 +15,7 @@
 package org.kie.j2cl.tools.di.core.internal.weak;
 
 import jsinterop.annotations.JsType;
-import org.kie.j2cl.tools.utils.GwtIncompatible;
+import org.kie.j2cl.tools.di.core.internal.GwtIncompatible;
 
 public class WeakReference<T> {
 

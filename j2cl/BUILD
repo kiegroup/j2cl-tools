@@ -1,4 +1,4 @@
-load("@io_bazel_rules_closure//closure:defs.bzl", "closure_js_library")
+load("@rules_closure//closure:defs.bzl", "closure_js_library")
 load("@rules_license//rules:license.bzl", "license")
 load("//build_defs:rules.bzl", "j2cl_alias")
 
@@ -25,8 +25,6 @@ closure_js_library(
     name = "jre",
     exports = ["//jre/java:jre"],
 )
-
-# Note that JsInterop targets may disappear after jsinterop-annotations get its own repo.
 
 alias(
     name = "jsinterop-annotations",
@@ -77,4 +75,13 @@ string_flag(
 bool_flag(
     name = "experimental_enable_j2kt_web",
     build_setting_default = False,
+)
+
+# Flag to enable profiling for particular targets.
+# Example usage:
+#   blaze build <my_binary> --//:profiling_filter=<target_pattern>
+#   pprof --flame blaze-bin/<target>.profile
+string_flag(
+    name = "profiling_filter",
+    build_setting_default = "<disabled>",
 )

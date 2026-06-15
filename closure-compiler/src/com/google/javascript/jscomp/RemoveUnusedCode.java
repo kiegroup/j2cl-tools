@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
@@ -463,7 +462,7 @@ class RemoveUnusedCode implements CompilerPass {
         traverseCall(n, scope);
         break;
 
-      case SWITCH:
+      case SWITCH_BODY:
       case BLOCK:
         // This case if for if there are let and const variables in block scopes.
         // Otherwise other variables will be hoisted up into the global scope and already be
@@ -534,7 +533,7 @@ class RemoveUnusedCode implements CompilerPass {
           checkState(!((parent.isFunction() || parent.isClass()) && parent.getFirstChild() == n));
           traverseNameNode(n, scope)
               .setIsExplicitlyNotRemovable(
-                  () -> SimpleFormat.format("reference found: %s", n.getLocation()));
+                  () -> String.format("reference found: %s", n.getLocation()));
         }
         break;
 
@@ -798,20 +797,19 @@ class RemoveUnusedCode implements CompilerPass {
 
   /** Checks whether this is a recognizable call to $jscomp.polyfill. */
   private static boolean isJscompPolyfill(Node n) {
-    switch (n.getToken()) {
-      case NAME:
-        // Need to work correctly after CollapseProperties.
-        return (n.getString().equals("$jscomp$polyfill") || n.getString().equals("$jscomp$patch"))
-            && n.getNext().isStringLit();
-      case GETPROP:
-        // Need to work correctly without CollapseProperties.
-        return (n.getString().equals("polyfill") || n.getString().equals("patch"))
-            && n.getFirstChild().isName()
-            && n.getFirstChild().getString().equals("$jscomp")
-            && n.getNext().isStringLit();
-      default:
-        return false;
-    }
+    return switch (n.getToken()) {
+      case NAME ->
+          // Need to work correctly after CollapseProperties.
+          (n.getString().equals("$jscomp$polyfill") || n.getString().equals("$jscomp$patch"))
+              && n.getNext().isStringLit();
+      case GETPROP ->
+          // Need to work correctly without CollapseProperties.
+          (n.getString().equals("polyfill") || n.getString().equals("patch"))
+              && n.getFirstChild().isName()
+              && n.getFirstChild().getString().equals("$jscomp")
+              && n.getNext().isStringLit();
+      default -> false;
+    };
   }
 
   /** Traverse `Object.defineProperties(someObject, propertyDefinitions);`. */
@@ -1381,7 +1379,7 @@ class RemoveUnusedCode implements CompilerPass {
                     .buildClassOrPrototypeNamedProperty(member));
           }
           // TODO: b/354704593 - remove the entire class when it is not referenced
-          if (member.isStaticMember() && member.getFirstChild() != null) {
+          if (member.hasChildren()) {
             traverseChildren(member, scope);
           }
           break;
@@ -1389,6 +1387,10 @@ class RemoveUnusedCode implements CompilerPass {
         case COMPUTED_PROP:
         case COMPUTED_FIELD_DEF:
           traverseChildren(member, scope);
+          break;
+
+        case BLOCK:
+          traverseChildren(member, scopeCreator.createScope(member, scope));
           break;
 
         default:
@@ -1667,19 +1669,15 @@ class RemoveUnusedCode implements CompilerPass {
    * if there is no single name.
    */
   private static @Nullable Node nameOfParam(Node param) {
-    switch (param.getToken()) {
-      case NAME:
-        return param;
-      case DEFAULT_VALUE:
-        return nameOfParam(param.getFirstChild());
-      case ITER_REST:
-        return nameOfParam(param.getOnlyChild());
-      case ARRAY_PATTERN:
-      case OBJECT_PATTERN:
-        return null;
-      default:
-        throw new IllegalStateException("Unexpected child of PARAM_LIST: " + param.toStringTree());
-    }
+    return switch (param.getToken()) {
+      case NAME -> param;
+      case DEFAULT_VALUE -> nameOfParam(param.getFirstChild());
+      case ITER_REST -> nameOfParam(param.getOnlyChild());
+      case ARRAY_PATTERN, OBJECT_PATTERN -> null;
+      default ->
+          throw new IllegalStateException(
+              "Unexpected child of PARAM_LIST: " + param.toStringTree());
+    };
   }
 
   /**
@@ -1694,10 +1692,10 @@ class RemoveUnusedCode implements CompilerPass {
     checkNotNull(var);
     boolean isGlobal = var.isGlobal();
     if (var.isExtern()) {
-      unremovableLog.log(() -> SimpleFormat.format("%s: extern", var.getName()));
+      unremovableLog.log(() -> String.format("%s: extern", var.getName()));
       return canonicalUnremovableVarInfo;
     } else if (codingConvention.isExported(var.getName(), /* local= */ !isGlobal)) {
-      unremovableLog.log(() -> SimpleFormat.format("%s: exported by convention", var.getName()));
+      unremovableLog.log(() -> String.format("%s: exported by convention", var.getName()));
       return canonicalUnremovableVarInfo;
     } else if (var.isArguments()) {
       // No point in logging that we cannot remove "arguments"
@@ -3072,7 +3070,7 @@ class RemoveUnusedCode implements CompilerPass {
     public void setIsExplicitlyNotRemovable(Supplier<String> reasonSupplier) {
       if (isEntirelyRemovable) {
         isEntirelyRemovable = false;
-        unremovableLog.log(SimpleFormat.format("%s: %s", varName, reasonSupplier.get()));
+        unremovableLog.log(String.format("%s: %s", varName, reasonSupplier.get()));
         for (Removable r : removables) {
           considerForIndependentRemoval(r);
         }
@@ -3309,6 +3307,37 @@ class RemoveUnusedCode implements CompilerPass {
         nameNode.detach();
       }
       NodeUtil.markFunctionsDeleted(nameNode, compiler);
+    }
+
+    @Override
+    boolean isVariableAssignment() {
+      return true;
+    }
+
+    @Override
+    boolean isAssignedValueLocal() {
+      final Node initialValueNode = nameNode.getFirstChild();
+      if (initialValueNode == null) {
+        // `var foo;`
+        // the "assigned" value is undefined, which should be considered a "local" value,
+        // since it is a constant.
+        return true;
+      }
+      // Handle `var name = name || defaultValue;`
+      final Node valueNode = maybeUnwrapQnameOrDefaultValueNode(nameNode, initialValueNode);
+      return NodeUtil.evaluatesToLocalValue(valueNode);
+    }
+
+    @Override
+    @Nullable Node getLocalAssignedValue() {
+      final Node initialValueNode = nameNode.getFirstChild();
+      if (initialValueNode == null) {
+        // `var foo;` has no node to represent the `undefined` value that is assigned.
+        return null;
+      }
+      // Handle `var name = name || defaultValue;`
+      final Node valueNode = maybeUnwrapQnameOrDefaultValueNode(nameNode, initialValueNode);
+      return NodeUtil.evaluatesToLocalValue(valueNode) ? valueNode : null;
     }
   }
 

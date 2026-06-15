@@ -1,4 +1,10 @@
 ;;; Code for devirtualizedcalls.ArrayCalls [type definition]
+(type $devirtualizedcalls.ArrayCalls (sub $java.lang.Object (struct
+ (field $vtable (ref $devirtualizedcalls.ArrayCalls.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $devirtualizedcalls.ArrayCalls.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -7,14 +13,14 @@
  (field $m_main__void (ref $function.m_main__void))
  ))
 )
-(type $devirtualizedcalls.ArrayCalls (sub $java.lang.Object (struct
- (field $vtable (ref $devirtualizedcalls.ArrayCalls.vtable))
+
+;;; Code for devirtualizedcalls.CharSequenceCalls [type definition]
+(type $devirtualizedcalls.CharSequenceCalls (sub $java.lang.Object (struct
+ (field $vtable (ref $devirtualizedcalls.CharSequenceCalls.vtable))
  (field $itable (ref $itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for devirtualizedcalls.CharSequenceCalls [type definition]
 (type $devirtualizedcalls.CharSequenceCalls.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -24,14 +30,14 @@
  (field $m_test__java_lang_CharSequence__void (ref $function.m_test__java_lang_CharSequence__void))
  ))
 )
-(type $devirtualizedcalls.CharSequenceCalls (sub $java.lang.Object (struct
- (field $vtable (ref $devirtualizedcalls.CharSequenceCalls.vtable))
+
+;;; Code for devirtualizedcalls.NumberCalls [type definition]
+(type $devirtualizedcalls.NumberCalls (sub $java.lang.Object (struct
+ (field $vtable (ref $devirtualizedcalls.NumberCalls.vtable))
  (field $itable (ref $itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for devirtualizedcalls.NumberCalls [type definition]
 (type $devirtualizedcalls.NumberCalls.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -40,14 +46,14 @@
  (field $m_main__void (ref $function.m_main__void))
  ))
 )
-(type $devirtualizedcalls.NumberCalls (sub $java.lang.Object (struct
- (field $vtable (ref $devirtualizedcalls.NumberCalls.vtable))
+
+;;; Code for devirtualizedcalls.ObjectCalls [type definition]
+(type $devirtualizedcalls.ObjectCalls (sub $java.lang.Object (struct
+ (field $vtable (ref $devirtualizedcalls.ObjectCalls.vtable))
  (field $itable (ref $itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for devirtualizedcalls.ObjectCalls [type definition]
 (type $devirtualizedcalls.ObjectCalls.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
@@ -58,26 +64,20 @@
  (field $m_test__void (ref $function.m_test__void))
  ))
 )
-(type $devirtualizedcalls.ObjectCalls (sub $java.lang.Object (struct
- (field $vtable (ref $devirtualizedcalls.ObjectCalls.vtable))
+
+;;; Code for devirtualizedcalls.StringCalls [type definition]
+(type $devirtualizedcalls.StringCalls (sub $java.lang.Object (struct
+ (field $vtable (ref $devirtualizedcalls.StringCalls.vtable))
  (field $itable (ref $itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
-
-;;; Code for devirtualizedcalls.StringCalls [type definition]
 (type $devirtualizedcalls.StringCalls.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
  (field $m_hashCode__int (ref $function.m_hashCode__int))
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  (field $m_main__void (ref $function.m_main__void))
- ))
-)
-(type $devirtualizedcalls.StringCalls (sub $java.lang.Object (struct
- (field $vtable (ref $devirtualizedcalls.StringCalls.vtable))
- (field $itable (ref $itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
 
@@ -200,7 +200,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/ArrayCalls.java:18:13
   (call $$clinit__void_<once>_@devirtualizedcalls.ArrayCalls )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/ArrayCalls.java:18:13
-  (local.set $$instance (struct.new $devirtualizedcalls.ArrayCalls (ref.as_non_null (global.get $devirtualizedcalls.ArrayCalls.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $devirtualizedcalls.ArrayCalls (global.get $devirtualizedcalls.ArrayCalls.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/ArrayCalls.java:18:13
   (call $$ctor__void_$p_devirtualizedcalls_ArrayCalls@devirtualizedcalls.ArrayCalls (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/ArrayCalls.java:18:13
@@ -295,7 +295,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/CharSequenceCalls.java:18:13
   (call $$clinit__void_<once>_@devirtualizedcalls.CharSequenceCalls )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/CharSequenceCalls.java:18:13
-  (local.set $$instance (struct.new $devirtualizedcalls.CharSequenceCalls (ref.as_non_null (global.get $devirtualizedcalls.CharSequenceCalls.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $devirtualizedcalls.CharSequenceCalls (global.get $devirtualizedcalls.CharSequenceCalls.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/CharSequenceCalls.java:18:13
   (call $$ctor__void_$p_devirtualizedcalls_CharSequenceCalls@devirtualizedcalls.CharSequenceCalls (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/CharSequenceCalls.java:18:13
@@ -401,7 +401,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/NumberCalls.java:18:13
   (call $$clinit__void_<once>_@devirtualizedcalls.NumberCalls )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/NumberCalls.java:18:13
-  (local.set $$instance (struct.new $devirtualizedcalls.NumberCalls (ref.as_non_null (global.get $devirtualizedcalls.NumberCalls.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $devirtualizedcalls.NumberCalls (global.get $devirtualizedcalls.NumberCalls.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/NumberCalls.java:18:13
   (call $$ctor__void_$p_devirtualizedcalls_NumberCalls@devirtualizedcalls.NumberCalls (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/NumberCalls.java:18:13
@@ -677,7 +677,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/ObjectCalls.java:18:13
   (call $$clinit__void_<once>_@devirtualizedcalls.ObjectCalls )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/ObjectCalls.java:18:13
-  (local.set $$instance (struct.new $devirtualizedcalls.ObjectCalls (ref.as_non_null (global.get $devirtualizedcalls.ObjectCalls.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $devirtualizedcalls.ObjectCalls (global.get $devirtualizedcalls.ObjectCalls.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/ObjectCalls.java:18:13
   (call $$ctor__void_$p_devirtualizedcalls_ObjectCalls@devirtualizedcalls.ObjectCalls (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/ObjectCalls.java:18:13
@@ -828,7 +828,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/StringCalls.java:21:13
   (call $$clinit__void_<once>_@devirtualizedcalls.StringCalls )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/StringCalls.java:21:13
-  (local.set $$instance (struct.new $devirtualizedcalls.StringCalls (ref.as_non_null (global.get $devirtualizedcalls.StringCalls.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $devirtualizedcalls.StringCalls (global.get $devirtualizedcalls.StringCalls.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/StringCalls.java:21:13
   (call $$ctor__void_$p_devirtualizedcalls_StringCalls@devirtualizedcalls.StringCalls (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/devirtualizedcalls/readable-j2wasm.js/devirtualizedcalls/StringCalls.java:21:13

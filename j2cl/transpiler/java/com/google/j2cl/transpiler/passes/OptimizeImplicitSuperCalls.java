@@ -27,6 +27,7 @@ import com.google.j2cl.transpiler.ast.Method;
 import com.google.j2cl.transpiler.ast.MethodCall;
 import com.google.j2cl.transpiler.ast.MethodDescriptor;
 import com.google.j2cl.transpiler.ast.Node;
+import com.google.j2cl.transpiler.ast.ThisReference;
 
 /** Remove super constructor calls which can be implicit. */
 public class OptimizeImplicitSuperCalls extends NormalizationPass {
@@ -56,6 +57,12 @@ public class OptimizeImplicitSuperCalls extends NormalizationPass {
               return method;
             }
 
+            // Keep calls with explicit qualifier.
+            Expression qualifier = constructorCall.getQualifier();
+            if (qualifier != null && !(qualifier instanceof ThisReference)) {
+              return method;
+            }
+
             if (!constructorCall.getArguments().isEmpty()) {
               // Keep calls with non-empty args to non-vararg methods.
               if (!constructorCallTarget.isVarargs()) {
@@ -64,14 +71,13 @@ public class OptimizeImplicitSuperCalls extends NormalizationPass {
 
               // Keep calls with non-ArrayLiteral vararg argument.
               Expression varargArgument = getLast(constructorCall.getArguments());
-              if (!(varargArgument instanceof ArrayLiteral)) {
+              if (!(varargArgument instanceof ArrayLiteral arrayLiteral)) {
                 return method;
               }
 
               // Keep calls with non-empty ArrayLiteral vararg argument.
               // Assuming that this pass is executed after NormalizeVarargInvocationsJ2kt, calls
               // with empty ArrayLiteral vararg argument are safe to be removed.
-              ArrayLiteral arrayLiteral = (ArrayLiteral) varargArgument;
               if (!arrayLiteral.getValueExpressions().isEmpty()) {
                 return method;
               }

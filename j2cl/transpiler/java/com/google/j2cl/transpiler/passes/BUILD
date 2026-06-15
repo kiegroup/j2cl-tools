@@ -1,5 +1,5 @@
 load("@rules_java//java:defs.bzl", "java_library")
-load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
+load("@google_bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 package(
     default_applicable_licenses = ["//:j2cl_license"],
@@ -10,8 +10,10 @@ package(
 java_library(
     name = "passes",
     srcs = glob(["*.java"]),
+    javacopts = ["-Xep:BetaApi:OFF"],
     deps = [
         "//third_party:auto_value",
+        "//third_party:error_prone_annotations",
         "//third_party:guava",
         "//third_party:jsr305_annotations",
         "//transpiler/java/com/google/j2cl/common",
@@ -24,6 +26,12 @@ javadoc_library(
     name = "passes-javadoc",
     srcs = glob(["*.java"]),
     deps = [
-        ":passes",
+        "//third_party:auto_value",
+        "//third_party:error_prone_annotations",
+        "//third_party:guava",
+        "//third_party:jsr305_annotations",
+        "//transpiler/java/com/google/j2cl/common",
+        "//transpiler/java/com/google/j2cl/common/visitor",
+        "//transpiler/java/com/google/j2cl/transpiler/ast",
     ],
 )

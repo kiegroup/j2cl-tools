@@ -25,14 +25,10 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Locale;
+import junit.framework.TestCase;
 
 /** Tests java.lang.String. */
-public class StringTest extends GWTTestCase {
-
-  @Override
-  public String getModuleName() {
-    return "com.google.gwt.emultest.EmulSuite";
-  }
+public class StringTest extends TestCase {
 
   public void testCharAt() {
     assertEquals('b', hideFromCompiler("abc").charAt(1));
@@ -864,8 +860,9 @@ public class StringTest extends GWTTestCase {
     }
 
     try {
-      returnNull().indexOf("");
-      fail();
+      int index = returnNull().indexOf("");
+      // Use return value to avoid side-effect to be ignored by JSC.
+      fail(String.valueOf(index));
     } catch (NullPointerException e) {
       // expected
     }

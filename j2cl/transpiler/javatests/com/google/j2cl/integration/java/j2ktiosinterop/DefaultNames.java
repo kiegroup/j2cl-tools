@@ -24,50 +24,74 @@ public final class DefaultNames {
 
   public void method() {}
 
-  public void method(boolean c) {}
+  public void booleanMethod(boolean c) {}
 
-  public void method(char c) {}
+  public void charMethod(char c) {}
 
-  public void method(byte b) {}
+  public void byteMethod(byte b) {}
 
-  public void method(short s) {}
+  public void shortMethod(short s) {}
 
-  public void method(int i) {}
+  public void intMethod(int i) {}
 
-  public void method(long l) {}
+  public void longMethod(long l) {}
 
-  public void method(float f) {}
+  public void floatMethod(float f) {}
 
-  public void method(double d) {}
+  public void doubleMethod(double d) {}
 
-  public void method(Object obj) {}
+  public void objectMethod(Object obj) {}
 
-  public void method(String obj) {}
+  public void stringMethod(String obj) {}
 
-  public void method(String[] sa) {}
+  @SuppressWarnings("AvoidObjectArrays")
+  public void stringArrayMethod(String[] sa) {}
 
-  public void method(String[][] saa) {}
+  @SuppressWarnings("AvoidObjectArrays")
+  public void stringArrayArrayMethod(String[][] saa) {}
 
-  public void method(Cloneable c) {}
+  public void cloneableMethod(Cloneable c) {}
 
-  public void method(Number c) {}
+  public void numberMethod(Number c) {}
 
-  public void method(Class<String> c) {}
+  public void classMethod(Class<String> c) {}
 
-  public void method(Iterable<String> i) {}
+  public void stringIterableMethod(Iterable<String> i) {}
 
-  public void method(int i, String s) {}
+  public void intStringMethod(int i, String s) {}
 
   public <T> void genericMethod(T t) {}
 
-  public <T extends String> void genericMethod(T t) {}
+  public <T extends String> void genericStringMethod(T t) {}
 
-  public int field;
-  public static int staticField;
+  public <T> void genericArrayMethod(T[] t) {}
+
+  public <T extends String> void genericStringArrayMethod(T[] t) {}
+
+  public void overloadedMethod(Object o) {}
+
+  public void overloadedMethod(int i) {}
+
+  public void overloadedMethod(long l) {}
+
+  public void overloadedMethod(float f) {}
+
+  public void overloadedMethod(double d) {}
+
+  public void overloadedMethod(String s) {}
+
+  public final int finalIntField = 0;
+
+  public int intField;
+
+  public static final int STATIC_FINAL_INT_FIELD = 0;
+
+  @SuppressWarnings("NonFinalStaticField")
+  public static int staticIntField;
 
   public static void staticMethod() {}
 
-  public static void staticMethod(int i) {}
+  public static void staticIntMethod(int i) {}
 
-  public static void staticMethod(int i, String s) {}
+  public static void staticIntStringMethod(int i, String s) {}
 }

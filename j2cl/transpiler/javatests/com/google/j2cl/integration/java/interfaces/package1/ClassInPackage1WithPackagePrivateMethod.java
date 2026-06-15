@@ -15,6 +15,9 @@
  */
 package interfaces.package1;
 
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
 public class ClassInPackage1WithPackagePrivateMethod {
   String m() {
     return "package-private-m";

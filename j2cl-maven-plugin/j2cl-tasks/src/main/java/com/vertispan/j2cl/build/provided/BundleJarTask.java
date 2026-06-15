@@ -26,7 +26,6 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
@@ -59,6 +58,9 @@ public class BundleJarTask extends TaskFactory {
         return "0";
     }
 
+    private static final String J2CL_VERSION = com.vertispan.j2cl.config.BuildConfig.J2CL_VERSION;
+    private static final String J2CL_BASE_VERSION = com.vertispan.j2cl.config.BuildConfig.J2CL_BASE_VERSION;
+
     @Override
     public Task resolve(Project project, Config config) {
         List<Input> jsSources = Stream
@@ -71,6 +73,13 @@ public class BundleJarTask extends TaskFactory {
                 .map(i -> i.filter(BUNDLE_JS))
                 .collect(Collectors.toUnmodifiableList());
 
+
+        Map<String, Input> bootstrap = new LinkedHashMap<>();
+        bootstrap.put(String.format("org.kie.j2cl.tools:bootstrap:%s:jszip", J2CL_BASE_VERSION), null);
+        bootstrap.put(String.format("org.kie.j2cl.tools:jre:%s:jszip", J2CL_VERSION), null);
+        bootstrap.put(String.format("org.kie.j2cl.tools:closure-test:%s:jszip", J2CL_VERSION), null);
+        bootstrap.put(String.format("org.kie.j2cl.tools:junit-runtime:%s:jszip", J2CL_VERSION), null);
+
         // Sort the projects, to try to include them in order. We can't be sure that all project
         // dependencies will be (or should be) present, but we can make sure that we only load
         // our own JS after any dependencies that will be included have already loaded.
@@ -80,13 +89,22 @@ public class BundleJarTask extends TaskFactory {
         while (!remaining.isEmpty()) {
             for (Iterator<Input> iterator = remaining.iterator(); iterator.hasNext(); ) {
                 Input input = iterator.next();
+
                 if (input.getProject().getDependencies().stream().noneMatch(dep -> pendingProjectKeys.contains(dep.getProject().getKey()))) {
                     iterator.remove();
                     pendingProjectKeys.remove(input.getProject().getKey());
-                    sourceOrder.add(input);
+
+                    if(bootstrap.containsKey(input.getProject().getKey())) {
+                        // ensure bootstrap entries are first, in the order they were defined
+                        bootstrap.put(input.getProject().getKey(), input);
+                    } else {
+                        sourceOrder.add(input);
+                    }
                 }
             }
         }
+
+        sourceOrder.addAll(0, bootstrap.values().stream().filter(Objects::nonNull).toList());
 
         File initialScriptFile = config.getWebappDirectory().resolve(config.getInitialScriptFilename()).toFile();
         Map<String, Object> defines = new LinkedHashMap<>(config.getDefines());

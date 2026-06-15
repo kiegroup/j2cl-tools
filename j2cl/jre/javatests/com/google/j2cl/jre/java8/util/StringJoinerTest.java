@@ -18,22 +18,16 @@ package com.google.j2cl.jre.java8.util;
 import static com.google.j2cl.jre.testing.TestUtils.isWasm;
 
 import java.util.StringJoiner;
- 
-/**
- * Tests StringJoiner.
- */
-public class StringJoinerTest extends GWTTestCase {
+import junit.framework.TestCase;
+
+/** Tests StringJoiner. */
+public class StringJoinerTest extends TestCase {
 
   private StringJoiner joiner;
 
   @Override
-  public String getModuleName() {
-    return "com.google.gwt.emultest.EmulSuite";
-  }
-
-  @Override
-  protected void gwtSetUp() throws Exception {
-    super.gwtSetUp();
+  protected void setUp() throws Exception {
+    super.setUp();
     joiner = new StringJoiner("|", "[", "]");
   }
 

@@ -19,16 +19,25 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.MoreCollectors.onlyElement;
-import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.HAS_NO_SIDE_EFFECTS_ANNOTATION_NAME;
-import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.UNCHECKED_CAST_ANNOTATION_NAME;
-import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.WASM_ANNOTATION_NAME;
+import static com.google.j2cl.transpiler.frontend.common.SupportedAnnotations.isSupportedAnnotation;
+import static com.google.j2cl.transpiler.frontend.javac.AnnotationUtils.getAnnotationName;
+import static com.google.j2cl.transpiler.frontend.javac.AnnotationUtils.hasAnnotation;
+import static com.google.j2cl.transpiler.frontend.javac.AnnotationUtils.hasNullMarkedAnnotation;
+import static com.google.j2cl.transpiler.frontend.javac.J2ktInteropUtils.getJ2ktVariance;
+import static com.google.j2cl.transpiler.frontend.javac.JsInteropAnnotationUtils.getJsNamespace;
+import static java.util.stream.Collectors.toCollection;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Streams;
 import com.google.j2cl.common.InternalCompilerError;
 import com.google.j2cl.common.SourcePosition;
+import com.google.j2cl.transpiler.ast.Annotation;
+import com.google.j2cl.transpiler.ast.ArrayConstant;
 import com.google.j2cl.transpiler.ast.ArrayTypeDescriptor;
 import com.google.j2cl.transpiler.ast.BinaryOperator;
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
@@ -36,9 +45,12 @@ import com.google.j2cl.transpiler.ast.FieldDescriptor;
 import com.google.j2cl.transpiler.ast.IntersectionTypeDescriptor;
 import com.google.j2cl.transpiler.ast.JsEnumInfo;
 import com.google.j2cl.transpiler.ast.JsInfo;
+import com.google.j2cl.transpiler.ast.KtInfo;
+import com.google.j2cl.transpiler.ast.KtVariance;
 import com.google.j2cl.transpiler.ast.Literal;
 import com.google.j2cl.transpiler.ast.MethodDescriptor;
 import com.google.j2cl.transpiler.ast.MethodDescriptor.ParameterDescriptor;
+import com.google.j2cl.transpiler.ast.NullabilityAnnotation;
 import com.google.j2cl.transpiler.ast.PackageDeclaration;
 import com.google.j2cl.transpiler.ast.PostfixOperator;
 import com.google.j2cl.transpiler.ast.PrefixOperator;
@@ -46,19 +58,21 @@ import com.google.j2cl.transpiler.ast.PrimitiveTypes;
 import com.google.j2cl.transpiler.ast.TypeDeclaration;
 import com.google.j2cl.transpiler.ast.TypeDeclaration.DescriptorFactory;
 import com.google.j2cl.transpiler.ast.TypeDeclaration.Kind;
+import com.google.j2cl.transpiler.ast.TypeDeclaration.SourceLanguage;
 import com.google.j2cl.transpiler.ast.TypeDescriptor;
 import com.google.j2cl.transpiler.ast.TypeDescriptors;
+import com.google.j2cl.transpiler.ast.TypeLiteral;
 import com.google.j2cl.transpiler.ast.TypeVariable;
 import com.google.j2cl.transpiler.ast.UnionTypeDescriptor;
 import com.google.j2cl.transpiler.ast.Variable;
 import com.google.j2cl.transpiler.ast.Visibility;
 import com.google.j2cl.transpiler.frontend.common.Nullability;
-import com.google.j2cl.transpiler.frontend.common.PackageInfoCache;
 import com.sun.tools.javac.code.Attribute.TypeCompound;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.tools.javac.code.Symbol.TypeVariableSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.TargetType;
 import com.sun.tools.javac.code.Type;
@@ -66,6 +80,7 @@ import com.sun.tools.javac.code.Type.CapturedType;
 import com.sun.tools.javac.code.Type.ClassType;
 import com.sun.tools.javac.code.Type.IntersectionClassType;
 import com.sun.tools.javac.code.Type.JCPrimitiveType;
+import com.sun.tools.javac.code.Type.TypeVar;
 import com.sun.tools.javac.code.Type.UnionClassType;
 import com.sun.tools.javac.code.TypeAnnotationPosition;
 import com.sun.tools.javac.code.TypeAnnotationPosition.TypePathEntry;
@@ -85,6 +100,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -101,14 +117,15 @@ import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.WildcardType;
 
 /** Utility functions to interact with JavaC internal representations. */
-public class JavaEnvironment {
+class JavaEnvironment {
   JavacTypes javacTypes;
   Types internalTypes;
   JavacElements elements;
 
-  public JavaEnvironment(Context context, Collection<String> wellKnownQualifiedBinaryNames) {
+  JavaEnvironment(Context context, Collection<String> wellKnownQualifiedBinaryNames) {
     this.javacTypes = JavacTypes.instance(context);
     this.internalTypes = Types.instance(context);
     this.elements = JavacElements.instance(context);
@@ -117,6 +134,13 @@ public class JavaEnvironment {
   }
 
   private void initWellKnownTypes(Collection<String> wellKnownQualifiedBinaryNames) {
+    System.err.println("Initializing well-known types");
+
+    if(TypeDescriptors.isInitialized()) {
+      return;
+    }
+
+
     checkState(!TypeDescriptors.isInitialized());
 
     TypeDescriptors.SingletonBuilder builder = new TypeDescriptors.SingletonBuilder();
@@ -134,125 +158,87 @@ public class JavaEnvironment {
 
   @Nullable
   static PrefixOperator getPrefixOperator(com.sun.source.tree.Tree.Kind operator) {
-    switch (operator) {
-      case PREFIX_INCREMENT:
-        return PrefixOperator.INCREMENT;
-      case PREFIX_DECREMENT:
-        return PrefixOperator.DECREMENT;
-      case UNARY_PLUS:
-        return PrefixOperator.PLUS;
-      case UNARY_MINUS:
-        return PrefixOperator.MINUS;
-      case BITWISE_COMPLEMENT:
-        return PrefixOperator.COMPLEMENT;
-      case LOGICAL_COMPLEMENT:
-        return PrefixOperator.NOT;
-      default:
-        return null;
-    }
+    return switch (operator) {
+      case PREFIX_INCREMENT -> PrefixOperator.INCREMENT;
+      case PREFIX_DECREMENT -> PrefixOperator.DECREMENT;
+      case UNARY_PLUS -> PrefixOperator.PLUS;
+      case UNARY_MINUS -> PrefixOperator.MINUS;
+      case BITWISE_COMPLEMENT -> PrefixOperator.COMPLEMENT;
+      case LOGICAL_COMPLEMENT -> PrefixOperator.NOT;
+      default -> null;
+    };
   }
 
   @Nullable
   static PostfixOperator getPostfixOperator(com.sun.source.tree.Tree.Kind operator) {
-    switch (operator) {
-      case POSTFIX_INCREMENT:
-        return PostfixOperator.INCREMENT;
-      case POSTFIX_DECREMENT:
-        return PostfixOperator.DECREMENT;
-      default:
-        return null;
-    }
+    return switch (operator) {
+      case POSTFIX_INCREMENT -> PostfixOperator.INCREMENT;
+      case POSTFIX_DECREMENT -> PostfixOperator.DECREMENT;
+      default -> null;
+    };
   }
 
   @Nullable
   static BinaryOperator getBinaryOperator(com.sun.source.tree.Tree.Kind operator) {
-    switch (operator) {
-      case ASSIGNMENT:
-        return BinaryOperator.ASSIGN;
-      case PLUS_ASSIGNMENT:
-        return BinaryOperator.PLUS_ASSIGN;
-      case MINUS_ASSIGNMENT:
-        return BinaryOperator.MINUS_ASSIGN;
-      case MULTIPLY_ASSIGNMENT:
-        return BinaryOperator.TIMES_ASSIGN;
-      case DIVIDE_ASSIGNMENT:
-        return BinaryOperator.DIVIDE_ASSIGN;
-      case AND_ASSIGNMENT:
-        return BinaryOperator.BIT_AND_ASSIGN;
-      case OR_ASSIGNMENT:
-        return BinaryOperator.BIT_OR_ASSIGN;
-      case XOR_ASSIGNMENT:
-        return BinaryOperator.BIT_XOR_ASSIGN;
-      case REMAINDER_ASSIGNMENT:
-        return BinaryOperator.REMAINDER_ASSIGN;
-      case LEFT_SHIFT_ASSIGNMENT:
-        return BinaryOperator.LEFT_SHIFT_ASSIGN;
-      case RIGHT_SHIFT_ASSIGNMENT:
-        return BinaryOperator.RIGHT_SHIFT_SIGNED_ASSIGN;
-      case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT:
-        return BinaryOperator.RIGHT_SHIFT_UNSIGNED_ASSIGN;
-      case AND:
-        return BinaryOperator.BIT_AND;
-      case CONDITIONAL_AND:
-        return BinaryOperator.CONDITIONAL_AND;
-      case CONDITIONAL_OR:
-        return BinaryOperator.CONDITIONAL_OR;
-      case DIVIDE:
-        return BinaryOperator.DIVIDE;
-      case EQUAL_TO:
-        return BinaryOperator.EQUALS;
-      case GREATER_THAN:
-        return BinaryOperator.GREATER;
-      case GREATER_THAN_EQUAL:
-        return BinaryOperator.GREATER_EQUALS;
-      case LEFT_SHIFT:
-        return BinaryOperator.LEFT_SHIFT;
-      case LESS_THAN:
-        return BinaryOperator.LESS;
-      case LESS_THAN_EQUAL:
-        return BinaryOperator.LESS_EQUALS;
-      case MINUS:
-        return BinaryOperator.MINUS;
-      case MULTIPLY:
-        return BinaryOperator.TIMES;
-      case NOT_EQUAL_TO:
-        return BinaryOperator.NOT_EQUALS;
-      case OR:
-        return BinaryOperator.BIT_OR;
-      case PLUS:
-        return BinaryOperator.PLUS;
-      case REMAINDER:
-        return BinaryOperator.REMAINDER;
-      case RIGHT_SHIFT:
-        return BinaryOperator.RIGHT_SHIFT_SIGNED;
-      case UNSIGNED_RIGHT_SHIFT:
-        return BinaryOperator.RIGHT_SHIFT_UNSIGNED;
-      case XOR:
-        return BinaryOperator.BIT_XOR;
-      default:
-        return null;
-    }
+    return switch (operator) {
+      case ASSIGNMENT -> BinaryOperator.ASSIGN;
+      case PLUS_ASSIGNMENT -> BinaryOperator.PLUS_ASSIGN;
+      case MINUS_ASSIGNMENT -> BinaryOperator.MINUS_ASSIGN;
+      case MULTIPLY_ASSIGNMENT -> BinaryOperator.TIMES_ASSIGN;
+      case DIVIDE_ASSIGNMENT -> BinaryOperator.DIVIDE_ASSIGN;
+      case AND_ASSIGNMENT -> BinaryOperator.BIT_AND_ASSIGN;
+      case OR_ASSIGNMENT -> BinaryOperator.BIT_OR_ASSIGN;
+      case XOR_ASSIGNMENT -> BinaryOperator.BIT_XOR_ASSIGN;
+      case REMAINDER_ASSIGNMENT -> BinaryOperator.REMAINDER_ASSIGN;
+      case LEFT_SHIFT_ASSIGNMENT -> BinaryOperator.LEFT_SHIFT_ASSIGN;
+      case RIGHT_SHIFT_ASSIGNMENT -> BinaryOperator.RIGHT_SHIFT_SIGNED_ASSIGN;
+      case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT -> BinaryOperator.RIGHT_SHIFT_UNSIGNED_ASSIGN;
+      case AND -> BinaryOperator.BIT_AND;
+      case CONDITIONAL_AND -> BinaryOperator.CONDITIONAL_AND;
+      case CONDITIONAL_OR -> BinaryOperator.CONDITIONAL_OR;
+      case DIVIDE -> BinaryOperator.DIVIDE;
+      case EQUAL_TO -> BinaryOperator.EQUALS;
+      case GREATER_THAN -> BinaryOperator.GREATER;
+      case GREATER_THAN_EQUAL -> BinaryOperator.GREATER_EQUALS;
+      case LEFT_SHIFT -> BinaryOperator.LEFT_SHIFT;
+      case LESS_THAN -> BinaryOperator.LESS;
+      case LESS_THAN_EQUAL -> BinaryOperator.LESS_EQUALS;
+      case MINUS -> BinaryOperator.MINUS;
+      case MULTIPLY -> BinaryOperator.TIMES;
+      case NOT_EQUAL_TO -> BinaryOperator.NOT_EQUALS;
+      case OR -> BinaryOperator.BIT_OR;
+      case PLUS -> BinaryOperator.PLUS;
+      case REMAINDER -> BinaryOperator.REMAINDER;
+      case RIGHT_SHIFT -> BinaryOperator.RIGHT_SHIFT_SIGNED;
+      case UNSIGNED_RIGHT_SHIFT -> BinaryOperator.RIGHT_SHIFT_UNSIGNED;
+      case XOR -> BinaryOperator.BIT_XOR;
+      default -> null;
+    };
   }
 
   Variable createVariable(
-      SourcePosition sourcePosition, VariableElement variableElement, boolean isParameter) {
+      SourcePosition sourcePosition,
+      VariableElement variableElement,
+      boolean isParameter,
+      boolean inNullMarkedScope) {
     TypeMirror type = variableElement.asType();
     String name = variableElement.getSimpleName().toString();
     TypeDescriptor typeDescriptor =
-        isParameter
-            ? createTypeDescriptorWithNullability(
-                type, variableElement.getAnnotationMirrors(), /* inNullMarkedScope= */ false)
-            : createTypeDescriptor(type);
+        createTypeDescriptorWithNullability(
+            type, variableElement.getAnnotationMirrors(), inNullMarkedScope);
+    if (!isParameter) {
+      // In JSpecify, variables do not inherit the nullability from the scope, instead they are
+      // conceptually nullable but their nullability is eventually inferred from the assignments.
+      typeDescriptor = typeDescriptor.toNullable();
+    }
     boolean isFinal = isFinal(variableElement);
-    boolean isUnusableByJsSuppressed =
-        JsInteropAnnotationUtils.isUnusableByJsSuppressed(variableElement);
     return Variable.newBuilder()
         .setName(name)
         .setTypeDescriptor(typeDescriptor)
         .setFinal(isFinal)
         .setParameter(isParameter)
-        .setUnusableByJsSuppressed(isUnusableByJsSuppressed)
         .setSourcePosition(sourcePosition)
+        .setAnnotations(createAnnotations(variableElement, inNullMarkedScope))
         .build();
   }
 
@@ -263,11 +249,6 @@ public class JavaEnvironment {
   DeclaredTypeDescriptor createDeclaredTypeDescriptor(
       TypeMirror typeMirror, boolean inNullMarkedScope) {
     return createTypeDescriptor(typeMirror, inNullMarkedScope, DeclaredTypeDescriptor.class);
-  }
-
-  /** Creates a specific subclass of TypeDescriptor from a TypeMirror. */
-  <T extends TypeDescriptor> T createTypeDescriptor(TypeMirror typeMirror, Class<T> clazz) {
-    return createTypeDescriptor(typeMirror, /* inNullMarkedScope= */ false, clazz);
   }
 
   /** Creates a specific subclass of TypeDescriptor from a TypeMirror. */
@@ -313,12 +294,12 @@ public class JavaEnvironment {
     }
 
     if (typeMirror.getKind() == TypeKind.TYPEVAR) {
-      return createTypeVariable((javax.lang.model.type.TypeVariable) typeMirror);
+      return createTypeVariable(
+          (javax.lang.model.type.TypeVariable) typeMirror, elementAnnotations, inNullMarkedScope);
     }
 
     if (typeMirror.getKind() == TypeKind.WILDCARD) {
-      return createWildcardTypeVariable(
-          ((javax.lang.model.type.WildcardType) typeMirror).getExtendsBound());
+      return createWildcardTypeVariable((WildcardType) typeMirror, inNullMarkedScope);
     }
 
     boolean isNullable = isNullable(typeMirror, elementAnnotations, inNullMarkedScope);
@@ -345,11 +326,6 @@ public class JavaEnvironment {
       List<? extends AnnotationMirror> elementAnnotations,
       boolean inNullMarkedScope) {
     checkArgument(!typeMirror.getKind().isPrimitive());
-
-    if (asTypeElement(typeMirror).getQualifiedName().contentEquals("java.lang.Void")) {
-      // Void is always nullable.
-      return true;
-    }
 
     Iterable<? extends AnnotationMirror> allAnnotations =
         Iterables.concat(elementAnnotations, typeMirror.getAnnotationMirrors());
@@ -378,48 +354,88 @@ public class JavaEnvironment {
         annotationType.asElement().getQualifiedName().toString());
   }
 
-  private TypeVariable createTypeVariable(javax.lang.model.type.TypeVariable typeVariable) {
-    if (typeVariable instanceof CapturedType) {
-      return createWildcardTypeVariable(typeVariable.getUpperBound());
-    }
+  // TODO(b/408478800): Cleanup unique keys for type variables and provide a more meaningful
+  // toString().
+  private TypeVariable createTypeVariable(
+      javax.lang.model.type.TypeVariable typeVariable,
+      List<? extends AnnotationMirror> elementAnnotations,
+      boolean inNullMarkedScope) {
+    boolean isCapture = typeVariable instanceof CapturedType;
 
     Supplier<TypeDescriptor> boundTypeDescriptorFactory =
-        () -> createTypeDescriptor(typeVariable.getUpperBound());
+        () -> createTypeDescriptor(typeVariable.getUpperBound(), inNullMarkedScope);
+
+    TypeDescriptor lowerBound =
+        typeVariable.getLowerBound() != null
+                && typeVariable.getLowerBound().getKind() != TypeKind.NULL
+            ? createTypeDescriptor(typeVariable.getLowerBound(), inNullMarkedScope)
+            : null;
 
     List<String> classComponents = getClassComponents(typeVariable);
+    Symbol baseSymbol = ((TypeVariableSymbol) typeVariable.asElement()).baseSymbol();
+    KtVariance ktVariance = getJ2ktVariance(baseSymbol);
+    Type baseSymbolType = baseSymbol.asType();
+    int id = getTypeVariableId(baseSymbolType);
     return TypeVariable.newBuilder()
         .setUpperBoundTypeDescriptorFactory(boundTypeDescriptorFactory)
+        .setLowerBoundTypeDescriptor(lowerBound)
         .setUniqueKey(
-            String.join("::", classComponents)
-                + (typeVariable.getUpperBound() != null
-                    ? typeVariable.getUpperBound().toString()
+            "#"
+                + id
+                + ":"
+                + (isCapture ? "capture of " : "")
+                + String.join("::", classComponents)
+                + (baseSymbolType.getUpperBound() != null
+                    ? "::^::" + baseSymbolType.getUpperBound()
+                    : "")
+                + (baseSymbolType.getLowerBound() != null
+                    ? "::v::" + baseSymbolType.getLowerBound()
                     : ""))
-        .setName(typeVariable.asElement().getSimpleName().toString())
+        .setKtVariance(ktVariance)
+        .setName(baseSymbol.getSimpleName().toString())
+        .setCapture(isCapture)
+        .setNullabilityAnnotation(getNullabilityAnnotation(typeVariable, elementAnnotations))
         .build();
   }
 
-  private TypeVariable createWildcardTypeVariable(TypeMirror bound) {
+
+  private TypeVariable createWildcardTypeVariable(
+      WildcardType wildcardType, boolean inNullMarkedScope) {
+    return createWildcardTypeVariable(
+        wildcardType,
+        wildcardType.getExtendsBound(),
+        wildcardType.getSuperBound(),
+        inNullMarkedScope);
+  }
+
+  private TypeVariable createWildcardTypeVariable(
+      WildcardType wildcardType,
+      @Nullable TypeMirror upperBound,
+      @Nullable TypeMirror lowerBound,
+      boolean inNullMarkedScope) {
+    int id = getTypeVariableId(wildcardType);
     return TypeVariable.newBuilder()
-        .setUpperBoundTypeDescriptorFactory(() -> createTypeDescriptor(bound))
+        .setUpperBoundTypeDescriptorFactory(
+            () -> lowerBound == null ? createTypeDescriptor(upperBound, inNullMarkedScope) : null)
+        .setLowerBoundTypeDescriptor(createTypeDescriptor(lowerBound, inNullMarkedScope))
         .setWildcard(true)
         .setName("?")
-        .setUniqueKey("::?::" + (bound != null ? bound.toString() : ""))
+        .setUniqueKey("#" + id + ":" + (inNullMarkedScope ? "+" : "-"))
         .build();
+  }
+
+  private final Map<TypeMirror, Integer> typeVariableIdByTypeVariable = new HashMap<>();
+
+  private int getTypeVariableId(TypeMirror typeVariable) {
+    checkState(
+        typeVariable.getKind() == TypeKind.TYPEVAR || typeVariable.getKind() == TypeKind.WILDCARD);
+    return typeVariableIdByTypeVariable.computeIfAbsent(
+        typeVariable, w -> typeVariableIdByTypeVariable.size());
   }
 
   private static DeclaredTypeDescriptor withNullability(
       DeclaredTypeDescriptor typeDescriptor, boolean nullable) {
     return nullable ? typeDescriptor.toNullable() : typeDescriptor.toNonNullable();
-  }
-
-  /**
-   * In case the given type element is nested, return the outermost possible enclosing type element.
-   */
-  private static TypeElement toTopLevelTypeBinding(Element element) {
-    if (element.getEnclosingElement().getKind() == ElementKind.PACKAGE) {
-      return (TypeElement) element;
-    }
-    return toTopLevelTypeBinding(element.getEnclosingElement());
   }
 
   private ImmutableList<String> getClassComponents(
@@ -448,10 +464,9 @@ public class JavaEnvironment {
   }
 
   private ImmutableList<String> getClassComponents(Element element) {
-    if (!(element instanceof TypeElement)) {
+    if (!(element instanceof TypeElement typeElement)) {
       return ImmutableList.of();
     }
-    TypeElement typeElement = (TypeElement) element;
     List<String> classComponents = new ArrayList<>();
     TypeElement currentType = typeElement;
     while (currentType != null) {
@@ -470,10 +485,7 @@ public class JavaEnvironment {
       }
       classComponents.add(0, simpleName);
       Element enclosingElement = currentType.getEnclosingElement();
-      while (enclosingElement != null
-          && enclosingElement.getKind() != ElementKind.CLASS
-          && enclosingElement.getKind() != ElementKind.INTERFACE
-          && enclosingElement.getKind() != ElementKind.ENUM) {
+      while (enclosingElement != null && !(enclosingElement instanceof TypeElement)) {
         enclosingElement = enclosingElement.getEnclosingElement();
       }
       currentType = (TypeElement) enclosingElement;
@@ -506,6 +518,10 @@ public class JavaEnvironment {
             .contentEquals("java.lang.String");
   }
 
+  private static boolean isAnnotationMethod(ExecutableElement executableElement) {
+    return executableElement.getEnclosingElement().getKind() == ElementKind.ANNOTATION_TYPE;
+  }
+
   /**
    * Returns true if instances of this type capture its outer instances; i.e. if it is an non static
    * member class, or an anonymous or local class defined in an instance context.
@@ -529,11 +545,10 @@ public class JavaEnvironment {
         createDeclaredTypeDescriptor(getEnclosingType(variableElement).asType());
     String fieldName = variableElement.getSimpleName().toString();
 
+    boolean inNullMarkedScope = enclosingTypeDescriptor.getTypeDeclaration().isNullMarked();
     TypeDescriptor thisTypeDescriptor =
         createTypeDescriptorWithNullability(
-            type,
-            variableElement.getAnnotationMirrors(),
-            enclosingTypeDescriptor.getTypeDeclaration().isNullMarked());
+            type, variableElement.getAnnotationMirrors(), inNullMarkedScope);
 
     boolean isEnumConstant = ((VarSymbol) variableElement).isEnum();
     if (isEnumConstant) {
@@ -549,6 +564,7 @@ public class JavaEnvironment {
     }
 
     JsInfo jsInfo = JsInteropUtils.getJsInfo(variableElement);
+    KtInfo ktInfo = J2ktInteropUtils.getJ2ktInfo(variableElement);
     Object constantValue = variableElement.getConstantValue();
     boolean isCompileTimeConstant = constantValue != null;
     if (isCompileTimeConstant) {
@@ -562,126 +578,133 @@ public class JavaEnvironment {
         .setStatic(isStatic)
         .setVisibility(visibility)
         .setOriginalJsInfo(jsInfo)
+        .setOriginalKtInfo(ktInfo)
         .setFinal(isFinal)
+        .setAnnotations(createAnnotations(variableElement, inNullMarkedScope))
         .setCompileTimeConstant(isCompileTimeConstant)
         .setConstantValue(
             constantValue != null ? Literal.fromValue(constantValue, thisTypeDescriptor) : null)
         .setDeclarationDescriptor(declarationFieldDescriptor)
         .setEnumConstant(isEnumConstant)
-        .setUnusableByJsSuppressed(
-            JsInteropAnnotationUtils.isUnusableByJsSuppressed(variableElement))
-        .setDeprecated(isDeprecated(variableElement))
         .build();
-  }
-
-  /**
-   * Creates a MethodDescriptor from javac internal representation.
-   *
-   * @param methodType an ExecutableType containing the (inferred) specialization of the method in a
-   *     usage location.
-   * @param returnType the (inferred) specialized return type.
-   * @param declarationMethodElement the method declaration.
-   */
-  MethodDescriptor createMethodDescriptor(
-      ExecutableType methodType, Type returnType, ExecutableElement declarationMethodElement) {
-
-    DeclaredTypeDescriptor enclosingTypeDescriptor =
-        createDeclaredTypeDescriptor(declarationMethodElement.getEnclosingElement().asType());
-
-    MethodDescriptor declarationMethodDescriptor = null;
-    List<? extends TypeMirror> parameterTypes = methodType.getParameterTypes();
-    if (isSpecialized(declarationMethodElement, parameterTypes, returnType)) {
-      declarationMethodDescriptor = createDeclarationMethodDescriptor(declarationMethodElement);
-    }
-
-    TypeDescriptor returnTypeDescriptor =
-        applyReturnTypeNullabilityAnnotations(
-            createTypeDescriptorWithNullability(
-                returnType,
-                declarationMethodElement.getAnnotationMirrors(),
-                enclosingTypeDescriptor.getTypeDeclaration().isNullMarked()),
-            declarationMethodElement);
-
-    ImmutableList.Builder<TypeDescriptor> parametersBuilder = ImmutableList.builder();
-    for (int i = 0; i < parameterTypes.size(); i++) {
-      parametersBuilder.add(
-          applyParameterNullabilityAnnotations(
-              createTypeDescriptorWithNullability(
-                  parameterTypes.get(i),
-                  declarationMethodElement.getParameters().get(i).getAnnotationMirrors(),
-                  enclosingTypeDescriptor.getTypeDeclaration().isNullMarked()),
-              declarationMethodElement,
-              i));
-    }
-
-    // generate type parameters declared in the method.
-    return createDeclaredMethodDescriptor(
-        enclosingTypeDescriptor.toNullable(),
-        declarationMethodElement,
-        declarationMethodDescriptor,
-        parametersBuilder.build(),
-        returnTypeDescriptor);
   }
 
   /** Create a MethodDescriptor directly based on the given JavaC ExecutableElement. */
   MethodDescriptor createMethodDescriptor(
       DeclaredTypeDescriptor enclosingTypeDescriptor,
-      ExecutableElement methodElement,
-      ExecutableElement declarationMethodElement) {
+      ExecutableType methodType,
+      ExecutableElement declarationMethodElement,
+      List<TypeDescriptor> typeArguments) {
+
+    // TODO(b/380911302): Remove redundancy in the creation of method descriptors.
+    // The enclosing type descriptor might be a subclass of the actual type descriptor, hence
+    // traverse the supertypes to find the actual enclosing type descriptor without loosing the
+    // parameterization.
+    DeclaredTypeDescriptor unparameterizedEnclosingTypeDescriptor =
+        createDeclaredTypeDescriptor(
+            ((MethodSymbol) declarationMethodElement).baseSymbol().getEnclosingElement().asType());
+    enclosingTypeDescriptor =
+        enclosingTypeDescriptor.getAllSuperTypesIncludingSelf().stream()
+            .filter(unparameterizedEnclosingTypeDescriptor::isSameBaseType)
+            .findFirst()
+            .get();
 
     MethodDescriptor declarationMethodDescriptor = null;
 
     ImmutableList<TypeMirror> parameters =
-        methodElement.getParameters().stream()
-            .map(VariableElement::asType)
-            .collect(toImmutableList());
+        methodType.getParameterTypes().stream().collect(toImmutableList());
 
-    TypeMirror returnType = methodElement.getReturnType();
-    if (isSpecialized(declarationMethodElement, parameters, returnType)) {
-      declarationMethodDescriptor =
-          createDeclarationMethodDescriptor(
-              declarationMethodElement, enclosingTypeDescriptor.getDeclarationDescriptor());
+    TypeMirror returnType = methodType.getReturnType();
+    if (isSpecialized(enclosingTypeDescriptor, declarationMethodElement, parameters, returnType)) {
+      declarationMethodDescriptor = createMethodDescriptor(declarationMethodElement);
+    } else {
+      typeArguments = ImmutableList.of();
     }
 
     TypeDescriptor returnTypeDescriptor =
-        applyReturnTypeNullabilityAnnotations(
-            createTypeDescriptorWithNullability(
-                returnType,
-                declarationMethodElement.getAnnotationMirrors(),
-                enclosingTypeDescriptor.getTypeDeclaration().isNullMarked()),
-            declarationMethodElement);
+        adjustForSyntheticEnumOrAnnotationMethod(
+            declarationMethodElement,
+            applyReturnTypeNullabilityAnnotations(
+                createTypeDescriptorWithNullability(
+                    returnType,
+                    declarationMethodElement.getAnnotationMirrors(),
+                    enclosingTypeDescriptor.getTypeDeclaration().isNullMarked()),
+                declarationMethodElement));
 
-    ImmutableList.Builder<TypeDescriptor> parametersBuilder = ImmutableList.builder();
-    for (int i = 0; i < parameters.size(); i++) {
-      parametersBuilder.add(
-          applyParameterNullabilityAnnotations(
-              createTypeDescriptorWithNullability(
-                  parameters.get(i),
-                  declarationMethodElement.getParameters().get(i).getAnnotationMirrors(),
-                  enclosingTypeDescriptor.getTypeDeclaration().isNullMarked()),
-              declarationMethodElement,
-              i));
-    }
+    ImmutableList<ParameterDescriptor> parameterDescriptors =
+        convertParameterDescriptors(enclosingTypeDescriptor, declarationMethodElement, parameters);
 
     return createDeclaredMethodDescriptor(
-        enclosingTypeDescriptor.toNullable(),
+        enclosingTypeDescriptor,
         declarationMethodElement,
         declarationMethodDescriptor,
-        parametersBuilder.build(),
-        returnTypeDescriptor);
+        parameterDescriptors,
+        returnTypeDescriptor,
+        typeArguments);
+  }
+
+  private ImmutableList<ParameterDescriptor> convertParameterDescriptors(
+      DeclaredTypeDescriptor enclosingTypeDescriptor,
+      ExecutableElement declarationMethodElement,
+      ImmutableList<TypeMirror> parameters) {
+    boolean inNullMarkedScope = enclosingTypeDescriptor.getTypeDeclaration().isNullMarked();
+    ImmutableList.Builder<ParameterDescriptor> parametersBuilder = ImmutableList.builder();
+
+    for (int i = 0; i < parameters.size(); i++) {
+      var parameterAnnotations =
+          declarationMethodElement.getParameters().get(i).getAnnotationMirrors();
+
+      TypeDescriptor parameterType =
+          adjustForSyntheticEnumOrAnnotationMethod(
+              declarationMethodElement,
+              applyParameterNullabilityAnnotations(
+                  createTypeDescriptorWithNullability(
+                      parameters.get(i), parameterAnnotations, inNullMarkedScope),
+                  declarationMethodElement,
+                  i));
+
+      parametersBuilder.add(
+          ParameterDescriptor.newBuilder()
+              .setTypeDescriptor(parameterType)
+              .setJsOptional(JsInteropUtils.isJsOptional(declarationMethodElement, i))
+              .setVarargs(i == parameters.size() - 1 && declarationMethodElement.isVarArgs())
+              .setAnnotations(createAnnotations(parameterAnnotations, inNullMarkedScope))
+              .build());
+    }
+    return parametersBuilder.build();
+  }
+
+  private TypeDescriptor adjustForSyntheticEnumOrAnnotationMethod(
+      ExecutableElement methodSymbol, TypeDescriptor typeDescriptor) {
+    if (!isEnumSyntheticMethod(methodSymbol) && !isAnnotationMethod(methodSymbol)) {
+      return typeDescriptor;
+    }
+
+    if (typeDescriptor.isArray()) {
+      ArrayTypeDescriptor arrayTypeDescriptor = (ArrayTypeDescriptor) typeDescriptor;
+      return ArrayTypeDescriptor.newBuilder()
+          .setComponentTypeDescriptor(
+              arrayTypeDescriptor.getComponentTypeDescriptor().toNonNullable())
+          .setNullable(false)
+          .build();
+    }
+    return typeDescriptor.toNonNullable();
   }
 
   /** Create a MethodDescriptor directly based on the given JavaC ExecutableElement. */
-  MethodDescriptor createDeclarationMethodDescriptor(ExecutableElement methodElement) {
+  MethodDescriptor createMethodDescriptor(ExecutableElement methodElement) {
+    // Obtain @NullMarked scope from the enclosing type declaration so that both the enclosing type
+    // descriptor and the MethodDescriptor are created in the right context.
+    TypeElement typeElement = (TypeElement) methodElement.getEnclosingElement();
+    boolean inNullMarkedScope = createTypeDeclaration(typeElement).isNullMarked();
     DeclaredTypeDescriptor enclosingTypeDescriptor =
-        createDeclaredTypeDescriptor(methodElement.getEnclosingElement().asType());
-    return createDeclarationMethodDescriptor(methodElement, enclosingTypeDescriptor);
-  }
-
-  /** Create a MethodDescriptor directly based on the given JavaC ExecutableElement. */
-  MethodDescriptor createDeclarationMethodDescriptor(
-      ExecutableElement methodElement, DeclaredTypeDescriptor enclosingTypeDescriptor) {
-    return createMethodDescriptor(enclosingTypeDescriptor, methodElement, methodElement);
+        createDeclaredTypeDescriptor(
+            methodElement.getEnclosingElement().asType(), inNullMarkedScope);
+    return createMethodDescriptor(
+        enclosingTypeDescriptor,
+        (ExecutableType) methodElement.asType(),
+        methodElement,
+        ImmutableList.of());
   }
 
 
@@ -802,6 +825,7 @@ public class JavaEnvironment {
    * class declaration.
    */
   private boolean isSpecialized(
+      DeclaredTypeDescriptor enclosingTypeDescriptor,
       ExecutableElement declarationMethodElement,
       List<? extends TypeMirror> parameters,
       TypeMirror returnType) {
@@ -810,7 +834,10 @@ public class JavaEnvironment {
                 parameters.stream(),
                 declarationMethodElement.getParameters().stream(),
                 (thisType, thatType) -> isSameType(thisType, thatType.asType()))
-            .allMatch(equals -> equals);
+            .allMatch(equals -> equals)
+        || !enclosingTypeDescriptor
+            .getTypeArgumentDescriptors()
+            .equals(enclosingTypeDescriptor.getTypeDeclaration().getTypeParameterDescriptors());
   }
 
   private boolean isSameType(TypeMirror thisType, TypeMirror thatType) {
@@ -821,19 +848,22 @@ public class JavaEnvironment {
       DeclaredTypeDescriptor enclosingTypeDescriptor,
       ExecutableElement declarationMethodElement,
       MethodDescriptor declarationMethodDescriptor,
-      List<TypeDescriptor> parameters,
-      TypeDescriptor returnTypeDescriptor) {
+      List<ParameterDescriptor> parameterDescriptors,
+      TypeDescriptor returnTypeDescriptor,
+      List<TypeDescriptor> typeArguments) {
+    boolean inNullMarkedScope = enclosingTypeDescriptor.getTypeDeclaration().isNullMarked();
     ImmutableList<TypeVariable> typeParameterTypeDescriptors =
         declarationMethodElement.getTypeParameters().stream()
-            .map(Element::asType)
-            .map(this::createTypeDescriptor)
-            .map(TypeVariable.class::cast)
+            .map(TypeParameterElement::asType)
+            .map(javax.lang.model.type.TypeVariable.class::cast)
+            .map(tv -> createTypeVariable(tv, ImmutableList.of(), inNullMarkedScope))
             .collect(toImmutableList());
 
     boolean isStatic = isStatic(declarationMethodElement);
     Visibility visibility = getVisibility(declarationMethodElement);
     boolean isDefault = isDefaultMethod(declarationMethodElement);
     JsInfo jsInfo = JsInteropUtils.getJsInfo(declarationMethodElement);
+    KtInfo ktInfo = J2ktInteropUtils.getJ2ktInfo(declarationMethodElement);
 
     boolean isNative =
         isNative(declarationMethodElement)
@@ -844,52 +874,51 @@ public class JavaEnvironment {
     boolean isConstructor = declarationMethodElement.getKind() == ElementKind.CONSTRUCTOR;
     String methodName = declarationMethodElement.getSimpleName().toString();
 
-    ImmutableList.Builder<ParameterDescriptor> parameterDescriptorBuilder = ImmutableList.builder();
-    for (int i = 0; i < parameters.size(); i++) {
-      parameterDescriptorBuilder.add(
-          ParameterDescriptor.newBuilder()
-              .setTypeDescriptor(parameters.get(i))
-              .setJsOptional(JsInteropUtils.isJsOptional(declarationMethodElement, i))
-              .setVarargs(i == parameters.size() - 1 && declarationMethodElement.isVarArgs())
-              .setDoNotAutobox(JsInteropUtils.isDoNotAutobox(declarationMethodElement, i))
-              .build());
-    }
+    var thrownExceptions =
+        declarationMethodElement.getThrownTypes().stream()
+            .map(this::createTypeDescriptor)
+            .collect(toImmutableList());
 
-    boolean hasUncheckedCast = hasUncheckedCastAnnotation(declarationMethodElement);
+    // if (methodName.equals("isNull")) {
+    //   // debug = true;
+    //   var anno = createAnnotations(declarationMethodElement, inNullMarkedScope);
+    //   // debug = false;
+
+    //   AnnotationMirror wasmAnnotation =
+    //       com.google.j2cl.transpiler.frontend.javac.AnnotationUtils.findAnnotationByName(
+    //           declarationMethodElement, "javaemul.internal.annotations.Wasm");
+    //   String wasmInfo =
+    //       wasmAnnotation == null
+    //           ? null
+    //           : com.google.j2cl.transpiler.frontend.javac.AnnotationUtils
+    //               .getAnnotationParameterString(wasmAnnotation, "value");
+
+    //   System.out.println("isNull found " + anno + " wasmInfo=" + wasmInfo);
+    // }
+
     return MethodDescriptor.newBuilder()
         .setEnclosingTypeDescriptor(enclosingTypeDescriptor)
         .setName(isConstructor ? null : methodName)
-        .setParameterDescriptors(parameterDescriptorBuilder.build())
+        .setParameterDescriptors(parameterDescriptors)
         .setDeclarationDescriptor(declarationMethodDescriptor)
         .setReturnTypeDescriptor(isConstructor ? enclosingTypeDescriptor : returnTypeDescriptor)
         .setTypeParameterTypeDescriptors(typeParameterTypeDescriptors)
+        .setTypeArgumentTypeDescriptors(typeArguments)
+        .setExceptionTypeDescriptors(thrownExceptions)
         .setOriginalJsInfo(jsInfo)
+        .setOriginalKtInfo(ktInfo)
         .setVisibility(visibility)
         .setStatic(isStatic)
         .setConstructor(isConstructor)
         .setNative(isNative)
-        .setWasmInfo(getWasmInfo(declarationMethodElement))
+        .setAnnotations(createAnnotations(declarationMethodElement, inNullMarkedScope))
         .setFinal(isFinal(declarationMethodElement))
         .setDefaultMethod(isDefault)
         .setAbstract(isAbstract(declarationMethodElement))
+        .setSynchronized(isSynchronized(declarationMethodElement))
         .setSynthetic(isSynthetic(declarationMethodElement))
         .setEnumSyntheticMethod(isEnumSyntheticMethod(declarationMethodElement))
-        .setSideEffectFree(isAnnotatedWithHasNoSideEffects(declarationMethodElement))
-        .setUnusableByJsSuppressed(
-            JsInteropAnnotationUtils.isUnusableByJsSuppressed(declarationMethodElement))
-        .setDeprecated(isDeprecated(declarationMethodElement))
-        .setUncheckedCast(hasUncheckedCast)
         .build();
-  }
-
-  /** Returns true if the element is annotated with @UncheckedCast. */
-  private static boolean hasUncheckedCastAnnotation(Element element) {
-    return AnnotationUtils.hasAnnotation(element, UNCHECKED_CAST_ANNOTATION_NAME);
-  }
-
-  /** Returns true if the element is annotated with @HasNoSideEffects. */
-  private static boolean isAnnotatedWithHasNoSideEffects(Element element) {
-    return AnnotationUtils.hasAnnotation(element, HAS_NO_SIDE_EFFECTS_ANNOTATION_NAME);
   }
 
   private boolean isJavaLangObjectOverride(MethodSymbol method) {
@@ -954,11 +983,11 @@ public class JavaEnvironment {
   }
 
   private Element asElement(TypeMirror typeMirror) {
-    if (typeMirror instanceof JCPrimitiveType) {
-      return ((JCPrimitiveType) typeMirror).asElement();
+    if (typeMirror instanceof JCPrimitiveType primitiveType) {
+      return primitiveType.asElement();
     }
-    if (typeMirror instanceof Type) {
-      return ((Type) typeMirror).tsym;
+    if (typeMirror instanceof Type type) {
+      return type.tsym;
     }
     return javacTypes.asElement(typeMirror);
   }
@@ -971,8 +1000,8 @@ public class JavaEnvironment {
     return javacTypes.erasure(typeMirror);
   }
 
-  private PackageElement getPackageOf(TypeElement typeElement) {
-    return elements.getPackageOf(typeElement);
+  private PackageElement getPackageOf(Element element) {
+    return elements.getPackageOf(element);
   }
 
   private TypeDescriptor createIntersectionType(IntersectionClassType intersectionType) {
@@ -999,11 +1028,56 @@ public class JavaEnvironment {
       return cachedTypeDescriptor;
     }
 
+    TypeElement typeElement = (TypeElement) classType.asElement();
     DeclaredTypeDescriptor typeDescriptor =
-        createDeclarationForType((TypeElement) classType.asElement())
-            .toDescriptor(createTypeDescriptors(getTypeArguments(classType), inNullMarkedScope));
+        createTypeDeclaration(typeElement)
+            .toDescriptor(
+                createTypeArgumentDescriptors(
+                    getTypeArguments(classType),
+                    getTypeParameters(typeElement),
+                    inNullMarkedScope));
     putTypeDescriptorInCache(inNullMarkedScope, classType, typeDescriptor);
     return typeDescriptor;
+  }
+
+  public ImmutableList<TypeDescriptor> createTypeArgumentDescriptors(
+      List<? extends TypeMirror> typeMirrors,
+      List<? extends TypeParameterElement> declaredTypeParameters,
+      boolean inNullMarkedScope) {
+    // TODO(b/246332093): Consider doing this in our type model after cleanup. Currently results in
+    // an infinite recursion.
+    return Streams.zip(
+            typeMirrors.stream(),
+            declaredTypeParameters.stream(),
+            (typeMirror, typeParameter) -> {
+              javax.lang.model.type.TypeVariable typeVariable =
+                  (javax.lang.model.type.TypeVariable) typeParameter.asType();
+              boolean isUnbound =
+                  typeMirror.getKind() == TypeKind.WILDCARD
+                      && isNullOrJavaLangObject(((WildcardType) typeMirror).getExtendsBound())
+                      && ((WildcardType) typeMirror).getSuperBound() == null;
+              if (isUnbound && !isNullOrJavaLangObject(typeVariable.getUpperBound())) {
+                // Unbounded wildcards in the source inherit the bound from the declaration of
+                // of the variable they replace.
+                // TODO(b/398164480): Fix handling of unbound wildcards and captures.
+                return createWildcardTypeVariable(
+                    (WildcardType) typeMirror,
+                    typeVariable.getUpperBound(),
+                    /* lowerBound= */ null,
+                    inNullMarkedScope);
+              }
+              return createTypeDescriptor(typeMirror, inNullMarkedScope);
+            })
+        .collect(toImmutableList());
+  }
+
+  private boolean isNullOrJavaLangObject(@Nullable TypeMirror typeMirror) {
+    if (typeMirror == null) {
+      return true;
+    }
+    Element element = asElement(typeMirror);
+    return element instanceof TypeElement typeElement
+        && typeElement.getQualifiedName().contentEquals("java.lang.Object");
   }
 
   private final Map<DeclaredType, DeclaredTypeDescriptor>
@@ -1042,10 +1116,7 @@ public class JavaEnvironment {
             ((Parameterizable) enclosingElement)
                 .getTypeParameters().stream().map(Element::asType).collect(toImmutableList()));
       }
-      currentType =
-          currentType.getEnclosingType() instanceof DeclaredType
-              ? (DeclaredType) currentType.getEnclosingType()
-              : null;
+      currentType = currentType.getEnclosingType() instanceof DeclaredType type ? type : null;
     } while (currentType != null);
     return typeArguments;
   }
@@ -1112,19 +1183,15 @@ public class JavaEnvironment {
   }
 
   @Nullable
-  TypeDeclaration createDeclarationForType(final TypeElement typeElement) {
+  TypeDeclaration createTypeDeclaration(final TypeElement typeElement) {
     if (typeElement == null) {
       return null;
     }
 
-    PackageInfoCache packageInfoCache = PackageInfoCache.get();
-
     // Compute these first since they're reused in other calculations.
     boolean isAbstract = isAbstract(typeElement) && !isInterface(typeElement);
     Kind kind = getKindFromTypeBinding(typeElement);
-    // TODO(b/341721484): Even though enums can not have the final modifier, turbine make them final
-    // in the header jars.
-    boolean isFinal = isFinal(typeElement) && kind != Kind.ENUM;
+    boolean isFinal = isFinal(typeElement);
 
     Supplier<ImmutableList<MethodDescriptor>> declaredMethods =
         () -> {
@@ -1137,7 +1204,7 @@ public class JavaEnvironment {
                               || element.getKind() == ElementKind.CONSTRUCTOR)
                   .map(MethodSymbol.class::cast)
                   .collect(toImmutableList())) {
-            MethodDescriptor methodDescriptor = createDeclarationMethodDescriptor(methodElement);
+            MethodDescriptor methodDescriptor = createMethodDescriptor(methodElement);
             listBuilder.add(methodDescriptor);
           }
           return listBuilder.build();
@@ -1148,16 +1215,26 @@ public class JavaEnvironment {
           if (kind != Kind.INTERFACE) {
             return null;
           }
-          // Get the declaration, possibly in a supertype.
+
+          // Get the actual abstract method from the frontend; which will return the unparameterized
+          // declaration possibly from a supertype.
           var declaration =
-              createDeclarationMethodDescriptor(
-                  getFunctionalInterfaceMethodDecl(typeElement.asType()));
-          return declaration == null
-              ? null
-              // Find the parameterized version in the type.
-              : typeDeclaration.toDescriptor().getPolymorphicMethods().stream()
-                  .filter(m -> m.getDeclarationDescriptor() == declaration)
+              createMethodDescriptor(getFunctionalInterfaceMethodDecl(typeElement.asType()));
+
+          if (declaration == null) {
+            return null;
+          }
+
+          // Find the parameterized supertype.
+          var parameterizedFunctionalInterface =
+              typeDeclaration.toDescriptor().getAllSuperTypesIncludingSelf().stream()
+                  .filter(declaration.getEnclosingTypeDescriptor()::isSameBaseType)
                   .collect(onlyElement());
+
+          // Find the parameterized version of the single abstract method in the type.
+          return parameterizedFunctionalInterface.getDeclaredMethodDescriptors().stream()
+              .filter(m -> m.getDeclarationDescriptor() == declaration)
+              .collect(onlyElement());
         };
 
     Supplier<ImmutableList<FieldDescriptor>> declaredFields =
@@ -1175,10 +1252,19 @@ public class JavaEnvironment {
 
     List<TypeParameterElement> typeParameterElements = getTypeParameters(typeElement);
 
-    boolean isNullMarked = isNullMarked(typeElement, packageInfoCache);
+    boolean isNullMarked = isNullMarked(typeElement);
     return TypeDeclaration.newBuilder()
         .setClassComponents(getClassComponents(typeElement))
-        .setEnclosingTypeDeclaration(createDeclarationForType(getEnclosingType(typeElement)))
+        .setEnclosingTypeDeclaration(createTypeDeclaration(getEnclosingType(typeElement)))
+        .setEnclosingMethodDescriptorFactory(() -> getEnclosingMethodDescriptor(typeElement))
+        .setSuperTypeDescriptorFactory(
+            () ->
+                (DeclaredTypeDescriptor)
+                    applyNullabilityAnnotations(
+                        createDeclaredTypeDescriptor(typeElement.getSuperclass(), isNullMarked),
+                        typeElement,
+                        position ->
+                            position.type == TargetType.CLASS_EXTENDS && position.type_index == -1))
         .setInterfaceTypeDescriptorsFactory(
             () ->
                 createTypeDescriptors(
@@ -1193,71 +1279,81 @@ public class JavaEnvironment {
         .setFinal(isFinal)
         .setFunctionalInterface(isFunctionalInterface(typeElement.asType()))
         .setJsFunctionInterface(JsInteropUtils.isJsFunction(typeElement))
+        .setAnnotationsFactory(() -> createAnnotations(typeElement, isNullMarked))
+        .setSourceLanguage(
+            isAnnotatedWithKotlinMetadata(typeElement)
+                ? SourceLanguage.KOTLIN
+                : SourceLanguage.JAVA)
         .setJsType(JsInteropUtils.isJsType(typeElement))
         .setJsEnumInfo(jsEnumInfo)
         .setNative(JsInteropUtils.isJsNativeType(typeElement))
         .setAnonymous(isAnonymous(typeElement))
-        .setLocal(isLocal(typeElement))
+        // Keep parity with jdt where anonymous classes are also considered local.
+        .setLocal(isLocal(typeElement) || isAnonymous(typeElement))
         .setSimpleJsName(JsInteropAnnotationUtils.getJsName(typeElement))
-        .setCustomizedJsNamespace(JsInteropAnnotationUtils.getJsNamespace(typeElement))
-        .setWasmInfo(getWasmInfo(typeElement))
+        .setCustomizedJsNamespace(getJsNamespace(typeElement))
+        .setObjectiveCNamePrefix(getObjectiveCNamePrefix(typeElement))
+        .setKtTypeInfo(J2ktInteropUtils.getJ2ktTypeInfo(typeElement))
+        .setKtObjcInfo(J2ktInteropUtils.getJ2ktObjcInfo(typeElement))
         .setNullMarked(isNullMarked)
         .setOriginalSimpleSourceName(
             typeElement.getSimpleName() != null ? typeElement.getSimpleName().toString() : null)
-        .setPackage(createPackageDeclaration(getPackageOf(typeElement), packageInfoCache))
-        .setSuperTypeDescriptorFactory(
-            () ->
-                (DeclaredTypeDescriptor)
-                    applyNullabilityAnnotations(
-                        createDeclaredTypeDescriptor(typeElement.getSuperclass(), isNullMarked),
-                        typeElement,
-                        position ->
-                            position.type == TargetType.CLASS_EXTENDS && position.type_index == -1))
+        .setPackage(createPackageDeclaration(getPackageOf(typeElement)))
         .setTypeParameterDescriptors(
             typeParameterElements.stream()
                 .map(TypeParameterElement::asType)
                 .map(javax.lang.model.type.TypeVariable.class::cast)
-                .map(this::createTypeVariable)
+                .map(tv -> createTypeVariable(tv, ImmutableList.of(), isNullMarked))
                 .collect(toImmutableList()))
         .setVisibility(getVisibility(typeElement))
         .setDeclaredMethodDescriptorsFactory(declaredMethods)
         .setSingleAbstractMethodDescriptorFactory(singleAbstractMethod)
         .setDeclaredFieldDescriptorsFactory(declaredFields)
-        .setUnusableByJsSuppressed(JsInteropAnnotationUtils.isUnusableByJsSuppressed(typeElement))
-        .setDeprecated(isDeprecated(typeElement))
+        .setMemberTypeDeclarationsFactory(
+            () ->
+                typeElement.getEnclosedElements().stream()
+                    .filter(TypeElement.class::isInstance)
+                    .map(TypeElement.class::cast)
+                    .map(this::createTypeDeclaration)
+                    .collect(toImmutableList()))
         .build();
   }
 
-  private static PackageDeclaration createPackageDeclaration(
-      PackageElement packageElement, PackageInfoCache packageInfoCache) {
+  @Nullable
+  private MethodDescriptor getEnclosingMethodDescriptor(TypeElement typeElement) {
+    Element enclosingElement = typeElement.getEnclosingElement();
+    if (enclosingElement == null
+        || (enclosingElement.getKind() != ElementKind.METHOD
+            && enclosingElement.getKind() != ElementKind.CONSTRUCTOR)) {
+      return null;
+    }
+
+    return createMethodDescriptor((ExecutableElement) enclosingElement);
+  }
+
+  private static PackageDeclaration createPackageDeclaration(PackageElement packageElement) {
     // Caching is left to PackageDeclaration.Builder since construction is trivial.
     String packageName = packageElement.getQualifiedName().toString();
     return PackageDeclaration.newBuilder()
         .setName(packageName)
-        .setCustomizedJsNamespace(packageInfoCache.getJsNamespace(packageName))
+        .setCustomizedJsNamespace(getJsNamespace(packageElement))
         .build();
   }
 
-  private static boolean isNullMarked(TypeElement classSymbol, PackageInfoCache packageInfoCache) {
-    if (packageInfoCache.isNullMarked(
-        getBinaryNameFromTypeBinding(toTopLevelTypeBinding(classSymbol)))) {
-      // The package is NullMarked, no need to look further.
-      return true;
-    }
-
-    return hasNullMarkedAnnotation(classSymbol);
-  }
-
-  private static boolean hasNullMarkedAnnotation(TypeElement classSymbol) {
-    if (classSymbol.getAnnotationMirrors().stream()
-        .anyMatch(a -> Nullability.isNullMarkedAnnotation(AnnotationUtils.getAnnotationName(a)))) {
+  private static boolean isNullMarked(Element element) {
+    if (hasNullMarkedAnnotation(element)) {
       // The type is NullMarked, no need to look further.
       return true;
     }
 
-    Element enclosingElement = classSymbol.getEnclosingElement();
-    return enclosingElement instanceof TypeElement
-        && hasNullMarkedAnnotation((TypeElement) enclosingElement);
+    Element enclosingElement = element.getEnclosingElement();
+    while (enclosingElement != null
+        && !(enclosingElement instanceof TypeElement
+            || enclosingElement instanceof PackageElement)) {
+      enclosingElement = enclosingElement.getEnclosingElement();
+    }
+
+    return enclosingElement != null && isNullMarked(enclosingElement);
   }
 
   private static List<TypeParameterElement> getTypeParameters(TypeElement typeElement) {
@@ -1272,10 +1368,10 @@ public class JavaEnvironment {
 
       if (enclosingElement.getKind() != ElementKind.STATIC_INIT
           && enclosingElement.getKind() != ElementKind.INSTANCE_INIT
-          && enclosingElement instanceof Parameterizable) {
+          && enclosingElement instanceof Parameterizable parameterizable) {
         // Add the enclosing element type variables, skip STATIC_INIT and INSTANCE_INIT since they
         // never define type variables, and throw NPE if getTypeParameters is called on them.
-        typeParameterElements.addAll(((Parameterizable) enclosingElement).getTypeParameters());
+        typeParameterElements.addAll(parameterizable.getTypeParameters());
       }
       currentElement = enclosingElement;
       enclosingElement = enclosingElement.getEnclosingElement();
@@ -1300,35 +1396,9 @@ public class JavaEnvironment {
   }
 
   @Nullable
-  private TypeMirror getFunctionalInterface(Type type) {
-    if (type.isIntersection()) {
-      return ((IntersectionType) type)
-          .getBounds().stream().filter(this::isFunctionalInterface).findFirst().orElse(null);
-    }
-    checkArgument(isFunctionalInterface(type));
-    return type;
-  }
-
-  MethodDescriptor getJsFunctionMethodDescriptor(TypeMirror type) {
-    DeclaredTypeDescriptor expressionTypeDescriptor =
-        createDeclaredTypeDescriptor(getFunctionalInterface((Type) type));
-    return createMethodDescriptor(
-        expressionTypeDescriptor,
-        (MethodSymbol) getFunctionalInterfaceMethod(type).asMemberOf((Type) type, internalTypes),
-        getFunctionalInterfaceMethod(type));
-  }
-
-  @Nullable
   private MethodSymbol getFunctionalInterfaceMethodDecl(TypeMirror typeMirror) {
     return Optional.ofNullable(getFunctionalInterfaceMethodPair(typeMirror))
         .map(MethodDeclarationPair::getDeclarationMethodSymbol)
-        .orElse(null);
-  }
-
-  @Nullable
-  private MethodSymbol getFunctionalInterfaceMethod(TypeMirror typeMirror) {
-    return Optional.ofNullable(getFunctionalInterfaceMethodPair(typeMirror))
-        .map(MethodDeclarationPair::getMethodSymbol)
         .orElse(null);
   }
 
@@ -1338,22 +1408,58 @@ public class JavaEnvironment {
     if (!internalTypes.isFunctionalInterface(type)) {
       return null;
     }
-    if (type.isIntersection()) {
-
-      return ((IntersectionType) type)
-          .getBounds().stream()
-              .filter(this::isFunctionalInterface)
-              .map(this::getFunctionalInterfaceMethodPair)
-              .findFirst()
-              .orElse(null);
+    if (type instanceof IntersectionType intersectionType) {
+      return intersectionType.getBounds().stream()
+          .filter(this::isFunctionalInterface)
+          .map(this::getFunctionalInterfaceMethodPair)
+          .collect(onlyElement());
     }
     return getMethods((ClassType) type).stream()
         .filter(
-            p ->
-                isAbstract(p.getDeclarationMethodSymbol())
-                    && !isJavaLangObjectOverride(p.getDeclarationMethodSymbol()))
+            m ->
+                isAbstract(m.getDeclarationMethodSymbol())
+                    && !isJavaLangObjectOverride(m.getDeclarationMethodSymbol()))
+        // There are cases in which the functional interface extends two distinct functional
+        // interfaces. In those cases all the methods that remain abstract in this interface must
+        // be compatible (i.e. have the same signature in the current parameterization). In this
+        // case any of them are suitable abstract methods as the method that implements the
+        // functional interface will always override both.
         .findFirst()
-        .orElse(null);
+        .get();
+  }
+
+  @Nullable
+  private String getObjectiveCNamePrefix(TypeElement typeElement) {
+    // checkArgument(!typeElement.isPrimitive());
+    String objectiveCNamePrefix = J2ktInteropAnnotationUtils.getJ2ktObjectiveCName(typeElement);
+    boolean isTopLevelType =
+        typeElement.getEnclosingElement() == null
+            || typeElement.getEnclosingElement() instanceof PackageElement;
+
+    return objectiveCNamePrefix != null || !isTopLevelType
+        ? objectiveCNamePrefix
+        : J2ktInteropAnnotationUtils.getJ2ktObjectiveCName(getPackageOf(typeElement));
+  }
+
+  /** Return whether a type is annotated for nullability and which type of annotation it has. */
+  private static NullabilityAnnotation getNullabilityAnnotation(
+      AnnotatedConstruct annotatedConstruct, List<? extends AnnotationMirror> elementAnnotations) {
+
+    Iterable<AnnotationMirror> allAnnotations =
+        Iterables.concat(elementAnnotations, annotatedConstruct.getAnnotationMirrors());
+    for (AnnotationMirror annotation : allAnnotations) {
+      String annotationName = getAnnotationName(annotation);
+
+      if (Nullability.isNonNullAnnotation(annotationName)) {
+        return NullabilityAnnotation.NOT_NULLABLE;
+      }
+
+      if (Nullability.isNullableAnnotation(annotationName)) {
+        return NullabilityAnnotation.NULLABLE;
+      }
+    }
+
+    return NullabilityAnnotation.NONE;
   }
 
   private boolean isFunctionalInterface(TypeMirror type) {
@@ -1398,21 +1504,6 @@ public class JavaEnvironment {
     }
   }
 
-  @Nullable
-  private static String getWasmInfo(Element element) {
-    AnnotationMirror wasmAnnotation =
-        AnnotationUtils.findAnnotationBindingByName(
-            element.getAnnotationMirrors(), WASM_ANNOTATION_NAME);
-    if (wasmAnnotation == null) {
-      return null;
-    }
-    return AnnotationUtils.getAnnotationParameterString(wasmAnnotation, "value");
-  }
-
-  private static boolean isDeprecated(AnnotatedConstruct binding) {
-    return AnnotationUtils.hasAnnotation(binding, Deprecated.class.getName());
-  }
-
   private static boolean isDefaultMethod(Element element) {
     return element.getModifiers().contains(Modifier.DEFAULT);
   }
@@ -1429,11 +1520,186 @@ public class JavaEnvironment {
     return element.getModifiers().contains(Modifier.STATIC);
   }
 
+  public static boolean isSynchronized(Element element) {
+    return element.getModifiers().contains(Modifier.SYNCHRONIZED);
+  }
+
   private static boolean isNative(Element element) {
     return element.getModifiers().contains(Modifier.NATIVE);
   }
 
   private static boolean isSynthetic(Element element) {
-    return element instanceof Symbol && (((Symbol) element).flags() & Flags.SYNTHETIC) != 0;
+    return element instanceof Symbol s && (s.flags() & Flags.SYNTHETIC) != 0;
+  }
+
+  private static boolean isAnnotatedWithKotlinMetadata(Element element) {
+    return hasAnnotation(element, "kotlin.Metadata");
+  }
+
+  private ImmutableList<Annotation> createAnnotations(Element element, boolean inNullMarkedScope) {
+    return createAnnotations(element.getAnnotationMirrors(), inNullMarkedScope);
+  }
+
+  private ImmutableList<Annotation> createAnnotations(
+      List<? extends AnnotationMirror> annotations, boolean inNullMarkedScope) {
+    return annotations.stream()
+        .filter(annotationMirror -> isSupportedAnnotation(getAnnotationName(annotationMirror)))
+        .map(
+            annotationMirror ->
+                newAnnotationBuilder(annotationMirror.getElementValues(), inNullMarkedScope)
+                    .setTypeDescriptor(
+                        createDeclaredType(annotationMirror.getAnnotationType(), inNullMarkedScope))
+                    .build())
+        .collect(toImmutableList());
+  }
+
+  private Annotation.Builder newAnnotationBuilder(
+      Map<? extends ExecutableElement, ? extends AnnotationValue> values,
+      boolean inNullMarkedScope) {
+    Annotation.Builder annotationBuilder = Annotation.newBuilder();
+    for (var valuePair : values.entrySet()) {
+      TypeDescriptor elementType =
+          createTypeDescriptor(valuePair.getKey().getReturnType(), inNullMarkedScope);
+      Literal translatedValue =
+          createAnnotationValue(elementType, valuePair.getValue().getValue(), inNullMarkedScope);
+      if (translatedValue == null) {
+        continue;
+      }
+      annotationBuilder.addValue(valuePair.getKey().getSimpleName().toString(), translatedValue);
+    }
+    return annotationBuilder;
+  }
+
+  /**
+   * Creates a literal for the given annotation member value.
+   *
+   * <p>If the value type is not supported, returns {@code null}. TODO(b/397460318, b/395716783):
+   * Remove the null return once we handle all member value types.
+   */
+  @Nullable
+  private Literal createAnnotationValue(
+      TypeDescriptor elementType, Object value, boolean inNullMarkedScope) {
+    if (TypeDescriptors.isBoxedOrPrimitiveType(elementType)
+        || TypeDescriptors.isJavaLangString(elementType)) {
+      return Literal.fromValue(value, elementType);
+    } else if (TypeDescriptors.isJavaLangClass(elementType)) {
+      return new TypeLiteral(
+          SourcePosition.NONE, createTypeDescriptor((TypeMirror) value, inNullMarkedScope));
+    } else if (elementType.isArray()) {
+      List<Literal> values =
+          ((List<?>) value)
+              .stream()
+                  .map(
+                      v ->
+                          createAnnotationValue(
+                              ((ArrayTypeDescriptor) elementType).getComponentTypeDescriptor(),
+                              ((AnnotationValue) v).getValue(),
+                              inNullMarkedScope))
+                  .collect(toCollection(ArrayList::new));
+      // TODO(b/397460318, b/395716783): Remove this null check once we handle all member value
+      // types. We don't expect null unless it's an unhandled value type.
+      if (values.contains(null)) {
+        return null;
+      }
+      return ArrayConstant.newBuilder()
+          .setTypeDescriptor((ArrayTypeDescriptor) elementType)
+          .setValueExpressions(values)
+          .build();
+    }
+    // TODO(b/397460318, b/395716783): Implement various member value types, then throw an exception
+    // here if unhandled.
+    return null;
+  }
+
+  // TODO(b/392124958): Remove this method that was copied from errorprone once we
+  // depend on errorprone.
+  /**
+   * Returns the mapping between type variables and their instantiations in the given type. For
+   * example, the instantiation of {@code Map<K, V>} as {@code Map<String, Integer>} would be
+   * represented as a {@code TypeSubstitution} from {@code [K, V]} to {@code [String, Integer]}.
+   */
+  public static ImmutableListMultimap<TypeVariableSymbol, Type> getTypeSubstitution(
+      Type type, Symbol sym) {
+    ImmutableListMultimap.Builder<Symbol.TypeVariableSymbol, Type> result =
+        ImmutableListMultimap.builder();
+
+    Multimap<Type, Type> visited = HashMultimap.create();
+
+    class Visitor extends Types.DefaultTypeVisitor<Void, Type> {
+
+      @Override
+      public Void visitMethodType(Type.MethodType t, Type other) {
+        scan(t.getParameterTypes(), other.getParameterTypes());
+        scan(t.getThrownTypes(), other.getThrownTypes());
+        scan(t.getReturnType(), other.getReturnType());
+        return null;
+      }
+
+      @Override
+      public Void visitClassType(ClassType t, Type other) {
+        scan(t.getTypeArguments(), other.getTypeArguments());
+        return null;
+      }
+
+      @Override
+      public Void visitTypeVar(TypeVar t, Type other) {
+        if (!visited.put(t, other)) {
+          // The pair has been visited before, nothing to do.
+          return null;
+        }
+
+        result.put((Symbol.TypeVariableSymbol) t.asElement(), other);
+
+        // Retrieve potential parameterizations from the bound of the type variable.
+        if (other instanceof TypeVar otherTypeVar) {
+          // If the substitution is also a type variable then use the bounds.
+          scan(t.getUpperBound(), otherTypeVar.getUpperBound());
+        } else {
+          // Otherwise just use the actual type.
+          scan(t.getUpperBound(), other);
+        }
+        return null;
+      }
+
+      @Override
+      public Void visitForAll(Type.ForAll t, Type other) {
+        scan(t.getParameterTypes(), other.getParameterTypes());
+        scan(t.getThrownTypes(), other.getThrownTypes());
+        scan(t.getReturnType(), other.getReturnType());
+        return null;
+      }
+
+      @Override
+      public Void visitWildcardType(Type.WildcardType t, Type type) {
+        if (type instanceof Type.WildcardType other) {
+          scan(t.getExtendsBound(), other.getExtendsBound());
+          scan(t.getSuperBound(), other.getSuperBound());
+        }
+        return null;
+      }
+
+      @Override
+      public Void visitArrayType(Type.ArrayType t, Type type) {
+        scan(t.elemtype, ((Type.ArrayType) type).elemtype);
+        return null;
+      }
+
+      @Override
+      public Void visitType(Type t, Type other) {
+        return null;
+      }
+
+      private void scan(Collection<Type> from, Collection<Type> to) {
+        Streams.forEachPair(from.stream(), to.stream(), this::scan);
+      }
+
+      private void scan(Type from, Type to) {
+        if (from != null && to != null) {
+          from.accept(this, to);
+        }
+      }
+    }
+    sym.asType().accept(new Visitor(), type);
+    return result.build();
   }
 }

@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.backend.common.ir.asInlinable
 import org.jetbrains.kotlin.backend.common.ir.inline
 import org.jetbrains.kotlin.backend.common.lower.createIrBuilder
 import org.jetbrains.kotlin.backend.jvm.JvmBackendContext
+import org.jetbrains.kotlin.ir.InternalSymbolFinderAPI
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.builders.createTmpVariable
 import org.jetbrains.kotlin.ir.builders.irBlock
@@ -46,6 +47,7 @@ import org.jetbrains.kotlin.ir.expressions.IrReturn
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.expressions.copyTypeArgumentsFrom
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.fromSymbolOwner
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
@@ -81,6 +83,7 @@ import org.jetbrains.kotlin.util.OperatorNameConventions
  * Semantically it doesn't make sense for user-code to do this, so it should be incredibly rare that
  * this fallback operation is ever used.
  */
+@OptIn(InternalSymbolFinderAPI::class)
 class ArrayConstructorLowering(private val context: JvmBackendContext) :
   BodyLoweringPass, IrElementTransformerVoidWithContext() {
 
@@ -145,7 +148,7 @@ class ArrayConstructorLowering(private val context: JvmBackendContext) :
         IrCallImpl.fromSymbolOwner(
             startOffset = originalInitializer.startOffset,
             endOffset = originalInitializer.endOffset,
-            adapterInitializerFor(classConstructed)
+            adapterInitializerFor(classConstructed),
           )
           .also {
             if (!classConstructed.isPrimitiveArrayClass) {
@@ -171,7 +174,9 @@ class ArrayConstructorLowering(private val context: JvmBackendContext) :
         context.irBuiltIns.floatArray -> Name.identifier("FloatArrayInitializer")
         else -> Name.identifier("ArrayInitializer")
       }
-    return checkNotNull(context.irBuiltIns.findClass(name, FqName("kotlin.jvm.internal")))
+    return checkNotNull(
+      context.irBuiltIns.symbolFinder.findClass(name, FqName("kotlin.jvm.internal"))
+    )
   }
 
   private fun adapterInitializerFor(arrayClass: IrClassSymbol): IrSimpleFunctionSymbol {
@@ -187,7 +192,9 @@ class ArrayConstructorLowering(private val context: JvmBackendContext) :
         context.irBuiltIns.floatArray -> Name.identifier("toFloatArrayInitializer")
         else -> Name.identifier("toArrayInitializer")
       }
-    return context.irBuiltIns.findFunctions(name, FqName("kotlin.jvm.internal")).single()
+    return context.irBuiltIns.symbolFinder
+      .findFunctions(name, FqName("kotlin.jvm.internal"))
+      .single()
   }
 
   private val IrClassSymbol.isArrayClass: Boolean
@@ -240,14 +247,14 @@ private fun escapesScope(irFunction: IrFunction): Boolean {
  */
 private class ArrayConstructorTransformer(
   val context: CommonBackendContext,
-  val container: IrSymbolOwner
+  val container: IrSymbolOwner,
 ) : IrElementTransformerVoidWithContext() {
 
   // Array(size, init) -> Array(size)
   companion object {
     internal fun arrayInlineToSizeConstructor(
       context: CommonBackendContext,
-      irConstructor: IrConstructor
+      irConstructor: IrConstructor,
     ): IrFunctionSymbol? {
       val clazz = irConstructor.constructedClass.symbol
       return when {
@@ -283,7 +290,7 @@ private class ArrayConstructorTransformer(
     val scope = (currentScope ?: createScope(container)).scope
     return context.createIrBuilder(scope.scopeOwnerSymbol).irBlock(
       expression.startOffset,
-      expression.endOffset
+      expression.endOffset,
     ) {
       val index = createTmpVariable(irInt(0), isMutable = true)
       val sizeVar = createTmpVariable(size)
@@ -321,7 +328,7 @@ private class ArrayConstructorTransformer(
           +irSet(
             index.symbol,
             irCallOp(inc.symbol, index.type, irGet(index)),
-            origin = IrStatementOrigin.PREFIX_INCR
+            origin = IrStatementOrigin.PREFIX_INCR,
           )
         }
       }

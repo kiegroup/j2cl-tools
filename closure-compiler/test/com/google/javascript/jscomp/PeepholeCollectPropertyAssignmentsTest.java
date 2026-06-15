@@ -32,25 +32,28 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
   @Test
   public void test36122565a() {
     testSame(
-        lines(
-            "var foo = { bar: g(), baz: 4 };",
-            "foo.bar = 3;",
-            "foo.baz = 3;",
-            "console.log(foo.bar);",
-            "console.log(foo.baz);"));
+        """
+        var foo = { bar: g(), baz: 4 };
+        foo.bar = 3;
+        foo.baz = 3;
+        console.log(foo.bar);
+        console.log(foo.baz);
+        """);
 
     test(
-        lines(
-            "var foo = { bar: g(), baz: 4 };",
-            "foo.baz = 3;",
-            "foo.bar = 3;",
-            "console.log(foo.bar);",
-            "console.log(foo.baz);"),
-        lines(
-            "var foo = { bar: g(), baz: 3 };",
-            "foo.bar = 3;",
-            "console.log(foo.bar);",
-            "console.log(foo.baz);"));
+        """
+        var foo = { bar: g(), baz: 4 };
+        foo.baz = 3;
+        foo.bar = 3;
+        console.log(foo.bar);
+        console.log(foo.baz);
+        """,
+        """
+        var foo = { bar: g(), baz: 3 };
+        foo.bar = 3;
+        console.log(foo.bar);
+        console.log(foo.baz);
+        """);
   }
 
   @Test
@@ -132,12 +135,22 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
 
   @Test
   public void testEarlyUsage1() {
-    testSame("function c() {return sum(a)};" + "var a = [1,2,3];" + "a[4] = c();");
+    testSame(
+        """
+        function c() {return sum(a)};
+        var a = [1,2,3];
+        a[4] = c();
+        """);
   }
 
   @Test
   public void testEarlyUsage2() {
-    testSame("function c() {return sum(a)};" + "var a; a = [1,2,3];" + "a[4] = c();");
+    testSame(
+        """
+        function c() {return sum(a)};
+        var a; a = [1,2,3];
+        a[4] = c();
+        """);
   }
 
   @Test
@@ -262,57 +275,98 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
 
   @Test
   public void testObjectFunctionRollup1() {
-    test("var o; o = {};" + "o.x = function() {};", "var o; o = {x:function () {}};");
+    test(
+        """
+        var o; o = {};
+        o.x = function() {};
+        """,
+        "var o; o = {x:function () {}};");
   }
 
   @Test
   public void testObjectFunctionRollup2() {
-    testSame("var o; o = {};" + "o.x = (function() {return o})();");
+    testSame(
+        """
+        var o; o = {};
+        o.x = (function() {return o})();
+        """);
   }
 
   @Test
   public void testObjectFunctionRollup3() {
     test(
-        "var o; o = {};" + "o.x = function() {return o};",
+        """
+        var o; o = {};
+        o.x = function() {return o};
+        """,
         "var o; o = {x:function () {return o}};");
   }
 
   @Test
   public void testObjectFunctionRollup4() {
-    testSame("function f() {return o};" + "var o; o = {};" + "o.x = f();");
+    testSame(
+        """
+        function f() {return o};
+        var o; o = {};
+        o.x = f();
+        """);
   }
 
   @Test
   public void testObjectFunctionRollup5() {
     test(
-        "var o; o = {};"
-            + "o.x = function() {return o};"
-            + "o.y = [function() {return o}];"
-            + "o.z = {a:function() {return o}};",
-        "var o; o = {"
-            + "x:function () {return o}, "
-            + "y:[function () {return o}], "
-            + "z:{a:function () {return o}}};");
+        """
+        var o; o = {};
+        o.x = function() {return o};
+        o.y = [function() {return o}];
+        o.z = {a:function() {return o}};
+        """,
+        """
+        var o; o = {
+        x:function () {return o},
+        y:[function () {return o}],
+        z:{a:function () {return o}}};
+        """);
   }
 
   @Test
   public void testObjectPropertyReassigned() {
-    test("var a = {b:''};" + "a.b='c';", "var a={b:'c'};");
+    test(
+        """
+        var a = {b:''};
+        a.b='c';
+        """,
+        "var a={b:'c'};");
   }
 
   @Test
   public void testObjectPropertyReassigned2() {
-    test("var a = {b:'', x:10};" + "a.b='c';", "var a={x:10, b:'c'};");
+    test(
+        """
+        var a = {b:'', x:10};
+        a.b='c';
+        """,
+        "var a={x:10, b:'c'};");
   }
 
   @Test
   public void testObjectPropertyReassigned3() {
-    test("var a = {x:10};" + "a.b = 'c';", "var a = {x:10, b:'c'};");
+    test(
+        """
+        var a = {x:10};
+        a.b = 'c';
+        """,
+        "var a = {x:10, b:'c'};");
   }
 
   @Test
   public void testObjectPropertyReassigned4() {
-    testSame("var a = {b:10};" + "var x = 1;" + "a.b = x+10;");
+    testSame(
+        """
+        var a = {b:10};
+        var x = 1;
+        a.b = x+10;
+        """);
   }
 
   @Test
@@ -335,40 +389,72 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
   @Test
   public void testObjectComputedProp1() {
     testSame(
-        lines(
-            "var a = {['computed']: 10};",
-            "var alsoComputed = 'someValue';",
-            "a[alsoComputed] = 20;"));
+        """
+        var a = {['computed']: 10};
+        var alsoComputed = 'someValue';
+        a[alsoComputed] = 20;
+        """);
   }
 
   @Test
   public void testObjectComputedProp2() {
     test(
-        lines("var a = {['computed']: 10};", "a.prop = 20;"),
-        lines("var a = {", "  ['computed']: 10,", "  prop: 20,", "};"));
+        """
+        var a = {['computed']: 10};
+        a.prop = 20;
+        """,
+        """
+        var a = {
+          ['computed']: 10,
+          prop: 20,
+        };
+        """);
   }
 
   @Test
   public void testObjectMemberFunction1() {
     test(
-        lines("var a = { member() {} };", "a.prop = 20;"),
-        lines("var a = {", "  member() {},", "  prop: 20,", "};"));
+        """
+        var a = { member() {} };
+        a.prop = 20;
+        """,
+        """
+        var a = {
+          member() {},
+          prop: 20,
+        };
+        """);
   }
 
   @Test
   public void testObjectMemberFunction2() {
     test(
-        lines("var a = { member() {} };", "a.member = 20;"),
-        lines("var a = {", "  member: 20,", "};"));
+        """
+        var a = { member() {} };
+        a.member = 20;
+        """,
+        """
+        var a = {
+          member: 20,
+        };
+        """);
   }
 
   @Test
   public void testObjectGetter() {
-    testSame(lines("var a = { get x() {} };", "a.x = 20;"));
+    testSame(
+        """
+        var a = { get x() {} };
+        a.x = 20;
+        """);
   }
 
   @Test
   public void testObjectSetter() {
-    testSame(lines("var a = { set x(value) {} };", "a.x = 20;"));
+    testSame(
+        """
+        var a = { set x(value) {} };
+        a.x = 20;
+        """);
   }
 }

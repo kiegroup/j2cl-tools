@@ -54,6 +54,11 @@ public final class TemplateUtil {
   }
 
   // ------------------------------------------------------ IsElement / (Is)Widget methods
+  public static <E extends HTMLElement> void replaceElement(HTMLElement context, String identifier,
+                                                            IsElement<E> newElement) {
+      HTMLElement element = Js.cast(newElement.getElement());
+      replaceElement(context, identifier, element);
+  }
 
   public static void replaceElement(HTMLElement context, String identifier,
       HTMLElement newElement) {

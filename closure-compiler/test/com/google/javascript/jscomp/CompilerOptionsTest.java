@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.BrowserFeaturesetYear;
@@ -26,8 +25,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.regex.Pattern;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,6 +59,9 @@ public final class CompilerOptionsTest {
 
     options.setBrowserFeaturesetYear(2024);
     assertThat(options.getOutputFeatureSet()).isEqualTo(FeatureSet.BROWSER_2024);
+
+    options.setBrowserFeaturesetYear(2025);
+    assertThat(options.getOutputFeatureSet()).isEqualTo(FeatureSet.BROWSER_2025);
   }
 
   @Test
@@ -72,6 +72,23 @@ public final class CompilerOptionsTest {
         .isEqualTo(Token.FALSE);
     options.setBrowserFeaturesetYear(2019);
     assertThat(options.getDefineReplacements().get("$jscomp.ASSUME_ES5").getToken())
+        .isEqualTo(Token.TRUE);
+  }
+
+  @Test
+  public void testBrowserFeaturesetYearOptionSetsAssumeES6() {
+    CompilerOptions options = new CompilerOptions();
+    options.setBrowserFeaturesetYear(2012);
+    assertThat(options.getDefineReplacements().get("$jscomp.ASSUME_ES6").getToken())
+        .isEqualTo(Token.FALSE);
+    options.setBrowserFeaturesetYear(2018);
+    assertThat(options.getDefineReplacements().get("$jscomp.ASSUME_ES6").getToken())
+        .isEqualTo(Token.TRUE);
+    options.setBrowserFeaturesetYear(2020);
+    assertThat(options.getDefineReplacements().get("$jscomp.ASSUME_ES2020").getToken())
+        .isEqualTo(Token.FALSE);
+    options.setBrowserFeaturesetYear(2021);
+    assertThat(options.getDefineReplacements().get("$jscomp.ASSUME_ES2020").getToken())
         .isEqualTo(Token.TRUE);
   }
 
@@ -89,8 +106,7 @@ public final class CompilerOptionsTest {
   public void testMinimumBrowserFeatureSetYearRequiredFor_returnsUnspecifiedIfUnsupported() {
     // Newer features, in particular anything in ES_NEXT, may not be part of a browser featureset
     // year yet.
-    assertThat(BrowserFeaturesetYear.minimumRequiredFor(Feature.PUBLIC_CLASS_FIELDS))
-        .isEqualTo(null);
+    assertThat(BrowserFeaturesetYear.minimumRequiredFor(Feature.PUBLIC_CLASS_FIELDS)).isNull();
   }
 
   @Test
@@ -138,31 +154,6 @@ public final class CompilerOptionsTest {
   }
 
   @Test
-  public void testSerialization() throws Exception {
-    CompilerOptions options = new CompilerOptions();
-    options.setDefineToBooleanLiteral("trueVar", true);
-    options.setDefineToBooleanLiteral("falseVar", false);
-    options.setDefineToNumberLiteral("threeVar", 3);
-    options.setDefineToStringLiteral("strVar", "str");
-    options.setAmbiguateProperties(false);
-    options.setOutputCharset(US_ASCII);
-
-    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    options.serialize(byteArrayOutputStream);
-
-    options =
-        CompilerOptions.deserialize(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
-
-    ImmutableMap<String, Node> actual = options.getDefineReplacements();
-    assertEquivalent(new Node(Token.TRUE), actual.get("trueVar"));
-    assertEquivalent(new Node(Token.FALSE), actual.get("falseVar"));
-    assertEquivalent(Node.newNumber(3), actual.get("threeVar"));
-    assertEquivalent(Node.newString("str"), actual.get("strVar"));
-    assertThat(options.shouldAmbiguateProperties()).isFalse();
-    assertThat(options.getOutputCharset()).isEqualTo(US_ASCII);
-  }
-
-  @Test
   public void testRemoveRegexFromPath() {
     CompilerOptions options = new CompilerOptions();
     Pattern pattern = options.getConformanceRemoveRegexFromPath().get();
@@ -170,16 +161,25 @@ public final class CompilerOptionsTest {
         .isEqualTo("some/path");
     assertThat(pattern.matcher("blaze-out/k8-fastbin/bin/some/path").replaceAll(""))
         .isEqualTo("some/path");
-    assertThat(pattern.matcher("google3/bazel-out/k8-fastbin/bin/some/path").replaceAll(""))
+    assertThat(pattern.matcher("google3/blaze-out/k8-fastbin/bin/some/path").replaceAll(""))
         .isEqualTo("some/path");
     assertThat(pattern.matcher("google3/blaze-out/k8-fastbin/genfiles/some/path").replaceAll(""))
-        .isEqualTo("genfiles/some/path");
-    assertThat(pattern.matcher("somethin/google3/blaze-out/k8-fastbin/some/path").replaceAll(""))
+        .isEqualTo("some/path");
+    assertThat(pattern.matcher("something/google3/blaze-out/k8-fastbin/some/path").replaceAll(""))
         .isEqualTo("blaze-out/k8-fastbin/some/path");
+    assertThat(
+            pattern.matcher("/something/google3/blaze-out/k8-fastbin/bin/some/path").replaceAll(""))
+        .isEqualTo("some/path");
+    assertThat(pattern.matcher("google3/some/path").replaceAll("")).isEqualTo("some/path");
 
     assertThat(pattern.matcher("google3/foo/blaze-out/some/path").replaceAll(""))
         .isEqualTo("foo/blaze-out/some/path");
     assertThat(pattern.matcher("google3/blaze-out/foo/blaze-out/some/path").replaceAll(""))
         .isEqualTo("blaze-out/foo/blaze-out/some/path");
+
+    assertThat(pattern.matcher("bazel-out/k8-fastbin/bin/some/path").replaceAll(""))
+        .isEqualTo("some/path");
+    assertThat(pattern.matcher("bazel-out/k8-fastbin/genfiles/some/path").replaceAll(""))
+        .isEqualTo("some/path");
   }
 }

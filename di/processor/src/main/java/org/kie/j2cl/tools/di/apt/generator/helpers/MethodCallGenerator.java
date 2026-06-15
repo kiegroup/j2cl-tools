@@ -26,7 +26,6 @@ import org.kie.j2cl.tools.di.apt.generator.context.ExecutionEnv;
 import org.kie.j2cl.tools.di.apt.generator.context.IOCContext;
 import org.kie.j2cl.tools.processors.utils.J2CLUtils;
 
-
 public class MethodCallGenerator {
 
   private final FreemarkerTemplateGenerator freemarkerTemplateGenerator =

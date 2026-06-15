@@ -17,7 +17,7 @@ package org.kie.j2cl.tools.di.core.internal.weak;
 import java.util.Map;
 
 import elemental2.core.JsWeakMap;
-import org.kie.j2cl.tools.utils.GwtIncompatible;
+import org.kie.j2cl.tools.di.core.internal.GwtIncompatible;
 
 public class WeakMap<K, V> {
 

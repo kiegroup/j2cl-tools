@@ -64,11 +64,14 @@ internal fun NameRenderer.typeDescriptorSource(
       projectRawToWildcards = projectRawToWildcards,
       rendersCaptures = rendersCaptures,
     )
-    .source(typeDescriptor.withImplicitNullability)
+    .source(typeDescriptor)
 
 /** Returns source for the given list of type bindings. */
-internal fun NameRenderer.typeBindingsSource(typeBindings: List<TypeBinding>): Source =
-  TypeDescriptorRenderer(this).typeBindingsSource(typeBindings)
+internal fun NameRenderer.typeBindingsSource(
+  typeBindings: List<TypeBinding>,
+  rendersCaptures: Boolean = false,
+): Source =
+  TypeDescriptorRenderer(this, rendersCaptures = rendersCaptures).typeBindingsSource(typeBindings)
 
 /**
  * Type descriptor renderer, contains options for rendering type descriptor sources.
@@ -77,7 +80,7 @@ internal fun NameRenderer.typeBindingsSource(typeBindings: List<TypeBinding>): S
  * @property seenTypeVariables a set of seen type variables used to detect recursion
  * @property asSuperType whether to render a super-type, using bridge name if present
  * @property projectRawToWildcards whether to project raw types to wildcards, or bounds
- * @param rendersCaptures whether to render captures
+ * @property rendersCaptures whether to render captures
  */
 internal data class TypeDescriptorRenderer(
   private val nameRenderer: NameRenderer,
@@ -116,7 +119,7 @@ internal data class TypeDescriptorRenderer(
     join(
       nameRenderer.qualifiedNameSource(arrayTypeDescriptor),
       arrayTypeDescriptor.componentTypeDescriptor.let {
-        Source.emptyUnless(!it.isPrimitive) { inAngleBrackets(child.source(it)) }
+        Source.emptyIf(it.isPrimitive) { inAngleBrackets(child.source(it)) }
       },
       nullableSuffixSource(arrayTypeDescriptor),
     )
@@ -127,7 +130,7 @@ internal data class TypeDescriptorRenderer(
     val isStatic = !typeDeclaration.isCapturingEnclosingInstance
     return join(
       if (typeDeclaration.isLocal || enclosingTypeDescriptor == null || isStatic) {
-        nameRenderer.qualifiedNameSource(declaredTypeDescriptor, asSuperType)
+        nameRenderer.qualifiedNameSource(declaredTypeDescriptor, asSuperType = asSuperType)
       } else {
         dotSeparated(
           child.declaredSource(enclosingTypeDescriptor.toNonNullable()),
@@ -160,7 +163,7 @@ internal data class TypeDescriptorRenderer(
               if (lowerBound != null) {
                 spaceSeparated(IN_KEYWORD, child.source(lowerBound))
               } else {
-                typeVariable.upperBoundTypeDescriptor.let { upperBound ->
+                typeVariable.normalizedUpperBoundTypeDescriptor.let { upperBound ->
                   if (upperBound.isImplicitUpperBound) {
                     STAR_OPERATOR
                   } else {

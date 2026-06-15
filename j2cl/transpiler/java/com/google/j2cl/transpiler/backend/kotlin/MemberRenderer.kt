@@ -17,8 +17,8 @@ package com.google.j2cl.transpiler.backend.kotlin
 
 import com.google.j2cl.common.InternalCompilerError
 import com.google.j2cl.transpiler.ast.ArrayTypeDescriptor
-import com.google.j2cl.transpiler.ast.AstUtils
 import com.google.j2cl.transpiler.ast.AstUtils.getConstructorInvocation
+import com.google.j2cl.transpiler.ast.AstUtils.isAnnotatedWithDoNotAutobox
 import com.google.j2cl.transpiler.ast.Field
 import com.google.j2cl.transpiler.ast.InitializerBlock
 import com.google.j2cl.transpiler.ast.Member as JavaMember
@@ -26,10 +26,7 @@ import com.google.j2cl.transpiler.ast.Method
 import com.google.j2cl.transpiler.ast.MethodDescriptor.ParameterDescriptor
 import com.google.j2cl.transpiler.ast.MethodLike
 import com.google.j2cl.transpiler.ast.NewInstance
-import com.google.j2cl.transpiler.ast.ReturnStatement
-import com.google.j2cl.transpiler.ast.Statement
 import com.google.j2cl.transpiler.ast.Type
-import com.google.j2cl.transpiler.ast.TypeDescriptors
 import com.google.j2cl.transpiler.ast.Variable
 import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.COMPANION_KEYWORD
 import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.CONST_KEYWORD
@@ -47,13 +44,13 @@ import com.google.j2cl.transpiler.backend.kotlin.KotlinSource.initializer
 import com.google.j2cl.transpiler.backend.kotlin.MemberDescriptorRenderer.Companion.enumValueDeclarationNameSource
 import com.google.j2cl.transpiler.backend.kotlin.ast.CompanionObject
 import com.google.j2cl.transpiler.backend.kotlin.ast.Member
-import com.google.j2cl.transpiler.backend.kotlin.common.runIf
 import com.google.j2cl.transpiler.backend.kotlin.source.Source
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.NEW_LINE
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.block
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.colonSeparated
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.commaSeparated
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.emptyLineSeparated
+import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.inNewLine
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.inParentheses
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.indented
 import com.google.j2cl.transpiler.backend.kotlin.source.Source.Companion.indentedIf
@@ -108,7 +105,7 @@ internal data class MemberRenderer(val nameRenderer: NameRenderer, val enclosing
       ),
     )
 
-  private fun memberSource(member: JavaMember): Source =
+  internal fun memberSource(member: JavaMember): Source =
     when (member) {
       is Method -> methodSource(member).withMapping(member.descriptor)
       is Field -> fieldSource(member).withMapping(member.descriptor)
@@ -117,26 +114,24 @@ internal data class MemberRenderer(val nameRenderer: NameRenderer, val enclosing
     }
 
   private fun methodSource(method: Method): Source =
-    method.renderedStatements.let { statements ->
-      // Don't render primary constructor if it's empty.
-      Source.emptyUnless(!isKtPrimaryConstructor(method) || statements.isNotEmpty()) {
-        spaceSeparated(
-          methodHeaderSource(method),
-          Source.emptyUnless(!method.isAbstract && !method.isNative) {
-            // Constructors with no statements can be rendered without curly braces.
-            Source.emptyUnless(!method.isConstructor || statements.isNotEmpty()) {
-              spaceSeparated(
-                  Source.emptyUnless(method.descriptor.isKtProperty) {
-                    join(GET_KEYWORD, inParentheses(Source.EMPTY))
-                  },
-                  block(statementRenderer.statementsSource(statements)),
-                )
-                .runIf(method.descriptor.isKtProperty) { indented(NEW_LINE + this) }
-            }
-          },
-        )
-      }
-    }
+    spaceSeparated(
+      methodHeaderSource(method),
+      when {
+        method.isAbstract -> Source.EMPTY
+        method.isNative -> Source.EMPTY
+        method.isConstructor && method.renderedStatements.isEmpty() -> Source.EMPTY
+        method.descriptor.isKtProperty -> ktPropertyGetterSource(method)
+        else -> bodySource(method)
+      },
+    )
+
+  private fun ktPropertyGetterSource(method: Method): Source =
+    indented(
+      inNewLine(spaceSeparated(join(GET_KEYWORD, inParentheses(Source.EMPTY)), bodySource(method)))
+    )
+
+  private fun bodySource(method: Method): Source =
+    block(statementRenderer.statementsSource(method.renderedStatements))
 
   private fun isKtPrimaryConstructor(method: Method): Boolean =
     method == enclosingType.ktPrimaryConstructor
@@ -203,7 +198,7 @@ internal data class MemberRenderer(val nameRenderer: NameRenderer, val enclosing
           colonSeparated(
             join(
               memberDescriptorRenderer.methodKindAndNameSource(methodDescriptor),
-              methodParametersSource(method, methodObjCNames?.parameterNames),
+              methodParametersSource(method, methodObjCNames?.parameterObjCNames),
             ),
             if (methodDescriptor.isConstructor) {
               constructorInvocationSource(method)
@@ -219,7 +214,7 @@ internal data class MemberRenderer(val nameRenderer: NameRenderer, val enclosing
   private fun methodModifiersSource(method: Method): Source =
     spaceSeparated(
       memberDescriptorRenderer.visibilityModifierSource(method.descriptor),
-      Source.emptyUnless(!method.descriptor.enclosingTypeDescriptor.typeDeclaration.isInterface) {
+      Source.emptyIf(method.descriptor.enclosingTypeDescriptor.typeDeclaration.isInterface) {
         spaceSeparated(
           Source.emptyUnless(method.descriptor.isNative) { KotlinSource.EXTERNAL_KEYWORD },
           method.inheritanceModifierSource,
@@ -228,21 +223,33 @@ internal data class MemberRenderer(val nameRenderer: NameRenderer, val enclosing
       Source.emptyUnless(method.isJavaOverride) { KotlinSource.OVERRIDE_KEYWORD },
     )
 
-  fun annotationsSource(method: Method, methodObjCNames: MethodObjCNames?) =
+  fun annotationsSource(method: Method, methodObjCNames: MethodObjCNames?): Source =
     newLineSeparated(
       objCNameRenderer.objCAnnotationSource(method.descriptor, methodObjCNames),
       jsInteropAnnotationRenderer.jsInteropAnnotationsSource(method),
       memberDescriptorRenderer.jvmThrowsAnnotationSource(method.descriptor),
       memberDescriptorRenderer.nativeThrowsAnnotationSource(method.descriptor),
+      suppressNothingToOverrideSource(method),
     )
 
-  fun methodParametersSource(method: MethodLike, objCParameterNames: List<String>? = null): Source {
+  private fun suppressNothingToOverrideSource(method: Method): Source =
+    Source.emptyUnless(method.hasSuppressNothingToOverrideAnnotation()) {
+      return annotation(
+        memberDescriptorRenderer.nameRenderer.topLevelQualifiedNameSource("kotlin.Suppress"),
+        KotlinSource.literal("NOTHING_TO_OVERRIDE"),
+      )
+    }
+
+  fun methodParametersSource(
+    method: MethodLike,
+    objCParameterNames: List<ObjCName>? = null,
+  ): Source {
     val methodDescriptor = method.descriptor
     val parameterDescriptors = methodDescriptor.parameterDescriptors
     val parameters = method.parameters
     val renderWithNewLines = objCParameterNames != null && parameters.isNotEmpty()
-    val optionalNewLineSource = Source.emptyUnless(renderWithNewLines) { Source.NEW_LINE }
-    return Source.emptyUnless(!methodDescriptor.isKtProperty) {
+    val optionalNewLineSource = Source.emptyUnless(renderWithNewLines) { NEW_LINE }
+    return Source.emptyIf(methodDescriptor.isKtProperty) {
       inParentheses(
         join(
           indentedIf(
@@ -269,7 +276,7 @@ internal data class MemberRenderer(val nameRenderer: NameRenderer, val enclosing
   private fun parameterSource(
     parameterDescriptor: ParameterDescriptor,
     parameter: Variable,
-    objCParameterName: String? = null,
+    objCParameterName: ObjCName? = null,
   ): Source {
     val parameterTypeDescriptor = parameterDescriptor.typeDescriptor
     val renderedTypeDescriptor =
@@ -279,9 +286,16 @@ internal data class MemberRenderer(val nameRenderer: NameRenderer, val enclosing
         (parameterTypeDescriptor as ArrayTypeDescriptor).componentTypeDescriptor!!
       }
     return spaceSeparated(
-      Source.emptyUnless(parameterDescriptor.isVarargs) { VARARG_KEYWORD },
-      objCParameterName?.let { objCNameRenderer.objCNameAnnotationSource(it) }.orEmpty(),
+      objCParameterName
+        ?.let { objCNameRenderer.objCNameAnnotationSource(it.string, swiftName = it.swiftString) }
+        .orEmpty(),
       jsInteropAnnotationRenderer.jsInteropAnnotationsSource(parameterDescriptor),
+      Source.emptyUnless(isAnnotatedWithDoNotAutobox(parameterDescriptor)) {
+        annotation(
+          nameRenderer.topLevelQualifiedNameSource("javaemul.internal.annotations.DoNotAutobox")
+        )
+      },
+      Source.emptyUnless(parameterDescriptor.isVarargs) { VARARG_KEYWORD },
       colonSeparated(
         nameRenderer.nameSource(parameter),
         nameRenderer.typeDescriptorSource(renderedTypeDescriptor),
@@ -321,28 +335,10 @@ internal data class MemberRenderer(val nameRenderer: NameRenderer, val enclosing
                 ?.let { expressionRenderer.invocationSource(newInstance) }
                 .orEmpty(),
             ),
-            newInstance.anonymousInnerClass?.let { typeRenderer.typeBodySource(it) }.orEmpty(),
+            newInstance.anonymousInnerClass
+              ?.let { typeRenderer.typeBodySource(it, skipEmptyBlock = true) }
+              .orEmpty(),
           ),
         )
       }
-
-  companion object {
-    val Method.renderedStatements: List<Statement>
-      get() {
-        if (!descriptor.isKtDisabled) {
-          return body.statements.filter { !AstUtils.isConstructorInvocationStatement(it) }
-        }
-
-        if (TypeDescriptors.isPrimitiveVoid(descriptor.returnTypeDescriptor)) {
-          return listOf()
-        }
-
-        return listOf(
-          ReturnStatement.newBuilder()
-            .setSourcePosition(sourcePosition)
-            .setExpression(descriptor.returnTypeDescriptor.defaultValue)
-            .build()
-        )
-      }
-  }
 }

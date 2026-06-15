@@ -1,0 +1,16 @@
+goog.module('localfunction.LocalFunctionKt');
+
+goog.require('java.lang.Appendable');
+goog.require('java.lang.CharSequence');
+goog.require('java.lang.Integer');
+goog.require('java.lang.Number');
+goog.require('java.lang.Object');
+goog.require('java.lang.String');
+goog.require('java.lang.StringBuilder');
+goog.require('javaemul.internal.InternalPreconditions');
+goog.require('nativebootstrap.Util');
+goog.require('vmbootstrap.Numbers');
+goog.require('vmbootstrap.Objects');
+
+const LocalFunctionKt = goog.require('localfunction.LocalFunctionKt$impl');
+exports = LocalFunctionKt;

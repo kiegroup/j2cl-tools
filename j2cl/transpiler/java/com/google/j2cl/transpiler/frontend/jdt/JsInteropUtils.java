@@ -67,8 +67,8 @@ public final class JsInteropUtils {
           isJsType(declaringType) && Modifier.isPublic(member.getModifiers());
       boolean isJsEnumConstant =
           isJsEnum(declaringType)
-              && member instanceof IVariableBinding
-              && ((IVariableBinding) member).isEnumConstant();
+              && member instanceof IVariableBinding variableBinding
+              && variableBinding.isEnumConstant();
       boolean memberOfNativeType = isJsNativeType(declaringType) && !isJsEnum(declaringType);
       if (memberAnnotation != null
           || ((publicMemberOfJsType || isJsEnumConstant || memberOfNativeType) && !jsOverlay)) {
@@ -152,10 +152,6 @@ public final class JsInteropUtils {
 
   public static boolean isJsOptional(IMethodBinding methodBinding, int i) {
     return JsInteropAnnotationUtils.getJsOptionalAnnotation(methodBinding, i) != null;
-  }
-
-  public static boolean isDoNotAutobox(IMethodBinding methodBinding, int i) {
-    return JsInteropAnnotationUtils.getDoNotAutoboxAnnotation(methodBinding, i) != null;
   }
 
   public static boolean isJsType(ITypeBinding typeBinding) {

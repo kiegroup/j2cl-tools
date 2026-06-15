@@ -80,14 +80,15 @@ public final class CheckNestedNamesTest extends CompilerTestCase {
     noWarning("goog.module('a'); function foo() { class C {}; /** @enum */ C.E = {};} foo();");
     noWarning("goog.module('a'); function foo() { let C = {}; /** @enum */ C.E = {};} foo();");
     noWarning(
-        lines(
-            "goog.module('a');",
-            "/** @param {!Function} x */",
-            "function foo(x) {",
-            "  /** @enum */ x.E = {};",
-            "}",
-            "function y() {}",
-            "foo(y);"));
+        """
+        goog.module('a');
+        /** @param {!Function} x */
+        function foo(x) {
+          /** @enum */ x.E = {};
+        }
+        function y() {}
+        foo(y);
+        """);
   }
 
   @Test
@@ -136,8 +137,13 @@ public final class CheckNestedNamesTest extends CompilerTestCase {
     nestedNameWarning("goog.module('a'); class C {}; C.C = class {};");
 
     nestedNameWarning(
-        "goog.module('a'); class C {}; /** @constructor */ function D() {}; /** @const */ C.C ="
-            + " D;");
+        """
+        goog.module('a');
+        class C {};
+        /** @constructor */
+        function D() {};
+        /** @const */ C.C = D;
+        """);
     noWarning("goog.module('a'); class C {}; function D() {}; /** @const */ C.C = D;");
 
     nestedNameWarning("goog.module('a'); class C {}; /** @enum */ E = {}; C.E = E;");

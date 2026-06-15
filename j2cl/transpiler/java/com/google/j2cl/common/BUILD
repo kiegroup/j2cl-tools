@@ -1,5 +1,5 @@
 load("@rules_java//java:defs.bzl", "java_library")
-load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
+load("@google_bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 package(
     default_applicable_licenses = ["//:j2cl_license"],
@@ -16,6 +16,7 @@ java_library(
     deps = [
         "//third_party:args4j",
         "//third_party:auto_value",
+        "//third_party:error_prone_annotations",
         "//third_party:guava",
         "//third_party:jsr305_annotations",
     ],
@@ -25,6 +26,10 @@ javadoc_library(
     name = "common-javadoc",
     srcs = glob(["*.java"]),
     deps = [
-        ":common"
+        "//third_party:args4j",
+        "//third_party:auto_value",
+        "//third_party:error_prone_annotations",
+        "//third_party:guava",
+        "//third_party:jsr305_annotations",
     ],
 )

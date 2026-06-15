@@ -18,6 +18,7 @@ import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.ir.IrBuiltIns
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.*
+import org.jetbrains.kotlin.ir.declarations.lazy.IrLazyFunctionBase
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.expressions.impl.IrBlockImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrFunctionReferenceImpl
@@ -27,10 +28,12 @@ import org.jetbrains.kotlin.ir.visitors.IrElementTransformerVoid
 import org.jetbrains.kotlin.ir.visitors.transformChildrenVoid
 import org.jetbrains.kotlin.resolve.annotations.JVM_STATIC_ANNOTATION_FQ_NAME
 
-// Passes that handles object functions annotated with JvmStatic annotations.
-//
-// Copied and modified from org.jetbrains.kotlin.backend.common.lower.JvmStaticAnnotationLowering.
-
+/**
+ * Makes `@JvmStatic` functions in non-companion objects static and replaces all call sites in the
+ * module.
+ *
+ * Copied and modified from org.jetbrains.kotlin.backend.common.lower.JvmStaticAnnotationLowering.
+ */
 internal class JvmStaticInObjectLowering(val context: JvmBackendContext) : FileLoweringPass {
   override fun lower(irFile: IrFile) =
     irFile.transformChildrenVoid(
@@ -41,6 +44,7 @@ internal class JvmStaticInObjectLowering(val context: JvmBackendContext) : FileL
     )
 }
 
+/** Synthesizes static proxy functions for `@JvmStatic` functions in companion objects. */
 internal class JvmStaticInCompanionLowering(val context: JvmBackendContext) : FileLoweringPass {
   override fun lower(irFile: IrFile) =
     irFile.transformChildrenVoid(CompanionObjectJvmStaticTransformer(context))
@@ -76,7 +80,7 @@ private fun IrMemberAccessExpression<*>.makeStatic(
   replaceCallee: IrSimpleFunction?,
 ): IrExpression {
   val receiver = dispatchReceiver ?: return this
-  dispatchReceiver = null
+  removeDispatchReceiver()
   if (replaceCallee != null) {
     (this as IrCall).symbol = replaceCallee.symbol
   }
@@ -94,29 +98,41 @@ class SingletonObjectJvmStaticTransformer(
   private val irBuiltIns: IrBuiltIns,
   private val cachedFields: CachedFieldsForObjectInstances,
 ) : IrElementTransformerVoid() {
-  override fun visitClass(declaration: IrClass): IrStatement {
-    if (declaration.isNonCompanionObject) {
-      for (function in declaration.simpleFunctions()) {
-        if (function.isJvmStaticDeclaration()) {
-          // dispatch receiver parameter is already null for synthetic property annotation methods
-          function.dispatchReceiverParameter?.let { oldDispatchReceiverParameter ->
-            function.dispatchReceiverParameter = null
-            function.replaceThisByStaticReference(
-              cachedFields,
-              declaration,
-              oldDispatchReceiverParameter,
-            )
-          }
+  override fun visitSimpleFunction(declaration: IrSimpleFunction): IrStatement {
+    transformFunction(declaration)
+    return super.visitSimpleFunction(declaration)
+  }
+
+  private fun transformFunction(function: IrFunction) {
+    if (function.isJvmStaticInObject()) {
+      // dispatch receiver parameter is already null for synthetic property annotation methods
+      function.dispatchReceiverParameter?.let { oldDispatchReceiverParameter ->
+        function.dispatchReceiverParameter = null
+
+        if (function !is IrLazyFunctionBase) {
+          function.replaceThisByStaticReference(
+            cachedFields,
+            function.parentAsClass,
+            oldDispatchReceiverParameter,
+          )
         }
       }
     }
-    return super.visitClass(declaration)
   }
 
   // This lowering runs before functions references are handled, and should transform them too.
   override fun visitMemberAccess(expression: IrMemberAccessExpression<*>): IrExpression {
     expression.transformChildrenVoid(this)
+
     val callee = expression.symbol.owner
+    if (callee is IrFunction) {
+      transformFunction(callee)
+    }
+    if (callee is IrProperty) {
+      callee.getter?.let { transformFunction(it) }
+      callee.setter?.let { transformFunction(it) }
+    }
+
     if (callee is IrDeclaration && callee.isJvmStaticInObject()) {
       return expression.makeStatic(irBuiltIns, replaceCallee = null)
     }
@@ -210,7 +226,6 @@ private class CompanionObjectJvmStaticTransformer(val context: JvmBackendContext
               implFunRef.type,
               staticProxy.symbol,
               staticProxy.typeParameters.size,
-              staticProxy.valueParameters.size,
               implFunRef.reflectionTarget,
               implFunRef.origin,
             ),
@@ -257,7 +272,11 @@ private class CompanionObjectJvmStaticTransformer(val context: JvmBackendContext
 
     // The return type on the proxy was blindy copied from the original without remapping the
     // possible type parameters.
-    proxy.returnType = proxy.returnType.remapTypeParameters(callee, proxy)
+    static.returnType = static.returnType.remapTypeParameters(callee, static)
+    if (proxy != static) {
+      // Also remap the proxy if it has been newly created in the companion object.
+      proxy.returnType = proxy.returnType.remapTypeParameters(callee, proxy)
+    }
 
     return static to companionFun
   }

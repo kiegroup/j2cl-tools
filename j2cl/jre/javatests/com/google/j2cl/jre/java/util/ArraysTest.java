@@ -57,16 +57,9 @@ public class ArraysTest extends EmulTestBase {
       return value + "@" + index;
     }
   }
-
-  @Override
-  public String getModuleName() {
-    return "com.google.gwt.emultest.EmulSuite";
-  }
-
   /**
-   * Verifies that calling Arrays.hashCode(Object[]) with an array with
-   * embedded null references works properly (and most importantly doesn't
-   * throw an NPE).
+   * Verifies that calling Arrays.hashCode(Object[]) with an array with embedded null references
+   * works properly (and most importantly doesn't throw an NPE).
    */
   public void testArraysHashCodeWithNullElements() {
     String[] a = new String[] { "foo", null, "bar", "baz" };
@@ -1406,8 +1399,6 @@ public class ArraysTest extends EmulTestBase {
     assertTrue(Float.isNaN(array[9]));
     assertTrue(Float.isNaN(array[10]));
   }
-
-
 
   /**
    * Tests sorting a subrange of a primitive array.

@@ -3,11 +3,48 @@
   <parent>
     <artifactId>j2cl-parent</artifactId>
     <groupId>org.kie.j2cl.tools</groupId>
-    <version>v20241110-1</version>
+    <version>v20250822-1</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>junit-processor</artifactId>
+  <name>J2CL Junit processor</name>
+  <description>J2CL is a powerful, simple and lightweight transpiler from Java to Closure style JavaScript.
+        The project is designed, implemented, and maintained by the J2CL team at Google.
+        This distribution is slightly modified from the original and packaged for Maven Central by Vertispan LLC.
+        The links and references in this pom.xml will reference the Vertispan fork, to ensure that any error introduced
+        by our packaging are not incorrectly blamed on the upstream Google repository.</description>
+  <url>https://github.com/vertispan/j2cl</url>
+  <issueManagement>
+    <system>GitHub Issues</system>
+    <url>https://github.com/vertispan/j2cl/issues</url>
+  </issueManagement>
+  <inceptionYear>2015</inceptionYear>
+  <developers>
+    <developer>
+      <name>J2CL team</name>
+      <organization>Google</organization>
+      <organizationUrl>https://www.google.com</organizationUrl>
+    </developer>
+    <developer>
+      <name>Colin Alworth</name>
+      <email>colin@vertispan.com</email>
+      <organization>Vertispan LLC</organization>
+      <organizationUrl>https://www.vertispan.com/</organizationUrl>
+    </developer>
+  </developers>
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <connection>scm:git:https://github.com/vertispan/j2cl.git</connection>
+    <developerConnection>scm:git:git@github.com:vertispan/j2cl.git</developerConnection>
+    <url>https://github.com/vertispan/j2cl</url>
+  </scm>
   <build>
     <plugins>
       <plugin>
@@ -38,7 +75,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.2.1</version>
+        <version>3.5.3</version>
         <executions>
           <execution>
             <phase>package</phase>

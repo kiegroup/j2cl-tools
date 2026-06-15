@@ -19,12 +19,11 @@ import com.google.j2cl.jre.testing.J2ktIncompatible;
 import com.google.j2cl.jre.testing.TestUtils;
 import java.util.ArrayList;
 import java.util.Date;
+import junit.framework.TestCase;
 
-/**
- * Tests for GWT's emulation of the JRE Date class.
- */
+/** Tests for GWT's emulation of the JRE Date class. */
 @SuppressWarnings("deprecation")
-public class DateTest extends GWTTestCase {
+public class DateTest extends TestCase {
   public static final String CURRENT = "CURRENT";
   public static final String TO_STRING_PATTERN =
       "\\w{3} \\w{3} \\d{2} \\d{2}:\\d{2}:\\d{2}( .+)? \\d{4}";
@@ -35,13 +34,6 @@ public class DateTest extends GWTTestCase {
 
   Date theDate = new Date();
 
-  /**
-   * Sets module name so that javascript compiler can operate.
-   */
-  @Override
-  public String getModuleName() {
-    return "com.google.gwt.emultest.EmulSuite";
-  }
 
   /** Testing for public boolean java.util.Date.after(java.util.Date). */
   public void testAfter() {

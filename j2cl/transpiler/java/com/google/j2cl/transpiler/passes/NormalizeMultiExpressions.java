@@ -63,15 +63,8 @@ public class NormalizeMultiExpressions extends NormalizationPass {
 
     @Override
     public Statement rewriteExpressionStatement(ExpressionStatement statement) {
-      if (statement.getExpression() instanceof MultiExpression) {
-        // Since we're looking at MultiExpressions that are the primary expression of an
-        // ExpressionStatement, we know that the return value isn't used.
-        // That makes it safe to remove any subexpressions that don't have side effects.
-        List<Expression> expressions =
-            ((MultiExpression) statement.getExpression())
-                .getExpressions().stream()
-                    .filter(Expression::hasSideEffects)
-                    .collect(toImmutableList());
+      if (statement.getExpression() instanceof MultiExpression multiExpression) {
+        List<Expression> expressions = multiExpression.getExpressions();
 
         if (expressions.isEmpty()) {
           // No expressions with side effects in this top level multexpression, remove completely.
@@ -101,13 +94,23 @@ public class NormalizeMultiExpressions extends NormalizationPass {
     @Override
     public Expression rewriteMultiExpression(MultiExpression multiExpression) {
       List<Expression> flattenedExpressions = new ArrayList<>();
-      for (Expression expression : multiExpression.getExpressions()) {
-        if (expression instanceof MultiExpression) {
-          flattenedExpressions.addAll(((MultiExpression) expression).getExpressions());
+      for (int i = 0; i < multiExpression.getExpressions().size(); i++) {
+        Expression expression = multiExpression.getExpressions().get(i);
+
+        // Any side-effect free expression can be removed as it's not observable, expect for the
+        // last expression.
+        boolean isLastExpression = i == multiExpression.getExpressions().size() - 1;
+        if (!isLastExpression && !expression.hasSideEffects()) {
+          continue;
+        }
+
+        if (expression instanceof MultiExpression nestedMultiExpression) {
+          flattenedExpressions.addAll(nestedMultiExpression.getExpressions());
         } else {
           flattenedExpressions.add(expression);
         }
       }
+
       return MultiExpression.newBuilder().setExpressions(flattenedExpressions).build();
     }
   }
@@ -116,9 +119,8 @@ public class NormalizeMultiExpressions extends NormalizationPass {
     @Override
     public Expression rewriteBinaryExpression(BinaryExpression expression) {
       if (expression.getOperator().hasSideEffect()
-          && expression.getLeftOperand() instanceof MultiExpression) {
-        List<Expression> lhsExpressions =
-            ((MultiExpression) expression.getLeftOperand()).getExpressions();
+          && expression.getLeftOperand() instanceof MultiExpression leftOperand) {
+        List<Expression> lhsExpressions = leftOperand.getExpressions();
         Expression rightMostLhsExpression = Iterables.getLast(lhsExpressions);
         Expression innerExpression =
             BinaryExpression.Builder.from(expression).setLeftOperand(rightMostLhsExpression).build();
@@ -133,8 +135,8 @@ public class NormalizeMultiExpressions extends NormalizationPass {
     @Override
     public Expression rewriteUnaryExpression(UnaryExpression expression) {
       if (expression.getOperator().hasSideEffect()
-          && expression.getOperand() instanceof MultiExpression) {
-        List<Expression> expressions = ((MultiExpression) expression.getOperand()).getExpressions();
+          && expression.getOperand() instanceof MultiExpression operand) {
+        List<Expression> expressions = operand.getExpressions();
         Expression rightMostExpression = Iterables.getLast(expressions);
         Expression innerExpression =
             UnaryExpression.Builder.from(expression).setOperand(rightMostExpression).build();

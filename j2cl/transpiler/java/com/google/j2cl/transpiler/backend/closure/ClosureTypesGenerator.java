@@ -19,6 +19,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static com.google.j2cl.transpiler.ast.AstUtils.isNonNativeJsEnum;
+import static com.google.j2cl.transpiler.ast.TypeDescriptors.getEnumBoxType;
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.collect.ImmutableList;
@@ -26,7 +28,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
 import com.google.j2cl.transpiler.ast.ArrayTypeDescriptor;
-import com.google.j2cl.transpiler.ast.AstUtils;
 import com.google.j2cl.transpiler.ast.DeclaredTypeDescriptor;
 import com.google.j2cl.transpiler.ast.IntersectionTypeDescriptor;
 import com.google.j2cl.transpiler.ast.MethodDescriptor;
@@ -70,48 +71,53 @@ class ClosureTypesGenerator {
   public String getJsDocForParameter(MethodLike methodLike, int index) {
     MethodDescriptor methodDescriptor = methodLike.getDescriptor();
     ParameterDescriptor parameterDescriptor = methodDescriptor.getParameterDescriptors().get(index);
-    return toClosureTypeParameter(
-            methodDescriptor, parameterDescriptor, parameterDescriptor.getTypeDescriptor())
+    TypeDescriptor parameterTypeDescriptor = parameterDescriptor.getTypeDescriptor();
+    TypeDescriptor parameterDeclarationDescriptor =
+        methodDescriptor.getDeclarationDescriptor().getParameterTypeDescriptors().get(index);
+    if (isSpecializedToNonNativeJsEnum(parameterDeclarationDescriptor, parameterTypeDescriptor)) {
+      // TODO(b/118615488): This should be performed as a transformation in the AST.
+      parameterTypeDescriptor = getEnumBoxType(parameterTypeDescriptor);
+    }
+    return toClosureTypeParameter(methodDescriptor, parameterDescriptor, parameterTypeDescriptor)
         .render();
+  }
+
+  private static boolean isSpecializedToNonNativeJsEnum(
+      TypeDescriptor declarationDescriptor, TypeDescriptor typeDescriptor) {
+    return declarationDescriptor.isTypeVariable() && isNonNativeJsEnum(typeDescriptor);
+  }
+
+  /**
+   * Returns the string representation of a Closure type of a type descriptor used as return type of
+   * a function for use in a JsDoc annotation.
+   */
+  public String getJsDocForReturnType(MethodDescriptor methodDescriptor) {
+    return getFunctionReturnClosureType(methodDescriptor).render();
   }
 
   /** Returns the Closure type for a type descriptor. */
   private ClosureType getClosureType(TypeDescriptor typeDescriptor) {
+    return switch (typeDescriptor) {
+      case PrimitiveTypeDescriptor descriptor -> getClosureTypeForPrimitive(descriptor);
+      case TypeVariable typeVariable -> getClosureTypeForTypeVariable(typeVariable);
+      case ArrayTypeDescriptor descriptor -> getClosureTypeForArray(descriptor);
+      case UnionTypeDescriptor descriptor -> getClosureTypeForUnion(descriptor);
+      case IntersectionTypeDescriptor descriptor -> getClosureTypeForIntersection(descriptor);
+      case DeclaredTypeDescriptor descriptor -> {
 
-    if (typeDescriptor.isPrimitive()) {
-      return getClosureTypeForPrimitive((PrimitiveTypeDescriptor) typeDescriptor);
-    }
+        // TODO(b/118615488): Surface enum boxed types so that this hack is not needed.
+        descriptor = replaceJsEnumArguments(descriptor);
 
-    if (typeDescriptor instanceof TypeVariable) {
-      return getClosureTypeForTypeVariable((TypeVariable) typeDescriptor);
-    }
-
-    if (typeDescriptor.isArray()) {
-      return getClosureTypeForArray((ArrayTypeDescriptor) typeDescriptor);
-    }
-
-    if (typeDescriptor.isUnion()) {
-      return getClosureTypeForUnion((UnionTypeDescriptor) typeDescriptor);
-    }
-
-    if (typeDescriptor.isIntersection()) {
-      return getClosureTypeForIntersection((IntersectionTypeDescriptor) typeDescriptor);
-    }
-
-    DeclaredTypeDescriptor declaredTypeDescriptor = (DeclaredTypeDescriptor) typeDescriptor;
-
-    // TODO(b/118615488): Surface enum boxed types so that this hack is not needed.
-    declaredTypeDescriptor = replaceJsEnumArguments(declaredTypeDescriptor);
-
-    if (declaredTypeDescriptor.isJsFunctionInterface()) {
-      return getClosureTypeForJsFunction(declaredTypeDescriptor);
-    }
-
-    return withNullability(
-        getClosureTypeForDeclaration(
-            declaredTypeDescriptor.getTypeDeclaration(),
-            getClosureTypes(declaredTypeDescriptor.getTypeArgumentDescriptors())),
-        typeDescriptor.isNullable());
+        yield descriptor.isJsFunctionInterface()
+            ? getClosureTypeForJsFunction(descriptor)
+            : withNullability(
+                getClosureTypeForDeclaration(
+                    descriptor.getTypeDeclaration(),
+                    getClosureTypes(descriptor.getTypeArgumentDescriptors())),
+                typeDescriptor.isNullable());
+      }
+      default -> throw new IllegalArgumentException();
+    };
   }
 
   /**
@@ -131,7 +137,7 @@ class ClosureTypesGenerator {
     }
     ImmutableList<TypeDescriptor> replacedTypeArguments =
         typeDescriptor.getTypeArgumentDescriptors().stream()
-            .map(t -> AstUtils.isNonNativeJsEnum(t) ? TypeDescriptors.getEnumBoxType(t) : t)
+            .map(t -> isNonNativeJsEnum(t) ? getEnumBoxType(t) : t)
             .collect(toImmutableList());
 
     if (replacedTypeArguments.equals(typeDescriptor.getTypeArgumentDescriptors())) {
@@ -172,7 +178,16 @@ class ClosureTypesGenerator {
       return UNKNOWN;
     }
 
-    return new ClosureNamedType(environment.getUniqueNameForVariable(typeVariable.toDeclaration()));
+    var typeVariableClosureType =
+        new ClosureNamedTypeWithUnknownNullability(
+            environment.getUniqueNameForVariable(typeVariable.toDeclaration()));
+
+    return switch (typeVariable.getNullabilityAnnotation()) {
+      // TODO(b/138680583): jscompiler does not support non-nullable templates.
+      // case NOT_NULLABLE -> typeVariableClosureType.toNonNullable();
+      case NULLABLE -> typeVariableClosureType.toNullable();
+      default -> typeVariableClosureType;
+    };
   }
 
   /** Returns the Closure type for an array type descriptor. */
@@ -229,8 +244,25 @@ class ClosureTypesGenerator {
     return withNullability(
         new ClosureFunctionType(
             toClosureTypeParameters(functionalMethodDescriptor),
-            getClosureType(functionalMethodDescriptor.getReturnTypeDescriptor())),
+            getFunctionReturnClosureType(functionalMethodDescriptor)),
         typeDescriptor.isNullable());
+  }
+
+  private ClosureType getFunctionReturnClosureType(MethodDescriptor methodDescriptor) {
+    TypeDescriptor returnTypeDescriptor = methodDescriptor.getReturnTypeDescriptor();
+    TypeDescriptor declarationReturnTypeDescriptor =
+        methodDescriptor.getDeclarationDescriptor().getReturnTypeDescriptor();
+    if (isSpecializedToNonNativeJsEnum(declarationReturnTypeDescriptor, returnTypeDescriptor)) {
+      // TODO(b/118615488): This should be performed as a transformation in the AST.
+      returnTypeDescriptor = getEnumBoxType(returnTypeDescriptor);
+    }
+    ClosureType closureReturnType = getClosureType(returnTypeDescriptor);
+
+    // For suspend functions (transpiled to JS Generators), returns the `Generator` type required by
+    // JsCompiler. Otherwise, returns the closure type of the method's return type.
+    return methodDescriptor.isSuspendFunction()
+        ? new ClosureNamedType("Generator", ANY, closureReturnType).toNonNullable()
+        : closureReturnType;
   }
 
   private ImmutableList<ClosureFunctionType.Parameter> toClosureTypeParameters(
@@ -259,15 +291,17 @@ class ClosureTypesGenerator {
     // This now non-js method would still have the parameter marked as JsOptional (since this is
     // a JsMethod in the source) but it can not be emitted as optional in closure because it might
     // be followed by a regular Java varargs parameter which is not optional nor a js varargs.
-    boolean isOptional =
+    boolean isJsOptional =
         parameterDescriptor.isJsOptional()
             && (methodDescriptor.isJsMember() || methodDescriptor.isJsFunction());
     parameterTypeDescriptor =
         isJsVarargs
             ? ((ArrayTypeDescriptor) parameterTypeDescriptor).getComponentTypeDescriptor()
             : parameterTypeDescriptor;
+
+    ClosureType closureParameterType = getClosureType(parameterTypeDescriptor);
     return new ClosureFunctionType.Parameter(
-        isJsVarargs, isOptional, getClosureType(parameterTypeDescriptor));
+        isJsVarargs, isJsOptional || parameterDescriptor.isOptional(), closureParameterType);
   }
 
   /** Returns Closure types for collection of type descriptors. */
@@ -559,22 +593,15 @@ class ClosureTypesGenerator {
 
   /** Represents function types. */
   private static class ClosureFunctionType extends ClosureType {
-    private static class Parameter {
-      private final boolean isVarargs;
-      private final boolean isOptional;
-      private final ClosureType closureType;
 
-      Parameter(boolean isVarargs, boolean isOptional, ClosureType closureType) {
+    private record Parameter(boolean isVarargs, boolean isOptional, ClosureType closureType) {
+      private Parameter {
         checkArgument(!(isVarargs && isOptional));
-        this.isVarargs = isVarargs;
-        this.isOptional = isOptional;
-        this.closureType = closureType;
       }
 
       String render() {
-        Object[] args =
-            new Object[] {isVarargs ? "..." : "", closureType.render(), isOptional ? "=" : ""};
-        return String.format("%s%s%s", args);
+        return String.format(
+            "%s%s%s", isVarargs ? "..." : "", closureType.render(), isOptional ? "=" : "");
       }
     }
 
@@ -628,7 +655,7 @@ class ClosureTypesGenerator {
           .put(NUMBER.render(), NUMBER)
           .put(BOOLEAN.render(), BOOLEAN)
           .put(VOID.render(), VOID)
-          .build();
+          .buildOrThrow();
 
   /**
    * Map from typed eclarations that are mapped into closure native types to the corresponding type
@@ -657,6 +684,6 @@ class ClosureTypesGenerator {
                   TypeDescriptors.get().kotlinNothing.getTypeDeclaration(),
                   UNKNOWN.toNonNullable());
             }
-            return builder.build();
+            return builder.buildOrThrow();
           });
 }

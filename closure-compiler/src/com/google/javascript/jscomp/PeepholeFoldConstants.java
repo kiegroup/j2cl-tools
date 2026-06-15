@@ -70,42 +70,23 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   @Override
   Node optimizeSubtree(Node subtree) {
-    switch (subtree.getToken()) {
-      case OPTCHAIN_CALL:
-      case CALL:
-        return tryFoldUselessObjectDotDefinePropertiesCall(subtree);
-
-      case NEW:
-        return tryFoldCtorCall(subtree);
-
-      case TYPEOF:
-        return tryFoldTypeof(subtree);
-
-      case ITER_SPREAD:
-        return tryFoldSpread(subtree);
-
-      case ARRAYLIT:
-      case OBJECTLIT:
-        return tryFlattenArrayOrObjectLit(subtree);
-
-      case NOT:
-      case POS:
-      case NEG:
-      case BITNOT:
+    return switch (subtree.getToken()) {
+      case OPTCHAIN_CALL, CALL -> tryFoldUselessObjectDotDefinePropertiesCall(subtree);
+      case NEW -> tryFoldCtorCall(subtree);
+      case TYPEOF -> tryFoldTypeof(subtree);
+      case ITER_SPREAD -> tryFoldSpread(subtree);
+      case ARRAYLIT, OBJECTLIT -> tryFlattenArrayOrObjectLit(subtree);
+      case NOT, POS, NEG, BITNOT -> {
         tryReduceOperandsForOp(subtree);
-        return tryFoldUnaryOperator(subtree);
-
-      case VOID:
-        return tryReduceVoid(subtree);
-
-      case OPTCHAIN_GETPROP:
-      case GETPROP:
-        return tryFoldGetProp(subtree);
-
-      default:
+        yield tryFoldUnaryOperator(subtree);
+      }
+      case VOID -> tryReduceVoid(subtree);
+      case OPTCHAIN_GETPROP, GETPROP -> tryFoldGetProp(subtree);
+      default -> {
         tryReduceOperandsForOp(subtree);
-        return tryFoldBinaryOperator(subtree);
-    }
+        yield tryFoldBinaryOperator(subtree);
+      }
+    };
   }
 
   private Node tryFoldBinaryOperator(Node subtree) {
@@ -490,6 +471,28 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
+    // Only certain RHS operators are supported.
+    var operator = right.getToken();
+    Token newType =
+        switch (operator) {
+          case ADD -> Token.ASSIGN_ADD;
+          case BITAND -> Token.ASSIGN_BITAND;
+          case BITOR -> Token.ASSIGN_BITOR;
+          case BITXOR -> Token.ASSIGN_BITXOR;
+          case DIV -> Token.ASSIGN_DIV;
+          case LSH -> Token.ASSIGN_LSH;
+          case MOD -> Token.ASSIGN_MOD;
+          case MUL -> Token.ASSIGN_MUL;
+          case RSH -> Token.ASSIGN_RSH;
+          case SUB -> Token.ASSIGN_SUB;
+          case URSH -> Token.ASSIGN_URSH;
+          case EXPONENT -> Token.ASSIGN_EXPONENT;
+          default -> null;
+        };
+    if (newType == null) {
+      return n;
+    }
+
     // Tries to convert x = x + y -> x += y;
     if (!right.hasChildren() || right.getSecondChild() != right.getLastChild()) {
       // RHS must have two children.
@@ -500,60 +503,39 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
+    // We can fold any 'leaf' that
+    // 1. is equal to the left side of the assignment
+    // 2. is either the first child of the operator or any child of the operator if the operator
+    //    is commutative
+    // 3. Also consider recursively discoverable children of the operator if the operator is
+    //    associative.
+    //
+    // For example, consider x = x + y + z;
+    // because + is left associative, the tree looks like `(x + y) + z` so we need to look deeper
+    // into the tree to find x.
+    // Right now we only recurse one level deep which allows use to handle x = x + y + z but not
+    // x = x + y + z + w.
+
     Node newRight;
     if (areNodesEqualForInlining(left, right.getFirstChild())) {
       newRight = right.getLastChild();
-    } else if (NodeUtil.isCommutative(right.getToken())
+    } else if (NodeUtil.isCommutative(operator)
         && areNodesEqualForInlining(left, right.getLastChild())) {
       newRight = right.getFirstChild();
+    } else if (NodeUtil.isAssociative(operator)
+        && right.getFirstChild().getToken() == operator
+        && areNodesEqualForInlining(left, right.getFirstFirstChild())) {
+
+      var newLeft = right.getFirstChild().getLastChild().detach();
+      right.removeFirstChild();
+      right.addChildToFront(newLeft);
+      newRight = right;
+
     } else {
       return n;
     }
 
-    Token newType = null;
-    switch (right.getToken()) {
-      case ADD:
-        newType = Token.ASSIGN_ADD;
-        break;
-      case BITAND:
-        newType = Token.ASSIGN_BITAND;
-        break;
-      case BITOR:
-        newType = Token.ASSIGN_BITOR;
-        break;
-      case BITXOR:
-        newType = Token.ASSIGN_BITXOR;
-        break;
-      case DIV:
-        newType = Token.ASSIGN_DIV;
-        break;
-      case LSH:
-        newType = Token.ASSIGN_LSH;
-        break;
-      case MOD:
-        newType = Token.ASSIGN_MOD;
-        break;
-      case MUL:
-        newType = Token.ASSIGN_MUL;
-        break;
-      case RSH:
-        newType = Token.ASSIGN_RSH;
-        break;
-      case SUB:
-        newType = Token.ASSIGN_SUB;
-        break;
-      case URSH:
-        newType = Token.ASSIGN_URSH;
-        break;
-      case EXPONENT:
-        newType = Token.ASSIGN_EXPONENT;
-        break;
-      default:
-        return n;
-    }
-
-    Node newNode = new Node(newType,
-        left.detach(), newRight.detach());
+    Node newNode = new Node(newType, left.detach(), newRight.detach());
     n.replaceWith(newNode);
 
     reportChangeToEnclosingScope(newNode);
@@ -1140,22 +1122,16 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     int rvalInt = rightVal.intValue();
     int bits = ecmascriptToInt32(leftVal);
 
-    double result;
-    switch (n.getToken()) {
-      case LSH:
-        result = bits << rvalInt;
-        break;
-      case RSH:
-        result = bits >> rvalInt;
-        break;
-      case URSH:
-        // JavaScript always treats the result of >>> as unsigned.
-        // We must force Java to do the same here.
-        result = 0xffffffffL & (bits >>> rvalInt);
-        break;
-      default:
-        throw new AssertionError("Unknown shift operator: " + n.getToken());
-    }
+    double result =
+        switch (n.getToken()) {
+          case LSH -> bits << rvalInt;
+          case RSH -> bits >> rvalInt;
+          case URSH ->
+              // JavaScript always treats the result of >>> as unsigned.
+              // We must force Java to do the same here.
+              0xffffffffL & (bits >>> rvalInt);
+          default -> throw new AssertionError("Unknown shift operator: " + n.getToken());
+        };
 
     Node newNumber = NodeUtil.numberNode(result, n);
     reportChangeToEnclosingScope(n);

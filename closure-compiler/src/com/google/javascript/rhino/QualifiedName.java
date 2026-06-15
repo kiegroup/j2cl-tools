@@ -128,6 +128,8 @@ public abstract class QualifiedName {
     return sb.toString();
   }
 
+  public abstract int getComponentCount();
+
   /**
    * Returns a new qualified name object with {@code this} name as the owner and the given string as
    * the property name.
@@ -177,6 +179,11 @@ public abstract class QualifiedName {
     }
 
     @Override
+    public int getComponentCount() {
+      return size;
+    }
+
+    @Override
     public boolean matches(Node n) {
       int pos = size - 1;
       while (pos > 0 && n.isGetProp()) {
@@ -191,17 +198,12 @@ public abstract class QualifiedName {
       }
 
       String term = this.terms.get(0);
-      switch (n.getToken()) {
-        case NAME:
-        case MEMBER_FUNCTION_DEF:
-          return RhinoStringPool.uncheckedEquals(term, n.getString());
-        case THIS:
-          return RhinoStringPool.uncheckedEquals(term, THIS);
-        case SUPER:
-          return RhinoStringPool.uncheckedEquals(term, SUPER);
-        default:
-          return false;
-      }
+      return switch (n.getToken()) {
+        case NAME, MEMBER_FUNCTION_DEF -> RhinoStringPool.uncheckedEquals(term, n.getString());
+        case THIS -> RhinoStringPool.uncheckedEquals(term, THIS);
+        case SUPER -> RhinoStringPool.uncheckedEquals(term, SUPER);
+        default -> false;
+      };
     }
   }
 
@@ -242,6 +244,11 @@ public abstract class QualifiedName {
           && RhinoStringPool.uncheckedEquals(n.getString(), prop)
           && owner.matches(n.getFirstChild());
     }
+
+    @Override
+    public int getComponentCount() {
+      return owner.getComponentCount() + 1;
+    }
   }
 
   /**
@@ -262,18 +269,12 @@ public abstract class QualifiedName {
 
     @Override
     public String getComponent() {
-      switch (node.getToken()) {
-        case THIS:
-          return THIS;
-        case SUPER:
-          return SUPER;
-        case NAME:
-        case GETPROP:
-        case MEMBER_FUNCTION_DEF:
-          return node.getString();
-        default:
-          throw new IllegalStateException("Not a qualified name: " + node);
-      }
+      return switch (node.getToken()) {
+        case THIS -> THIS;
+        case SUPER -> SUPER;
+        case NAME, GETPROP, MEMBER_FUNCTION_DEF -> node.getString();
+        default -> throw new IllegalStateException("Not a qualified name: " + node);
+      };
     }
 
     @Override
@@ -294,6 +295,17 @@ public abstract class QualifiedName {
     @Override
     public boolean matches(Node n) {
       return n.matchesQualifiedName(node);
+    }
+
+    @Override
+    public int getComponentCount() {
+      int count = 1;
+      Node current = this.node;
+      while (current.isGetProp()) {
+        count++;
+        current = current.getFirstChild();
+      }
+      return count;
     }
   }
 

@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.MoreObjects;
@@ -43,12 +42,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -60,17 +53,23 @@ import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 
 /** Compiler options */
-public class CompilerOptions implements Serializable {
+public class CompilerOptions {
   // The number of characters after which we insert a line break in the code
   static final int DEFAULT_LINE_LENGTH_THRESHOLD = 500;
 
-  private static final char[] POLYMER_PROPERTY_RESERVED_FIRST_CHARS =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZ$".toCharArray();
-  private static final char[] POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS = "_$".toCharArray();
-  private static final char[] ANGULAR_PROPERTY_RESERVED_FIRST_CHARS = {'$'};
+  private static final ImmutableSet<Character> POLYMER_PROPERTY_RESERVED_FIRST_CHARS =
+      ImmutableSet.copyOf(Chars.asList("ABCDEFGHIJKLMNOPQRSTUVWXYZ$".toCharArray()));
+  private static final ImmutableSet<Character> POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS =
+      ImmutableSet.of('_', '$');
+  private static final ImmutableSet<Character> ANGULAR_PROPERTY_RESERVED_FIRST_CHARS =
+      ImmutableSet.of('$');
 
   public static ImmutableSet<Character> getAngularPropertyReservedFirstChars() {
-    return ImmutableSet.copyOf(Chars.asList(ANGULAR_PROPERTY_RESERVED_FIRST_CHARS));
+    return ANGULAR_PROPERTY_RESERVED_FIRST_CHARS;
+  }
+
+  public static ImmutableSet<Character> getPolymerPropertyReservedFirstChars() {
+    return POLYMER_PROPERTY_RESERVED_FIRST_CHARS;
   }
 
   public boolean shouldRunCrossChunkCodeMotion() {
@@ -147,7 +146,8 @@ public class CompilerOptions implements Serializable {
     YEAR_2021(2021, FeatureSet.BROWSER_2021),
     YEAR_2022(2022, FeatureSet.BROWSER_2022),
     YEAR_2023(2023, FeatureSet.BROWSER_2023),
-    YEAR_2024(2024, FeatureSet.BROWSER_2024);
+    YEAR_2024(2024, FeatureSet.BROWSER_2024),
+    YEAR_2025(2025, FeatureSet.BROWSER_2025);
 
     private final int year;
     private final FeatureSet featureSet;
@@ -161,7 +161,8 @@ public class CompilerOptions implements Serializable {
             2021, YEAR_2021,
             2022, YEAR_2022,
             2023, YEAR_2023,
-            2024, YEAR_2024
+            2024, YEAR_2024,
+            2025, YEAR_2025
             // go/keep-sorted end
             );
 
@@ -173,7 +174,7 @@ public class CompilerOptions implements Serializable {
     static BrowserFeaturesetYear from(int year) {
       checkState(
           YEAR_MAP.containsKey(year),
-          "Illegal browser_featureset_year=%s. We support values 2012, or 2018..2024 only",
+          "Illegal browser_featureset_year=%s. We support values 2012, or 2018..2025 only",
           year);
       return YEAR_MAP.get(year);
     }
@@ -184,6 +185,8 @@ public class CompilerOptions implements Serializable {
       options.languageOutIsDefaultStrict = Optional.of(true);
       options.setDefineToNumberLiteral("goog.FEATURESET_YEAR", year);
       options.setDefineToBooleanLiteral("$jscomp.ASSUME_ES5", year > 2012);
+      options.setDefineToBooleanLiteral("$jscomp.ASSUME_ES6", year >= 2018);
+      options.setDefineToBooleanLiteral("$jscomp.ASSUME_ES2020", year >= 2021);
     }
 
     FeatureSet getFeatureSet() {
@@ -311,13 +314,6 @@ public class CompilerOptions implements Serializable {
      * code being compiled. This is useful for incremental type checking.
      */
     GENERATE_IJS,
-
-    /**
-     * The compiler should run the same checks as used during type-only interface generation, but
-     * run them after typechecking to give better error messages. This only makes sense in
-     * --checks_only mode.
-     */
-    RUN_IJS_CHECKS_LATE,
   }
 
   private IncrementalCheckMode incrementalCheckMode = IncrementalCheckMode.OFF;
@@ -326,7 +322,6 @@ public class CompilerOptions implements Serializable {
     incrementalCheckMode = value;
     switch (value) {
       case OFF:
-      case RUN_IJS_CHECKS_LATE:
         break;
       case GENERATE_IJS:
         setPreserveTypeAnnotations(true);
@@ -337,10 +332,6 @@ public class CompilerOptions implements Serializable {
 
   public boolean shouldGenerateTypedExterns() {
     return incrementalCheckMode == IncrementalCheckMode.GENERATE_IJS;
-  }
-
-  public boolean shouldRunTypeSummaryChecksLate() {
-    return incrementalCheckMode == IncrementalCheckMode.RUN_IJS_CHECKS_LATE;
   }
 
   private Config.JsDocParsing parseJsDocDocumentation = Config.JsDocParsing.TYPES_ONLY;
@@ -859,6 +850,28 @@ public class CompilerOptions implements Serializable {
   /** Isolates injected polyfills from the global scope. */
   private boolean isolatePolyfills = false;
 
+  /**
+   * Configures polyfill injection of all polyfills newer than the given language mode, regardless
+   * of whether they are actually referenced in the code being compiled.
+   *
+   * <p>How is this different from --inject_library? --inject_library takes a specific JS file
+   * defined in the jscomp/js package, and injects that and all of its dependencies. This option
+   * takes a language mode.
+   *
+   * <p>For example, the common use of `--inject_library` is passing `--inject_library=es6_runtime`.
+   * es6_runtime.js is a file that contains both all the ES6 polyfills and also ES6 transpilation
+   * utilities (library code referenced by transpiled code). So
+   *
+   * <ul>
+   *   <li>es6_runtime includes transpilation utilities, not just polyfills.
+   *       `--inject_polyfills_newer_than=ES5` will not add transpilation utilities, just the
+   *       polyfills,
+   *   <li>if someone forgot to add a new polyfill to es6_runtime.js, then `--inject_library` will
+   *       not add it, but `--inject_polyfills_newer_than=ES5` will add it.
+   * </ul>
+   */
+  private LanguageMode injectPolyfillsNewerThan = null;
+
   /** Whether to instrument reentrant functions for AsyncContext. */
   private boolean instrumentAsyncContext = false;
 
@@ -1163,19 +1176,51 @@ public class CompilerOptions implements Serializable {
   /** List of conformance configs to use in CheckConformance. */
   private ImmutableList<ConformanceConfig> conformanceConfigs = ImmutableList.of();
 
+  private ConformanceReportingMode conformanceReportingMode =
+      ConformanceReportingMode.IGNORE_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG;
+
+  public ConformanceReportingMode getConformanceReportingMode() {
+    return conformanceReportingMode;
+  }
+
+  public void setConformanceReportingMode(ConformanceReportingMode mode) {
+    this.conformanceReportingMode = mode;
+  }
+
   /**
-   * Remove the first match of this regex from any paths when checking conformance whitelists.
+   * Whether to respect the library-level non-allowlisted conformance behavior specified in the
+   * conformance config.
+   */
+  public static enum ConformanceReportingMode {
+    /**
+     * Used when running conformance checks at the binary level. It ignores the library-level
+     * conformance behavior specified in the conformance config and always report the conformance
+     * violations. For example, setting this allows the compiler to ignore the "RECORD_ONLY"
+     * library-level behavior specified in the config and unconditionally report the non-allowlisted
+     * violations when it is running at the binary level.
+     */
+    IGNORE_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG, // default
+    /**
+     * Used when running conformance checks at the library level. It respects the library-level
+     * conformance behavior specified in the conformance config and only reports the conformance
+     * violations according to the behavior. For example, setting this respects the "RECORD_ONLY"
+     * library-level behavior specified in the Boq Web configs and only records the violations when
+     * it is running at the library level, and also respects the "REPORT_AS_BUILD_ERROR" behavior
+     * specified in the global conformance configs to report errors for go/jscp at the library
+     * level.
+     */
+    RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG
+  }
+
+  /**
+   * Remove the first match of this regex from any paths when checking conformance allowlists.
    *
    * <p>You can use this to make absolute paths relative to the root of your source tree. This is
    * useful to work around CI and build systems that use absolute paths.
    */
   private Optional<Pattern> conformanceRemoveRegexFromPath =
       Optional.of(
-          // The regex uses lookahead because we want to be able to identify generated files. For a
-          // path like "blaze-out/directory/bin/some/file.js" we strip out the entire prefix,
-          // resulting in a reported path of "some/file.js". For generated files, we only strip the
-          // first two segments, leaving "genfiles/some/file.js".
-          Pattern.compile("^((.*/)?google3/)?(/?(blaze|bazel)-out/[^/]+/(bin/|(?=genfiles/)))?"));
+          Pattern.compile("^((.*/)?google3/)?(/?(blaze|bazel)-out/[^/]+/(bin|genfiles)/)?"));
 
   public void setConformanceRemoveRegexFromPath(Optional<Pattern> pattern) {
     conformanceRemoveRegexFromPath = pattern;
@@ -1435,12 +1480,12 @@ public class CompilerOptions implements Serializable {
     for (Map.Entry<String, Object> entry : this.defineReplacements.entrySet()) {
       String name = entry.getKey();
       Object value = entry.getValue();
-      if (value instanceof Boolean) {
-        map.put(name, NodeUtil.booleanNode(((Boolean) value).booleanValue()));
-      } else if (value instanceof Number) {
-        map.put(name, NodeUtil.numberNode(((Number) value).doubleValue(), null));
-      } else if (value instanceof String) {
-        map.put(name, IR.string((String) value));
+      if (value instanceof Boolean b) {
+        map.put(name, NodeUtil.booleanNode(b.booleanValue()));
+      } else if (value instanceof Number number) {
+        map.put(name, NodeUtil.numberNode(number.doubleValue(), null));
+      } else if (value instanceof String string) {
+        map.put(name, IR.string(string));
       } else {
         throw new IllegalStateException(String.valueOf(value));
       }
@@ -1481,6 +1526,24 @@ public class CompilerOptions implements Serializable {
   /** Whether the warnings guard in this Options object disables the given group of warnings. */
   boolean disables(DiagnosticGroup group) {
     return this.warningsGuard.mustRunChecks(group) == Tri.FALSE;
+  }
+
+  private ImmutableList<String> unknownDefinesToIgnore = ImmutableList.of();
+
+  public void setUnknownDefinesToIgnore(ImmutableList<String> unknownDefinesToIgnore) {
+    this.unknownDefinesToIgnore = unknownDefinesToIgnore;
+  }
+
+  public void addUnknownDefinesToIgnore(ImmutableList<String> unknownDefinesToIgnore) {
+    this.unknownDefinesToIgnore =
+        ImmutableList.<String>builder()
+            .addAll(this.unknownDefinesToIgnore)
+            .addAll(unknownDefinesToIgnore)
+            .build();
+  }
+
+  ImmutableList<String> getUnknownDefinesToIgnore() {
+    return this.unknownDefinesToIgnore;
   }
 
   /** Configure the given type of warning to the given level. */
@@ -2391,6 +2454,26 @@ public class CompilerOptions implements Serializable {
     this.defineReplacements.putAll(defineReplacements);
   }
 
+  private @Nullable String enableZonesDefineName = null;
+
+  public @Nullable String getEnableZonesDefineName() {
+    return this.enableZonesDefineName;
+  }
+
+  public void setEnableZonesDefineName(@Nullable String enableZonesDefineName) {
+    this.enableZonesDefineName = enableZonesDefineName;
+  }
+
+  private @Nullable Pattern zoneInputPattern = null;
+
+  public @Nullable Pattern getZoneInputPattern() {
+    return this.zoneInputPattern;
+  }
+
+  public void setZoneInputPattern(@Nullable Pattern zoneInputPattern) {
+    this.zoneInputPattern = zoneInputPattern;
+  }
+
   public void setRewriteGlobalDeclarationsForTryCatchWrapping(boolean rewrite) {
     this.rewriteGlobalDeclarationsForTryCatchWrapping = rewrite;
   }
@@ -2607,7 +2690,15 @@ public class CompilerOptions implements Serializable {
     return this.isolatePolyfills;
   }
 
-  /** Sets whether to isolate polyfills from the global scope. */
+  public void setInjectPolyfillsNewerThan(LanguageMode injectPolyfillsNewerThan) {
+    this.injectPolyfillsNewerThan = injectPolyfillsNewerThan;
+  }
+
+  LanguageMode getInjectPolyfillsNewerThan() {
+    return this.injectPolyfillsNewerThan;
+  }
+
+  /** Sets whether to transpile async functions and generators for AsyncContext. */
   public void setInstrumentAsyncContext(boolean instrumentAsyncContext) {
     this.instrumentAsyncContext = instrumentAsyncContext;
     this.setDefineToBooleanLiteral("$jscomp.INSTRUMENT_ASYNC_CONTEXT", instrumentAsyncContext);
@@ -2659,14 +2750,22 @@ public class CompilerOptions implements Serializable {
     return conformanceConfigs;
   }
 
-  /** Both enable and configure conformance checks, if non-null. */
-  @GwtIncompatible("Conformance")
+  /**
+   * Both enable and configure conformance checks, if non-null.
+   *
+   * @deprecated See go/binary-level-conformance-deprecated.
+   */
+  @Deprecated // See go/binary-level-conformance-deprecated.
   public void setConformanceConfig(ConformanceConfig conformanceConfig) {
     setConformanceConfigs(ImmutableList.of(conformanceConfig));
   }
 
-  /** Both enable and configure conformance checks, if non-null. */
-  @GwtIncompatible("Conformance")
+  /**
+   * Both enable and configure conformance checks, if non-null.
+   *
+   * @deprecated See go/binary-level-conformance-deprecated.
+   */
+  @Deprecated // See go/binary-level-conformance-deprecated.
   public void setConformanceConfigs(List<ConformanceConfig> configs) {
     this.conformanceConfigs = ImmutableList.copyOf(configs);
   }
@@ -2737,19 +2836,6 @@ public class CompilerOptions implements Serializable {
     this.chunkOutputType = chunkOutputType;
   }
 
-  /** Serializes compiler options to a stream. */
-  @GwtIncompatible("ObjectOutputStream")
-  public void serialize(OutputStream objectOutputStream) throws IOException {
-    new ObjectOutputStream(objectOutputStream).writeObject(this);
-  }
-
-  /** Deserializes compiler options from a stream. */
-  @GwtIncompatible("ObjectInputStream")
-  public static CompilerOptions deserialize(InputStream objectInputStream)
-      throws IOException, ClassNotFoundException {
-    return (CompilerOptions) new ObjectInputStream(objectInputStream).readObject();
-  }
-
   public void setStrictMessageReplacement(boolean strictMessageReplacement) {
     this.strictMessageReplacement = strictMessageReplacement;
   }
@@ -2787,6 +2873,7 @@ public class CompilerOptions implements Serializable {
         .add("computeFunctionSideEffects", computeFunctionSideEffects)
         .add("conformanceConfigs", getConformanceConfigs())
         .add("conformanceRemoveRegexFromPath", conformanceRemoveRegexFromPath)
+        .add("conformanceReportingMode", conformanceReportingMode)
         .add("continueAfterErrors", canContinueAfterErrors())
         .add("convertToDottedProperties", convertToDottedProperties)
         .add("crossChunkCodeMotion", crossChunkCodeMotion)
@@ -2948,18 +3035,13 @@ public class CompilerOptions implements Serializable {
       if (value == null) {
         return null;
       }
-      switch (value) {
-        case "NONE":
-          return InstrumentOption.NONE;
-        case "LINE":
-          return InstrumentOption.LINE_ONLY;
-        case "BRANCH":
-          return InstrumentOption.BRANCH_ONLY;
-        case "PRODUCTION":
-          return InstrumentOption.PRODUCTION;
-        default:
-          return null;
-      }
+      return switch (value) {
+        case "NONE" -> InstrumentOption.NONE;
+        case "LINE" -> InstrumentOption.LINE_ONLY;
+        case "BRANCH" -> InstrumentOption.BRANCH_ONLY;
+        case "PRODUCTION" -> InstrumentOption.PRODUCTION;
+        default -> null;
+      };
     }
   }
 
@@ -3037,13 +3119,10 @@ public class CompilerOptions implements Serializable {
 
     /** Whether this language mode defaults to strict mode */
     boolean isDefaultStrict() {
-      switch (this) {
-        case ECMASCRIPT3:
-        case ECMASCRIPT5:
-          return false;
-        default:
-          return true;
-      }
+      return switch (this) {
+        case ECMASCRIPT3, ECMASCRIPT5 -> false;
+        default -> true;
+      };
     }
 
     /** Returns a list of valid names used to select a `LanguageMode` on the command line. */
@@ -3084,39 +3163,24 @@ public class CompilerOptions implements Serializable {
     }
 
     public FeatureSet toFeatureSet() {
-      switch (this) {
-        case ECMASCRIPT3:
-          return FeatureSet.ES3;
-        case ECMASCRIPT5:
-        case ECMASCRIPT5_STRICT:
-          return FeatureSet.ES5;
-        case ECMASCRIPT_2015:
-          return FeatureSet.ES2015_MODULES;
-        case ECMASCRIPT_2016:
-          return FeatureSet.ES2016_MODULES;
-        case ECMASCRIPT_2017:
-          return FeatureSet.ES2017_MODULES;
-        case ECMASCRIPT_2018:
-          return FeatureSet.ES2018_MODULES;
-        case ECMASCRIPT_2019:
-          return FeatureSet.ES2019_MODULES;
-        case ECMASCRIPT_2020:
-          return FeatureSet.ES2020_MODULES;
-        case ECMASCRIPT_2021:
-          return FeatureSet.ES2021_MODULES;
-        case ECMASCRIPT_NEXT:
-          return FeatureSet.ES_NEXT;
-        case NO_TRANSPILE:
-        case UNSTABLE:
-          return FeatureSet.ES_UNSTABLE;
-        case UNSUPPORTED:
-          return FeatureSet.ES_UNSUPPORTED;
-        case STABLE:
-          throw new UnsupportedOperationException(
-              "STABLE has different feature sets for language in and out. "
-                  + "Use STABLE_IN or STABLE_OUT.");
-      }
-      throw new IllegalStateException();
+      return switch (this) {
+        case ECMASCRIPT3 -> FeatureSet.ES3;
+        case ECMASCRIPT5, ECMASCRIPT5_STRICT -> FeatureSet.ES5;
+        case ECMASCRIPT_2015 -> FeatureSet.ES2015_MODULES;
+        case ECMASCRIPT_2016 -> FeatureSet.ES2016_MODULES;
+        case ECMASCRIPT_2017 -> FeatureSet.ES2017_MODULES;
+        case ECMASCRIPT_2018 -> FeatureSet.ES2018_MODULES;
+        case ECMASCRIPT_2019 -> FeatureSet.ES2019_MODULES;
+        case ECMASCRIPT_2020 -> FeatureSet.ES2020_MODULES;
+        case ECMASCRIPT_2021 -> FeatureSet.ES2021_MODULES;
+        case ECMASCRIPT_NEXT -> FeatureSet.ES_NEXT;
+        case NO_TRANSPILE, UNSTABLE -> FeatureSet.ES_UNSTABLE;
+        case UNSUPPORTED -> FeatureSet.ES_UNSUPPORTED;
+        case STABLE ->
+            throw new UnsupportedOperationException(
+                "STABLE has different feature sets for language in and out. "
+                    + "Use STABLE_IN or STABLE_OUT.");
+      };
     }
   }
 
@@ -3169,11 +3233,23 @@ public class CompilerOptions implements Serializable {
     IIFE; // The output should be wrapped in an IIFE to isolate global variables.
   }
 
+  /** What segment of the compilation to run. */
+  public static enum SegmentOfCompilationToRun {
+    ENTIRE_COMPILATION, // all JSC compilation in a single action.
+    CHECKS, // all checks
+    OPTIMIZATIONS_FIRST_HALF, // first half of optimizations
+    OPTIMIZATIONS_SECOND_HALF, // second half of optimizations
+    OPTIMIZATIONS, // all optimizations
+    OPTIMIZATIONS_AND_FINALIZATIONS, // all optimizations and finalizations in one action
+    FINALIZATIONS, // all finalizations
+  }
+
   /** A mode enum used to indicate the alias strings policy for the AliasStrings pass */
   public static enum AliasStringsMode {
     NONE, // Do not alias string literals.
     LARGE, // Alias all string literals with a length greater than 100 characters.
-    ALL // Alias all string literals.
+    ALL, // Alias all string literals where it may improve code size
+    ALL_AGGRESSIVE // Alias all string regardless of code size
   }
 
   /**
@@ -3297,49 +3373,20 @@ public class CompilerOptions implements Serializable {
     return this;
   }
 
-  public char[] getPropertyReservedNamingFirstChars() {
-    char[] reservedChars = null;
+  public ImmutableSet<Character> getPropertyReservedNamingFirstChars() {
     if (polymerPass) {
-      if (reservedChars == null) {
-        reservedChars = POLYMER_PROPERTY_RESERVED_FIRST_CHARS;
-      } else {
-        reservedChars = Chars.concat(reservedChars, POLYMER_PROPERTY_RESERVED_FIRST_CHARS);
-      }
+      return POLYMER_PROPERTY_RESERVED_FIRST_CHARS;
     } else if (angularPass) {
-      if (reservedChars == null) {
-        reservedChars = ANGULAR_PROPERTY_RESERVED_FIRST_CHARS;
-      } else {
-        reservedChars = Chars.concat(reservedChars, ANGULAR_PROPERTY_RESERVED_FIRST_CHARS);
-      }
+      return ANGULAR_PROPERTY_RESERVED_FIRST_CHARS;
     }
-    return reservedChars;
+    return ImmutableSet.of();
   }
 
-  public char[] getPropertyReservedNamingNonFirstChars() {
-    char[] reservedChars = null;
+  public ImmutableSet<Character> getPropertyReservedNamingNonFirstChars() {
     if (polymerPass) {
-      if (reservedChars == null) {
-        reservedChars = POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS;
-      } else {
-        reservedChars = Chars.concat(reservedChars, POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS);
-      }
+      return POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS;
     }
-    return reservedChars;
-  }
-
-  @GwtIncompatible("ObjectOutputStream")
-  private void writeObject(ObjectOutputStream out) throws IOException {
-    out.defaultWriteObject();
-    out.writeObject(outputCharset == null ? null : outputCharset.name());
-  }
-
-  @GwtIncompatible("ObjectInputStream")
-  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    in.defaultReadObject();
-    String outputCharsetName = (String) in.readObject();
-    if (outputCharsetName != null) {
-      outputCharset = Charset.forName(outputCharsetName);
-    }
+    return ImmutableSet.of();
   }
 
   boolean shouldOptimize() {

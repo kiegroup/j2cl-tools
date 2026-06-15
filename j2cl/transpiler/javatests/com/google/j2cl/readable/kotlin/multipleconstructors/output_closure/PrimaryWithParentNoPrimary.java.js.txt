@@ -1,0 +1,9 @@
+goog.module('multipleconstructors.PrimaryWithParentNoPrimary');
+
+goog.require('javaemul.internal.JsUtils');
+goog.require('kotlin.jvm.internal.DefaultConstructorMarker');
+goog.require('multipleconstructors.ParentWithoutPrimary');
+goog.require('nativebootstrap.Util');
+
+const PrimaryWithParentNoPrimary = goog.require('multipleconstructors.PrimaryWithParentNoPrimary$impl');
+exports = PrimaryWithParentNoPrimary;

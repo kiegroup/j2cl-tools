@@ -40,7 +40,7 @@ public class FieldDefinitionFactory {
     FieldDefinition result;
     if (holder.containsKey(property)) {
       result = holder.get(property);
-    } else if (typeUtils.isSimpleType(property)) {
+    } else if (property.getKind().isPrimitive() || typeUtils.isSimpleType(property)) {
       result = new BasicTypeFieldDefinition(property, context);
     } else if (context.getTypeUtils().isIterable(property)) {
       result = new IterableBeanFieldDefinition(property, context);

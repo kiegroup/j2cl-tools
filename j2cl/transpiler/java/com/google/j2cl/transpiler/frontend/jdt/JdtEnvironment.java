@@ -18,9 +18,8 @@ package com.google.j2cl.transpiler.frontend.jdt;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.HAS_NO_SIDE_EFFECTS_ANNOTATION_NAME;
-import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.UNCHECKED_CAST_ANNOTATION_NAME;
-import static com.google.j2cl.transpiler.frontend.common.FrontendConstants.WASM_ANNOTATION_NAME;
+import static com.google.j2cl.transpiler.frontend.common.SupportedAnnotations.isSupportedAnnotation;
+import static java.util.stream.Collectors.toCollection;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
@@ -29,6 +28,8 @@ import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.j2cl.common.InternalCompilerError;
 import com.google.j2cl.common.SourcePosition;
+import com.google.j2cl.transpiler.ast.Annotation;
+import com.google.j2cl.transpiler.ast.ArrayConstant;
 import com.google.j2cl.transpiler.ast.ArrayLength;
 import com.google.j2cl.transpiler.ast.ArrayTypeDescriptor;
 import com.google.j2cl.transpiler.ast.BinaryOperator;
@@ -49,13 +50,14 @@ import com.google.j2cl.transpiler.ast.PrefixOperator;
 import com.google.j2cl.transpiler.ast.PrimitiveTypes;
 import com.google.j2cl.transpiler.ast.TypeDeclaration;
 import com.google.j2cl.transpiler.ast.TypeDeclaration.Kind;
+import com.google.j2cl.transpiler.ast.TypeDeclaration.SourceLanguage;
 import com.google.j2cl.transpiler.ast.TypeDescriptor;
 import com.google.j2cl.transpiler.ast.TypeDescriptors;
+import com.google.j2cl.transpiler.ast.TypeLiteral;
 import com.google.j2cl.transpiler.ast.TypeVariable;
 import com.google.j2cl.transpiler.ast.Variable;
 import com.google.j2cl.transpiler.ast.Visibility;
 import com.google.j2cl.transpiler.frontend.common.Nullability;
-import com.google.j2cl.transpiler.frontend.common.PackageInfoCache;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -70,6 +72,7 @@ import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.IAnnotationBinding;
 import org.eclipse.jdt.core.dom.IBinding;
+import org.eclipse.jdt.core.dom.IMemberValuePairBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.IPackageBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -106,10 +109,14 @@ public class JdtEnvironment {
    * might be all that is needed by the caller.
    */
   @CanIgnoreReturnValue
-  public JdtEnvironment(JdtParser jdtParser, Collection<String> wellKnownTypesBinaryNames) {
-    PackageInfoCache.init(ImmutableList.of(), null);
-    this.packageAnnotationsResolver = PackageAnnotationsResolver.create(Stream.of());
-    this.initWellKnownTypes(jdtParser.resolveBindings(wellKnownTypesBinaryNames));
+  public JdtEnvironment(
+      JdtParser jdtParser,
+      List<String> classpathEntries,
+      Collection<String> wellKnownTypesBinaryNames) {
+    this.packageAnnotationsResolver =
+        PackageAnnotationsResolver.create(
+            Stream.of(), new PackageInfoCache(ImmutableList.of(), null));
+    this.initWellKnownTypes(jdtParser.resolveBindings(classpathEntries, wellKnownTypesBinaryNames));
   }
 
   public JdtEnvironment(PackageAnnotationsResolver packageAnnotationsResolver) {
@@ -118,112 +125,69 @@ public class JdtEnvironment {
 
   @Nullable
   public static BinaryOperator getBinaryOperator(InfixExpression.Operator operator) {
-    switch (operator.toString()) {
-      case "*":
-        return BinaryOperator.TIMES;
-      case "/":
-        return BinaryOperator.DIVIDE;
-      case "%":
-        return BinaryOperator.REMAINDER;
-      case "+":
-        return BinaryOperator.PLUS;
-      case "-":
-        return BinaryOperator.MINUS;
-      case "<<":
-        return BinaryOperator.LEFT_SHIFT;
-      case ">>":
-        return BinaryOperator.RIGHT_SHIFT_SIGNED;
-      case ">>>":
-        return BinaryOperator.RIGHT_SHIFT_UNSIGNED;
-      case "<":
-        return BinaryOperator.LESS;
-      case ">":
-        return BinaryOperator.GREATER;
-      case "<=":
-        return BinaryOperator.LESS_EQUALS;
-      case ">=":
-        return BinaryOperator.GREATER_EQUALS;
-      case "==":
-        return BinaryOperator.EQUALS;
-      case "!=":
-        return BinaryOperator.NOT_EQUALS;
-      case "^":
-        return BinaryOperator.BIT_XOR;
-      case "&":
-        return BinaryOperator.BIT_AND;
-      case "|":
-        return BinaryOperator.BIT_OR;
-      case "&&":
-        return BinaryOperator.CONDITIONAL_AND;
-      case "||":
-        return BinaryOperator.CONDITIONAL_OR;
-      default:
-        return null;
-    }
+    return switch (operator.toString()) {
+      case "*" -> BinaryOperator.TIMES;
+      case "/" -> BinaryOperator.DIVIDE;
+      case "%" -> BinaryOperator.REMAINDER;
+      case "+" -> BinaryOperator.PLUS;
+      case "-" -> BinaryOperator.MINUS;
+      case "<<" -> BinaryOperator.LEFT_SHIFT;
+      case ">>" -> BinaryOperator.RIGHT_SHIFT_SIGNED;
+      case ">>>" -> BinaryOperator.RIGHT_SHIFT_UNSIGNED;
+      case "<" -> BinaryOperator.LESS;
+      case ">" -> BinaryOperator.GREATER;
+      case "<=" -> BinaryOperator.LESS_EQUALS;
+      case ">=" -> BinaryOperator.GREATER_EQUALS;
+      case "==" -> BinaryOperator.EQUALS;
+      case "!=" -> BinaryOperator.NOT_EQUALS;
+      case "^" -> BinaryOperator.BIT_XOR;
+      case "&" -> BinaryOperator.BIT_AND;
+      case "|" -> BinaryOperator.BIT_OR;
+      case "&&" -> BinaryOperator.CONDITIONAL_AND;
+      case "||" -> BinaryOperator.CONDITIONAL_OR;
+      default -> null;
+    };
   }
 
   @Nullable
   public static BinaryOperator getBinaryOperator(Assignment.Operator operator) {
-    switch (operator.toString()) {
-      case "=":
-        return BinaryOperator.ASSIGN;
-      case "+=":
-        return BinaryOperator.PLUS_ASSIGN;
-      case "-=":
-        return BinaryOperator.MINUS_ASSIGN;
-      case "*=":
-        return BinaryOperator.TIMES_ASSIGN;
-      case "/=":
-        return BinaryOperator.DIVIDE_ASSIGN;
-      case "&=":
-        return BinaryOperator.BIT_AND_ASSIGN;
-      case "|=":
-        return BinaryOperator.BIT_OR_ASSIGN;
-      case "^=":
-        return BinaryOperator.BIT_XOR_ASSIGN;
-      case "%=":
-        return BinaryOperator.REMAINDER_ASSIGN;
-      case "<<=":
-        return BinaryOperator.LEFT_SHIFT_ASSIGN;
-      case ">>=":
-        return BinaryOperator.RIGHT_SHIFT_SIGNED_ASSIGN;
-      case ">>>=":
-        return BinaryOperator.RIGHT_SHIFT_UNSIGNED_ASSIGN;
-      default:
-        return null;
-    }
+    return switch (operator.toString()) {
+      case "=" -> BinaryOperator.ASSIGN;
+      case "+=" -> BinaryOperator.PLUS_ASSIGN;
+      case "-=" -> BinaryOperator.MINUS_ASSIGN;
+      case "*=" -> BinaryOperator.TIMES_ASSIGN;
+      case "/=" -> BinaryOperator.DIVIDE_ASSIGN;
+      case "&=" -> BinaryOperator.BIT_AND_ASSIGN;
+      case "|=" -> BinaryOperator.BIT_OR_ASSIGN;
+      case "^=" -> BinaryOperator.BIT_XOR_ASSIGN;
+      case "%=" -> BinaryOperator.REMAINDER_ASSIGN;
+      case "<<=" -> BinaryOperator.LEFT_SHIFT_ASSIGN;
+      case ">>=" -> BinaryOperator.RIGHT_SHIFT_SIGNED_ASSIGN;
+      case ">>>=" -> BinaryOperator.RIGHT_SHIFT_UNSIGNED_ASSIGN;
+      default -> null;
+    };
   }
 
   @Nullable
   public static PrefixOperator getPrefixOperator(PrefixExpression.Operator operator) {
-    switch (operator.toString()) {
-      case "++":
-        return PrefixOperator.INCREMENT;
-      case "--":
-        return PrefixOperator.DECREMENT;
-      case "+":
-        return PrefixOperator.PLUS;
-      case "-":
-        return PrefixOperator.MINUS;
-      case "~":
-        return PrefixOperator.COMPLEMENT;
-      case "!":
-        return PrefixOperator.NOT;
-      default:
-        return null;
-    }
+    return switch (operator.toString()) {
+      case "++" -> PrefixOperator.INCREMENT;
+      case "--" -> PrefixOperator.DECREMENT;
+      case "+" -> PrefixOperator.PLUS;
+      case "-" -> PrefixOperator.MINUS;
+      case "~" -> PrefixOperator.COMPLEMENT;
+      case "!" -> PrefixOperator.NOT;
+      default -> null;
+    };
   }
 
   @Nullable
   public static PostfixOperator getPostfixOperator(PostfixExpression.Operator operator) {
-    switch (operator.toString()) {
-      case "++":
-        return PostfixOperator.INCREMENT;
-      case "--":
-        return PostfixOperator.DECREMENT;
-      default:
-        return null;
-    }
+    return switch (operator.toString()) {
+      case "++" -> PostfixOperator.INCREMENT;
+      case "--" -> PostfixOperator.DECREMENT;
+      default -> null;
+    };
   }
 
   public Variable createVariable(
@@ -239,15 +203,13 @@ public class JdtEnvironment {
     }
     boolean isFinal = isFinal(variableBinding);
     boolean isParameter = variableBinding.isParameter();
-    boolean isUnusableByJsSuppressed =
-        JsInteropAnnotationUtils.isUnusableByJsSuppressed(variableBinding);
     return Variable.newBuilder()
         .setName(name)
         .setTypeDescriptor(typeDescriptor)
         .setFinal(isFinal)
         .setParameter(isParameter)
-        .setUnusableByJsSuppressed(isUnusableByJsSuppressed)
         .setSourcePosition(sourcePosition)
+        .setAnnotations(createAnnotations(variableBinding, inNullMarkedScope))
         .build();
   }
 
@@ -265,11 +227,6 @@ public class JdtEnvironment {
     return variableBinding.getName().equals("length")
         && variableBinding.isField()
         && variableBinding.getDeclaringClass() == null;
-  }
-
-  /** Returns true if the binding is annotated with @UncheckedCast. */
-  public static boolean hasUncheckedCastAnnotation(IBinding binding) {
-    return JdtAnnotationUtils.hasAnnotation(binding, UNCHECKED_CAST_ANNOTATION_NAME);
   }
 
   /** Helper method to work around JDT habit of returning raw collections. */
@@ -393,7 +350,7 @@ public class JdtEnvironment {
         .setCapture(typeBinding.isCapture())
         .setUniqueKey(uniqueKey)
         .setName(typeBinding.getName())
-        .setKtVariance(KtInteropUtils.getKtVariance(typeBinding.getTypeAnnotations()))
+        .setKtVariance(J2ktInteropUtils.getJ2ktVariance(typeBinding))
         .setNullabilityAnnotation(nullabilityAnnotation)
         .build();
   }
@@ -417,7 +374,8 @@ public class JdtEnvironment {
 
   private TypeDescriptor getUpperBoundTypeDescriptor(
       ITypeBinding typeBinding, boolean inNullMarkedScope) {
-    if (typeBinding.isWildcardType()) {
+    if (typeBinding.isWildcardType() || typeBinding.isCapture()) {
+      // If the wildcard or capture is unbound, it is necessarily nullable.
       if (isUnbounded(typeBinding)) {
         return TypeDescriptors.get().javaLangObject;
       }
@@ -473,10 +431,13 @@ public class JdtEnvironment {
       return true;
     }
 
-    if (typeBounds.length == 1 && typeBounds[0].getQualifiedName().equals("java.lang.Object")) {
-      // This is fragile, but the observation is that in these cases .getBound() is null and
-      // there is only one type bound in .getTypeBounds() and that is j.l.Object.
-      return true;
+    // This is fragile, but the observation is that in these cases .getBound() is null and
+    // there is only one type bound in .getTypeBounds() and that is j.l.Object.
+    if (typeBounds.length == 1) {
+      ITypeBinding typeBound = typeBounds[0];
+      return typeBound.getQualifiedName().equals("java.lang.Object")
+          && getNullabilityAnnotation(typeBound, typeBound.getAnnotations())
+              == NullabilityAnnotation.NONE;
     }
 
     return false;
@@ -501,14 +462,11 @@ public class JdtEnvironment {
       boolean inNullMarkedScope) {
     checkArgument(!typeBinding.isPrimitive());
 
-    switch (getNullabilityAnnotation(typeBinding, elementAnnotations)) {
-      case NULLABLE:
-        return true;
-      case NOT_NULLABLE:
-        return false;
-      default:
-        return !inNullMarkedScope;
-    }
+    return switch (getNullabilityAnnotation(typeBinding, elementAnnotations)) {
+      case NULLABLE -> true;
+      case NOT_NULLABLE -> false;
+      default -> !inNullMarkedScope;
+    };
   }
 
   /** Return whether a type is annotated for nullablility and which type of annotation it has. */
@@ -616,10 +574,9 @@ public class JdtEnvironment {
     // enclosing it when the declaration is inside a lambda. If the declaring method declares a
     // type variable, it would get lost.
     IBinding declarationBinding = getDeclaringMethodOrFieldBinding(typeBinding);
-    if (declarationBinding instanceof IMethodBinding) {
+    if (declarationBinding instanceof IMethodBinding methodBinding) {
       typeArgumentDescriptorsBuilder.addAll(
-          createTypeDescriptors(
-              ((IMethodBinding) declarationBinding).getTypeParameters(), inNullMarkedScope, clazz));
+          createTypeDescriptors(methodBinding.getTypeParameters(), inNullMarkedScope, clazz));
     }
 
     if (capturesEnclosingInstance(typeBinding.getTypeDeclaration())) {
@@ -650,10 +607,6 @@ public class JdtEnvironment {
     }
   }
 
-  private static boolean isDeprecated(IBinding binding) {
-    return JdtAnnotationUtils.hasAnnotation(binding, Deprecated.class.getName());
-  }
-
   private static boolean isDefaultMethod(IMethodBinding binding) {
     return Modifier.isDefault(binding.getModifiers());
   }
@@ -667,8 +620,7 @@ public class JdtEnvironment {
   }
 
   public static boolean isStatic(IBinding binding) {
-    if (binding instanceof IVariableBinding) {
-      IVariableBinding variableBinding = (IVariableBinding) binding;
+    if (binding instanceof IVariableBinding variableBinding) {
       if (!variableBinding.isField() || variableBinding.getDeclaringClass().isInterface()) {
         // Interface fields and variables are implicitly static.
         return true;
@@ -697,6 +649,10 @@ public class JdtEnvironment {
     return methodBinding.getName().equals("valueOf")
         && methodBinding.getParameterTypes().length == 1
         && methodBinding.getParameterTypes()[0].getQualifiedName().equals("java.lang.String");
+  }
+
+  private static boolean isAnnotationMethod(IMethodBinding methodBinding) {
+    return methodBinding.getDeclaringClass().isAnnotation();
   }
 
   /**
@@ -746,8 +702,8 @@ public class JdtEnvironment {
   }
 
   private static boolean isLambdaBinding(IBinding binding) {
-    return binding instanceof IMethodBinding
-        && ((IMethodBinding) binding).getDeclaringMember() != null;
+    return binding instanceof IMethodBinding methodBinding
+        && methodBinding.getDeclaringMember() != null;
   }
 
   /** Create a FieldDescriptor directly based on the given JDT field variable binding. */
@@ -799,16 +755,14 @@ public class JdtEnvironment {
             .setStatic(isStatic)
             .setVisibility(visibility)
             .setOriginalJsInfo(JsInteropUtils.getJsInfo(variableBinding))
-            .setOriginalKtInfo(KtInteropUtils.getKtInfo(variableBinding))
+            .setOriginalKtInfo(J2ktInteropUtils.getJ2ktInfo(variableBinding))
+            .setAnnotations(createAnnotations(variableBinding, inNullMarkedScope))
             .setFinal(isFinal)
             .setCompileTimeConstant(isCompileTimeConstant)
             .setConstantValue(
                 constantValue != null ? Literal.fromValue(constantValue, thisTypeDescriptor) : null)
             .setDeclarationDescriptor(declarationFieldDescriptor)
             .setEnumConstant(variableBinding.isEnumConstant())
-            .setUnusableByJsSuppressed(
-                JsInteropAnnotationUtils.isUnusableByJsSuppressed(variableBinding))
-            .setDeprecated(isDeprecated(variableBinding))
             .build();
     cachedFieldDescriptorByVariableBinding.put(variableBinding, fieldDescriptor);
     return fieldDescriptor;
@@ -839,7 +793,7 @@ public class JdtEnvironment {
     Visibility visibility = getVisibility(methodBinding);
     boolean isDefault = isDefaultMethod(methodBinding);
     JsInfo jsInfo = JsInteropUtils.getJsInfo(methodBinding);
-    KtInfo ktInfo = KtInteropUtils.getKtInfo(methodBinding);
+    KtInfo ktInfo = J2ktInteropUtils.getJ2ktInfo(methodBinding);
 
     boolean isNative =
         Modifier.isNative(methodBinding.getModifiers())
@@ -853,7 +807,7 @@ public class JdtEnvironment {
     TypeDescriptor returnTypeDescriptor =
         isConstructor
             ? enclosingTypeDescriptor.toNonNullable()
-            : adjustForSyntheticEnumMethod(
+            : adjustForSyntheticEnumOrAnnotationMethod(
                 methodBinding,
                 createTypeDescriptorWithNullability(
                     methodBinding.getReturnType(),
@@ -903,8 +857,8 @@ public class JdtEnvironment {
             .setTypeArgumentTypeDescriptors(typeArgumentTypeDescriptors)
             .setOriginalJsInfo(jsInfo)
             .setOriginalKtInfo(ktInfo)
-            .setKtObjcInfo(KtInteropUtils.getKtObjcInfo(methodBinding))
-            .setWasmInfo(getWasmInfo(methodBinding))
+            .setKtObjcInfo(J2ktInteropUtils.getJ2ktObjcInfo(methodBinding))
+            .setAnnotations(createAnnotations(methodBinding, inNullMarkedScope))
             .setVisibility(visibility)
             .setStatic(isStatic)
             .setConstructor(isConstructor)
@@ -915,11 +869,6 @@ public class JdtEnvironment {
             .setSynchronized(Modifier.isSynchronized(methodBinding.getModifiers()))
             .setSynthetic(methodBinding.isSynthetic())
             .setEnumSyntheticMethod(isEnumSyntheticMethod(methodBinding))
-            .setUnusableByJsSuppressed(
-                JsInteropAnnotationUtils.isUnusableByJsSuppressed(methodBinding))
-            .setSideEffectFree(isAnnotatedWithHasNoSideEffects(methodBinding))
-            .setDeprecated(isDeprecated(methodBinding))
-            .setUncheckedCast(hasUncheckedCastAnnotation(methodBinding))
             .build();
     cachedMethodDescriptorByMethodBinding.put(methodBinding, methodDescriptor);
     return methodDescriptor;
@@ -937,18 +886,20 @@ public class JdtEnvironment {
         parameterTypes.length - methodBinding.getMethodDeclaration().getParameterTypes().length;
 
     for (int i = firstNonSyntheticParameter; i < parameterTypes.length; i++) {
+      IAnnotationBinding[] parameterAnnotations = methodBinding.getParameterAnnotations(i);
+
       TypeDescriptor parameterTypeDescriptor =
-          adjustForSyntheticEnumMethod(
+          adjustForSyntheticEnumOrAnnotationMethod(
               methodBinding,
               createTypeDescriptorWithNullability(
-                  parameterTypes[i], methodBinding.getParameterAnnotations(i), inNullMarkedScope));
+                  parameterTypes[i], parameterAnnotations, inNullMarkedScope));
 
       parameterDescriptorBuilder.add(
           ParameterDescriptor.newBuilder()
               .setTypeDescriptor(parameterTypeDescriptor)
               .setJsOptional(JsInteropUtils.isJsOptional(methodBinding, i))
               .setVarargs(i == parameterTypes.length - 1 && methodBinding.isVarargs())
-              .setDoNotAutobox(JsInteropUtils.isDoNotAutobox(methodBinding, i))
+              .setAnnotations(createAnnotations(parameterAnnotations, inNullMarkedScope))
               .build());
     }
     return parameterDescriptorBuilder.build();
@@ -956,14 +907,14 @@ public class JdtEnvironment {
 
   /**
    * Makes parameters and returns of the synthetic enum methods ({@code Enum.valueOf} and {@code
-   * Enum.values}) non-nullable.
+   * Enum.values}) and all annotation methods non-nullable.
    *
    * <p>Note that non-nullability is also applied to the component of array types to cover the
    * return of {@code Enum.values}.
    */
-  private TypeDescriptor adjustForSyntheticEnumMethod(
+  private TypeDescriptor adjustForSyntheticEnumOrAnnotationMethod(
       IMethodBinding methodBinding, TypeDescriptor typeDescriptor) {
-    if (!isEnumSyntheticMethod(methodBinding)) {
+    if (!isEnumSyntheticMethod(methodBinding) && !isAnnotationMethod(methodBinding)) {
       return typeDescriptor;
     }
 
@@ -985,20 +936,6 @@ public class JdtEnvironment {
         .collect(toImmutableList());
   }
 
-  private static String getWasmInfo(ITypeBinding binding) {
-    return JdtAnnotationUtils.getStringAttribute(
-        JdtAnnotationUtils.findAnnotationBindingByName(
-            binding.getAnnotations(), WASM_ANNOTATION_NAME),
-        "value");
-  }
-
-  private static String getWasmInfo(IMethodBinding binding) {
-    return JdtAnnotationUtils.getStringAttribute(
-        JdtAnnotationUtils.findAnnotationBindingByName(
-            binding.getAnnotations(), WASM_ANNOTATION_NAME),
-        "value");
-  }
-
   private static boolean isLocal(ITypeBinding typeBinding) {
     return typeBinding.isLocal();
   }
@@ -1016,6 +953,10 @@ public class JdtEnvironment {
   }
 
   public void initWellKnownTypes(Iterable<ITypeBinding> typesToResolve) {
+    if( TypeDescriptors.isInitialized()) {
+      return;
+    }
+
     checkState(!TypeDescriptors.isInitialized());
 
     TypeDescriptors.SingletonBuilder builder = new TypeDescriptors.SingletonBuilder();
@@ -1105,7 +1046,7 @@ public class JdtEnvironment {
   @Nullable
   private String getObjectiveCNamePrefix(ITypeBinding typeBinding) {
     checkArgument(!typeBinding.isPrimitive());
-    String objectiveCNamePrefix = KtInteropAnnotationUtils.getKtObjectiveCName(typeBinding);
+    String objectiveCNamePrefix = J2ktInteropAnnotationUtils.getJ2ktObjectiveCName(typeBinding);
     boolean isTopLevelType = typeBinding.getDeclaringClass() == null;
 
     return objectiveCNamePrefix != null || !isTopLevelType
@@ -1134,9 +1075,7 @@ public class JdtEnvironment {
     // Compute these first since they're reused in other calculations.
     boolean isAbstract = isAbstract(typeBinding);
     Kind kind = getKindFromTypeBinding(typeBinding);
-    // TODO(b/341721484): Even though enums can not have the final modifier, turbine make them final
-    // in the header jars.
-    boolean isFinal = isFinal(typeBinding) && kind != Kind.ENUM;
+    boolean isFinal = isFinal(typeBinding);
 
     boolean isNullMarked = isNullMarked(typeBinding);
     IBinding declaringMemberBinding = getDeclaringMethodOrFieldBinding(typeBinding);
@@ -1165,21 +1104,21 @@ public class JdtEnvironment {
             .setFunctionalInterface(
                 !typeBinding.isAnnotation() && typeBinding.getFunctionalInterfaceMethod() != null)
             .setJsFunctionInterface(JsInteropUtils.isJsFunction(typeBinding))
-            .setAnnotatedWithFunctionalInterface(isAnnotatedWithFunctionalInterface(typeBinding))
-            .setAnnotatedWithAutoValue(isAnnotatedWithAutoValue(typeBinding))
-            .setAnnotatedWithAutoValueBuilder(isAnnotatedWithAutoValueBuilder(typeBinding))
-            .setTestClass(isTestClass(typeBinding))
+            .setAnnotationsFactory(() -> createAnnotations(typeBinding, isNullMarked))
+            .setSourceLanguage(
+                isAnnotatedWithKotlinMetadata(typeBinding)
+                    ? SourceLanguage.KOTLIN
+                    : SourceLanguage.JAVA)
             .setJsType(JsInteropUtils.isJsType(typeBinding))
             .setJsEnumInfo(JsInteropUtils.getJsEnumInfo(typeBinding))
-            .setWasmInfo(getWasmInfo(typeBinding))
             .setNative(JsInteropUtils.isJsNativeType(typeBinding))
             .setAnonymous(typeBinding.isAnonymous())
             .setLocal(isLocal(typeBinding))
             .setSimpleJsName(JsInteropAnnotationUtils.getJsName(typeBinding))
             .setCustomizedJsNamespace(JsInteropAnnotationUtils.getJsNamespace(typeBinding))
             .setObjectiveCNamePrefix(getObjectiveCNamePrefix(typeBinding))
-            .setKtTypeInfo(KtInteropUtils.getKtTypeInfo(typeBinding))
-            .setKtObjcInfo(KtInteropUtils.getKtObjcInfo(typeBinding))
+            .setKtTypeInfo(J2ktInteropUtils.getJ2ktTypeInfo(typeBinding))
+            .setKtObjcInfo(J2ktInteropUtils.getJ2ktObjcInfo(typeBinding))
             .setNullMarked(isNullMarked)
             .setOriginalSimpleSourceName(typeBinding.getName())
             .setPackage(createPackageDeclaration(typeBinding.getPackage()))
@@ -1197,9 +1136,6 @@ public class JdtEnvironment {
                 () -> createFieldDescriptorsOrderedById(typeBinding.getDeclaredFields()))
             .setMemberTypeDeclarationsFactory(
                 () -> createTypeDeclarations(typeBinding.getDeclaredTypes()))
-            .setUnusableByJsSuppressed(
-                JsInteropAnnotationUtils.isUnusableByJsSuppressed(typeBinding))
-            .setDeprecated(isDeprecated(typeBinding))
             .build();
     cachedTypeDeclarationByTypeBinding.put(typeBinding, typeDeclaration);
     return typeDeclaration;
@@ -1237,46 +1173,103 @@ public class JdtEnvironment {
         .collect(ImmutableList.toImmutableList());
   }
 
+  /**
+   * Returns true if {@code typeBinding}, one of its enclosing types, or its package has
+   * a @NullMarked annotation
+   */
   private boolean isNullMarked(ITypeBinding typeBinding) {
-    return hasNullMarkedAnnotation(typeBinding)
-        || packageAnnotationsResolver.isNullMarked(typeBinding.getPackage().getName());
+    if (JdtAnnotationUtils.hasNullMarkedAnnotation(typeBinding)) {
+      return true;
+    }
+
+    if (typeBinding.getDeclaringClass() != null) {
+      return isNullMarked(typeBinding.getDeclaringClass());
+    }
+
+    return packageAnnotationsResolver.isNullMarked(typeBinding.getPackage().getName());
+  }
+
+  private static boolean isAnnotatedWithKotlinMetadata(ITypeBinding typeBinding) {
+    return JdtAnnotationUtils.hasAnnotation(typeBinding, "kotlin.Metadata");
+  }
+
+  private ImmutableList<Annotation> createAnnotations(IBinding binding, boolean inNullMarkedScope) {
+    if (!JdtAnnotationUtils.shouldReadAnnotations(binding)) {
+      return ImmutableList.of();
+    }
+    return createAnnotations(binding.getAnnotations(), inNullMarkedScope);
+  }
+
+  private ImmutableList<Annotation> createAnnotations(
+      IAnnotationBinding[] annotations, boolean inNullMarkedScope) {
+    return Arrays.stream(annotations)
+        .filter(
+            annotationBinding ->
+                isSupportedAnnotation(annotationBinding.getAnnotationType().getQualifiedName()))
+        .map(
+            annotationBinding ->
+                newAnnotationBuilder(
+                        annotationBinding.getDeclaredMemberValuePairs(), inNullMarkedScope)
+                    .setTypeDescriptor(
+                        createDeclaredType(
+                            annotationBinding.getAnnotationType(), inNullMarkedScope))
+                    .build())
+        .collect(toImmutableList());
+  }
+
+  private Annotation.Builder newAnnotationBuilder(
+      IMemberValuePairBinding[] valuePairs, boolean inNullMarkedScope) {
+    Annotation.Builder annotationBuilder = Annotation.newBuilder();
+    for (IMemberValuePairBinding valuePair : valuePairs) {
+      TypeDescriptor elementType =
+          createTypeDescriptor(valuePair.getMethodBinding().getReturnType(), inNullMarkedScope);
+      Literal translatedValue =
+          createAnnotationValue(elementType, valuePair.getValue(), inNullMarkedScope);
+      if (translatedValue == null) {
+        continue;
+      }
+      annotationBuilder.addValue(valuePair.getName(), translatedValue);
+    }
+    return annotationBuilder;
   }
 
   /**
-   * Returns true if {@code typeBinding} or one of its enclosing types has a @NullMarked annotation.
+   * Creates a literal for the given annotation member value.
+   *
+   * <p>If the value type is not supported, returns {@code null}. TODO(b/397460318, b/395716783):
+   * Remove the null return once we handle all member value types.
    */
-  private static boolean hasNullMarkedAnnotation(ITypeBinding typeBinding) {
-    if (hasNullMarkedAnnotation(Arrays.stream(typeBinding.getAnnotations()))) {
-      return true;
+  @Nullable
+  private Literal createAnnotationValue(
+      TypeDescriptor elementType, Object value, boolean inNullMarkedScope) {
+    if (TypeDescriptors.isBoxedOrPrimitiveType(elementType)
+        || TypeDescriptors.isJavaLangString(elementType)) {
+      return Literal.fromValue(value, elementType);
+    } else if (TypeDescriptors.isJavaLangClass(elementType)) {
+      return new TypeLiteral(
+          SourcePosition.NONE, createTypeDescriptor((ITypeBinding) value, inNullMarkedScope));
+    } else if (elementType.isArray()) {
+      List<Literal> values =
+          Arrays.stream((Object[]) value)
+              .map(
+                  v ->
+                      createAnnotationValue(
+                          ((ArrayTypeDescriptor) elementType).getComponentTypeDescriptor(),
+                          v,
+                          inNullMarkedScope))
+              .collect(toCollection(ArrayList::new));
+      // TODO(b/397460318, b/395716783): Remove this null check once we handle all member value
+      // types. We don't expect null unless it's an unhandled value type.
+      if (values.contains(null)) {
+        return null;
+      }
+      return ArrayConstant.newBuilder()
+          .setTypeDescriptor((ArrayTypeDescriptor) elementType)
+          .setValueExpressions(values)
+          .build();
     }
-    return typeBinding.getDeclaringClass() != null
-        && hasNullMarkedAnnotation(typeBinding.getDeclaringClass());
-  }
-
-  private static boolean hasNullMarkedAnnotation(Stream<IAnnotationBinding> annotations) {
-    return annotations.anyMatch(
-        a -> Nullability.isNullMarkedAnnotation(a.getAnnotationType().getQualifiedName()));
-  }
-
-  private static boolean isAnnotatedWithFunctionalInterface(ITypeBinding typeBinding) {
-    return JdtAnnotationUtils.hasAnnotation(typeBinding, FunctionalInterface.class.getName());
-  }
-
-  private static boolean isAnnotatedWithAutoValue(ITypeBinding typeBinding) {
-    return JdtAnnotationUtils.hasAnnotation(typeBinding, "com.google.auto.value.AutoValue");
-  }
-
-  private static boolean isAnnotatedWithAutoValueBuilder(ITypeBinding typeBinding) {
-    return JdtAnnotationUtils.hasAnnotation(typeBinding, "com.google.auto.value.AutoValue.Builder");
-  }
-
-  private static boolean isTestClass(ITypeBinding typeBinding) {
-    return JdtAnnotationUtils.hasAnnotation(typeBinding, "org.junit.runner.RunWith")
-        || JdtAnnotationUtils.hasAnnotation(
-            typeBinding, "com.google.apps.xplat.testing.parameterized.RunParameterized");
-  }
-
-  private static boolean isAnnotatedWithHasNoSideEffects(IMethodBinding methodBinding) {
-    return JdtAnnotationUtils.hasAnnotation(methodBinding, HAS_NO_SIDE_EFFECTS_ANNOTATION_NAME);
+    // TODO(b/397460318, b/395716783): Implement various member value types, then throw an exception
+    // here if unhandled.
+    return null;
   }
 }

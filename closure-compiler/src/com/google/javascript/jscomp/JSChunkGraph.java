@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -34,7 +33,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
-import com.google.javascript.jscomp.base.format.SimpleFormat;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
@@ -149,7 +147,7 @@ public final class JSChunkGraph implements Serializable {
         int depDepth = dep.getDepth();
         if (depDepth < 0) {
           throw new ChunkDependenceException(
-              SimpleFormat.format(
+              String.format(
                   "Chunks not in dependency order: %s preceded %s", chunk.getName(), dep.getName()),
               chunk,
               dep);
@@ -322,7 +320,6 @@ public final class JSChunkGraph implements Serializable {
    *
    * @return List of chunk JSONObjects.
    */
-  @GwtIncompatible("com.google.gson")
   JsonArray toJson() {
     JsonArray chunks = new JsonArray();
     for (JSChunk chunk : getAllChunks()) {
@@ -718,27 +715,27 @@ public final class JSChunkGraph implements Serializable {
         }
       }
 
-      for (ModuleIdentifier entryPoint : dependencyOptions.getEntryPoints()) {
+      for (ModuleIdentifier entryPoint : dependencyOptions.entryPoints()) {
         CompilerInput entryPointInput = null;
         try {
-          if (entryPoint.getClosureNamespace().equals(entryPoint.getModuleName())) {
-            entryPointInput = sorter.maybeGetInputProviding(entryPoint.getClosureNamespace());
+          if (entryPoint.closureNamespace().equals(entryPoint.moduleName())) {
+            entryPointInput = sorter.maybeGetInputProviding(entryPoint.closureNamespace());
             // Check to see if we can find the entry point as an ES6 and CommonJS module
             // ES6 and CommonJS entry points may not provide any symbols
             if (entryPointInput == null) {
-              entryPointInput = sorter.getInputProviding(entryPoint.getName());
+              entryPointInput = sorter.getInputProviding(entryPoint.name());
             }
           } else {
-            JSChunk chunk = chunksByName.get(entryPoint.getModuleName());
+            JSChunk chunk = chunksByName.get(entryPoint.moduleName());
             if (chunk == null) {
-              throw new MissingChunkException(entryPoint.getModuleName());
+              throw new MissingChunkException(entryPoint.moduleName());
             } else {
-              entryPointInput = sorter.getInputProviding(entryPoint.getClosureNamespace());
+              entryPointInput = sorter.getInputProviding(entryPoint.closureNamespace());
               entryPointInput.overrideModule(chunk);
             }
           }
         } catch (MissingProvideException e) {
-          throw new MissingProvideException(entryPoint.getName(), e);
+          throw new MissingProvideException(entryPoint.name(), e);
         }
 
         if (entryPointInput.getSourceFile().isWeak()) {

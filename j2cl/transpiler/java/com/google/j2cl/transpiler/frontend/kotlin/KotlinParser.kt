@@ -22,10 +22,8 @@ import com.google.j2cl.common.SourceUtils.FileInfo
 import com.google.j2cl.transpiler.ast.CompilationUnit
 import com.google.j2cl.transpiler.ast.Library
 import com.google.j2cl.transpiler.frontend.common.FrontendOptions
-import com.google.j2cl.transpiler.frontend.common.PackageInfoCache
-import com.google.j2cl.transpiler.frontend.jdt.JdtParser
-import com.google.j2cl.transpiler.frontend.jdt.PackageAnnotationsResolver
 import com.google.j2cl.transpiler.frontend.kotlin.ir.IntrinsicMethods
+import com.google.j2cl.transpiler.frontend.kotlin.ir.JvmIrDeserializerImpl
 import com.google.j2cl.transpiler.frontend.kotlin.lower.LoweringPasses
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
@@ -33,13 +31,10 @@ import com.intellij.openapi.util.Disposer
 import java.io.File
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.backend.jvm.JvmIrCodegenFactory
-import org.jetbrains.kotlin.backend.jvm.JvmIrDeserializerImpl
 import org.jetbrains.kotlin.builtins.DefaultBuiltIns
-import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys.ORIGINAL_MESSAGE_COLLECTOR_KEY
-import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys.PHASE_CONFIG
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys.RENDER_DIAGNOSTIC_INTERNAL_NAME
+import org.jetbrains.kotlin.cli.common.LegacyK2CliPipeline
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.parseCommandLineArguments
 import org.jetbrains.kotlin.cli.common.collectSources
@@ -51,15 +46,14 @@ import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.common.setupCommonArguments
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinToJVMBytecodeCompiler
-import org.jetbrains.kotlin.cli.jvm.compiler.NoScopeRecordCliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.configureSourceRoots
-import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.ModuleCompilerInput
-import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.compileModuleToAnalyzedFir
-import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.convertToIrAndActualizeForJvm
-import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.createProjectEnvironment
-import org.jetbrains.kotlin.cli.jvm.compiler.withModule
+import org.jetbrains.kotlin.cli.jvm.compiler.legacy.pipeline.IncrementalCompilationApi
+import org.jetbrains.kotlin.cli.jvm.compiler.legacy.pipeline.ModuleCompilerInput
+import org.jetbrains.kotlin.cli.jvm.compiler.legacy.pipeline.compileModuleToAnalyzedFirViaLightTreeIncrementally
+import org.jetbrains.kotlin.cli.jvm.compiler.legacy.pipeline.convertToIrAndActualizeForJvm
+import org.jetbrains.kotlin.cli.jvm.compiler.toVfsBasedProjectEnvironment
 import org.jetbrains.kotlin.cli.jvm.config.configureJdkClasspathRoots
+import org.jetbrains.kotlin.cli.jvm.config.jvmClasspathRoots
 import org.jetbrains.kotlin.cli.jvm.configureAdvancedJvmOptions
 import org.jetbrains.kotlin.cli.jvm.configureJavaModulesContentRoots
 import org.jetbrains.kotlin.cli.jvm.configureJdkHome
@@ -67,9 +61,8 @@ import org.jetbrains.kotlin.cli.jvm.configureKlibPaths
 import org.jetbrains.kotlin.cli.jvm.configureModuleChunk
 import org.jetbrains.kotlin.cli.jvm.configureStandardLibs
 import org.jetbrains.kotlin.cli.jvm.setupJvmSpecificArguments
-import org.jetbrains.kotlin.codegen.ClassBuilderFactories
-import org.jetbrains.kotlin.codegen.CodegenFactory
 import org.jetbrains.kotlin.codegen.state.GenerationState
+import org.jetbrains.kotlin.config.CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY
 import org.jetbrains.kotlin.config.CommonConfigurationKeys.MODULE_NAME
 import org.jetbrains.kotlin.config.CommonConfigurationKeys.USE_FIR
 import org.jetbrains.kotlin.config.CompilerConfiguration
@@ -78,160 +71,137 @@ import org.jetbrains.kotlin.diagnostics.DiagnosticReporterFactory
 import org.jetbrains.kotlin.diagnostics.impl.PendingDiagnosticsCollectorWithSuppress
 import org.jetbrains.kotlin.fir.backend.jvm.JvmFir2IrExtensions
 import org.jetbrains.kotlin.fir.descriptors.FirModuleDescriptor
-import org.jetbrains.kotlin.ir.backend.jvm.serialization.JvmIrMangler
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
-import org.jetbrains.kotlin.load.kotlin.ModuleVisibilityManager
-import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmMetadataVersion
+import org.jetbrains.kotlin.metadata.deserialization.MetadataVersion
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.modules.TargetId
-import org.jetbrains.kotlin.platform.CommonPlatforms
-import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
+import org.jetbrains.kotlin.progress.CompilationCanceledException
+import org.jetbrains.kotlin.progress.CompilationCanceledStatus
+import org.jetbrains.kotlin.progress.ProgressIndicatorAndCompilationCanceledStatus
 
 /** A parser for Kotlin sources that builds {@code CompilationtUnit}s. */
 class KotlinParser(private val problems: Problems) {
 
-  /** Returns a list of compilation units after Kotlinc parsing. */
-  fun parseFiles(options: FrontendOptions): Library {
-    if (options.sources.isEmpty()) {
-      return Library.newEmpty()
+  companion object {
+    // Track problems on a thread local so a cancelation doesn't effect other compilation threads.
+    private val globalProblems = ThreadLocal<Problems>()
+
+    init {
+      ProgressIndicatorAndCompilationCanceledStatus.setCompilationCanceledStatus(
+        object : CompilationCanceledStatus {
+          override fun checkCanceled() {
+            // throw CompilationCanceledException instead of our own which is properly handled by
+            // kotlinc to gracefully exit from the compilation.
+            if (globalProblems.get().isCancelled)
+              throw CompilationCanceledException().initCause(Problems.Exit())
+          }
+        }
+      )
     }
-
-    val kotlincDisposable = Disposer.newDisposable("J2CL Root Disposable")
-    val compilerConfiguration = createCompilerConfiguration(options)
-
-    val compilationUnits =
-      if (compilerConfiguration.getBoolean(USE_FIR)) {
-        parseFilesWithK2(options, compilerConfiguration, kotlincDisposable)
-      } else {
-        parseFilesWithK1(options, compilerConfiguration, kotlincDisposable)
-      }
-
-    return Library.newBuilder()
-      .setCompilationUnits(compilationUnits)
-      .setDisposableListener { Disposer.dispose(kotlincDisposable) }
-      .build()
   }
 
-  private fun parseFilesWithK1(
-    options: FrontendOptions,
+  /** Returns a list of compilation units after Kotlinc parsing. */
+  fun parseFiles(options: FrontendOptions): Library {
+    val compilerConfiguration = createCompilerConfiguration(options)
+    problems.abortIfCancelled()
+
+    check(compilerConfiguration.getBoolean(USE_FIR)) { "Kotlin/Closure only supports > K2" }
+
+    val kotlincDisposable = Disposer.newDisposable("J2CL Root Disposable")
+    try {
+      globalProblems.set(problems)
+
+      val compilationUnits =
+        parseFiles(compilerConfiguration, kotlincDisposable, options.targetLabel)
+
+      return Library.newBuilder()
+        .setCompilationUnits(compilationUnits)
+        .setDisposableListener { Disposer.dispose(kotlincDisposable) }
+        .build()
+    } catch (e: Throwable) {
+      // Clean up disposable if we are not properly exiting to avoid memory leaks.
+      Disposer.dispose(kotlincDisposable)
+      throw e
+    }
+  }
+
+  private fun parseFiles(
     compilerConfiguration: CompilerConfiguration,
     disposable: Disposable,
+    currentTarget: String?,
   ): List<CompilationUnit> {
+
     val environment =
       KotlinCoreEnvironment.createForProduction(
         disposable,
         compilerConfiguration,
         EnvironmentConfigFiles.JVM_CONFIG_FILES,
       )
+    problems.abortIfCancelled()
 
-    // Register friend modules so that we do not trigger visibility errors.
-    ModuleVisibilityManager.SERVICE.getInstance(environment.project)
-      .addEligibleFriends(compilerConfiguration)
+    // Create VirtualFile list of classpaths backed by Kotlin's fast jar file system.
+    val classpath =
+      compilerConfiguration.jvmClasspathRoots.map {
+        environment.projectEnvironment.jarFileSystem.findFileByPath("$it!/")!!
+      }
 
-    // analyze() will return null if it failed analysis phase. Errors should have been collected
-    // into Problems.
-    val analysis = KotlinToJVMBytecodeCompiler.analyze(environment)
-    problems.abortIfHasErrors()
-    checkNotNull(analysis)
+    val packageInfoCache = PackageInfoCache(classpath)
+    problems.abortIfCancelled()
+
+    compilerConfiguration.setEligibleFriends(classpath, currentTarget)
+    problems.abortIfCancelled()
+
+    val module = compilerConfiguration.get(MODULES)!![0]
+    val messageCollector = compilerConfiguration.get(MESSAGE_COLLECTOR_KEY)!!
+    val diagnosticsReporter = DiagnosticReporterFactory.createPendingReporter(messageCollector)
+    val sources = collectSources(compilerConfiguration, environment.project, messageCollector)
+    problems.abortIfCancelled()
+
+    val analysisResults =
+      @OptIn(IncrementalCompilationApi::class, LegacyK2CliPipeline::class)
+      compileModuleToAnalyzedFirViaLightTreeIncrementally(
+        environment.toVfsBasedProjectEnvironment(),
+        messageCollector,
+        compilerConfiguration,
+        ModuleCompilerInput(TargetId(module), sources, compilerConfiguration),
+        diagnosticsReporter,
+        incrementalExcludesScope = null,
+      )
+
+    diagnosticsReporter.maybeReportErrorsAndAbort(messageCollector, compilerConfiguration)
 
     val state =
-      GenerationState.Builder(
-          environment.project,
-          ClassBuilderFactories.THROW_EXCEPTION,
-          analysis.moduleDescriptor,
-          analysis.bindingContext,
-          environment.getSourceFiles(),
-          compilerConfiguration,
-        )
-        .isIrBackend(true)
-        .build()
+      GenerationState(
+        environment.project,
+        FirModuleDescriptor.createSourceModuleDescriptor(
+          analysisResults.outputs[0].session,
+          DefaultBuiltIns.Instance,
+        ),
+        compilerConfiguration,
+        targetId = TargetId(module),
+        diagnosticReporter = diagnosticsReporter,
+      )
+
+    problems.abortIfCancelled()
+
+    val jvmIrDeserializer = JvmIrDeserializerImpl()
 
     val compilationUnitBuilderExtension =
       createAndRegisterCompilationUnitBuilder(
         compilerConfiguration,
         environment.project,
         state,
-        options,
+        packageInfoCache,
+        jvmIrDeserializer,
       )
-
-    JvmIrCodegenFactory(compilerConfiguration, compilerConfiguration.get(PHASE_CONFIG))
-      .convertToIr(
-        CodegenFactory.IrConversionInput.fromGenerationStateAndFiles(
-          state,
-          environment.getSourceFiles(),
-        )
-      )
-
-    problems.abortIfHasErrors()
-
-    return compilationUnitBuilderExtension.compilationUnits
-  }
-
-  private fun parseFilesWithK2(
-    options: FrontendOptions,
-    compilerConfiguration: CompilerConfiguration,
-    disposable: Disposable,
-  ): List<CompilationUnit> {
-    val messageCollector = compilerConfiguration.get(MESSAGE_COLLECTOR_KEY)!!
-
-    val projectEnvironment =
-      createProjectEnvironment(
-        compilerConfiguration,
-        disposable,
-        EnvironmentConfigFiles.JVM_CONFIG_FILES,
-        messageCollector,
-      )
-
-    val module = compilerConfiguration.get(MODULES)!![0]
-    val diagnosticsReporter = DiagnosticReporterFactory.createPendingReporter()
-
-    val analysisResults =
-      compileModuleToAnalyzedFir(
-        ModuleCompilerInput(
-          TargetId(module),
-          collectSources(compilerConfiguration, projectEnvironment, messageCollector),
-          CommonPlatforms.defaultCommonPlatform,
-          JvmPlatforms.unspecifiedJvmPlatform,
-          compilerConfiguration,
-        ),
-        projectEnvironment,
-        emptyList(),
-        null,
-        diagnosticsReporter,
-      )
-
-    diagnosticsReporter.maybeReportErrorsAndAbort(messageCollector, compilerConfiguration)
-
-    val state =
-      GenerationState.Builder(
-          projectEnvironment.project,
-          ClassBuilderFactories.THROW_EXCEPTION,
-          FirModuleDescriptor.createSourceModuleDescriptor(
-            analysisResults.outputs[0].session,
-            DefaultBuiltIns.Instance,
-          ),
-          NoScopeRecordCliBindingTrace(projectEnvironment.project).bindingContext,
-          compilerConfiguration,
-        )
-        .withModule(module)
-        .isIrBackend(true)
-        .diagnosticReporter(diagnosticsReporter)
-        .build()
-
-    val compilationUnitBuilderExtension =
-      createAndRegisterCompilationUnitBuilder(
-        compilerConfiguration,
-        projectEnvironment.project,
-        state,
-        options,
-      )
+    problems.abortIfCancelled()
 
     val unused =
       analysisResults.convertToIrAndActualizeForJvm(
-        JvmFir2IrExtensions(compilerConfiguration, JvmIrDeserializerImpl(), JvmIrMangler),
+        JvmFir2IrExtensions(compilerConfiguration, jvmIrDeserializer),
         compilerConfiguration,
         diagnosticsReporter,
-        IrGenerationExtension.getInstances(projectEnvironment.project),
+        IrGenerationExtension.getInstances(environment.project),
       )
 
     diagnosticsReporter.maybeReportErrorsAndAbort(messageCollector, compilerConfiguration)
@@ -243,10 +213,11 @@ class KotlinParser(private val problems: Problems) {
     compilerConfiguration: CompilerConfiguration,
     project: Project,
     state: GenerationState,
-    options: FrontendOptions,
+    packageInfoCache: PackageInfoCache,
+    jvmIrDeserializerImpl: JvmIrDeserializerImpl,
   ): CompilationUnitBuilderExtension {
     // Lower the IR tree before to convert it to a j2cl ast
-    val lowerings = LoweringPasses(state, compilerConfiguration)
+    val lowerings = LoweringPasses(state, compilerConfiguration, jvmIrDeserializerImpl)
     IrGenerationExtension.registerExtension(project, lowerings)
 
     val compilationUnitBuilderExtension =
@@ -256,11 +227,7 @@ class KotlinParser(private val problems: Problems) {
         override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
           compilationUnits =
             CompilationUnitBuilder(
-                KotlinEnvironment(
-                  pluginContext,
-                  getPackageAnnotationResolver(options),
-                  lowerings.jvmBackendContext,
-                ),
+                KotlinEnvironment(pluginContext, packageInfoCache, lowerings.jvmBackendContext),
                 IntrinsicMethods(pluginContext.irBuiltIns),
               )
               .convert(moduleFragment)
@@ -269,17 +236,6 @@ class KotlinParser(private val problems: Problems) {
 
     IrGenerationExtension.registerExtension(project, compilationUnitBuilderExtension)
     return compilationUnitBuilderExtension
-  }
-
-  private fun getPackageAnnotationResolver(options: FrontendOptions): PackageAnnotationsResolver {
-    val packageInfoSources: List<FileInfo> =
-      options.sources.filter { it.originalPath().endsWith("package-info.java") }
-
-    PackageInfoCache.init(options.classpaths, problems)
-    return PackageAnnotationsResolver.create(
-      packageInfoSources,
-      JdtParser(options.classpaths, problems),
-    )
   }
 
   interface CompilationUnitBuilderExtension {
@@ -299,9 +255,7 @@ class KotlinParser(private val problems: Problems) {
     // for others libraries we use the Kotlinc default name `main`
     configuration.put(MODULE_NAME, arguments.moduleName ?: JvmProtoBufUtil.DEFAULT_MODULE_NAME)
 
-    configuration.setupCommonArguments(arguments) { versionArray ->
-      JvmMetadataVersion(*versionArray)
-    }
+    configuration.setupCommonArguments(arguments) { versionArray -> MetadataVersion(*versionArray) }
     configuration.setupJvmSpecificArguments(arguments)
     configuration.configureJdkHome(arguments)
     configuration.configureJavaModulesContentRoots(arguments)
@@ -332,8 +286,6 @@ class KotlinParser(private val problems: Problems) {
           .map(FileInfo::sourcePath)
           .toTypedArray()
       arguments.freeArgs = options.sources.map(FileInfo::sourcePath)
-
-      arguments.setEligibleFriends(options.targetLabel)
     }
 
   private fun PendingDiagnosticsCollectorWithSuppress.maybeReportErrorsAndAbort(

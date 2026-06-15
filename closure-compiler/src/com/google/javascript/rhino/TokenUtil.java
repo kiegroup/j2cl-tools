@@ -45,17 +45,12 @@
 
 package com.google.javascript.rhino;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.base.Tri;
 
 /**
- * Helper methods for parsing JavaScript. These methods use unsupported features in GWT's emulation
- * of java.lang.Character.
- *
- * <p>TODO(moz): Add a GWT-compatible version in the super-source directory.
+ * Helper methods for parsing JavaScript.
  *
  */
-@GwtIncompatible("Unsupported java.lang.Character fields")
 public final class TokenUtil {
   /* As defined in ECMA.  jsscan.c uses C isspace() (which allows
    * \v, I think.)  note that code in getChar() implicitly accepts
@@ -80,22 +75,21 @@ public final class TokenUtil {
 
   /** Copied from Rhino's ScriptRuntime */
   public static Tri isStrWhiteSpaceChar(int c) {
-    switch (c) {
-      case '\u000B': // <VT>
-        return Tri.UNKNOWN; // IE says "no", ECMAScript says "yes"
-      case ' ': // <SP>
-      case '\n': // <LF>
-      case '\r': // <CR>
-      case '\t': // <TAB>
-      case '\u00A0': // <NBSP>
-      case '\u000C': // <FF>
-      case '\u2028': // <LS>
-      case '\u2029': // <PS>
-      case '\uFEFF': // <BOM>
-        return Tri.TRUE;
-      default:
-        return (Character.getType(c) == Character.SPACE_SEPARATOR) ? Tri.TRUE : Tri.FALSE;
-    }
+    return switch (c) {
+      case '\u000B' -> // <VT>
+          Tri.UNKNOWN; // IE says "no", ECMAScript says "yes"
+      case ' ', // <SP>
+          '\n', // <LF>
+          '\r', // <CR>
+          '\t', // <TAB>
+          '\u00A0', // <NBSP>
+          '\u000C', // <FF>
+          '\u2028', // <LS>
+          '\u2029', // <PS>
+          '\uFEFF' -> // <BOM>
+          Tri.TRUE;
+      default -> (Character.getType(c) == Character.SPACE_SEPARATOR) ? Tri.TRUE : Tri.FALSE;
+    };
   }
 
   private TokenUtil() {}

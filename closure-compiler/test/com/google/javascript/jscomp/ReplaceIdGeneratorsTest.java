@@ -86,171 +86,250 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
   @Test
   public void testSerialization1() {
     testMap(
-        lines("var x = goog.events.getUniqueId('xxx');", "var y = goog.events.getUniqueId('yyy');"),
-        lines("var x = 'a';", "var y = 'b';"),
-        lines("[goog.events.getUniqueId]", "", "a:testcode:1:32", "b:testcode:2:32", "", ""));
+        """
+        var x = goog.events.getUniqueId('xxx');
+        var y = goog.events.getUniqueId('yyy');
+        """,
+        """
+        var x = 'a';
+        var y = 'b';
+        """,
+        """
+        [goog.events.getUniqueId]
+
+        a:testcode:1:32
+        b:testcode:2:32
+        """);
   }
 
   @Test
   public void testSerialization2() {
     testMap(
-        lines(
-            "/** @idGenerator {consistent} */",
-            "xid = function() {};",
-            "f1 = xid('f1');",
-            "f1 = xid('f1')"),
-        lines("/** @idGenerator {consistent} */", "xid = function() {};", "f1 = 'a';", "f1 = 'a'"),
-        lines("[xid]", "", "a:f1", "", ""));
+        """
+        /** @idGenerator {consistent} */
+        xid = function() {};
+        f1 = xid('f1');
+        f1 = xid('f1')
+        """,
+        """
+        /** @idGenerator {consistent} */
+        xid = function() {};
+        f1 = 'a';
+        f1 = 'a'
+        """,
+        """
+        [xid]
+
+        a:f1
+        """);
   }
 
   @Test
   public void testReusePreviousSerialization1() {
     previousMappings =
-        lines(
-            "[goog.events.getUniqueId]",
-            "",
-            "previous1:testcode:1:32",
-            "previous2:testcode:2:32",
-            "",
-            "[goog.place.getUniqueId]",
-            "",
-            "");
+        """
+        [goog.events.getUniqueId]
+
+        previous1:testcode:1:32
+        previous2:testcode:2:32
+
+        [goog.place.getUniqueId]
+        """;
     testMap(
-        "var x = goog.events.getUniqueId('xxx');\n" + "var y = goog.events.getUniqueId('yyy');\n",
-        "var x = 'previous1';\n" + "var y = 'previous2';\n",
-        "[goog.events.getUniqueId]\n"
-            + "\n"
-            + "previous1:testcode:1:32\n"
-            + "previous2:testcode:2:32\n"
-            + "\n");
+        """
+        var x = goog.events.getUniqueId('xxx');
+        var y = goog.events.getUniqueId('yyy');
+        """,
+        """
+        var x = 'previous1';
+        var y = 'previous2';
+        """,
+        """
+        [goog.events.getUniqueId]
+
+        previous1:testcode:1:32
+        previous2:testcode:2:32
+        """);
   }
 
   @Test
   public void testReusePreviousSerialization2() {
     previousMappings =
-        "[goog.events.getUniqueId]\n"
-            + "\n"
-            + "a:testcode:1:32\n"
-            + "b:testcode:2:32\n"
-            + "\n"
-            + "[goog.place.getUniqueId]\n"
-            + "\n"
-            + "\n";
+        """
+        [goog.events.getUniqueId]
+
+        a:testcode:1:32
+        b:testcode:2:32
+
+        [goog.place.getUniqueId]
+        """;
     testMap(
-        "var x = goog.events.getUniqueId('xxx');\n"
-            + "\n"
-            + // new line to change location
-            "var y = goog.events.getUniqueId('yyy');\n",
-        "var x = 'a';\n" + "var y = 'c';\n",
-        "[goog.events.getUniqueId]\n" + "\n" + "a:testcode:1:32\n" + "c:testcode:3:32\n" + "\n");
+        """
+        var x = goog.events.getUniqueId('xxx');
+        // new line to change location
+        var y = goog.events.getUniqueId('yyy');
+        """,
+        """
+        var x = 'a';
+        var y = 'c';
+        """,
+        """
+        [goog.events.getUniqueId]
+
+        a:testcode:1:32
+        c:testcode:3:32
+        """);
   }
 
   @Test
   public void testReusePreviousSerializationConsistent1() {
-    previousMappings = "[cid]\n" + "\n" + "a:f1\n" + "\n";
+    previousMappings =
+        """
+        [cid]
+
+        a:f1
+        """;
     testMap(
-        lines(
-            "/** @idGenerator {consistent} */ cid = function() {};",
-            "f1 = cid('f1');",
-            "f1 = cid('f1')"),
-        lines("/** @idGenerator {consistent} */ cid = function() {};", "f1 = 'a';", "f1 = 'a'"),
-        "[cid]\n" + "\n" + "a:f1\n" + "\n");
+        """
+        /** @idGenerator {consistent} */ cid = function() {};
+        f1 = cid('f1');
+        f1 = cid('f1')
+        """,
+        """
+        /** @idGenerator {consistent} */ cid = function() {};
+        f1 = 'a';
+        f1 = 'a'
+        """,
+        """
+        [cid]
+
+        a:f1
+        """);
   }
 
   @Test
   public void testNullishCoalesce() {
     testWithPseudo(
-        lines(
-            "/** @idGenerator */ foo.getUniqueId = function() {x ?? y;};",
-            "foo.bar = foo.getUniqueId('foo_bar')"),
-        lines("/** @idGenerator */ foo.getUniqueId = function() {x ?? y;};", "foo.bar = 'a'"),
-        lines(
-            "/** @idGenerator */ foo.getUniqueId = function() {x ?? y;};",
-            "foo.bar = 'foo_bar$0'"));
+        """
+        /** @idGenerator */ foo.getUniqueId = function() {x ?? y;};
+        foo.bar = foo.getUniqueId('foo_bar')
+        """,
+        """
+        /** @idGenerator */ foo.getUniqueId = function() {x ?? y;};
+        foo.bar = 'a'
+        """,
+        """
+        /** @idGenerator */ foo.getUniqueId = function() {x ?? y;};
+        foo.bar = 'foo_bar$0'
+        """);
   }
 
   @Test
   public void testSimple() {
     testWithPseudo(
-        lines(
-            "/** @idGenerator */ foo.getUniqueId = function() {};",
-            "foo.bar = foo.getUniqueId('foo_bar')"),
-        lines("/** @idGenerator */ foo.getUniqueId = function() {};", "foo.bar = 'a'"),
-        lines("/** @idGenerator */ foo.getUniqueId = function() {};", "foo.bar = 'foo_bar$0'"));
+        """
+        /** @idGenerator */ foo.getUniqueId = function() {};
+        foo.bar = foo.getUniqueId('foo_bar')
+        """,
+        """
+        /** @idGenerator */ foo.getUniqueId = function() {};
+        foo.bar = 'a'
+        """,
+        """
+        /** @idGenerator */ foo.getUniqueId = function() {};
+        foo.bar = 'foo_bar$0'
+        """);
 
     testWithPseudo(
-        lines(
-            "/** @idGenerator */ goog.events.getUniqueId = function() {};",
-            "foo1 = goog.events.getUniqueId('foo1');",
-            "foo1 = goog.events.getUniqueId('foo1');"),
-        lines(
-            "/** @idGenerator */ goog.events.getUniqueId = function() {};",
-            "foo1 = 'a';",
-            "foo1 = 'b';"),
-        lines(
-            "/** @idGenerator */ goog.events.getUniqueId = function() {};",
-            "foo1 = 'foo1$0';",
-            "foo1 = 'foo1$1';"));
+        """
+        /** @idGenerator */ goog.events.getUniqueId = function() {};
+        foo1 = goog.events.getUniqueId('foo1');
+        foo1 = goog.events.getUniqueId('foo1');
+        """,
+        """
+        /** @idGenerator */ goog.events.getUniqueId = function() {};
+        foo1 = 'a';
+        foo1 = 'b';
+        """,
+        """
+        /** @idGenerator */ goog.events.getUniqueId = function() {};
+        foo1 = 'foo1$0';
+        foo1 = 'foo1$1';
+        """);
   }
 
   @Test
   public void testIndirectCall() {
     testWithPseudo(
-        lines(
-            "/** @idGenerator */ foo.getUniqueId = function() {};", //
-            "foo.bar = (0, foo.getUniqueId)('foo_bar')"),
-        lines(
-            "/** @idGenerator */ foo.getUniqueId = function() {};", //
-            "foo.bar = 'a'"),
-        lines(
-            "/** @idGenerator */ foo.getUniqueId = function() {};", //
-            "foo.bar = 'foo_bar$0'"));
+        """
+        /** @idGenerator */ foo.getUniqueId = function() {};
+        foo.bar = (0, foo.getUniqueId)('foo_bar')
+        """,
+        """
+        /** @idGenerator */ foo.getUniqueId = function() {};
+        foo.bar = 'a'
+        """,
+        """
+        /** @idGenerator */ foo.getUniqueId = function() {};
+        foo.bar = 'foo_bar$0'
+        """);
     // JSCompiler inserts JSCOMPILER_PRESERVE(...) in the "UselessCode" analysis.
     testWithPseudo(
-        lines(
-            "/** @idGenerator */ foo.getUniqueId = function() {};", //
-            "foo.bar = (JSCOMPILER_PRESERVE(0), foo.getUniqueId)('foo_bar')"),
-        lines(
-            "/** @idGenerator */ foo.getUniqueId = function() {};", //
-            "foo.bar = 'a'"),
-        lines(
-            "/** @idGenerator */ foo.getUniqueId = function() {};", //
-            "foo.bar = 'foo_bar$0'"));
+        """
+        /** @idGenerator */ foo.getUniqueId = function() {};
+        foo.bar = (JSCOMPILER_PRESERVE(0), foo.getUniqueId)('foo_bar')
+        """,
+        """
+        /** @idGenerator */ foo.getUniqueId = function() {};
+        foo.bar = 'a'
+        """,
+        """
+        /** @idGenerator */ foo.getUniqueId = function() {};
+        foo.bar = 'foo_bar$0'
+        """);
   }
 
   @Test
   public void testObjectLit() {
     testWithPseudo(
-        lines(
-            "/** @idGenerator */ goog.id = function() {};",
-            "things = goog.id({foo1: 'test', 'foo bar': 'test'})"),
-        lines(
-            "/** @idGenerator */ goog.id = function() {};", "things = {'a': 'test', 'b': 'test'}"),
-        lines(
-            "/** @idGenerator */ goog.id = function() {};",
-            "things = {'foo1$0': 'test', 'foo bar$1': 'test'}"));
+        """
+        /** @idGenerator */ goog.id = function() {};
+        things = goog.id({foo1: 'test', 'foo bar': 'test'})
+        """,
+        """
+        /** @idGenerator */ goog.id = function() {};
+        things = {'a': 'test', 'b': 'test'}
+        """,
+        """
+        /** @idGenerator */ goog.id = function() {};
+        things = {'foo1$0': 'test', 'foo bar$1': 'test'}
+        """);
   }
 
   @Test
   public void testObjectLit_mapped() {
     testNonPseudoSupportingGenerator(
-        lines(
-            "/** @idGenerator {mapped} */ id = function() {};",
-            "things = id({foo: 'test', 'bar': 'test'})"),
-        lines(
-            "/** @idGenerator {mapped} */ id = function() {};",
-            "things = {':foo:': 'test', ':bar:': 'test'}"));
+        """
+        /** @idGenerator {mapped} */ id = function() {};
+        things = id({foo: 'test', 'bar': 'test'})
+        """,
+        """
+        /** @idGenerator {mapped} */ id = function() {};
+        things = {':foo:': 'test', ':bar:': 'test'}
+        """);
   }
 
   @Test
   public void testObjectLit_xid() {
     testNonPseudoSupportingGenerator(
-        lines(
-            "/** @idGenerator {xid} */ xid.object = function() {};",
-            "things = xid.object({foo: 'test', 'value': 'test'})"),
-        lines(
-            "/** @idGenerator {xid} */ xid.object = function() {};",
-            "things = {'QB6rXc': 'test', 'b6Lt6c': 'test'}"));
+        """
+        /** @idGenerator {xid} */ xid.object = function() {};
+        things = xid.object({foo: 'test', 'value': 'test'})
+        """,
+        """
+        /** @idGenerator {xid} */ xid.object = function() {};
+        things = {'QB6rXc': 'test', 'b6Lt6c': 'test'}
+        """);
   }
 
   @Test
@@ -264,32 +343,50 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
   @Test
   public void testObjectLit_function() {
     testWithPseudo(
-        lines(
-            "/** @idGenerator */ goog.id = function() {};",
-            "things = goog.id({foo: function() {}})"),
-        lines("/** @idGenerator */ goog.id = function() {};", "things = {'a': function() {}}"),
-        lines("/** @idGenerator */ goog.id = function() {};", "things = {'foo$0': function() {}}"));
+        """
+        /** @idGenerator */ goog.id = function() {};
+        things = goog.id({foo: function() {}})
+        """,
+        """
+        /** @idGenerator */ goog.id = function() {};
+        things = {'a': function() {}}
+        """,
+        """
+        /** @idGenerator */ goog.id = function() {};
+        things = {'foo$0': function() {}}
+        """);
 
     testWithPseudo(
-        lines(
-            "/** @idGenerator */ goog.id = function() {};",
-            "things = goog.id({foo: function*() {}})"),
-        lines("/** @idGenerator */ goog.id = function() {};", "things = {'a': function*() {}}"),
-        lines(
-            "/** @idGenerator */ goog.id = function() {};", "things = {'foo$0': function*() {}}"));
+        """
+        /** @idGenerator */ goog.id = function() {};
+        things = goog.id({foo: function*() {}})
+        """,
+        """
+        /** @idGenerator */ goog.id = function() {};
+        things = {'a': function*() {}}
+        """,
+        """
+        /** @idGenerator */ goog.id = function() {};
+        things = {'foo$0': function*() {}}
+        """);
   }
 
   @Test
   public void testObjectLit_ES6() {
     testError(
-        lines("/** @idGenerator */", "goog.id = function() {};", "things = goog.id({fooX() {}})"),
+        """
+        /** @idGenerator */
+        goog.id = function() {};
+        things = goog.id({fooX() {}})
+        """,
         ReplaceIdGenerators.SHORTHAND_FUNCTION_NOT_SUPPORTED_IN_ID_GEN);
 
     testError(
-        lines(
-            "/** @idGenerator */",
-            "goog.id = function() {};",
-            "things = goog.id({['fooX']: 'test'})"),
+        """
+        /** @idGenerator */
+        goog.id = function() {};
+        things = goog.id({['fooX']: 'test'})
+        """,
         ReplaceIdGenerators.COMPUTED_PROP_NOT_SUPPORTED_IN_ID_GEN);
   }
 
@@ -298,10 +395,11 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
     testSame(
         externs(""),
         srcs(
-            lines(
-                "/** @idGenerator */",
-                "goog.id = function() {};",
-                "things = goog.id(class fooBar{})")),
+            """
+            /** @idGenerator */
+            goog.id = function() {};
+            things = goog.id(class fooBar{})
+            """),
         warning(ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER));
   }
 
@@ -318,278 +416,404 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "/** @idGenerator {consistent} */ cid = function() {}; f1 = 'f1$0'; f1 = 'f1$0'");
 
     testWithPseudo(
-        lines(
-            "/** @idGenerator {consistent} */ cid = function() {};",
-            "f1 = cid('f1');",
-            "f1 = cid('f1');",
-            "f1 = cid('f1')"),
-        lines(
-            "/** @idGenerator {consistent} */ cid = function() {};",
-            "f1 = 'a';",
-            "f1 = 'a';",
-            "f1 = 'a'"),
-        lines(
-            "/** @idGenerator {consistent} */ cid = function() {};",
-            "f1 = 'f1$0';",
-            "f1 = 'f1$0';",
-            "f1 = 'f1$0'"));
+        """
+        /** @idGenerator {consistent} */ cid = function() {};
+        f1 = cid('f1');
+        f1 = cid('f1');
+        f1 = cid('f1')
+        """,
+        """
+        /** @idGenerator {consistent} */ cid = function() {};
+        f1 = 'a';
+        f1 = 'a';
+        f1 = 'a'
+        """,
+        """
+        /** @idGenerator {consistent} */ cid = function() {};
+        f1 = 'f1$0';
+        f1 = 'f1$0';
+        f1 = 'f1$0'
+        """);
   }
 
   @Test
   public void testSimpleStable() {
     testNonPseudoSupportingGenerator(
-        "/** @idGenerator {stable} */ sid = function() {};" + "foo.bar = sid('foo_bar')",
-        "/** @idGenerator {stable} */ sid = function() {};" + "foo.bar = '125lGg'");
+        """
+        /** @idGenerator {stable} */ sid = function() {};
+        foo.bar = sid('foo_bar')
+        """,
+        """
+        /** @idGenerator {stable} */ sid = function() {};
+        foo.bar = '125lGg'
+        """);
 
     testNonPseudoSupportingGenerator(
-        "/** @idGenerator {stable} */ sid = function() {};" + "f1 = sid('f1');" + "f1 = sid('f1')",
-        "/** @idGenerator {stable} */ sid = function() {};" + "f1 = 'AAAMiw';" + "f1 = 'AAAMiw'");
+        """
+        /** @idGenerator {stable} */ sid = function() {};
+        f1 = sid('f1');
+        f1 = sid('f1')
+        """,
+        """
+        /** @idGenerator {stable} */ sid = function() {};
+        f1 = 'AAAMiw';
+        f1 = 'AAAMiw'
+        """);
   }
 
   @Test
   public void testSimpleXid() {
     testNonPseudoSupportingGenerator(
-        lines("/** @idGenerator {xid} */ xid = function() {};", "foo.bar = xid('foo')"),
-        lines("/** @idGenerator {xid} */ xid = function() {};", "foo.bar = 'QB6rXc'"));
+        """
+        /** @idGenerator {xid} */ xid = function() {};
+        foo.bar = xid('foo')
+        """,
+        """
+        /** @idGenerator {xid} */ xid = function() {};
+        foo.bar = 'QB6rXc'
+        """);
 
     testNonPseudoSupportingGenerator(
-        lines(
-            "/** @idGenerator {xid} */ xid = function() {};",
-            "f1 = xid('foo');",
-            "f1 = xid('foo')"),
-        lines("/** @idGenerator {xid} */ xid = function() {};", "f1 = 'QB6rXc';", "f1 = 'QB6rXc'"));
+        """
+        /** @idGenerator {xid} */ xid = function() {};
+        f1 = xid('foo');
+        f1 = xid('foo')
+        """,
+        """
+        /** @idGenerator {xid} */ xid = function() {};
+        f1 = 'QB6rXc';
+        f1 = 'QB6rXc'
+        """);
 
     testNonPseudoSupportingGenerator(
-        lines(
-            "/** @idGenerator {xid} */ xid = function() {};",
-            "f1 = xid(`foo`);",
-            "f1 = xid(`foo`)"),
-        lines("/** @idGenerator {xid} */ xid = function() {};", "f1 = 'QB6rXc';", "f1 = 'QB6rXc'"));
+        """
+        /** @idGenerator {xid} */ xid = function() {};
+        f1 = xid(`foo`);
+        f1 = xid(`foo`)
+        """,
+        """
+        /** @idGenerator {xid} */ xid = function() {};
+        f1 = 'QB6rXc';
+        f1 = 'QB6rXc'
+        """);
   }
 
   @Test
   public void testVar() {
     testWithPseudo(
-        lines(
-            "/** @idGenerator {consistent} */ var cid = function() {};",
-            "foo.bar = cid('foo_bar')"),
-        lines("/** @idGenerator {consistent} */ var cid = function() {};", "foo.bar = 'a'"),
-        lines(
-            "/** @idGenerator {consistent} */ var cid = function() {};", "foo.bar = 'foo_bar$0'"));
+        """
+        /** @idGenerator {consistent} */ var cid = function() {};
+        foo.bar = cid('foo_bar')
+        """,
+        """
+        /** @idGenerator {consistent} */ var cid = function() {};
+        foo.bar = 'a'
+        """,
+        """
+        /** @idGenerator {consistent} */ var cid = function() {};
+        foo.bar = 'foo_bar$0'
+        """);
 
     testNonPseudoSupportingGenerator(
-        lines("/** @idGenerator {stable} */ var sid = function() {};", "foo.bar = sid('foo_bar')"),
-        lines("/** @idGenerator {stable} */ var sid = function() {};", "foo.bar = '125lGg'"));
+        """
+        /** @idGenerator {stable} */ var sid = function() {};
+        foo.bar = sid('foo_bar')
+        """,
+        """
+        /** @idGenerator {stable} */ var sid = function() {};
+        foo.bar = '125lGg'
+        """);
   }
 
   @Test
   public void testLet() {
     testWithPseudo(
-        lines(
-            "/** @idGenerator {consistent} */ let cid = function() {};",
-            "foo.bar = cid('foo_bar')"),
-        lines("/** @idGenerator {consistent} */ let cid = function() {};", "foo.bar = 'a'"),
-        lines(
-            "/** @idGenerator {consistent} */ let cid = function() {};", "foo.bar = 'foo_bar$0'"));
+        """
+        /** @idGenerator {consistent} */ let cid = function() {};
+        foo.bar = cid('foo_bar')
+        """,
+        """
+        /** @idGenerator {consistent} */ let cid = function() {};
+        foo.bar = 'a'
+        """,
+        """
+        /** @idGenerator {consistent} */ let cid = function() {};
+        foo.bar = 'foo_bar$0'
+        """);
 
     testNonPseudoSupportingGenerator(
-        "/** @idGenerator {stable} */ let sid = function() {};" + "foo.bar = sid('foo_bar')",
-        "/** @idGenerator {stable} */ let sid = function() {};" + "foo.bar = '125lGg'");
+        """
+        /** @idGenerator {stable} */ let sid = function() {};
+        foo.bar = sid('foo_bar')
+        """,
+        """
+        /** @idGenerator {stable} */ let sid = function() {};
+        foo.bar = '125lGg'
+        """);
   }
 
   @Test
   public void testConst() {
     testWithPseudo(
-        lines(
-            "/** @idGenerator {consistent} */ const cid = function() {};",
-            "foo.bar = cid('foo_bar')"),
-        lines("/** @idGenerator {consistent} */ const cid = function() {};", "foo.bar = 'a'"),
-        lines(
-            "/** @idGenerator {consistent} */ const cid = function() {};",
-            "foo.bar = 'foo_bar$0'"));
+        """
+        /** @idGenerator {consistent} */ const cid = function() {};
+        foo.bar = cid('foo_bar')
+        """,
+        """
+        /** @idGenerator {consistent} */ const cid = function() {};
+        foo.bar = 'a'
+        """,
+        """
+        /** @idGenerator {consistent} */ const cid = function() {};
+        foo.bar = 'foo_bar$0'
+        """);
 
     testNonPseudoSupportingGenerator(
-        lines(
-            "/** @idGenerator {stable} */ const cid = function() {};", "foo.bar = cid('foo_bar')"),
-        lines("/** @idGenerator {stable} */ const cid = function() {};", "foo.bar = '125lGg'"));
+        """
+        /** @idGenerator {stable} */ const cid = function() {};
+        foo.bar = cid('foo_bar')
+        """,
+        """
+        /** @idGenerator {stable} */ const cid = function() {};
+        foo.bar = '125lGg'
+        """);
   }
 
   @Test
   public void testInObjLit() {
     testWithPseudo(
-        lines(
-            "/** @idGenerator {consistent} */ cid = function() {};",
-            "foo.bar = {a: cid('foo_bar')}"),
-        lines("/** @idGenerator {consistent} */ cid = function() {};", "foo.bar = {a: 'a'}"),
-        lines(
-            "/** @idGenerator {consistent} */ cid = function() {};", "foo.bar = {a: 'foo_bar$0'}"));
+        """
+        /** @idGenerator {consistent} */ cid = function() {};
+        foo.bar = {a: cid('foo_bar')}
+        """,
+        """
+        /** @idGenerator {consistent} */ cid = function() {};
+        foo.bar = {a: 'a'}
+        """,
+        """
+        /** @idGenerator {consistent} */ cid = function() {};
+        foo.bar = {a: 'foo_bar$0'}
+        """);
 
     testNonPseudoSupportingGenerator(
-        lines("/** @idGenerator {stable} */ sid = function() {};", "foo.bar = {a: sid('foo_bar')}"),
-        lines("/** @idGenerator {stable} */ sid = function() {};", "foo.bar = {a: '125lGg'}"));
+        """
+        /** @idGenerator {stable} */ sid = function() {};
+        foo.bar = {a: sid('foo_bar')}
+        """,
+        """
+        /** @idGenerator {stable} */ sid = function() {};
+        foo.bar = {a: '125lGg'}
+        """);
 
     testNonPseudoSupportingGenerator(
-        lines(
-            "/** @idGenerator {xid} */ get.xid = function() {};", "foo.bar = {a: get.xid('foo')}"),
-        lines("/** @idGenerator {xid} */ get.xid = function() {};", "foo.bar = {a: 'QB6rXc'}"));
+        """
+        /** @idGenerator {xid} */ get.xid = function() {};
+        foo.bar = {a: get.xid('foo')}
+        """,
+        """
+        /** @idGenerator {xid} */ get.xid = function() {};
+        foo.bar = {a: 'QB6rXc'}
+        """);
   }
 
   @Test
   public void testInObjLit_mapped() {
-    testWithPseudo(
-        lines("foo.bar = {a: id('foo')}"),
-        lines("foo.bar = {a: ':foo:'}"),
-        lines("foo.bar = {a: ':foo:'}"));
+    testWithPseudo("foo.bar = {a: id('foo')}", "foo.bar = {a: ':foo:'}", "foo.bar = {a: ':foo:'}");
   }
 
   @Test
   public void testMapped() {
-    testWithPseudo(
-        lines("foo.bar = id('foo');"), lines("foo.bar = ':foo:';"), lines("foo.bar = ':foo:';"));
+    testWithPseudo("foo.bar = id('foo');", "foo.bar = ':foo:';", "foo.bar = ':foo:';");
   }
 
   @Test
   public void testMappedMap() {
     testMap(
-        lines("foo.bar = id('foo');", "foo.bar = id('foo');"),
-        lines("foo.bar = ':foo:';", "foo.bar = ':foo:';"),
-        lines("[id]", "", ":foo::foo", "", ""));
+        """
+        foo.bar = id('foo');
+        foo.bar = id('foo');
+        """,
+        """
+        foo.bar = ':foo:';
+        foo.bar = ':foo:';
+        """,
+        """
+        [id]
+
+        :foo::foo
+        """);
   }
 
   @Test
   public void testMapped2() {
     testWithPseudo(
-        lines(
-            "/** @idGenerator {mapped}*/ id = function() {};",
-            "foo.bar = function() { return id('foo'); };"),
-        lines(
-            "/** @idGenerator {mapped}*/ id = function() {};",
-            "foo.bar = function() { return ':foo:'; };"),
-        lines(
-            "/** @idGenerator {mapped}*/ id = function() {};",
-            "foo.bar = function() { return ':foo:'; };"));
+        """
+        /** @idGenerator {mapped}*/ id = function() {};
+        foo.bar = function() { return id('foo'); };
+        """,
+        """
+        /** @idGenerator {mapped}*/ id = function() {};
+        foo.bar = function() { return ':foo:'; };
+        """,
+        """
+        /** @idGenerator {mapped}*/ id = function() {};
+        foo.bar = function() { return ':foo:'; };
+        """);
   }
 
   @Test
   public void testTwoGenerators() {
     testWithPseudo(
-        lines(
-            "/** @idGenerator */ var id1 = function() {};",
-            "/** @idGenerator */ var id2 = function() {};",
-            "f1 = id1('1');",
-            "f2 = id1('1');",
-            "f3 = id2('1');",
-            "f4 = id2('1');"),
-        lines(
-            "/** @idGenerator */ var id1 = function() {};",
-            "/** @idGenerator */ var id2 = function() {};",
-            "f1 = 'a';",
-            "f2 = 'b';",
-            "f3 = 'a';",
-            "f4 = 'b';"),
-        lines(
-            "/** @idGenerator */ var id1 = function() {};",
-            "/** @idGenerator */ var id2 = function() {};",
-            "f1 = '1$0';",
-            "f2 = '1$1';",
-            "f3 = '1$0';",
-            "f4 = '1$1';"));
+        """
+        /** @idGenerator */ var id1 = function() {};
+        /** @idGenerator */ var id2 = function() {};
+        f1 = id1('1');
+        f2 = id1('1');
+        f3 = id2('1');
+        f4 = id2('1');
+        """,
+        """
+        /** @idGenerator */ var id1 = function() {};
+        /** @idGenerator */ var id2 = function() {};
+        f1 = 'a';
+        f2 = 'b';
+        f3 = 'a';
+        f4 = 'b';
+        """,
+        """
+        /** @idGenerator */ var id1 = function() {};
+        /** @idGenerator */ var id2 = function() {};
+        f1 = '1$0';
+        f2 = '1$1';
+        f3 = '1$0';
+        f4 = '1$1';
+        """);
   }
 
   @Test
   public void testMixedGenerators() {
     testWithPseudo(
-        lines(
-            "/** @idGenerator */ var id1 = function() {};",
-            "/** @idGenerator {consistent} */ var id2 = function() {};",
-            "/** @idGenerator {stable} */ var id3 = function() {};",
-            "f1 = id1('1');",
-            "f2 = id1('1');",
-            "f3 = id2('1');",
-            "f4 = id2('1');",
-            "f5 = id3('1');",
-            "f6 = id3('1');"),
-        lines(
-            "/** @idGenerator */ var id1 = function() {};",
-            "/** @idGenerator {consistent} */ var id2 = function() {};",
-            "/** @idGenerator {stable} */ var id3 = function() {};",
-            "f1 = 'a';",
-            "f2 = 'b';",
-            "f3 = 'a';",
-            "f4 = 'a';",
-            "f5 = 'AAAAMQ';",
-            "f6 = 'AAAAMQ';"),
-        lines(
-            "/** @idGenerator */ var id1 = function() {};",
-            "/** @idGenerator {consistent} */ var id2 = function() {};",
-            "/** @idGenerator {stable} */ var id3 = function() {};",
-            "f1 = '1$0';",
-            "f2 = '1$1';",
-            "f3 = '1$0';",
-            "f4 = '1$0';",
-            "f5 = 'AAAAMQ';",
-            "f6 = 'AAAAMQ';"));
+        """
+        /** @idGenerator */ var id1 = function() {};
+        /** @idGenerator {consistent} */ var id2 = function() {};
+        /** @idGenerator {stable} */ var id3 = function() {};
+        f1 = id1('1');
+        f2 = id1('1');
+        f3 = id2('1');
+        f4 = id2('1');
+        f5 = id3('1');
+        f6 = id3('1');
+        """,
+        """
+        /** @idGenerator */ var id1 = function() {};
+        /** @idGenerator {consistent} */ var id2 = function() {};
+        /** @idGenerator {stable} */ var id3 = function() {};
+        f1 = 'a';
+        f2 = 'b';
+        f3 = 'a';
+        f4 = 'a';
+        f5 = 'AAAAMQ';
+        f6 = 'AAAAMQ';
+        """,
+        """
+        /** @idGenerator */ var id1 = function() {};
+        /** @idGenerator {consistent} */ var id2 = function() {};
+        /** @idGenerator {stable} */ var id3 = function() {};
+        f1 = '1$0';
+        f2 = '1$1';
+        f3 = '1$0';
+        f4 = '1$0';
+        f5 = 'AAAAMQ';
+        f6 = 'AAAAMQ';
+        """);
   }
 
   @Test
   public void testNonLiteralParam1() {
     testSame(
-        "/** @idGenerator */ var id = function() {}; " + "var x = 'foo';" + "id(x);",
+        """
+        /** @idGenerator */ var id = function() {};
+        var x = 'foo';
+        id(x);
+        """,
         ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER);
   }
 
   @Test
   public void testNonLiteralParam2() {
     testSame(
-        "/** @idGenerator */ var id = function() {}; " + "id('foo' + 'bar');",
+        """
+        /** @idGenerator */ var id = function() {};
+        id('foo' + 'bar');
+        """,
         ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER);
   }
 
   @Test
   public void testLocalCall() {
     testError(
-        "/** @idGenerator */ var iid = function() {}; " + "function Foo() { iid('foo'); }",
+        """
+        /** @idGenerator */ var iid = function() {};
+        function Foo() { iid('foo'); }
+        """,
         ReplaceIdGenerators.NON_GLOBAL_ID_GENERATOR_CALL);
   }
 
   @Test
   public void testConditionalCall() {
     testError(
-        lines("/** @idGenerator */", "var xid = function() {}; ", "while(0){ xid('foo');}"),
+        """
+        /** @idGenerator */
+        var xid = function() {};
+        while(0){ xid('foo');}
+        """,
         ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
 
     testError(
-        lines("/** @idGenerator */", "var xid = function() {}; ", "for(;;){ xid('foo');}"),
+        """
+        /** @idGenerator */
+        var xid = function() {};
+        for(;;){ xid('foo');}
+        """,
         ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
 
     testError(
-        "/** @idGenerator */ var xid = function() {}; " + "if(x) xid('foo');",
+        """
+        /** @idGenerator */ var xid = function() {};
+        if(x) xid('foo');
+        """,
         ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
 
     testWithPseudo(
-        lines(
-            "/** @idGenerator {consistent} */ var xid = function() {};",
-            "function fb() {foo.bar = xid('foo_bar')}"),
-        lines(
-            "/** @idGenerator {consistent} */ var xid = function() {};",
-            "function fb() {foo.bar = 'a'}"),
-        lines(
-            "/** @idGenerator {consistent} */ var xid = function() {};",
-            "function fb() {foo.bar = 'foo_bar$0'}"));
+        """
+        /** @idGenerator {consistent} */ var xid = function() {};
+        function fb() {foo.bar = xid('foo_bar')}
+        """,
+        """
+        /** @idGenerator {consistent} */ var xid = function() {};
+        function fb() {foo.bar = 'a'}
+        """,
+        """
+        /** @idGenerator {consistent} */ var xid = function() {};
+        function fb() {foo.bar = 'foo_bar$0'}
+        """);
 
     testNonPseudoSupportingGenerator(
-        lines(
-            "/** @idGenerator {stable} */ var xid = function() {};",
-            "function fb() {foo.bar = xid('foo_bar')}"),
-        lines(
-            "/** @idGenerator {stable} */ var xid = function() {};",
-            "function fb() {foo.bar = '125lGg'}"));
+        """
+        /** @idGenerator {stable} */ var xid = function() {};
+        function fb() {foo.bar = xid('foo_bar')}
+        """,
+        """
+        /** @idGenerator {stable} */ var xid = function() {};
+        function fb() {foo.bar = '125lGg'}
+        """);
 
     testError(
-        lines(
-            "/** @idGenerator */",
-            "var xid = function() {}; ",
-            "for(x of [1, 2, 3]){ xid('foo');}"),
+        """
+        /** @idGenerator */
+        var xid = function() {};
+        for(x of [1, 2, 3]){ xid('foo');}
+        """,
         ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
   }
 
@@ -601,73 +825,104 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
     testSame("/** @idGenerator {stable} \n @idGenerator \n*/ var xid = function() {}; ");
 
     testSame(
-        lines(
-            "/** @idGenerator {stable} \n @idGenerator {consistent} \n */",
-            "var xid = function() {};"));
+        """
+        /** @idGenerator {stable}
+         @idGenerator {consistent}
+         */
+        var xid = function() {};
+        """);
   }
 
   @Test
   public void testConsistentIdGenUnderPseudoRenaming() {
     testWithPseudo(
-        lines(
-            "/** @idGenerator {consistent} */ var cid = function() {};",
-            "if (x) {foo.bar = cid('foo_bar')}"),
-        lines( //
-            "/** @idGenerator {consistent} */ var cid = function() {};", "if (x) {foo.bar = 'a'}"),
-        lines(
-            "/** @idGenerator {consistent} */ var cid = function() {};",
-            "if (x) {foo.bar = 'foo_bar$0'}"));
+        """
+        /** @idGenerator {consistent} */ var cid = function() {};
+        if (x) {foo.bar = cid('foo_bar')}
+        """,
+        """
+        /** @idGenerator {consistent} */ var cid = function() {};
+        if (x) {foo.bar = 'a'}
+        """,
+        """
+        /** @idGenerator {consistent} */ var cid = function() {};
+        if (x) {foo.bar = 'foo_bar$0'}
+        """);
   }
 
   @Test
   public void testUnknownMapping() {
     testSame(
-        lines(
-            "/** @idGenerator {mapped} */",
-            "var unknownId = function() {};",
-            "function Foo() { unknownId('foo'); }"),
+        """
+        /** @idGenerator {mapped} */
+        var unknownId = function() {};
+        function Foo() { unknownId('foo'); }
+        """,
         ReplaceIdGenerators.MISSING_NAME_MAP_FOR_GENERATOR);
   }
 
   @Test
   public void testBadGenerator1() {
     testSame(
-        "/** @idGenerator */ id = function() {};" + "foo.bar = id()", INVALID_GENERATOR_PARAMETER);
+        """
+        /** @idGenerator */ id = function() {};
+        foo.bar = id()
+        """,
+        INVALID_GENERATOR_PARAMETER);
   }
 
   @Test
   public void testBadGenerator2() {
     testSame(
-        "/** @idGenerator {consistent} */ id = function() {};" + "foo.bar = id()",
+        """
+        /** @idGenerator {consistent} */ id = function() {};
+        foo.bar = id()
+        """,
         INVALID_GENERATOR_PARAMETER);
   }
 
   @Test
   public void testBadGenerator3() {
     testSame(
-        "/** @idGenerator {consistent} */ id = function() {};"
-            + "foo.bar = id(`hello${ ' '}world`)",
+        """
+        /** @idGenerator {consistent} */ id = function() {};
+        foo.bar = id(`hello${ ' '}world`)
+        """,
         INVALID_GENERATOR_PARAMETER);
   }
 
   @Test
   public void testTTLCall() {
     testMap(
-        lines(
-            "/** @idGenerator {stable} */ function tagId(strings) {return strings[0];};",
-            "function Foo() { tagId`foo`; }"),
-        lines(
-            "/** @idGenerator {stable} */ function tagId(strings) {return strings[0];};",
-            "function Foo() { 'AAGMxg'; }"),
-        lines("[tagId]", "", "AAGMxg:foo", "", ""));
+        """
+        /** @idGenerator {stable} */ function tagId(strings) {return strings[0];};
+        function Foo() { tagId`foo`; }
+        """,
+        """
+        /** @idGenerator {stable} */ function tagId(strings) {return strings[0];};
+        function Foo() { 'AAGMxg'; }
+        """,
+        """
+        [tagId]
+
+        AAGMxg:foo
+        """);
     testMap(
-        lines(
-            "/** @idGenerator {stable} */ function tagId(strings, ...args) {return strings[0];};",
-            "function Foo() { tagId`foo${1}bar${2}`; }"),
-        lines(
-            "/** @idGenerator {stable} */ function tagId(strings, ...args) {return strings[0];};",
-            "function Foo() { tagId`AAGMxg${1}AAF8Ew${2}AAAAAA`; }"),
-        lines("[tagId]", "", "AAGMxg:foo", "AAF8Ew:bar", "AAAAAA:", "", ""));
+        """
+        /** @idGenerator {stable} */ function tagId(strings, ...args) {return strings[0];};
+        function Foo() { tagId`foo${1}bar${2}`; }
+        """,
+        """
+        /** @idGenerator {stable} */ function tagId(strings, ...args) {return strings[0];};
+        function Foo() { tagId`AAGMxg${1}AAF8Ew${2}AAAAAA`; }
+        """,
+        """
+        [tagId]
+
+        AAGMxg:foo
+        AAF8Ew:bar
+        AAAAAA:
+        """);
   }
 
   // The application may or may not be transpiling, ensure we support transpiled mode
@@ -675,47 +930,61 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
   public void testTTLCall_transpiled() {
     enableTranspile();
     testMap(
-        lines(
-            "/** @idGenerator {stable} */ function tagId(strings) {return strings[0];};",
-            "function Foo() { tagId`foo`; }"),
-        lines(
-            "/** @const */",
-            "var $jscomp = $jscomp || {};",
-            "/** @const */",
-            "$jscomp.scope = {};",
-            "/**",
-            " * @nosideeffects",
-            " * @noinline",
-            " * @param {!ITemplateArray} arrayStrings",
-            " * @return {!ITemplateArray}",
-            " */",
-            "$jscomp.createTemplateTagFirstArg = function(arrayStrings) {",
-            "  return $jscomp.createTemplateTagFirstArgWithRaw(arrayStrings, arrayStrings)",
-            "};",
-            "/**",
-            " * @nosideeffects",
-            " * @noinline",
-            " * @param {!ITemplateArray} arrayStrings",
-            " * @param {!ITemplateArray} rawArrayStrings",
-            " * @return {!ITemplateArray}",
-            " */",
-            "$jscomp.createTemplateTagFirstArgWithRaw = function(arrayStrings, rawArrayStrings) {",
-            "  arrayStrings.raw = rawArrayStrings;",
-            "  Object.freeze && (Object.freeze(arrayStrings), Object.freeze(rawArrayStrings));",
-            "  return (/** @type {!ITemplateArray} */ (arrayStrings));",
-            "};",
-            "/** @idGenerator {stable} */ function tagId(strings) {return strings[0];};",
-            "function Foo() { 'AAGMxg'; }"),
-        lines("[tagId]", "", "AAGMxg:foo", "", ""));
+        """
+        /** @idGenerator {stable} */ function tagId(strings) {return strings[0];};
+        function Foo() { tagId`foo`; }
+        """,
+        """
+        /** @const */
+        var $jscomp = $jscomp || {};
+        /** @const */
+        $jscomp.scope = {};
+        /**
+         * @nosideeffects
+         * @noinline
+         * @param {!ITemplateArray} arrayStrings
+         * @return {!ITemplateArray}
+         */
+        $jscomp.createTemplateTagFirstArg = function(arrayStrings) {
+          return $jscomp.createTemplateTagFirstArgWithRaw(arrayStrings, arrayStrings)
+        };
+        /**
+         * @nosideeffects
+         * @noinline
+         * @param {!ITemplateArray} arrayStrings
+         * @param {!ITemplateArray} rawArrayStrings
+         * @return {!ITemplateArray}
+         */
+        $jscomp.createTemplateTagFirstArgWithRaw = function(arrayStrings, rawArrayStrings) {
+          arrayStrings.raw = rawArrayStrings;
+          Object.freeze && (Object.freeze(arrayStrings), Object.freeze(rawArrayStrings));
+          return (/** @type {!ITemplateArray} */ (arrayStrings));
+        };
+        /** @idGenerator {stable} */ function tagId(strings) {return strings[0];};
+        function Foo() { 'AAGMxg'; }
+        """,
+        """
+        [tagId]
+
+        AAGMxg:foo
+        """);
     enableTranspile();
     testMap(
-        lines(
-            "/** @idGenerator {stable} */ function tagId(strings, ...args) {return strings[0];};",
-            "function Foo() { tagId`foo${1}bar${2}`; }"),
-        lines(
-            "/** @idGenerator {stable} */ function tagId(strings, ...args) {return strings[0];};",
-            "function Foo() { tagId`AAGMxg${1}AAF8Ew${2}AAAAAA`; }"),
-        lines("[tagId]", "", "AAGMxg:foo", "AAF8Ew:bar", "AAAAAA:", "", ""));
+        """
+        /** @idGenerator {stable} */ function tagId(strings, ...args) {return strings[0];};
+        function Foo() { tagId`foo${1}bar${2}`; }
+        """,
+        """
+        /** @idGenerator {stable} */ function tagId(strings, ...args) {return strings[0];};
+        function Foo() { tagId`AAGMxg${1}AAF8Ew${2}AAAAAA`; }
+        """,
+        """
+        [tagId]
+
+        AAGMxg:foo
+        AAF8Ew:bar
+        AAAAAA:
+        """);
   }
 
   @Test
@@ -729,7 +998,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   private void testMap(String code, String expected, String expectedMap) {
     test(code, expected);
-    assertThat(lastPass.getSerializedIdMappings()).isEqualTo(expectedMap);
+    assertThat(lastPass.getSerializedIdMappings().trim()).isEqualTo(expectedMap.trim());
   }
 
   private void testWithPseudo(String code, String expected, String expectedPseudo) {

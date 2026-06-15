@@ -20,11 +20,10 @@ import static com.google.j2cl.jre.testing.TestUtils.isWasm;
 import com.google.j2cl.jre.testing.J2ktIncompatible;
 import java.util.NoSuchElementException;
 import java.util.OptionalDouble;
+import junit.framework.TestCase;
 
-/**
- * Tests for OptionalDouble JRE emulation.
- */
-public class OptionalDoubleTest extends GWTTestCase {
+/** Tests for OptionalDouble JRE emulation. */
+public class OptionalDoubleTest extends TestCase {
 
   private static final double REFERENCE = 10d;
   private static final double OTHER_REFERENCE = 20d;
@@ -34,13 +33,8 @@ public class OptionalDoubleTest extends GWTTestCase {
   private OptionalDouble present;
 
   @Override
-  public String getModuleName() {
-    return "com.google.gwt.emultest.EmulSuite";
-  }
-
-  @Override
-  protected void gwtSetUp() throws Exception {
-    super.gwtSetUp();
+  protected void setUp() throws Exception {
+    super.setUp();
     mutableFlag = new boolean[1];
     empty = OptionalDouble.empty();
     present = OptionalDouble.of(REFERENCE);

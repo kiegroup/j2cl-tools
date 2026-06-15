@@ -8,6 +8,7 @@ let InternalPreconditions = goog.forwardDeclare('javaemul.internal.InternalPreco
 let Numbers = goog.forwardDeclare('switchstatement.Numbers$impl');
 let $Asserts = goog.forwardDeclare('vmbootstrap.Asserts$impl');
 let $Exceptions = goog.forwardDeclare('vmbootstrap.Exceptions$impl');
+let $Primitives = goog.forwardDeclare('vmbootstrap.Primitives$impl');
 
 class SwitchStatement extends j_l_Object {
  /** @protected @nodts */
@@ -28,53 +29,65 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_main__void() {
   switch (InternalPreconditions.m_checkNotNull__java_lang_Object__java_lang_Object('one')) {
-   case 'one': 
-   case 'two': 
+   case 'one':
+   case 'two':
     break;
-   default: 
+   default:
     return;
   }
   switch (49 /* '1' */) {
-   case 49 /* '1' */: 
-   case 50 /* '2' */: 
+   case 49 /* '1' */:
+   case 50 /* '2' */:
     break;
-   default: 
+   default:
     return;
   }
   switch (1) {
-   case -2: 
-   case 1: 
-   case 2: 
+   case -2:
+   case 1:
+   case 2:
     break;
-   default: 
+   default:
     return;
   }
   switch (Numbers.f_ONE__switchstatement_Numbers.ordinal()) {
-   case Numbers.$ordinal_ONE__switchstatement_Numbers: 
-   case Numbers.$ordinal_TWO__switchstatement_Numbers: 
+   case Numbers.$ordinal_ONE__switchstatement_Numbers:
+   case Numbers.$ordinal_TWO__switchstatement_Numbers:
     break;
-   case Numbers.$ordinal_THREE__switchstatement_Numbers: 
+   case Numbers.$ordinal_THREE__switchstatement_Numbers:
     break;
-   default: 
+   default:
     return;
+  }
+  let s = 1;
+  switch (s) {
+   case 1:
+    s = $Primitives.narrowIntToShort(s + 1 | 0);
+    break;
+   case 3:
+    s = $Primitives.narrowIntToShort(s + 1 | 0);
+    break;
+   case 12:
+    s = $Primitives.narrowIntToShort(s + 1 | 0);
+    break;
   }
  }
  /** @nodts */
  static m_testSwitchVariableDeclarations__void() {
   let /** number */ i;
   switch (3) {
-   case 1: 
+   case 1:
     let /** number */ unassigned, /** number */ unassigned2;
     i = 0;
     let j = 2, b = j + 1 | 0;
     break;
-   case 3: 
+   case 3:
     i = 3;
     $Asserts.$assert(i == 3);
     return;
   }
   switch (5) {
-   case 5: 
+   case 5:
     let i_1 = 1;
     break;
   }
@@ -83,50 +96,50 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testCaseExpressionTypes__char__int__byte__short__void_$p_switchstatement_SwitchStatement(/** number */ ch, /** number */ i, /** number */ b, /** number */ s) {
   switch (ch) {
-   case 97 /* 'a' */: 
+   case 97 /* 'a' */:
     break;
-   case 1: 
+   case 1:
     break;
-   case 2: 
+   case 2:
     break;
-   case 3: 
+   case 3:
     break;
   }
   switch (i) {
-   case 97 /* 'a' */: 
+   case 97 /* 'a' */:
     break;
-   case 1: 
+   case 1:
     break;
-   case 2: 
+   case 2:
     break;
-   case 3: 
+   case 3:
     break;
   }
   switch (b) {
-   case 97 /* 'a' */: 
+   case 97 /* 'a' */:
     break;
-   case 1: 
+   case 1:
     break;
-   case 2: 
+   case 2:
     break;
-   case 3: 
+   case 3:
     break;
   }
   switch (s) {
-   case 97 /* 'a' */: 
+   case 97 /* 'a' */:
     break;
-   case 1: 
+   case 1:
     break;
-   case 2: 
+   case 2:
     break;
-   case 3: 
+   case 3:
     break;
   }
  }
  /** @nodts */
  m_testBlocksInSwitchCase__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 1: 
+   case 1:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
     {
      this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
@@ -142,7 +155,7 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testLabelInSwitchCase__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 1: 
+   case 1:
     do {
      break;
     } while (true);
@@ -151,10 +164,10 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testNonFallThroughBreakCase__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 1: 
+   case 1:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
     break;
-   default: 
+   default:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
     break;
   }
@@ -163,10 +176,10 @@ class SwitchStatement extends j_l_Object {
  m_testNonFallThroughBreakOuterCase__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   {
    switch (i) {
-    case 1: 
+    case 1:
      this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
      break;
-    default: 
+    default:
      this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
      break;
    }
@@ -176,10 +189,10 @@ class SwitchStatement extends j_l_Object {
  m_testNonFallThroughContinueCase__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   {
    switch (i) {
-    case 3: 
+    case 3:
      this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
      break;
-    default: 
+    default:
      this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
      break;
    }
@@ -188,10 +201,10 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testNonFallThroughReturnCase__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 4: 
+   case 4:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
     return;
-   default: 
+   default:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
     break;
   }
@@ -199,10 +212,10 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testNonFallThroughThrowCase__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 5: 
+   case 5:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
     throw $Exceptions.toJs(RuntimeException.$create__());
-   default: 
+   default:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
     break;
   }
@@ -210,14 +223,14 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testNonFallThroughIfCase__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 1: 
+   case 1:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
     if (false) {
      break;
     } else {
      break;
     }
-   default: 
+   default:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
     break;
   }
@@ -225,12 +238,12 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testNonFallThroughBlockCase__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 1: 
+   case 1:
     {
      this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
      break;
     }
-   default: 
+   default:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
     break;
   }
@@ -238,16 +251,16 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testNonFallThrough_defaultIsNotLast__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 1: 
+   case 1:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
     break;
-   case 2: 
+   case 2:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
     break;
-   default: 
+   default:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(3);
     break;
-   case 3: 
+   case 3:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(4);
     break;
   }
@@ -255,9 +268,9 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testFallThroughCase__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 1: 
+   case 1:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
-   default: 
+   default:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
     break;
   }
@@ -265,9 +278,9 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testFallThroughBreakInnerCase__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 1: 
+   case 1:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
-   default: 
+   default:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
     break;
   }
@@ -275,9 +288,9 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testFallThroughContinueInnerCase__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 1: 
+   case 1:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
-   default: 
+   default:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
     break;
   }
@@ -285,14 +298,14 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testFallThroughLabeledStatement__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 1: 
+   case 1:
     INNER_LABEL: {
      if (false) {
       break INNER_LABEL;
      }
      return;
     }
-   default: 
+   default:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
     break;
   }
@@ -300,12 +313,12 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testFallThroughIfCase__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 1: 
+   case 1:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
     if (false) {
      break;
     }
-   default: 
+   default:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
     break;
   }
@@ -313,14 +326,14 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testFallThroughIfElseCase__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 1: 
+   case 1:
     if (true) {
      this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
      break;
     } else {
      this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
     }
-   default: 
+   default:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
     break;
   }
@@ -328,23 +341,23 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testFallThoughLastCase__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 1: 
+   case 1:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
     break;
-   default: 
+   default:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
   }
  }
  /** @nodts */
  m_testDefaultIsNotLast_fallThrough__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
   switch (i) {
-   case 1: 
+   case 1:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
-   case 2: 
+   case 2:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
-   default: 
+   default:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(3);
-   case 4: 
+   case 4:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(4);
   }
  }
@@ -352,11 +365,11 @@ class SwitchStatement extends j_l_Object {
  m_testDefaultNotLast_fallThroughCase__int__int_$p_switchstatement_SwitchStatement(/** number */ i) {
   let result = 0;
   switch (i) {
-   case 1: 
-   default: 
+   case 1:
+   default:
     result = result + 10 | 0;
     break;
-   case 3: 
+   case 3:
     result = result + 100 | 0;
     break;
   }
@@ -366,11 +379,11 @@ class SwitchStatement extends j_l_Object {
  m_testDefaultNotLast_fallThroughDefault__int__int_$p_switchstatement_SwitchStatement(/** number */ i) {
   let result = 0;
   switch (i) {
-   case 1: 
+   case 1:
     result = result + 10 | 0;
     break;
-   default: 
-   case 3: 
+   default:
+   case 3:
     result = result + 100 | 0;
     break;
   }
@@ -379,9 +392,9 @@ class SwitchStatement extends j_l_Object {
  /** @nodts @return {number} */
  m_testNonExhaustive__switchstatement_Numbers__int_$p_switchstatement_SwitchStatement(/** Numbers */ numbers) {
   switch (numbers.ordinal()) {
-   case Numbers.$ordinal_ONE__switchstatement_Numbers: 
+   case Numbers.$ordinal_ONE__switchstatement_Numbers:
     return 1;
-   case Numbers.$ordinal_TWO__switchstatement_Numbers: 
+   case Numbers.$ordinal_TWO__switchstatement_Numbers:
     return 2;
   }
   return 3;
@@ -389,12 +402,78 @@ class SwitchStatement extends j_l_Object {
  /** @nodts */
  m_testNonExhaustive_fallThrough__switchstatement_Numbers__void_$p_switchstatement_SwitchStatement(/** Numbers */ numbers) {
   switch (numbers.ordinal()) {
-   case Numbers.$ordinal_ONE__switchstatement_Numbers: 
+   case Numbers.$ordinal_ONE__switchstatement_Numbers:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(1);
-   case Numbers.$ordinal_TWO__switchstatement_Numbers: 
+   case Numbers.$ordinal_TWO__switchstatement_Numbers:
     this.m_foo__int__void_$p_switchstatement_SwitchStatement(2);
     break;
   }
+ }
+ /** @nodts */
+ m_testNonExhaustive_foldableFallThrough__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {
+  switch (i) {
+   case 1:
+   case 2:
+   case 3:
+    break;
+   case 4:
+   default:
+    break;
+   case 5:
+   case 6:
+  }
+ }
+ /** @nodts */
+ static m_testSwitchStatement_withRules__void() {
+  let o = 0;
+  switch (1) {
+   default:
+    {
+     break;
+    }
+   case 2:
+    {
+     break;
+    }
+  }
+ }
+ /** @nodts @return {number} */
+ static m_testDefaultNotLast_withRules__int__boolean__int(/** number */ i, /** boolean */ doBreak) {
+  let result = 0;
+  switch (i) {
+   case 1:
+    {
+     result = 1;
+     if (doBreak) {
+      break;
+     }
+     result = 2;
+     break;
+    }
+   case 2:
+    {
+     break;
+    }
+   default:
+    {
+     break;
+    }
+   case 3:
+    {
+     result = 3;
+     break;
+    }
+   case 4:
+    {
+     SwitchStatement.m_foo__int();
+     break;
+    }
+  }
+  return result;
+ }
+ /** @nodts @return {number} */
+ static m_foo__int() {
+  return 1;
  }
  /** @nodts */
  m_foo__int__void_$p_switchstatement_SwitchStatement(/** number */ i) {}
@@ -416,8 +495,11 @@ class SwitchStatement extends j_l_Object {
   Numbers = goog.module.get('switchstatement.Numbers$impl');
   $Asserts = goog.module.get('vmbootstrap.Asserts$impl');
   $Exceptions = goog.module.get('vmbootstrap.Exceptions$impl');
+  $Primitives = goog.module.get('vmbootstrap.Primitives$impl');
  }
 }
+/**@const {number} @nodts*/
+SwitchStatement.f_CONST__switchstatement_SwitchStatement = 3;
 $Util.$setClassMetadata(SwitchStatement, 'switchstatement.SwitchStatement');
 
 exports = SwitchStatement;

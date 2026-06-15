@@ -1,17 +1,17 @@
 ;;; Code for instancefieldinitializer.InstanceFieldInitializer [type definition]
-(type $instancefieldinitializer.InstanceFieldInitializer.vtable (sub $java.lang.Object.vtable (struct
- (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
- (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
- (field $m_hashCode__int (ref $function.m_hashCode__int))
- (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
- ))
-)
 (type $instancefieldinitializer.InstanceFieldInitializer (sub $java.lang.Object (struct
  (field $vtable (ref $instancefieldinitializer.InstanceFieldInitializer.vtable))
  (field $itable (ref $itable))
  (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  (field $a@instancefieldinitializer.InstanceFieldInitializer (mut i32))
  (field $b@instancefieldinitializer.InstanceFieldInitializer (mut i32))
+ ))
+)
+(type $instancefieldinitializer.InstanceFieldInitializer.vtable (sub $java.lang.Object.vtable (struct
+ (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
+ (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
+ (field $m_hashCode__int (ref $function.m_hashCode__int))
+ (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
  ))
 )
 
@@ -46,7 +46,7 @@
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/instancefieldinitializer/readable-j2wasm.js/instancefieldinitializer/InstanceFieldInitializer.java:18:13
   (call $$clinit__void_<once>_@instancefieldinitializer.InstanceFieldInitializer )
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/instancefieldinitializer/readable-j2wasm.js/instancefieldinitializer/InstanceFieldInitializer.java:18:13
-  (local.set $$instance (struct.new $instancefieldinitializer.InstanceFieldInitializer (ref.as_non_null (global.get $instancefieldinitializer.InstanceFieldInitializer.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0) (i32.const 0) (i32.const 0)))
+  (local.set $$instance (struct.new $instancefieldinitializer.InstanceFieldInitializer (global.get $instancefieldinitializer.InstanceFieldInitializer.vtable) (global.get $itable.empty) (i32.const 0) (i32.const 0) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/instancefieldinitializer/readable-j2wasm.js/instancefieldinitializer/InstanceFieldInitializer.java:18:13
   (call $$ctor__void_$p_instancefieldinitializer_InstanceFieldInitializer@instancefieldinitializer.InstanceFieldInitializer (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/instancefieldinitializer/readable-j2wasm.js/instancefieldinitializer/InstanceFieldInitializer.java:18:13

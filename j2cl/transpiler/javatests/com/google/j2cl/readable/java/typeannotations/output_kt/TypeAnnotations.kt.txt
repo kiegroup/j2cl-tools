@@ -1,5 +1,4 @@
 // Generated from "typeannotations/TypeAnnotations.java"
-@file:OptIn(ExperimentalObjCName::class)
 @file:Suppress(
  "ALWAYS_NULL",
  "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
@@ -20,54 +19,35 @@ package typeannotations
 
 import javaemul.lang.*
 import java.util.ArrayList
-import kotlin.OptIn
 import kotlin.String
 import kotlin.Suppress
 import kotlin.collections.MutableList
-import kotlin.experimental.ExperimentalObjCName
 import kotlin.jvm.JvmStatic
-import kotlin.native.ObjCName
 import typeannotations.ParametricType
 
-@ObjCName("J2ktTypeannotationsAbstractType", exact = true)
-abstract class AbstractType internal constructor(): ParametricType<AbstractType?> {}
+abstract class AbstractType internal constructor(): ParametricType<AbstractType?>
 
-@ObjCName("J2ktTypeannotationsAbstractTypeNonNull", exact = true)
-abstract class AbstractTypeNonNull internal constructor(): ParametricType<AbstractType> {}
+abstract class AbstractTypeNonNull internal constructor(): ParametricType<AbstractType>
 
-@ObjCName("J2ktTypeannotationsParent", exact = true)
 open class Parent internal constructor() {
- @ObjCName("m")
- open fun m(
-  @ObjCName("withNSString") s: String,
-  @ObjCName("withTypeannotationsParent") c: Parent?
- ): Parent? {
+ open fun m(s: String, c: Parent?): Parent? {
   return c
  }
 
- @ObjCName("m")
- open fun m(
-  @ObjCName("withJavaUtilList") l: MutableList<String>?,
-  @ObjCName("withTypeannotationsParent") c: Parent?
- ): MutableList<Parent>? {
+ open fun m(l: MutableList<String>?, c: Parent?): MutableList<Parent>? {
   return ArrayList<Parent>()
  }
 }
 
-@ObjCName("J2ktTypeannotationsChildWithNullableParent", exact = true)
-open class ChildWithNullableParent internal constructor(): Parent(), ParametricType<Parent?> {}
+open class ChildWithNullableParent internal constructor(): Parent(), ParametricType<Parent?>
 
-@ObjCName("J2ktTypeannotationsChildWithNonNullableParent", exact = true)
-open class ChildWithNonNullableParent internal constructor(): Parent(), ParametricType<Parent> {}
+open class ChildWithNonNullableParent internal constructor(): Parent(), ParametricType<Parent>
 
-@ObjCName("J2ktTypeannotationsTypeAnnotations", exact = true)
 open class TypeAnnotations {
- @ObjCName("J2ktTypeannotationsTypeAnnotationsCompanion", exact = true)
  companion object {
   @JvmStatic
-  @ObjCName("main")
   fun main() {
-   val list: MutableList<String>? = ArrayList<String>()
+   val list: MutableList<String> = ArrayList<String>()
   }
  }
 }

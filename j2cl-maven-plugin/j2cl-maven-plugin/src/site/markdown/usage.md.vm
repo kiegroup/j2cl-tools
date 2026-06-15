@@ -53,8 +53,8 @@ have tests or produce runnable JavaScript:
 This will default to producing optimized JavaScript of the application in the `prepare-package` phase. See the 
 [configuration options for j2cl:build](build-mojo.html) for more details on how to customize this.
 
-By default, for a project named `my-app` with version `1.2.3-SNAPSHOT` output will be written to the
-`target/my-app-1.2.3-SNAPSHOT` directory, under the assumption that a war file will be built around this content, and
+By default, for a project named `my-app` with version `1.3.2-SNAPSHOT` output will be written to the
+`target/my-app-1.3.2-SNAPSHOT` directory, under the assumption that a war file will be built around this content, and
 used as an overlay for the server war. This directory can be customized using 
 [`<webappDirectory>`](build-mojo.html#webappDirectory). The actual output JS file in turn would be in that directory, 
 in `my-app/my-app.js` - other generated resources would live in the same directory. To avoid this extra wrapping

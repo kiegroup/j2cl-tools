@@ -17,10 +17,9 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.j2cl.common.OutputUtils;
 import com.google.j2cl.common.OutputUtils.Output;
-import com.google.j2cl.common.Problems;
 import com.google.j2cl.common.Problems.FatalError;
 import com.google.j2cl.common.SourceUtils;
 import com.google.j2cl.common.SourceUtils.FileInfo;
@@ -57,6 +56,15 @@ final class BazelJ2clBuilder extends BazelWorker {
       metaVar = "<path>",
       usage = "Specifies where to find user class files and annotation processors.")
   String classPath;
+
+  @Option(name = "-directdeps", metaVar = "<path>", usage = "Specifies direct dependency jars.")
+  String directDeps = "";
+
+  @Option(
+      name = "-system",
+      metaVar = "<path>",
+      usage = "Specifies the location of the system modules.")
+  String system = "";
 
   @Option(
       name = "-output",
@@ -123,26 +131,50 @@ final class BazelJ2clBuilder extends BazelWorker {
       hidden = true)
   Backend backend = Backend.CLOSURE;
 
+  @Option(
+      name = "-javacOptions",
+      metaVar = "<option>",
+      usage = "Options to pass to Javac.",
+      hidden = true)
+  List<String> javacOptions = new ArrayList<>();
+
   @Option(name = "-kotlincOptions", hidden = true)
   List<String> kotlincOptions = new ArrayList<>();
 
   @Option(name = "-experimentalGenerateWasmExport", hidden = true)
   List<String> wasmEntryPoints = new ArrayList<>();
 
+  @Option(
+      name = "-experimentalEnableWasmCustomDescriptors",
+      usage = "Enables generating custom descriptors for Wasm.",
+      hidden = true)
+  boolean enableWasmCustomDescriptors = false;
+
   @Option(name = "-forbiddenAnnotation", hidden = true)
-  List<String> forbiddenAnnotations = new ArrayList();
+  List<String> forbiddenAnnotations = new ArrayList<>();
 
   @Option(name = "-experimentalDefineForWasm", handler = MapOptionHandler.class, hidden = true)
   Map<String, String> definesForWasm = new HashMap<>();
 
+  @Option(name = "-objCNamePrefix", hidden = true)
+  String objCNamePrefix = "J2kt";
+
   @Override
-  protected void run(Problems problems) {
-    try (Output out = OutputUtils.initOutput(this.output, problems)) {
-      J2clTranspiler.transpile(createOptions(out, problems), problems);
+  protected void run() {
+    problems.abortIfCancelled();
+    try (Output out = OutputUtils.initOutput(workdir.resolve(output), problems)) {
+      problems.abortIfCancelled();
+      try {
+        J2clTranspiler.transpile(createOptions(out), problems);
+      } catch (RuntimeException | Error e) {
+        // Cancel the writing of the output files since we don't need them anymore.
+        out.cancel();
+        throw e;
+      }
     }
   }
 
-  private J2clTranspilerOptions createOptions(Output output, Problems problems) {
+  private J2clTranspilerOptions createOptions(Output output) {
 
     if (this.readableSourceMaps && this.generateKytheIndexingMetadata) {
       problems.warning(
@@ -150,16 +182,16 @@ final class BazelJ2clBuilder extends BazelWorker {
       this.readableSourceMaps = false;
     }
 
-    if (backend == Backend.CLOSURE && libraryInfoOutput == null) {
-      problems.fatal(FatalError.LIBRARY_INFO_OUTPUT_ARG_MISSING);
-    }
-
     if (!javaFrontend.isJavaFrontend()) {
       problems.fatal(FatalError.INVALID_JAVA_FRONTEND, javaFrontend);
     }
 
+    Path sourceJarDir = SourceUtils.deriveDirectory(this.output, "_source_jars");
     ImmutableList<FileInfo> allSources =
-        SourceUtils.getAllSources(this.sources, problems).collect(toImmutableList());
+        SourceUtils.getAllSourcesFromPaths(
+                sources.stream().map(workdir::resolve), sourceJarDir, problems)
+            .collect(toImmutableList());
+    problems.abortIfCancelled();
 
     ImmutableList<FileInfo> allJavaSources =
         allSources.stream()
@@ -169,9 +201,7 @@ final class BazelJ2clBuilder extends BazelWorker {
     ImmutableList<FileInfo> allKotlinSources =
         allSources.stream().filter(p -> p.sourcePath().endsWith(".kt")).collect(toImmutableList());
 
-    // For now, only package-info.java files are allowed with Kotlin sources.
-    if (allJavaSources.stream().anyMatch(f -> !f.sourcePath().endsWith("package-info.java"))
-        && !allKotlinSources.isEmpty()) {
+    if (!allJavaSources.isEmpty() && !allKotlinSources.isEmpty()) {
       throw new AssertionError(
           "Transpilation of Java and Kotlin files together is not supported yet.");
     }
@@ -185,6 +215,11 @@ final class BazelJ2clBuilder extends BazelWorker {
     allSources.stream()
         .filter(p -> p.sourcePath().endsWith(".js") && !p.sourcePath().endsWith("native.js"))
         .forEach(f -> output.copyFile(f.sourcePath(), f.targetPath()));
+    problems.abortIfCancelled();
+
+    if (libraryInfoOutput != null) {
+      libraryInfoOutput = workdir.resolve(libraryInfoOutput);
+    }
 
     return J2clTranspilerOptions.newBuilder()
         .setSources(
@@ -194,30 +229,33 @@ final class BazelJ2clBuilder extends BazelWorker {
                 .build())
         .setNativeSources(allNativeSources)
         .setClasspaths(getPathEntries(this.classPath))
+        .setDirectDeps(getPathEntries(this.directDeps))
+        .setSystem(this.system)
         .setOutput(output)
         .setTargetLabel(targetLabel)
-        .setLibraryInfoOutput(this.libraryInfoOutput)
+        .setLibraryInfoOutput(libraryInfoOutput)
         .setEmitReadableLibraryInfo(readableLibraryInfo)
         .setEmitReadableSourceMap(this.readableSourceMaps)
         .setSourceMappingPathPrefix(this.sourceMappingPathPrefix)
-        .setGenerateKytheIndexingMetadata(this.generateKytheIndexingMetadata)
         .setOptimizeAutoValue(this.optimizeAutoValue)
+        .setGenerateKytheIndexingMetadata(this.generateKytheIndexingMetadata)
         .setFrontend(allKotlinSources.isEmpty() ? javaFrontend : Frontend.KOTLIN)
         .setBackend(this.backend)
-        .setWasmEntryPointStrings(ImmutableList.copyOf(this.wasmEntryPoints))
-        .setDefinesForWasm(ImmutableMap.copyOf(definesForWasm))
+        .setWasmEntryPointStrings(this.wasmEntryPoints)
+        .setEnableWasmCustomDescriptors(this.enableWasmCustomDescriptors)
+        .setDefinesForWasm(definesForWasm)
         .setNullMarkedSupported(this.enableJSpecifySupport)
-        .setKotlincOptions(ImmutableList.copyOf(kotlincOptions))
-        .setForbiddenAnnotations(ImmutableList.copyOf(forbiddenAnnotations))
+        .setJavacOptions(javacOptions)
+        .setKotlincOptions(kotlincOptions)
+        .setForbiddenAnnotations(forbiddenAnnotations)
+        .setObjCNamePrefix(objCNamePrefix)
         .build(problems);
   }
 
-  private static List<String> getPathEntries(String path) {
-    List<String> entries = new ArrayList<>();
-    for (String entry : Splitter.on(File.pathSeparatorChar).omitEmptyStrings().split(path)) {
-      entries.add(entry);
-    }
-    return entries;
+  private List<String> getPathEntries(String path) {
+    return Lists.transform(
+        Splitter.on(File.pathSeparatorChar).omitEmptyStrings().splitToList(path),
+        s -> workdir.resolve(s).toString());
   }
 
   public static void main(String[] workerArgs) throws Exception {

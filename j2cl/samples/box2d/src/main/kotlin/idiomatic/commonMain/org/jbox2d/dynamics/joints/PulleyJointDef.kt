@@ -23,6 +23,7 @@
 /** Created at 12:11:41 PM Jan 23, 2011 */
 package org.jbox2d.dynamics.joints
 
+import org.jbox2d.common.Settings
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.Body
 
@@ -65,12 +66,11 @@ class PulleyJointDef : JointDef() {
     groundAnchorB = ga2
     localAnchorA = bodyA.getLocalPoint(anchor1)
     localAnchorB = bodyB.getLocalPoint(anchor2)
-    val d1 = anchor1.sub(ga1)
+    val d1 = anchor1 - ga1
     lengthA = d1.length()
-    val d2 = anchor2.sub(ga2)
+    val d2 = anchor2 - ga2
     lengthB = d2.length()
     ratio = r
-    // assert is not supported in KMP.
-    // assert(ratio > Settings.EPSILON)
+    assert(ratio > Settings.EPSILON)
   }
 }

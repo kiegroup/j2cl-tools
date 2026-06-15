@@ -62,7 +62,11 @@ public final class CheckGoogModuleTypeScriptNameTest extends CompilerTestCase {
 
   @Test
   public void testNoWarning_noModule() {
-    testNoWarning(lines("goog.provide('test');", "alert(1)"));
+    testNoWarning(
+        """
+        goog.provide('test');
+        alert(1)
+        """);
   }
 
   @Test
@@ -72,7 +76,7 @@ public final class CheckGoogModuleTypeScriptNameTest extends CompilerTestCase {
             ImmutableList.of(
                 SourceFile.fromCode("gws/js/test.js", "goog.module('test');\nalert(1);"))),
         warning(MODULE_NAMESPACE_MISMATCHES_TYPESCRIPT_NAMESPACE)
-            .withMessageContaining(lines("The correct namespace is: \"google3.gws.js.test\"")));
+            .withMessageContaining("The correct namespace is: \"google3.gws.js.test\""));
   }
 
   // MOE::begin_strip
@@ -85,7 +89,7 @@ public final class CheckGoogModuleTypeScriptNameTest extends CompilerTestCase {
                     "/google/src/cloud/someuser/someworkspace/google3/gws/js/test.js",
                     "goog.module('test');\nalert(1);"))),
         warning(MODULE_NAMESPACE_MISMATCHES_TYPESCRIPT_NAMESPACE)
-            .withMessageContaining(lines("The correct namespace is: \"google3.gws.js.test\"")));
+            .withMessageContaining("The correct namespace is: \"google3.gws.js.test\""));
   }
   // MOE::end_strip
 }

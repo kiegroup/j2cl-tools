@@ -1,15 +1,15 @@
 ;;; Code for instancequalifieronstaticfield.InstanceQualifiers [type definition]
+(type $instancequalifieronstaticfield.InstanceQualifiers (sub $java.lang.Object (struct
+ (field $vtable (ref $instancequalifieronstaticfield.InstanceQualifiers.vtable))
+ (field $itable (ref $itable))
+ (field $$systemIdentityHashCode@java.lang.Object (mut i32))
+ ))
+)
 (type $instancequalifieronstaticfield.InstanceQualifiers.vtable (sub $java.lang.Object.vtable (struct
  (field $$getClassImpl__java_lang_Class (ref $function.$getClassImpl__java_lang_Class))
  (field $m_equals__java_lang_Object__boolean (ref $function.m_equals__java_lang_Object__boolean))
  (field $m_hashCode__int (ref $function.m_hashCode__int))
  (field $m_toString__java_lang_String (ref $function.m_toString__java_lang_String))
- ))
-)
-(type $instancequalifieronstaticfield.InstanceQualifiers (sub $java.lang.Object (struct
- (field $vtable (ref $instancequalifieronstaticfield.InstanceQualifiers.vtable))
- (field $itable (ref $itable))
- (field $$systemIdentityHashCode@java.lang.Object (mut i32))
  ))
 )
 
@@ -60,7 +60,7 @@
  (local $$instance (ref null $instancequalifieronstaticfield.InstanceQualifiers))
  (block
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/instancequalifieronstaticfield/readable-j2wasm.js/instancequalifieronstaticfield/InstanceQualifiers.java:18:13
-  (local.set $$instance (struct.new $instancequalifieronstaticfield.InstanceQualifiers (ref.as_non_null (global.get $instancequalifieronstaticfield.InstanceQualifiers.vtable)) (ref.as_non_null (global.get $itable.empty)) (i32.const 0)))
+  (local.set $$instance (struct.new $instancequalifieronstaticfield.InstanceQualifiers (global.get $instancequalifieronstaticfield.InstanceQualifiers.vtable) (global.get $itable.empty) (i32.const 0)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/instancequalifieronstaticfield/readable-j2wasm.js/instancequalifieronstaticfield/InstanceQualifiers.java:18:13
   (call $$ctor__void_$p_instancequalifieronstaticfield_InstanceQualifiers@instancequalifieronstaticfield.InstanceQualifiers (ref.as_non_null (local.get $$instance)))
   ;;@ transpiler/javatests/com/google/j2cl/readable/java/instancequalifieronstaticfield/readable-j2wasm.js/instancequalifieronstaticfield/InstanceQualifiers.java:18:13

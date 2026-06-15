@@ -236,11 +236,14 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   @Test
   public void testInvalidBase2() {
     testError(
-        "function Foo() {}"
-            + FOO_INHERITS
-            + "Foo.method = function() {"
-            + "  Foo.base(this, 'method');"
-            + "};",
+        """
+        function Foo() {}
+        FOO_INHERITS
+        Foo.method = function() {
+          Foo.base(this, 'method');
+        };
+        """
+            .replace("FOO_INHERITS", FOO_INHERITS),
         BASE_CLASS_ERROR);
   }
 
@@ -297,9 +300,11 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   @Test
   public void testInvalidBase13() {
     testError(
-        "function Bar(){ Bar.base(this, 'constructor'); }"
-            + "goog.inherits(Bar, Goo);"
-            + "function Foo(){ Bar.base(this, 'constructor'); }"
+        """
+        function Bar(){ Bar.base(this, 'constructor'); }
+        goog.inherits(Bar, Goo);
+        function Foo(){ Bar.base(this, 'constructor'); }
+        """
             + FOO_INHERITS,
         BASE_CLASS_ERROR);
   }
@@ -353,65 +358,79 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   @Test
   public void testValidBase6() {
     test(
-        "var goog = {}; goog.Foo = function() {"
-            + "goog.Foo.base(this, 'constructor'); }; "
-            + "goog.inherits(goog.Foo, goog.BaseFoo);",
-        "var goog = {}; goog.Foo = function() { goog.BaseFoo.call(this); }; "
-            + "goog.inherits(goog.Foo, goog.BaseFoo);");
+        """
+        var goog = {}; goog.Foo = function() {
+        goog.Foo.base(this, 'constructor'); };
+        goog.inherits(goog.Foo, goog.BaseFoo);
+        """,
+        """
+        var goog = {}; goog.Foo = function() { goog.BaseFoo.call(this); };
+        goog.inherits(goog.Foo, goog.BaseFoo);
+        """);
   }
 
   @Test
   public void testValidBase7() {
     // No goog.inherits, so this is probably a different 'base' function.
-    testSame("" + "var a = function() {" + "  a.base(this, 'constructor');" + "};");
+    testSame(
+        """
+        var a = function() {
+          a.base(this, 'constructor');
+        };
+        """);
   }
 
   @Test
   public void testValidBase_exportsAssignmentsBeforeGoogInherits() {
     test(
-        lines(
-            "goog.module('my.Foo');",
-            "class Bar {}",
-            "function Foo() { Foo.base(this, 'constructor', 1, 2); }",
-            "exports.Foo = Foo;",
-            "exports.Bar = Bar;",
-            FOO_INHERITS),
-        lines(
-            "goog.module('my.Foo');",
-            "class Bar {}",
-            "function Foo() { BaseFoo.call(this, 1, 2); }",
-            "exports.Foo = Foo;",
-            "exports.Bar = Bar;",
-            FOO_INHERITS));
+        """
+        goog.module('my.Foo');
+        class Bar {}
+        function Foo() { Foo.base(this, 'constructor', 1, 2); }
+        exports.Foo = Foo;
+        exports.Bar = Bar;
+        """
+            + FOO_INHERITS,
+        """
+        goog.module('my.Foo');
+        class Bar {}
+        function Foo() { BaseFoo.call(this, 1, 2); }
+        exports.Foo = Foo;
+        exports.Bar = Bar;
+        """
+            + FOO_INHERITS);
   }
 
   @Test
   public void testInvalidBase_nonAliasLinesBeforeGoogInherits() {
     testSame(
-        lines(
-            "goog.module('my.Foo');",
-            "function Foo() { Foo.base(this, 'constructor', 1, 2); }",
-            "alert(0);",
-            "alert(1);",
-            "alert(2);",
-            FOO_INHERITS));
+        """
+        goog.module('my.Foo');
+        function Foo() { Foo.base(this, 'constructor', 1, 2); }
+        alert(0);
+        alert(1);
+        alert(2);
+        """
+            + FOO_INHERITS);
   }
 
   @Test
   public void testValidBase_googProvide_googRequiredInOtherModule() {
     test(
         srcs(
-            lines(
-                "goog.provide('my.Foo');",
-                "/** @constructor */",
-                "my.Foo = function() {}",
-                "goog.inherits(my.Foo, BaseFoo);"),
-            lines(
-                "goog.module('test');",
-                "const Foo = goog.require('my.Foo');",
-                "Foo.prototype.method = function() {",
-                "  Foo.base(this, 'method');",
-                "};")),
+            """
+            goog.provide('my.Foo');
+            /** @constructor */
+            my.Foo = function() {}
+            goog.inherits(my.Foo, BaseFoo);
+            """,
+            """
+            goog.module('test');
+            const Foo = goog.require('my.Foo');
+            Foo.prototype.method = function() {
+              Foo.base(this, 'method');
+            };
+            """),
         error(POSSIBLE_BASE_CLASS_ERROR));
   }
 
@@ -419,30 +438,34 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   public void testValidBase_googModule_googRequiredInOtherModule() {
     test(
         srcs(
-            lines(
-                "goog.module('FooModule');",
-                "/** @constructor */ function Foo() {}",
-                "goog.inherits(Foo, BaseFoo);",
-                "exports = {Foo};"),
-            lines(
-                "goog.module('test');",
-                "const {Foo: FooRequired} = goog.require('FooModule');",
-                "FooRequired.prototype.method = function() {",
-                "  FooRequired.base(this, 'method');",
-                "};")),
+            """
+            goog.module('FooModule');
+            /** @constructor */ function Foo() {}
+            goog.inherits(Foo, BaseFoo);
+            exports = {Foo};
+            """,
+            """
+            goog.module('test');
+            const {Foo: FooRequired} = goog.require('FooModule');
+            FooRequired.prototype.method = function() {
+              FooRequired.base(this, 'method');
+            };
+            """),
         error(POSSIBLE_BASE_CLASS_ERROR));
   }
 
   @Test
   public void testValidPrimitiveCalls() {
     testNoWarning(
-        lines(
-            "goog.module('c');", //
-            "goog.forwardDeclare('A.b');"));
+        """
+        goog.module('c');
+        goog.forwardDeclare('A.b');
+        """);
     testNoWarning(
-        lines(
-            "goog.module('d');", //
-            "goog.addDependency('C.D');"));
+        """
+        goog.module('d');
+        goog.addDependency('C.D');
+        """);
   }
 
   @Test

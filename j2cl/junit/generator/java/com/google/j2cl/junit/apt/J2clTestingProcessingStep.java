@@ -56,7 +56,7 @@ public class J2clTestingProcessingStep implements ProcessingStep {
             errorReporter, processingEnv.getTypeUtils(), processingEnv.getElementUtils());
     Map<String, String> options = processingEnv.getOptions();
     this.testPlatform =
-        options.getOrDefault(J2clTestingProcessor.JAVAC_OPTS_FLAG_TEST_PLATFORM, "CLOSURE");
+        options.getOrDefault(J2clTestingProcessor.JAVAC_OPTS_FLAG_TEST_PLATFORM, "UNKNOWN");
     this.writer = new TemplateWriter(errorReporter, processingEnv.getFiler(), testPlatform);
   }
 
@@ -69,11 +69,20 @@ public class J2clTestingProcessingStep implements ProcessingStep {
   @Override
   public Set<Element> process(
       SetMultimap<Class<? extends Annotation>, Element> elementsByAnnotation) {
-    elementsByAnnotation.get(J2clTestInput.class).forEach(value -> {
+
+    java.util.Collection<Element> elements = elementsByAnnotation.get(J2clTestInput.class);
+    for(Element elm: elements) {
       String className =
-          MoreApt.getClassNameFromAnnotation(value, J2clTestInput.class, "value").get();
+              MoreApt.getClassNameFromAnnotation(elm, J2clTestInput.class, "value").get();
+      System.out.println("process " + elm + " " + className);
       handleClass(className);
-    });
+
+    }
+
+/*    Element value = Iterables.getOnlyElement(elementsByAnnotation.get(J2clTestInput.class));
+    String className =
+        MoreApt.getClassNameFromAnnotation(value, J2clTestInput.class, "value").get();
+    handleClass(className);*/
     return ImmutableSet.of();
   }
 

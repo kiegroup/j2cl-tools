@@ -16,12 +16,17 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlistedConformanceViolationsBehavior.UNSPECIFIED;
 
-import com.google.common.annotations.GwtIncompatible;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.CompilerOptions.ConformanceReportingMode;
+import com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlistedConformanceViolationsBehavior;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.TextFormat;
@@ -29,18 +34,21 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Provides a framework for checking code against a set of user configured conformance rules. The
- * rules are specified by the ConformanceConfig proto, which allows for both standard checks
- * (forbidden properties, variables, or dependencies) and allow for more complex checks using custom
- * rules than specify
+ * Provides a framework for checking code against a set of user configured conformance requirements
+ * {@link Requirement}. The requirements are specified by the ConformanceConfig proto, which allows
+ * for both standard checks (forbidden properties, variables, or dependencies) and allow for more
+ * complex checks using requirements of CUSTOM type.
+ *
+ * <p>The requirements are translated into rules {@link CheckConformance.Rule} which are then
+ * checked by this pass.
  *
  * <p>Conformance violations are both reported as compiler errors, and are also reported separately
  * to the {cI gue@link ErrorManager}
  */
-@GwtIncompatible("com.google.protobuf")
 public final class CheckConformance implements NodeTraversal.Callback, CompilerPass {
   static final DiagnosticType CONFORMANCE_ERROR =
       DiagnosticType.error("JSC_CONFORMANCE_ERROR", "Violation: {0}{1}{2}");
@@ -59,6 +67,31 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
   private final AbstractCompiler compiler;
   private final ImmutableList<Category> categories;
 
+  /**
+   * Map of root requirements to their behavior specified in their configs, or of their extending
+   * requirement's config. It is only populated if both of the following conditions are met:
+   *
+   * <ol>
+   *   <li>the conformance reporting mode is RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG,
+   *       i.e. the conformance checks are being run during the CheckJS action.
+   *   <li>the requirement has a behavior that is different from the default UNSPECIFIED behavior
+   *       (i.e. RECORD_ONLY or REPORT_AS_BUILD_ERROR).
+   * </ol>
+   *
+   * The behavior of each library-level requirement gets stored in this map, and gets passed into
+   * the check() method of its corresponding rule to determine whether to record or report the
+   * conformance violations.
+   */
+  private final Map<Requirement, LibraryLevelNonAllowlistedConformanceViolationsBehavior>
+      mergedBehaviors = new LinkedHashMap<>();
+
+  // Map of rules to their behavior. Populated from the mergedBehaviors map. The behavior of each
+  // rule is passed into the check() method of the rule to determine whether to record or report the
+  // conformance violations.
+  private final Map<Rule, LibraryLevelNonAllowlistedConformanceViolationsBehavior> ruleToBehavior =
+      new LinkedHashMap<>();
+
+  /** A rule that can be checked for conformance. */
   public static interface Rule {
 
     /**
@@ -75,7 +108,8 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
     }
 
     /** Perform conformance check */
-    void check(NodeTraversal t, Node n);
+    void check(
+        NodeTraversal t, Node n, LibraryLevelNonAllowlistedConformanceViolationsBehavior behavior);
   }
 
   /**
@@ -107,12 +141,23 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
   }
 
   /**
+   * @param compiler The compiler.
+   */
+  @VisibleForTesting
+  CheckConformance(AbstractCompiler compiler) {
+    this(compiler, ImmutableList.of(), null);
+  }
+
+  /**
    * @param configs The rules to check.
    */
-  CheckConformance(AbstractCompiler compiler, ImmutableList<ConformanceConfig> configs) {
+  CheckConformance(
+      AbstractCompiler compiler,
+      ImmutableList<ConformanceConfig> configs,
+      ConformanceReportingMode reportingMode) {
     this.compiler = compiler;
     // Initialize the map of functions to inspect for renaming candidates.
-    this.categories = initRules(compiler, configs);
+    this.categories = initRules(compiler, configs, reportingMode);
   }
 
   @Override
@@ -148,26 +193,102 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
       Category category = this.categories.get(c);
       if (category.precondition.shouldCheck(n)) {
         for (int r = category.rules.size() - 1; r >= 0; r--) {
-          category.rules.get(r).check(t, n);
+          Rule rule = category.rules.get(r);
+          var behavior = checkNotNull(ruleToBehavior.getOrDefault(rule, UNSPECIFIED));
+          rule.check(t, n, behavior);
         }
       }
     }
   }
 
   /** Build the data structures need by this pass from the provided configurations. */
-  private static ImmutableList<Category> initRules(
-      AbstractCompiler compiler, ImmutableList<ConformanceConfig> configs) {
+  private ImmutableList<Category> initRules(
+      AbstractCompiler compiler,
+      ImmutableList<ConformanceConfig> configs,
+      ConformanceReportingMode reportingMode) {
     HashMultimap<Precondition, Rule> builder = HashMultimap.create();
-    List<Requirement> requirements = mergeRequirements(compiler, configs);
-    for (Requirement requirement : requirements) {
+
+    boolean isLibraryLevelReportingMode =
+        reportingMode != null
+            && reportingMode.equals(
+                ConformanceReportingMode.RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG);
+    if (isLibraryLevelReportingMode) {
+      if (!validateBehaviorSettingOfConfigs(compiler, configs, reportingMode)) {
+        return ImmutableList.of();
+      }
+    }
+
+    List<Requirement> mergedRequirements =
+        mergeRequirements(compiler, configs, isLibraryLevelReportingMode);
+    for (Requirement requirement : mergedRequirements) {
+      var behavior = UNSPECIFIED;
       Rule rule = initRule(compiler, requirement);
       if (rule != null) {
         builder.put(rule.getPrecondition(), rule);
+        if (isLibraryLevelReportingMode && mergedBehaviors.containsKey(requirement)) {
+          behavior = mergedBehaviors.get(requirement);
+          checkNotNull(
+              behavior,
+              "The mergeBehaviors method inserted a null behavior in the mergedBehaviors map");
+        }
+        ruleToBehavior.put(rule, behavior);
       }
     }
     return builder.asMap().entrySet().stream()
         .map((e) -> new Category(e.getKey(), ImmutableList.copyOf(e.getValue())))
         .collect(toImmutableList());
+  }
+
+  private static boolean validateBehaviorSettingOfConfigs(
+      AbstractCompiler compiler,
+      ImmutableList<ConformanceConfig> configs,
+      ConformanceReportingMode reportingMode) {
+    // only validate if the behavior matters (i.e. if the compiler is running in library-level
+    // conformance mode)
+    checkState(
+        reportingMode.equals(
+            ConformanceReportingMode.RESPECT_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG));
+    Map<String, LibraryLevelNonAllowlistedConformanceViolationsBehavior> baseRequirementBehaviors =
+        new LinkedHashMap<>();
+    for (ConformanceConfig config : configs) {
+      if (!config.hasLibraryLevelNonAllowlistedConformanceViolationsBehavior()) {
+        // nothing to validate
+        continue;
+      }
+      var behavior = config.getLibraryLevelNonAllowlistedConformanceViolationsBehavior();
+      for (Requirement requirement : config.getRequirementList()) {
+        if (requirement.hasRuleId()) {
+          baseRequirementBehaviors.put(requirement.getRuleId(), behavior);
+        }
+      }
+    }
+
+    for (ConformanceConfig config : configs) {
+      if (!config.hasLibraryLevelNonAllowlistedConformanceViolationsBehavior()) {
+        // nothing to validate
+        continue;
+      }
+      for (Requirement requirement : config.getRequirementList()) {
+        if (requirement.hasExtends()) {
+          var extendingBehavior =
+              config.getLibraryLevelNonAllowlistedConformanceViolationsBehavior();
+          String baseRuleId = requirement.getExtends();
+          if (baseRequirementBehaviors.containsKey(baseRuleId)) {
+            var baseBehavior = baseRequirementBehaviors.get(baseRuleId);
+            if (!baseBehavior.equals(extendingBehavior)) {
+              reportInvalidRequirement(
+                  compiler,
+                  requirement,
+                  "extending rule's config may not specify a different value of"
+                      + " 'library_level_non_allowlisted_conformance_violations_behavior' than the"
+                      + " base rule's config. Skipping all conformance checks.");
+              return false;
+            }
+          }
+        }
+      }
+    }
+    return true;
   }
 
   private static final ImmutableSet<String> EXTENDABLE_FIELDS =
@@ -183,78 +304,277 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
           "value");
 
   /**
-   * Gets requirements from all configs. Merges allowlists/whitelists of requirements with 'extends'
-   * equal to 'rule_id' of other rule.
+   * Gets requirements from all configs, validates them, and merges any extending requirements into
+   * their respective requirements from which they're extending. This means merging the
+   * allowlists/whitelists of requirements with 'extends' equal to 'rule_id' of other rule.
+   *
+   * <p>The requirements inheritance can not have a chain of more than 1 level. This means that a
+   * requirement that extends another requirement can not itself be extended. This is enforced by
+   * this pass and reported as an error if a requirement has both 'extends' and 'rule_id' fields
+   * set. Given that, we can safely define the following types of requirements:
+   *
+   * <p>Root requirements are simply the requirements that do not extend any other requirement. They
+   * do not have an `extends` field. They may or may not have a 'rule_id' field. For example,
+   * without a 'rule_id' field:
+   *
+   * <pre>
+   *   requirement: {
+   *     type: BANNED_NAME
+   *     value: 'eval'
+   *     error_message: 'eval is not allowed'
+   *   }
+   * </pre>
+   *
+   * <p>Root requirements may have a 'rule_id' field. For example:
+   *
+   * <pre>
+   *   requirement: {
+   *     rule_id: 'eval'
+   *     type: BANNED_NAME
+   *     value: 'eval'
+   *     error_message: 'eval is not allowed'
+   *   }
+   * </pre>
+   *
+   * <p>Extendable root requirements are those root requirements that have a 'rule_id' field, and
+   * therefore _can_ be extended. They may or may not getting extended by another requirement. For
+   * example:
+   *
+   * <pre>
+   *   requirement: {
+   *     rule_id: 'extendable'
+   *     type: BANNED_NAME
+   *     value: 'eval'
+   *     error_message: 'eval is not allowed'
+   *   }
+   * </pre>
+   *
+   * <p>Extended root requirements are extendable root requirements that are extended by at least
+   * one other requirement. For example:
+   *
+   * <pre>
+   *   requirement: {
+   *     rule_id: 'extended'
+   *     type: BANNED_NAME
+   *     value: 'eval'
+   *     error_message: 'eval is not allowed'
+   *   }
+   *
+   *   requirement: {
+   *     extends: 'extended'
+   *   }
+   * </pre>
+   *
+   * <p>Extending requirements are leaf-requirements that have an 'extends' field. For example:
+   *
+   * <pre>
+   *   requirement: {
+   *     extends: 'eval'
+   * </pre>
+   *
+   * <p>The following diagram illustrates the relationship between the different types of
+   * requirements that can be defined.
+   *
+   * <p>
+   *
+   * <pre>
+   *     {@literal
+   *
+   *             +---------------------------+    +------------------------------+
+   *             |    Root Requirements      |    |  Extending Requirements      |
+   *             |                           |    | (leaf, with 'extends' field) |
+   *             +---------------------------+    +------------------------------+
+   *                /                        \
+   *               /                          \
+   *   +-------------------------------+      +-----------------------------------+
+   *   |Extendable Root Requirements   |      | Non-Extendable Root Requirements  |
+   *   |     (with rule_id)            |      |        (without rule_id)          |
+   *   +-------------------------------+      +-----------------------------------+
+   *             |                      \
+   *             |                       \
+   *   +----------------------------+    +--------------------------------+
+   *   | Extended Root Requirements |    | Non-Extended Root Requirements |
+   *   +----------------------------+    +--------------------------------+
+   *
+   *
+   *     }
+   * </pre>
+   *
+   * <p>Here's the algorithm:
+   *
+   * <ol>
+   *   <li>Process the root requirements and add them to the rootRequirements list, and process the
+   *       extendable requirements and add them to the extendable map.
+   *   <li>Process extending-leaf requirements and merge them into their respective extended root
+   *       requirements.
+   *   <li>Remove duplicates from the allowlists/whitelists of the merged extended root
+   *       requirements.
+   * </ol>
+   *
+   * @return a list of root requirements of all configs after merging.
    */
-  static List<Requirement> mergeRequirements(
-      AbstractCompiler compiler, List<ConformanceConfig> configs) {
-    List<Requirement.Builder> builders = new ArrayList<>();
+  List<Requirement> mergeRequirements(
+      AbstractCompiler compiler,
+      List<ConformanceConfig> configs,
+      boolean isLibraryLevelConformanceReportingMode) {
+    // Root requirements (i.e. requirements that have no 'extends' field).
+    Map<Requirement.Builder, LibraryLevelNonAllowlistedConformanceViolationsBehavior>
+        rootRequirements = new LinkedHashMap<>();
+    // Requirements that are extendable (i.e. have a 'rule_id' field).
     Map<String, Requirement.Builder> extendable = new LinkedHashMap<>();
+
+    // 1. Process the root requirements and add them to the rootRequirements list, and process the
+    // extendable requirements and add them to the extendable map.
     for (ConformanceConfig config : configs) {
       for (Requirement requirement : config.getRequirementList()) {
         Requirement.Builder builder = requirement.toBuilder();
         if (requirement.hasRuleId()) {
-          if (requirement.getRuleId().isEmpty()) {
-            reportInvalidRequirement(compiler, requirement, "empty rule_id");
+          if (!validateExtendableRequirement(compiler, requirement, extendable)) {
             continue;
           }
-          if (extendable.containsKey(requirement.getRuleId())) {
-            reportInvalidRequirement(
-                compiler,
-                requirement,
-                "two requirements with the same rule_id: " + requirement.getRuleId());
-            continue;
-          }
+          // has a rule_id, so it's extendable
           extendable.put(requirement.getRuleId(), builder);
         }
         if (!requirement.hasExtends()) {
-          builders.add(builder);
+          // does not extend anything, so it's a root requirement. May or may not have a rule_id.
+          if (!isLibraryLevelConformanceReportingMode) {
+            rootRequirements.put(builder, UNSPECIFIED);
+          } else {
+            var hasBehavior = config.hasLibraryLevelNonAllowlistedConformanceViolationsBehavior();
+            var behavior = config.getLibraryLevelNonAllowlistedConformanceViolationsBehavior();
+            rootRequirements.put(builder, hasBehavior ? behavior : UNSPECIFIED);
+          }
         }
       }
     }
 
+    // 2. Process extending requirements and merge them into their respective extended requirements.
     for (ConformanceConfig config : configs) {
       for (Requirement requirement : config.getRequirementList()) {
         if (requirement.hasExtends()) {
-          Requirement.Builder existing = extendable.get(requirement.getExtends());
-          if (existing == null) {
-            reportInvalidRequirement(
-                compiler, requirement, "no requirement with rule_id: " + requirement.getExtends());
+          Requirement.Builder extendableRequirement = extendable.get(requirement.getExtends());
+          if (!validateExtendingRequirement(compiler, requirement, extendableRequirement)) {
             continue;
           }
-          for (Descriptors.FieldDescriptor field : requirement.getAllFields().keySet()) {
-            if (!EXTENDABLE_FIELDS.contains(field.getName())) {
-              reportInvalidRequirement(
-                  compiler, requirement, "extending rules allow only " + EXTENDABLE_FIELDS);
-            }
+          if (config.hasLibraryLevelNonAllowlistedConformanceViolationsBehavior()) {
+            // overwrite the behavior of the extendable requirement with the behavior of the
+            // extending requirement.
+            rootRequirements.put(
+                extendableRequirement,
+                config.getLibraryLevelNonAllowlistedConformanceViolationsBehavior());
           }
-          if (requirement.getValueCount() > 0 && !existing.getAllowExtendingValue()) {
-            reportInvalidRequirement(
-                compiler,
-                requirement,
-                "extending rule may not specify 'value' if base rule does not allow it");
-          }
-          existing
-              .addAllWhitelist(requirement.getWhitelistList())
-              .addAllWhitelistRegexp(requirement.getWhitelistRegexpList())
-              .addAllAllowlist(requirement.getAllowlistList())
-              .addAllAllowlistRegexp(requirement.getAllowlistRegexpList())
-              .addAllOnlyApplyTo(requirement.getOnlyApplyToList())
-              .addAllOnlyApplyToRegexp(requirement.getOnlyApplyToRegexpList())
-              .addAllWhitelistEntry(requirement.getWhitelistEntryList())
-              .addAllAllowlistEntry(requirement.getAllowlistEntryList())
-              .addAllValue(requirement.getValueList())
-              .addAllConfigFile(requirement.getConfigFileList());
+          mergeExtendingRequirementIntoExtended(extendableRequirement, requirement);
         }
       }
     }
 
-    List<Requirement> requirements = new ArrayList<>(builders.size());
-    for (Requirement.Builder builder : builders) {
+    // 3. Remove duplicates from the allowlists/whitelists of the merged root requirements.
+    List<Requirement> cleanedUpRootRequirements = new ArrayList<>(rootRequirements.size());
+    for (Entry<Requirement.Builder, LibraryLevelNonAllowlistedConformanceViolationsBehavior> entry :
+        rootRequirements.entrySet()) {
+      Requirement.Builder builder = entry.getKey();
+      var behavior = entry.getValue();
       removeDuplicates(builder);
-      requirements.add(builder.build());
+      Requirement requirement = builder.build();
+      if (isLibraryLevelConformanceReportingMode && behavior != null && behavior != UNSPECIFIED) {
+        mergedBehaviors.put(requirement, behavior);
+      }
+      cleanedUpRootRequirements.add(requirement);
     }
-    return requirements;
+
+    return cleanedUpRootRequirements;
+  }
+
+  /**
+   * Merges the allowlists/whitelists of the extending requirement into the extended requirement.
+   *
+   * @param extendedRequirement the extended requirement to merge the extending requirement into.
+   * @param extendingRequirement the extending requirement to merge into the extended requirement.
+   */
+  private static void mergeExtendingRequirementIntoExtended(
+      Requirement.Builder extendedRequirement, Requirement extendingRequirement) {
+    checkState(
+        extendingRequirement.getExtends().equals(extendedRequirement.getRuleId()),
+        "Attempting to merge an requirement with the wrong extended requirement");
+    extendedRequirement
+        .addAllWhitelist(extendingRequirement.getWhitelistList())
+        .addAllWhitelistRegexp(extendingRequirement.getWhitelistRegexpList())
+        .addAllAllowlist(extendingRequirement.getAllowlistList())
+        .addAllAllowlistRegexp(extendingRequirement.getAllowlistRegexpList())
+        .addAllOnlyApplyTo(extendingRequirement.getOnlyApplyToList())
+        .addAllOnlyApplyToRegexp(extendingRequirement.getOnlyApplyToRegexpList())
+        .addAllWhitelistEntry(extendingRequirement.getWhitelistEntryList())
+        .addAllAllowlistEntry(extendingRequirement.getAllowlistEntryList())
+        .addAllValue(extendingRequirement.getValueList())
+        .addAllConfigFile(extendingRequirement.getConfigFileList());
+  }
+
+  /**
+   * Validates a extendable requirement.
+   *
+   * <p>A valid extendable requirement is a requirement that has a unique, non-empty rule_id.
+   *
+   * @return true if the requirement is valid, false otherwise.
+   */
+  private static boolean validateExtendableRequirement(
+      AbstractCompiler compiler,
+      Requirement requirement,
+      Map<String, Requirement.Builder> extendable) {
+    checkState(requirement.hasRuleId(), "Extendable requirement must have a rule_id");
+
+    if (requirement.getRuleId().isEmpty()) {
+      reportInvalidRequirement(compiler, requirement, "empty rule_id");
+      return false;
+    }
+    if (extendable.containsKey(requirement.getRuleId())) {
+      reportInvalidRequirement(
+          compiler,
+          requirement,
+          "two requirements with the same rule_id: " + requirement.getRuleId());
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Validates an extending requirement is correctly extending an extendable requirement.
+   *
+   * <p>A valid extending requirement is a requirement that:
+   *
+   * <ol>
+   *   <li>has a non-empty extends field, and
+   *   <li>only extends an existing extendable requirement
+   *   <li>does not specify any fields that are not in {@link #EXTENDABLE_FIELDS}.
+   *   <li>does not specify a value if the extendable requirement does not allow extending values.
+   *
+   * @return true if the requirement is valid, false otherwise.
+   */
+  private static boolean validateExtendingRequirement(
+      AbstractCompiler compiler,
+      Requirement extendingRequirement,
+      Requirement.Builder extendableRequirement) {
+    checkState(extendingRequirement.hasExtends(), "Extending requirement must have an extends");
+    if (extendableRequirement == null) {
+      reportInvalidRequirement(
+          compiler,
+          extendingRequirement,
+          "no extendable requirement with rule_id: " + extendingRequirement.getExtends());
+      return false;
+    }
+    for (Descriptors.FieldDescriptor field : extendingRequirement.getAllFields().keySet()) {
+      if (!EXTENDABLE_FIELDS.contains(field.getName())) {
+        reportInvalidRequirement(
+            compiler, extendingRequirement, "extending rules allow only " + EXTENDABLE_FIELDS);
+      }
+    }
+    if (extendingRequirement.getValueCount() > 0
+        && !extendableRequirement.getAllowExtendingValue()) {
+      reportInvalidRequirement(
+          compiler,
+          extendingRequirement,
+          "extending rule may not specify 'value' if extendable rule does not allow it");
+    }
+    return true;
   }
 
   private static void removeDuplicates(Requirement.Builder requirement) {
@@ -278,42 +598,40 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
     requirement.clearOnlyApplyToRegexp().addAllOnlyApplyToRegexp(list4);
   }
 
+  /**
+   * Translates a requirement specified in the conformance config file into a rule instance.
+   *
+   * @param compiler the compiler to use for the rule.
+   * @param requirement the requirement to initialize the rule for.
+   * @return the initialized rule, or null if the requirement is invalid.
+   */
   private static @Nullable Rule initRule(AbstractCompiler compiler, Requirement requirement) {
     try {
-      switch (requirement.getType()) {
-        case CUSTOM:
-          return new ConformanceRules.CustomRuleProxy(compiler, requirement);
-        case NO_OP:
-          return new ConformanceRules.NoOp(compiler, requirement);
-        case BANNED_CODE_PATTERN:
-          return new ConformanceRules.BannedCodePattern(compiler, requirement);
-        case BANNED_DEPENDENCY:
-          return new ConformanceRules.BannedDependency(compiler, requirement);
-        case BANNED_DEPENDENCY_REGEX:
-          return new ConformanceRules.BannedDependencyRegex(compiler, requirement);
-        case BANNED_ENHANCE:
-          return new ConformanceRules.BannedEnhance(compiler, requirement);
-        case BANNED_MODS_REGEX:
-          return new ConformanceRules.BannedModsRegex(compiler, requirement);
-        case BANNED_NAME:
-        case BANNED_NAME_CALL:
-          return new ConformanceRules.BannedName(compiler, requirement);
-        case BANNED_PROPERTY:
-        case BANNED_PROPERTY_READ:
-        case BANNED_PROPERTY_WRITE:
-        case BANNED_PROPERTY_NON_CONSTANT_WRITE:
-        case BANNED_PROPERTY_CALL:
-          return new ConformanceRules.BannedProperty(compiler, requirement);
-        case RESTRICTED_NAME_CALL:
-          return new ConformanceRules.RestrictedNameCall(compiler, requirement);
-        case RESTRICTED_METHOD_CALL:
-          return new ConformanceRules.RestrictedMethodCall(compiler, requirement);
-        case RESTRICTED_PROPERTY_WRITE:
-          return new ConformanceRules.RestrictedPropertyWrite(compiler, requirement);
-        case BANNED_STRING_REGEX:
-          return new ConformanceRules.BannedStringRegex(compiler, requirement);
-      }
-      throw new AssertionError();
+      return switch (requirement.getType()) {
+        case CUSTOM -> new ConformanceRules.CustomRuleProxy(compiler, requirement);
+        case NO_OP -> new ConformanceRules.NoOp(compiler, requirement);
+        case BANNED_CODE_PATTERN -> new ConformanceRules.BannedCodePattern(compiler, requirement);
+        case BANNED_DEPENDENCY -> new ConformanceRules.BannedDependency(compiler, requirement);
+        case BANNED_DEPENDENCY_REGEX ->
+            new ConformanceRules.BannedDependencyRegex(compiler, requirement);
+        case BANNED_ENHANCE -> new ConformanceRules.BannedEnhance(compiler, requirement);
+        case BANNED_MODS_REGEX -> new ConformanceRules.BannedModsRegex(compiler, requirement);
+        case BANNED_NAME,
+            BANNED_NAME_CALL ->
+            new ConformanceRules.BannedName(compiler, requirement);
+        case BANNED_PROPERTY,
+            BANNED_PROPERTY_READ,
+            BANNED_PROPERTY_WRITE,
+            BANNED_PROPERTY_NON_CONSTANT_WRITE,
+            BANNED_PROPERTY_CALL ->
+            new ConformanceRules.BannedProperty(compiler, requirement);
+        case RESTRICTED_NAME_CALL -> new ConformanceRules.RestrictedNameCall(compiler, requirement);
+        case RESTRICTED_METHOD_CALL ->
+            new ConformanceRules.RestrictedMethodCall(compiler, requirement);
+        case RESTRICTED_PROPERTY_WRITE ->
+            new ConformanceRules.RestrictedPropertyWrite(compiler, requirement);
+        case BANNED_STRING_REGEX -> new ConformanceRules.BannedStringRegex(compiler, requirement);
+      };
     } catch (InvalidRequirementSpec e) {
       reportInvalidRequirement(compiler, requirement, e.getMessage());
       return null;

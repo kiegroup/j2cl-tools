@@ -11,5 +11,4 @@ package(
 integration_test(
     name = "innerclassinitorder",
     srcs = glob(["*.java"]),
-    enable_kt = False,
 )

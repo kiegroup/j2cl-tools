@@ -11,45 +11,32 @@ load(
     "j2wasm_application",
     "j2wasm_library",
 )
-load("@rules_java//java:defs.bzl", "java_binary", "java_import", "java_library", "java_test")
+load("@rules_java//java:defs.bzl", "java_binary", "java_library", "java_test")
 
 package(
     default_applicable_licenses = ["//:j2cl_license"],
     licenses = ["notice"],
 )
 
-java_import(
-    name = "jre",
-    jars = ["//jre/java:libjre.jar"],
-    srcjar = "//jre/java:libjre-src.jar",
-    tags = [
-        "incomplete-deps",
-    ],
-    deps = ["//jre/java:jre_bootclasspath"],
-)
-
 # A java_binary to create a merged jar of all deps of the standard runtime.
 java_binary(
     name = "jre_bundle",
     create_executable = 0,
-    runtime_deps = [":jre"],
+    runtime_deps = ["//jre/java:jre_bootclasspath"],
 )
 
-java_import(
-    name = "jre-j2wasm",
-    jars = ["//jre/java:libjre-j2wasm.jar"],
-    srcjar = "//jre/java:libjre-j2wasm-src.jar",
-    tags = [
-        "incomplete-deps",
-    ],
-    deps = ["//jre/java:jre_bootclasspath-j2wasm"],
+# A java_binary to create a merged jar of all deps of the standard runtime for Kotlin backend.
+java_binary(
+    name = "jre_bundle-j2kt",
+    create_executable = 0,
+    runtime_deps = ["//third_party/java/xplat/j2kt:jre_bootclasspath-j2kt"],
 )
 
 # A java_binary to create a merged jar of all deps of the standard runtime for Wasm.
 java_binary(
     name = "jre_bundle-j2wasm",
     create_executable = 0,
-    runtime_deps = [":jre-j2wasm"],
+    runtime_deps = ["//jre/java:jre_bootclasspath-j2wasm"],
 )
 
 java_test(
@@ -57,7 +44,7 @@ java_test(
     srcs = ["CommandLineInvocationTest.java"],
     data = [":jre_bundle_deploy.jar"],
     deps = [
-        ":TranspilerTester",
+        ":tester_lib",
         "//third_party:junit",
     ],
 )
@@ -67,7 +54,7 @@ java_test(
     srcs = ["SourceMapsIntegrationTest.java"],
     data = [":jre_bundle_deploy.jar"],
     deps = [
-        ":TranspilerTester",
+        ":tester_lib",
         "//third_party:junit",
     ],
 )
@@ -77,7 +64,7 @@ java_test(
     srcs = ["KytheIndexingMetadataTest.java"],
     data = [":jre_bundle_deploy.jar"],
     deps = [
-        ":TranspilerTester",
+        ":tester_lib",
         "//third_party:junit",
     ],
 )
@@ -87,7 +74,7 @@ java_test(
     srcs = ["JsInteropRestrictionsCheckerTest.java"],
     data = [":jre_bundle_deploy.jar"],
     deps = [
-        ":TranspilerTester",
+        ":tester_lib",
         "//third_party:junit",
     ],
 )
@@ -100,7 +87,7 @@ java_test(
         ":jre_bundle-j2wasm_deploy-src.jar",
     ],
     deps = [
-        ":TranspilerTester",
+        ":tester_lib",
         "//third_party:junit",
     ],
 )
@@ -108,9 +95,9 @@ java_test(
 java_test(
     name = "J2ktRestrictionsCheckerTest",
     srcs = ["J2ktRestrictionsCheckerTest.java"],
-    data = [":jre_bundle_deploy.jar"],
+    data = [":jre_bundle-j2kt_deploy.jar"],
     deps = [
-        ":TranspilerTester",
+        ":tester_lib",
         "//third_party:junit",
     ],
 )
@@ -123,7 +110,7 @@ java_test(
         ":jre_bundle-j2wasm_deploy-src.jar",
     ],
     deps = [
-        ":TranspilerTester",
+        ":tester_lib",
         "//third_party:guava",
         "//third_party:junit",
     ],
@@ -143,14 +130,18 @@ java_test(
         ":jre_bundle_deploy-src.jar",
         ":ktstdlib_bundle_deploy.jar",
         ":libjre_native.jar",
-        "//samples/box2d/src/main/kotlin/idiomatic:libbox2d_kt_library-j2cl-src.jar",
+        "//samples/box2d/src/main/kotlin/idiomatic:libbox2d_library-j2cl-src.jar",
     ],
-    shard_count = 2,
-    runtime_deps = [
-        "//transpiler/java/com/google/j2cl/transpiler/frontend/kotlin",
+    jvm_flags = [
+        # Configure JVM to provide more consistent performance since we rely on execution times.
+        "-XX:+TieredCompilation",
+        "-XX:TieredStopAtLevel=2",
+        "-XX:MaxGCPauseMillis=100",
     ],
+    shard_count = 6,
     deps = [
-        ":TranspilerTester",
+        ":tester_lib",
+        "//java/com/google/common/util/concurrent",
         "//third_party:junit",
     ],
 )
@@ -174,24 +165,35 @@ java_test(
     ],
     tags = ["j2wasm"],
     deps = [
+        ":tester_lib",
         "//third_party:jscomp",
         "//third_party:junit",
-        "//third_party:runfiles",
         "//third_party/java/truth",
     ],
 )
 
 java_library(
-    name = "TranspilerTester",
+    name = "tester_lib",
     testonly = 1,
-    srcs = [
-        "TranspilerTester.java",
-    ],
+    srcs = ["TranspilerTester.java"],
+    javacopts = ["-Xep:BetaApi:OFF"],
     deps = [
+        "//third_party:error_prone_annotations",
         "//third_party:guava",
         "//third_party:junit",
+        "//third_party:runfiles",
         "//third_party:truth",
         "//transpiler/java/com/google/j2cl/common",
         "//transpiler/java/com/google/j2cl/transpiler:commandlinerunner_lib",
     ],
+)
+
+java_library(
+    name = "tester_lib_public",
+    testonly = 1,
+    data = [
+        ":jre_bundle_deploy.jar",
+    ],
+    visibility = ["//benchmarking/java/com/google/j2cl/benchmarks/transpiler:__pkg__"],
+    exports = [":tester_lib"],
 )

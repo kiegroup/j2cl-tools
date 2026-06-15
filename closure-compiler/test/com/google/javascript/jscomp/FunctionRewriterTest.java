@@ -25,27 +25,39 @@ import org.junit.runners.JUnit4;
 public final class FunctionRewriterTest extends CompilerTestCase {
 
   private static final String RETURNARG_HELPER =
-      "function JSCompiler_returnArg(JSCompiler_returnArg_value){"
-          + "  return function() { return JSCompiler_returnArg_value }"
-          + "}";
+      """
+      function JSCompiler_returnArg(JSCompiler_returnArg_value){
+        return function() { return JSCompiler_returnArg_value }
+      }
+      """;
   private static final String GET_HELPER =
-      "function JSCompiler_get(JSCompiler_get_name){"
-          + "  return function() { return this[JSCompiler_get_name] }"
-          + "}";
+      """
+      function JSCompiler_get(JSCompiler_get_name){
+        return function() { return this[JSCompiler_get_name] }
+      }
+      """;
   private static final String SET_HELPER =
-      "function JSCompiler_set(JSCompiler_set_name) {"
-          + "  return function(JSCompiler_set_value){"
-          + "    this[JSCompiler_set_name]=JSCompiler_set_value"
-          + "  }"
-          + "}";
+      """
+      function JSCompiler_set(JSCompiler_set_name) {
+        return function(JSCompiler_set_value){
+          this[JSCompiler_set_name]=JSCompiler_set_value
+        }
+      }
+      """;
   private static final String EMPTY_HELPER =
-      "function JSCompiler_emptyFn() {" + "  return function(){}" + "}";
+      """
+      function JSCompiler_emptyFn() {
+        return function(){}
+      }
+      """;
   private static final String IDENTITY_HELPER =
-      "function JSCompiler_identityFn() {"
-          + "  return function(JSCompiler_identityFn_value) {"
-          + "      return JSCompiler_identityFn_value"
-          + "  }"
-          + "}";
+      """
+      function JSCompiler_identityFn() {
+        return function(JSCompiler_identityFn_value) {
+            return JSCompiler_identityFn_value
+        }
+      }
+      """;
 
   @Override
   public void setUp() throws Exception {
@@ -70,29 +82,30 @@ public final class FunctionRewriterTest extends CompilerTestCase {
   public void testEs6Class() {
     // There is never any benefit to replacing ES6 class methods
     checkCompilesToSame(
-        lines(
-            "class C {",
-            "  constructor(x = 1) {", // looks like a setter
-            "    this.x_ = x;",
-            "  }",
-            "  get x() {",
-            "    return this.x_",
-            "  }",
-            "  getX() {",
-            "    return this.x_",
-            "  }",
-            "  set x(x) {",
-            "    this.x_ = x;",
-            "  }",
-            "  setX(x = 3) {",
-            "    this.x_ = x;",
-            "  }",
-            "  getConst() {",
-            "    return 1;",
-            "  }",
-            "  empty() {}",
-            "  identity(x) { return x; }",
-            "}"),
+        """
+        class C {
+          constructor(x = 1) { // looks like a setter
+            this.x_ = x;
+          }
+          get x() {
+            return this.x_
+          }
+          getX() {
+            return this.x_
+          }
+          set x(x) {
+            this.x_ = x;
+          }
+          setX(x = 3) {
+            this.x_ = x;
+          }
+          getConst() {
+            return 1;
+          }
+          empty() {}
+          identity(x) { return x; }
+        }
+        """,
         10);
   }
 
@@ -255,20 +268,22 @@ public final class FunctionRewriterTest extends CompilerTestCase {
   @Test
   public void testIssue538() {
     checkCompilesToSame(
-        "/** @constructor */\n"
-            + "WebInspector.Setting = function() {}\n"
-            + "WebInspector.Setting.prototype = {\n"
-            + "    get name0(){return this._name;},\n"
-            + "    get name1(){return this._name;},\n"
-            + "    get name2(){return this._name;},\n"
-            + "    get name3(){return this._name;},\n"
-            + "    get name4(){return this._name;},\n"
-            + "    get name5(){return this._name;},\n"
-            + "    get name6(){return this._name;},\n"
-            + "    get name7(){return this._name;},\n"
-            + "    get name8(){return this._name;},\n"
-            + "    get name9(){return this._name;},\n"
-            + "}",
+        """
+        /** @constructor */
+        WebInspector.Setting = function() {}
+        WebInspector.Setting.prototype = {
+            get name0(){return this._name;},
+            get name1(){return this._name;},
+            get name2(){return this._name;},
+            get name3(){return this._name;},
+            get name4(){return this._name;},
+            get name5(){return this._name;},
+            get name6(){return this._name;},
+            get name7(){return this._name;},
+            get name8(){return this._name;},
+            get name9(){return this._name;},
+        }
+        """,
         1);
   }
 

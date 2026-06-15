@@ -15,17 +15,68 @@
 
 package org.kie.j2cl.tools.yaml.tests.annotations.customtypeser;
 
+import java.util.List;
 import org.kie.j2cl.tools.yaml.mapper.api.annotation.YAMLMapper;
 
 @YAMLMapper
 public class Tested {
   private ValueHolder value;
 
+  private ValueHolder[] values;
+
+  private List<ValueHolder> listOfValues;
+
+  private OneMoreValueHolder oneMoreValueHolder;
+
+  private OneMoreValueHolder[] oneMoreValueHolders;
+
+  private List<OneMoreValueHolder> listOfOneMoreValueHolders;
+
+  public List<OneMoreValueHolder> getListOfOneMoreValueHolders() {
+    return listOfOneMoreValueHolders;
+  }
+
+  public List<ValueHolder> getListOfValues() {
+    return listOfValues;
+  }
+
+  public OneMoreValueHolder getOneMoreValueHolder() {
+    return oneMoreValueHolder;
+  }
+
+  public OneMoreValueHolder[] getOneMoreValueHolders() {
+    return oneMoreValueHolders;
+  }
+
   public ValueHolder getValue() {
     return value;
   }
 
+  public ValueHolder[] getValues() {
+    return values;
+  }
+
+  public void setListOfOneMoreValueHolders(List<OneMoreValueHolder> listOfOneMoreValueHolders) {
+    this.listOfOneMoreValueHolders = listOfOneMoreValueHolders;
+  }
+
+  public void setListOfValues(List<ValueHolder> listOfValues) {
+    this.listOfValues = listOfValues;
+  }
+
+  public void setOneMoreValueHolder(OneMoreValueHolder oneMoreValueHolder) {
+    this.oneMoreValueHolder = oneMoreValueHolder;
+  }
+
+  public void setOneMoreValueHolders(OneMoreValueHolder[] oneMoreValueHolders) {
+    this.oneMoreValueHolders = oneMoreValueHolders;
+  }
+
   public void setValue(ValueHolder value) {
     this.value = value;
+  }
+
+  public void setValues(ValueHolder[] values) {
+    this.values = values;
   }
 }

@@ -54,25 +54,26 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   private ImmutableList<String> functionsToInspect;
 
   private static final String EXTERNS =
-      lines(
-          MINIMAL_EXTERNS,
-          "var goog = {};",
-          "goog.debug = {};",
-          "/** @constructor */",
-          "goog.debug.Trace = function() {};",
-          "goog.debug.Trace.startTracer = function (var_args) {};",
-          "/** @constructor */",
-          "goog.debug.Logger = function() {};",
-          "goog.debug.Logger.prototype.info = function(msg, opt_ex) {};",
-          "/**",
-          " * @param {?} name",
-          " * @return {!goog.debug.Logger}",
-          " */",
-          "goog.debug.Logger.getLogger = function(name){};",
-          "goog.log = {}",
-          "goog.log.getLogger = function(name){};",
-          "goog.log.info = function(logger, msg, opt_ex) {};",
-          "goog.log.multiString = function(logger, replace1, replace2, keep) {};");
+      MINIMAL_EXTERNS
+          + """
+          var goog = {};
+          goog.debug = {};
+          /** @constructor */
+          goog.debug.Trace = function() {};
+          goog.debug.Trace.startTracer = function (var_args) {};
+          /** @constructor */
+          goog.debug.Logger = function() {};
+          goog.debug.Logger.prototype.info = function(msg, opt_ex) {};
+          /**
+           * @param {?} name
+           * @return {!goog.debug.Logger}
+           */
+          goog.debug.Logger.getLogger = function(name){};
+          goog.log = {}
+          goog.log.getLogger = function(name){};
+          goog.log.info = function(logger, msg, opt_ex) {};
+          goog.log.multiString = function(logger, replace1, replace2, keep) {};
+          """;
 
   public ReplaceStringsTest() {
     super(EXTERNS);
@@ -178,46 +179,50 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Test
   public void testThrowError3a() {
     testDebugStrings(
-        lines(
-            "/** @const */ var preposition = 'in';",
-            "/** @const */ var action = 'search';",
-            "/** @const */ var error = 'Unhandled ' + action;",
-            "throw Error(error + ' ' + type + ' ' + preposition + ' ' + search);"),
-        lines(
-            "/** @const */ var preposition = 'in';",
-            "/** @const */ var action = 'search';",
-            "/** @const */ var error = 'Unhandled ' + action;",
-            "throw Error('a' + '`' + type + '`' + search);"),
+        """
+        /** @const */ var preposition = 'in';
+        /** @const */ var action = 'search';
+        /** @const */ var error = 'Unhandled ' + action;
+        throw Error(error + ' ' + type + ' ' + preposition + ' ' + search);
+        """,
+        """
+        /** @const */ var preposition = 'in';
+        /** @const */ var action = 'search';
+        /** @const */ var error = 'Unhandled ' + action;
+        throw Error('a' + '`' + type + '`' + search);
+        """,
         (new String[] {"a", "Unhandled search ` in `"}));
   }
 
   @Test
   public void testThrowError4() {
     testDebugStrings(
-        lines(
-            "/** @constructor */",
-            "var A = function() {};",
-            "A.prototype.m = function(child) {",
-            "  if (this.haveChild(child)) {",
-            "    throw Error('Node: ' + this.getDataPath() +",
-            "                ' already has a child named ' + child);",
-            "  } else if (child.parentNode) {",
-            "    throw Error('Node: ' + child.getDataPath() +",
-            "                ' already has a parent');",
-            "  }",
-            "  child.parentNode = this;",
-            "};"),
-        lines(
-            "/** @constructor */",
-            "var A = function(){};",
-            "A.prototype.m = function(child) {",
-            "  if (this.haveChild(child)) {",
-            "    throw Error('a' + '`' + this.getDataPath() + '`' + child);",
-            "  } else if (child.parentNode) {",
-            "    throw Error('b' + '`' + child.getDataPath());",
-            "  }",
-            "  child.parentNode = this;",
-            "};"),
+        """
+        /** @constructor */
+        var A = function() {};
+        A.prototype.m = function(child) {
+          if (this.haveChild(child)) {
+            throw Error('Node: ' + this.getDataPath() +
+                        ' already has a child named ' + child);
+          } else if (child.parentNode) {
+            throw Error('Node: ' + child.getDataPath() +
+                        ' already has a parent');
+          }
+          child.parentNode = this;
+        };
+        """,
+        """
+        /** @constructor */
+        var A = function(){};
+        A.prototype.m = function(child) {
+          if (this.haveChild(child)) {
+            throw Error('a' + '`' + this.getDataPath() + '`' + child);
+          } else if (child.parentNode) {
+            throw Error('b' + '`' + child.getDataPath());
+          }
+          child.parentNode = this;
+        };
+        """,
         (new String[] {
           "a", "Node: ` already has a child named `", "b", "Node: ` already has a parent",
         }));
@@ -234,16 +239,18 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Test
   public void testThrowError_templateLiteralWithConstantTerms() {
     testDebugStrings(
-        lines(
-            "const preposition = 'in';",
-            "const action = 'search';",
-            "const error = `Unhandled ${action}`;",
-            "throw Error(`${error} ${'type ' + getType()} ${preposition} ${search}`);"),
-        lines(
-            "const preposition = 'in';",
-            "const action = 'search';",
-            "const error = `Unhandled ${action}`;",
-            "throw Error('a' + '`' + getType() + '`' + search);"),
+        """
+        const preposition = 'in';
+        const action = 'search';
+        const error = `Unhandled ${action}`;
+        throw Error(`${error} ${'type ' + getType()} ${preposition} ${search}`);
+        """,
+        """
+        const preposition = 'in';
+        const action = 'search';
+        const error = `Unhandled ${action}`;
+        throw Error('a' + '`' + getType() + '`' + search);
+        """,
         (new String[] {"a", "Unhandled search type ` in `"}));
   }
 
@@ -253,12 +260,14 @@ public final class ReplaceStringsTest extends CompilerTestCase {
     // since any transitive strings may have changed, and we certainly don't want to call functions
     // a second time.
     testDebugStrings(
-        lines(
-            "const error = `Unhandled ${action}`;",
-            "throw Error(`${error} ${type} in ${search}`);"),
-        lines(
-            "const error = `Unhandled ${action}`;",
-            "throw Error('a' + '`' + error + '`' + type + '`' + search);"),
+        """
+        const error = `Unhandled ${action}`;
+        throw Error(`${error} ${type} in ${search}`);
+        """,
+        """
+        const error = `Unhandled ${action}`;
+        throw Error('a' + '`' + error + '`' + type + '`' + search);
+        """,
         (new String[] {"a", "` ` in `"}));
   }
 
@@ -335,8 +344,10 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Test
   public void testStartTracer3() {
     testDebugStrings(
-        "goog$debug$Trace.startTracer('ThreadlistView',\n"
-            + "                             'Updating ' + array.length + ' rows');",
+        """
+        goog$debug$Trace.startTracer('ThreadlistView',
+                                     'Updating ' + array.length + ' rows');
+        """,
         "goog$debug$Trace.startTracer('a', 'b' + '`' + array.length);",
         new String[] {"a", "ThreadlistView", "b", "Updating ` rows"});
   }
@@ -360,8 +371,14 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Test
   public void testLoggerOnVar() {
     testDebugStrings(
-        "var logger = goog.debug.Logger.getLogger('foo');" + "logger.info('Some message');",
-        "var logger = goog.debug.Logger.getLogger('a');" + "logger.info('Some message');",
+        """
+        var logger = goog.debug.Logger.getLogger('foo');
+        logger.info('Some message');
+        """,
+        """
+        var logger = goog.debug.Logger.getLogger('a');
+        logger.info('Some message');
+        """,
         new String[] {"a", "foo"});
   }
 
@@ -400,45 +417,58 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Test
   public void testRepeatedLoggerString() {
     testDebugStrings(
-        "goog$debug$Logger$getLogger('goog.net.XhrTransport');"
-            + "goog$debug$Logger$getLogger('my.app.Application');"
-            + "goog$debug$Logger$getLogger('my.app.Application');",
-        "goog$debug$Logger$getLogger('a');"
-            + "goog$debug$Logger$getLogger('b');"
-            + "goog$debug$Logger$getLogger('b');",
+        """
+        goog$debug$Logger$getLogger('goog.net.XhrTransport');
+        goog$debug$Logger$getLogger('my.app.Application');
+        goog$debug$Logger$getLogger('my.app.Application');
+        """,
+        """
+        goog$debug$Logger$getLogger('a');
+        goog$debug$Logger$getLogger('b');
+        goog$debug$Logger$getLogger('b');
+        """,
         new String[] {"a", "goog.net.XhrTransport", "b", "my.app.Application"});
   }
 
   @Test
   public void testRepeatedStringsWithDifferentMethods() {
     test(
-        "throw Error('A');"
-            + "goog$debug$Trace.startTracer('B', 'A');"
-            + "goog$debug$Logger$getLogger('C');"
-            + "goog$debug$Logger$getLogger('B');"
-            + "goog$debug$Logger$getLogger('A');"
-            + "throw Error('D');"
-            + "throw Error('C');"
-            + "throw Error('B');"
-            + "throw Error('A');",
-        "throw Error('a');"
-            + "goog$debug$Trace.startTracer('b', 'a');"
-            + "goog$debug$Logger$getLogger('c');"
-            + "goog$debug$Logger$getLogger('b');"
-            + "goog$debug$Logger$getLogger('a');"
-            + "throw Error('d');"
-            + "throw Error('c');"
-            + "throw Error('b');"
-            + "throw Error('a');");
+        """
+        throw Error('A');
+        goog$debug$Trace.startTracer('B', 'A');
+        goog$debug$Logger$getLogger('C');
+        goog$debug$Logger$getLogger('B');
+        goog$debug$Logger$getLogger('A');
+        throw Error('D');
+        throw Error('C');
+        throw Error('B');
+        throw Error('A');
+        """,
+        """
+        throw Error('a');
+        goog$debug$Trace.startTracer('b', 'a');
+        goog$debug$Logger$getLogger('c');
+        goog$debug$Logger$getLogger('b');
+        goog$debug$Logger$getLogger('a');
+        throw Error('d');
+        throw Error('c');
+        throw Error('b');
+        throw Error('a');
+        """);
   }
 
   @Test
   public void testLoggerWithNoReplacedParam() {
     testDebugStrings(
-        "var x = {};"
-            + "x.logger_ = goog.log.getLogger('foo');"
-            + "goog.log.info(x.logger_, 'Some message');",
-        "var x$logger_ = goog.log.getLogger('a');" + "goog.log.info(x$logger_, 'b');",
+        """
+        var x = {};
+        x.logger_ = goog.log.getLogger('foo');
+        goog.log.info(x.logger_, 'Some message');
+        """,
+        """
+        var x$logger_ = goog.log.getLogger('a');
+        goog.log.info(x$logger_, 'b');
+        """,
         new String[] {
           "a", "foo",
           "b", "Some message"
@@ -448,12 +478,16 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Test
   public void testLoggerWithSomeParametersNotReplaced() {
     testDebugStrings(
-        "var x = {};"
-            + "x.logger_ = goog.log.getLogger('foo');"
-            + "goog.log.multiString(x.logger_, 'Some message', 'Some message2', "
-            + "'Do not replace');",
-        "var x$logger_ = goog.log.getLogger('a');"
-            + "goog.log.multiString(x$logger_, 'b', 'c', 'Do not replace');",
+        """
+        var x = {};
+        x.logger_ = goog.log.getLogger('foo');
+        goog.log.multiString(x.logger_, 'Some message', 'Some message2',
+        'Do not replace');
+        """,
+        """
+        var x$logger_ = goog.log.getLogger('a');
+        goog.log.multiString(x$logger_, 'b', 'c', 'Do not replace');
+        """,
         new String[] {
           "a", "foo",
           "b", "Some message",

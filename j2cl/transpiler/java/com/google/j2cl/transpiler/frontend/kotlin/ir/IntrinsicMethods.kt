@@ -14,15 +14,19 @@
  * the License.
  */
 @file:Suppress("JAVA_MODULE_DOES_NOT_DEPEND_ON_MODULE")
-@file:OptIn(UnsafeDuringIrConstructionAPI::class)
+@file:OptIn(UnsafeDuringIrConstructionAPI::class, InternalSymbolFinderAPI::class)
 
 package com.google.j2cl.transpiler.frontend.kotlin.ir
 
 import com.google.j2cl.transpiler.ast.BinaryOperator
 import com.google.j2cl.transpiler.ast.PrefixOperator
+import org.jetbrains.kotlin.backend.jvm.functionByName
+import org.jetbrains.kotlin.builtins.PrimitiveType
 import org.jetbrains.kotlin.builtins.StandardNames
+import org.jetbrains.kotlin.ir.InternalSymbolFinderAPI
 import org.jetbrains.kotlin.ir.IrBuiltIns
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrPackageFragment
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrCall
@@ -125,6 +129,37 @@ class IntrinsicMethods(val irBuiltIns: IrBuiltIns) {
   fun isIeee754EqualsOperator(irCall: IrCall): Boolean =
     irCall.symbol.toKey() in ieee754EqualsSymbolKeys
 
+  private val compareToSymbolKeys by lazy {
+    PrimitiveType.entries
+      .flatMap { parameter ->
+        PrimitiveType.entries.map { Key(it.typeFqName, "compareTo", listOf(parameter.typeFqName)) }
+      }
+      .toSet()
+  }
+
+  fun isCompareTo(irCall: IrCall): Boolean = irCall.symbol.toKey() in compareToSymbolKeys
+
+  val jsUndefinedSymbol: IrSimpleFunctionSymbol by lazy {
+    irBuiltIns.symbolFinder
+      .findClass(Name.identifier("JsUtils"), FqName("javaemul.internal"))!!
+      .functionByName("undefined")
+  }
+
+  fun isGetJsUndefinedCall(irCall: IrCall): Boolean =
+    irCall.symbol.toKey() == jsUndefinedSymbol.toKey()
+
+  val jsIsUndefinedFunctionSymbol: IrSimpleFunctionSymbol by lazy {
+    irBuiltIns.symbolFinder
+      .findClass(Name.identifier("JsUtils"), FqName("javaemul.internal"))!!
+      .functionByName("isUndefined")
+  }
+
+  val jsCoerceToNullSymbol: IrSimpleFunctionSymbol by lazy {
+    irBuiltIns.symbolFinder
+      .findClass(Name.identifier("JsUtils"), FqName("javaemul.internal"))!!
+      .functionByName("coerceToNull")
+  }
+
   fun getPrefixOperator(symbol: IrFunctionSymbol): PrefixOperator? =
     prefixOperatorByIntrinsicSymbolKey[symbol.toKey()]
 
@@ -137,9 +172,10 @@ class IntrinsicMethods(val irBuiltIns: IrBuiltIns) {
   fun isBinaryOperation(irCall: IrCall): Boolean =
     irCall.symbol.toKey() in binaryOperatorByIntrinsicSymbolKey
 
+  @OptIn(InternalSymbolFinderAPI::class)
   fun getRangeToConstructor(irCall: IrCall): IrConstructorSymbol {
     val fqName = irCall.type.classFqName!!
-    val classSymbol = irBuiltIns.findClass(fqName.shortName(), fqName.parent())!!
+    val classSymbol = irBuiltIns.symbolFinder.findClass(fqName.shortName(), fqName.parent())!!
     return classSymbol.constructors.single { it.owner.valueParameters.size == 2 }
   }
 
@@ -299,11 +335,20 @@ class IntrinsicMethods(val irBuiltIns: IrBuiltIns) {
       rightSide.map { right -> Key(left.fqnOrFail, methodName, listOf(right.fqnOrFail)) }
     }
 
+  /**
+   * A unique key for an `IrFunction` to be used for identification. The key is composed of the
+   * fully-qualified name of the owner, the name of the function, and the fully-qualified names of
+   * its value parameters. This allows for precise lookup of intrinsic functions.
+   */
   private data class Key(
     val owner: FqName,
     val name: String,
     val valueParameterTypeFqNames: List<FqName?> = emptyList(),
-  )
+  ) {
+    fun toFqName(): FqName =
+      // add the name of the element to the fqn of the parent.
+      FqName.fromSegments(owner.pathSegments().map { it.toString() } + listOf(name))
+  }
 
   private fun IrFunctionSymbol.toKey(): Key {
     val parent = owner.parent
@@ -318,6 +363,8 @@ class IntrinsicMethods(val irBuiltIns: IrBuiltIns) {
         // Some intrinsic methods are not defined in a file and their direct parent is the package
         // they belong to.
         parent is IrPackageFragment -> parent.packageFqName
+        // For local functions, use the fqn of the enclosing function.
+        parent is IrFunction -> parent.symbol.toKey().toFqName()
         else -> throw IllegalStateException("Parent not supported $parent: ${parent.kotlinFqName}")
       }
 

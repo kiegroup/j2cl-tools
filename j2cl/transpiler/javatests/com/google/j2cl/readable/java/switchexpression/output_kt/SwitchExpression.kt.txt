@@ -1,0 +1,166 @@
+// Generated from "switchexpression/SwitchExpression.java"
+@file:Suppress(
+ "ALWAYS_NULL",
+ "PARAMETER_NAME_CHANGED_ON_OVERRIDE",
+ "SENSELESS_COMPARISON",
+ "UNCHECKED_CAST",
+ "UNNECESSARY_LATEINIT",
+ "UNNECESSARY_NOT_NULL_ASSERTION",
+ "UNREACHABLE_CODE",
+ "UNUSED_ANONYMOUS_PARAMETER",
+ "UNUSED_PARAMETER",
+ "UNUSED_VARIABLE",
+ "USELESS_CAST",
+ "VARIABLE_IN_SINGLETON_WITHOUT_THREAD_LOCAL",
+ "VARIABLE_WITH_REDUNDANT_INITIALIZER",
+ "REDUNDANT_ELSE_IN_WHEN")
+
+package switchexpression
+
+import javaemul.lang.*
+import java.lang.AssertionError
+import java.lang.RuntimeException
+import kotlin.Int
+import kotlin.Long
+import kotlin.Short
+import kotlin.Suppress
+import kotlin.jvm.JvmStatic
+import kotlin.run
+
+open class SwitchExpression {
+ companion object {
+  @JvmStatic
+  private fun testBasicSwitchExpressions() {
+   var a: Int = 0
+   val i: Long = run {
+    when (3) {
+     1 -> {
+      return@run 5L
+     }
+     3, 4 -> {
+      throw RuntimeException()
+     }
+     else -> {
+      val j: Short? = run {
+       val ___value: Int = a
+       a = a + 1
+       ___value
+      }.toShort()
+      return@run j!!.toShort().toLong()
+     }
+    }
+   }
+  }
+
+  @JvmStatic
+  private fun testSwitchExpressionsWithComplexControlFlow() {
+   var a: Int = 0
+   val i: Long = run {
+    when (3) {
+     1 -> {
+      return@run 5L
+     }
+     3, 4 -> {
+      throw RuntimeException()
+     }
+     else -> {
+      val j: Short? = run {
+       val ___value: Int = a
+       a = a + 1
+       ___value
+      }.toShort()
+      while (j!!.toShort().toInt() < 3) {
+       if (j!!.toShort().toInt() == 2) {
+        return@run 2L
+       }
+      }
+      return@run j!!.toShort().toLong()
+     }
+    }
+   }
+  }
+
+  @JvmStatic
+  private fun testNestedSwitchExpressions() {
+   val a: Int = 0
+   val i: Long = run {
+    when (3) {
+     1 -> {
+      return@run run {
+       when (5) {
+        1 -> {
+         return@run 10L
+        }
+        else -> {
+         return@run run {
+          when (6) {
+           1 -> {
+            throw RuntimeException()
+           }
+           else -> {
+            return@run 5L
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+     else -> {
+      return@run a.toLong()
+     }
+    }
+   }
+  }
+
+  @JvmStatic
+  private fun testExhaustiveSwitchExpression() {
+   val i: Long = run {
+    when (Enum.A) {
+     Enum.A -> {
+      return@run 0L
+     }
+     Enum.B -> {
+      return@run 1L
+     }
+    }
+   }
+  }
+
+  @JvmStatic
+  private fun testFallthroughSwitchExpression() {
+   var o: Int = 0
+   val i: Long = run {
+    SWITCH@ do {
+     CASE@ do {
+      CASE_1@ do {
+       do {
+        when (1) {
+         2 -> {
+          break@CASE_1
+         }
+         1 -> {
+          break@CASE
+         }
+         else -> {
+          break
+         }
+        }
+        break@SWITCH
+       } while (false)
+       o = 1
+      } while (false)
+      return@run 1L
+     } while (false)
+     return@run 2L
+    } while (false)
+    throw AssertionError()
+   }
+  }
+ }
+
+ enum class Enum {
+  A,
+  B;
+ }
+}

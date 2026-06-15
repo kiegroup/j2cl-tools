@@ -34,15 +34,18 @@ import com.google.j2cl.transpiler.ast.FieldDescriptor.FieldOrigin;
 import com.google.j2cl.transpiler.ast.Invocation;
 import com.google.j2cl.transpiler.ast.Method;
 import com.google.j2cl.transpiler.ast.NewInstance;
+import com.google.j2cl.transpiler.ast.RuntimeMethods;
 import com.google.j2cl.transpiler.ast.ThisReference;
 import com.google.j2cl.transpiler.ast.Type;
 import com.google.j2cl.transpiler.ast.TypeDeclaration;
 import com.google.j2cl.transpiler.ast.Variable;
+import com.google.j2cl.transpiler.ast.VariableDeclarationFragment;
 import com.google.j2cl.transpiler.ast.VariableReference;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -52,6 +55,7 @@ public class ResolveCaptures extends NormalizationPass {
   @Override
   public void applyTo(CompilationUnit compilationUnit) {
     collectCaptures(compilationUnit);
+    replaceMutableCapturedVariablesWithReference(compilationUnit);
     declareBackingFields(compilationUnit);
     passCapturesAsConstructorArguments(compilationUnit);
     addConstructorParametersForCaptures(compilationUnit);
@@ -63,6 +67,9 @@ public class ResolveCaptures extends NormalizationPass {
       LinkedHashMultimap.create();
   /** Maps variables to the types they are declared in. */
   private final Map<Variable, TypeDeclaration> declaringTypeByVariable = new HashMap<>();
+
+  /** Collects all the variables that are modified within their capturing scope. */
+  private final Set<Variable> modifiedCapturedVariables = new HashSet<>();
 
   /**
    * Collects information to be able to resolve captures.
@@ -115,7 +122,19 @@ public class ResolveCaptures extends NormalizationPass {
 
           @Override
           public boolean enterVariableReference(VariableReference variableReference) {
-            recordCapture(variableReference.getTarget());
+            Variable variable = variableReference.getTarget();
+            recordCapture(variable);
+
+            // Check if the captured variable is modified in a capturing scope.
+            if (AstUtils.isAssignmentTarget(variableReference, getParent())
+                && declaringTypeByVariable.get(variable) != getCurrentType().getDeclaration()) {
+              // The pass assumes that parameters are final; and they are in Kotlin which is the
+              // only frontend language that allows modifying a variable defined in an enclosing
+              // scope.
+              checkState(!variable.isParameter());
+              modifiedCapturedVariables.add(variable);
+            }
+
             return true;
           }
 
@@ -159,6 +178,89 @@ public class ResolveCaptures extends NormalizationPass {
 
           private void recordCaptures(Collection<Variable> variables) {
             variables.forEach(this::recordCapture);
+          }
+        });
+  }
+
+  /**
+   * Replaces mutable captured variables with reference variables. e.g., `int x=10; x = 11;` becomes
+   * `Ref.OfInt x = createRef(10); x.element = 11;`.
+   */
+  private void replaceMutableCapturedVariablesWithReference(CompilationUnit compilationUnit) {
+    if (modifiedCapturedVariables.isEmpty()) {
+      // Nothing to rewrite.
+      return;
+    }
+    // Maps the variable to the reference variable that will be used to replace it.
+    Map<Variable, Variable> referenceVariableByVariable = new HashMap<>();
+
+    // Rewrite the variable declaration to use the reference variable.
+    compilationUnit.accept(
+        new AbstractRewriter() {
+          @Override
+          public VariableDeclarationFragment rewriteVariableDeclarationFragment(
+              VariableDeclarationFragment variableDeclarationFragment) {
+            Variable originalVariable = variableDeclarationFragment.getVariable();
+
+            if (!modifiedCapturedVariables.contains(originalVariable)) {
+              return variableDeclarationFragment;
+            }
+
+            Expression initialValue =
+                variableDeclarationFragment.getInitializer() != null
+                    ? variableDeclarationFragment.getInitializer()
+                    : originalVariable.getTypeDescriptor().getDefaultValue();
+
+            Expression refWrappingCall =
+                RuntimeMethods.createRefWrappingCall(
+                    originalVariable.getTypeDescriptor(), initialValue);
+
+            Variable referenceWrapperVariable =
+                Variable.Builder.from(originalVariable)
+                    .setTypeDescriptor(refWrappingCall.getTypeDescriptor())
+                    .build();
+            checkState(
+                referenceVariableByVariable.put(originalVariable, referenceWrapperVariable)
+                    == null);
+
+            return VariableDeclarationFragment.newBuilder()
+                .setVariable(referenceWrapperVariable)
+                .setInitializer(refWrappingCall)
+                .build();
+          }
+        });
+
+    // Rewrite the accesses to the dereferencing of the reference variable.
+    compilationUnit.accept(
+        new AbstractRewriter() {
+          @Override
+          public Expression rewriteVariableReference(VariableReference variableReference) {
+            Variable originalVariable = variableReference.getTarget();
+            if (!modifiedCapturedVariables.contains(originalVariable)) {
+              return variableReference;
+            }
+            Variable referenceWrapperVariable = referenceVariableByVariable.get(originalVariable);
+
+            return FieldAccess.newBuilder()
+                .setQualifier(referenceWrapperVariable.createReference())
+                .setTarget(
+                    ((DeclaredTypeDescriptor) referenceWrapperVariable.getTypeDescriptor())
+                        .getFieldDescriptor("element"))
+                .build();
+          }
+        });
+
+    // Update the captures map to use the reference variable.
+    referenceVariableByVariable.forEach(
+        (originalVariable, replacementVariable) -> {
+          TypeDeclaration typeDeclaration = declaringTypeByVariable.remove(originalVariable);
+          declaringTypeByVariable.put(replacementVariable, typeDeclaration);
+
+          for (TypeDeclaration td : capturedVariablesByTypeDeclaration.keySet()) {
+            if (capturedVariablesByTypeDeclaration.containsEntry(td, originalVariable)) {
+              capturedVariablesByTypeDeclaration.put(td, replacementVariable);
+              capturedVariablesByTypeDeclaration.remove(td, originalVariable);
+            }
           }
         });
   }
@@ -227,10 +329,7 @@ public class ResolveCaptures extends NormalizationPass {
                   .addArgumentAndUpdateDescriptor(
                       0,
                       invocation.getQualifier(),
-                      // Consider the outer instance type to be nullable to be make the type
-                      // consistent across all places where it is used (backing field and
-                      // constructor parameters).
-                      targetTypeDescriptor.getEnclosingTypeDescriptor().toNullable())
+                      targetTypeDescriptor.getEnclosingTypeDescriptor().toNonNullable())
                   .setQualifier(null);
             }
             return invocationBuilder.build();
@@ -363,16 +462,15 @@ public class ResolveCaptures extends NormalizationPass {
 
           @Override
           public Expression rewriteThisReference(ThisReference thisReference) {
-            DeclaredTypeDescriptor capturedEnclosingType =
-                constructor
-                    .getDescriptor()
-                    .getEnclosingTypeDescriptor()
-                    .getEnclosingTypeDescriptor();
-            if (enclosingInstanceParameter != null
-                && thisReference.getTypeDescriptor().hasSameRawType(capturedEnclosingType)) {
-              return enclosingInstanceParameter.createReference();
+            DeclaredTypeDescriptor currentTypeDescriptor =
+                constructor.getDescriptor().getEnclosingTypeDescriptor();
+            DeclaredTypeDescriptor targetTypeDescriptor = thisReference.getTypeDescriptor();
+            if (currentTypeDescriptor.hasSameRawType(targetTypeDescriptor)) {
+              return thisReference;
             }
-            return thisReference;
+
+            Expression outerFieldAccess = enclosingInstanceParameter.createReference();
+            return rewriteOuterThisReference(outerFieldAccess, targetTypeDescriptor);
           }
         });
   }
@@ -411,22 +509,30 @@ public class ResolveCaptures extends NormalizationPass {
             }
 
             Expression outerFieldAccess = new ThisReference(currentTypeDescriptor);
-            do {
-              outerFieldAccess =
-                  FieldAccess.newBuilder()
-                      .setTarget(currentTypeDescriptor.getFieldDescriptorForEnclosingInstance())
-                      .setQualifier(outerFieldAccess)
-                      .build();
-              currentTypeDescriptor = currentTypeDescriptor.getEnclosingTypeDescriptor();
-              if (currentTypeDescriptor == null) {
-                checkArgument(targetTypeDescriptor.isInterface());
-                return thisReference;
-              }
-            } while (!currentTypeDescriptor.hasSameRawType(targetTypeDescriptor));
-
-            return outerFieldAccess;
+            return rewriteOuterThisReference(outerFieldAccess, targetTypeDescriptor);
           }
         });
+  }
+
+  /**
+   * Compute the qualified nested expression to access the outer type descriptor for {@code
+   * targetTypeDescriptor} starting from {@code currentExpression},
+   */
+  private static Expression rewriteOuterThisReference(
+      Expression currentExpression, DeclaredTypeDescriptor targetTypeDescriptor) {
+
+    DeclaredTypeDescriptor currentTypeDescriptor =
+        (DeclaredTypeDescriptor) currentExpression.getTypeDescriptor();
+    while (!currentTypeDescriptor.hasSameRawType(targetTypeDescriptor)) {
+      currentExpression =
+          FieldAccess.newBuilder()
+              .setTarget(currentTypeDescriptor.getFieldDescriptorForEnclosingInstance())
+              .setQualifier(currentExpression)
+              .build();
+      currentTypeDescriptor = currentTypeDescriptor.getEnclosingTypeDescriptor();
+    }
+
+    return currentExpression;
   }
 
   /** Returns the FieldDescriptor corresponding to the captured variable. */

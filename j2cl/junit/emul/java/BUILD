@@ -1,29 +1,9 @@
 load("//build_defs:rules.bzl", "j2cl_library", "j2kt_jvm_import", "j2kt_native_library")
-load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
+load("@google_bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
 
 package(
     default_applicable_licenses = ["//:j2cl_license"],
     licenses = ["reciprocal"],  # Eclipse Public License - v 1.0
-)
-
-java_library(
-    name = "junit_emul-java",
-    srcs = glob(
-        ["**/*.java"],
-        exclude = [
-            "org/junit/super-j2kt/*.java",
-        ],
-    ),
-    javacopts = [
-        "-Xep:DoNotCall:OFF",
-    ],
-    visibility = [
-        "//:__pkg__",
-        "//jre:__subpackages__",
-    ],
-    deps = [
-        "//junit/generator/java/com/google/j2cl/junit/runtime:internal_assumption_violated_exception",
-    ],
 )
 
 j2cl_library(
@@ -37,9 +17,23 @@ j2cl_library(
     javacopts = [
         "-Xep:DoNotCall:OFF",
     ],
-    visibility = ["//:__pkg__", "//jre:__subpackages__"],
+    visibility = ["//:__pkg__", "//junit/generator/java/com/google/j2cl/junit/runtime:__pkg__",
+    "//junit/emul/java/com/google/gwt/junit:__pkg__"],
     deps = [
         "//junit/generator/java/com/google/j2cl/junit/runtime:internal_assumption_violated_exception-j2cl",
+    ],
+)
+
+javadoc_library(
+    name = "junit_emul-javadoc",
+    srcs = glob(
+        ["**/*.java"],
+        exclude = [
+            "org/junit/super-j2kt/*.java",
+        ],
+    ),
+    deps = [
+        "//junit/generator/java/com/google/j2cl/junit/runtime:internal_assumption_violated_exception",
     ],
 )
 
@@ -63,16 +57,26 @@ j2kt_native_library(
     javacopts = [
         "-Xep:DoNotCall:OFF",
     ],
-    visibility = ["//:__pkg__", "//jre:__subpackages__"],
+    visibility = ["//:__pkg__"],
     deps = [
         "//junit/generator/java/com/google/j2cl/junit/runtime:internal_assumption_violated_exception-j2kt-native",
     ],
 )
-javadoc_library(
-    name = "junit_emul-javadoc",
-    srcs = glob(["**/*.java"]),
+
+java_library(
+    name = "junit_emul-jdk",
+    srcs = glob(
+        ["**/*.java"],
+        exclude = [
+            "org/junit/super-j2kt/*.java",
+        ],
+    ),
+    javacopts = [
+        "-Xep:DoNotCall:OFF",
+    ],
+    visibility = ["//junit/generator/java/com/google/j2cl/junit/runtime:__pkg__",
+                  "//junit/emul/java/com/google/gwt/junit:__pkg__"],
     deps = [
-        ":junit_emul",
         "//junit/generator/java/com/google/j2cl/junit/runtime:internal_assumption_violated_exception",
     ],
 )

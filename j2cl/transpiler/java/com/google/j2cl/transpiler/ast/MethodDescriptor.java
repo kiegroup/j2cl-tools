@@ -17,7 +17,9 @@ package com.google.j2cl.transpiler.ast;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.j2cl.transpiler.ast.TypeDescriptors.isJavaLangObject;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
 
 import com.google.auto.value.AutoValue;
@@ -54,24 +56,18 @@ import javax.annotation.Nullable;
 public abstract class MethodDescriptor extends MemberDescriptor {
   /** A method parameter descriptor */
   @AutoValue
-  public abstract static class ParameterDescriptor {
-
-    // TODO(b/182341814): This is a temporary hack to be able to disable DoNotAutobox annotations
-    //   on wasm
-    private static final ThreadLocal<Boolean> ignoreDoNotAutoboxAnnotations =
-        ThreadLocal.withInitial(() -> false);
-
-    public static void setIgnoreDoNotAutoboxAnnotations() {
-      ignoreDoNotAutoboxAnnotations.set(true);
-    }
+  public abstract static class ParameterDescriptor implements HasAnnotations {
 
     public abstract TypeDescriptor getTypeDescriptor();
 
     public abstract boolean isVarargs();
 
-    public abstract boolean isJsOptional();
+    @Override
+    public abstract ImmutableList<Annotation> getAnnotations();
 
-    public abstract boolean isDoNotAutobox();
+    public abstract boolean isOptional();
+
+    public abstract boolean isJsOptional();
 
     @Memoized
     public ParameterDescriptor toRawParameterDescriptor() {
@@ -83,8 +79,9 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     public static Builder newBuilder() {
       return new AutoValue_MethodDescriptor_ParameterDescriptor.Builder()
           .setVarargs(false)
-          .setJsOptional(false)
-          .setDoNotAutobox(false);
+          .setAnnotations(ImmutableList.of())
+          .setOptional(false)
+          .setJsOptional(false);
     }
 
     private static final ThreadLocalInterner<ParameterDescriptor> interner =
@@ -97,16 +94,27 @@ public abstract class MethodDescriptor extends MemberDescriptor {
 
       public abstract Builder setVarargs(boolean isVarargs);
 
+      abstract boolean isVarargs();
+
+      public abstract Builder setAnnotations(List<Annotation> annotations);
+
+      public abstract Builder setOptional(boolean isOptional);
+
+      abstract boolean isOptional();
+
       public abstract Builder setJsOptional(boolean isJsOptional);
 
-      public abstract Builder setDoNotAutobox(boolean isDoNotAutobox);
+      abstract boolean isJsOptional();
 
       abstract ParameterDescriptor autoBuild();
 
       public ParameterDescriptor build() {
-        if (ignoreDoNotAutoboxAnnotations.get()) {
-          setDoNotAutobox(false);
-        }
+        checkState(!isOptional() || !isVarargs(), "Parameters cannot be both varargs and optional");
+        // TODO(b/236400205): we need to think through the implications of something being both
+        //  optional and explicitly JsOptional. For now we'll prevent frontends from getting us into
+        //  that state.
+        checkState(
+            !isOptional() || !isJsOptional(), "Parameters cannot be both optional and JsOptional");
         return interner.intern(autoBuild());
       }
     }
@@ -157,27 +165,26 @@ public abstract class MethodDescriptor extends MemberDescriptor {
 
     @Override
     public String getPrefix() {
-      switch (this) {
+      return switch (this) {
         // User written methods and bridges need to be mangled the same way.
-        case SOURCE:
-        case GENERALIZING_BRIDGE:
-        case SPECIALIZING_BRIDGE:
-        case DEFAULT_METHOD_BRIDGE:
-        case ABSTRACT_STUB:
-          return "m_";
+        case SOURCE,
+            GENERALIZING_BRIDGE,
+            SPECIALIZING_BRIDGE,
+            DEFAULT_METHOD_BRIDGE,
+            ABSTRACT_STUB ->
+            "m_";
+
         // Getters and setters need to be mangled as fields.
-        case SYNTHETIC_SYSTEM_PROPERTY_GETTER_REQUIRED:
-        case SYNTHETIC_SYSTEM_PROPERTY_GETTER_OPTIONAL:
-          // Synthetic property getters use the name of the property as the name of the method hence
-          // they don't start with "$" and the prefix needs to be added here.
-          return "$";
-        case SYNTHETIC_PROPERTY_SETTER:
-        case SYNTHETIC_PROPERTY_GETTER:
-          return FieldOrigin.SOURCE.getPrefix();
+        case SYNTHETIC_SYSTEM_PROPERTY_GETTER_REQUIRED, SYNTHETIC_SYSTEM_PROPERTY_GETTER_OPTIONAL ->
+            // Synthetic property getters use the name of the property as the name of the method
+            // hence they don't start with "$" and the prefix needs to be added here.
+            "$";
+
+        case SYNTHETIC_PROPERTY_SETTER, SYNTHETIC_PROPERTY_GETTER -> FieldOrigin.SOURCE.getPrefix();
+
         // Don't prefix the rest, they all start with "$"
-        default:
-          return "";
-      }
+        default -> "";
+      };
     }
 
     @Override
@@ -186,26 +193,23 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     }
 
     public boolean isOnceMethod() {
-      switch (this) {
-        case SYNTHETIC_CLASS_INITIALIZER:
-        case SYNTHETIC_CLASS_LITERAL_GETTER:
-        case SYNTHETIC_STRING_LITERAL_GETTER:
-        case SYNTHETIC_SYSTEM_PROPERTY_GETTER_OPTIONAL:
-        case SYNTHETIC_SYSTEM_PROPERTY_GETTER_REQUIRED:
-          return true;
-        default:
-          return false;
-      }
+      return switch (this) {
+        case SYNTHETIC_CLASS_INITIALIZER,
+            SYNTHETIC_CLASS_LITERAL_GETTER,
+            SYNTHETIC_STRING_LITERAL_GETTER,
+            SYNTHETIC_SYSTEM_PROPERTY_GETTER_OPTIONAL,
+            SYNTHETIC_SYSTEM_PROPERTY_GETTER_REQUIRED ->
+            true;
+        default -> false;
+      };
     }
 
     public boolean isSystemGetPropertyGetter() {
-      switch (this) {
-        case SYNTHETIC_SYSTEM_PROPERTY_GETTER_OPTIONAL:
-        case SYNTHETIC_SYSTEM_PROPERTY_GETTER_REQUIRED:
-          return true;
-        default:
-          return false;
-      }
+      return switch (this) {
+        case SYNTHETIC_SYSTEM_PROPERTY_GETTER_OPTIONAL, SYNTHETIC_SYSTEM_PROPERTY_GETTER_REQUIRED ->
+            true;
+        default -> false;
+      };
     }
 
     public boolean isRequiredSystemGetPropertyGetter() {
@@ -235,28 +239,33 @@ public abstract class MethodDescriptor extends MemberDescriptor {
 
   public static String buildMethodSignature(
       String name, TypeDescriptor... parameterTypeDescriptors) {
-    return buildMethodSignature(name, Arrays.asList(parameterTypeDescriptors));
+    return buildMethodSignature(name, Arrays.asList(parameterTypeDescriptors), false);
   }
 
   private static String buildMethodSignature(
-      String name, List<TypeDescriptor> parameterTypeDescriptors) {
-    return name
-        + parameterTypeDescriptors.stream()
-            .map(MethodDescriptor::getSignatureStringForParameter)
-            .collect(joining(",", "(", ")"));
+      String name, List<TypeDescriptor> parameterTypeDescriptors, boolean isSuspendFunction) {
+    String signature =
+        name
+            + parameterTypeDescriptors.stream()
+                .map(MethodDescriptor::getSignatureStringForParameter)
+                .collect(joining(",", "(", ")"));
+    if (isSuspendFunction) {
+      // Suspend functions are considered to have separate namespace so a suffix is added to
+      // differentiate them from regular functions
+      signature += "#suspend";
+    }
+    return signature;
   }
 
   private static String getSignatureStringForParameter(TypeDescriptor typeDescriptor) {
-    if (typeDescriptor instanceof DeclaredTypeDescriptor) {
-      return ((DeclaredTypeDescriptor) typeDescriptor).getQualifiedBinaryName();
+    if (typeDescriptor instanceof DeclaredTypeDescriptor descriptor) {
+      return descriptor.getQualifiedBinaryName();
     }
-    if (typeDescriptor instanceof PrimitiveTypeDescriptor) {
-      return ((PrimitiveTypeDescriptor) typeDescriptor).getSimpleSourceName();
+    if (typeDescriptor instanceof PrimitiveTypeDescriptor descriptor) {
+      return descriptor.getSimpleSourceName();
     }
-    if (typeDescriptor instanceof ArrayTypeDescriptor) {
-      return getSignatureStringForParameter(
-              ((ArrayTypeDescriptor) typeDescriptor).getComponentTypeDescriptor())
-          + "[]";
+    if (typeDescriptor instanceof ArrayTypeDescriptor descriptor) {
+      return getSignatureStringForParameter(descriptor.getComponentTypeDescriptor()) + "[]";
     }
     return getSignatureStringForParameter(typeDescriptor.toRawTypeDescriptor());
   }
@@ -274,6 +283,14 @@ public abstract class MethodDescriptor extends MemberDescriptor {
 
   @Override
   public abstract boolean isDefaultMethod();
+
+  @Override
+  public boolean isLocalFunction() {
+    return getEnclosingMethodDescriptor() != null;
+  }
+
+  /** Return true if the underlying method represent a Kotlin suspend function. */
+  public abstract boolean isSuspendFunction();
 
   public boolean isBridge() {
     return getBridgeOrigin() != null;
@@ -297,7 +314,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
    * }
    * }</pre>
    */
-  public boolean isGeneralizingdBridge() {
+  public boolean isGeneralizingBridge() {
     return getOrigin() == MethodOrigin.GENERALIZING_BRIDGE;
   }
 
@@ -340,11 +357,11 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     return getOrigin() == MethodOrigin.DEFAULT_METHOD_BRIDGE;
   }
 
-  /** Returns {@code true} if the method is annotated with {@code UncheckedCast}. */
-  public abstract boolean isUncheckedCast();
-
   /** Returns {@code true} if the method is annotated with {@code HasNoSideEffect}. */
-  public abstract boolean isSideEffectFree();
+  @Memoized
+  public boolean isSideEffectFree() {
+    return hasAnnotation("javaemul.internal.annotations.HasNoSideEffects");
+  }
 
   /** Returns true if the bridge was build with {@code candidateTarget} as its target. */
   boolean isBridgeTarget(MethodDescriptor candidateTarget) {
@@ -352,6 +369,10 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     return method != null
         && method.getDeclarationDescriptor().equals(candidateTarget.getDeclarationDescriptor());
   }
+
+  /** Returns the enclosing method descriptor if the descriptor represents a local function. */
+  @Nullable
+  public abstract MethodDescriptor getEnclosingMethodDescriptor();
 
   public abstract ImmutableList<ParameterDescriptor> getParameterDescriptors();
 
@@ -363,10 +384,6 @@ public abstract class MethodDescriptor extends MemberDescriptor {
   public abstract ImmutableList<TypeVariable> getTypeParameterTypeDescriptors();
 
   public abstract ImmutableList<TypeDescriptor> getTypeArgumentTypeDescriptors();
-
-  public boolean isParameterOptional(int i) {
-    return getParameterDescriptors().get(i).isJsOptional();
-  }
 
   @Memoized
   public ImmutableList<TypeDescriptor> getParameterTypeDescriptors() {
@@ -508,7 +525,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
 
   @Override
   public boolean isInstanceMember() {
-    return !isStatic() && !isConstructor();
+    return !isStatic() && !isConstructor() && !isLocalFunction();
   }
 
   /** Whether the method does dynamic dispatch and can be overridden. */
@@ -520,9 +537,6 @@ public abstract class MethodDescriptor extends MemberDescriptor {
   public boolean isMethod() {
     return true;
   }
-
-  @Nullable
-  public abstract String getWasmInfo();
 
   @Nullable
   abstract KtObjcInfo getKtObjcInfo();
@@ -760,24 +774,29 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     if (isInstanceMember()) {
       // Only use suffixes for instance methods. Static methods are always called through the
       // right constructor, no need to add a suffix to avoid collisions.
-      switch (getVisibility()) {
-        case PRIVATE:
-          // To ensure that private methods never override each other.
-          suffix = "_$p_" + getEnclosingTypeDescriptor().getMangledName();
-          break;
-        case PACKAGE_PRIVATE:
-          // To ensure that package private methods only override one another when
-          // they are in the same package.
-          suffix =
-              "_$pp_"
-                  + getEnclosingTypeDescriptor()
-                      .getTypeDeclaration()
-                      .getPackageName()
-                      .replace('.', '_');
-          break;
-        default:
-          break;
-      }
+      suffix =
+          switch (getVisibility()) {
+            case PRIVATE ->
+                // To ensure that private methods never override each other.
+                "_$p_" + getEnclosingTypeDescriptor().getMangledName();
+            case PACKAGE_PRIVATE ->
+                // To ensure that package private methods only override one another when
+                // they are in the same package.
+                "_$pp_"
+                    + getEnclosingTypeDescriptor()
+                        .getTypeDeclaration()
+                        .getPackageName()
+                        .replace('.', '_');
+            default -> "";
+          };
+    }
+
+    if (isSuspendFunction()) {
+      // Suspend functions are considered to have separate namespace so a suffix is added to
+      // differentiate them from regular functions. Since they get an implicit Continuation
+      // parameter which becomes part of our signature, the suffix avoids conflicts with a regular
+      // functions that explicitly declare a Continuation typed parameter.
+      suffix += "_$s_";
     }
 
     Stream<TypeDescriptor> signatureDescriptors = getParameterTypeDescriptors().stream();
@@ -808,7 +827,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     if (!isDeclaration()) {
       return getDeclarationDescriptor().getManglingDescriptor();
     }
-    if (isGeneralizingdBridge() || isAbstractStub()) {
+    if (isGeneralizingBridge() || isAbstractStub()) {
       // Generalizing bridges are methods that fill the gap between the overridden parent method and
       // a specialized override. Abstract stubs override a parent method that has a given mangled
       // name. In both cases, the parameter/return types for these methods do not determine the
@@ -900,7 +919,8 @@ public abstract class MethodDescriptor extends MemberDescriptor {
             // for all non-nullable "primitive" types).
             ? convertNonNullableBoxedTypesToPrimitives(getParameterTypeDescriptors())
             : getParameterTypeDescriptors();
-    return buildMethodSignature(getNameApplyingKotlinRenames(), parameterTypeDescriptors);
+    return buildMethodSignature(
+        getNameApplyingKotlinRenames(), parameterTypeDescriptors, isSuspendFunction());
   }
 
   /** Returns the method name but accounts for kotlin's rename of {@code T List.remove(int)}. */
@@ -982,6 +1002,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
         .setVisibility(Visibility.PUBLIC)
         .setOriginalJsInfo(JsInfo.NONE)
         .setOriginalKtInfo(KtInfo.NONE)
+        .setAnnotations(ImmutableList.of())
         .setAbstract(false)
         .setSynchronized(false)
         .setConstructor(false)
@@ -990,11 +1011,8 @@ public abstract class MethodDescriptor extends MemberDescriptor {
         .setStatic(false)
         .setFinal(false)
         .setSynthetic(false)
+        .setSuspendFunction(false)
         .setEnumSyntheticMethod(false)
-        .setUnusableByJsSuppressed(false)
-        .setDeprecated(false)
-        .setUncheckedCast(false)
-        .setSideEffectFree(false)
         .setOrigin(MethodOrigin.SOURCE)
         .setParameterDescriptors(ImmutableList.of())
         .setReturnTypeDescriptor(PrimitiveTypes.VOID)
@@ -1041,7 +1059,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
 
   /**
    * Returns a set of the method descriptors that are overridden by {@code methodDescriptor} from
-   * the Java semantics persepective.
+   * the Java semantics perspective.
    */
   @Memoized
   public ImmutableSet<MethodDescriptor> getJavaOverriddenMethodDescriptors() {
@@ -1049,15 +1067,12 @@ public abstract class MethodDescriptor extends MemberDescriptor {
       return ImmutableSet.of();
     }
 
-    var overriddenMethodsBuilder = ImmutableSet.<MethodDescriptor>builder();
-
-    getEnclosingTypeDescriptor().getTransitiveSuperTypes().stream()
+    return getEnclosingTypeDescriptor().getAllSuperTypesIncludingSelf().stream()
+        .filter(t -> t != getEnclosingTypeDescriptor())
         .flatMap(t -> t.getDeclaredMethodDescriptors().stream())
         .filter(MethodDescriptor::isPolymorphic)
         .filter(this::isOverride)
-        .forEach(overriddenMethodsBuilder::add);
-
-    return overriddenMethodsBuilder.build();
+        .collect(toImmutableSet());
   }
 
   /**
@@ -1300,17 +1315,13 @@ public abstract class MethodDescriptor extends MemberDescriptor {
   public final String toString() {
     StringBuilder sb = new StringBuilder();
     switch (getJsInfo().getJsMemberType()) {
-      case METHOD:
-        sb.append("@JsMethod ");
-        break;
-      case PROPERTY:
-        sb.append("@JsProperty ");
-        break;
-      case CONSTRUCTOR:
-        sb.append("@JsConstructor ");
-        break;
-      default:
-        break;
+      case METHOD -> sb.append("@JsMethod ");
+      case PROPERTY -> sb.append("@JsProperty ");
+      case CONSTRUCTOR -> sb.append("@JsConstructor ");
+      default -> {}
+    }
+    if (isSuspendFunction()) {
+      sb.append("suspend ");
     }
     if (isStatic()) {
       sb.append("static ");
@@ -1332,22 +1343,12 @@ public abstract class MethodDescriptor extends MemberDescriptor {
       sb.append(" pp");
     }
     switch (getOrigin()) {
-      case SPECIALIZING_BRIDGE:
-        sb.append(" s-bridge");
-        break;
-      case GENERALIZING_BRIDGE:
-        sb.append(" g-bridge");
-        break;
-      case DEFAULT_METHOD_BRIDGE:
-        sb.append(" d-bridge");
-        break;
-      case ABSTRACT_STUB:
-        sb.append(" stub");
-        break;
-      case SOURCE:
-        break;
-      default:
-        sb.append(" synthetic");
+      case SPECIALIZING_BRIDGE -> sb.append(" s-bridge");
+      case GENERALIZING_BRIDGE -> sb.append(" g-bridge");
+      case DEFAULT_METHOD_BRIDGE -> sb.append(" d-bridge");
+      case ABSTRACT_STUB -> sb.append(" stub");
+      case SOURCE -> {}
+      default -> sb.append(" synthetic");
     }
     return sb.toString();
   }
@@ -1377,6 +1378,8 @@ public abstract class MethodDescriptor extends MemberDescriptor {
 
     public abstract Builder setSynthetic(boolean isSynthetic);
 
+    public abstract Builder setSuspendFunction(boolean suspendFunction);
+
     public Builder makeAbstractStub(MethodDescriptor methodDescriptor) {
       return setBridgeOrigin(methodDescriptor)
           .setOrigin(MethodOrigin.ABSTRACT_STUB)
@@ -1387,8 +1390,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
           // descriptor from an existing one.
           .setDefaultMethod(false)
           .setAbstract(true)
-          .setNative(false)
-          .setUncheckedCast(false);
+          .setNative(false);
     }
 
     public Builder makeBridge(
@@ -1404,8 +1406,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
           // descriptor from an existing one.
           .setDefaultMethod(false)
           .setAbstract(false)
-          .setNative(false)
-          .setUncheckedCast(false);
+          .setNative(false);
     }
 
     public Builder makeDeclaration() {
@@ -1427,8 +1428,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     }
 
     private static boolean isFreeTypeVariable(TypeDescriptor typeDescriptor) {
-      return typeDescriptor.isTypeVariable()
-          && !((TypeVariable) typeDescriptor).isWildcardOrCapture();
+      return typeDescriptor.isTypeVariable() && !typeDescriptor.isWildcardOrCapture();
     }
 
     /** Internal use only. Use {@link #makeBridge}. */
@@ -1437,20 +1437,13 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     /** Internal use only. Use {@link #makeBridge}. */
     abstract Builder setBridgeTarget(MethodDescriptor bridgeOrigin);
 
-    public abstract Builder setWasmInfo(String value);
-
     public abstract Builder setEnumSyntheticMethod(boolean isEnumSyntheticMethod);
-
-    public abstract Builder setUnusableByJsSuppressed(boolean isUnusableByJsSuppressed);
-
-    public abstract Builder setDeprecated(boolean isDeprecated);
-
-    public abstract Builder setUncheckedCast(boolean isUncheckedCast);
-
-    public abstract Builder setSideEffectFree(boolean isSideEffectFree);
 
     public abstract Builder setEnclosingTypeDescriptor(
         DeclaredTypeDescriptor enclosingTypeDescriptor);
+
+    public abstract Builder setEnclosingMethodDescriptor(
+        @Nullable MethodDescriptor enclosingMethodDescriptor);
 
     public abstract DeclaredTypeDescriptor getEnclosingTypeDescriptor();
 
@@ -1467,6 +1460,8 @@ public abstract class MethodDescriptor extends MemberDescriptor {
     public abstract Builder setOriginalKtInfo(KtInfo ktInfo);
 
     public abstract Builder setKtObjcInfo(KtObjcInfo ktObjcInfo);
+
+    public abstract Builder setAnnotations(List<Annotation> annotations);
 
     public abstract Builder setOrigin(MethodOrigin methodOrigin);
 
@@ -1622,10 +1617,10 @@ public abstract class MethodDescriptor extends MemberDescriptor {
 
         // Bridge methods cannot be abstract nor native,
         checkState(
-            !methodDescriptor.isGeneralizingdBridge()
+            !methodDescriptor.isGeneralizingBridge()
                 || (!methodDescriptor.isAbstract() || !methodDescriptor.isNative()));
         // Bridge methods have to be marked synthetic,
-        checkState(!methodDescriptor.isGeneralizingdBridge() || methodDescriptor.isSynthetic());
+        checkState(!methodDescriptor.isGeneralizingBridge() || methodDescriptor.isSynthetic());
 
         // Static methods cannot be abstract
         checkState(!methodDescriptor.isStatic() || !methodDescriptor.isAbstract());
@@ -1640,8 +1635,10 @@ public abstract class MethodDescriptor extends MemberDescriptor {
         checkState(!methodDescriptor.isDefaultMethod() || !methodDescriptor.isAbstract());
 
         // Default methods can not be abstract.
-        checkState(
-            !methodDescriptor.isDefaultMethod() || !methodDescriptor.isGeneralizingdBridge());
+        checkState(!methodDescriptor.isDefaultMethod() || !methodDescriptor.isGeneralizingBridge());
+
+        // JsAsync local function are not supported yet.
+        checkState(!methodDescriptor.isLocalFunction() || !methodDescriptor.isJsAsync());
 
         // Default methods can only be in interfaces.
         checkState(
@@ -1659,6 +1656,12 @@ public abstract class MethodDescriptor extends MemberDescriptor {
         checkState(
             !methodDescriptor.isVarargs()
                 || Iterables.getLast(methodDescriptor.getParameterDescriptors()).isVarargs());
+
+        // Optional parameters must be trailing.
+        checkState(
+            methodDescriptor.getParameterDescriptors().stream()
+                .dropWhile(not(ParameterDescriptor::isOptional))
+                .allMatch(ParameterDescriptor::isOptional));
 
         checkState(
             methodDescriptor.getTypeParameterTypeDescriptors().stream()
@@ -1693,6 +1696,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
       // checkState(methodDescriptor.isNative() == declaration.isNative());
       checkState(methodDescriptor.isDefaultMethod() == declaration.isDefaultMethod());
       checkState(methodDescriptor.isFinal() == declaration.isFinal());
+      checkState(methodDescriptor.isLocalFunction() == declaration.isLocalFunction());
       checkState(methodDescriptor.isStatic() == declaration.isStatic());
       checkState(
           declaration.getParameterTypeDescriptors().size()
@@ -1702,7 +1706,7 @@ public abstract class MethodDescriptor extends MemberDescriptor {
               == methodDescriptor.getReturnTypeDescriptor().isPrimitive());
 
       checkState(
-          !methodDescriptor.isGeneralizingdBridge()
+          !methodDescriptor.isGeneralizingBridge()
               || methodDescriptor.isJsMethod() == methodDescriptor.getBridgeOrigin().isJsMethod());
     }
 

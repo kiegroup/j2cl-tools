@@ -45,6 +45,12 @@ DOMException.TYPE_MISMATCH_ERR;
 
 /**
  * @constructor
+ * @implements {IObject<string, string|undefined>}
+ */
+function DOMStringMap() {}
+
+/**
+ * @constructor
  * @implements {IArrayLike<string>}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMStringList
  */
@@ -449,6 +455,13 @@ Element.prototype.removeAttributeNS = function(namespaceURI, localName) {};
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-ElSetAtNodeNS
  */
 Element.prototype.setAttributeNodeNS = function(newAttr) {};
+
+/**
+ * @param {string} html
+ * @return {undefined}
+ * @see https://developer.mozilla.org/docs/Web/API/Element/setHTMLUnsafe
+ */
+Element.prototype.setHTMLUnsafe = function(html) {};
 
 /**
  * @param {?string} namespaceURI

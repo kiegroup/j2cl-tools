@@ -38,6 +38,7 @@ import javaemul.internal.annotations.DoNotAutobox;
 import javaemul.internal.annotations.UncheckedCast;
 import javaemul.internal.annotations.Wasm;
 import jsenum.NativeEnums.NativeEnum;
+import jsenum.NativeEnums.NativeEnumWitMissingValues;
 import jsenum.NativeEnums.NativeEnumWithClinit;
 import jsenum.NativeEnums.NumberNativeEnum;
 import jsenum.NativeEnums.StringNativeEnum;
@@ -55,6 +56,7 @@ public class Main {
 
   public static void main(String... args) {
     testNativeJsEnum();
+    testNativeJsEnumWithMissingValues();
     testStringNativeJsEnum();
     testCastOnNative();
     testComparableJsEnum();
@@ -102,6 +104,7 @@ public class Main {
         () -> {
           NativeEnum nullJsEnum = null;
           switch (nullJsEnum) {
+            default:
           }
         });
 
@@ -158,6 +161,17 @@ public class Main {
     assertTrue(asSeenFromJs(NativeEnum.ACCEPT) == OK_STRING);
   }
 
+  @Wasm("nop") // TODO(b/288145698): Support native JsEnum.
+  private static void testNativeJsEnumWithMissingValues() {
+    NativeEnumWitMissingValues e = (NativeEnumWitMissingValues) (Object) NativeEnum.CANCEL;
+    int i =
+        switch (e) {
+          case OK -> 1;
+          default -> -1;
+        };
+    assertEquals(-1, i);
+  }
+
   @JsMethod(name = "passThrough")
   @Wasm("nop") // TODO(b/288145698): Support native JsEnum.
   private static native Object asSeenFromJs(NativeEnum s);
@@ -181,6 +195,7 @@ public class Main {
         () -> {
           StringNativeEnum nullJsEnum = null;
           switch (nullJsEnum) {
+            default:
           }
         });
 

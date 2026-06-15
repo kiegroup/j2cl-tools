@@ -1,4 +1,4 @@
-load("@io_bazel_rules_closure//closure:defs.bzl", "closure_js_library")
+load("@rules_closure//closure:defs.bzl", "closure_js_library")
 load("//build_defs:rules.bzl", "j2kt_jvm_library")
 load(
     "//transpiler/javatests/com/google/j2cl/readable:readable_example.bzl",
@@ -14,6 +14,7 @@ package(
 j2kt_jvm_library(
     name = "readable-j2kt-jvm",
     srcs = glob(["*.java"]),
+    j2kt_j2objc_interop_enabled = False,
     deps = ["//third_party:jsinterop-annotations-j2kt-jvm"],
 )
 
